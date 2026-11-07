@@ -75,6 +75,7 @@ UCLASS()
 class STARSHATTERWARS_API UStarshatterShipDesignSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
+    friend class USSWDesignIngestionCommandlet;
 
 public:
     UFUNCTION(BlueprintCallable,Category="ShipDesign|Authoring")

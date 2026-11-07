@@ -24,10 +24,20 @@
 #include "TurretBaseActor.h"
 #include "Weapon.h"
 #include "WeaponDesign.h"
+#include "CapitalShipActor.h"
+#include "ShieldComponent.h"
+#include "Shield.h"
+#include "SimShot.h"
+#include "Game.h"
+#include "SimComponent.h"
+#include "StarshatterSystemDesignSubsystem.h"
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFleetEffectCoverageTest,"Starshatter.VisualPass.FleetEffects",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFleetEffectCoverageTest,"Starshatter.VisualPass.FleetEffects",EAutomationTestFlags::EditorContext|EAutomationTestFlags::ClientContext|EAutomationTestFlags::EngineFilter)
 bool FFleetEffectCoverageTest::RunTest(const FString&)
 {
+    const bool bWasPaused = Game::Paused();
+    Game::SetPausedState(false);
+    ON_SCOPE_EXIT { Game::SetPausedState(bWasPaused); };
     const auto SavedWeapons=WeaponDesignRegistry::GetAll();
     const auto SavedShips=ShipDesignRegistry::GetAll();
     ON_SCOPE_EXIT {WeaponDesignRegistry::Clear();for(const auto& E:SavedWeapons)WeaponDesignRegistry::RegisterDesign(E.Key,E.Value);
@@ -35,11 +45,17 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
     auto* Weapons=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_WeaponDesign.DT_WeaponDesign"));
     if(!TestNotNull(TEXT("Weapon design table"),Weapons))return false;
     for(const auto& E:Weapons->GetRowMap())WeaponDesignRegistry::RegisterDesign(E.Key,*reinterpret_cast<const FWeaponDesign*>(E.Value));
-    auto* Importer=NewObject<UStarshatterShipDesignSubsystem>(NewObject<UGameInstance>());
+    auto* GameInstance = NewObject<UGameInstance>();
+    auto* SystemImporter = NewObject<UStarshatterSystemDesignSubsystem>(GameInstance);
+    SystemImporter->LoadSystemDesigns();
+    auto* Importer=NewObject<UStarshatterShipDesignSubsystem>(GameInstance);
     auto* Table=NewObject<UDataTable>();Table->RowStruct=FShipDesign::StaticStruct();Importer->ShipDesignDataTable=Table;
     const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
     ON_SCOPE_EXIT {World->DestroyWorld(false);};
+    const bool bUseBootDesigns = IsRunningGame();
+    if (bUseBootDesigns)
+        TestEqual(TEXT("Boot version shown by main menu"), Game::VersionInfo, FString(TEXT("6.0 Alpha 2")));
     int32 Checked=0;
     int32 MountShips=0;
     int32 MountedTurrets=0;
@@ -53,7 +69,13 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
         const FString Filename=FPaths::ProjectContentDir()/TEXT("GameData/Ships")/(FString(Entry.Definition)+TEXT(".def"));
         if(!FPaths::FileExists(Filename))continue;
         const auto Ansi=StringCast<ANSICHAR>(*Filename);Importer->LoadShipDesign(Ansi.Get());
-        const auto* Row=Table->FindRow<FShipDesign>(FName(Entry.Design),TEXT("Fleet effects"),false);
+        const bool bZolonFleet = FString(Entry.Definition).StartsWith(TEXT("ZZ"));
+        const FName DesignKey(Entry.Design);
+        const auto* Row = bUseBootDesigns && bZolonFleet
+            ? SavedShips.Find(DesignKey)
+            : Table->FindRow<FShipDesign>(DesignKey, TEXT("Fleet effects"), false);
+        if (bZolonFleet)
+            TestNotNull(FString(Entry.Definition) + TEXT(" design available for runtime validation"), Row);
         if (!Row) continue;
         if (FString(Entry.Definition) == TEXT("Falcon") && TestTrue(TEXT("Falcon death spiral exists"), !Row->DeathSpiral.IsEmpty()))
         {
@@ -69,6 +91,43 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
         const FName Key(Entry.Definition);ShipDesignRegistry::RegisterDesign(Key,*Row);
         auto* Design=ShipDesignRegistry::FindLegacy(Key);if(!TestNotNull(FString(Entry.Definition)+TEXT(" runtime design"),Design))continue;
         Ship Runtime(TCHAR_TO_ANSI(Entry.Definition),"",Design,1,0,nullptr,false);
+        if (Key == TEXT("Orion"))
+        {
+            SimComponent* Core = nullptr;
+            SimComponent* Regulator = nullptr;
+            for (int Index = 0; Index < Runtime.GetSystems().size(); ++Index)
+            {
+                auto& Components = Runtime.GetSystems()[Index]->GetComponents();
+                if (Components.size() != 7 ||
+                    FCStringAnsi::Strcmp(Components[0]->Name(), "Reactor Core") != 0)
+                    continue;
+                Core = Components[0];
+                Regulator = Components[4];
+                break;
+            }
+            if (TestNotNull(TEXT("Fusion reactor copies seven DEF components onto the ship"), Core) &&
+                TestNotNull(TEXT("Fusion reactor regulator"), Regulator))
+            {
+                TestEqual(TEXT("Core abbreviation"), FString(ANSI_TO_TCHAR(Core->Abbreviation())), FString(TEXT("Reac Core")));
+                TestEqual(TEXT("Core repair time"), Core->RepairTime(), 120.0f);
+                TestEqual(TEXT("Core replacement time"), Core->ReplaceTime(), 24000.0f);
+                TestTrue(TEXT("Core affects efficiency and safety"), Core->DamageEfficiency() && Core->DamageSafety());
+                TestFalse(TEXT("Core does not affect stability"), Core->DamageStability());
+                Core->ApplyDamage(30);
+                TestEqual(TEXT("Component damage reduces availability"), Core->Availability(), 70.0f);
+                Core->Repair();
+                TestEqual(TEXT("Repair uses DEF timer"), Core->TimeRemaining(), 120.0f);
+                Core->ExecMaintFrame(121);
+                TestTrue(TEXT("Repair finishes"), Core->TimeRemaining() <= 0);
+                TestEqual(TEXT("Regulator DEF spares"), Regulator->SpareCount(), 2);
+                Regulator->ApplyDamage(55);
+                Regulator->Replace();
+                TestEqual(TEXT("Replacement consumes a spare"), Regulator->SpareCount(), 1);
+                TestEqual(TEXT("Replacement uses DEF timer"), Regulator->TimeRemaining(), 60.0f);
+                Regulator->ExecMaintFrame(61);
+                TestEqual(TEXT("Replacement restores full availability"), Regulator->Availability(), 100.0f);
+            }
+        }
         auto* Actor=World->SpawnActor<AShipActor>(Class);if(!TestNotNull(FString(Entry.Definition)+TEXT(" actor"),Actor))continue;
         Actor->BindRuntimeShip(&Runtime);
         ON_SCOPE_EXIT {Actor->BindRuntimeShip(nullptr);Actor->Destroy();};
@@ -103,6 +162,70 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
                 TestNotNull(Label + TEXT(" base mesh"), BaseActor->BaseMesh->GetStaticMesh().Get());
             TestTrue(Label + TEXT(" gun and base coincide"),
                 Base->GetComponentLocation().Equals(Mount->GetComponentLocation(), 0.01));
+        }
+
+        if (Row->ShipEmpire == EShipEmpire::Zolon && bZolonFleet)
+        {
+            const FString Label(Entry.Definition);
+            int32 ArmedStations = 0;
+            for (const auto& Point : Actor->NativeWeaponHardpoints)
+            {
+                const auto* Mount = Cast<UShipWeaponMountComponent>(Point.Get());
+                if (!Mount || !Mount->RuntimeWeapon) continue;
+                ++ArmedStations;
+                for (int32 Barrel = 0; Barrel < Mount->GetMuzzleCount(); ++Barrel)
+                {
+                    const FTransform Muzzle = Mount->GetMuzzleWorldTransform(Barrel);
+                    TestFalse(Label + TEXT(" muzzle has a finite transform"), Muzzle.ContainsNaN());
+                    TestTrue(Label + TEXT(" muzzle is aligned with its station"),
+                        FVector::DotProduct(Muzzle.GetUnitAxis(EAxis::X), Mount->GetForwardVector()) > 0.99);
+                }
+            }
+            TestTrue(Label + TEXT(" DEF weapons are bound to native stations"), ArmedStations > 0);
+            TestEqual(Label + TEXT(" authored running lights"), Actor->NavLights.Num(), 3);
+            auto* Thruster = Runtime.GetThruster();
+            if (TestNotNull(Label + TEXT(" runtime thruster"), Thruster))
+                TestEqual(Label + TEXT(" runtime nozzle count"), Thruster->GetNumThrusters(), 6);
+
+            auto* Shield = Runtime.GetShield();
+            if (Row->Shield.IsEmpty())
+            {
+                TestNull(Label + TEXT(" unshielded by DEF"), Shield);
+            }
+            else if (TestNotNull(Label + TEXT(" runtime shield"), Shield))
+            {
+                auto* Capital = Cast<ACapitalShipActor>(Actor);
+                if (!TestNotNull(Label + TEXT(" capital presentation"), Capital)) continue;
+                Shield->SetPowerLevel(100);
+                Shield->ExecFrame(10);
+                Shield->Distribute(Shield->GetConsumption(), 1);
+                WeaponDesign Weapon;
+                Weapon.penetration = 1;
+                Weapon.life = 1;
+                SimShot Shot(FVector::ZeroVector, Camera(), &Weapon);
+                const FVector Impact = Runtime.GetLocation() + Runtime.GetCam().vpn() * 100.0;
+                Runtime.InflictDamage(100, &Shot, 1, Impact);
+                TestFalse(Label + TEXT(" hull hit leaves shell hidden"), Capital->ShieldComponent->IsComponentTickEnabled());
+                Runtime.InflictDamage(100, &Shot, 3, Impact);
+                TestTrue(Label + TEXT(" deflected hit starts shell effect"), Capital->ShieldComponent->IsComponentTickEnabled());
+                TArray<UStaticMeshComponent*> Meshes;
+                Capital->GetComponents(Meshes);
+                const FString ExpectedMesh = TEXT("SM_") + Row->Shield[0].ModelName;
+                const auto* Found = Meshes.FindByPredicate([&](const UStaticMeshComponent* Mesh) {
+                    return Mesh->GetStaticMesh() && Mesh->GetStaticMesh()->GetName() == ExpectedMesh;
+                });
+                if (TestNotNull(Label + TEXT(" DEF-selected shield shell"), Found))
+                {
+                    TestTrue(Label + TEXT(" shell follows corrected hull transform"),
+                        (*Found)->GetAttachParent() == Capital->HullMesh &&
+                        (*Found)->GetComponentTransform().Equals(Capital->HullMesh->GetComponentTransform()));
+                    TestEqual(Label + TEXT(" shield visual has no collision"), (*Found)->GetCollisionEnabled(),
+                        ECollisionEnabled::NoCollision);
+                    UActorComponent* Effect = Capital->ShieldComponent;
+                    Effect->TickComponent(0.5f, LEVELTICK_All, &Effect->PrimaryComponentTick);
+                    TestFalse(Label + TEXT(" shield visual fades out"), (*Found)->IsVisible());
+                }
+            }
         }
 
         if (Kind == TEXT("sam") || Kind == TEXT("hulk")) continue;

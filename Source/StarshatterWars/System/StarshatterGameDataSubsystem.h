@@ -326,6 +326,8 @@ public:
         void BuildCombatRosterFromDataTables();
 
 private:
+    friend class USSWDesignIngestionCommandlet;
+    friend class FStagedIngestionTest;
     // =====================================================================
     // Internal helpers
     // =====================================================================

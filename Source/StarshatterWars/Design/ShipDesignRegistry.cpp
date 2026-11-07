@@ -312,6 +312,13 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
     Legacy->trans_y = Row.Trans.Y;
     Legacy->trans_z = Row.Trans.Z;
 
+    const auto ApplyComponentDesign = [](SimSystem& System, const FString& Name)
+    {
+        if (Name.IsEmpty()) return;
+        if (const auto* Design = SystemDesign::Find(TCHAR_TO_UTF8(*Name)))
+            System.SetDesign(Design);
+    };
+
     for (const FShipPower& Src : Row.Power)
     {
         if (Src.Type == EPowerSource::NONE)
@@ -328,6 +335,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         Reactor->SetName(TCHAR_TO_ANSI(*Src.PName));
         Reactor->SetAbbreviation(TCHAR_TO_ANSI(*Src.PAbrv));
 
+        ApplyComponentDesign(*Reactor, Src.DesignName);
         Legacy->reactors.append(Reactor);
     }
 
@@ -368,6 +376,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             NewDrive->AddPort(Port);
         }
 
+        ApplyComponentDesign(*NewDrive, Src.DesignName);
         Legacy->drives.append(NewDrive);
 
         UE_LOG(LogTemp, Warning,
@@ -450,6 +459,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
                 Port->TrailScale);
         }
 
+        ApplyComponentDesign(*NewThruster, Src.DesignName);
         Legacy->thrusters.append(NewThruster);
     }
 
@@ -480,6 +490,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             Src.SourceIndex,
             Src.HullFactor);
 
+        ApplyComponentDesign(*NewNavSys, Src.DesignName);
         Legacy->navsystems.append(NewNavSys);
     }
 
@@ -504,6 +515,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             NewSensor->AddRange(static_cast<double>(R));
         }
 
+        ApplyComponentDesign(*NewSensor, Src.DesignName);
         Legacy->sensors.append(NewSensor);
 
         UE_LOG(LogTemp, Warning,
@@ -546,8 +558,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             NewShield->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
         }
 
-        if(!Src.DesignName.IsEmpty())
-            if(auto* System=SystemDesign::Find(TCHAR_TO_ANSI(*Src.DesignName)))NewShield->SetDesign(System);
+        ApplyComponentDesign(*NewShield, Src.DesignName);
         NewShield->SetSourceIndex(Src.SourceIndex);
         NewShield->SetHullFactor(Src.HullFactor);
 
@@ -636,6 +647,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         //---------------------------------------------------------
         // Register into legacy design
         //---------------------------------------------------------
+        ApplyComponentDesign(*NewComputer, Src.DesignName);
         Legacy->computers.append(NewComputer);
 
         //---------------------------------------------------------
@@ -679,6 +691,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         NewQuantum->SetHullFactor(Src.HullFactor);
         NewQuantum->SetCountdown(Src.Countdown);
 
+        ApplyComponentDesign(*NewQuantum, Src.DesignName);
         Legacy->quantum_drives.append(NewQuantum);
 
         UE_LOG(LogTemp, Warning,
@@ -726,6 +739,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             NewFarcaster->SetApproachPoint(i, Src.ApproachPoints[i]);
         }
 
+        ApplyComponentDesign(*NewFarcaster, Src.DesignName);
         Legacy->farcasters.append(NewFarcaster);
 
         UE_LOG(LogTemp, Warning,
@@ -762,6 +776,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
                 NewNavLight->AddBeacon(Beacon.Name, Beacon.Location, Beacon.LocalRotation,
                     Beacon.Color, Beacon.Intensity, Beacon.Radius, Beacon.Mode, Beacon.BlinkInterval, Beacon.PhaseOffset);
             }
+            ApplyComponentDesign(*NewNavLight, Src.DesignName);
             Legacy->navlights.append(NewNavLight);
             UE_LOG(LogTemp, Verbose, TEXT("[ShipDesignRegistry] NavLight Row='%s' First=%d Beacons=%d"),
                 *RowName.ToString(), First, End-First);
@@ -824,6 +839,8 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             Src.AzimuthRadians,
             Src.ElevationRadians
         );
+
+        ApplyComponentDesign(*NewWeapon, Src.DesignName);
 
         if (!Src.GroupName.IsEmpty())
         {
@@ -1018,6 +1035,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
                 *Item.End.ToString());
         }
 
+        ApplyComponentDesign(*NewGear, Src.DesignName);
         Legacy->landing_gear.append(NewGear);
 
         UE_LOG(LogTemp, Warning,
@@ -1118,6 +1136,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             Src.Slots.Num(), NewDeck->NumSlots(),
             CompatibleThunderboltSpots, NewDeck->SpaceLeft(0x00000004));
 
+        ApplyComponentDesign(*NewDeck, Src.DesignName);
         Legacy->flight_decks.append(NewDeck);
 
         UE_LOG(LogTemp, Warning,

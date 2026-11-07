@@ -321,7 +321,7 @@ event: { type: Display,    time:   1, fade: (1,5,1), rect: (20,40, 600,150), fon
 
 
 event: {
-   event: Message
+   type: Message
    time:  1
    sound: "Briefing_05_sam"
 }

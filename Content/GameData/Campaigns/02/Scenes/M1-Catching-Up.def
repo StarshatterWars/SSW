@@ -36,19 +36,19 @@ event: { type: Display,    time:   5, fade: (0,65,0), rect: (20,190, 600,800), f
 
 
 event: {
-   event: Message
+   type: Message
    time:  5
    sound: "Mail_01a"
 }
 
 event: {
-   event: Message
+   type: Message
    time:  32
    sound: "Mail_01b"
 }
 
 event: {
-   event: Message
+   type: Message
    time:  45
    sound: "Mail_01c"
 }

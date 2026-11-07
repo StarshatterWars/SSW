@@ -282,7 +282,7 @@ event: { type: Camera,                param: 3,  target: "Trellis-Solus", vec: (
 event: { type: Camera,                param: 5,                           vec: (0.12, 0.01, 0.02)  }
 
 event: { type: Display,    time:   5, message: "Trellis-Solus Farcaster", font: Limerick18,   color: 0xffffff80, fade: (1,7,1), rect: (20,20, 300,100) }
-event: { type: Messasge,              sound: "News_03_Blockade_Broken" }
+event: { type: Message,              sound: "News_03_Blockade_Broken" }
 
 
 event: { type: Camera,     time:  25, param: 3,  target: "Archon",        vec: (2,0,2700)           }

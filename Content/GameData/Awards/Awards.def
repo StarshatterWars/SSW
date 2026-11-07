@@ -552,4 +552,32 @@ award: {
    dynamic_campaign: true
 }
 
+award: {
+   type: medal
+   id: 0x0008
+   name: "KorianCrisisService"
+   desc: "The Korian Crisis Service medal is awarded to any member of any branch of Force who participated in combat action during the Korian diplomatic crisis and related fleet operations."
+   award: "The Korian Crisis Service medal is awarded to any member of any branch of Force who participated in combat action during the Korian diplomatic crisis and related fleet operations."
+   small: Ribbon02
+   large: Medal02
+   campaign_id: 1
+   campaign_complete: true
+   dynamic_campaign: true
+   ceremony: true
+   eligibility_configured: false
+}
 
+award: {
+   type: medal
+   id: 0x8000
+   name: "GrandOrder"
+   desc: "The Grand Order of the Alliance is awarded only to those officers who have successfully completed every major campaign theater in service of the Terellian Alliance. This distinction recognizes strategic mastery, endurance, and total victory across the war."
+   award: "The Grand Order of the Alliance is awarded only to those officers who have successfully completed every major campaign theater in service of the Terellian Alliance. This distinction recognizes strategic mastery, endurance, and total victory across the war."
+   small: RibbonFF
+   large: MedalFF
+   campaign_id: 0
+   campaign_complete: true
+   dynamic_campaign: true
+   ceremony: true
+   eligibility_configured: false
+}

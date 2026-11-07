@@ -73,7 +73,7 @@ event: { type: Camera,                param: 3,  target: "body:Borova",  vec: (2
 event: { type: Camera,                param: 5,                          vec: (0.12, 0.012, 0.025)  }
 event: { type: Display,    time:   4, message: "Borovan Republic", font: Limerick18,   color: 0xffffff80, fade: (1,4,1), rect: (20,20, 300,100) }
 event: { type: Display,               message: "Capitol",      font: Limerick12,   color: 0xffffff80, fade: (1,4,1), rect: (20,40, 300,100) }
-event: { type: Messasge,              sound: "News_06_Ele_aan_Diplomats" }
+event: { type: Message,              sound: "News_06_Ele_aan_Diplomats" }
 
 
 event: { type: Camera,     time:  10, param: (6,30), target: Consul }

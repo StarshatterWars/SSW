@@ -200,7 +200,7 @@ event: { type: Camera,                param: 3, target: "body:Jarnell",   vec: (
 event: { type: Camera,                param: 5,                           vec: (-0.12, 0.01, 0.01) }
 event: { type: Display,               message: "The PRESIDENT of the TERELLIAN ALLIANCE",            font: Limerick18,     color: 0xffffff80, fade: (1,10,1), rect: (20,20, 300,300) }
 
-event: { type: Messasge,              sound: "News_02_President_Speech" }
+event: { type: Message,              sound: "News_02_President_Speech" }
 
 
 event: { type: Display,    time:  10, image: "Map", color: 0xffffffff, fade: (1,6,1), rect: (-280,-280,256,256) }

@@ -137,6 +137,7 @@ public:
     const FS_CombatGroup* FindCombatGroupByName(const FString& GroupName) const;
 
 private:
+    friend class USSWDesignIngestionCommandlet;
     void BuildIndexes();
     void ClearCombatGroupData();
 

@@ -324,6 +324,7 @@ protected:
     TArray<OrbitalRegion*> RuntimeRegions;
 
 private:
+    friend class USSWDesignIngestionCommandlet;
     // Cached GI (kept)
     USSWGameInstance* SSWInstance = nullptr;
 

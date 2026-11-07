@@ -38,18 +38,15 @@ ComponentDesign::~ComponentDesign()
 
 // +----------------------------------------------------------------------+
 
-SimComponent::SimComponent(ComponentDesign* d, SimSystem* s)
+SimComponent::SimComponent(const ComponentDesign& d, SimSystem* s)
 	: design(d),
 	availability(100.0f),
 	time_remaining(0.0f),
-	spares(0),
+	spares(d.spares),
 	jerried(0),
 	system(s)
 {
 	Status = SYSTEM_STATUS::NOMINAL;
-	
-	if (design)
-		spares = design->spares;
 }
 
 // +----------------------------------------------------------------------+
@@ -139,7 +136,7 @@ SimComponent::Repair()
 {
 	if (Status < SYSTEM_STATUS::NOMINAL) {
 		Status = SYSTEM_STATUS::REPAIR;
-		time_remaining = design->repair_time;
+		time_remaining = design.repair_time;
 
 		if (system)
 			system->CalcStatus();
@@ -154,7 +151,7 @@ SimComponent::Replace()
 	if (Status <= SYSTEM_STATUS::NOMINAL) {
 		Status = SYSTEM_STATUS::REPLACE;
 		spares--;
-		time_remaining = design->replace_time;
+		time_remaining = design.replace_time;
 
 		if (system)
 			system->CalcStatus();

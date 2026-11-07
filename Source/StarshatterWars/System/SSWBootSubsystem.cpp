@@ -19,6 +19,7 @@
 
 #include "Engine/GameInstance.h"
 
+#include "Game.h"
 #include "GameStructs.h"
 #include "GameStructs_UI.h"
 #include "SSWGameInstance.h"
@@ -53,6 +54,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogSSWBoot, Log, All);
 void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
+    Game::VersionInfo = GameVersion;
 
     UE_LOG(LogSSWBoot, Log, TEXT("[BOOT] Initialize"));
 

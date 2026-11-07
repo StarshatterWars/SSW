@@ -1587,7 +1587,7 @@ void UStarshatterGameDataSubsystem::LoadSingleMissions()
                     TEXT("[SingleMissions] Registry key Data.SingleMissionTable did not resolve a DataTable."));
             }
         }
-        else
+        else if (!SingleMissionsDataTable)
         {
             UE_LOG(LogTemp, Error, TEXT("[SMTRACE][03] AssetRegistry subsystem MISSING"));
         }
@@ -5756,6 +5756,14 @@ void UStarshatterGameDataSubsystem::LoadContentBundle()
 // +--------------------------------------------------------------------+
 
 
+static TSoftObjectPtr<UTexture2D> AwardImageReference(const TCHAR* Folder, const FString& Id)
+{
+    if (Id.IsEmpty()) return {};
+    const FString Asset = FPaths::GetBaseFilename(Id);
+    const FString Path = FString::Printf(TEXT("/Game/UI/%s/%s.%s"), Folder, *Asset, *Asset);
+    return TSoftObjectPtr<UTexture2D>(FSoftObjectPath(Path));
+}
+
 void UStarshatterGameDataSubsystem::LoadAwardTables()
 {
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::LoadAwardTables()"));
@@ -5886,6 +5894,7 @@ void UStarshatterGameDataSubsystem::LoadAwardTables()
 		int32  LocalMinShipClass = 0;
 		int32  LocalMaxShipClass = MAX_int32;
 		FMedalInfo Eligibility;
+        Eligibility.bEligibilityConfigured = true;
 
 		for (int32 i = 0; i < (int32)Val->elements()->size(); ++i)
 		{
@@ -5924,6 +5933,7 @@ void UStarshatterGameDataSubsystem::LoadAwardTables()
 			else if (Key == "campaign_complete") { GetDefBool(bLocalCampaignComplete, PDef, FileNameAnsi); }
 			else if (Key == "dynamic_campaign") { GetDefBool(bLocalDynamicCampaign, PDef, FileNameAnsi); }
 			else if (Key == "ceremony") { GetDefBool(bLocalCeremony, PDef, FileNameAnsi); }
+            else if (Key == "eligibility_configured") { GetDefBool(Eligibility.bEligibilityConfigured, PDef, FileNameAnsi); }
 
 			else if (Key == "min_ship_class")
 			{
@@ -5965,6 +5975,8 @@ void UStarshatterGameDataSubsystem::LoadAwardTables()
 
 			RankRow.SmallImageId = FString(LocalSmall);
 			RankRow.LargeImageId = FString(LocalLarge);
+            RankRow.SmallImage = AwardImageReference(TEXT("Ranks"), RankRow.SmallImageId);
+            RankRow.LargeImage = AwardImageReference(TEXT("Ranks"), RankRow.LargeImageId);
 			RankRow.GrantSoundId = FString(LocalGrantSound);
 
 			RankRow.GrantedShipClasses = LocalGrant;
@@ -5988,13 +6000,15 @@ void UStarshatterGameDataSubsystem::LoadAwardTables()
 			MedalRow.TotalPoints = LocalTotalPoints;
 			MedalRow.MinShipClass = LocalMinShipClass;
 			MedalRow.MaxShipClass = LocalMaxShipClass;
-			MedalRow.bEligibilityConfigured = true;
+			MedalRow.bEligibilityConfigured = Eligibility.bEligibilityConfigured;
 			MedalRow.MedalId = LocalId;
 			MedalRow.Name = NameStr;
 			MedalRow.Desc = FString(LocalDesc);
 			MedalRow.AwardText = FString(LocalAwardText);
 			MedalRow.SmallImageId = FString(LocalSmall);
 			MedalRow.LargeImageId = FString(LocalLarge);
+            MedalRow.SmallImage = AwardImageReference(TEXT("Awards"), MedalRow.SmallImageId);
+            MedalRow.LargeImage = AwardImageReference(TEXT("Awards"), MedalRow.LargeImageId);
 			MedalRow.GrantSoundId = FString(LocalGrantSound);
 
 			MedalRow.CampaignId = LocalCampaignId;

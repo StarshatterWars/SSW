@@ -63,7 +63,7 @@ public:
 
 	void              SetName(const char* n) { name = n; }
 	void              SetAbbreviation(const char* a) { abrv = a; }
-	void              SetDesign(SystemDesign* d);
+	void              SetDesign(const SystemDesign* d);
 
 	virtual int       GetValue()        const { return (int)(max_value * availability * 100); }
 	int               GetMaxValue()     const { return (int)(max_value * 100); }
@@ -179,7 +179,6 @@ protected:
 	EExplosionType    explosion_type;
 
 	// Subcomponents:
-	SystemDesign* design;
 	List<SimComponent>  components;
 };
 

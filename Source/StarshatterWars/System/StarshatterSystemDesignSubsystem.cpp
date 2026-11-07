@@ -22,8 +22,38 @@
 
 #include "Engine/DataTable.h"
 #include "FormattingUtils.h"
+#include "SystemDesign.h"
+#include "SimComponent.h"
 #include "DataTableUtils.h"
 #include "StarshatterAssetRegistrySubsystem.h"
+
+
+namespace
+{
+void PublishSystemComponents(const TMap<FName, FSystemDesign>& Rows)
+{
+    // Runtime components own a copy of their design and survive a catalog reload.
+    SystemDesign::Close();
+    for (const auto& Row : Rows)
+    {
+        const FSystemDesign& Source = Row.Value;
+        auto* Design = new SystemDesign;
+        Design->name = TCHAR_TO_UTF8(*Source.Name);
+        for (const FComponentDesign& Entry : Source.Components)
+        {
+            auto* Component = new ComponentDesign;
+            Component->name = TCHAR_TO_UTF8(*Entry.Name);
+            Component->abrv = TCHAR_TO_UTF8(*Entry.Abbrev);
+            Component->repair_time = Entry.RepairTime;
+            Component->replace_time = Entry.ReplaceTime;
+            Component->spares = Entry.Spares;
+            Component->affects = Entry.Affects;
+            Design->components.append(Component);
+        }
+        SystemDesign::catalog.append(Design);
+    }
+}
+}
 
 
 void UStarshatterSystemDesignSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -69,11 +99,17 @@ void UStarshatterSystemDesignSubsystem::Deinitialize()
 void UStarshatterSystemDesignSubsystem::LoadAll(bool bLoaded)
 {
     UE_LOG(LogTemp, Log, TEXT("UStarshatterShipDesignSubsystem::LoadAll()"));
-    if (!bLoaded)
-        return;
-
-    LoadSystemDesigns();
-    bLoaded = true;
+    if (bLoaded)
+    {
+        LoadSystemDesigns();
+    }
+    else if (SystemDesignDataTable && SystemDesignDataTable->GetRowStruct() == FSystemDesign::StaticStruct())
+    {
+        DesignsByName.Reset();
+        for (const auto& Row : SystemDesignDataTable->GetRowMap())
+            DesignsByName.Add(Row.Key, *reinterpret_cast<const FSystemDesign*>(Row.Value));
+        PublishSystemComponents(DesignsByName);
+    }
 }
 
 void UStarshatterSystemDesignSubsystem::LoadSystemDesigns()
@@ -303,6 +339,9 @@ void UStarshatterSystemDesignSubsystem::LoadSystemDesign(const char* Filename)
     }
 
     delete TermObj;
+
+    if (ParsedSystems > 0)
+        PublishSystemComponents(DesignsByName);
 
     UE_LOG(LogTemp, Log, TEXT("[SYSTEM] Loaded %d system designs (cache=%d) from '%s'"),
         ParsedSystems, DesignsByName.Num(), *FilePath);

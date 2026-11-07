@@ -68,7 +68,7 @@ event: { type: Display,    message: "Operation Nightfall", font: Limerick18, col
 event: { type: Display,    message: "Defeat",                    font: Limerick18, color: 0xffffff80, fade: (0,73,0), rect: (20,42, 600,100) }
 
 event: {
-   event: Message
+   type: Message
    time:  3
    sound: "End_03_Defeat"
 }

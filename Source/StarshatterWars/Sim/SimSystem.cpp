@@ -58,7 +58,6 @@ SimSystem::SimSystem(SYSTEM_CATEGORY t, int s, const char* n, int maxv,
 	power_on(true),
 	emcon(3),
 	explosion_type(EExplosionType::NONE),
-	design(0),
 	components()
 {
 	name = n;
@@ -102,20 +101,16 @@ SimSystem::SimSystem(const SimSystem& s)
 	power_on(s.power_on),
 	emcon(s.emcon),
 	explosion_type(s.explosion_type),
-	design(s.design),
 	components()
 {
 	name = s.name;
 	abrv = s.abrv;
 
-	if (design) {
-		// cast-away const (matches original Starshatter behavior):
-		ListIter<SimComponent> c = (List<SimComponent>&) s.components;
-		while (++c) {
-			SimComponent* comp = new SimComponent(*(c.value()));
-			comp->SetSystem(this);
-			components.append(comp);
-		}
+	ListIter<SimComponent> c = (List<SimComponent>&) s.components;
+	while (++c) {
+		SimComponent* comp = new SimComponent(*(c.value()));
+		comp->SetSystem(this);
+		components.append(comp);
 	}
 
 	emcon_power[0] = s.emcon_power[0];
@@ -133,22 +128,13 @@ SimSystem::~SimSystem()
 // +--------------------------------------------------------------------+
 
 void
-SimSystem::SetDesign(SystemDesign* d)
+SimSystem::SetDesign(const SystemDesign* d)
 {
-	if (design) {
-		design = 0;
-		components.destroy();
-	}
+	components.destroy();
+	if (!d) return;
 
-	if (d) {
-		design = d;
-
-		ListIter<ComponentDesign> cd = design->components;
-		while (++cd) {
-			SimComponent* comp = new SimComponent(cd.value(), this);
-			components.append(comp);
-		}
-	}
+	for (int i = 0; i < d->components.size(); ++i)
+		components.append(new SimComponent(*d->components[i], this));
 }
 
 // +--------------------------------------------------------------------+

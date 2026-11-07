@@ -162,5 +162,6 @@ private:
 private:
     bool bBootComplete = false;
     bool bNeedsFirstRun = false;
+    FString GameVersion = TEXT("6.0 Alpha 2");
     bool bRebuildTables = true;
 };

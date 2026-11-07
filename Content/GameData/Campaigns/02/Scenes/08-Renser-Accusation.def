@@ -162,7 +162,7 @@ event: { type: Camera,                param: 3,  target: "body:Renser",   vec: (
 event: { type: Camera,                param: 5,                           vec: (-0.13, 0.01, 0.02) }
 
 event: {
-   event: Message
+   type: Message
    time:  6
    sound: "News_08_Renser_Accusation"
 }

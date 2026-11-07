@@ -150,7 +150,7 @@ event: { type: Camera,                param: 5,                           vec: (
 event: { type: Display,    time:   1, message: "The PRESIDENT of the TERELLIAN ALLIANCE",            font: Limerick18,     color: 0xffffff80, fade: (1,9,1), rect: (20,20, 300,300) }
 
 event: {
-   event: Message
+   type: Message
    time:  2
    sound: "News_13_Renser_Invasion"
 }

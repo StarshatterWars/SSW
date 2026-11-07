@@ -38,7 +38,7 @@ event: { type: Display,    time:   5, fade: (0,90,0), rect: (20,190, 600,800), f
 
 
 event: {
-   event: Message
+   type: Message
    time:  5
    sound: "Mail_03_Down_for_Repairs"
 }

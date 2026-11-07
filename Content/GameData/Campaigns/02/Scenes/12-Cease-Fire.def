@@ -289,7 +289,7 @@ event: { type: Camera,                param: 5,                           vec: (
 event: { type: Display,               message: "Jalah Sector",            font: Limerick18,     color: 0xffffff80, fade: (1,9,1), rect: (20,20, 300,100) }
 
 event: {
-   event: Message
+   type: Message
    time:  5
    sound: "News_12_Cease_Fire"
 }

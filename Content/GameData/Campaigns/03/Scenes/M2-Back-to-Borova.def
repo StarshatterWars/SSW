@@ -36,7 +36,7 @@ event: { type: Display,    time:   5, fade: (0,80,0), rect: (20,190, 600,800), f
 
 
 event: {
-   event: Message
+   type: Message
    time:  5
    sound: "Mail_02_Back_to_Borova"
 }

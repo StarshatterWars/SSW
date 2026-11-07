@@ -45,7 +45,7 @@ I don't have very much time.  I could be discovered at any moment.  I need to ke
 
 
 event: {
-   event: Message
+   type: Message
    time:  5
    sound: "Mail_02_Final_Message"
 }

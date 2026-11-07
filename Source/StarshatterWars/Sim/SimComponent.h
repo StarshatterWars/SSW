@@ -64,18 +64,18 @@ public:
 		DAMAGE_STABILITY = 0x04
 	};
 
-	SimComponent(ComponentDesign* d, SimSystem* s);
+	SimComponent(const ComponentDesign& d, SimSystem* s);
 	SimComponent(const SimComponent& c);
 	virtual ~SimComponent();
 
-	const char* Name()         const { return design->name; }
-	const char* Abbreviation() const { return design->abrv; }
-	float       RepairTime()   const { return design->repair_time; }
-	float       ReplaceTime()  const { return design->replace_time; }
+	const char* Name()         const { return design.name; }
+	const char* Abbreviation() const { return design.abrv; }
+	float       RepairTime()   const { return design.repair_time; }
+	float       ReplaceTime()  const { return design.replace_time; }
 
-	bool DamageEfficiency() const { return (design->affects & DAMAGE_EFFICIENCY) ? true : false; }
-	bool DamageSafety()     const { return (design->affects & DAMAGE_SAFETY) ? true : false; }
-	bool DamageStability()  const { return (design->affects & DAMAGE_STABILITY) ? true : false; }
+	bool DamageEfficiency() const { return (design.affects & DAMAGE_EFFICIENCY) ? true : false; }
+	bool DamageSafety()     const { return (design.affects & DAMAGE_SAFETY) ? true : false; }
+	bool DamageStability()  const { return (design.affects & DAMAGE_STABILITY) ? true : false; }
 
 	SYSTEM_STATUS	GetStatus() const { return Status; }
 	void			SetStatus(SYSTEM_STATUS stat) { Status = stat; }
@@ -94,7 +94,7 @@ public:
 	virtual void Replace();
 
 protected:
-	ComponentDesign* design;
+	ComponentDesign design;
 
 	// Component health status:
 	SYSTEM_STATUS	Status;
