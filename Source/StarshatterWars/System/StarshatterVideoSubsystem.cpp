@@ -1,6 +1,6 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright (C) 2025–2026.
+    Copyright (C) 2025ï¿½2026.
     All Rights Reserved.
 
     SUBSYSTEM:    StarshatterWars (Unreal Engine)
@@ -15,6 +15,10 @@
 
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "Engine/Level.h"
+#include "Components/MeshComponent.h"
+#include "Materials/Material.h"
+#include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
@@ -27,11 +31,13 @@
 void UStarshatterVideoSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
+    LevelAddedHandle = FWorldDelegates::LevelAddedToWorld.AddUObject(this, &UStarshatterVideoSubsystem::ApplyLevelVisualSettings);
     // Boot is orchestrated by StarshatterBootSubsystem (intentionally not auto-booting here)
 }
 
 void UStarshatterVideoSubsystem::Deinitialize()
 {
+    FWorldDelegates::LevelAddedToWorld.Remove(LevelAddedHandle);
     Super::Deinitialize();
 }
 
@@ -283,8 +289,15 @@ void UStarshatterVideoSubsystem::ApplySettingsToRuntime()
     if(GEngine) GEngine->DisplayGamma=FMath::Clamp(2.2f*CurrentConfig.GammaLevel/128.f,0.5f,4.f);
     auto SetCVar=[](const TCHAR* Name,int32 Value){if(auto* C=IConsoleManager::Get().FindConsoleVariable(Name))C->Set(Value,ECVF_SetByGameSetting);};
     SetCVar(TEXT("r.LensFlareQuality"),CurrentConfig.bLensFlare?2:0);
+    SetCVar(TEXT("ShowFlag.Specular"), CurrentConfig.bSpecularMaps ? 2 : 0);
     SetCVar(TEXT("r.DetailMode"),CurrentConfig.TerrainDetailIndex);
     SetCVar(TEXT("r.MaterialQualityLevel"),(CurrentConfig.bBumpMaps||CurrentConfig.bSpecularMaps)?1:0);
+
+    if (UWorld* World = GetGameInstance()->GetWorld())
+    {
+        for (ULevel* Level : World->GetLevels())
+            ApplyLevelVisualSettings(Level, World);
+    }
 
     OnVideoChangeRequested.Broadcast(CurrentConfig);
 
@@ -296,6 +309,61 @@ void UStarshatterVideoSubsystem::ApplySettingsToRuntime()
 // SaveGame bridging
 // +--------------------------------------------------------------------+
 
+void UStarshatterVideoSubsystem::ApplyLevelVisualSettings(ULevel* Level, UWorld* World)
+{
+    if (!Level || !World || !World->IsGameWorld() || World->GetGameInstance() != GetGameInstance())
+        return;
+
+    for (auto It = HiddenNebulaActors.CreateIterator(); It; ++It)
+    {
+        AActor* Actor = It->Get();
+        if (!Actor || (CurrentConfig.bNebula && Actor->GetLevel() == Level))
+        {
+            if (Actor)
+                Actor->SetActorHiddenInGame(false);
+            It.RemoveCurrent();
+        }
+    }
+
+
+    for (auto It = HiddenCoronaMeshes.CreateIterator(); It; ++It)
+    {
+        UMeshComponent* Mesh = It->Get();
+        if (!Mesh || (CurrentConfig.bCorona && Mesh->GetOwner()->GetLevel() == Level))
+        {
+            if (Mesh)
+                Mesh->SetHiddenInGame(false);
+            It.RemoveCurrent();
+        }
+    }
+
+    for (AActor* Actor : Level->Actors)
+    {
+        if (!CurrentConfig.bNebula && IsValid(Actor) && !Actor->IsHidden() &&
+            Actor->GetClass()->GetOutermost()->GetName().StartsWith(TEXT("/Game/VolumetricNebula/Blueprints/")))
+        {
+            Actor->SetActorHiddenInGame(true);
+            HiddenNebulaActors.Add(Actor);
+        }
+        if (CurrentConfig.bCorona || !IsValid(Actor) ||
+            !Actor->GetClass()->GetOutermost()->GetName().EndsWith(TEXT("/Blueprints/BP_Star")))
+            continue;
+
+        TInlineComponentArray<UMeshComponent*> Meshes(Actor);
+        for (UMeshComponent* Mesh : Meshes)
+        {
+            if (Mesh->bHiddenInGame || Mesh->GetNumMaterials() != 1)
+                continue;
+            UMaterialInterface* Material = Mesh->GetMaterial(0);
+            const UMaterial* Base = Material ? Material->GetMaterial() : nullptr;
+            if (Base && Base->GetOutermost()->GetName().Contains(TEXT("/Materials/Coronal_Flares/")))
+            {
+                Mesh->SetHiddenInGame(true);
+                HiddenCoronaMeshes.Add(Mesh);
+            }
+        }
+    }
+}
 void UStarshatterVideoSubsystem::LoadFromSaveGame(const UStarshatterSettingsSaveGame* SaveGame)
 {
     if (!SaveGame)

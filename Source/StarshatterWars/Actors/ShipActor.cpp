@@ -60,6 +60,8 @@
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInterface.h"
 #include "Engine/World.h"
+#include "Camera/PlayerCameraManager.h"
+#include "GameFramework/PlayerController.h"
 
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
@@ -78,6 +80,11 @@
 static TAutoConsoleVariable<int32> CVarCacheEngineParameters(
     TEXT("ssw.VFX.CacheEngineParameters"), 1,
     TEXT("Cache unchanged main-engine Niagara parameters. 0 restores per-frame uploads for profiling."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<int32> CVarCullDistantRCS(
+    TEXT("ssw.VFX.CullDistantRCS"), 0,
+    TEXT("Skip distant non-player maneuvering exhaust. Main exhaust and navigation lights are unaffected."),
     ECVF_Default);
 
 template<typename T>
@@ -619,7 +626,7 @@ void AShipActor::UpdateLaunchBayFill()
         LaunchBayFill->SetRelativeLocation(FVector(90, -75, 220));
         LaunchBayFill->SetLightColor(FLinearColor(0.82f, 0.91f, 1.0f));
         LaunchBayFill->SetIntensityUnits(ELightUnits::Candelas);
-        LaunchBayFill->SetIntensity(350.0f);
+        LaunchBayFill->SetIntensity(230.0f);
         LaunchBayFill->SetAttenuationRadius(650.0f);
         LaunchBayFill->SetCastShadows(false);
         LaunchBayFill->RegisterComponent();
@@ -2534,13 +2541,13 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
 
         const FVector BaseScale = RuntimeMainEngineBaseScales.IsValidIndex(EmitterIndex)
             ? RuntimeMainEngineBaseScales[EmitterIndex] : FVector::OneVector;
-        Emitter->SetRelativeScale3D(RuntimeScale * BaseScale);
-
-        Emitter->SetVisibility(
-            bActive);
-
-        Emitter->SetHiddenInGame(
-            !bActive);
+        const FVector DesiredScale = RuntimeScale * BaseScale;
+        if (Emitter->GetRelativeScale3D() != DesiredScale)
+            Emitter->SetRelativeScale3D(DesiredScale);
+        if (Emitter->IsVisible() != bActive)
+            Emitter->SetVisibility(bActive);
+        if (Emitter->bHiddenInGame == bActive)
+            Emitter->SetHiddenInGame(!bActive);
 
         // Niagara queues deferred writes even when the value is unchanged.
         // Keep every real throttle change; never quantize or defer engine spool-up.
@@ -2951,6 +2958,22 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
         && MainDrive->GetStatus() > SYSTEM_STATUS::CRITICAL
         ? FMath::Clamp(MainDrive->GetThrottle(), 0.0f, 1.0f) : 0.0f;
 
+    // Maneuvering jets are small, unlike drive exhaust. Keep the entire
+    // effect on the player and nearby ships, and resume from the current burn
+    // when a distant ship comes back into view.
+    bool bCullManeuveringJets = false;
+    if (!RuntimeShip->IsPlayer() && CVarCullDistantRCS.GetValueOnGameThread() != 0)
+    {
+        const UWorld* World = GetWorld();
+        const APlayerController* Controller = World && World->IsGameWorld() ? World->GetFirstPlayerController() : nullptr;
+        if (Controller && Controller->PlayerCameraManager)
+        {
+            const double Range = FMath::Max(12000.0, RuntimeShip->GetRadius() * 40.0);
+            bCullManeuveringJets = FVector::DistSquared(Controller->PlayerCameraManager->GetCameraLocation(),
+                GetActorLocation()) > FMath::Square(Range);
+        }
+    }
+
     // Visit each cached emitter once, rather than searching the array per port.
     for (FRuntimeThrusterFX& Entry : RuntimeThrusterFX)
     {
@@ -2964,7 +2987,7 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
 
         // Thruster::ExecTrans already resolves the Fire mask into Port->Burn.
         // Applying another directional test here suppressed rotational jets.
-        const float VisualBurn = bMainEngine ? FMath::Max(Burn, DriveBurn) : Burn;
+        const float VisualBurn = bMainEngine ? FMath::Max(Burn, DriveBurn) : (bCullManeuveringJets ? 0.0f : Burn);
         const float DeadZone = 0.01f;
         const float VisualBurnFiltered = VisualBurn <= DeadZone ? 0.0f
             : FMath::Sqrt(FMath::GetMappedRangeValueClamped(

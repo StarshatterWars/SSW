@@ -18,6 +18,15 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 
+FInputActionValue USSWMouseFlightModifier::ModifyRaw_Implementation(
+    const UEnhancedPlayerInput*, FInputActionValue CurrentValue, float)
+{
+    const auto& Config = UStarshatterControlsSettings::Get()->GetControlsConfig();
+    const float Scale = Config.MouseSensitivity / 25.0f;
+    const float Direction = bVerticalAxis && Config.bMouseInvert ? -1.0f : 1.0f;
+    return FInputActionValue(CurrentValue.Get<float>() * Scale * Direction);
+}
+
 UStarshatterControlsSettings* UStarshatterControlsSettings::Get()
 {
     return GetMutableDefault<UStarshatterControlsSettings>();
@@ -182,8 +191,4 @@ void UStarshatterControlsSettings::ApplyToEnhancedInput(UObject* WorldContextObj
     UInputMappingContext* Selected = ResolveContextForModel();
     InstallOnlySelectedContext(EIS, Selected);
 
-    // Sensitivity and invert:
-    // Enhanced Input has no global mouse sensitivity or invert settings.
-    // Apply these in your input handling code (pawn/controller) by reading:
-    // UStarshatterControlsSettings::Get()->GetControlsConfig().
 }

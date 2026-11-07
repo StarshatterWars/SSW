@@ -27,6 +27,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
+#include "InputModifiers.h"
 
 // Canonical enum + struct live here:
 #include "GameStructs.h"
@@ -36,6 +37,18 @@
 class UObject;
 class UInputMappingContext;
 class UEnhancedInputLocalPlayerSubsystem;
+
+UCLASS()
+class USSWMouseFlightModifier : public UInputModifier
+{
+    GENERATED_BODY()
+
+public:
+    UPROPERTY()
+    bool bVerticalAxis = false;
+    virtual FInputActionValue ModifyRaw_Implementation(
+        const UEnhancedPlayerInput* PlayerInput, FInputActionValue CurrentValue, float DeltaTime) override;
+};
 
 UCLASS(Config = Game, DefaultConfig)
 class STARSHATTERWARS_API UStarshatterControlsSettings : public UObject

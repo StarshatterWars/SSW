@@ -1,5 +1,6 @@
 #include "SpaceDustComponent.h"
 #include "StarshatterVideoSettings.h"
+#include "StarshatterVideoSubsystem.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
@@ -31,13 +32,16 @@ void USpaceDustComponent::TickComponent(float DeltaTime,ELevelTick TickType,FAct
     if(!bPlayerActive || !GetWorld())return;
     auto* PC=GetWorld()->GetFirstPlayerController();if(!PC || !PC->PlayerCameraManager)return;
     const FVector Camera=PC->PlayerCameraManager->GetCameraLocation();
-    const int32 Level=FMath::Clamp(GetDefault<UStarshatterVideoSettings>()->GetConfig().DustLevel,0,3);
+    const UStarshatterVideoSubsystem* Video = UStarshatterVideoSubsystem::Get(this);
+    const int32 Level = FMath::Clamp(Video ? Video->GetConfig().DustLevel :
+        GetDefault<UStarshatterVideoSettings>()->GetConfig().DustLevel, 0, 3);
     const int32 Count=Level*64;
     if(Specks.Num()!=Count)
     {
         ClearInstances();Specks.SetNum(Count);DustTransforms.SetNum(Count);bHaveCamera=false;
         for(int32 I=0;I<Count;++I)AddInstance(FTransform::Identity);
     }
+    if (Count == 0) return;
     const FVector Motion=bHaveCamera ? Camera-PreviousCamera : FVector::ZeroVector;
     const bool Reset=!bHaveCamera || Motion.SizeSquared()>FMath::Square(DustRadius);
     const FVector Direction=Motion.IsNearlyZero()?FVector::ForwardVector:Motion.GetSafeNormal();

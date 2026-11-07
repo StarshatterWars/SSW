@@ -34,17 +34,13 @@ bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
         // The player's preview has a fixed view and HUD tint. Refresh briefly
         // during streaming, then reuse the render target until the design changes.
         const double Now = FPlatformTime::Seconds();
-        const bool bCaptureDue = !bPlayerPanel ||
-            (StaticWarmupCaptures > 0 && Now >= NextStaticCaptureAt);
+        const bool bCaptureDue = StaticWarmupCaptures > 0 && Now >= NextStaticCaptureAt;
         if(!GUsingNullRHI && Capture.IsValid() && !bHasLiveView && bCaptureDue)
         {
             Scene->GetWorld()->SendAllEndOfFrameUpdates();
             Capture->GetCaptureComponent2D()->CaptureScene();
-            if (bPlayerPanel)
-            {
-                --StaticWarmupCaptures;
-                NextStaticCaptureAt = Now + 1.0;
-            }
+            --StaticWarmupCaptures;
+            NextStaticCaptureAt = Now + 1.0;
         }
         return true;
     }
@@ -108,13 +104,13 @@ void FShipMFDPreview::SetView(const FQuat& TargetRotation,const FVector& ToObser
     TRACE_CPUPROFILER_EVENT_SCOPE(SSW_TargetMFD);
     const double Now = FPlatformTime::Seconds();
     const FQuat Rotation = TargetRotation.GetNormalized();
-    Visual->SetActorRotation(Rotation);
     if (bHasLiveView && Now < NextLiveCaptureAt) return;
     const FVector Direction = ToObserver.GetSafeNormal();
     const bool bViewChanged = !bHasLiveView || !Rotation.Equals(LastTargetRotation, 0.00001)
         || !Direction.Equals(LastObserverDirection, 0.00001)
         || !ObserverUp.Equals(LastObserverUp, 0.00001);
     if (!bViewChanged && (StaticWarmupCaptures == 0 || Now < NextStaticCaptureAt)) return;
+    Visual->SetActorRotation(Rotation);
     bHasLiveView = true;
     LastTargetRotation = Rotation;
     LastObserverDirection = Direction;

@@ -1,6 +1,6 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright (C) 2025–2026.
+    Copyright (C) 2025ï¿½2026.
     All Rights Reserved.
 
     SUBSYSTEM:    StarshatterWars (Unreal Engine)
@@ -110,7 +110,7 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Starshatter|Video")
     void LoadFromSaveGame(const UStarshatterSettingsSaveGame* SaveGame);
 
-    /** Push subsystem CurrentConfig into unified SaveGame’s Video struct. */
+    /** Push subsystem CurrentConfig into unified SaveGameï¿½s Video struct. */
     UFUNCTION(BlueprintCallable, Category = "Starshatter|Video")
     void WriteToSaveGame(UStarshatterSettingsSaveGame* SaveGame) const;
 
@@ -138,6 +138,11 @@ public:
     FString ResolveConfigPath(const FString& InRelativeOrAbsolutePath) const;
 
 private:
+    void ApplyLevelVisualSettings(ULevel* Level, UWorld* World);
+    FDelegateHandle LevelAddedHandle;
+    TSet<TWeakObjectPtr<AActor>> HiddenNebulaActors;
+    TSet<TWeakObjectPtr<class UMeshComponent>> HiddenCoronaMeshes;
+
     // -----------------------------
     // Internal State
     // -----------------------------

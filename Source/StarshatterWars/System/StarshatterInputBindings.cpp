@@ -1,5 +1,6 @@
 #include "StarshatterInputBindings.h"
 #include "StarshatterKeyboardSettings.h"
+#include "StarshatterControlsSettings.h"
 #include "InputMappingContext.h"
 #include "InputAction.h"
 #include "InputModifiers.h"
@@ -84,7 +85,8 @@ bool StarshatterInputBindings::IsModifierDown(APlayerController* Controller,cons
 FString StarshatterInputBindings::Id(const FEnhancedActionKeyMapping& Mapping)
 {
     FString Settings;
-    for (const auto& Modifier:Mapping.Modifiers) Settings+=Signature(Modifier);
+    for (const auto& Modifier : Mapping.Modifiers)
+        if (!Cast<USSWMouseFlightModifier>(Modifier)) Settings += Signature(Modifier);
     for (const auto& Trigger:Mapping.Triggers) Settings+=Signature(Trigger);
     const FString ActionId=Mapping.Action && Mapping.Action->GetName().StartsWith(TEXT("SSW_"))?Mapping.Action->GetName():GetPathNameSafe(Mapping.Action.Get());
     return ActionId+TEXT("|")+Mapping.Key.ToString()+TEXT("|")+FMD5::HashAnsiString(*Settings);
@@ -138,7 +140,22 @@ void StarshatterInputBindings::Refresh()
         for (int32 Index=0;Index<Item.Ids.Num() && Index<Item.Context->GetMappings().Num();++Index)
         {
             const FKey* Key=Config.EnhancedBindings.Find(Item.Ids[Index]);
-            Item.Context->GetMapping(Index).Key=Key && Key->IsValid()?*Key:Item.Defaults[Index];
+            auto& Mapping = Item.Context->GetMapping(Index);
+            Mapping.Key = Key && Key->IsValid() ? *Key : Item.Defaults[Index];
+
+            Mapping.Modifiers.RemoveAll([](const auto& Modifier)
+            {
+                return Cast<USSWMouseFlightModifier>(Modifier) != nullptr;
+            });
+            if (!Mapping.Action || (Mapping.Key != EKeys::MouseX && Mapping.Key != EKeys::MouseY))
+                continue;
+            const FName Action = Mapping.Action->GetFName();
+            if (Action == TEXT("IA_Pitch") || Action == TEXT("IA_Yaw") || Action == TEXT("IA_Roll"))
+            {
+                auto* Modifier = NewObject<USSWMouseFlightModifier>(Item.Context.Get());
+                Modifier->bVerticalAxis = Mapping.Key == EKeys::MouseY;
+                Mapping.Modifiers.Insert(Modifier, 0);
+            }
         }
 }
 
