@@ -1,5 +1,6 @@
-#include "ShipVisualCatalog.h"
+
 #include "ContactsDlg.h"
+#include "ShipVisualCatalog.h"
 #include "FormattingUtils.h"
 #include "MissionBriefingDlg.h"
 #include "MissionObjectTarget.h"

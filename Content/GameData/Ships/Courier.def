@@ -283,7 +283,7 @@ death_spiral: {
    debris_count:     20,
    debris_life:      15,
 
-   debris:           "Debris0C.",
+   debris:           "Debris0C",
    debris_loc:       (0,0,0),
    debris_mass:      1,
    debris_count:     10,

@@ -18,9 +18,9 @@
     Shared read-only region view for Mission Navigation and Operations.
 */
 
-#include "ShipVisualCatalog.h"
-#include "SectorMapPanel.h"
 
+#include "SectorMapPanel.h"
+#include "ShipVisualCatalog.h"
 #include "MissionNavDlg.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "StarSystem.h"

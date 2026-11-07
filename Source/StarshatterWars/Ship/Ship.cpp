@@ -16,6 +16,7 @@
 */
 #include "Ship.h"
 #include "ShipActor.h"
+#include "CapitalShipActor.h"
 #include "MeshCollision.h"
 #include "CoreMinimal.h"        // UE_LOG, FVector, basic UE types
 #include "Math/Vector.h"        // FVector (explicit)
@@ -6150,7 +6151,10 @@ Ship::InflictDamage(double damage, SimShot* shot, int hit_type, FVector impact)
 		impact = GetLocation();
 
 	if (hit_shield && GetShieldStrength() > 0) {
-		hull_damage = shield->DeflectDamage(shot, damage);
+        hull_damage = shield->DeflectDamage(shot, damage);
+        if (shot && hull_damage < damage)
+            if (auto* Visual = Cast<ACapitalShipActor>(GetNativePresentation()))
+                Visual->ShowShieldImpact(*this, impact);
 
 		if (shot) {
 			if (shot->IsBeam()) {

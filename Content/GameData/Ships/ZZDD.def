@@ -185,7 +185,7 @@ nav:        {
 }
 
 
-map: { sprite: "zmap.pcx" }
+map: { sprite: "zmap" }
 
 
 death_spiral: {

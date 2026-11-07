@@ -205,19 +205,19 @@ gear: {
    hull_factor: 0.5,
 
    gear: {
-      model: "GearNose0.mag",
+      model: "GearNose0",
       start: (0, -14, 73),
       end:   (0, -40, 87)
    },
 
    gear: {
-      model: "GearLeft0.mag",
+      model: "GearLeft0",
       start: (-30, -12, -40),
       end:   (-50, -40, -40)
    },
 
    gear: {
-      model: "GearRight0.mag",
+      model: "GearRight0",
       start: ( 30, -12, -40),
       end:   ( 50, -40, -40)
    },
@@ -276,7 +276,7 @@ death_spiral: {
    final_type:       12,   // LARGE_BURST
    final_loc:        (0, 0, -12),
 
-   debris:           "DebrisX.mag"
+   debris:           "DebrisX"
    debris_loc:       (0,0,-2)
    debris_mass:      20
    debris_count:     4
@@ -286,7 +286,7 @@ death_spiral: {
    debris_drag:      0.3
    debris_speed:     196
 
-   debris:           "DebrisX.mag"
+   debris:           "DebrisX"
    debris_loc:       (0,0,3)
    debris_mass:      20
    debris_count:     3
@@ -299,14 +299,14 @@ death_spiral: {
 
 
 map: {
-   sprite: "ViperMap0.pcx",
-   sprite: "ViperMap1.pcx",
-   sprite: "ViperMap2.pcx",
-   sprite: "ViperMap3.pcx",
-   sprite: "ViperMap4.pcx",
-   sprite: "ViperMap5.pcx",
-   sprite: "ViperMap6.pcx",
-   sprite: "ViperMap7.pcx",
+   sprite: "ViperMap0",
+   sprite: "ViperMap1",
+   sprite: "ViperMap2",
+   sprite: "ViperMap3",
+   sprite: "ViperMap4",
+   sprite: "ViperMap5",
+   sprite: "ViperMap6",
+   sprite: "ViperMap7",
 }
 
 navlight: {

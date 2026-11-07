@@ -1,5 +1,6 @@
-#include "ShipVisualCatalog.h"
+
 #include "FighterHUDDetails.h"
+#include "ShipVisualCatalog.h"
 #include "GearIndicator.h"
 #include "NativeHUDSymbology.h"
 #include "FlightPanelStyle.h"

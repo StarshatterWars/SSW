@@ -185,7 +185,9 @@ void FCockpitDisplays::Update(AFighterActor* Fighter,TSharedRef<SFighterHUDDetai
             W->SetBackgroundColor(I==2?FLinearColor::Transparent:FLinearColor::Black);
             W->SetCollisionEnabled(ECollisionEnabled::NoCollision);W->SetCastShadow(false);W->SetTickWhenOffscreen(true);W->SetRedrawTime(.1f);
             const FVector Right=TR[I]-TL[I],Down=BL[I]-TL[I];const FVector Normal=FVector::CrossProduct(Right,Down).GetSafeNormal();
-            W->SetRelativeLocation(TL[I]+Normal*.03);W->SetRelativeRotation(FRotationMatrix::MakeFromYZ(-Right,-Down).Rotator());
+            // Keep the panel in front of the surface after fighter cockpit scaling.
+            const double SurfaceClearance = I == 2 ? 0.03 : 1.0;
+            W->SetRelativeLocation(TL[I]+Normal*SurfaceClearance);W->SetRelativeRotation(FRotationMatrix::MakeFromYZ(-Right,-Down).Rotator());
             W->SetRelativeScale3D(FVector(1,Right.Size()/(I==2?1024:512),Down.Size()/512));
             W->SetSlateWidget(SNew(SCockpitInstrument,HUD,I,TWeakObjectPtr<AFighterActor>(Fighter)));W->RegisterComponent();Panels.Add(W);
         }

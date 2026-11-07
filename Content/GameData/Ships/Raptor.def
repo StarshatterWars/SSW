@@ -251,19 +251,19 @@ gear: {
    hull_factor: 0.5,
 
    gear: {
-      model: "GearNose0.mag",
+      model: "GearNose0",
       start: (0, -25, 134),
       end:   (0, -50, 148)
    },
 
    gear: {
-      model: "GearLeft0.mag",
+      model: "GearLeft0",
       start: (-20, -30, -64),
       end:   (-45, -60, -64),
    },
 
    gear: {
-      model: "GearRight0.mag",
+      model: "GearRight0",
       start: ( 20, -30, -64),
       end:   ( 45, -60, -64),
    },
@@ -325,7 +325,7 @@ death_spiral: {
    final_type:       12,   // LARGE_BURST
    final_loc:        (0, 0, -32),
 
-   debris:           "DebrisX.mag"
+   debris:           "DebrisX"
    debris_loc:       (0,0,-2)
    debris_mass:      20
    debris_count:     4
@@ -335,7 +335,7 @@ death_spiral: {
    debris_drag:      0.3
    debris_speed:     190
 
-   debris:           "DebrisX.mag"
+   debris:           "DebrisX"
    debris_loc:       (0,0,3)
    debris_mass:      20
    debris_count:     3
@@ -348,14 +348,14 @@ death_spiral: {
 
 
 map: {
-   sprite: "RaptorMap0.pcx",
-   sprite: "RaptorMap1.pcx",
-   sprite: "RaptorMap2.pcx",
-   sprite: "RaptorMap3.pcx",
-   sprite: "RaptorMap4.pcx",
-   sprite: "RaptorMap5.pcx",
-   sprite: "RaptorMap6.pcx",
-   sprite: "RaptorMap7.pcx",
+   sprite: "RaptorMap0",
+   sprite: "RaptorMap1",
+   sprite: "RaptorMap2",
+   sprite: "RaptorMap3",
+   sprite: "RaptorMap4",
+   sprite: "RaptorMap5",
+   sprite: "RaptorMap6",
+   sprite: "RaptorMap7",
 }
 
 navlight: {

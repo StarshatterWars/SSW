@@ -36,8 +36,8 @@ shield:     {
    design:           "Grav",
    factor:           0.02,
    consumption:      6000,
-   bolt_hit_sound:   "shield_hit4.wav",
-   beam_hit_sound:   "shield_hit5.wav",
+   bolt_hit_sound:   "shield_hit4",
+   beam_hit_sound:   "shield_hit5",
 
    pcs:              100,
    loc:              (0, -60, 0),

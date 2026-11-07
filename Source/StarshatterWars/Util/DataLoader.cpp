@@ -221,6 +221,12 @@ DataLoader::LoadGameBitmap(const char* name, Bitmap& bitmap, int type, bool opti
     TArray<FString> Paths;
     if(FPaths::IsRelative(Relative))Paths.Add(FPaths::ProjectContentDir()/TEXT("GameData")/Relative);
     Paths.Add(Relative);
+    if (FPaths::GetExtension(Relative).IsEmpty())
+    {
+        const int32 Count = Paths.Num();
+        for (int32 Index = 0; Index < Count; ++Index)
+            Paths.Add(Paths[Index] + TEXT(".pcx"));
+    }
     for(const FString& Path : Paths)
     {
         int32 W=0,H=0;TArray<FColor> Pixels;

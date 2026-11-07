@@ -133,8 +133,8 @@ quantum: {
 shield: {
    design:           "Grav",
    pcs:              100,
-   bolt_hit_sound:   "shield_hit4.wav",
-   beam_hit_sound:   "shield_hit5.wav",
+   bolt_hit_sound:   "shield_hit4",
+   beam_hit_sound:   "shield_hit5",
 
    loc:              (0, 0, -60),
    size:             48,
@@ -473,11 +473,11 @@ death_spiral: {
    explosion: { type: 13, final: true } // Nuke
    explosion: { type: 12, final: true } // Large burst
 
-   debris:    { model: "BroadswordDebris.mag",  loc: (0,0,200),  mass: 28e3, count:  1, life: 380,
+   debris:    { model: "BroadswordDebris",  loc: (0,0,200),  mass: 28e3, count:  1, life: 380,
                 fire:  (60,60,20), fire:  (-60,-30,-10) }
-   debris:    { model: "Debris0A.mag",          loc: (0,0,-50),  mass:   55, count: 25, life:  20 }
-   debris:    { model: "Debris0B.mag",          loc: (0,0,-50),  mass:   64, count: 20, life:  35 }
-   debris:    { model: "Debris0C.mag",          loc: (0,0,0),    mass:   43, count: 15, life:  30 }
+   debris:    { model: "Debris0A",          loc: (0,0,-50),  mass:   55, count: 25, life:  20 }
+   debris:    { model: "Debris0B",          loc: (0,0,-50),  mass:   64, count: 20, life:  35 }
+   debris:    { model: "Debris0C",          loc: (0,0,0),    mass:   43, count: 15, life:  30 }
 
 }
 

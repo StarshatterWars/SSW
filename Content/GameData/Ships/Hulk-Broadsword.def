@@ -84,8 +84,8 @@ shield: {
    design:           "Grav",
    abrv:             "Shield"
    pcs:              100,
-   bolt_hit_sound:   "shield_hit4.wav",
-   beam_hit_sound:   "shield_hit5.wav",
+   bolt_hit_sound:   "shield_hit4",
+   beam_hit_sound:   "shield_hit5",
 
    loc:              (0, 0, -60),
    size:             48,

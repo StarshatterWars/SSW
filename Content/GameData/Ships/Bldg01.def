@@ -8,7 +8,7 @@ hud_icon:     "hud_bldg01"
 description: "The Office Tower rises above the surrounding settlement as a centralized hub for commercial and administrative operations. Though not a military structure, its communications arrays and data archives make it strategically significant during periods of unrest or occupation."
 empire:     All
 
-model:   "Bldg01-0.mag"
+model:   "Bldg01-0"
 
 mass:       5e3
 integrity:  8e3

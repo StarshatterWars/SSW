@@ -1,5 +1,6 @@
-#include "ProfilingDebugging/CpuProfilerTrace.h"
+
 #include "ShipMFDPreview.h"
+#include "ProfilingDebugging/CpuProfilerTrace.h"
 #include "ShipBriefingPreview.h"
 #include "GameStructs_System.h"
 #include "PreviewScene.h"

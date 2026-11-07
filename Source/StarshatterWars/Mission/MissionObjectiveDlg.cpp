@@ -1,5 +1,7 @@
-#include "ShipVisualCatalog.h"
+
 #include "MissionObjectiveDlg.h"
+#include "ShipVisualCatalog.h"
+
 #include "ShipBriefingPreview.h"
 #include "Components/Overlay.h"
 #include "Components/OverlaySlot.h"

@@ -21,9 +21,11 @@
     and may not yet drive gameplay systems.
 */
 
+#include "ShipActor.h"
+
 #include "ProfilingDebugging/CpuProfilerTrace.h"
 #include "HAL/IConsoleManager.h"
-#include "ShipActor.h"
+
 #include "SpaceDustComponent.h"
 #include "ShipProbeComponent.h"
 #include "ShipDecoyComponent.h"
@@ -52,6 +54,7 @@
 #include "ShipDesign.h"
 #include "Thruster.h"
 #include "Sim.h"
+#include "FlightDeck.h"
 #include "StarshatterAudioSubsystem.h"
 
 #include "Engine/StaticMesh.h"
@@ -572,6 +575,7 @@ void
 AShipActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+    UpdateLaunchBayFill();
 
     if (RuntimeShip)
     {
@@ -598,6 +602,31 @@ AShipActor::Tick(float DeltaTime)
     if (bUseCutsceneNavMovement)
         UpdateCutsceneNavMovement(DeltaTime);
     UpdateNavLights(DeltaTime);
+}
+
+void AShipActor::UpdateLaunchBayFill()
+{
+    Sim* Simulation = Sim::GetSim();
+    const FlightDeck* Deck = RuntimeShip ? RuntimeShip->GetDock() : nullptr;
+    const EOPSMode Phase = RuntimeShip ? RuntimeShip->GetFlightPhase() : EOPSMode::NONE;
+    const bool bInLaunchBay = Simulation && RuntimeShip && Simulation->GetPlayerShip() == RuntimeShip &&
+        Deck && Deck->IsLaunchDeck() && Phase >= EOPSMode::ALERT && Phase <= EOPSMode::TAKEOFF;
+
+    if (bInLaunchBay && !LaunchBayFill)
+    {
+        LaunchBayFill = NewObject<UPointLightComponent>(this, TEXT("LaunchBayFill"), RF_Transient);
+        LaunchBayFill->SetupAttachment(GetRootComponent());
+        LaunchBayFill->SetRelativeLocation(FVector(90, -75, 220));
+        LaunchBayFill->SetLightColor(FLinearColor(0.82f, 0.91f, 1.0f));
+        LaunchBayFill->SetIntensityUnits(ELightUnits::Candelas);
+        LaunchBayFill->SetIntensity(350.0f);
+        LaunchBayFill->SetAttenuationRadius(650.0f);
+        LaunchBayFill->SetCastShadows(false);
+        LaunchBayFill->RegisterComponent();
+    }
+
+    if (LaunchBayFill && LaunchBayFill->IsVisible() != bInLaunchBay)
+        LaunchBayFill->SetVisibility(bInLaunchBay);
 }
 
 void AShipActor::ConfigureForCutscene()
@@ -1132,6 +1161,13 @@ void AShipActor::UpdateNavLights(float DeltaTime)
             bVisible = true;
         }
 
+        if (RuntimeShip && RuntimeNavLightSystemIndices.IsValidIndex(Index))
+        {
+            const int32 SystemIndex = RuntimeNavLightSystemIndices[Index];
+            const class NavLight* System = SystemIndex < RuntimeShip->navlights.size() ? RuntimeShip->navlights[SystemIndex] : nullptr;
+            bVisible &= System && System->IsEnabled();
+        }
+
         NavLight->SetVisibility(bVisible);
         NavLight->SetHiddenInGame(!bVisible);
 
@@ -1460,6 +1496,7 @@ void AShipActor::ClearNavLightArray(TArray<UNavLightComponent*>& Components)
 
 void AShipActor::ClearNavLightVisuals()
 {
+    RuntimeNavLightSystemIndices.Reset();
     for (int32 i = 0; i < NavLightBulbMeshes.Num(); ++i)
     {
         UStaticMeshComponent* Comp = NavLightBulbMeshes[i];
@@ -2134,6 +2171,9 @@ void AShipActor::BuildNavLightsFromRuntime()
     ClearNavLightArray(NavLights);
     ClearNavLightVisuals();
 
+    if (!bEnableNavLights)
+        return;
+
     if (!RuntimeShip)
     {
         UE_LOG(LogTemp, Warning,
@@ -2195,7 +2235,7 @@ void AShipActor::BuildNavLightsFromRuntime()
             Def.PhaseOffset =
                 RuntimeNavLight->GetBeaconPhaseOffset(BeaconIndex);
 
-            AddRuntimeNavLightComponent(Def);
+            AddRuntimeNavLightComponent(Def, LightSystemIndex);
 
             BuiltCount++;
         }
@@ -2332,6 +2372,7 @@ void AShipActor::BuildMainEnginesFromRuntime()
 
 void AShipActor::ClearRuntimeNavLights()
 {
+    RuntimeNavLightSystemIndices.Reset();
     for (UNavLightComponent* Comp : NavLights)
     {
         if (Comp)
@@ -2530,7 +2571,7 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
     PresentedEngineThrottle = Throttle;
 }
 
-void AShipActor::AddRuntimeNavLightComponent(const FShipNavLightDef& Def)
+void AShipActor::AddRuntimeNavLightComponent(const FShipNavLightDef& Def, int32 SystemIndex)
 {
     UNavLightComponent* NavComp =
         NewObject<UNavLightComponent>(this);
@@ -2550,27 +2591,51 @@ void AShipActor::AddRuntimeNavLightComponent(const FShipNavLightDef& Def)
     NavComp->SetRelativeRotation(Def.LocalRotation);
 
     NavLights.Add(NavComp);
+    RuntimeNavLightSystemIndices.Add(SystemIndex);
 
-    UPointLightComponent* PointLight =
-        NewObject<UPointLightComponent>(this);
+    UStaticMesh* BulbAsset = NavLightBulbMesh;
+    if (!BulbAsset)
+        BulbAsset = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+    UMaterialInterface* BulbMaterial = NavLightBulbMaterial;
+    if (!BulbMaterial)
+        BulbMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_NavlightEmissive.M_NavlightEmissive"));
 
+    UStaticMeshComponent* Bulb = nullptr;
+    UMaterialInstanceDynamic* Glow = nullptr;
+    if (BulbAsset && BulbMaterial)
+    {
+        Bulb = NewObject<UStaticMeshComponent>(this);
+        Bulb->SetupAttachment(VFXRoot);
+        Bulb->SetStaticMesh(BulbAsset);
+        Bulb->SetRelativeLocationAndRotation(Def.LocalOffset, Def.LocalRotation);
+        Bulb->SetRelativeScale3D(FVector(0.02f));
+        Bulb->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        Bulb->SetGenerateOverlapEvents(false);
+        Bulb->SetCastShadow(false);
+        Bulb->SetCanEverAffectNavigation(false);
+        Glow = Bulb->CreateDynamicMaterialInstance(0, BulbMaterial);
+        if (Glow)
+        {
+            Glow->SetVectorParameterValue(TEXT("GlowColor"), Def.Color);
+            Glow->SetScalarParameterValue(TEXT("GlowIntensity"), FMath::Max(1.0f, Def.Intensity * 0.01f));
+        }
+        Bulb->RegisterComponent();
+    }
+    NavLightBulbMeshes.Add(Bulb);
+    NavLightBulbMIDs.Add(Glow);
+
+    auto* PointLight = NewObject<UPointLightComponent>(this);
     if (PointLight)
     {
-        PointLight->RegisterComponent();
-        PointLight->AttachToComponent(
-            VFXRoot,
-            FAttachmentTransformRules::KeepRelativeTransform);
-
+        PointLight->SetupAttachment(VFXRoot);
         PointLight->SetRelativeLocation(Def.LocalOffset);
         PointLight->SetLightColor(Def.Color);
         PointLight->SetIntensity(0.0f);
         PointLight->SetAttenuationRadius(Def.Radius);
-
-        NavLightPointLights.Add(PointLight);
+        PointLight->SetCastShadows(false);
+        PointLight->RegisterComponent();
     }
-
-    NavLightBulbMeshes.Add(nullptr);
-    NavLightBulbMIDs.Add(nullptr);
+    NavLightPointLights.Add(PointLight);
 }
 
 void AShipActor::CreateEngineAudioComponents()
@@ -3181,3 +3246,4 @@ void AShipActor::SyncSurfaceDamage()
     // Per-primitive shader data avoids material instances or per-frame parameter writes.
     HullMesh->SetCustomPrimitiveDataFloat(0,Damage);
 }
+

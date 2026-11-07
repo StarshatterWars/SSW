@@ -17,6 +17,7 @@
 */
 
 #include "ShipDesignRegistry.h"
+#include "ShipVisualCatalog.h"
 #include "Skin.h"
 #include "NativeSkinDefinition.h"
 #include "Polygon.h"
@@ -1193,7 +1194,29 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             const FDebris& Entry = Src.Debris[Index];
             ShipDebris& Fragment = Legacy->debris[Index];
             const FString Model = FPaths::GetBaseFilename(Entry.ModelName.TrimStartAndEnd());
-            Fragment.VisualModel = Model.IsEmpty() ? NAME_None : FName(*Model);
+            Fragment.VisualModel = NAME_None;
+            if (!Model.IsEmpty())
+            {
+                FString ShipKey = ShipVisualCatalog::DefinitionName(Row.ShipName, Row.Model);
+                const bool bMarakanHulk = ShipKey.RemoveFromStart(TEXT("Hulk-"));
+                FString Folder;
+                if (Model.Equals(TEXT("Debris0A"), ESearchCase::IgnoreCase) ||
+                    Model.Equals(TEXT("Debris0B"), ESearchCase::IgnoreCase) ||
+                    Model.Equals(TEXT("Debris0C"), ESearchCase::IgnoreCase))
+                {
+                    if (Row.ShipEmpire == EShipEmpire::Marakan || bMarakanHulk)
+                        Folder = TEXT("/Game/Models/Debris/Marakan");
+                    else if (Row.ShipEmpire == EShipEmpire::Terellian)
+                        Folder = TEXT("/Game/Models/Debris/Terellian");
+                }
+                else if (!ShipKey.IsEmpty())
+                {
+                    Folder = TEXT("/Game/Models/") + ShipKey + TEXT("/Debris");
+                }
+
+                if (!Folder.IsEmpty())
+                    Fragment.VisualModel = FName(*(Folder / Model / (TEXT("BP_") + Model)));
+            }
             Fragment.SetCount(Entry.Count);
             Fragment.SetLife(FMath::TruncToInt(Entry.Life));
             Fragment.SetMass(Entry.Mass);

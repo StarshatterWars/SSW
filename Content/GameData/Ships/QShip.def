@@ -304,14 +304,14 @@ death_spiral: {
    }
 
 map: {
-   sprite: "CBmap0.pcx",
-   sprite: "CBmap1.pcx",
-   sprite: "CBmap2.pcx",
-   sprite: "CBmap3.pcx",
-   sprite: "CBmap4.pcx",
-   sprite: "CBmap5.pcx",
-   sprite: "CBmap6.pcx",
-   sprite: "CBmap7.pcx"
+   sprite: "CBmap0",
+   sprite: "CBmap1",
+   sprite: "CBmap2",
+   sprite: "CBmap3",
+   sprite: "CBmap4",
+   sprite: "CBmap5",
+   sprite: "CBmap6",
+   sprite: "CBmap7"
 }
 
 

@@ -154,9 +154,9 @@ shield:     {
    design:           "Grav",
    factor:           0.05,
    consumption:      2000,
-   model:            "Frigate_Shield.mag",
-   bolt_hit_sound:   "shield_hit4.wav",
-   beam_hit_sound:   "shield_hit5.wav",
+   model:            "Frigate_Shield",
+   bolt_hit_sound:   "shield_hit4",
+   beam_hit_sound:   "shield_hit5",
 
    pcs:              100,
    loc:              (0, 20, -80),

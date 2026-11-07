@@ -716,6 +716,10 @@ protected:
 
     void UpdateDerivedPointsFromHull();
     void UpdateNavLights(float DeltaTime);
+    void UpdateLaunchBayFill();
+
+    UPROPERTY(Transient)
+    TObjectPtr<UPointLightComponent> LaunchBayFill;
 
     void CreateMainEnginePoints();
     void CreateThrusterPoints();
@@ -736,7 +740,8 @@ protected:
 
 protected:
     void ClearRuntimeNavLights();
-    void AddRuntimeNavLightComponent(const FShipNavLightDef& Def);
+    void AddRuntimeNavLightComponent(const FShipNavLightDef& Def, int32 SystemIndex);
+    TArray<int32> RuntimeNavLightSystemIndices;
 
 protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Ship|FX")

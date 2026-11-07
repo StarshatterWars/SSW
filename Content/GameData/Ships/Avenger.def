@@ -253,19 +253,19 @@ gear: {
    hull_factor: 0.5,
 
    gear: {
-      model: "GearNose0.mag",
+      model: "GearNose0",
       start: (0, -25, 144),
       end:   (0, -45, 155)
    },
 
    gear: {
-      model: "GearLeft0.mag",
+      model: "GearLeft0",
       start: (-20, -25, -64),
       end:   (-42, -50, -64),
    },
 
    gear: {
-      model: "GearRight0.mag",
+      model: "GearRight0",
       start: ( 20, -25, -64),
       end:   ( 42, -50, -64),
    },
@@ -325,7 +325,7 @@ death_spiral: {
    final_type:       12,   // LARGE_BURST
    final_loc:        (0, 0, -32),
 
-   debris:           "DebrisX.mag"
+   debris:           "DebrisX"
    debris_loc:       (0,0,-2)
    debris_mass:      20
    debris_count:     4
@@ -335,7 +335,7 @@ death_spiral: {
    debris_drag:      0.3
    debris_speed:     195
 
-   debris:           "DebrisX.mag"
+   debris:           "DebrisX"
    debris_loc:       (0,0,3)
    debris_mass:      20
    debris_count:     3
@@ -349,14 +349,14 @@ death_spiral: {
 
 
 map: {
-   sprite: "AvengerMap0.pcx",
-   sprite: "AvengerMap1.pcx",
-   sprite: "AvengerMap2.pcx",
-   sprite: "AvengerMap3.pcx",
-   sprite: "AvengerMap4.pcx",
-   sprite: "AvengerMap5.pcx",
-   sprite: "AvengerMap6.pcx",
-   sprite: "AvengerMap7.pcx",
+   sprite: "AvengerMap0",
+   sprite: "AvengerMap1",
+   sprite: "AvengerMap2",
+   sprite: "AvengerMap3",
+   sprite: "AvengerMap4",
+   sprite: "AvengerMap5",
+   sprite: "AvengerMap6",
+   sprite: "AvengerMap7",
 }
 
 navlight: {

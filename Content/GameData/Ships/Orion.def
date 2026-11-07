@@ -140,7 +140,7 @@ quantum:     {
 shield:     {
    design:           "Grav",
    pcs:              100,
-   model:            "OShield.mag",
+   model:            "OShield",
    bolt_hit_sound:   "shield_hit4",
    beam_hit_sound:   "shield_hit5",
 }

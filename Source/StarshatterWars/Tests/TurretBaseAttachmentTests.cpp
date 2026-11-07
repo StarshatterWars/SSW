@@ -7,6 +7,7 @@
 #include "WeaponDesignRegistry.h"
 #include "WeaponDesign.h"
 #include "TurretBaseCatalog.h"
+#include "TurretActor.h"
 #include "TurretBaseComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "OrionShipActor.h"
@@ -76,6 +77,36 @@ bool FTurretBaseAttachmentTest::RunTest(const FString&)
         const int32 Count=Ship->AuthoredTurretPointComponents.Num();
         TArray<FTransform> BeforePoses;for(const auto& P:Ship->AuthoredTurretPointComponents)BeforePoses.Add(P->GetRelativeTransform());
         Ship->RebuildTurretActors();Ship->RebuildTurretActors();
+        if (Ship->IsA<AOrionShipActor>())
+        {
+            int32 VanguardPairs = 0;
+            int32 PhalanxBalls = 0;
+            for (const auto& Point : Ship->AuthoredTurretPointComponents)
+            {
+                const auto* Base = Cast<UTurretBaseComponent>(Point.Get());
+                if (!Base || !Ship->NativeWeaponHardpoints.IsValidIndex(Base->SourceWeaponIndex)) continue;
+                const auto* Mount = Cast<UShipWeaponMountComponent>(Ship->NativeWeaponHardpoints[Base->SourceWeaponIndex]);
+                const auto* Gun = Mount ? Mount->GetTurretVisualActor() : nullptr;
+                if (!TestNotNull(TEXT("Orion gun is present at the base's weapon slot"), Gun)) continue;
+                TestNotNull(TEXT("Orion gun mesh"), Gun->GunMesh->GetStaticMesh());
+                TestTrue(TEXT("Orion gun and base use the same world mount point"),
+                    Mount->GetComponentLocation().Equals(Base->GetComponentLocation(), 0.01));
+                if (Base->WeaponType == TEXT("Vanguard"))
+                {
+                    const auto* Visual = Cast<ATurretBaseActor>(Base->GetChildActor());
+                    if (TestNotNull(TEXT("Vanguard separate base actor"), Visual))
+                        TestNotNull(TEXT("Vanguard base mesh"), Visual->BaseMesh->GetStaticMesh());
+                    ++VanguardPairs;
+                }
+                else if (Base->WeaponType == TEXT("Phalanx Cannon"))
+                {
+                    TestNull(TEXT("Phalanx uses its integral ball mount"), Base->GetChildActor());
+                    ++PhalanxBalls;
+                }
+            }
+            TestEqual(TEXT("Orion Vanguard gun and base pairs"), VanguardPairs, 6);
+            TestEqual(TEXT("Orion integral Phalanx mounts"), PhalanxBalls, 4);
+        }
         TestEqual(TEXT("Rebuild never duplicates base components"),Ship->AuthoredTurretPointComponents.Num(),Count);
         TestEqual(TEXT("Base definitions survive derived constructor refresh"),Ship->TurretBasePointDefs.Num(),Count);
         for(int32 I=0;I<Count;++I){

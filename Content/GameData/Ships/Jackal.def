@@ -98,25 +98,25 @@ gear: {
    hull_factor: 0.5,
 
    gear: {
-      model: "zgear_r.mag",
+      model: "zgear_r",
       start: ( 34, -30,  -10)
       end:   ( 74, -60,  -10)
       },
 
    gear: {
-      model: "zgear_l.mag",
+      model: "zgear_l",
       start: (-34, -30,  -10)
       end:   (-74, -60,  -10)
       },
 
    gear: {
-      model: "zgear_r.mag",
+      model: "zgear_r",
       start: ( 34, -30, -140),
       end:   ( 74, -60, -140)
       },
 
    gear: {
-      model: "zgear_l.mag",
+      model: "zgear_l",
       start: (-34, -30, -140),
       end:   (-74, -60, -140)
       },
@@ -211,14 +211,14 @@ death_spiral: {
    }
 
 map: {
-   sprite: "JackalMap0.pcx",
-   sprite: "JackalMap1.pcx",
-   sprite: "JackalMap2.pcx",
-   sprite: "JackalMap3.pcx",
-   sprite: "JackalMap4.pcx",
-   sprite: "JackalMap5.pcx",
-   sprite: "JackalMap6.pcx",
-   sprite: "JackalMap7.pcx",
+   sprite: "JackalMap0",
+   sprite: "JackalMap1",
+   sprite: "JackalMap2",
+   sprite: "JackalMap3",
+   sprite: "JackalMap4",
+   sprite: "JackalMap5",
+   sprite: "JackalMap6",
+   sprite: "JackalMap7",
 }
 
 navlight: {

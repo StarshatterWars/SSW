@@ -20,10 +20,10 @@ ADebrisActor::ADebrisActor()
 TSubclassOf<ADebrisActor> ADebrisActor::ResolveVisualClass(FName Model)
 {
     if (Model.IsNone()) return nullptr;
-    const FString Name = Model.ToString();
-    const FString Package = FString::Printf(TEXT("/Game/Models/Debris/%s/BP_%s"), *Name, *Name);
+    const FString Package = Model.ToString();
     if (!FPackageName::DoesPackageExist(Package)) return nullptr;
-    return LoadClass<ADebrisActor>(nullptr, *(Package + TEXT(".BP_") + Name + TEXT("_C")));
+    const FString Blueprint = FPackageName::GetShortName(Package);
+    return LoadClass<ADebrisActor>(nullptr, *(Package + TEXT(".") + Blueprint + TEXT("_C")));
 }
 
 double ADebrisActor::GetVisualRadius() const

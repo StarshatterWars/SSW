@@ -225,19 +225,19 @@ gear: {
    hull_factor: 0.5,
 
    gear: {
-      model: "GearNose0.mag",
+      model: "GearNose0",
       start: (0, -15, 104),
       end:   (0, -42, 118)
    },
 
    gear: {
-      model: "GearLeft0.mag",
+      model: "GearLeft0",
       start: (-28, -22, -48),
       end:   (-42, -42, -48)
    },
 
    gear: {
-      model: "GearRight0.mag",
+      model: "GearRight0",
       start: ( 28, -22, -48),
       end:   ( 42, -42, -48)
    },
@@ -305,7 +305,7 @@ death_spiral: {
    final_type:       12,   // LARGE_BURST
    final_loc:        (0, 0, -12),
 
-   debris:           "DebrisX.mag"
+   debris:           "DebrisX"
    debris_loc:       (2,0,-3)
    debris_mass:      20
    debris_count:     3
@@ -315,7 +315,7 @@ death_spiral: {
    debris_drag:      0.3
    debris_speed:     190
 
-   debris:           "DebrisX.mag"
+   debris:           "DebrisX"
    debris_loc:       (0,0,6)
    debris_mass:      20
    debris_count:     4
@@ -328,14 +328,14 @@ death_spiral: {
 
 
 map: {
-   sprite: "CobraMap0.pcx",
-   sprite: "CobraMap1.pcx",
-   sprite: "CobraMap2.pcx",
-   sprite: "CobraMap3.pcx",
-   sprite: "CobraMap4.pcx",
-   sprite: "CobraMap5.pcx",
-   sprite: "CobraMap6.pcx",
-   sprite: "CobraMap7.pcx",
+   sprite: "CobraMap0",
+   sprite: "CobraMap1",
+   sprite: "CobraMap2",
+   sprite: "CobraMap3",
+   sprite: "CobraMap4",
+   sprite: "CobraMap5",
+   sprite: "CobraMap6",
+   sprite: "CobraMap7",
 }
 
 navlight: {

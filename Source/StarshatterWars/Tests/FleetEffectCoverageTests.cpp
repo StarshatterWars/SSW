@@ -65,6 +65,12 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
         const auto* Drive=Runtime.GetMainDrive();const auto* RCS=Runtime.GetThruster();
         TestEqual(FString(Entry.Definition)+TEXT(" engine count"),Engines,Drive?Drive->NumPorts():0);
         TestEqual(FString(Entry.Definition)+TEXT(" light count"),Lights,ExpectedLights);
+        int32 VisibleBulbs = 0;
+        for (const auto& Bulb : Actor->NavLightBulbMeshes)
+        {
+            if (Bulb && Bulb->GetStaticMesh() && Bulb->GetMaterial(0)) ++VisibleBulbs;
+        }
+        TestEqual(FString(Entry.Definition) + TEXT(" emissive nav-light bulbs"), VisibleBulbs, ExpectedLights);
         if(RCS)TestTrue(FString(Entry.Definition)+TEXT(" Niagara thruster ports provisioned"),Thrusters>=RCS->GetNumThrusters());
         AddInfo(FString::Printf(TEXT("%s: main=%d rcsFX=%d nav=%d"),Entry.Definition,Engines,Thrusters,Lights));
     }
