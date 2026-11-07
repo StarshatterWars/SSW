@@ -88,14 +88,14 @@ bool FTurretBaseAttachmentTest::RunTest(const FString&)
                 const auto* Mount = Cast<UShipWeaponMountComponent>(Ship->NativeWeaponHardpoints[Base->SourceWeaponIndex]);
                 const auto* Gun = Mount ? Mount->GetTurretVisualActor() : nullptr;
                 if (!TestNotNull(TEXT("Orion gun is present at the base's weapon slot"), Gun)) continue;
-                TestNotNull(TEXT("Orion gun mesh"), Gun->GunMesh->GetStaticMesh());
+                TestNotNull(TEXT("Orion gun mesh"), Gun->GunMesh->GetStaticMesh().Get());
                 TestTrue(TEXT("Orion gun and base use the same world mount point"),
                     Mount->GetComponentLocation().Equals(Base->GetComponentLocation(), 0.01));
                 if (Base->WeaponType == TEXT("Vanguard"))
                 {
                     const auto* Visual = Cast<ATurretBaseActor>(Base->GetChildActor());
                     if (TestNotNull(TEXT("Vanguard separate base actor"), Visual))
-                        TestNotNull(TEXT("Vanguard base mesh"), Visual->BaseMesh->GetStaticMesh());
+                        TestNotNull(TEXT("Vanguard base mesh"), Visual->BaseMesh->GetStaticMesh().Get());
                     ++VanguardPairs;
                 }
                 else if (Base->WeaponType == TEXT("Phalanx Cannon"))

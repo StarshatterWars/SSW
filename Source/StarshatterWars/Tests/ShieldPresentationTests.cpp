@@ -5,6 +5,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "Game.h"
+#include "Materials/Material.h"
 #include "OrionShipActor.h"
 #include "Shield.h"
 #include "ShieldComponent.h"
@@ -69,7 +70,7 @@ bool FShieldPresentationTest::RunTest(const FString&)
     for (const UStaticMeshComponent* Mesh : Meshes)
     {
         if (!Mesh->HasAnyFlags(RF_Transient) || Mesh->GetAttachParent() != Orion->GetRootComponent()) continue;
-        if (!Mesh->GetMaterial(0) || !Mesh->GetMaterial(0)->GetPathName().Contains(TEXT("M_ShieldImpact"))) continue;
+        if (!Mesh->GetMaterial(0) || !Mesh->GetMaterial(0)->GetMaterial()->GetName().Equals(TEXT("M_ShieldImpact"))) continue;
         bFoundImpact = true;
         TestEqual(TEXT("Impact effect has no UE collision"), Mesh->GetCollisionEnabled(), ECollisionEnabled::NoCollision);
     }
