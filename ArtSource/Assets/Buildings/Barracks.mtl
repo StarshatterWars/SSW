@@ -1,0 +1,51 @@
+#
+# Barracks Material Library exported by Magic 2.0
+#
+
+newmtl (default)
+Ka 0.25098 0.25098 0.25098
+Kd 0.75294 0.75294 0.75294
+Ks 0.10000 0.10000 0.10000
+Ns 10.00000
+illum 2
+
+newmtl Bldg00
+Ka 0.50000 0.50000 0.50000
+Kd 1.00000 1.00000 1.00000
+Ks 0.20000 0.20000 0.20000
+Ns 20.00000
+illum 2
+map_Kd Bldg00+.pcx
+
+newmtl Bldg00B
+Ka 0.50000 0.50000 0.50000
+Kd 1.00000 1.00000 1.00000
+Ks 0.20000 0.20000 0.20000
+Ns 20.00000
+illum 2
+map_Kd Bldg00B.pcx
+
+newmtl Bldg05
+Ka 0.50000 0.50000 0.50000
+Kd 1.00000 1.00000 1.00000
+Ks 0.20000 0.20000 0.20000
+Ns 20.00000
+illum 2
+map_Kd Bldg05+.pcx
+
+newmtl Bldg05G
+Ka 0.50000 0.50000 0.50000
+Kd 1.00000 1.00000 1.00000
+Ks 0.20000 0.20000 0.20000
+Ns 20.00000
+illum 2
+map_Kd Bldg05G.pcx
+
+newmtl Bldg05B
+Ka 0.50000 0.50000 0.50000
+Kd 1.00000 1.00000 1.00000
+Ks 0.20000 0.20000 0.20000
+Ns 20.00000
+illum 2
+map_Kd Bldg05B.pcx
+

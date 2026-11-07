@@ -4,6 +4,8 @@ AFarcasterShipActor::AFarcasterShipActor()
 {
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(15.0f));
+    bLegacyEmitterCoordinates=true;
+    bLegacyEmitterUsesHullAxes=true;
     ApplyFarcasterDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Farcaster"));

@@ -10,12 +10,10 @@ AMasterBuildingActor::AMasterBuildingActor()
     bEnableThrusterEmitters = false;
     bEnableMainEngineEmitters = false;
     bEnableNavLights = false;
-    if (HullMesh && Cube.Succeeded())
-    {
-        HullMesh->SetStaticMesh(Cube.Object);
-        HullMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-        HullMesh->SetCollisionResponseToAllChannels(ECR_Block);
-    }
+    PlaceholderMesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GroundPlaceholder"));
+    PlaceholderMesh->SetupAttachment(VisualRoot);
+    PlaceholderMesh->SetCollisionResponseToAllChannels(ECR_Block);
+    if(Cube.Succeeded())PlaceholderMesh->SetStaticMesh(Cube.Object);
     UpdateGroundPlaceholder();
 }
 void AMasterBuildingActor::OnConstruction(const FTransform& Transform)
@@ -25,10 +23,12 @@ void AMasterBuildingActor::OnConstruction(const FTransform& Transform)
 }
 void AMasterBuildingActor::UpdateGroundPlaceholder()
 {
-    // Never replace or resize an artist-provided building mesh.
-    if (!HullMesh || !HullMesh->GetStaticMesh() ||
-        HullMesh->GetStaticMesh()->GetPathName()!=TEXT("/Engine/BasicShapes/Cube.Cube")) return;
+    // Keep the placeholder separate so a real mesh inherits normal UE scale.
+    if(!PlaceholderMesh)return;
+    const bool bShow=!(HullMesh && HullMesh->GetStaticMesh());
+    PlaceholderMesh->SetVisibility(bShow);
+    PlaceholderMesh->SetCollisionEnabled(bShow?ECollisionEnabled::QueryOnly:ECollisionEnabled::NoCollision);
     const FVector Size=PlaceholderSizeCm.ComponentMax(FVector(1.f));
-    HullMesh->SetRelativeScale3D(Size/100.f);
-    HullMesh->SetRelativeLocation(FVector(0.f,0.f,Size.Z*.5f));
+    PlaceholderMesh->SetRelativeScale3D(Size/100.f);
+    PlaceholderMesh->SetRelativeLocation(FVector(0.f,0.f,Size.Z*.5f));
 }

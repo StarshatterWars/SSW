@@ -322,6 +322,7 @@ void UCmdForceDlg::NativeConstruct()
             UVerticalBox* Details = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ForceNativeDetailsContent"));
             DetailScroll->AddChild(Details);
             FactionLogo=WidgetTree->ConstructWidget<UImage>();FactionLogo->SetDesiredSizeOverride(FVector2D(56.f));SSWTwoColumn::Append(Details,FactionLogo);
+            if(auto* LogoSlot=Cast<UVerticalBoxSlot>(FactionLogo->Slot))LogoSlot->SetHorizontalAlignment(HAlign_Left);
             SSWTwoColumn::Append(Details, GroupNameText);
             SSWTwoColumn::Append(Details, GroupTypeText);
             SSWTwoColumn::Append(Details, GroupEmpireText);

@@ -127,7 +127,7 @@ public:
             }
             Text(20,470,FString::Printf(TEXT("%.0f KM   %d TRACKS"),H->SensorRange/1000,H->Contacts.Num()),Blue,22);
         }
-        return L+1;
+        return Panel==0?L+4:L+1;
     }
 private:
     TWeakPtr<SFighterHUDDetails> HUD;

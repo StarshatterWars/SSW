@@ -541,6 +541,8 @@ public:
     // Some unconverted DEFs retain local X=right, Y=up, Z=forward for FX ports.
     UPROPERTY(EditDefaultsOnly, Category="Ship|FX")
     bool bLegacyEmitterCoordinates = false;
+    // Some gate FBXs preserve DEF coordinates in the imported hull basis.
+    bool bLegacyEmitterUsesHullAxes = false;
 
     FVector RuntimeEmitterLocalPosition(const FVector& ImportedPosition) const;
     void BuildMainEnginesFromRuntime();

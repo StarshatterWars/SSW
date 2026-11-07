@@ -1,0 +1,27 @@
+#
+# Farcaster2 Material Library exported by Magic 2.0
+#
+
+newmtl (default)
+Ka 0.05020 0.05020 0.05020
+Kd 0.60235 0.60235 0.60235
+Ks 0.50000 0.50000 0.50000
+Ns 10.00000
+illum 2
+
+newmtl Metalic
+Ka 0.50196 0.50196 0.50196
+Kd 1.00000 1.00000 1.00000
+Ks 0.50000 0.50000 0.50000
+Ns 25.00000
+illum 2
+map_Kd Metalic+.pcx
+
+newmtl Cell
+Ka 0.50196 0.50196 0.50196
+Kd 1.00000 1.00000 1.00000
+Ks 0.10000 0.10000 0.10000
+Ns 20.00000
+illum 2
+map_Kd Cell+.pcx
+

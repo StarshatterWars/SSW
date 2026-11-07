@@ -726,7 +726,7 @@ void UTacRefDlg::BuildModernShell()
     BuildingButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleBuildingModeClicked);
     WeaponButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleWeaponModeClicked);
     auto* Selectors=WidgetTree->ConstructWidget<UHorizontalBox>();
-    FactionLogo=WidgetTree->ConstructWidget<UImage>();FactionLogo->SetDesiredSizeOverride(FVector2D(44.f));Selectors->AddChildToHorizontalBox(FactionLogo)->SetPadding(FMargin(8,0));
+    FactionLogo=WidgetTree->ConstructWidget<UImage>();FactionLogo->SetDesiredSizeOverride(FVector2D(44.f));auto* FactionSlot=Selectors->AddChildToHorizontalBox(FactionLogo);FactionSlot->SetPadding(FMargin(8,0));FactionSlot->SetVerticalAlignment(VAlign_Center);
     auto AddSelector=[&](const TCHAR* Caption,UWidget* Selector)
     {
         if(!Selector) return;

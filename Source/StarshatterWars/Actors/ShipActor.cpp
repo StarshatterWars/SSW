@@ -1818,7 +1818,11 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     if(RuntimeShip && RuntimeShip!=InShip) RuntimeShip->BindNativePresentation(nullptr);
     RuntimeShip = InShip;
     PresentedHullDamage=-1.f;
-    if(HullMesh && InShip)HullMesh->SetCustomPrimitiveDataFloat(1,float(GetTypeHash(FString(InShip->GetName()))%65536)/65536.f);
+    if(HullMesh)
+    {
+        HullMesh->SetCustomPrimitiveDataFloat(0,0.f);
+        HullMesh->SetCustomPrimitiveDataFloat(1,InShip?float(GetTypeHash(FString(InShip->GetName()))%65536)/65536.f:0.f);
+    }
     NativeGeometry.Reset();
     if(InShip) InShip->BindNativePresentation(this);
 
@@ -2219,6 +2223,13 @@ FVector AShipActor::RuntimeEmitterLocalPosition(const FVector& ImportedPosition)
     // transform supply BP mesh/VisualRoot/actor scale and mesh pivot offset.
     const FTransform HullTransform = HullMesh->GetComponentTransform();
     const FTransform FXTransform = VFXRoot->GetComponentTransform();
+    if(bLegacyEmitterUsesHullAxes)
+    {
+        // Confirmed against the replacement Farcaster OBJ/FBX geometry:
+        // authored (X,Y,Z) -> UE mesh (X,Z,Y). Apply the hull pose once.
+        return FXTransform.InverseTransformPosition(HullTransform.TransformPosition(
+            FVector(UnscaledPosition.X,UnscaledPosition.Z,UnscaledPosition.Y)));
+    }
     const FVector WorldDirection = FXTransform.GetRotation().RotateVector(AuthoredPosition);
     const FVector HullLocal = HullTransform.GetRotation().UnrotateVector(WorldDirection);
     return FXTransform.InverseTransformPosition(HullTransform.TransformPosition(HullLocal));

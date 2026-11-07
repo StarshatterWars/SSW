@@ -1,0 +1,12 @@
+#
+# Dsrt05 Material Library exported by Magic 2.0
+#
+
+newmtl D5
+Ka 0.50196 0.50196 0.50196
+Kd 1.00000 1.00000 1.00000
+Ks 0.07529 0.07529 0.07529
+Ns 10.00000
+illum 2
+map_Kd D5_D.jpg
+

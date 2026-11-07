@@ -18,8 +18,10 @@ bool FGearInterlockTest::RunTest(const FString&)
 {
     class FShipWithGear : public Ship
     {
-    public: FShipWithGear():Ship("Gear interlock","",static_cast<ShipDesign*>(nullptr),1,0,nullptr,false){gear=new LandingGear;}
-    } Player;
+    public: explicit FShipWithGear(ShipDesign* Design):Ship("Gear interlock","",Design,1,0,nullptr,false){if(!gear)gear=new LandingGear;}
+    };
+    ShipDesign Definition;Definition.integrity=100;Definition.mass=100;
+    FShipWithGear Player(&Definition);
     for(auto Phase:{EOPSMode::DOCKED,EOPSMode::ALERT,EOPSMode::LOCKED,EOPSMode::LAUNCH,EOPSMode::TAKEOFF,EOPSMode::RECOVERY,EOPSMode::DOCKING})
     {
         Player.SetFlightPhase(Phase);Player.GetGear()->SetState(LandingGear::GEAR_DOWN);Player.ToggleGear();
@@ -55,7 +57,7 @@ bool FShipPBRShaderTest::RunTest(const FString&)
     TestNotNull(TEXT("Shared wear/damage surface function"),LoadObject<UMaterialFunction>(nullptr,TEXT("/Game/Materials/Ships/MF_SSW_ShipSurface.MF_SSW_ShipSurface")));
     if(GUsingNullRHI){AddWarning(TEXT("NullRHI: shader/render verification deferred to RHI test"));return true;}
     auto& Registry=FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry")).Get();
-    FARFilter Filter;Filter.PackagePaths.Add(TEXT("/Game/Models"));Filter.bRecursivePaths=true;Filter.ClassPaths.Add(UMaterial::StaticClass()->GetClassPathName());
+    FARFilter Filter;Filter.PackagePaths.Add(TEXT("/Game/Models"));Filter.PackagePaths.Add(TEXT("/Game/Assets/Ground"));Filter.bRecursivePaths=true;Filter.ClassPaths.Add(UMaterial::StaticClass()->GetClassPathName());
     TArray<FAssetData> Assets;Registry.GetAssets(Filter,Assets);TArray<UMaterial*> Materials;
     for(const auto& Asset:Assets){const FString Path=Asset.PackageName.ToString();if(Path.Contains(TEXT("/Bolt/"))||Path.Contains(TEXT("/Beams/")))continue;if(auto* Mat=Cast<UMaterial>(Asset.GetAsset()))Materials.Add(Mat);}
     FAssetCompilingManager::Get().FinishAllCompilation();if(GShaderCompilingManager)GShaderCompilingManager->FinishAllCompilation();

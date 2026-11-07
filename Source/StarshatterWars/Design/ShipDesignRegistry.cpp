@@ -744,59 +744,25 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
     //-------------------------------------------------------------
     for (const FShipNavLight& Src : Row.Navlight)
     {
-        if (Src.Beacons.Num() <= 0)
+        // Preserve every DEF beacon while respecting the legacy controller capacity.
+        // All chunks retain the same period, scale and individual phase offsets.
+        const FString& SystemName = !Src.Name.IsEmpty() ? Src.Name : Src.DesignName;
+        for (int32 First = 0; First < Src.Beacons.Num(); First += NavLight::MAX_LIGHTS)
         {
-            continue;
+            NavLight* NewNavLight = new NavLight(Src.Period, Src.Scale);
+            NewNavLight->SetName(SystemName.IsEmpty() ? "NavLight" : TCHAR_TO_ANSI(*SystemName));
+            if (!Src.Abbrev.IsEmpty()) NewNavLight->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
+            const int32 End = FMath::Min(Src.Beacons.Num(), First + int32(NavLight::MAX_LIGHTS));
+            for (int32 Index = First; Index < End; ++Index)
+            {
+                const FNavLightBeacon& Beacon = Src.Beacons[Index];
+                NewNavLight->AddBeacon(Beacon.Name, Beacon.Location, Beacon.LocalRotation,
+                    Beacon.Color, Beacon.Intensity, Beacon.Radius, Beacon.Mode, Beacon.BlinkInterval, Beacon.PhaseOffset);
+            }
+            Legacy->navlights.append(NewNavLight);
+            UE_LOG(LogTemp, Verbose, TEXT("[ShipDesignRegistry] NavLight Row='%s' First=%d Beacons=%d"),
+                *RowName.ToString(), First, End-First);
         }
-
-        NavLight* NewNavLight = new NavLight(
-            Src.Period,
-            Src.Scale
-        );
-
-        if (!Src.Name.IsEmpty())
-        {
-            NewNavLight->SetName(TCHAR_TO_ANSI(*Src.Name));
-        }
-        else if (!Src.DesignName.IsEmpty())
-        {
-            NewNavLight->SetName(TCHAR_TO_ANSI(*Src.DesignName));
-        }
-        else
-        {
-            NewNavLight->SetName("NavLight");
-        }
-
-        if (!Src.Abbrev.IsEmpty())
-        {
-            NewNavLight->SetAbbreviation(TCHAR_TO_ANSI(*Src.Abbrev));
-        }
-
-        for (const FNavLightBeacon& Beacon : Src.Beacons)
-        {
-            NewNavLight->AddBeacon(
-                Beacon.Name,
-                Beacon.Location,
-                Beacon.LocalRotation,
-                Beacon.Color,
-                Beacon.Intensity,
-                Beacon.Radius,
-                Beacon.Mode,
-                Beacon.BlinkInterval,
-                Beacon.PhaseOffset
-            );
-        }
-
-        Legacy->navlights.append(NewNavLight);
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[ShipDesignRegistry] NavLight built Row='%s' NavLight=%p Name='%hs' Period=%.2f Scale=%.2f Beacons=%d"),
-            *RowName.ToString(),
-            NewNavLight,
-            NewNavLight->GetName(),
-            Src.Period,
-            Src.Scale,
-            Src.Beacons.Num());
     }
 
     //-------------------------------------------------------------

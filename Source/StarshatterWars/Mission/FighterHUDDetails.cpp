@@ -1012,7 +1012,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         if (!bPreTakeoff && (ThirdPerson.Get() || bHelmMode))
             Symbology->PaintCompass(G,E,L+3,HeadingDegrees,OrderedHeading,PitchDegrees,OrderedPitch,bHelmMode,ThirdPerson.Get(),FMath::RadiansToDegrees(BankRadians));
     }
-    return SCompoundWidget::OnPaint(Args,G,Cull,E,L+5,Style,Enabled);
+    return SCompoundWidget::OnPaint(Args,G,Cull,E,L+7,Style,Enabled);
 }
 
 namespace

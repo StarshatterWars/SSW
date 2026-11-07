@@ -101,6 +101,8 @@ const ShipVisualCatalog::FEntry Definitions[] = {
     { TEXT("Viper"), TEXT("Viper"), TEXT("Viper"), TEXT("ViperShipActor"), TEXT("fighter") },
     { TEXT("Volnaris"), TEXT("Volnaris"), TEXT("Volnaris"), TEXT("VolnarisShipActor"), TEXT("destroyer") },
     { TEXT("Wolf"), TEXT("Wolf"), TEXT("Wolf"), TEXT("WolfShipActor"), TEXT("destroyer") },
+    { TEXT("Jackal"), TEXT("Jackal"), TEXT("Jackal"), TEXT("JackalShipActor"), TEXT("attack") },
+    { TEXT("Zodiac"), TEXT("Zodiac"), TEXT("Zodiac"), TEXT("ZodiacShipActor"), TEXT("fighter") },
     { TEXT("ZZA"), TEXT("ZZA"), TEXT("ZAttack"), TEXT("ZZAShipActor"), TEXT("attack") },
     { TEXT("ZZCA"), TEXT("ZZCA"), TEXT("ZolonCA"), TEXT("ZZCAShipActor"), TEXT("cruiser") },
     { TEXT("ZZCS"), TEXT("ZZCS"), TEXT("ZolonCS"), TEXT("ZZCSShipActor"), TEXT("cruiser") },
@@ -112,12 +114,14 @@ FString ClassPath(const FString& Name)
 {
     const bool bGround = [&]() { for (const auto& E : Definitions)
         if (Name==E.Definition) return FString(E.Kind)==TEXT("building") || FString(E.Kind)==TEXT("sam"); return false; }();
-    return FString::Printf(bGround ? TEXT("/Game/Assets/Ground/%s/BP_%s.BP_%s_C") : TEXT("/Game/Models/%s/BP_%s.BP_%s_C"), *Name, *Name, *Name);
+    if(bGround) return FString::Printf(TEXT("/Game/Assets/Ground/%s/BP_%s.BP_%s_C"), *Name, *Name, *Name);
+    return FString::Printf(TEXT("/Game/Models/%s/BP_%s.BP_%s_C"), *Name, *Name, *Name);
 }
 }
 TConstArrayView<ShipVisualCatalog::FEntry> ShipVisualCatalog::Entries() { return MakeArrayView(Definitions); }
 FString ShipVisualCatalog::DefinitionName(const FString& DesignName, const FString& ModelName)
 {
+    if(DesignName.Equals(TEXT("Marakan Farcaster"),ESearchCase::IgnoreCase))return TEXT("Farcaster2");
     for (const auto& Entry : Definitions)
         if (DesignName.Equals(Entry.Definition, ESearchCase::IgnoreCase)) return Entry.Definition;
     const FEntry* Match = nullptr;

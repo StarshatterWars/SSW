@@ -12,6 +12,9 @@
 #include "Engine/TextureRenderTarget2D.h"
 #include "RenderingThread.h"
 #include "RHI.h"
+#include "AssetCompilingManager.h"
+#include "ShaderCompiler.h"
+#include "ContentStreaming.h"
 #include "ImageUtils.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -56,6 +59,10 @@ bool FPlayerMFDRenderTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Opposing IFF is red"),SFighterHUDDetails::IdentificationColor(2,1).Equals(FLinearColor::Red));
     TestTrue(TEXT("Neutral contact is yellow"),SFighterHUDDetails::IdentificationColor(0,1).Equals(FLinearColor(1.f,0.85f,0.f)));
     if(GUsingNullRHI){AddWarning(TEXT("No GPU: rendered pixel verification skipped"));return true;}
+    FAssetCompilingManager::Get().FinishAllCompilation();
+    if(GShaderCompilingManager)GShaderCompilingManager->FinishAllCompilation();
+    IStreamingManager::Get().StreamAllResources(0);
+    Player.NextStaticCaptureAt=0;Player.SetDesign(Design);
     FlushRenderingCommands();
     TArray<FLinearColor> Pixels;
     Player.Target->GameThread_GetRenderTargetResource()->ReadLinearColorPixels(Pixels);

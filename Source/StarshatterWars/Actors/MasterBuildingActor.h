@@ -14,5 +14,6 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ground|Placeholder", meta=(ClampMin="1"))
     FVector PlaceholderSizeCm = FVector(1000.f,1000.f,1000.f);
 protected:
+    UPROPERTY(VisibleAnywhere, Category="Ground|Placeholder") TObjectPtr<UStaticMeshComponent> PlaceholderMesh;
     void UpdateGroundPlaceholder();
 };

@@ -38,7 +38,8 @@ bool FFirstRunPresentationTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("First-run width is 512"),Frame->GetWidthOverride(),512.f);
     TestEqual(TEXT("First-run height is 512"),Frame->GetHeightOverride(),512.f);
     TestNotNull(TEXT("Pilot name input"),Setup->NameEdit.Get());TestNotNull(TEXT("Callsign input"),Setup->CallsignEdit.Get());
-    TestEqual(TEXT("Three empire options preserved"),Setup->EmpireCombo->GetOptionCount(),3);
+    TestEqual(TEXT("Only Alliance and Marakan are first-run choices"),Setup->EmpireCombo->GetOptionCount(),2);
+    TestEqual(TEXT("Dantari remains campaign-only"),Setup->EmpireCombo->FindOptionIndex(TEXT("Dantari Separatists")),INDEX_NONE);
     TestEqual(TEXT("Both flight models preserved"),Setup->PlayStyleCombo->GetOptionCount(),2);
     TestEqual(TEXT("Both experience choices preserved"),Setup->ExperienceCombo->GetOptionCount(),2);
     Setup->NameEdit->SetText(FText::FromString(TEXT("Caloy")));Setup->CallsignEdit->SetText(FText::FromString(TEXT("Caloy")));
@@ -54,7 +55,7 @@ bool FFirstRunPresentationTest::RunTest(const FString& Parameters)
             if(Icon)TestTrue(TEXT("Standard arrow asset assigned"),Icon->GetBrush().GetResourceObject() && Icon->GetBrush().GetResourceObject()->GetPathName()==Path);
         };
         VerifyAsset(Setup->AcceptBtn,TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_R_256x256.T_Arrow_R_256x256"));
-        VerifyAsset(Setup->CancelBtn,TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_L_256x256.T_Arrow_L_256x256"));
+        VerifyAsset(Setup->CancelBtn,TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_OnOff_256x256.T_OnOff_256x256"));
         AddWarning(TEXT("NullRHI: structural and asset assertions passed; pixel captures require an RHI-enabled run."));
         return true;
     }
@@ -85,7 +86,7 @@ bool FFirstRunPresentationTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Arrow background remains transparent"),TransparentPixels>100);
     };
     VerifyIcon(Setup->AcceptBtn,TEXT("AcceptIconOnly"),TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_R_256x256.T_Arrow_R_256x256"));
-    VerifyIcon(Setup->CancelBtn,TEXT("CancelIconOnly"),TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Arrow_L_256x256.T_Arrow_L_256x256"));
+    VerifyIcon(Setup->CancelBtn,TEXT("CancelIconOnly"),TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_OnOff_256x256.T_OnOff_256x256"));
     return true;
 }
 

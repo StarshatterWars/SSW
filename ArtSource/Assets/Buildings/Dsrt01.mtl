@@ -1,0 +1,12 @@
+#
+# Dsrt01 Material Library exported by Magic 2.0
+#
+
+newmtl Desert
+Ka 0.25098 0.25098 0.25098
+Kd 1.00000 1.00000 1.00000
+Ks 0.05020 0.05020 0.05020
+Ns 10.00000
+illum 2
+map_Kd D5_D.jpg
+
