@@ -41,6 +41,15 @@
 #include "Campaign.h"
 #include "StarshatterAssetRegistrySubsystem.h"
 
+#include "Engine/GameViewportClient.h"
+#include "Framework/Application/SlateApplication.h"
+#include "RHI.h"
+#include "Slate/DeferredCleanupSlateBrush.h"
+#include "Styling/CoreStyle.h"
+#include "Widgets/Images/SImage.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SScaleBox.h"
+
 #undef UpdateResource
 #undef PlaySound
 
@@ -51,21 +60,77 @@ USSWGameInstance::USSWGameInstance(const FObjectInitializer& ObjectInitializer)
 
 void USSWGameInstance::OnStart()
 {
-	// ---------------------------------------------------------
-	// Show Main Menu (safe timing)
-	// ---------------------------------------------------------
-	if (UWorld* World = GetWorld())
-	{
-		World->GetTimerManager().SetTimerForNextTick(
-			this,
-			&USSWGameInstance::ShowMainMenuScreen
-		);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Init: World is NULL, cannot show menu yet"));
-	}
-	
+    if (UWorld* World = GetWorld())
+    {
+        World->GetTimerManager().SetTimerForNextTick(this, &USSWGameInstance::ShowStartupSplashes);
+    }
+}
+
+void USSWGameInstance::ShowStartupSplashes()
+{
+    UWorld* World = GetWorld();
+    UGameViewportClient* Viewport = GetGameViewportClient();
+    if (!World || !Viewport || World->WorldType != EWorldType::Game ||
+        GUsingNullRHI || !FSlateApplication::IsInitialized())
+    {
+        ShowMainMenuScreen();
+        return;
+    }
+
+    ShowStartupSplash(0);
+}
+
+void USSWGameInstance::ShowStartupSplash(int32 Index)
+{
+    static const TCHAR* const Art[] = {
+        TEXT("/Game/UI/Splash/FractalDevStudios_1080p.FractalDevStudios_1080p"),
+        TEXT("/Game/UI/Splash/SSW_OrionLaunch_1080p.SSW_OrionLaunch_1080p")
+    };
+    UWorld* World = GetWorld();
+    UGameViewportClient* Viewport = GetGameViewportClient();
+    if (!World || !Viewport || Index >= UE_ARRAY_COUNT(Art))
+    {
+        ShowMainMenuScreen();
+        return;
+    }
+
+    UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, Art[Index]);
+    if (!Texture)
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[StartupSplash] Missing %s"), Art[Index]);
+        ShowStartupSplash(Index + 1);
+        return;
+    }
+
+    // The viewport owns the overlay and the image attribute retains its texture.
+    // Both source images are 1920x1080. Imported texture padding can change the surface dimensions.
+    const auto Brush = FDeferredCleanupSlateBrush::CreateBrush(Texture, FVector2D(1920, 1080));
+    const TSharedRef<SWidget> Overlay =
+        SNew(SBorder)
+        .Padding(0)
+        .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+        .BorderBackgroundColor(FLinearColor::Black)
+        [
+            SNew(SScaleBox)
+            .Stretch(EStretch::ScaleToFit)
+            [
+                SNew(SImage)
+                .Image_Lambda([Brush]() { return Brush->GetSlateBrush(); })
+            ]
+        ];
+
+    Viewport->AddViewportWidgetContent(Overlay, 1000);
+    UE_LOG(LogTemp, Display, TEXT("[StartupSplash] Showing %s"), *Texture->GetName());
+
+    FTimerHandle Handle;
+    World->GetTimerManager().SetTimer(Handle,
+        FTimerDelegate::CreateWeakLambda(this,
+            [this, WeakViewport = TWeakObjectPtr<UGameViewportClient>(Viewport), Overlay, Index]()
+            {
+                if (UGameViewportClient* ActiveViewport = WeakViewport.Get())
+                    ActiveViewport->RemoveViewportWidgetContent(Overlay);
+                ShowStartupSplash(Index + 1);
+            }), 1.75f, false);
 }
 
 void USSWGameInstance::StartGameTimers()

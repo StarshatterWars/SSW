@@ -152,6 +152,8 @@ public:
 	// =====================================================================
 	UFUNCTION(BlueprintCallable, Category = "Game Variables")
 	void ShowMainMenuScreen();
+	void ShowStartupSplashes();
+	void ShowStartupSplash(int32 Index);
 
 	/** Restore the player-save campaign without overwriting live campaign progress. */
 	bool RestoreSavedActiveCampaign();
