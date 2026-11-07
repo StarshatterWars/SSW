@@ -18,33 +18,62 @@ UShieldComponent::UShieldComponent()
     PrimaryComponentTick.bStartWithTickEnabled = false;
 }
 
-void UShieldComponent::ShowImpact(const FVector& LocalImpact, const FVector& LocalNormal, double WorldSize)
+void UShieldComponent::ShowImpact(const FVector& LocalImpact, const FVector& LocalNormal, double WorldSize,
+    const FString& ModelName, USceneComponent* Hull)
 {
     AActor* Owner = GetOwner();
-    if (!ShieldTexture || !Owner || !Owner->GetRootComponent() || LocalNormal.IsNearlyZero()) return;
+    if (!Owner || !Owner->GetRootComponent() || LocalNormal.IsNearlyZero()) return;
+    const bool bWantsModel = Hull && !ModelName.IsEmpty();
+    const FString RequestedModel = bWantsModel ? ModelName : FString();
+    if (ImpactMesh && ActiveModelName != RequestedModel)
+    {
+        ImpactMesh->DestroyComponent();
+        ImpactMesh = nullptr;
+        ImpactMaterial = nullptr;
+    }
+
     if (!ImpactMesh)
     {
-        auto* Plane = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Plane.Plane"));
-        auto* Material = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/Ships/M_ShieldImpact.M_ShieldImpact"));
-        if (!Plane || !Material) return;
+        UStaticMesh* Mesh = nullptr;
+        UMaterialInterface* Material = nullptr;
+        if (bWantsModel)
+        {
+            const FString Path = FString::Printf(TEXT("/Game/Models/Shields/%s/SM_%s.SM_%s"),
+                *ModelName, *ModelName, *ModelName);
+            Mesh = LoadObject<UStaticMesh>(nullptr, *Path, nullptr, LOAD_NoWarn);
+            Material = Mesh ? Mesh->GetMaterial(0) : nullptr;
+        }
+        if (!Mesh || !Material)
+        {
+            if (!ShieldTexture) return;
+            Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Plane.Plane"));
+            Material = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/Ships/M_ShieldImpact.M_ShieldImpact"));
+        }
+        if (!Mesh || !Material) return;
+
         ImpactMesh = NewObject<UStaticMeshComponent>(Owner, NAME_None, RF_Transient);
-        ImpactMesh->SetupAttachment(Owner->GetRootComponent());
-        ImpactMesh->SetStaticMesh(Plane);
+        // Attach authored shells to the hull so they share its scale and 180-degree correction.
+        const bool bModel = bWantsModel && Mesh->GetName() == (TEXT("SM_") + ModelName);
+        ImpactMesh->SetupAttachment(bModel ? Hull : Owner->GetRootComponent());
+        ImpactMesh->SetStaticMesh(Mesh);
         ImpactMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         ImpactMesh->SetGenerateOverlapEvents(false);
         ImpactMesh->SetCastShadow(false);
         ImpactMesh->SetCanEverAffectNavigation(false);
         ImpactMaterial = ImpactMesh->CreateDynamicMaterialInstance(0, Material);
         ImpactMesh->RegisterComponent();
+        ActiveModelName = RequestedModel;
     }
 
     if (!ImpactMaterial) return;
-    const FVector Scale = Owner->GetActorScale3D();
-    const FVector ReciprocalScale = FTransform::GetSafeScaleReciprocal(Scale);
-    ImpactMesh->SetRelativeLocationAndRotation((LocalImpact + LocalNormal * 4.0) * ReciprocalScale,
-        FRotationMatrix::MakeFromZ(LocalNormal).Rotator());
-    ImpactMesh->SetWorldScale3D(FVector(WorldSize / 100.0));
-    ImpactMaterial->SetTextureParameterValue(TEXT("ShieldTexture"), ShieldTexture);
+    if (ImpactMesh->GetAttachParent() == Owner->GetRootComponent())
+    {
+        const FVector ReciprocalScale = FTransform::GetSafeScaleReciprocal(Owner->GetActorScale3D());
+        ImpactMesh->SetRelativeLocationAndRotation((LocalImpact + LocalNormal * 4.0) * ReciprocalScale,
+            FRotationMatrix::MakeFromZ(LocalNormal).Rotator());
+        ImpactMesh->SetWorldScale3D(FVector(WorldSize / 100.0));
+        ImpactMaterial->SetTextureParameterValue(TEXT("ShieldTexture"), ShieldTexture);
+    }
     ImpactMaterial->SetScalarParameterValue(TEXT("Opacity"), 1.0f);
     ImpactMesh->SetVisibility(true);
     RemainingTime = ImpactDuration;

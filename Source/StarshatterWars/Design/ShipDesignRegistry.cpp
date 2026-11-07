@@ -529,6 +529,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             continue;
         }
 
+        Legacy->shield_visual_model = Src.ModelName.TrimStartAndEnd();
         Shield* NewShield = new Shield(Src.ShieldType);
 
         if (!Src.Name.IsEmpty())

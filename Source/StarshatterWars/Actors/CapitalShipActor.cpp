@@ -2,6 +2,8 @@
 #include "Components/SceneComponent.h"
 #include "ShieldComponent.h"
 #include "Ship.h"
+#include "ShipDesign.h"
+#include "Components/StaticMeshComponent.h"
 
 ACapitalShipActor::ACapitalShipActor()
 {
@@ -22,5 +24,7 @@ void ACapitalShipActor::ShowShieldImpact(const Ship& ShieldedShip, const FVector
     const FVector Delta = Impact - ShieldedShip.GetLocation();
     const FVector Local(FVector::DotProduct(Delta, Frame.vpn()), FVector::DotProduct(Delta, Frame.vrt()),
         FVector::DotProduct(Delta, Frame.vup()));
-    ShieldComponent->ShowImpact(Local, Local.GetSafeNormal(), FMath::Clamp(ShieldedShip.GetRadius() * 0.35, 40.0, 500.0));
+    const ShipDesign* Design = ShieldedShip.Design();
+    ShieldComponent->ShowImpact(Local, Local.GetSafeNormal(), FMath::Clamp(ShieldedShip.GetRadius() * 0.35, 40.0, 500.0),
+        Design ? Design->shield_visual_model : FString(), HullMesh);
 }

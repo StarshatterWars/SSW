@@ -19,7 +19,8 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Shield")
     TObjectPtr<UTexture2D> ShieldTexture;
 
-    void ShowImpact(const FVector& LocalImpact, const FVector& LocalNormal, double WorldSize);
+    void ShowImpact(const FVector& LocalImpact, const FVector& LocalNormal, double WorldSize,
+        const FString& ModelName = FString(), USceneComponent* Hull = nullptr);
 
 protected:
     void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* TickFunction) override;
@@ -29,5 +30,6 @@ private:
     TObjectPtr<UStaticMeshComponent> ImpactMesh;
     UPROPERTY(Transient)
     TObjectPtr<UMaterialInstanceDynamic> ImpactMaterial;
+    FString ActiveModelName;
     float RemainingTime = 0;
 };

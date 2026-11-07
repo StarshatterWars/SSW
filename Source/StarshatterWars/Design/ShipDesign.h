@@ -225,6 +225,7 @@ public:
 	Shield* shield = nullptr;
 
 	SimModel* shield_model;
+	FString shield_visual_model;
 	Weapon* decoy;
 	Weapon* probe;
 	LandingGear* gear;
