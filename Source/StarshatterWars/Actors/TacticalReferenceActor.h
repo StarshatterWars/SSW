@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Ship.h"
 #include "TacticalReferenceActor.generated.h"
 
 class UStaticMeshComponent;
@@ -17,6 +18,7 @@ class STARSHATTERWARS_API ATacticalReferenceActor : public AActor
     GENERATED_BODY()
 public:
     ATacticalReferenceActor();
+    virtual ~ATacticalReferenceActor() override;
 
     UFUNCTION(BlueprintCallable, Category = "Tactical")
     void ShowShip(const FString& DesignName);
@@ -44,6 +46,7 @@ public:
 
 protected:
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type Reason) override;
 
     UPROPERTY(VisibleAnywhere)
     USceneComponent* Root;
@@ -94,4 +97,8 @@ protected:
     bool bCaptureMouse = true;
 
     void ApplyView();
+
+private:
+    void ClearShipPreview();
+    TUniquePtr<Ship> PreviewShip;
 };

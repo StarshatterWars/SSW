@@ -20,5 +20,6 @@ private:
     TWeakObjectPtr<UStaticMeshComponent> Mesh;
     TArray<TWeakObjectPtr<UWidgetComponent>> Panels;
     TStrongObjectPtr<UMaterialInterface> OriginalHUD;
+    int32 OriginalHUDSlot = INDEX_NONE;
     TStrongObjectPtr<UTexture2D> Blank;
 };

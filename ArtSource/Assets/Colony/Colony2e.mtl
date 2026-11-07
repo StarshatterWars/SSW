@@ -1,0 +1,20 @@
+#
+# Colony2e Material Library exported by Magic 2.0
+#
+
+newmtl Gantry
+Ka 0.10039 0.10039 0.10039
+Kd 1.00000 1.00000 1.00000
+Ks 0.30000 0.30000 0.30000
+Ns 10.00000
+illum 2
+map_Kd GANTRY_D.jpg
+
+newmtl Ship
+Ka 0.50196 0.50196 0.50196
+Kd 0.75294 0.75294 0.75294
+Ks 0.75294 0.75294 0.75294
+Ns 15.00000
+illum 2
+map_Kd MAIN_D.jpg
+

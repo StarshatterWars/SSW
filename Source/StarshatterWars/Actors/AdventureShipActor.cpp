@@ -1,6 +1,7 @@
 #include "AdventureShipActor.h"
 AAdventureShipActor::AAdventureShipActor()
 {
+    bLegacyEmitterCoordinates = true;
     SetActorScale3D(FVector(2.5f));
 
     ApplyAuthoredAttachmentDefaults();

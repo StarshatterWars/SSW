@@ -67,6 +67,9 @@ struct FRuntimeThrusterFX
     UNiagaraComponent* Trail = nullptr;
 
     UPROPERTY()
+    TObjectPtr<UStaticMeshComponent> Nozzle;
+
+    UPROPERTY()
     int32 RuntimePortIndex = INDEX_NONE;
 
     FVector Location = FVector::ZeroVector;

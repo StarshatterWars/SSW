@@ -1290,6 +1290,7 @@ Ship::Destroy()
 	// inbound slot is deleted by flight deck:
 	inbound = 0;
 
+    if (IsDying()) transition_type = TRANSITION_DEAD;
 	life = 0;
 	Notify();
 }
@@ -3411,6 +3412,13 @@ Ship::ExecFrame(double seconds)
 	FMemory::Memzero(trigger, sizeof(trigger));
 	altitude_agl = -1.0e6f;
 
+    // A dying ship needs simulation ticks even with an Unreal-only hull or on deck.
+    if (IsDying() && killer)
+    {
+        killer->ExecFrame(seconds);
+        if (IsDead()) return;
+    }
+
 	if (flight_phase < EOPSMode::LAUNCH) {
 		DockFrame(seconds);
 		return;
@@ -3452,9 +3460,6 @@ Ship::ExecFrame(double seconds)
 			return;
 		}
 
-		if (rep && IsDying() && killer) {
-			killer->ExecFrame(seconds);
-		}
 	}
 
 	if (IsStatic()) {

@@ -98,12 +98,12 @@ void ShipKiller::BeginDeathSpiral()
 	loc = ship->GetLocation() + ship->GetVelocity() * (time_to_go - 1.0f);
 
 	// Unreal: prefer FMath over rand()
-	if (FMath::Rand() < 16000)
+	if (FMath::RandRange(0, 32767) < 16000)
 		loc += ship->GetBeamLine() * (-3.0f * (float)ship->GetRadius());
 	else
 		loc += ship->GetBeamLine() * (3.0f * (float)ship->GetRadius());
 
-	if (FMath::Rand() < 8000)
+	if (FMath::RandRange(0, 32767) < 8000)
 		loc += ship->GetLiftLine() * (-1.0f * (float)ship->GetRadius());
 	else
 		loc += ship->GetLiftLine() * (2.0f * (float)ship->GetRadius());
@@ -185,9 +185,9 @@ void ShipKiller::ExecFrame(double seconds)
 	// UE COMPAT: replace "FVector * Matrix" with an explicit rotation transform.
 	// Assumption: ship->Cam().Orientation() returns your Starshatter Matrix type.
 	// This lambda converts Matrix -> FRotationMatrix and transforms a direction vector.
-	const auto TransformDirByShipCam = [&](const FVector& LocalDir) -> FVector
+	const auto TransformDirection = [](const Camera& Frame, const FVector& LocalDir) -> FVector
 		{
-			const Matrix& M = ship->GetCam().Orientation();
+			const Matrix& M = Frame.Orientation();
 
 			// Convert Starshatter Matrix basis into an Unreal FMatrix.
 			// The original code uses rows as basis vectors:
@@ -221,7 +221,7 @@ void ShipKiller::ExecFrame(double seconds)
 
 		if (design->explosion[exp_index].GetType() > EExplosionType::NONE) {
 			const FVector exp_loc =
-				ship->GetLocation() + TransformDirByShipCam(design->explosion[exp_index].GetLocation());
+				ship->GetLocation() + TransformDirection(ship->GetCam(), design->explosion[exp_index].GetLocation());
 			sim->CreateExplosion(exp_loc,
 				ship->GetVelocity(),
 				design->explosion[exp_index].GetType(),
@@ -236,7 +236,7 @@ void ShipKiller::ExecFrame(double seconds)
 		for (int i = 0; i < ShipDesign::MAX_EXPLOSIONS; i++) {
 			if (design->explosion[i].IsFinal()) {
 				const FVector exp_loc =
-					ship->GetLocation() + TransformDirByShipCam(design->explosion[i].GetLocation());
+					ship->GetLocation() + TransformDirection(ship->GetCam(), design->explosion[i].GetLocation());
 
 				sim->CreateExplosion(exp_loc,
 					ship->GetVelocity(),
@@ -255,7 +255,7 @@ void ShipKiller::ExecFrame(double seconds)
             const double VisualRadius = Visual ? Visual->GetVisualRadius() : 0.0;
             if (Fragment.GetModel() || (VisualRadius > 0 && Fragment.GetMass() > 0 && Fragment.GetLife() > 0)) {
 				const FVector debris_loc =
-					ship->GetLocation() + TransformDirByShipCam(design->debris[i].GetLocation());
+					ship->GetLocation() + TransformDirection(ship->GetCam(), Fragment.GetLocation());
 
 				FVector debris_vel = debris_loc - ship->GetLocation();
 				debris_vel.Normalize();
@@ -294,7 +294,7 @@ void ShipKiller::ExecFrame(double seconds)
 							continue;
 
 						const FVector fire_loc =
-							debris->GetLocation() + TransformDirByShipCam(design->debris[i].GetFireLocation(fire));
+							debris->GetLocation() + TransformDirection(debris->GetCam(), Fragment.GetFireLocation(fire));
 						if (design->debris[i].GetFireType() > (int) EExplosionType::NONE) {
 							sim->CreateExplosion(fire_loc,
 								ship->GetVelocity(),

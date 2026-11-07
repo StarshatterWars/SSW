@@ -1,0 +1,36 @@
+#
+# BoltPit Material Library exported by Magic 2.0
+#
+
+newmtl Cockpit
+Ka 0.40000 0.40000 0.40000
+Kd 0.48039 0.48314 0.41451
+Ks 0.43137 0.42549 0.39020
+Ns 20.00000
+illum 2
+map_Kd EAGLEPIT_D.jpg
+
+newmtl Canopy
+Ka 0.00000 0.00000 0.00000
+Kd 0.50196 0.50196 0.50196
+Ks 0.00000 0.00000 0.00000
+Ns 10.00000
+illum 2
+map_Kd ECANOPY_D.jpg
+
+newmtl HUD
+Ka 0.00000 0.00000 0.00000
+Kd 0.00000 0.00000 0.00000
+Ks 0.00000 0.00000 0.00000
+Ns 0.00000
+illum 2
+map_Kd hud-512.pcx
+
+newmtl MFD
+Ka 0.00000 0.00000 0.00000
+Kd 0.00000 0.00000 0.00000
+Ks 0.00000 0.00000 0.00000
+Ns 0.00000
+illum 2
+map_Kd hud-512.pcx
+

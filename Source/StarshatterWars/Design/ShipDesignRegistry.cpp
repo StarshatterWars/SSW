@@ -258,6 +258,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
     // Core flight + physics
     //-------------------------------------------------------------
     Legacy->scale = Row.Scale;
+    Legacy->explosion_scale = Row.ExplosionScale;
     Legacy->vlimit = Row.Vlimit;
     Legacy->agility = Row.Agility;
 
@@ -1200,9 +1201,22 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
                 FString ShipKey = ShipVisualCatalog::DefinitionName(Row.ShipName, Row.Model);
                 const bool bMarakanHulk = ShipKey.RemoveFromStart(TEXT("Hulk-"));
                 FString Folder;
-                if (Model.Equals(TEXT("Debris0A"), ESearchCase::IgnoreCase) ||
+                if (ShipKey == TEXT("Saber") && Model.Equals(TEXT("DebrisX"), ESearchCase::IgnoreCase))
+                {
+                    Folder = TEXT("/Game/Models/Saber/Debris");
+                }
+                else if (Row.ShipEmpire == EShipEmpire::Pirate &&
+                    (Model.Equals(TEXT("Debris5"), ESearchCase::IgnoreCase) ||
+                     Model.Equals(TEXT("Debris6"), ESearchCase::IgnoreCase) ||
+                     Model.Equals(TEXT("Debris7"), ESearchCase::IgnoreCase) ||
+                     Model.Equals(TEXT("DebrisX"), ESearchCase::IgnoreCase)))
+                {
+                    Folder = TEXT("/Game/Models/Debris/Pirate");
+                }
+                else if (Model.Equals(TEXT("Debris0A"), ESearchCase::IgnoreCase) ||
                     Model.Equals(TEXT("Debris0B"), ESearchCase::IgnoreCase) ||
-                    Model.Equals(TEXT("Debris0C"), ESearchCase::IgnoreCase))
+                    Model.Equals(TEXT("Debris0C"), ESearchCase::IgnoreCase) ||
+                    Model.Equals(TEXT("DebrisX"), ESearchCase::IgnoreCase))
                 {
                     if (Row.ShipEmpire == EShipEmpire::Marakan || bMarakanHulk)
                         Folder = TEXT("/Game/Models/Debris/Marakan");

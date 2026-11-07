@@ -857,7 +857,7 @@ void SimRegion::UpdateShips(double seconds)
     for (int i = 0; i < ships.size(); /* manual */) {
         Ship* s = ships[i];
 
-        if (!s || IsDeadShip(s)) {
+        if (!s || s->IsDead()) {
             if (s && !dead_ships.contains(s))
                 dead_ships.append(s);
 
@@ -875,7 +875,7 @@ void SimRegion::UpdateShips(double seconds)
         if (s->NumFlightDecks() > 0)
             carriers.append(s);
 
-        if (IsDeadShip(s)) {
+        if (s->IsDead()) {
             if (!dead_ships.contains(s))
                 dead_ships.append(s);
 
@@ -889,7 +889,7 @@ void SimRegion::UpdateShips(double seconds)
     if (player_ship && player_ship->GetRegion() != this)
         player_ship = nullptr;
 
-    if (player_ship && IsDeadShip(player_ship))
+    if (player_ship && player_ship->IsDead())
         player_ship = nullptr;
     ++ai_index;
 }

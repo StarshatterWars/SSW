@@ -1,0 +1,12 @@
+#
+# Saber Material Library exported by Magic 2.0
+#
+
+newmtl Hull
+Ka 0.75294 0.75294 0.75294
+Kd 1.00000 1.00000 1.00000
+Ks 0.70000 0.70000 0.70000
+Ns 30.00000
+illum 2
+map_Kd Saber_D.jpg
+

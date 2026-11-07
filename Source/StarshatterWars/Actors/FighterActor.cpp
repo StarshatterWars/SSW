@@ -108,12 +108,43 @@ void AFighterActor::ConfigureCockpitBlueprint()
     const bool IsFalcon = AuthoredCockpitModel.Equals(TEXT("FalconPit"),ESearchCase::IgnoreCase)
         || (HullMesh && HullMesh->GetStaticMesh() && HullMesh->GetStaticMesh()->GetName().Equals(TEXT("Falcon"),ESearchCase::IgnoreCase))
         || (Runtime && Runtime->Design() && !FCStringAnsi::Stricmp(Runtime->Design()->name,"Falcon"));
-    if (!IsFalcon) return;
-    const FString FalconPitPath(TEXT("/Game/Models/Cockpit/Falcon/BP_FalconPit.BP_FalconPit_C"));
+    if (!IsFalcon)
+    {
+        const FString* Folder = nullptr;
+        static const TMap<FString, FString> CockpitFolders = {
+            {TEXT("EaglePit"), TEXT("Eagle")},
+            {TEXT("StormhawkPit"), TEXT("Stormhawk")},
+            {TEXT("ThunderboltPit"), TEXT("Thunderbolt")},
+        };
+        Folder = CockpitFolders.Find(AuthoredCockpitModel);
+        if (!Folder) return;
+        const FString Package = FString::Printf(TEXT("/Game/Models/Cockpits/%s/BP_%s"),
+            **Folder, *AuthoredCockpitModel);
+        const FString ClassPath = Package + TEXT(".BP_") + AuthoredCockpitModel + TEXT("_C");
+        if (CockpitComponent->GetChildActorClass() &&
+            CockpitComponent->GetChildActorClass()->GetPathName() != ClassPath) return;
+        if (!CockpitComponent->GetChildActorClass())
+        {
+            if (!FPackageName::DoesPackageExist(Package)) return;
+            if (UClass* Class = LoadClass<AActor>(nullptr, *ClassPath))
+                CockpitComponent->SetChildActorClass(Class);
+        }
+        CockpitComponent->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+        const double HullScale = GetActorScale3D().X;
+        if (HullScale > SMALL_NUMBER)
+            CockpitComponent->SetRelativeScale3D(FVector(AuthoredCockpitScale / HullScale));
+        return;
+    }
+    const FString OldFalconPitPath(TEXT("/Game/Models/Cockpit/Falcon/BP_FalconPit.BP_FalconPit_C"));
+    const FString NewFalconPitPath(TEXT("/Game/Models/Cockpits/Falcon/BP_FalconPit.BP_FalconPit_C"));
+    const FString& FalconPitPath = FPackageName::DoesPackageExist(TEXT("/Game/Models/Cockpits/Falcon/BP_FalconPit"))
+        ? NewFalconPitPath : OldFalconPitPath;
     // Preserve explicit custom cockpit assemblies and their authored transforms.
     if (CockpitComponent->GetChildActorClass()
-        && CockpitComponent->GetChildActorClass()->GetPathName() != FalconPitPath) return;
-    if (!CockpitComponent->GetChildActorClass())
+        && CockpitComponent->GetChildActorClass()->GetPathName() != OldFalconPitPath
+        && CockpitComponent->GetChildActorClass()->GetPathName() != NewFalconPitPath) return;
+    if (!CockpitComponent->GetChildActorClass() ||
+        CockpitComponent->GetChildActorClass()->GetPathName() != FalconPitPath)
         if (UClass* Class = LoadClass<AActor>(nullptr,*FalconPitPath))
             CockpitComponent->SetChildActorClass(Class);
     CockpitComponent->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
@@ -130,7 +161,9 @@ void AFighterActor::ConfigureCockpitBlueprint()
         // Imported hull glass and FalconPit CANOPY_D have different origins.
         // This offset aligns their centers after hull +90 and cockpit -90 yaw,
         // leaving the legacy bridge/viewpoint and independent model scale intact.
-        CockpitComponent->SetRelativeLocation(FalconCockpitVisualOffset);
+        const FVector ImportCorrection = FalconPitPath == NewFalconPitPath
+            ? FVector(-0.287, 0.015, 0.438) : FVector::ZeroVector;
+        CockpitComponent->SetRelativeLocation(FalconCockpitVisualOffset + ImportCorrection);
     }
     const float HullScale = Design ? Design->scale : 0.27f;
     const float CockpitScale = Design ? Design->cockpit_scale : 0.02f;

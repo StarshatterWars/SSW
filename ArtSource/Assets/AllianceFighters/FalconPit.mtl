@@ -1,0 +1,36 @@
+#
+# FalconPit Material Library exported by Magic 2.0
+#
+
+newmtl Main
+Ka 0.00000 0.00000 0.00000
+Kd 0.61569 0.63529 0.69020
+Ks 0.70588 0.76863 0.80392
+Ns 33.00000
+illum 2
+map_Kd FALCONPIT_D.jpg
+
+newmtl CANOPY_D
+Ka 0.37647 0.37647 0.37647
+Kd 0.37647 0.37647 0.37647
+Ks 0.00000 0.00000 0.00000
+Ns 20.00000
+illum 2
+map_Kd FCANOPY_D.jpg
+
+newmtl HUD
+Ka 0.00000 0.00000 0.00000
+Kd 0.00000 0.00000 0.00000
+Ks 0.00000 0.00000 0.00000
+Ns 0.00000
+illum 2
+map_Kd hud-512.pcx
+
+newmtl MFD
+Ka 0.00000 0.00000 0.00000
+Kd 0.00000 0.00000 0.00000
+Ks 0.00000 0.00000 0.00000
+Ns 0.00000
+illum 2
+map_Kd hud-512.pcx
+

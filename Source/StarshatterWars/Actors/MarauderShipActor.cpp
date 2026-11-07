@@ -1,6 +1,7 @@
 #include "MarauderShipActor.h"
 AMarauderShipActor::AMarauderShipActor()
 {
+    bLegacyEmitterCoordinates = true;
 
     SetActorScale3D(FVector(2.5f));
 

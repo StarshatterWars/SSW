@@ -135,6 +135,54 @@ private:
     int32 Panel=0;
 };
 
+namespace
+{
+struct FCockpitPanelSurface
+{
+    FVector TopLeft;
+    FVector TopRight;
+    FVector BottomLeft;
+};
+
+// Authored HUD and MFD faces converted from OBJ coordinates to the imported FBX basis.
+TConstArrayView<FCockpitPanelSurface> CockpitPanelLayout(FName MeshName)
+{
+    static const FCockpitPanelSurface FalconPit[] = {
+        {{71.102417,182.349457,-40.402714}, {47.681965,190.185822,-40.402714}, {70.079567,179.292480,-64.888107}},
+        {{-7.01,193.36,-33.73}, {-35.66,193.36,-33.73}, {-7.01,189.86,-62.17}},
+        {{48.085361,183.565155,24.140862}, {-48.085361,183.565155,24.140862}, {48.085361,183.565155,-24.397217}},
+        {{35.68,193.36,-33.73}, {7.03,193.36,-33.73}, {35.68,189.86,-62.17}},
+        {{-47.681965,190.185822,-40.402714}, {-71.102417,182.349457,-40.402714}, {-46.659107,187.128845,-64.888107}},
+    };
+    if (MeshName == TEXT("FalconPit")) return FalconPit;
+    static const FCockpitPanelSurface EaglePit[] = {
+        {{61.28292, 190.59924, -35.39997}, {30.64771, 194.63245, -35.39997}, {60.76295, 186.64972, -65.65838}},
+        {{21.82903, 187.85002, -82.27844}, {-21.67839, 187.85002, -82.27844}, {21.82903, 179.75490, -102.31459}},
+        {{45.08002, 183.56516, 22.62400}, {-45.08002, 183.56516, 22.62401}, {45.08002, 183.56516, -22.88045}},
+        {{9.03302, 195.67630, -29.79222}, {-8.87209, 195.67630, -29.79222}, {9.03302, 193.33922, -47.54412}},
+        {{-30.39818, 194.60727, -35.59299}, {-61.03339, 190.57407, -35.59299}, {-29.87822, 190.65775, -65.85140}},
+    };
+    static const FCockpitPanelSurface StormhawkPit[] = {
+        {{80.67818, 190.56984, -27.62829}, {46.14000, 195.07799, -28.22180}, {80.67818, 186.07870, -61.74181}},
+        {{30.62526, 196.64900, -36.43555}, {-30.18109, 196.64900, -36.43555}, {30.62526, 192.85352, -65.26510}},
+        {{48.08536, 183.56516, 24.14082}, {-48.08536, 183.56516, 24.14082}, {48.08536, 183.56516, -24.39726}},
+        {{66.02338, 186.10338, -79.00187}, {44.06894, 187.44617, -79.00187}, {65.50951, 177.70174, -99.32305}},
+        {{-46.13939, 195.07799, -28.22180}, {-80.67758, 190.56984, -27.62829}, {-46.13939, 190.58685, -62.33533}},
+    };
+    static const FCockpitPanelSurface ThunderboltPit[] = {
+        {{61.48940, 188.05246, -49.83309}, {41.34616, 188.05246, -49.83309}, {61.48940, 185.42325, -69.80397}},
+        {{16.65184, 194.80428, -34.40786}, {-17.33989, 194.80428, -34.40786}, {16.65184, 190.36746, -68.10864}},
+        {{45.08002, 183.56516, 22.62400}, {-45.08002, 183.56516, 22.62401}, {45.08002, 183.56516, -22.88045}},
+        {{21.82903, 185.95863, -82.96233}, {-21.67839, 185.95863, -82.96233}, {21.82903, 177.86351, -102.99847}},
+        {{-40.63260, 188.05246, -49.83309}, {-60.77584, 188.05246, -49.83309}, {-40.63260, 185.42325, -69.80397}},
+    };
+    if (MeshName == TEXT("EaglePit")) return EaglePit;
+    if (MeshName == TEXT("StormhawkPit")) return StormhawkPit;
+    if (MeshName == TEXT("ThunderboltPit")) return ThunderboltPit;
+    return {};
+ }
+}
+
 FCockpitDisplays::~FCockpitDisplays(){Clear();}
 bool FCockpitDisplays::IsActive() const
 {
@@ -157,7 +205,9 @@ bool FCockpitDisplays::HandleGearClick()
 }
 void FCockpitDisplays::Clear()
 {
-    if(Mesh.IsValid() && OriginalHUD.IsValid())Mesh->SetMaterial(2,OriginalHUD.Get());
+    if(Mesh.IsValid() && OriginalHUD.IsValid() && OriginalHUDSlot != INDEX_NONE)
+        Mesh->SetMaterial(OriginalHUDSlot, OriginalHUD.Get());
+    OriginalHUDSlot = INDEX_NONE;
     for(auto& Panel:Panels)if(Panel.IsValid())Panel->DestroyComponent();
     Panels.Reset();Mesh.Reset();OriginalHUD.Reset();Blank.Reset();
 }
@@ -165,35 +215,33 @@ void FCockpitDisplays::Update(AFighterActor* Fighter,TSharedRef<SFighterHUDDetai
 {
     AActor* Child=Fighter && Fighter->CockpitComponent?Fighter->CockpitComponent->GetChildActor():nullptr;
     UStaticMeshComponent* Screen=Child?Child->FindComponentByClass<UStaticMeshComponent>():nullptr;
-    // The measured screen layout belongs only to this mesh. Other cockpits keep the external HUD.
-    if(!Visible || !Fighter || !Fighter->IsCockpitViewActive() || !Screen || !Screen->GetStaticMesh() || Screen->GetStaticMesh()->GetPathName()!=TEXT("/Game/Models/Cockpit/Falcon/FalconPit.FalconPit")){Clear();return;}
-    if(Mesh.Get()!=Screen)
+    const auto Layout = Screen && Screen->GetStaticMesh()
+        ? CockpitPanelLayout(Screen->GetStaticMesh()->GetFName()) : TConstArrayView<FCockpitPanelSurface>{};
+    if (!Visible || !Fighter || !Fighter->IsCockpitViewActive() || Layout.IsEmpty()) { Clear(); return; }
+    if (Mesh.Get() != Screen)
     {
-        Clear();Mesh=Screen;OriginalHUD.Reset(Screen->GetMaterial(2));
-        // FalconPit mesh coordinates: own ship, sensor, combiner, mission, target.
-        const FVector TL[] = {{71.102417,182.349457,-40.402714}, {-7.01,193.36,-33.73},
-            {48.085361,183.565155,24.140862}, {35.68,193.36,-33.73}, {-47.681965,190.185822,-40.402714}};
-        const FVector TR[] = {{47.681965,190.185822,-40.402714}, {-35.66,193.36,-33.73},
-            {-48.085361,183.565155,24.140862}, {7.03,193.36,-33.73}, {-71.102417,182.349457,-40.402714}};
-        const FVector BL[] = {{70.079567,179.292480,-64.888107}, {-7.01,189.86,-62.17},
-            {48.085361,183.565155,-24.397217}, {35.68,189.86,-62.17}, {-46.659107,187.128845,-64.888107}};
-        for (int32 I = 0; I < UE_ARRAY_COUNT(TL); ++I)
+        Clear();
+        Mesh = Screen;
+        OriginalHUDSlot = Screen->GetMaterialIndex(TEXT("HUD"));
+        if (OriginalHUDSlot != INDEX_NONE) OriginalHUD.Reset(Screen->GetMaterial(OriginalHUDSlot));
+        for (int32 I = 0; I < Layout.Num(); ++I)
         {
+            const auto& Surface = Layout[I];
             auto* W=NewObject<UWidgetComponent>(Child,NAME_None,RF_Transient);
             W->SetupAttachment(Screen);W->SetWidgetSpace(EWidgetSpace::World);W->SetDrawSize(I==2?FVector2D(1024,512):FVector2D(512,512));
             W->SetPivot(FVector2D::ZeroVector);W->SetTwoSided(true);W->SetBlendMode(I==2?EWidgetBlendMode::Transparent:EWidgetBlendMode::Opaque);
             W->SetBackgroundColor(I==2?FLinearColor::Transparent:FLinearColor::Black);
             W->SetCollisionEnabled(ECollisionEnabled::NoCollision);W->SetCastShadow(false);W->SetTickWhenOffscreen(true);W->SetRedrawTime(.1f);
-            const FVector Right=TR[I]-TL[I],Down=BL[I]-TL[I];const FVector Normal=FVector::CrossProduct(Right,Down).GetSafeNormal();
+            const FVector Right=Surface.TopRight-Surface.TopLeft,Down=Surface.BottomLeft-Surface.TopLeft;const FVector Normal=FVector::CrossProduct(Right,Down).GetSafeNormal();
             // Keep the panel in front of the surface after fighter cockpit scaling.
             const double SurfaceClearance = I == 2 ? 0.03 : 1.0;
-            W->SetRelativeLocation(TL[I]+Normal*SurfaceClearance);W->SetRelativeRotation(FRotationMatrix::MakeFromYZ(-Right,-Down).Rotator());
+            W->SetRelativeLocation(Surface.TopLeft+Normal*SurfaceClearance);W->SetRelativeRotation(FRotationMatrix::MakeFromYZ(-Right,-Down).Rotator());
             W->SetRelativeScale3D(FVector(1,Right.Size()/(I==2?1024:512),Down.Size()/512));
             W->SetSlateWidget(SNew(SCockpitInstrument,HUD,I,TWeakObjectPtr<AFighterActor>(Fighter)));W->RegisterComponent();Panels.Add(W);
         }
     }
     // Blank the imported HUD artwork only once the replacement is rendered.
-    if(IsActive() && !Blank.IsValid())
+    if(IsActive() && OriginalHUDSlot != INDEX_NONE && !Blank.IsValid())
     {
         Blank.Reset(UTexture2D::CreateTransient(1,1,PF_B8G8R8A8));
         if(Blank.IsValid()){
@@ -206,7 +254,7 @@ void FCockpitDisplays::Update(AFighterActor* Fighter,TSharedRef<SFighterHUDDetai
                 auto* Empty = UMaterialInstanceDynamic::Create(Material, Screen);
                 Empty->SetTextureParameterValue(TEXT("SlateUI"), Blank.Get());
                 Empty->SetVectorParameterValue(TEXT("TintColorAndOpacity"), FLinearColor::Transparent);
-                Screen->SetMaterial(2, Empty);
+                Screen->SetMaterial(OriginalHUDSlot, Empty);
             }
         }
     }
@@ -294,6 +342,53 @@ bool FCockpitDisplaysTest::RunTest(const FString&)
     TestEqual(TEXT("Leaving cockpit destroys transient displays"),Panels.Num(),0);TestEqual(TEXT("Imported HUD material restored"),Mesh->GetMaterial(2),Original);
     Displays.Update(Fighter,HUD,true);TestFalse(TEXT("External mode retains floating HUD fallback"),Displays.IsActive());
     Fighter->SetCockpitViewActive(true);FMissionCameraRig Rig;Rig.PlayerActor=Fighter;Rig.Reset(nullptr);TestFalse(TEXT("Camera reset clears cockpit mode"),Fighter->IsCockpitViewActive());
+    for (const TCHAR* Name : {TEXT("Eagle"), TEXT("Stormhawk"), TEXT("Thunderbolt"), TEXT("Zodiac"), TEXT("Jackal")})
+    {
+        const FString Path = FString::Printf(TEXT("/Game/Models/%s/BP_%s.BP_%s_C"), Name, Name, Name);
+        UClass* FighterClass = LoadClass<AFighterActor>(nullptr, *Path);
+        AFighterActor* Other = FighterClass ? World->SpawnActor<AFighterActor>(FighterClass) : nullptr;
+        if (!TestNotNull(FString(Name) + TEXT(" fighter Blueprint"), Other)) continue;
+        Other->SetCockpitViewActive(true);
+        Displays.Update(Other, HUD, true);
+        AActor* Cockpit = Other->CockpitComponent->GetChildActor();
+        TArray<UWidgetComponent*> Instruments;
+        if (Cockpit) Cockpit->GetComponents(Instruments);
+        const bool bHasSuppliedCockpit = FCString::Stricmp(Name, TEXT("Zodiac")) != 0 && FCString::Stricmp(Name, TEXT("Jackal")) != 0;
+        TestEqual(FString(Name) + TEXT(" physical instruments"), Instruments.Num(), bHasSuppliedCockpit ? 5 : 0);
+        for (auto* Instrument : Instruments)
+        {
+            TestEqual(TEXT("Attached to the cockpit surface"), Instrument->GetAttachParent(),
+                static_cast<USceneComponent*>(Cockpit->FindComponentByClass<UStaticMeshComponent>()));
+            TestEqual(TEXT("Instrument has no gameplay collision"), Instrument->GetCollisionEnabled(), ECollisionEnabled::NoCollision);
+            const FTransform Transform = Instrument->GetRelativeTransform();
+            TestTrue(TEXT("Instrument faces aft toward pilot"), Transform.GetRotation().GetForwardVector().Y < -0.8);
+        }
+        if (bHasSuppliedCockpit && !GUsingNullRHI)
+        {
+            Other->CockpitComponent->SetVisibility(true, true);
+            Cockpit->SetActorHiddenInGame(false);
+            for (auto* Instrument : Instruments)
+            {
+                Instrument->SetRedrawTime(0);
+                Instrument->TickComponent(0.2f, LEVELTICK_All, nullptr);
+            }
+            FlushRenderingCommands();
+            Displays.Update(Other, HUD, true);
+            TestTrue(FString(Name) + TEXT(" instrument render targets are ready"), Displays.IsActive());
+            for (auto* Instrument : Instruments)
+            {
+                auto* Target = Instrument->GetRenderTarget();
+                if (!TestNotNull(FString(Name) + TEXT(" panel render target"), Target)) continue;
+                TArray<FColor> Pixels;
+                Target->GameThread_GetRenderTargetResource()->ReadPixels(Pixels);
+                int32 Lit = 0;
+                for (const FColor& Pixel : Pixels) if (Pixel.B > 50 && Pixel.G > 50) ++Lit;
+                TestTrue(FString(Name) + TEXT(" panel renders live information"), Lit > 100);
+            }
+        }
+        Displays.Clear();
+        Other->Destroy();
+    }
     World->DestroyWorld(false);return true;
 }
 #endif

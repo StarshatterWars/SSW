@@ -253,3 +253,11 @@ death_spiral: {
 
 }
 
+navlight: {
+   name: "Running Lights"
+   scale: 1.0
+   period: 1.0
+   light: { name: "Port", loc: (-98.75, -1544.62, 16.57), color: "red", intensity: 1800, radius: 140, mode: "steady" }
+   light: { name: "Starboard", loc: (-95.05, 1534.57, 16.57), color: "green", intensity: 1800, radius: 140, mode: "steady" }
+   light: { name: "Aft", loc: (-1557.77, -98.45, 16.56), color: "white", intensity: 1800, radius: 140, mode: "steady" }
+}

@@ -1,6 +1,7 @@
 #include "CutlassShipActor.h"
 ACutlassShipActor::ACutlassShipActor()
 {
+    bLegacyEmitterCoordinates = true;
     SetActorScale3D(FVector(0.24f));
 
     ApplyAuthoredAttachmentDefaults();

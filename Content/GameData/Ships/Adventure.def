@@ -323,12 +323,12 @@ nav:        {
 
 
 map: {
-   sprite: "cvmap0,
+   sprite: "cvmap0",
    sprite: "cvmap1",
    sprite: "cvmap2",
    sprite: "cvmap3",
-   sprite: "cvmap4,
-   sprite: "cvmap5,
+   sprite: "cvmap4",
+   sprite: "cvmap5",
    sprite: "cvmap6",
    sprite: "cvmap7"
 }
@@ -391,8 +391,11 @@ death_spiral: {
 
 }
 
-
-
-
-
-
+navlight: {
+   name: "Running Lights"
+   scale: 1.0
+   period: 1.0
+   light: { name: "Port", loc: (295.49, -6.35, -177.78), color: "red", intensity: 1800, radius: 140, mode: "steady" }
+   light: { name: "Starboard", loc: (-294.47, -6.35, -177.78), color: "green", intensity: 1800, radius: 140, mode: "steady" }
+   light: { name: "Aft", loc: (27.81, 63.92, -959.45), color: "white", intensity: 1800, radius: 140, mode: "steady" }
+}

@@ -252,8 +252,7 @@ struct FMissionCameraRig
         // must also move the cockpit camera, never the legacy simulation bridge.
         if (auto* Fighter = Cast<AFighterActor>(Visual))
             if (Fighter->IsCockpitViewActive() && Fighter->CockpitComponent &&
-                Fighter->CockpitComponent->GetChildActorClass() &&
-                Fighter->CockpitComponent->GetChildActorClass()->GetPathName() == TEXT("/Game/Models/Cockpit/Falcon/BP_FalconPit.BP_FalconPit_C"))
+                Fighter->CockpitComponent->GetChildActor())
                 Eye = Fighter->CockpitComponent->GetComponentLocation();
         FQuat Rotation = ShipRotation;
         if (bDock)
@@ -357,6 +356,14 @@ struct FMissionCameraRig
             if (!bDropCaptured)
             {
                 DropPosition = CameraActor->GetActorLocation();
+                if (Player->IsDying())
+                {
+                    const Camera& Frame = Player->GetCam();
+                    const FVector Delta = Player->GetTransitionLocation() - Player->GetLocation();
+                    const FVector Local(FVector::DotProduct(Delta, Frame.vpn()), FVector::DotProduct(Delta, Frame.vrt()),
+                        FVector::DotProduct(Delta, Frame.vup()));
+                    DropPosition = Pose.TransformPositionNoScale(Local);
+                }
                 bDropCaptured = true;
             }
             Eye = DropPosition;

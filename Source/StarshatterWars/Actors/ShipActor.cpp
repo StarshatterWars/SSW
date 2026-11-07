@@ -2784,24 +2784,8 @@ void AShipActor::BuildThrustersFromRuntime()
 {
     ClearRuntimeThrusters();
 
-    if (!bEnableThrusterEmitters)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[ShipActor] BuildThrustersFromRuntime: disabled Actor='%s'"),
-            *GetName());
-        return;
-    }
-
     if (!RuntimeShip)
     {
-        return;
-    }
-
-    if (!ThrusterFlareSystem && !ThrusterTrailSystem)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[ShipActor] BuildThrustersFromRuntime: no Niagara systems Actor='%s'"),
-            *GetName());
         return;
     }
 
@@ -2814,6 +2798,7 @@ void AShipActor::BuildThrustersFromRuntime()
 
 
 
+    UStaticMesh* NozzleMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
     const int32 NumPorts = RuntimeThruster->GetNumThrusters();
 
     for (int32 PortIndex = 0; PortIndex < NumPorts; ++PortIndex)
@@ -2852,7 +2837,25 @@ void AShipActor::BuildThrustersFromRuntime()
         FX.AudioMultiplier = Port->AudioMultiplier;
         FX.RuntimePortIndex = PortIndex;
 
-        if (Port->bShowFlare && ThrusterFlareSystem)
+        if (NozzleMesh)
+        {
+            const FRotator ExhaustRotation = ConvertLegacyPortRotation(FX.Rotation);
+            const float Diameter = FMath::Clamp(Port->PortScale * 0.06f, 0.035f, 0.14f);
+            FX.Nozzle = NewObject<UStaticMeshComponent>(this,
+                MakeUniqueObjectName(this, UStaticMeshComponent::StaticClass(), TEXT("ThrusterNozzle")), RF_Transient);
+            FX.Nozzle->SetupAttachment(VFXRoot);
+            FX.Nozzle->SetStaticMesh(NozzleMesh);
+            FX.Nozzle->SetRelativeLocation(PortLocation - ExhaustRotation.Vector() * (Diameter * 25.0));
+            FX.Nozzle->SetRelativeRotation(ExhaustRotation.Quaternion() * FRotator(90, 0, 0).Quaternion());
+            FX.Nozzle->SetRelativeScale3D(FVector(Diameter, Diameter, Diameter * 0.5f));
+            FX.Nozzle->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            FX.Nozzle->SetGenerateOverlapEvents(false);
+            FX.Nozzle->SetCastShadow(false);
+            FX.Nozzle->SetCanEverAffectNavigation(false);
+            FX.Nozzle->RegisterComponent();
+        }
+
+        if (bEnableThrusterEmitters && Port->bShowFlare && ThrusterFlareSystem)
         {
             FX.Flare = NewObject<UNiagaraComponent>(this);
 
@@ -2871,7 +2874,7 @@ void AShipActor::BuildThrustersFromRuntime()
             }
         }
 
-        if (Port->bShowTrail && ThrusterTrailSystem)
+        if (bEnableThrusterEmitters && Port->bShowTrail && ThrusterTrailSystem)
         {
             FX.Trail = NewObject<UNiagaraComponent>(this);
 
@@ -2898,6 +2901,12 @@ void AShipActor::ClearRuntimeThrusters()
 {
     for (FRuntimeThrusterFX& FX : RuntimeThrusterFX)
     {
+        if (FX.Nozzle)
+        {
+            FX.Nozzle->DestroyComponent();
+            FX.Nozzle = nullptr;
+        }
+
         if (FX.Flare)
         {
             FX.Flare->DestroyComponent();

@@ -140,7 +140,7 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
         AFighterActor* LiveFalcon = World->SpawnActor<AFighterActor>(FalconBP);
         if (TestNotNull(TEXT("Actual Falcon Blueprint spawns"), LiveFalcon))
         {
-            UClass* FalconPit = LoadClass<AActor>(nullptr,TEXT("/Game/Models/Cockpit/Falcon/BP_FalconPit.BP_FalconPit_C"));
+            UClass* FalconPit = LoadClass<AActor>(nullptr,TEXT("/Game/Models/Cockpits/Falcon/BP_FalconPit.BP_FalconPit_C"));
             TestNotNull(TEXT("FalconPit Blueprint exists"),FalconPit);
             TestEqual(TEXT("Saved Falcon uses FalconPit cockpit Blueprint"),LiveFalcon->CockpitComponent->GetChildActorClass().Get(),FalconPit);
             TestNotNull(TEXT("Falcon cockpit child is instantiated"),LiveFalcon->CockpitComponent->GetChildActor());
@@ -166,6 +166,7 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
             for (auto* Mesh:CockpitMeshes)
                 if (CanopyCenter(Mesh,TEXT("CANOPY_D"),CockpitCanopy)) { FoundCockpitCanopy=true; break; }
             TestTrue(TEXT("FalconPit canopy section exists"),FoundCockpitCanopy);
+            AddInfo(FString::Printf(TEXT("Canopy centers hull=%s cockpit=%s local delta=%s"), *HullCanopy.ToString(), *CockpitCanopy.ToString(), *LiveFalcon->FighterCockpitRoot->GetComponentTransform().InverseTransformVector(HullCanopy - CockpitCanopy).ToString()));
             TestTrue(TEXT("Imported cockpit canopy aligns with actual hull canopy"),HullCanopy.Equals(CockpitCanopy,0.05));
 
             TestTrue(TEXT("Falcon cockpit mount converts DEF bridge forward and height"),

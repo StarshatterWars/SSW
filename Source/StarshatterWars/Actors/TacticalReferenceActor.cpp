@@ -2,6 +2,8 @@
 
 #include "TacticalReferenceActor.h"
 #include "ShipDesignRegistry.h"
+#include "ShipActor.h"
+#include "Ship.h"
 #include "ShipVisualCatalog.h"
 #include "StarshatterInputBindings.h"
 #include "GameStructs_System.h"
@@ -61,6 +63,26 @@ ATacticalReferenceActor::ATacticalReferenceActor()
     ApplyView();
 }
 
+ATacticalReferenceActor::~ATacticalReferenceActor() = default;
+
+void ATacticalReferenceActor::ClearShipPreview()
+{
+    if (IsValid(SpawnedVisual))
+    {
+        if (auto* VisualShip = Cast<AShipActor>(SpawnedVisual))
+            VisualShip->BindRuntimeShip(nullptr);
+        SpawnedVisual->Destroy();
+    }
+    SpawnedVisual = nullptr;
+    PreviewShip.Reset();
+}
+
+void ATacticalReferenceActor::EndPlay(const EEndPlayReason::Type Reason)
+{
+    ClearShipPreview();
+    Super::EndPlay(Reason);
+}
+
 void ATacticalReferenceActor::BeginPlay()
 {
     Super::BeginPlay();
@@ -89,7 +111,7 @@ void ATacticalReferenceActor::Tick(float DeltaTime)
 
 void ATacticalReferenceActor::ShowShip(const FString& DesignName)
 {
-    if (SpawnedVisual) { SpawnedVisual->Destroy(); SpawnedVisual = nullptr; }
+    ClearShipPreview();
     if (ShipMesh) { ShipMesh->SetStaticMesh(nullptr); ShipMesh->SetVisibility(false); }
     if (DesignName.IsEmpty() || !GetWorld()) return;
 
@@ -100,10 +122,21 @@ void ATacticalReferenceActor::ShowShip(const FString& DesignName)
         Params.Owner = this;
         if (AActor* Visual = GetWorld()->SpawnActor<AActor>(BPClass, GetActorTransform(), Params))
         {
-            SpawnedVisual = Visual;
-            Visual->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
-            if (ShipMesh) ShipMesh->SetVisibility(false);
-            return;
+            auto* VisualShip = Cast<AShipActor>(Visual);
+            if (VisualShip && VisualShip->HullMesh && VisualShip->HullMesh->GetStaticMesh())
+            {
+                SpawnedVisual = VisualShip;
+                VisualShip->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+                if (ShipDesign* RuntimeDesign = ShipDesignRegistry::FindLegacy(DesignName))
+                {
+                    PreviewShip = MakeUnique<Ship>("Tactical reference", "", RuntimeDesign, 1, 0, nullptr, false);
+                    VisualShip->BindRuntimeShip(PreviewShip.Get());
+                    VisualShip->SetActorTickEnabled(false);
+                }
+                ShowUnavailableMessage(false);
+                return;
+            }
+            Visual->Destroy();
         }
     }
 
@@ -119,7 +152,7 @@ void ATacticalReferenceActor::ShowShip(const FString& DesignName)
 
 void ATacticalReferenceActor::SetDisplayMesh(UStaticMesh* Mesh)
 {
-    if (SpawnedVisual) { SpawnedVisual->Destroy(); SpawnedVisual = nullptr; }
+    ClearShipPreview();
     if (!ShipMesh) return;
     ShipMesh->SetStaticMesh(nullptr);
     ShipMesh->SetVisibility(false);
@@ -162,15 +195,10 @@ void ATacticalReferenceActor::ApplyView()
 
 void ATacticalReferenceActor::ShowShipDesign(const FShipDesign& Design)
 {
-    if (Design.Mesh.IsNull())
-    {
-        ShowShip(Design.ShipName);
-        return;
-    }
-    if (UStaticMesh* Mesh = Design.Mesh.LoadSynchronous())
-        SetDisplayMesh(Mesh);
-    else
-        ShowShip(Design.ShipName);
+    ShowShip(Design.ShipName);
+    if (!SpawnedVisual && !ShipMesh->GetStaticMesh() && !Design.Mesh.IsNull())
+        if (UStaticMesh* Mesh = Design.Mesh.LoadSynchronous())
+            SetDisplayMesh(Mesh);
 }
 
 void ATacticalReferenceActor::CenterInPanel()

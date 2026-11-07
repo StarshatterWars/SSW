@@ -4429,16 +4429,10 @@ void UStarshatterShipDesignSubsystem::ParseDeathSpiral(
 			else if (Def->term() &&
 				Def->term()->isText())
 			{
-				FDebris Step;
-
 				Text ModelBuf;
-
 				GetDefText(ModelBuf, Def, Fn);
-
-				Step.ModelName =
-					FString(ModelBuf);
-
-				NewDS.Debris.Add(Step);
+				CompatDeb.ModelName = FString(ModelBuf);
+				bHasCompatDebris = true;
 			}
 
 			else

@@ -226,3 +226,11 @@ map: {
    sprite: "cmap7"
 }
 
+navlight: {
+   name: "Running Lights"
+   scale: 1.0
+   period: 1.0
+   light: { name: "Port", loc: (178.73, 0.49, -67.14), color: "red", intensity: 1250, radius: 100, mode: "steady" }
+   light: { name: "Starboard", loc: (-178.43, 0.49, -67.14), color: "green", intensity: 1250, radius: 100, mode: "steady" }
+   light: { name: "Aft", loc: (31.33, 29.58, -198.03), color: "white", intensity: 1250, radius: 100, mode: "steady" }
+}
