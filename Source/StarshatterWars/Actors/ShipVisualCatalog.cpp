@@ -3,6 +3,39 @@
 #include "Misc/PackageName.h"
 namespace {
 const ShipVisualCatalog::FEntry Definitions[] = {
+    { TEXT("Barracks"), TEXT("Barracks"), TEXT("Barracks"), TEXT("BarracksBuildingActor"), TEXT("building") },
+    { TEXT("BioDome"), TEXT("BioDome"), TEXT("A1-0"), TEXT("BioDomeBuildingActor"), TEXT("building") },
+    { TEXT("BioDome2"), TEXT("BioDome2"), TEXT("A3-0"), TEXT("BioDome2BuildingActor"), TEXT("building") },
+    { TEXT("BioTrail"), TEXT("BioTrail"), TEXT("A2-0"), TEXT("BioTrailBuildingActor"), TEXT("building") },
+    { TEXT("Bldg00"), TEXT("Bldg00"), TEXT("Bldg00-0"), TEXT("Bldg00BuildingActor"), TEXT("building") },
+    { TEXT("Bldg01"), TEXT("Bldg01"), TEXT("Bldg01-0.mag"), TEXT("Bldg01BuildingActor"), TEXT("building") },
+    { TEXT("Bldg02"), TEXT("Bldg02"), TEXT("Bldg02-0"), TEXT("Bldg02BuildingActor"), TEXT("building") },
+    { TEXT("Bldg03"), TEXT("Bldg03"), TEXT("Bldg03-0"), TEXT("Bldg03BuildingActor"), TEXT("building") },
+    { TEXT("Bldg04"), TEXT("Bldg04"), TEXT("Bldg04-0"), TEXT("Bldg04BuildingActor"), TEXT("building") },
+    { TEXT("Bldg05"), TEXT("Bldg05"), TEXT("Bldg05-0"), TEXT("Bldg05BuildingActor"), TEXT("building") },
+    { TEXT("City00"), TEXT("City00"), TEXT("City00"), TEXT("City00BuildingActor"), TEXT("building") },
+    { TEXT("City01"), TEXT("City01"), TEXT("City01"), TEXT("City01BuildingActor"), TEXT("building") },
+    { TEXT("City02"), TEXT("City02"), TEXT("City02"), TEXT("City02BuildingActor"), TEXT("building") },
+    { TEXT("City03"), TEXT("City03"), TEXT("Vesta02"), TEXT("City03BuildingActor"), TEXT("building") },
+    { TEXT("Cool00"), TEXT("Cool00"), TEXT("Cool00"), TEXT("Cool00BuildingActor"), TEXT("building") },
+    { TEXT("Dsrt00"), TEXT("Dsrt00"), TEXT("Dsrt00"), TEXT("Dsrt00BuildingActor"), TEXT("building") },
+    { TEXT("Dsrt01"), TEXT("Dsrt01"), TEXT("Dsrt01"), TEXT("Dsrt01BuildingActor"), TEXT("building") },
+    { TEXT("Dsrt02"), TEXT("Dsrt02"), TEXT("Dsrt02"), TEXT("Dsrt02BuildingActor"), TEXT("building") },
+    { TEXT("Dsrt03"), TEXT("Dsrt03"), TEXT("Dsrt03"), TEXT("Dsrt03BuildingActor"), TEXT("building") },
+    { TEXT("Dsrt04"), TEXT("Dsrt04"), TEXT("Dsrt04"), TEXT("Dsrt04BuildingActor"), TEXT("building") },
+    { TEXT("Dsrt05"), TEXT("Dsrt05"), TEXT("Dsrt05"), TEXT("Dsrt05BuildingActor"), TEXT("building") },
+    { TEXT("Fact00"), TEXT("Fact00"), TEXT("Fact00"), TEXT("Fact00BuildingActor"), TEXT("building") },
+    { TEXT("Fact01"), TEXT("Fact01"), TEXT("Fact01"), TEXT("Fact01BuildingActor"), TEXT("building") },
+    { TEXT("Fact02"), TEXT("Fact02"), TEXT("Fact02"), TEXT("Fact02BuildingActor"), TEXT("building") },
+    { TEXT("Fact03"), TEXT("Fact03"), TEXT("Fact03"), TEXT("Fact03BuildingActor"), TEXT("building") },
+    { TEXT("Fact04"), TEXT("Fact04"), TEXT("Fact04"), TEXT("Fact04BuildingActor"), TEXT("building") },
+    { TEXT("Gnd_aaa1"), TEXT("AAA 1"), TEXT("Tower3"), TEXT("Gnd_aaa1ShipActor"), TEXT("sam") },
+    { TEXT("Gnd_aaa2"), TEXT("AAA 2"), TEXT("Tower3"), TEXT("Gnd_aaa2ShipActor"), TEXT("sam") },
+    { TEXT("Gnd_sam1"), TEXT("SAM 1"), TEXT("SAMBase"), TEXT("Gnd_sam1ShipActor"), TEXT("sam") },
+    { TEXT("Platform"), TEXT("Platform"), TEXT("Platform"), TEXT("PlatformBuildingActor"), TEXT("building") },
+    { TEXT("Reac01"), TEXT("Reac01"), TEXT("Reactor"), TEXT("Reac01BuildingActor"), TEXT("building") },
+    { TEXT("Senate"), TEXT("Senate"), TEXT("senate2"), TEXT("SenateBuildingActor"), TEXT("building") },
+    { TEXT("Tank00"), TEXT("Tank00"), TEXT("Tank00"), TEXT("Tank00BuildingActor"), TEXT("building") },
     { TEXT("Adventure"), TEXT("Adventure"), TEXT("Adventure"), TEXT("AdventureShipActor"), TEXT("carrier") },
     { TEXT("Archaelith"), TEXT("Archaelith"), TEXT("Archaelith"), TEXT("ArchaelithShipActor"), TEXT("drone") },
     { TEXT("Asher"), TEXT("Asher"), TEXT("Asher"), TEXT("AsherShipActor"), TEXT("destroyer") },
@@ -77,7 +110,9 @@ const ShipVisualCatalog::FEntry Definitions[] = {
 };
 FString ClassPath(const FString& Name)
 {
-    return FString::Printf(TEXT("/Game/Models/%s/BP_%s.BP_%s_C"), *Name, *Name, *Name);
+    const bool bGround = [&]() { for (const auto& E : Definitions)
+        if (Name==E.Definition) return FString(E.Kind)==TEXT("building") || FString(E.Kind)==TEXT("sam"); return false; }();
+    return FString::Printf(bGround ? TEXT("/Game/Assets/Ground/%s/BP_%s.BP_%s_C") : TEXT("/Game/Models/%s/BP_%s.BP_%s_C"), *Name, *Name, *Name);
 }
 }
 TConstArrayView<ShipVisualCatalog::FEntry> ShipVisualCatalog::Entries() { return MakeArrayView(Definitions); }
@@ -106,7 +141,7 @@ UClass* ShipVisualCatalog::Resolve(const FString& DesignName, const FString& Mod
     for (const FString& Name : Names)
     {
         if (Name.IsEmpty()) continue;
-        const FString Package = FString::Printf(TEXT("/Game/Models/%s/BP_%s"), *Name, *Name);
+        FString Package; FString Object; ClassPath(Name).Split(TEXT("."), &Package, &Object);
         if (!FPackageName::IsValidLongPackageName(Package) || !FPackageName::DoesPackageExist(Package)) continue;
         if (UClass* Class = LoadClass<AShipActor>(nullptr, *ClassPath(Name))) return Class;
     }

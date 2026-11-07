@@ -1,6 +1,7 @@
 #include "Gnd_aaa2ShipActor.h"
 AGnd_aaa2ShipActor::AGnd_aaa2ShipActor()
 {
+    GroundDefinition=TEXT("Gnd_aaa2");
     SetActorScale3D(FVector(2.0f));
 
     ApplyAuthoredAttachmentDefaults();
