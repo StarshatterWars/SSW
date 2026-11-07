@@ -470,10 +470,11 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
     const FVector2D Local = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
     if(MouseEvent.GetEffectingButton()==EKeys::LeftMouseButton)
     {
-        if(CockpitDisplays && CockpitDisplays->HandleGearClick())return FReply::Handled();
         Ship* P=PlayerShip();
-        const bool Mini=ThirdPerson.Get() && !(P && P->GetDock() && P->GetFlightPhase()<EOPSMode::ACTIVE) && !IsCockpitDisplayActive();
-        if(!IsCockpitDisplayActive() && P && P->GetGear() && SSWGearIndicator::Contains(Local,GearButtonOrigin(Size,Scale,Mini),FVector2D(28,26)*Scale))
+        const bool bPreTakeoff = P && P->GetDock() && P->GetDock()->IsLaunchDeck() && P->GetFlightPhase()<EOPSMode::ACTIVE;
+        if (!bPreTakeoff && CockpitDisplays && CockpitDisplays->HandleGearClick()) return FReply::Handled();
+        const bool Mini=ThirdPerson.Get() && !bPreTakeoff && !IsCockpitDisplayActive();
+        if(!bPreTakeoff && !IsCockpitDisplayActive() && P && P->GetGear() && SSWGearIndicator::Contains(Local,GearButtonOrigin(Size,Scale,Mini),FVector2D(28,26)*Scale))
         {P->ToggleGear();Refresh();return FReply::Handled();}
     }
     const FVector2D Right(Size.X - 220.f * Scale, Size.Y - 215.f * Scale);
@@ -601,7 +602,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     const bool bMiniHUD = bHasPlayer && bThirdPerson && !bPreTakeoff && !IsCockpitDisplayActive();
     if (!IsCockpitDisplayActive())
     {
-    if(bHasPlayer && HUDPlayer && HUDPlayer->GetGear())SSWGearIndicator::Draw(E,G,L+5,GearButtonOrigin(Size,Scale,bMiniHUD),FVector2D(28,26)*Scale,HUDPlayer);
+    if(!bPreTakeoff && bHasPlayer && HUDPlayer && HUDPlayer->GetGear())SSWGearIndicator::Draw(E,G,L+5,GearButtonOrigin(Size,Scale,bMiniHUD),FVector2D(28,26)*Scale,HUDPlayer);
     if (bHasPlayer && !ThirdPerson.Get() && !bPreTakeoff)
     {
 
