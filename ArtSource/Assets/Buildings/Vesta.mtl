@@ -1,0 +1,12 @@
+#
+# Vesta Material Library exported by Magic 2.0
+#
+
+newmtl (default)
+Ka 0.60235 0.60235 0.60235
+Kd 1.00000 1.00000 1.00000
+Ks 0.05020 0.05020 0.05020
+Ns 55.00000
+illum 2
+map_Kd Vestapol_D.jpg
+

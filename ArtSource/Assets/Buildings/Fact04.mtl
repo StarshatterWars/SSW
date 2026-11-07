@@ -1,0 +1,12 @@
+#
+# Fact04 Material Library exported by Magic 2.0
+#
+
+newmtl City
+Ka 0.25098 0.25098 0.25098
+Kd 1.00000 1.00000 1.00000
+Ks 0.10000 0.10000 0.10000
+Ns 10.00000
+illum 2
+map_Kd CITY_D.jpg
+
