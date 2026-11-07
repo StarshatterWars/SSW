@@ -1188,6 +1188,23 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
     {
         Legacy->death_spiral_time = Src.Time;
 
+        for (int32 Index = 0; Index < FMath::Min(Src.Debris.Num(), int32(ShipDesign::MAX_DEBRIS)); ++Index)
+        {
+            const FDebris& Entry = Src.Debris[Index];
+            ShipDebris& Fragment = Legacy->debris[Index];
+            const FString Model = FPaths::GetBaseFilename(Entry.ModelName.TrimStartAndEnd());
+            Fragment.VisualModel = Model.IsEmpty() ? NAME_None : FName(*Model);
+            Fragment.SetCount(Entry.Count);
+            Fragment.SetLife(FMath::TruncToInt(Entry.Life));
+            Fragment.SetMass(Entry.Mass);
+            Fragment.SetSpeed(Entry.Speed);
+            Fragment.SetDrag(Entry.Drag);
+            Fragment.SetLocation(Entry.Location);
+            Fragment.SetFireType(static_cast<int>(Entry.FireType));
+            for (int32 Fire = 0; Fire < FMath::Min(Entry.FireLocations.Num(), int32(ShipDebris::MAX_FIRE_LOCATIONS)); ++Fire)
+                Fragment.SetFireLocation(Fire, Entry.FireLocations[Fire]);
+        }
+
         const int32 MaxExplosions = FMath::Min(
             (int32)Src.Explosions.Num(),
             (int32)ShipExplosion::GetMaxExplosions());

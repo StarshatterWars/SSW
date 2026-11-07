@@ -1,0 +1,12 @@
+#
+# Debris0C Material Library exported by Magic 2.0
+#
+
+newmtl Debris
+Ka 0.50196 0.50196 0.50196
+Kd 0.75294 0.75294 0.75294
+Ks 0.15059 0.15059 0.15059
+Ns 25.00000
+illum 2
+map_Kd Debris.pcx
+

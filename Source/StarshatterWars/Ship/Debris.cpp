@@ -81,6 +81,13 @@ Debris::Debris(SimModel* model, const FVector& pos, const FVector& vel, double m
 
 // +--------------------------------------------------------------------+
 
+void Debris::SetVisualModel(FName Model, double Radius, double Scale)
+{
+    VisualModel = Model;
+    VisualScale = Scale;
+    if (radius <= 0 && Radius > 0) radius = Radius * Scale;
+}
+
 int
 Debris::HitBy(SimShot* shot, FVector& impact)
 {

@@ -24,6 +24,7 @@
 #include "SimShot.h"
 #include "Explosion.h"
 #include "Debris.h"
+#include "DebrisActor.h"
 #include "HUDSounds.h"
 
 #include "Solid.h"
@@ -247,7 +248,12 @@ void ShipKiller::ExecFrame(double seconds)
 		}
 
 		for (int i = 0; i < ShipDesign::MAX_DEBRIS; i++) {
-			if (design->debris[i].GetModel()) {
+            const ShipDebris& Fragment = design->debris[i];
+            if (Fragment.GetCount() <= 0) continue;
+            const auto VisualClass = ADebrisActor::ResolveVisualClass(Fragment.VisualModel);
+            const auto* Visual = VisualClass ? VisualClass->GetDefaultObject<ADebrisActor>() : nullptr;
+            const double VisualRadius = Visual ? Visual->GetVisualRadius() : 0.0;
+            if (Fragment.GetModel() || (VisualRadius > 0 && Fragment.GetMass() > 0 && Fragment.GetLife() > 0)) {
 				const FVector debris_loc =
 					ship->GetLocation() + TransformDirByShipCam(design->debris[i].GetLocation());
 
@@ -274,6 +280,8 @@ void ShipKiller::ExecFrame(double seconds)
 						design->debris[i].GetMass(),
 						ship->GetRegion());
 
+                    if (VisualRadius > 0)
+                        debris->SetVisualModel(Fragment.VisualModel, VisualRadius, design->scale > 0 ? design->scale : 1.0);
 					debris->SetLife(design->debris[i].GetLife());
 					debris->SetDrag(design->debris[i].GetDrag());
 					if (n == 0) {

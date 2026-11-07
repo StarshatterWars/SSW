@@ -15,6 +15,8 @@
 #include "SimShot.h"
 #include "ProjectilePresentationList.h"
 #include "NativeAsteroidActor.h"
+#include "DebrisActor.h"
+#include "Debris.h"
 #include "Asteroid.h"
 #include "Sensor.h"
 #include "WeaponDesign.h"
@@ -426,6 +428,7 @@ void USSWRuntimeSubsystem::UpdateWorld()
         if(auto* GI=GetGameInstance())if(auto* Timer=GI->GetSubsystem<UTimerSubsystem>())Timer->ManualMissionTick(float(Seconds));
         SimInstance->ExecFrame(Seconds);
         UpdateAsteroidVisuals();
+        UpdateDebrisVisuals();
         UpdateProjectileVisuals();
         UpdateExplosionVisuals(Seconds);
         if(SimRegion* Region=SimInstance->GetActiveRegion())
@@ -1500,9 +1503,49 @@ void USSWRuntimeSubsystem::ClearProjectileVisuals()
 {
     for(auto& Entry:AsteroidVisuals)if(auto* Actor=Entry.Value.Get())Actor->Destroy();
     AsteroidVisuals.Reset();
+    for (auto& Entry : DebrisVisuals)
+        if (auto* Actor = Entry.Value.Get()) Actor->Destroy();
+    DebrisVisuals.Reset();
     for(auto& Pair:ProjectileVisuals)if(Pair.Value.IsValid())Pair.Value->Destroy();
     ProjectileVisuals.Empty(); ProjectileMeshes.Empty(); ProjectileFallbackMesh=nullptr;
 }
+void USSWRuntimeSubsystem::UpdateDebrisVisuals()
+{
+    UWorld* World = GetWorld();
+    SimRegion* Region = SimInstance ? SimInstance->GetActiveRegion() : nullptr;
+    TSet<Debris*> Alive;
+    if (World && Region)
+    {
+        for (int32 Index = 0; Index < Region->GetRocks().size(); ++Index)
+        {
+            Debris* Piece = Region->GetRocks()[Index];
+            if (!Piece || Piece->GetVisualModel().IsNone() || Piece->GetLife() <= 0) continue;
+            Alive.Add(Piece);
+            ADebrisActor* Actor = DebrisVisuals.FindRef(Piece).Get();
+            if (!Actor || Actor->GetVisualModel() != Piece->GetVisualModel())
+            {
+                if (Actor) Actor->Destroy();
+                const auto Class = ADebrisActor::ResolveVisualClass(Piece->GetVisualModel());
+                if (!Class) continue;
+                FActorSpawnParameters Params;
+                Params.ObjectFlags |= RF_Transient;
+                Actor = World->SpawnActor<ADebrisActor>(Class, FTransform::Identity, Params);
+                if (!Actor) continue;
+                Actor->SetVisualModel(Piece->GetVisualModel());
+                DebrisVisuals.Add(Piece, Actor);
+            }
+            Actor->UpdateFromSimulation(*Piece, GetVisualLocationForRegion(Region, Piece->GetLocation()));
+        }
+    }
+
+    for (auto It = DebrisVisuals.CreateIterator(); It; ++It)
+    {
+        if (Alive.Contains(It.Key())) continue;
+        if (auto* Actor = It.Value().Get()) Actor->Destroy();
+        It.RemoveCurrent();
+    }
+}
+
 void USSWRuntimeSubsystem::UpdateAsteroidVisuals()
 {
     TRACE_CPUPROFILER_EVENT_SCOPE(SSW_AsteroidVisuals);

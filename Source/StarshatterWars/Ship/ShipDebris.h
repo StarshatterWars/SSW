@@ -40,6 +40,7 @@ public:
     ShipDebris();
 
     SimModel* GetModel() const;
+    FName     VisualModel;
     int       GetCount() const;
     int       GetLife() const;
     FVector   GetLocation() const;

@@ -1,0 +1,12 @@
+#
+# Hulk-Frigate Material Library exported by Magic 2.0
+#
+
+newmtl Hull
+Ka 0.50196 0.50196 0.50196
+Kd 0.79608 0.78039 0.71373
+Ks 0.40000 0.40000 0.40000
+Ns 10.00000
+illum 2
+map_Kd Frigate_D.jpg
+

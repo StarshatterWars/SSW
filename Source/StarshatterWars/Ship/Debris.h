@@ -34,6 +34,15 @@ class Debris : public SimObject
 public:
 	Debris(SimModel* model, const FVector& pos, const FVector& vel, double mass);
 
+    void SetVisualModel(FName Model, double Radius, double Scale);
+    double GetVisualScale() const { return VisualScale; }
+    FName GetVisualModel() const { return VisualModel; }
+
+private:
+    FName VisualModel;
+    double VisualScale = 1.0;
+
+public:
 	void              SetLife(int seconds) { life = seconds; }
 	virtual int       HitBy(SimShot* shot, FVector& impact);
 
