@@ -18,6 +18,10 @@
 #include "SSWBootSubsystem.h"
 
 #include "Engine/GameInstance.h"
+#include "Logging/LogSuppressionInterface.h"
+#include "Misc/ConfigCacheIni.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 
 #include "Game.h"
 #include "GameStructs.h"
@@ -54,6 +58,13 @@ DEFINE_LOG_CATEGORY_STATIC(LogSSWBoot, Log, All);
 void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
+    if (IsRunningGame() && GConfig && !GetDefault<USSWDiagnosticsSettings>()->bEnableGameLogging &&
+        !FParse::Param(FCommandLine::Get(), TEXT("SSWLogging")))
+    {
+        GConfig->SetString(TEXT("Core.Log"), TEXT("Global"), TEXT("off"), GEngineIni);
+        FLogSuppressionInterface::Get().ProcessConfigAndCommandLine();
+    }
+
     Game::VersionInfo = GameVersion;
 
     UE_LOG(LogSSWBoot, Log, TEXT("[BOOT] Initialize"));

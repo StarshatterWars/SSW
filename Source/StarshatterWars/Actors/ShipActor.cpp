@@ -582,7 +582,6 @@ void
 AShipActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    UpdateLaunchBayFill();
 
     if (RuntimeShip)
     {
@@ -609,31 +608,6 @@ AShipActor::Tick(float DeltaTime)
     if (bUseCutsceneNavMovement)
         UpdateCutsceneNavMovement(DeltaTime);
     UpdateNavLights(DeltaTime);
-}
-
-void AShipActor::UpdateLaunchBayFill()
-{
-    Sim* Simulation = Sim::GetSim();
-    const FlightDeck* Deck = RuntimeShip ? RuntimeShip->GetDock() : nullptr;
-    const EOPSMode Phase = RuntimeShip ? RuntimeShip->GetFlightPhase() : EOPSMode::NONE;
-    const bool bInLaunchBay = Simulation && RuntimeShip && Simulation->GetPlayerShip() == RuntimeShip &&
-        Deck && Deck->IsLaunchDeck() && Phase >= EOPSMode::ALERT && Phase <= EOPSMode::TAKEOFF;
-
-    if (bInLaunchBay && !LaunchBayFill)
-    {
-        LaunchBayFill = NewObject<UPointLightComponent>(this, TEXT("LaunchBayFill"), RF_Transient);
-        LaunchBayFill->SetupAttachment(GetRootComponent());
-        LaunchBayFill->SetRelativeLocation(FVector(90, -75, 220));
-        LaunchBayFill->SetLightColor(FLinearColor(0.82f, 0.91f, 1.0f));
-        LaunchBayFill->SetIntensityUnits(ELightUnits::Candelas);
-        LaunchBayFill->SetIntensity(230.0f);
-        LaunchBayFill->SetAttenuationRadius(650.0f);
-        LaunchBayFill->SetCastShadows(false);
-        LaunchBayFill->RegisterComponent();
-    }
-
-    if (LaunchBayFill && LaunchBayFill->IsVisible() != bInLaunchBay)
-        LaunchBayFill->SetVisibility(bInLaunchBay);
 }
 
 void AShipActor::ConfigureForCutscene()

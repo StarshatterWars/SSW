@@ -334,9 +334,9 @@ struct FMissionCameraRig
                     + RunUE * FMath::Min(Radius * 0.22, 60.0);
                 if (Phase == EOPSMode::ALERT || !bHeldLaunchFacingValid)
                 {
-                    const FVector FramedEye = Target - RunUE * (Radius * 3.5) + Up * (Radius * 0.5);
+                    const FVector FramedEye = Target - RunUE * (Radius * 1.5) + Up * (Radius * 0.5);
                     HeldLaunchEyeCorrection = FramedEye - Eye;
-                    Rotation = Aim(RunUE - Up * 0.12, Up, Rotation);
+                    Rotation = Aim(RunUE, Up, Rotation);
                     HeldLaunchFacing = Rotation;
                     bHeldLaunchFacingValid = true;
                 }

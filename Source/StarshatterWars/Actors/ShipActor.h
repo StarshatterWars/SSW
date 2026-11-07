@@ -719,10 +719,6 @@ protected:
 
     void UpdateDerivedPointsFromHull();
     void UpdateNavLights(float DeltaTime);
-    void UpdateLaunchBayFill();
-
-    UPROPERTY(Transient)
-    TObjectPtr<UPointLightComponent> LaunchBayFill;
 
     void CreateMainEnginePoints();
     void CreateThrusterPoints();

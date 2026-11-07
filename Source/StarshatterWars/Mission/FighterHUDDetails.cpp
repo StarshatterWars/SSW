@@ -657,7 +657,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
         for (int32 I=0; I<NavReadouts.Num(); ++I)
             ReticleText(128,LowerReadoutBaseline+I*LowerReadoutRowHeight,108,NavReadouts[I]);
-        if (bHasTarget)
+        if (bHasTarget && !bPreTakeoff)
         {
             ReticleText(128,SpeedRangeBaseline,108,FString(TEXT("RNG ")) + UFormattingUtils::FormatDistance(TargetRange * 1000.0));
             if (bClosingValid) ReticleText(128,SpeedRangeBaseline+14,108,FString::Printf(TEXT("CLS %+.0f M/S"),ClosingSpeed));
@@ -806,7 +806,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         Artwork(I,FVector2D(Size.X*0.5 + (I==5 ? -D.X : 0.0),Size.Y-D.Y),D);
     }
     if (bShowWeapons && !bHasPlayer) Text(FVector2D(Size.X*0.5-250*Scale,Size.Y*0.5+24*Scale),TEXT("WEAPONS: NO PLAYER SHIP"));
-    for (int32 Index=bMiniHUD ? 1 : 0; Index<2; ++Index)
+    for (int32 Index=bMiniHUD ? 1 : 0; !bPreTakeoff && Index<2; ++Index)
     {
         const EMode M=Modes[Index]; if (M==EMode::Off) continue;
         const FVector2D P(Index==0 ? 0.0 : Size.X-220*Scale, Size.Y-215*Scale);
@@ -894,7 +894,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
         Text(P,Label,Color);
     };
-    if (bHasPlayer && !bMiniHUD)
+    if (bHasPlayer && !bMiniHUD && !bPreTakeoff)
     {
         // Reserve an extra HOME row for fighters while keeping the final row at the bottom edge.
         const double HomeRowHeight = HomeCarrierReadout.IsEmpty() ? 0.0 : 20.0;

@@ -46,6 +46,7 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Engine/DeveloperSettings.h"
 #include "SSWBootSubsystem.generated.h"
 
 class UGameInstance;
@@ -69,6 +70,17 @@ class UStarshatterFormSubsystem;
 class USSWCombatGroupSubsystem;
 
 DECLARE_MULTICAST_DELEGATE(FOnSSWBootComplete);
+
+UCLASS(Config=Game, DefaultConfig, meta=(DisplayName="Starshatter Wars Diagnostics"))
+class USSWDiagnosticsSettings : public UDeveloperSettings
+{
+    GENERATED_BODY()
+
+public:
+    /** Enable logging for standalone game runs. Takes effect on the next launch. */
+    UPROPERTY(Config, EditAnywhere, Category="Logging")
+    bool bEnableGameLogging = false;
+};
 
 UCLASS()
 class STARSHATTERWARS_API USSWBootSubsystem : public UGameInstanceSubsystem
