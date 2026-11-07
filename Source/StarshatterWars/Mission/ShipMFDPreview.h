@@ -23,6 +23,10 @@ private:
     bool bPlayerPanel = false;
     bool bHasLiveView = false;
     double NextStaticCaptureAt = 0.0;
+    double NextLiveCaptureAt = 0.0;
+    FQuat LastTargetRotation = FQuat::Identity;
+    FVector LastObserverDirection = FVector::ZeroVector;
+    FVector LastObserverUp = FVector::ZeroVector;
     int32 StaticWarmupCaptures = 0;
     void Clear();
     FString Key;

@@ -750,7 +750,7 @@ TArray<SimShot*> SimRegion::GetProjectiles()
 void SimRegion::DamageShips()
 {
     TRACE_CPUPROFILER_EVENT_SCOPE(SSW_ProjectileCollision);
-    if (ships.size() == 0) return;
+    if (shots.size() == 0 && drones.size() == 0) return;
     // Restore legacy shot/ship damage dispatch after projectile movement.
     // HitBy owns shields, subsystem damage, arming and friendly-fire rules.
     for (SimShot* Shot : GetProjectiles()) {

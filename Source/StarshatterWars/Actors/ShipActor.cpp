@@ -21,6 +21,8 @@
     and may not yet drive gameplay systems.
 */
 
+#include "ProfilingDebugging/CpuProfilerTrace.h"
+#include "HAL/IConsoleManager.h"
 #include "ShipActor.h"
 #include "ShipProbeComponent.h"
 #include "ShipDecoyComponent.h"
@@ -66,6 +68,13 @@
 #include "NavLight.h"
 #include "ShipUtils.h"
 
+
+// Toggle only redundant presentation uploads for controlled same-scene A/B captures.
+// Both paths consume the identical simulation values and authored Niagara assets.
+static TAutoConsoleVariable<int32> CVarCacheEngineParameters(
+    TEXT("ssw.VFX.CacheEngineParameters"), 1,
+    TEXT("Cache unchanged main-engine Niagara parameters. 0 restores per-frame uploads for profiling."),
+    ECVF_Default);
 
 template<typename T>
 static void ClearComponentArray(TArray<TObjectPtr<T>>& Components)
@@ -1898,6 +1907,7 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
 void
 AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_ShipPresentation);
     if (!RuntimeShip)
     {
         return;
@@ -2013,9 +2023,10 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 
 void AShipActor::SyncCarriedMissiles()
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_CarriedMissiles);
     // Presentation now follows the actual runtime Weapon->station binding,
     // not incidental array order.
-    TArray<UShipWeaponMountComponent*> MissileMounts;
+    TArray<UShipWeaponMountComponent*, TInlineAllocator<8>> MissileMounts;
 
     for (TObjectPtr<USceneComponent>& Base : NativeWeaponHardpoints)
     {
@@ -2071,12 +2082,16 @@ void AShipActor::SyncCarriedMissiles()
         }
 
         // Reattach if the runtime loadout changed stations.
-        Mesh->AttachToComponent(Mount, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-        Mesh->SetRelativeLocation(FVector::ZeroVector);
-        Mesh->SetRelativeRotation(FRotator::ZeroRotator);
+        if (Mesh->GetAttachParent() != Mount)
+        {
+            Mesh->AttachToComponent(Mount, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+            Mesh->SetRelativeLocation(FVector::ZeroVector);
+            Mesh->SetRelativeRotation(FRotator::ZeroRotator);
+        }
 
-        Mesh->SetVisibility((!HullWeaponRoot || !Mount->GetChildActorClass()) &&
-            Mount->HasCarriedStore() && Mount->IsStoreAvailable());
+        const bool bVisible = (!HullWeaponRoot || !Mount->GetChildActorClass()) &&
+            Mount->HasCarriedStore() && Mount->IsStoreAvailable();
+        if (Mesh->IsVisible() != bVisible) Mesh->SetVisibility(bVisible);
     }
 }
 
@@ -2335,6 +2350,7 @@ void AShipActor::ClearRuntimeMainEngines()
 
     RuntimeMainEngineEmitters.Empty();
     RuntimeMainEngineBaseScales.Empty();
+    PresentedEnginePower = PresentedEngineThrottleRequest = PresentedEngineThrottle = -1.f;
 
     for (USceneComponent* Point : RuntimeMainEnginePoints)
     {
@@ -2349,6 +2365,7 @@ void AShipActor::ClearRuntimeMainEngines()
 
 void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_MainEnginePresentation);
     if (!RuntimeShip)
     {
         for (UNiagaraComponent* Emitter : RuntimeMainEngineEmitters)
@@ -2427,6 +2444,11 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
     const bool bActive =
         MainEngineVisualPower > 0.03f;
 
+    const bool bCacheParameters = CVarCacheEngineParameters.GetValueOnGameThread() != 0;
+    const bool bPowerChanged = !bCacheParameters || PresentedEnginePower != MainEngineVisualPower;
+    const bool bRequestChanged = !bCacheParameters || PresentedEngineThrottleRequest != ThrottleRequest;
+    const bool bThrottleChanged = !bCacheParameters || PresentedEngineThrottle != Throttle;
+
     for (int32 EmitterIndex = 0; EmitterIndex < RuntimeMainEngineEmitters.Num(); ++EmitterIndex)
     {
         UNiagaraComponent* Emitter = RuntimeMainEngineEmitters[EmitterIndex];
@@ -2454,17 +2476,14 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
         Emitter->SetHiddenInGame(
             !bActive);
 
-        Emitter->SetFloatParameter(
-            TEXT("EnginePower"),
-            MainEngineVisualPower);
-
-        Emitter->SetFloatParameter(
-            TEXT("ThrottleRequest"),
-            ThrottleRequest);
-
-        Emitter->SetFloatParameter(
-            TEXT("Throttle"),
-            Throttle);
+        // Niagara queues deferred writes even when the value is unchanged.
+        // Keep every real throttle change; never quantize or defer engine spool-up.
+        if (bPowerChanged)
+            Emitter->SetFloatParameter(TEXT("EnginePower"), MainEngineVisualPower);
+        if (bRequestChanged)
+            Emitter->SetFloatParameter(TEXT("ThrottleRequest"), ThrottleRequest);
+        if (bThrottleChanged)
+            Emitter->SetFloatParameter(TEXT("Throttle"), Throttle);
 
         if (bActive)
         {
@@ -2481,6 +2500,9 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
             }
         }
     }
+    PresentedEnginePower = MainEngineVisualPower;
+    PresentedEngineThrottleRequest = ThrottleRequest;
+    PresentedEngineThrottle = Throttle;
 }
 
 void AShipActor::AddRuntimeNavLightComponent(const FShipNavLightDef& Def)
@@ -2804,6 +2826,7 @@ void AShipActor::ClearRuntimeThrusters()
 
 void AShipActor::UpdateThrusterVFXFromRuntime()
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_ThrusterPresentation);
     if (!RuntimeShip)
     {
         return;
@@ -2855,6 +2878,17 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
             FX->PortScale > 0.0f
             ? FX->PortScale
             : 1.0f;
+
+        const auto HasExpectedState = [bActive](const UNiagaraComponent* Component)
+        {
+            return !Component || (Component->IsActive() == bActive &&
+                Component->IsVisible() == bActive && Component->bHiddenInGame != bActive);
+        };
+        if (FX->PresentedBurn == VisualBurnFiltered && FX->PresentedPortScale == FinalPortScale
+            && HasExpectedState(FX->Flare) && HasExpectedState(FX->Trail))
+            continue;
+        FX->PresentedBurn = VisualBurnFiltered;
+        FX->PresentedPortScale = FinalPortScale;
 
         FVector RuntimeScale = FVector::ZeroVector;
 

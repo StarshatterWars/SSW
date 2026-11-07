@@ -73,6 +73,8 @@ struct FRuntimeThrusterFX
 
     float PortScale = 1.0f;
     float AudioMultiplier = 1.0f;
+    float PresentedBurn = -1.0f;
+    float PresentedPortScale = -1.0f;
 };
 
 UCLASS()
@@ -517,6 +519,11 @@ public:
 
     // Parallel to successful emitter creations; retained across throttle updates.
     TArray<FVector> RuntimeMainEngineBaseScales;
+
+    // Exact values last uploaded to the owned Niagara instances.
+    float PresentedEnginePower = -1.f;
+    float PresentedEngineThrottleRequest = -1.f;
+    float PresentedEngineThrottle = -1.f;
 
     UPROPERTY(Transient)
     TObjectPtr<UAudioComponent> EngineAudioComponent;

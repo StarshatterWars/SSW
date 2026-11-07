@@ -1,3 +1,4 @@
+#include "ProfilingDebugging/CpuProfilerTrace.h"
 #include "ShipMFDPreview.h"
 #include "ShipBriefingPreview.h"
 #include "GameStructs_System.h"
@@ -21,6 +22,7 @@ void FShipMFDPreview::Clear()
     Material.Reset();Target.Reset();Scene.Reset();Key.Empty();bHasLiveView=false;
     StaticWarmupCaptures = 0;
     NextStaticCaptureAt = 0.0;
+    NextLiveCaptureAt = 0.0;
 }
 bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
 {
@@ -102,9 +104,23 @@ bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
 void FShipMFDPreview::SetView(const FQuat& TargetRotation,const FVector& ToObserver,const FVector& ObserverUp)
 {
     if(!IsReady() || !Capture.IsValid() || TargetRotation.ContainsNaN() || ToObserver.ContainsNaN() || ToObserver.IsNearlyZero())return;
-    bHasLiveView=true;
-    Visual->SetActorRotation(TargetRotation.GetNormalized());
-    const FVector Direction=ToObserver.GetSafeNormal();
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_TargetMFD);
+    const double Now = FPlatformTime::Seconds();
+    const FQuat Rotation = TargetRotation.GetNormalized();
+    Visual->SetActorRotation(Rotation);
+    if (bHasLiveView && Now < NextLiveCaptureAt) return;
+    const FVector Direction = ToObserver.GetSafeNormal();
+    const bool bViewChanged = !bHasLiveView || !Rotation.Equals(LastTargetRotation, 0.00001)
+        || !Direction.Equals(LastObserverDirection, 0.00001)
+        || !ObserverUp.Equals(LastObserverUp, 0.00001);
+    if (!bViewChanged && (StaticWarmupCaptures == 0 || Now < NextStaticCaptureAt)) return;
+    bHasLiveView = true;
+    LastTargetRotation = Rotation;
+    LastObserverDirection = Direction;
+    LastObserverUp = ObserverUp;
+    NextLiveCaptureAt = Now + 1.0 / 30.0;
+    if (StaticWarmupCaptures > 0) --StaticWarmupCaptures;
+    NextStaticCaptureAt = Now + 1.0;
     FVector Up=ObserverUp.GetSafeNormal();
     if(Up.IsNearlyZero() || FMath::Abs(FVector::DotProduct(Up,Direction))>0.99)
         Up=FMath::Abs(Direction.Z)<0.99 ? FVector::UpVector : FVector::RightVector;
