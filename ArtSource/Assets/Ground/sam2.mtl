@@ -1,0 +1,19 @@
+#
+# sam2 Material Library exported by Magic 2.0
+#
+
+newmtl body
+Ka 0.05020 0.05020 0.05020
+Kd 1.00000 1.00000 1.00000
+Ks 0.37647 0.37647 0.37647
+Ns 16.00000
+illum 2
+map_Kd Hammer+.pcx
+
+newmtl black
+Ka 0.05020 0.05020 0.05020
+Kd 0.00000 0.00000 0.00000
+Ks 0.37647 0.37647 0.37647
+Ns 15.00000
+illum 2
+
