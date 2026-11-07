@@ -28,6 +28,7 @@
 =============================================================================*/
 
 #include "TacRefDlg.h"
+#include "FactionInsignia.h"
 #include "ModernMenuLayout.h"
 #include "MissionUIStyle.h"
 #include "Blueprint/WidgetTree.h"
@@ -547,6 +548,7 @@ void UTacRefDlg::HandleEmpireComboChanged(FString SelectedItem, ESelectInfo::Typ
         return;
 
     ActiveEmpire = EmpireValues[Index];
+    FactionInsignia::Set(FactionLogo,EmpireCombo->GetSelectedOption(),44.f);
 
     PopulateShipDropdown();       // ship list respects ActiveEmpire via PassesEmpireFilter
     // Optionally: SelectShipByIndex(SelectedShipIndex);
@@ -724,6 +726,7 @@ void UTacRefDlg::BuildModernShell()
     BuildingButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleBuildingModeClicked);
     WeaponButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleWeaponModeClicked);
     auto* Selectors=WidgetTree->ConstructWidget<UHorizontalBox>();
+    FactionLogo=WidgetTree->ConstructWidget<UImage>();FactionLogo->SetDesiredSizeOverride(FVector2D(44.f));Selectors->AddChildToHorizontalBox(FactionLogo)->SetPadding(FMargin(8,0));
     auto AddSelector=[&](const TCHAR* Caption,UWidget* Selector)
     {
         if(!Selector) return;

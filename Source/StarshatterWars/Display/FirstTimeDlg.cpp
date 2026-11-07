@@ -17,6 +17,7 @@
 */
 
 #include "FirstTimeDlg.h"
+#include "FactionInsignia.h"
 #include "AwardInfoRegistry.h"
 #include "PlayerCharacter.h"
 #include "Campaign.h"
@@ -163,7 +164,7 @@ void UFirstTimeDlg::PopulateEmpireOptionsIfNeeded()
         EmpireCombo->ClearOptions();
         EmpireCombo->AddOption(TEXT("Terellian Alliance"));
         EmpireCombo->AddOption(TEXT("Marakan Hegemony"));
-        EmpireCombo->AddOption(TEXT("Dantari Separatists"));
+
     }
 
     if (EmpireCombo->GetSelectedIndex() < 0)
@@ -172,13 +173,13 @@ void UFirstTimeDlg::PopulateEmpireOptionsIfNeeded()
 
 EEMPIRE_NAME UFirstTimeDlg::EmpireFromComboIndex(int32 Index) const
 {
-    // Fixed order: 0 Terellian, 1 Marakan, 2 Dantari
+    // First-run playable factions: Alliance and Marakan. Dantari remains campaign-only.
     switch (Index)
     {
     default:
     case 0: return EEMPIRE_NAME::Terellian;
     case 1: return EEMPIRE_NAME::Marakan;
-    case 2: return EEMPIRE_NAME::Dantari;
+
     }
 }
 
@@ -362,7 +363,10 @@ void UFirstTimeDlg::BuildModernDialog()
     auto Text=[&](const TCHAR* Value,int32 Size,bool Heading=false){auto* T=WidgetTree->ConstructWidget<UTextBlock>();T->SetText(FText::FromString(Value));
         T->SetFont(Heading?MissionUIStyle::GetHeaderFont(Size):MissionUIStyle::GetRowFont(Size));T->SetColorAndOpacity(FSlateColor(FLinearColor(0.92f,0.96f,1)));return T;};
     auto* Header=WidgetTree->ConstructWidget<UBorder>();Header->SetBrushColor(FLinearColor(0.105f,0.113f,0.125f));Header->SetPadding(FMargin(12,10));
-    Header->SetContent(Text(TEXT("NEW PILOT"),26,true));Column->AddChildToVerticalBox(Header)->SetPadding(FMargin(0,0,0,12));
+    auto* HeaderRow=WidgetTree->ConstructWidget<UHorizontalBox>();
+    FactionLogo=WidgetTree->ConstructWidget<UImage>();FactionInsignia::Set(FactionLogo,TEXT("Terellian"),42.f);
+    HeaderRow->AddChildToHorizontalBox(FactionLogo)->SetPadding(FMargin(0,0,12,0));
+    HeaderRow->AddChildToHorizontalBox(Text(TEXT("NEW PILOT"),26,true))->SetVerticalAlignment(VAlign_Center);Header->SetContent(HeaderRow);Column->AddChildToVerticalBox(Header)->SetPadding(FMargin(0,0,0,12));
     auto* Intro=Text(TEXT("Create your pilot profile to begin."),16);Column->AddChildToVerticalBox(Intro)->SetPadding(FMargin(0,0,0,12));
     auto Row=[&](const TCHAR* Label,UWidget* Input){auto* H=WidgetTree->ConstructWidget<UHorizontalBox>();
         auto* LabelBox=WidgetTree->ConstructWidget<USizeBox>();LabelBox->SetWidthOverride(140);LabelBox->SetContent(Text(Label,16));
@@ -381,6 +385,7 @@ void UFirstTimeDlg::BuildModernDialog()
         ComboStyle.ComboButtonStyle.ButtonStyle.Hovered.TintColor=FSlateColor(FLinearColor(0.08f,0.16f,0.22f));
         ComboStyle.ComboButtonStyle.ButtonStyle.Pressed.TintColor=FSlateColor(FLinearColor(0.08f,0.16f,0.22f));
         Combo->SetWidgetStyle(ComboStyle);}
+    EmpireCombo->OnSelectionChanged.AddUniqueDynamic(this,&UFirstTimeDlg::OnEmpireLogoChanged);
     Row(TEXT("Pilot name"),NameEdit);Row(TEXT("Callsign"),CallsignEdit);Row(TEXT("Empire"),EmpireCombo);Row(TEXT("Flight model"),PlayStyleCombo);Row(TEXT("Experience"),ExperienceCombo);
     auto* Actions=WidgetTree->ConstructWidget<UHorizontalBox>();
     auto Action=[&](TObjectPtr<UButton>& Button,const TCHAR* Color,const TCHAR* Icon,const TCHAR* Tooltip){
@@ -399,3 +404,6 @@ void UFirstTimeDlg::BuildModernDialog()
     auto* ActionSlot=Column->AddChildToVerticalBox(Actions);ActionSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));ActionSlot->SetVerticalAlignment(VAlign_Bottom);ActionSlot->SetHorizontalAlignment(HAlign_Right);
     bModernDialogBuilt=true;
 }
+
+void UFirstTimeDlg::OnEmpireLogoChanged(FString SelectedItem,ESelectInfo::Type)
+{ FactionInsignia::Set(FactionLogo,SelectedItem,42.f); }

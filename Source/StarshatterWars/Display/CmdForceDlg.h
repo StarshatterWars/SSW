@@ -67,6 +67,7 @@ public:
     void SetModeAndHighlight(ECOMMAND_MODE InMode);
 
 private:
+    UPROPERTY(Transient) TObjectPtr<class UImage> FactionLogo;
     UFUNCTION()
     void OnForceSelectionChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
 

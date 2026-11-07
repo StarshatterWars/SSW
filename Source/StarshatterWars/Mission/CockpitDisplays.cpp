@@ -1,4 +1,6 @@
 #include "CockpitDisplays.h"
+#include "GearIndicator.h"
+#include "GameFramework/PlayerController.h"
 #include "FighterHUDDetails.h"
 #include "FighterActor.h"
 #include "Ship.h"
@@ -30,6 +32,7 @@ public:
     int32 OnPaint(const FPaintArgs&,const FGeometry& G,const FSlateRect&,FSlateWindowElementList& E,int32 L,const FWidgetStyle&,bool) const override
     {
         auto H=HUD.Pin(); if(!H) return L;
+        if(Panel==0 && Fighter.IsValid())SSWGearIndicator::Draw(E,G,L+3,FVector2D(426,24),FVector2D(60,55),Fighter->GetRuntimeShip());
         const FLinearColor Blue(.25f,.75f,1.f,1.f);
         auto Text=[&](float X,float Y,const FString& S,FLinearColor C,int32 Size=26){
             FSlateDrawElement::MakeText(E,L+1,G.ToPaintGeometry(FVector2f(1,1),FSlateLayoutTransform(FVector2f(X,Y))),S,FCoreStyle::GetDefaultFontStyle("Bold",Size),ESlateDrawEffect::None,C); };
@@ -138,6 +141,19 @@ bool FCockpitDisplays::IsActive() const
     if(!Mesh.IsValid() || Panels.Num()!=5)return false;
     for(const auto& Panel:Panels)if(!Panel.IsValid() || !Panel->GetRenderTarget())return false;
     return true;
+}
+bool FCockpitDisplays::HandleGearClick()
+{
+    if(!IsActive() || Panels.IsEmpty() || !Panels[0].IsValid())return false;
+    auto* Panel=Panels[0].Get();auto* Fighter=Cast<AFighterActor>(Panel->GetOwner());
+    auto* PC=Fighter && Fighter->GetWorld()?Fighter->GetWorld()->GetFirstPlayerController():nullptr;
+    FVector Origin,Direction;if(!PC || !PC->DeprojectMousePositionToWorld(Origin,Direction))return false;
+    const FTransform T=Panel->GetComponentTransform();const FVector O=T.InverseTransformPosition(Origin),D=T.InverseTransformVector(Direction);
+    if(FMath::Abs(D.X)<SMALL_NUMBER)return false;
+    const double Distance=-O.X/D.X;if(Distance<=0)return false;
+    const FVector Hit=O+D*Distance;
+    if(!SSWGearIndicator::Contains(FVector2D(-Hit.Y,-Hit.Z),FVector2D(426,24),FVector2D(60,55)))return false;
+    if(Ship* P=Fighter->GetRuntimeShip())P->ToggleGear();return true;
 }
 void FCockpitDisplays::Clear()
 {

@@ -276,6 +276,7 @@ public:
 
     bool              IsGearDown();
     void              LowerGear();
+    bool              CanRaiseGear() const;
     void              RaiseGear();
     void              ToggleGear();
     void              ToggleNavlights();

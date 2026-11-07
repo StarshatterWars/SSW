@@ -24,6 +24,7 @@
 #include "ProfilingDebugging/CpuProfilerTrace.h"
 #include "HAL/IConsoleManager.h"
 #include "ShipActor.h"
+#include "SpaceDustComponent.h"
 #include "ShipProbeComponent.h"
 #include "ShipDecoyComponent.h"
 #include "BoltWeaponActor.h"
@@ -190,6 +191,8 @@ AShipActor::AShipActor()
 
     VFXRoot = CreateDefaultSubobject<USceneComponent>(TEXT("VFXRoot"));
     VFXRoot->SetupAttachment(ShipRoot);
+    SpaceDust=CreateDefaultSubobject<USpaceDustComponent>(TEXT("SpaceDust"));
+    SpaceDust->SetupAttachment(ShipRoot);
     VFXRoot->SetRelativeRotation(FRotator::ZeroRotator);
 
     FocusPoint = CreateDefaultSubobject<USceneComponent>(TEXT("FocusPoint"));
@@ -579,6 +582,13 @@ AShipActor::Tick(float DeltaTime)
         UpdateEngineAudioFromRuntime(DeltaTime);
         UpdateThrusterVFXFromRuntime();
 
+        if(SpaceDust)
+        {
+            auto* Live=Sim::GetSim();auto* Runtime=GetGameInstance()?GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>():nullptr;
+            SpaceDust->SetPlayerActive(Live && Live->GetPlayerShip()==RuntimeShip &&
+                (RuntimeShip->GetFlightPhase()==EOPSMode::ACTIVE || RuntimeShip->GetFlightPhase()==EOPSMode::APPROACH) &&
+                (!Runtime || Runtime->GetTimeCompression()<=4));
+        }
         // Normal runtime thruster updates above control the effects.
         return;
     }
@@ -1807,6 +1817,8 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     RestoreHullSkin();
     if(RuntimeShip && RuntimeShip!=InShip) RuntimeShip->BindNativePresentation(nullptr);
     RuntimeShip = InShip;
+    PresentedHullDamage=-1.f;
+    if(HullMesh && InShip)HullMesh->SetCustomPrimitiveDataFloat(1,float(GetTypeHash(FString(InShip->GetName()))%65536)/65536.f);
     NativeGeometry.Reset();
     if(InShip) InShip->BindNativePresentation(this);
 
@@ -2016,6 +2028,7 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
         }
     }
 
+    SyncSurfaceDamage();
     SyncCarriedMissiles();
     SyncHullSkin();
 }
@@ -2154,10 +2167,11 @@ void AShipActor::BuildNavLightsFromRuntime()
             FShipNavLightDef Def;
 
             Def.LocalOffset =
-                RuntimeNavLight->GetBeaconLocalLocation(BeaconIndex);
+                RuntimeEmitterLocalPosition(RuntimeNavLight->GetBeaconLocalLocation(BeaconIndex));
 
             Def.LocalRotation =
-                RuntimeNavLight->GetBeaconLocalRotation(BeaconIndex);
+                bLegacyEmitterCoordinates ? ConvertLegacyPortRotation(RuntimeNavLight->GetBeaconLocalRotation(BeaconIndex))
+                    : RuntimeNavLight->GetBeaconLocalRotation(BeaconIndex);
 
             Def.Color =
                 RuntimeNavLight->GetBeaconColor(BeaconIndex);
@@ -3144,4 +3158,15 @@ void AShipActor::HoldRecoveryPresentation()
     }
     // Presentation only: do not feed the held pose into legacy docking physics.
     SetActorTransform(RecoveryPresentationPose,false,nullptr,ETeleportType::TeleportPhysics);
+}
+
+void AShipActor::SyncSurfaceDamage()
+{
+    if(!RuntimeShip || !RuntimeShip->Design() || !HullMesh)return;
+    const double Max=RuntimeShip->Design()->integrity;
+    const float Damage=Max>0 ? FMath::Clamp(float(1.-RuntimeShip->GetIntegrity()/Max),0.f,1.f) : 0.f;
+    if(Damage==PresentedHullDamage)return;
+    PresentedHullDamage=Damage;
+    // Per-primitive shader data avoids material instances or per-frame parameter writes.
+    HullMesh->SetCustomPrimitiveDataFloat(0,Damage);
 }

@@ -27,6 +27,7 @@ class Drive;
 class Weapon;
 class UShipWeaponMountComponent;
 class UShipProbeComponent;
+class USpaceDustComponent;
 class UShipDecoyComponent;
 
 USTRUCT(BlueprintType)
@@ -108,6 +109,9 @@ public:
     FTransform RecoveryPresentationPose = FTransform::Identity;
 
     void SyncCarriedMissiles();
+    void SyncSurfaceDamage();
+    float PresentedHullDamage=-1.f;
+    UPROPERTY(VisibleAnywhere, Category="Ship|Space") TObjectPtr<USpaceDustComponent> SpaceDust;
     UFUNCTION(BlueprintCallable, Category="Ship|Skin") void RefreshHullSkin();
     // Alias an imported native material slot to the exact legacy material name.
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ship|Skin") TMap<FName,FName> HullSkinSlotAliases;

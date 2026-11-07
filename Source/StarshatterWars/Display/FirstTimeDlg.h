@@ -21,6 +21,7 @@
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
 #include "GameStructs.h"                 // FS_PlayerGameInfo + EEMPIRE_NAME
+#include "Components/ComboBoxString.h"
 #include "FirstTimeDlg.generated.h"
 
 // UMG forward declarations:
@@ -50,7 +51,9 @@ protected:
     void OnCancelClicked();
 
 private:
+    UPROPERTY(Transient) TObjectPtr<class UImage> FactionLogo;
     void BuildModernDialog();
+    UFUNCTION() void OnEmpireLogoChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
     bool bModernDialogBuilt = false;
 
     // Helpers

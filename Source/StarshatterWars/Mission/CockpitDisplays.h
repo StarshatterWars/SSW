@@ -14,6 +14,7 @@ public:
     ~FCockpitDisplays();
     void Update(AFighterActor* Fighter, TSharedRef<SFighterHUDDetails> HUD, bool Visible);
     bool IsActive() const;
+    bool HandleGearClick();
     void Clear();
 private:
     TWeakObjectPtr<UStaticMeshComponent> Mesh;

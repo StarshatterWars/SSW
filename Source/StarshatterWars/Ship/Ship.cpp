@@ -2065,7 +2065,7 @@ Ship::SetFlightPhase(EOPSMode phase)
     CameraManager* LaunchCamera = CameraManager::GetInstance();
     const bool bWaitForLaunchCamera = Sim::GetSim() && Sim::GetSim()->GetPlayerShip() == this && LaunchCamera &&
         LaunchCamera->GetShip() == this && LaunchCamera->IsCarrierLaunchCameraHeld();
-    if (bLaunchFinished && IsDropship() && !bWaitForLaunchCamera) RaiseGear();
+
 	if (phase == EOPSMode::ACTIVE && !launch_time) {
 		launch_time = Game::GetGameTime() + 1;
 		dock = 0;
@@ -2075,6 +2075,7 @@ Ship::SetFlightPhase(EOPSMode phase)
 	}
 
 	flight_phase = phase;
+    if (bLaunchFinished && IsDropship() && !bWaitForLaunchCamera) RaiseGear();
 
 	if (flight_phase == EOPSMode::ACTIVE)
 		dock = 0;
@@ -2166,9 +2167,21 @@ Ship::LowerGear()
 	}
 }
 
+bool Ship::CanRaiseGear() const
+{
+    if (!gear || (flight_phase!=EOPSMode::ACTIVE && flight_phase!=EOPSMode::APPROACH)) return false;
+    if (IsAirborne())
+    {
+        const double GroundLevel=GetLocation().Y-GetAltitudeAGL();
+        if (gear->GetTouchDown()<=GroundLevel+1.0) return false;
+    }
+    return true;
+}
+
 void
 Ship::RaiseGear()
 {
+    if (!CanRaiseGear()) return;
 	if (gear && gear->GetState() != LandingGear::GEAR_UP)
 		gear->SetState(LandingGear::GEAR_RAISE);
 }

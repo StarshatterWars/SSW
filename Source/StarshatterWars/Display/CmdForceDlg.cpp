@@ -16,6 +16,7 @@
 */
 
 #include "CmdForceDlg.h"
+#include "FactionInsignia.h"
 #include "CmdTwoColumnLayout.h"
 #include "CmdForceListItem.h"
 
@@ -320,6 +321,7 @@ void UCmdForceDlg::NativeConstruct()
             SSWTwoColumn::Append(Right, DetailScroll, true);
             UVerticalBox* Details = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("ForceNativeDetailsContent"));
             DetailScroll->AddChild(Details);
+            FactionLogo=WidgetTree->ConstructWidget<UImage>();FactionLogo->SetDesiredSizeOverride(FVector2D(56.f));SSWTwoColumn::Append(Details,FactionLogo);
             SSWTwoColumn::Append(Details, GroupNameText);
             SSWTwoColumn::Append(Details, GroupTypeText);
             SSWTwoColumn::Append(Details, GroupEmpireText);
@@ -664,6 +666,7 @@ void UCmdForceDlg::ShowCombatant(Combatant* C)
         GroupNameText->SetText(FText::FromString(UTF8_TO_TCHAR(Force->GetDescription())));
     }
 
+    FactionInsignia::Set(FactionLogo,GetEmpireDisplayName((EEMPIRE_NAME)Force->GetEmpire()),56.f);
     if (GroupEmpireText)
     {
         GroupEmpireText->SetText(FText::FromString(
@@ -744,6 +747,7 @@ void UCmdForceDlg::ClearDescList()
     if (GroupEmpireText)
     {
         GroupEmpireText->SetText(FText::GetEmpty());
+        FactionInsignia::Set(FactionLogo,FString());
     }
 }
 
@@ -845,6 +849,7 @@ void UCmdForceDlg::PopulateDescForGroup(CombatGroup* Group)
         GroupLocationText->SetText(FText::FromString(UTF8_TO_TCHAR(Group->GetRegion().data())));
     }
 
+    FactionInsignia::Set(FactionLogo,GetEmpireDisplayName((EEMPIRE_NAME)Group->GetEmpire()),56.f);
     if (GroupEmpireText)
     {
         GroupEmpireText->SetText(FText::FromString(

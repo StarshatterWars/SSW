@@ -1,4 +1,5 @@
 #include "FighterHUDDetails.h"
+#include "GearIndicator.h"
 #include "NativeHUDSymbology.h"
 #include "FlightPanelStyle.h"
 #include "CockpitDisplays.h"
@@ -172,6 +173,11 @@ namespace
 }
 // Match GEAR DOWN width; double its height for a larger launch target.
 // GEAR DOWN is at HUD center +126; LAUNCH is below it at +158.
+static FVector2D GearButtonOrigin(FVector2D Size,float Scale,bool Mini)
+{
+    return Mini ? FVector2D(Size.X*.5-330*Scale,20*Scale)+FVector2D(190,77)*Scale
+                : FVector2D(180*Scale,Size.Y-208*Scale);
+}
 static FSlateRect CarrierLaunchButtonRect(const FVector2D& Size, float Scale)
 {
     const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold",
@@ -460,6 +466,14 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
     const FVector2D Size = MyGeometry.GetLocalSize();
     const float Scale = FMath::Min(Size.X / 1280.0f, Size.Y / 720.0f);
     const FVector2D Local = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
+    if(MouseEvent.GetEffectingButton()==EKeys::LeftMouseButton)
+    {
+        if(CockpitDisplays && CockpitDisplays->HandleGearClick())return FReply::Handled();
+        Ship* P=PlayerShip();
+        const bool Mini=ThirdPerson.Get() && !(P && P->GetDock() && P->GetFlightPhase()<EOPSMode::ACTIVE) && !IsCockpitDisplayActive();
+        if(!IsCockpitDisplayActive() && P && P->GetGear() && SSWGearIndicator::Contains(Local,GearButtonOrigin(Size,Scale,Mini),FVector2D(28,26)*Scale))
+        {P->ToggleGear();Refresh();return FReply::Handled();}
+    }
     const FVector2D Right(Size.X - 220.f * Scale, Size.Y - 215.f * Scale);
     const FVector2D Extent(220.f * Scale, 215.f * Scale);
     // Legacy carrier launch: clickable only for an aircraft currently staged
@@ -585,6 +599,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     const bool bMiniHUD = bHasPlayer && bThirdPerson && !bPreTakeoff && !IsCockpitDisplayActive();
     if (!IsCockpitDisplayActive())
     {
+    if(bHasPlayer && HUDPlayer && HUDPlayer->GetGear())SSWGearIndicator::Draw(E,G,L+5,GearButtonOrigin(Size,Scale,bMiniHUD),FVector2D(28,26)*Scale,HUDPlayer);
     if (bHasPlayer && !ThirdPerson.Get() && !bPreTakeoff)
     {
 
@@ -651,7 +666,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         else if (ThreatLevel==2 && bWarningFlash) Popup(-168,TEXT("MISSILE WARNING"),FLinearColor::Red);
         else if (ThreatLevel==1) Popup(-168,TEXT("LOCK WARNING"),FLinearColor::Yellow);
         if (bShoot && bShowWeapons) Popup(152,TEXT("SHOOT"));
-        if (bGearDown) Popup(126,TEXT("GEAR"));
+
     }
     if (bHasPlayer && bMiniHUD)
     {
@@ -729,8 +744,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         MiniText(366,43,CompactNavLabel,13,White,138);
         if (NavReadouts.Num() > 0)
             MiniText(366,62,NavReadouts[0],10,Muted,138);
-        const FString State = bGearDown ? TEXT("GEAR") : TEXT("GEAR UP");
-        MiniText(120,82,bAugmenterActive ? TEXT("AUG") : State,10,bAugmenterActive ? Green : Muted);
+        if(bAugmenterActive)MiniText(120,82,TEXT("AUG"),10,Green);
         if (bShowWeapons && !bCapitalWeapons)
         {
             MiniText(244,14,TEXT("WEAPONS"),10,Muted);
