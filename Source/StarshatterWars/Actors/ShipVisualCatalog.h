@@ -8,5 +8,6 @@ struct FEntry { const TCHAR* Definition; const TCHAR* Design; const TCHAR* Model
 STARSHATTERWARS_API TConstArrayView<FEntry> Entries();
 STARSHATTERWARS_API FString DefinitionName(const FString& DesignName, const FString& ModelName = FString());
 STARSHATTERWARS_API FString CanonicalClassPath(const FString& DesignName, const FString& ModelName = FString());
+STARSHATTERWARS_API FString IconFolder(const FString& DesignName);
 STARSHATTERWARS_API UClass* Resolve(const FString& DesignName, const FString& ModelName = FString());
 }

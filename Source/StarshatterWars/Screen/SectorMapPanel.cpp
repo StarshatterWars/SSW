@@ -1,4 +1,4 @@
-﻿/*
+/*
     Project Starshatter Wars
     Fractal Dev Studios LLC
     Copyright (c) 2025-2026. All Rights Reserved.
@@ -18,6 +18,7 @@
     Shared read-only region view for Mission Navigation and Operations.
 */
 
+#include "ShipVisualCatalog.h"
 #include "SectorMapPanel.h"
 
 #include "MissionNavDlg.h"
@@ -2197,7 +2198,7 @@ UTexture2D* USectorMapPanel::GetShipMapSprite(
 
     const FString Path = FString::Printf(
         TEXT("/Game/UI/Ships/%s/%s.%s"),
-        *ShipName,
+        *ShipVisualCatalog::IconFolder(ShipName),
         *SpriteName,
         *SpriteName);
 

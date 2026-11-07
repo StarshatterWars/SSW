@@ -151,3 +151,18 @@ UClass* ShipVisualCatalog::Resolve(const FString& DesignName, const FString& Mod
     }
     return nullptr;
 }
+
+FString ShipVisualCatalog::IconFolder(const FString& DesignName)
+{
+    for (const FEntry& Entry : Entries())
+    {
+        if (FCString::Stricmp(Entry.Kind, TEXT("sam")) == 0 &&
+            (DesignName.Equals(Entry.Design, ESearchCase::IgnoreCase) ||
+             DesignName.Equals(Entry.Definition, ESearchCase::IgnoreCase)))
+        {
+            return Entry.Definition;
+        }
+    }
+
+    return DesignName;
+}

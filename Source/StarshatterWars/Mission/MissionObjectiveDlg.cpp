@@ -1,3 +1,4 @@
+#include "ShipVisualCatalog.h"
 #include "MissionObjectiveDlg.h"
 #include "ShipBriefingPreview.h"
 #include "Components/Overlay.h"
@@ -379,7 +380,7 @@ void UMissionObjectiveDlg::RefreshPreviewPlaceholder(Mission* MissionPtr)
 
     const FString ShipName = Design->ShipName;
     const FString SpriteName = Design->Map[0].SpriteName;
-    const FString Path = FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"), *ShipName, *SpriteName, *SpriteName);
+    const FString Path = FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"), *ShipVisualCatalog::IconFolder(ShipName), *SpriteName, *SpriteName);
     if (UTexture2D* Tex = LoadObject<UTexture2D>(nullptr, *Path))
     {
         PreviewImage->SetBrushFromTexture(Tex, true);

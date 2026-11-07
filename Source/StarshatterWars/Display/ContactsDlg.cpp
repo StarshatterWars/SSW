@@ -1,4 +1,5 @@
-﻿#include "ContactsDlg.h"
+#include "ShipVisualCatalog.h"
+#include "ContactsDlg.h"
 #include "FormattingUtils.h"
 #include "MissionBriefingDlg.h"
 #include "MissionObjectTarget.h"
@@ -112,7 +113,7 @@ private:
                             FString Icon = D->HudIconName;
                             if(Icon.StartsWith(TEXT("/Game/"))) Path = Icon;
                             else { Icon.RemoveFromEnd(TEXT(".pcx"), ESearchCase::IgnoreCase);
-                                   Path = FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"), *D->ShipName, *Icon, *Icon); }
+                                   Path = FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"), *ShipVisualCatalog::IconFolder(D->ShipName), *Icon, *Icon); }
                         }
                     }
                     if(Path.IsEmpty()){

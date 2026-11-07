@@ -1,3 +1,4 @@
+#include "ShipVisualCatalog.h"
 #include "FighterHUDDetails.h"
 #include "GearIndicator.h"
 #include "NativeHUDSymbology.h"
@@ -143,7 +144,7 @@ namespace
         FString Icon = D->HudIconName;
         if (Icon.StartsWith(TEXT("/Game/"))) return Icon;
         Icon.RemoveFromEnd(TEXT(".pcx"), ESearchCase::IgnoreCase);
-        return FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"), *D->ShipName, *Icon, *Icon);
+        return FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"), *ShipVisualCatalog::IconFolder(D->ShipName), *Icon, *Icon);
     }
 
     FLinearColor SensorContactColor(const SimContact* Contact, Ship* Observer)
