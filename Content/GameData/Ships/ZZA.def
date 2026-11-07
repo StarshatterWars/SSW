@@ -4,6 +4,7 @@ name:          ZZA
 display_name:  Zolon
 class:         Attack
 abrv:          ZA
+hud_icon:      "zmap"
 empire:        Zolon
 description:   "The ZZA Attack Craft is a compact Zolon assault fighter designed for high-velocity strike runs against capital targets. Though lightly shielded, its forward-mounted weapons and aggressive maneuver profile make it a dangerous adversary in close engagements."
 secret:        true
@@ -136,3 +137,23 @@ death_spiral: {
 }
 
 map: { sprite: "zmap" }
+
+thruster: {
+   type: Plasma
+   design: Thruster
+   port_fore: { loc: (0.21, -135.43, 128.05), fire: 0x0004, rotation: (0, 0, 0), flare_scale: 0.12, trail_scale: 0.12 }
+   port_aft: { loc: (0.07, -37.81, -85.35), fire: 0x0008, rotation: (0, 0, 180), flare_scale: 0.12, trail_scale: 0.12 }
+   port_left: { loc: (145.78, -1.53, 58.23), fire: 0x0041, rotation: (0, 0, -90), flare_scale: 0.12, trail_scale: 0.12 }
+   port_right: { loc: (-145.55, -1.53, 58.23), fire: 0x0082, rotation: (0, 0, 90), flare_scale: 0.12, trail_scale: 0.12 }
+   port_top: { loc: (-0.95, 144.57, 58.23), fire: 0x0010, rotation: (0, 90, 0), flare_scale: 0.12, trail_scale: 0.12 }
+   port_bottom: { loc: (-0.95, -146.75, 58.23), fire: 0x0020, rotation: (0, -90, 0), flare_scale: 0.12, trail_scale: 0.12 }
+}
+
+navlight: {
+   name: "Running Lights"
+   scale: 1.0
+   period: 1.0
+   light: { name: "Port", loc: (145.77, 0.79, 58.23), color: "red", intensity: 1250, radius: 100, mode: "steady" }
+   light: { name: "Starboard", loc: (-145.54, 0.79, 58.23), color: "green", intensity: 1250, radius: 100, mode: "steady" }
+   light: { name: "Aft", loc: (0.07, 37.84, -85.35), color: "white", intensity: 1250, radius: 100, mode: "steady" }
+}

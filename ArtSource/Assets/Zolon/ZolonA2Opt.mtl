@@ -1,0 +1,28 @@
+#
+# ZolonA2Opt Material Library exported by Magic 2.0
+#
+
+newmtl skin_d
+Ka 0.50196 0.50196 0.50196
+Kd 1.50000 1.50000 1.50000
+Ks 0.91373 0.95294 0.94902
+Ns 22.00000
+illum 2
+map_Kd SKIN_D.jpg
+
+newmtl cry_d
+Ka 0.50196 0.50196 0.50196
+Kd 1.00000 1.00000 1.00000
+Ks 0.00000 0.00000 0.00000
+Ns 20.00000
+illum 2
+map_Kd CRY_D.jpg
+
+newmtl bump_d
+Ka 0.50196 0.50196 0.50196
+Kd 2.00000 2.00000 2.00000
+Ks 0.30000 0.30000 0.30000
+Ns 20.00000
+illum 2
+map_Kd BUMP_D.jpg
+

@@ -4,6 +4,7 @@ name:          ZZDD
 display_name:  Zolon
 class:         Destroyer
 abrv:          ZDA
+hud_icon:      "zmap"
 empire:        Zolon
 description:   "The ZZDD Zolon Destroyer is a fast-attack capital ship engineered for aggressive forward operations. Armed with concentrated strike batteries and reinforced hull plating, it excels at flanking maneuvers and rapid assault engagements in support of larger Zolon formations."
 secret:        true
@@ -64,11 +65,18 @@ drive: {
 }
 
 thruster: {
+   type: Plasma
    design:           Thruster,
 
    loc:              (0, 0, 88),
    size:             24,
    hull_factor:      0.3
+   port_fore: { loc: (0.17, -56.39, 824.31), fire: 0x0004, rotation: (0, 0, 0), flare_scale: 0.12, trail_scale: 0.12 }
+   port_aft: { loc: (-259.31, -12.88, -871.05), fire: 0x0008, rotation: (0, 0, 180), flare_scale: 0.12, trail_scale: 0.12 }
+   port_left: { loc: (549.49, -10.73, 104.56), fire: 0x0041, rotation: (0, 0, -90), flare_scale: 0.12, trail_scale: 0.12 }
+   port_right: { loc: (-548.54, -9.61, 101.22), fire: 0x0082, rotation: (0, 0, 90), flare_scale: 0.12, trail_scale: 0.12 }
+   port_top: { loc: (-9.28, 483.75, -318.93), fire: 0x0010, rotation: (0, 90, 0), flare_scale: 0.12, trail_scale: 0.12 }
+   port_bottom: { loc: (10.23, -484.70, -318.93), fire: 0x0020, rotation: (0, -90, 0), flare_scale: 0.12, trail_scale: 0.12 }
 }
 
 quantum: {
@@ -233,8 +241,11 @@ death_spiral: {
 
 }
 
-
-
-
-
-
+navlight: {
+   name: "Running Lights"
+   scale: 1.0
+   period: 1.0
+   light: { name: "Port", loc: (551.14, 33.79, -283.67), color: "red", intensity: 1250, radius: 100, mode: "steady" }
+   light: { name: "Starboard", loc: (-550.20, 33.79, -287.02), color: "green", intensity: 1250, radius: 100, mode: "steady" }
+   light: { name: "Aft", loc: (-281.60, 39.45, -871.05), color: "white", intensity: 1250, radius: 100, mode: "steady" }
+}

@@ -4,6 +4,7 @@ name:          ZZCS
 display_name:  "Zolon Consul"
 class:         Cruiser
 abrv:          ZCS
+hud_icon:      "zmap"
 empire:        Zolon     
 description:   "The ZZCS Zolon Consul is a command-grade cruiser that serves as both diplomatic envoy and battle leader within Zolon task forces. Outfitted with advanced sensor suites and reinforced defensive systems, it coordinates fleet actions while projecting Zolon authority across disputed systems."
 secret:        true
@@ -63,11 +64,18 @@ drive: {
 }
 
 thruster: {
+   type: Plasma
    design:           Thruster,
 
    loc:              (0, 0, 88),
    size:             24,
    hull_factor:      0.3
+   port_fore: { loc: (-246.09, -98.17, 843.49), fire: 0x0004, rotation: (0, 0, 0), flare_scale: 0.12, trail_scale: 0.12 }
+   port_aft: { loc: (-12.71, -50.57, -1834.25), fire: 0x0008, rotation: (0, 0, 180), flare_scale: 0.12, trail_scale: 0.12 }
+   port_left: { loc: (247.50, 86.46, 732.33), fire: 0x0041, rotation: (0, 0, -90), flare_scale: 0.12, trail_scale: 0.12 }
+   port_right: { loc: (-246.56, -86.77, 732.33), fire: 0x0082, rotation: (0, 0, 90), flare_scale: 0.12, trail_scale: 0.12 }
+   port_top: { loc: (-3.65, 838.46, 62.61), fire: 0x0010, rotation: (0, 90, 0), flare_scale: 0.12, trail_scale: 0.12 }
+   port_bottom: { loc: (-3.65, -838.78, 62.61), fire: 0x0020, rotation: (0, -90, 0), flare_scale: 0.12, trail_scale: 0.12 }
 }
 
 quantum: {
@@ -257,8 +265,11 @@ death_spiral: {
 
 }
 
-
-
-
-
-
+navlight: {
+   name: "Running Lights"
+   scale: 1.0
+   period: 1.0
+   light: { name: "Port", loc: (247.50, 86.46, 732.33), color: "red", intensity: 1250, radius: 100, mode: "steady" }
+   light: { name: "Starboard", loc: (-251.50, 98.02, 838.47), color: "green", intensity: 1250, radius: 100, mode: "steady" }
+   light: { name: "Aft", loc: (-12.02, 50.40, -1834.25), color: "white", intensity: 1250, radius: 100, mode: "steady" }
+}

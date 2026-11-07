@@ -1,0 +1,28 @@
+#
+# ZAttack Material Library exported by Magic 2.0
+#
+
+newmtl SKIN_D
+Ka 0.25098 0.25098 0.25098
+Kd 1.50000 1.50000 1.50000
+Ks 1.00000 1.00000 1.00000
+Ns 20.00000
+illum 2
+map_Kd SKIN_D.jpg
+
+newmtl BUMP_D
+Ka 0.25098 0.25098 0.25098
+Kd 1.00000 1.00000 1.00000
+Ks 0.20000 0.20000 0.20000
+Ns 20.00000
+illum 2
+map_Kd BUMP_D.jpg
+
+newmtl CRY_D
+Ka 0.25098 0.25098 0.25098
+Kd 1.00000 1.00000 1.00000
+Ks 0.20000 0.20000 0.20000
+Ns 20.00000
+illum 2
+map_Kd CRY_D.jpg
+

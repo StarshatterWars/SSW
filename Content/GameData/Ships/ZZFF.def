@@ -4,6 +4,7 @@ name:          ZZFF
 display_name:  Zolon
 class:         Frigate
 abrv:          ZFF
+hud_icon:      "zmap"
 empire:        Zolon
 description:   "The ZZFF Zolon Frigate is a versatile escort vessel designed to screen larger warships and patrol contested corridors. Combining moderate firepower with durable shielding, it forms the backbone of Zolon mid-range fleet operations."
 secret:        true
@@ -63,11 +64,18 @@ drive: {
 }
 
 thruster: {
+   type: Plasma
    design:           Thruster,
 
    loc:              (0, 0, 88),
    size:             24,
    hull_factor:      0.3
+   port_fore: { loc: (-76.56, -49.33, 90.38), fire: 0x0004, rotation: (0, 0, 0), flare_scale: 0.12, trail_scale: 0.12 }
+   port_aft: { loc: (-33.75, -24.78, -135.82), fire: 0x0008, rotation: (0, 0, 180), flare_scale: 0.12, trail_scale: 0.12 }
+   port_left: { loc: (101.72, 12.25, 18.20), fire: 0x0041, rotation: (0, 0, -90), flare_scale: 0.12, trail_scale: 0.12 }
+   port_right: { loc: (-100.53, 12.08, 18.20), fire: 0x0082, rotation: (0, 0, 90), flare_scale: 0.12, trail_scale: 0.12 }
+   port_top: { loc: (50.62, 88.61, 18.20), fire: 0x0010, rotation: (0, 90, 0), flare_scale: 0.12, trail_scale: 0.12 }
+   port_bottom: { loc: (7.65, -70.90, -24.34), fire: 0x0020, rotation: (0, -90, 0), flare_scale: 0.12, trail_scale: 0.12 }
 }
 
 quantum: {
@@ -257,8 +265,11 @@ death_spiral: {
 
 }
 
-
-
-
-
-
+navlight: {
+   name: "Running Lights"
+   scale: 1.0
+   period: 1.0
+   light: { name: "Port", loc: (101.68, 17.26, 16.26), color: "red", intensity: 1250, radius: 100, mode: "steady" }
+   light: { name: "Starboard", loc: (-100.50, 17.08, 16.26), color: "green", intensity: 1250, radius: 100, mode: "steady" }
+   light: { name: "Aft", loc: (-0.97, 43.85, -135.80), color: "white", intensity: 1250, radius: 100, mode: "steady" }
+}

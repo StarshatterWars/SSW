@@ -4,6 +4,7 @@ name:          ZZCA
 display_name:  Zolon
 class:         Cruiser
 abrv:          ZCA
+hud_icon:      "zmap"
 empire:        Zolon
 description:   "The ZZCA Zolon Cruiser is a mid-range warship built to enforce Zolon dominance across contested space. Equipped with heavy beam arrays and layered shielding, it serves as both a fleet escort and an independent strike platform in extended campaigns."
 secret:        true
@@ -63,11 +64,18 @@ drive: {
 }
 
 thruster: {
+   type: Plasma
    design:           Thruster,
 
    loc:              (0, 0, 88),
    size:             24,
    hull_factor:      0.3
+   port_fore: { loc: (1.02, -256.36, 797.33), fire: 0x0004, rotation: (0, 0, 0), flare_scale: 0.12, trail_scale: 0.12 }
+   port_aft: { loc: (-1.24, -50.11, -968.86), fire: 0x0008, rotation: (0, 0, 180), flare_scale: 0.12, trail_scale: 0.12 }
+   port_left: { loc: (470.60, 145.29, 631.01), fire: 0x0041, rotation: (0, 0, -90), flare_scale: 0.12, trail_scale: 0.12 }
+   port_right: { loc: (-470.64, 146.00, 631.01), fire: 0x0082, rotation: (0, 0, 90), flare_scale: 0.12, trail_scale: 0.12 }
+   port_top: { loc: (3.98, 368.86, -4.20), fire: 0x0010, rotation: (0, 90, 0), flare_scale: 0.12, trail_scale: 0.12 }
+   port_bottom: { loc: (-4.27, -370.76, -4.20), fire: 0x0020, rotation: (0, -90, 0), flare_scale: 0.12, trail_scale: 0.12 }
 }
 
 quantum: {
@@ -257,8 +265,11 @@ death_spiral: {
 
 }
 
-
-
-
-
-
+navlight: {
+   name: "Running Lights"
+   scale: 1.0
+   period: 1.0
+   light: { name: "Port", loc: (470.60, 145.29, 631.01), color: "red", intensity: 1250, radius: 100, mode: "steady" }
+   light: { name: "Starboard", loc: (-470.64, 146.00, 631.01), color: "green", intensity: 1250, radius: 100, mode: "steady" }
+   light: { name: "Aft", loc: (19.90, 43.17, -968.85), color: "white", intensity: 1250, radius: 100, mode: "steady" }
+}

@@ -2820,7 +2820,7 @@ void AShipActor::BuildThrustersFromRuntime()
         FX.Rotation = Port->Rotation;
         // These original DEFs specify exhaust direction by port key, without
         // explicit rotation fields. Derive the visual orientation only.
-        if (bLegacyEmitterCoordinates)
+        if (bLegacyEmitterCoordinates && Port->Rotation.IsNearlyZero())
         {
             switch (Port->Direction)
             {

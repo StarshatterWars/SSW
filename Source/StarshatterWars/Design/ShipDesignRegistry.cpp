@@ -1205,13 +1205,14 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
                 {
                     Folder = TEXT("/Game/Models/Saber/Debris");
                 }
-                else if (Row.ShipEmpire == EShipEmpire::Pirate &&
+                else if ((Row.ShipEmpire == EShipEmpire::Pirate || Row.ShipEmpire == EShipEmpire::Zolon) &&
                     (Model.Equals(TEXT("Debris5"), ESearchCase::IgnoreCase) ||
                      Model.Equals(TEXT("Debris6"), ESearchCase::IgnoreCase) ||
                      Model.Equals(TEXT("Debris7"), ESearchCase::IgnoreCase) ||
                      Model.Equals(TEXT("DebrisX"), ESearchCase::IgnoreCase)))
                 {
-                    Folder = TEXT("/Game/Models/Debris/Pirate");
+                    Folder = Row.ShipEmpire == EShipEmpire::Zolon
+                        ? TEXT("/Game/Models/Debris/Zolon") : TEXT("/Game/Models/Debris/Pirate");
                 }
                 else if (Model.Equals(TEXT("Debris0A"), ESearchCase::IgnoreCase) ||
                     Model.Equals(TEXT("Debris0B"), ESearchCase::IgnoreCase) ||
