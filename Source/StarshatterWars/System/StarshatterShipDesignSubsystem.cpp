@@ -830,6 +830,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		}
 		else if (Key == "navlight" && Def->term() && Def->term()->isStruct())
 		{
+            TGuardValue<float> DefinitionNavLightScale(CurrentShipScale, LocalScale);
 			ParseNavlight(Def->term()->isStruct(), fn);
 		}
 		else if (Key == "flightdeck" && Def->term() && Def->term()->isStruct())
