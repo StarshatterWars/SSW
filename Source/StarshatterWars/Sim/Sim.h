@@ -95,6 +95,7 @@ public:
     void ExecMission();
     // Player-controlled carrier launch; no launch queue advances until requested.
     bool RequestPlayerCarrierLaunch();
+    bool IsTrainingLaunchLeaderPending();
     void CommitMission();
     void UnloadMission();
 
@@ -268,7 +269,6 @@ protected:
     TArray<Ship*> DeferredPlayerWingmen;
     Ship* DeferredLaunchPlayer = nullptr;
     Ship* PendingLaunchPlayer = nullptr; // staged player, awaiting click / timeout
-    double PlayerLaunchHoldRemaining = 0.0; // simulation seconds; 60s fallback
     bool bPlayerLaunchRequested = false;
 
 };

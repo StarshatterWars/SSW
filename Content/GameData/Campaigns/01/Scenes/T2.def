@@ -14,7 +14,7 @@ sitrep: "The Third Fleet is participating in wargame "
     "to Janek orbit to practice spaceborne fighter "
     "operations.  As part of the exercise, you have "
     "been tasked with flying patrol patterns "
-    "and destroying target drones in your sector."
+    "and destroying target drones in your sector. Follow Echo 1 off the deck."
 start: "01/09:23:00"
 ship: {
     name: Archon,
@@ -54,7 +54,7 @@ element: {
         cmd: intercept,
         tgt: Bravo
     },
-    player: 1,
+    player: 2,
     alert: true,
     count: 2,
     iff: 1,
@@ -279,7 +279,7 @@ event: {
     type: Message,
     trigger: Navpoint,
     trigger_param: 3,
-    trigger_ship: "Echo 1",
+    trigger_ship: "Echo 2",
     message: "Alpha sweep point reached. Press T to cycle Alpha drones. Track and destroy all four."
 }
 
@@ -288,7 +288,7 @@ event: {
     type: Message,
     trigger: Navpoint,
     trigger_param: 4,
-    trigger_ship: "Echo 1",
+    trigger_ship: "Echo 2",
     message: "Bravo sweep point reached. Press T to cycle Bravo drones. Track and destroy all four."
 }
 

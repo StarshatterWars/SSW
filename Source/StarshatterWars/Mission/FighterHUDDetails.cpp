@@ -161,6 +161,9 @@ namespace
     {
         if (!Player || !PlayerHangar || Player->GetFlightPhase() != EOPSMode::ALERT)
             return false;
+        Sim* LiveSim = Sim::GetSim();
+        if (LiveSim && LiveSim->IsTrainingLaunchLeaderPending())
+            return false;
         const HangarSlot* Staged = PlayerHangar->GetSlot(Squadron, Slot);
         if (!Staged || PlayerHangar->GetState(Staged) != Hangar::ALERT)
             return false;

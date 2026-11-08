@@ -493,7 +493,6 @@ void Sim::UnloadMission()
     DeferredPlayerWingmen.Reset();
     DeferredLaunchPlayer = nullptr;
     PendingLaunchPlayer = nullptr;
-    PlayerLaunchHoldRemaining = 0.0;
     bPlayerLaunchRequested = false;
     OnMissionUnloading.Broadcast();
 
@@ -951,6 +950,13 @@ Sim::BuildLinks()
 	}
 }
 
+
+static bool IsLeaderFirstTraining(const Mission* MissionDef)
+{
+    return MissionDef && MissionDef->GetMissionType() == int(EMissionType::TRAINING) &&
+        (MissionDef->GetIdentity() == 101 || MissionDef->GetIdentity() == 102);
+}
+
 void
 Sim::CreateElements()
 {
@@ -1312,12 +1318,11 @@ Sim::CreateElements()
 					const int32 PlayerSlot = MissionElem->GetPlayerIndex() > 0
 						? MissionElem->GetPlayerIndex() - 1 : INDEX_NONE;
 					TArray<int32> LaunchOrder;
-                    const bool bT1InstructorFirst = mission && mission->GetIdentity() == 101 &&
-                        FString(ANSI_TO_TCHAR(mission->GetName())) == TEXT("Basic Space Flight");
-					if (!bT1InstructorFirst && PlayerSlot >= 0 && PlayerSlot < MissionElem->Count())
+                    const bool bTrainingLeaderFirst = PlayerSlot == 1 && IsLeaderFirstTraining(mission);
+					if (!bTrainingLeaderFirst && PlayerSlot >= 0 && PlayerSlot < MissionElem->Count())
 						LaunchOrder.Add(PlayerSlot);
 					for (int32 i = 0; i < MissionElem->Count(); i++)
-						if (bT1InstructorFirst || i != PlayerSlot)
+						if (bTrainingLeaderFirst || i != PlayerSlot)
 							LaunchOrder.Add(i);
 
                     for (int32 Order = 0; Order < LaunchOrder.Num(); Order++) {
@@ -1363,14 +1368,13 @@ Sim::CreateElements()
                                 if (bRequiredPlayerDeckStart)
                                 {
                                     PendingLaunchPlayer = AlertShip;
-                                    PlayerLaunchHoldRemaining = 60.0;
                                 }
                                 UE_LOG(LogTemp, Display,
                                     TEXT("[CarrierLaunch][PLAYER_AWAIT_LAUNCH] Ship='%hs' Carrier='%hs' Deck='%hs' Slot=%d"),
                                     AlertShip->GetName(), Carrier->GetName(), AssignedDeck->GetName(),
                                     HangarPtr->GetFlightDeckSlot(HangarSlotPtr));
                             }
-                            else if (PlayerSlot >= 0 && bRequiredPlayerDeckStart && !bT1InstructorFirst) {
+                            else if (PlayerSlot >= 0 && bRequiredPlayerDeckStart && !(bTrainingLeaderFirst && i == 0)) {
                                 // Stage AI wingmen, but do not queue their deck timers.
                                 // The first actual launch must be the player fighter.
                                 DeferredPlayerWingmen.Add(AlertShip);
@@ -2308,10 +2312,21 @@ Sim::RequestHyperJump(Ship* obj, SimRegion* rgn, const FVector& loc,
 
 // +--------------------------------------------------------------------+
 
+bool Sim::IsTrainingLaunchLeaderPending()
+{
+    const Ship* Player = GetPlayerShip();
+    if (!IsLeaderFirstTraining(mission) || !Player || !Player->GetElement())
+        return false;
+
+    const Ship* Leader = Player->GetElement()->GetShip(1);
+    return Leader && Leader != Player && !Leader->IsDead() && !Leader->IsDying() &&
+        Leader->GetFlightPhase() < EOPSMode::LAUNCH;
+}
+
 bool Sim::RequestPlayerCarrierLaunch()
 {
     Ship* Player = GetPlayerShip();
-    if (!Player || Player->IsDead() || bPlayerLaunchRequested ||
+    if (!Player || Player->IsDead() || bPlayerLaunchRequested || IsTrainingLaunchLeaderPending() ||
         (PendingLaunchPlayer && PendingLaunchPlayer != Player))
         return false;
 
@@ -2344,8 +2359,9 @@ bool Sim::RequestPlayerCarrierLaunch()
         return false;
 
     DeferredLaunchPlayer = Player;
+    if (PendingLaunchPlayer)
+        start_time = Game::GetGameTime();
     PendingLaunchPlayer = nullptr;
-    PlayerLaunchHoldRemaining = 0.0;
     bPlayerLaunchRequested = true;
     UE_LOG(LogTemp, Display,
         TEXT("[CarrierLaunch][PLAYER_BUTTON] Ship='%hs' Carrier='%hs' PendingWingmen=%d Queued=1"),
@@ -2374,24 +2390,7 @@ Sim::ExecFrame(double DeltaSeconds)
 		return;
 	}
 
-    // Explicit click is preferred. Only after 60 elapsed simulation seconds
-    // may the legacy fallback queue the player's fighter automatically.
-    if (PendingLaunchPlayer && !bPlayerLaunchRequested)
-    {
-        PlayerLaunchHoldRemaining = FMath::Max(0.0,
-            PlayerLaunchHoldRemaining - FMath::Max(0.0, DeltaSeconds));
-        if (PlayerLaunchHoldRemaining <= 0.0)
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[CarrierLaunch][PLAYER_TIMEOUT_60S] Ship='%hs'"),
-                PendingLaunchPlayer->GetName());
-            // If deck staging is invalid, retry on later simulation frames.
-            RequestPlayerCarrierLaunch();
-        }
-    }
-
-    // A fighter awaiting deck launch clearance must not run its main engines.
-    // This hold ends on explicit LAUNCH or successful 60-second fallback queue.
+    // Keep the staged fighter idle until the player selects Launch.
     if (PendingLaunchPlayer && !bPlayerLaunchRequested &&
         !PendingLaunchPlayer->IsDead() &&
         PendingLaunchPlayer->GetFlightPhase() == EOPSMode::ALERT)
@@ -2533,6 +2532,8 @@ Sim::ExecFrame(double DeltaSeconds)
 void
 Sim::ExecEvents(double seconds)
 {
+    if (PendingLaunchPlayer) return;
+
 	ListIter<MissionEvent> iter = events;
 	while (++iter) {
 		MissionEvent* event = iter.value();
@@ -2971,6 +2972,8 @@ Sim::ResolveTimeSkip(double seconds)
 void
 Sim::ProcessEventTrigger(int type, int event_id, const char* ship, int param)
 {
+    if (PendingLaunchPlayer) return;
+
 	Text ship_name = ship;
 
 	ListIter<MissionEvent> iter = events;
@@ -3011,6 +3014,8 @@ Sim::ProcessEventTrigger(int type, int event_id, const char* ship, int param)
 double
 Sim::MissionClock() const
 {
+    if (PendingLaunchPlayer) return 0.0;
+
 	return (Game::GetGameTime() - start_time) / 1000.0;
 }
 
