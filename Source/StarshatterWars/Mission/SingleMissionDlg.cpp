@@ -486,15 +486,19 @@ void USingleMissionDlg::RefreshMissionRoster()
         return;
     }
 
+    const bool bStoryView = IsStoryMissionView();
+    Campaign* ActiveStoryCampaign = bStoryView ? Campaign::GetCampaign() : nullptr;
     TArray<FName> RowNames = DataTable->GetRowNames();
     // Sort by authored mission ID, not by unpredictable DataTable iteration order.
     TArray<const FS_CampaignMission*> SortedRows;
     for (const FName& RowName : RowNames)
     {
         const FS_CampaignMission* Scenario = DataTable->FindRow<FS_CampaignMission>(RowName, TEXT("SingleMissionRoster"), false);
-        if (Scenario && Scenario->Id > 0) SortedRows.Add(Scenario);
+        if (!Scenario || Scenario->Id <= 0) continue;
+        if (bStoryView && (!ActiveStoryCampaign || Scenario->StoryCampaignId != ActiveStoryCampaign->GetCampaignId()))
+            continue;
+        SortedRows.Add(Scenario);
     }
-    const bool bStoryView = IsStoryMissionView();
     SortedRows.Sort([bStoryView](const FS_CampaignMission& A, const FS_CampaignMission& B)
     {
         if (bStoryView) return StoryComesBefore(A, B);

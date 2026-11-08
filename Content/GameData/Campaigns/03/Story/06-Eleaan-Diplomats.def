@@ -1,0 +1,42 @@
+MISSION
+
+id: 3006
+story_points: 250
+story_scene: "06-Eleaan-Diplomats"
+name: "Borova: Diplomatic Passage"
+type: "Sweep"
+system: "Borova"
+region: "Borova"
+start: "04/15:00:00"
+sitrep: "The Ele'aan fact-finding mission has concluded. Escort the diplomatic transport as it departs Borova to report to the Alliance."
+objective: "Protect Diplomatic Transport. Intercept Hegemony Interceptors."
+
+element: {
+    name: "Vanguard"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Diplomatic Transport" }
+    objective: { cmd: intercept, tgt: "Hegemony Interceptors" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Diplomatic Transport"
+    design: Transport
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Hegemony Interceptors"
+    design: Viper
+    count: 3
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Diplomatic Transport" }
+}

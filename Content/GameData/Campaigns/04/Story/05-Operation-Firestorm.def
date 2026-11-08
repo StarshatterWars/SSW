@@ -1,0 +1,42 @@
+MISSION
+
+id: 4005
+story_points: 325
+story_scene: "05-Operation-Firestorm"
+name: "Tarsus: Rescue Screen"
+type: "Sweep"
+system: "Tarsus"
+region: "Tarsus"
+start: "02/23:30:00"
+sitrep: "The peace conference has been attacked. Protect the Alliance escort securing the approaches while the fleet responds to the Zolon attack."
+objective: "Protect Rescue Escort. Intercept Zolon Strike Flight."
+
+element: {
+    name: "Vanguard"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Rescue Escort" }
+    objective: { cmd: intercept, tgt: "Zolon Strike Flight" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Rescue Escort"
+    design: Courageous
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Zolon Strike Flight"
+    design: ZZF
+    count: 4
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Rescue Escort" }
+}

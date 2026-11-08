@@ -21,27 +21,30 @@ The earlier unresolved physical-waypoint render capture remains an open regressi
 3. Planet-to-ground transitions for ground/group missions moved to the Alpha 3 terrestrial closeout.
 4. Surface mission areas moved to the Alpha 3 terrestrial closeout.
 5. New splash screen and startup/loading presentation using game assets.
-6. Convert selected Campaign 2–5 cutscene-only missions into playable story missions. Keep existing dialogue/story continuity and campaign ordering; each needs objectives, fail/success conditions, actors, scripting and save progression. The specific scene-to-mission conversion list is not yet chosen.
+6. Convert selected Campaign 2–5 cutscene-only missions into playable story missions. Keep existing dialogue/story continuity and campaign ordering; each needs objectives, fail/success conditions, actors, scripting and save progression. The first batch contains 28 story missions across Campaigns 2–5. Live playthroughs remain to be verified.
 
 7. Full in-game asset coverage. Finish faction hulls and relay station, fighter cockpits and landing gear, and DEF-referenced debris and hulks. The tactical reference must show each assembled ship with its authored weapon mounts, turret bases, running lights, engine and thruster ports, at the current legacy scale. Inspect orientation and validate combat effects in a live mission before marking an asset complete.
 
 ## Alpha 2 closeout — 2026-11-08
 
-Two workstreams remain for the milestone:
+The Alpha 2 closeout includes the following checks:
 
 1. Deep optimization. Profile repeatable in-game runs, prioritize Unreal rendering, Niagara, scene captures and frame pacing, and verify improvements against gameplay regression checks.
 2. Playable story missions. Select mission-capable cutscenes from Campaigns 2–5, preserve their dialogue and story, and build objectives, success and failure conditions, debriefs and saved story progress. Keep dynamic missions under Campaigns.
+3. Run T3 (Flight School) at Janek Station as the ground-flight smoke test before closing Alpha 2. Verify the terrain and airbase, flight, and debrief.
 
 The editor ingestion comparison is a migration checkpoint. Keep startup ingestion active until the staged tables have been reviewed. Deferred scope above remains tracked separately from these two closeout workstreams.
 
-## Alpha 3 closeout — terrestrial missions
+## Alpha 3 — terrestrial missions and 3D briefings
 
 Start with T3 (Flight School) at Janek Station for takeoff and landing. Follow with T4 (Ground Strike), whose mission DEF names the terrain region, Airbase1 and the strike targets. The legacy StarSystem parser can construct a TerrainRegion, and SimRegion uses it to enter airspace. Unreal already has an ANativeTerrainActor presentation path for an active SimRegion with terrain. Verify which region the live mission resolves and whether it retains its terrain before changing the mission or adding a second terrain system.
 
 1. Launch T3 from the Training screen. Verify Janek Station resolves as airspace and the base and fighters spawn at their authored positions. In T4, also verify the ground target positions.
-2. Use a separate temporary Unreal surface level for Janek presentation. Use /Game/Maps/Ground/JanekSurface for staging. It contains the Airbase1 preview and a temporary flat datum. Before binding it into flight, align the runway and surface presentation to the legacy terrain and region origin. Keep simulation terrain authoritative for altitude, contact, landing and combat. WorldScape can replace the presentation later through the same region binding.
+2. Use a separate temporary Unreal surface level for Janek presentation. Use /Game/Maps/Ground/JanekSurface for staging. It contains the Airbase1 preview and a legacy heightfield mesh at the current 1/100 presentation scale. Verify runway heading and ground contact when binding it into flight. Keep simulation terrain authoritative for altitude, contact, landing and combat. WorldScape can replace the presentation later through the same region binding.
 3. Verify takeoff, navigation, recovery and debrief in T3. Verify targeting and strike in T4 with an Ensign pilot. Check ground impact, objective success and failure, and saved completion after reload. Where a mission crosses from orbit to the surface, verify that streaming and the region handoff preserve the active ship and objective state.
 4. Use the same region path for Campaign 2–5 terrestrial story missions. Keep named locations available for HUD targeting, and leave objective completion to the mission script and simulation. Verify a representative story mission before closing Alpha 3.
+
+5. Build a Wing Commander-style 3D briefing in the existing briefing flow. Stage the route, ships, locations and objectives in sequence with camera moves and existing briefing narration where available. Keep the briefing text accessible and allow the player to skip directly to mission setup. Verify one space sortie and one terrestrial sortie. This is the current milestone for moving 3D briefings originally listed in A1.2.
 
 Keep the current 1/100 presentation scale and legacy simulation coordinates for this milestone. Alpha 3 remains open pending the live terrestrial checks.
 

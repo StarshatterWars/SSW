@@ -1,0 +1,42 @@
+MISSION
+
+id: 4001
+story_points: 225
+story_scene: "01-Campaign-Start"
+name: "Aram: Outpost Approach"
+type: "Sweep"
+system: "Ostara"
+region: "Aram"
+start: "01/00:00:00"
+sitrep: "The Sixth Fleet has reached Ostara. Screen its picket near Aram while the fleet establishes contact with the Hegemony outpost."
+objective: "Protect Sixth Fleet Picket. Intercept Outpost Patrol."
+
+element: {
+    name: "Vanguard"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Sixth Fleet Picket" }
+    objective: { cmd: intercept, tgt: "Outpost Patrol" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Sixth Fleet Picket"
+    design: Asher
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Outpost Patrol"
+    design: Viper
+    count: 3
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Sixth Fleet Picket" }
+}

@@ -1,0 +1,43 @@
+MISSION
+
+id: 2204
+story_points: 175
+story_scene: "03-Blockade-Broken"
+name: "Trellis: Relief Corridor"
+type: "Sweep"
+system: "Solus"
+region: "Trellis"
+start: "02/09:00:00"
+sitrep: "The Third Fleet has cleared the minefields around the Trellis-Solus Farcaster. Admiral Evars has authorized humanitarian traffic to the inner planets. Sweep the approach to Trellis Docks for remaining Separatist fighters."
+objective: "Protect Trellis Docks. Intercept Trellis Raiders."
+
+element: {
+    name: "Avengers"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Trellis Docks" }
+    objective: { cmd: intercept, tgt: "Trellis Raiders" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Trellis Docks"
+    design: Station1
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Trellis Raiders"
+    design: Wolf
+    mission: strike
+    count: 2
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Trellis Docks" }
+}

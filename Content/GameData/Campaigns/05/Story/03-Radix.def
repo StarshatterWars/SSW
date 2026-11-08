@@ -1,0 +1,42 @@
+MISSION
+
+id: 5003
+story_points: 275
+story_scene: "03-Radix"
+name: "Radix: Crossroads Screen"
+type: "Sweep"
+system: "Radix"
+region: "Radix"
+start: "01/16:30:00"
+sitrep: "Radix sits astride the southern trade routes. Keep the Alliance picket intact while it checks traffic on the approach."
+objective: "Protect Alliance Picket. Intercept Hegemony Interceptors."
+
+element: {
+    name: "Vanguard"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Alliance Picket" }
+    objective: { cmd: intercept, tgt: "Hegemony Interceptors" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Alliance Picket"
+    design: Asher
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Hegemony Interceptors"
+    design: Avenger
+    count: 3
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Alliance Picket" }
+}

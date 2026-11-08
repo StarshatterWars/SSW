@@ -1,0 +1,43 @@
+MISSION
+
+id: 2203
+story_points: 125
+story_scene: "01-News-Start"
+name: "Highland: Courier Corridor"
+type: "Sweep"
+system: "Solus"
+region: "Solus"
+start: "01/00:00:00"
+sitrep: "The Provisional Security Directorate has requested Alliance assistance. Couriers ran the Trellis blockade to deliver the appeal. Screen Archon near the Solus Farcaster while the Third Fleet establishes its presence."
+objective: "Protect Archon. Intercept Blockade Patrol."
+
+element: {
+    name: "Avengers"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Archon" }
+    objective: { cmd: intercept, tgt: "Blockade Patrol" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Archon"
+    design: Orion
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Blockade Patrol"
+    design: Wolf
+    mission: strike
+    count: 2
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Archon" }
+}

@@ -1,0 +1,42 @@
+MISSION
+
+id: 3012
+story_points: 325
+story_scene: "12-Colony-Ship"
+name: "Silessia: Far Horizon Screen"
+type: "Sweep"
+system: "Silessia"
+region: "Silessia"
+start: "09/22:00:00"
+sitrep: "Far Horizon is preparing for its departure. Keep the colony ship safe while the launch support teams finish their work."
+objective: "Protect Far Horizon. Intercept Hegemony Interceptors."
+
+element: {
+    name: "Vanguard"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Far Horizon" }
+    objective: { cmd: intercept, tgt: "Hegemony Interceptors" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Far Horizon"
+    design: Colony
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Hegemony Interceptors"
+    design: Viper
+    count: 4
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Far Horizon" }
+}

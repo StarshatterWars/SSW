@@ -1,0 +1,42 @@
+MISSION
+
+id: 3001
+story_points: 200
+story_scene: "01-Campaign-Start"
+name: "Janus: Invasion Response"
+type: "Sweep"
+system: "Janus"
+region: "Janek"
+start: "01/00:00:00"
+sitrep: "Hegemony fleets have invaded core Alliance systems. Defend the Janek approach against the leading elements of the Sixth Fleet."
+objective: "Protect Alliance Carrier. Intercept Hegemony Vanguard."
+
+element: {
+    name: "Vanguard"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Alliance Carrier" }
+    objective: { cmd: intercept, tgt: "Hegemony Vanguard" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Alliance Carrier"
+    design: Orion
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Hegemony Vanguard"
+    design: Viper
+    count: 3
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Alliance Carrier" }
+}

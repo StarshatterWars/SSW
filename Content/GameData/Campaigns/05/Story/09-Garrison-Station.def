@@ -1,0 +1,43 @@
+MISSION
+
+id: 5009
+story_points: 425
+story_scene: "09-Garrison-Station"
+name: "Garrison: Laboratory Strike"
+type: "Strike"
+system: "Garrison"
+region: "Garrison"
+start: "01/00:00:00"
+sitrep: "Force Intelligence traced the illegal Technite to an orbital military laboratory. Support the cruiser attack against its shields and gamma laser batteries."
+objective: "Protect Strike Cruiser. Strike Garrison Military Laboratory."
+
+element: {
+    name: "Vanguard"
+    design: Falcon
+    mission: strike
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Strike Cruiser" }
+    objective: { cmd: strike, tgt: "Garrison Military Laboratory" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Strike Cruiser"
+    design: Courageous
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+    mission: strike
+    objective: { cmd: strike, tgt: "Garrison Military Laboratory" }
+}
+
+element: {
+    name: "Garrison Military Laboratory"
+    design: Station7
+    count: 1
+    iff: 2
+    loc: (4000, 6000, 0)
+}

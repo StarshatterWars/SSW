@@ -1,0 +1,42 @@
+MISSION
+
+id: 5012
+story_points: 400
+story_scene: "12-Endgame"
+name: "Volante: Endgame Screen"
+type: "Sweep"
+system: "Trocanther"
+region: "Volante"
+start: "01/00:00:00"
+sitrep: "The Hegemony forces at Trocanther are breaking. Protect Orion against the Volante rear guard while the fleets close on the remaining Technite sites."
+objective: "Protect Orion. Intercept Hegemony Rear Guard."
+
+element: {
+    name: "Vanguard"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Orion" }
+    objective: { cmd: intercept, tgt: "Hegemony Rear Guard" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Orion"
+    design: Orion
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Hegemony Rear Guard"
+    design: Vendetta
+    count: 4
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Orion" }
+}

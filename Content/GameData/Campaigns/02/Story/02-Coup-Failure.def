@@ -1,0 +1,42 @@
+MISSION
+
+id: 2252
+story_points: 150
+story_scene: "02-Coup-Failure"
+name: "Solus: Directorate Courier"
+type: "Sweep"
+system: "Solus"
+region: "Solus"
+start: "02/05:00:00"
+sitrep: "The Directorate thwarted the coup in Telmera City. Screen its courier in Solus orbit against a Separatist patrol."
+objective: "Protect Directorate Courier. Intercept Separatist Pursuit."
+
+element: {
+    name: "Vanguard"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Directorate Courier" }
+    objective: { cmd: intercept, tgt: "Separatist Pursuit" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Directorate Courier"
+    design: Courier
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Separatist Pursuit"
+    design: Wolf
+    count: 2
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Directorate Courier" }
+}

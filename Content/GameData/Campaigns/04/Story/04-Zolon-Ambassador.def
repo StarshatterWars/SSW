@@ -1,0 +1,42 @@
+MISSION
+
+id: 4004
+story_points: 250
+story_scene: "04-Zolon-Ambassador"
+name: "Tarsus: Diplomatic Escort"
+type: "Sweep"
+system: "Tarsus"
+region: "Tarsus"
+start: "02/06:00:00"
+sitrep: "A Zolon consular ship is hosting talks in Tarsus orbit. Screen the Alliance delegation on approach. The consular ship and diplomatic traffic are friendly."
+objective: "Protect Alliance Delegation. Intercept Rogue Interceptors."
+
+element: {
+    name: "Vanguard"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Alliance Delegation" }
+    objective: { cmd: intercept, tgt: "Rogue Interceptors" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Alliance Delegation"
+    design: Transport
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Rogue Interceptors"
+    design: Viper
+    count: 3
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Alliance Delegation" }
+}

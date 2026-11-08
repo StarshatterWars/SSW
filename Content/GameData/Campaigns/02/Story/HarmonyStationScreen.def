@@ -1,0 +1,43 @@
+MISSION
+
+id: 2205
+story_points: 225
+story_scene: "04-Harmony-Risk"
+name: "Harmony Station: Defense Screen"
+type: "Sweep"
+system: "Solus"
+region: "Kalon"
+start: "03/09:15:00"
+sitrep: "Force Intelligence has intercepted traffic from suspected Dantari strike teams. The threat to Harmony Station is rated Gamma (Severe). A fighter patrol is assigned to Kalon to intercept any strike on the station."
+objective: "Protect Harmony Station. Intercept Kalon Strike."
+
+element: {
+    name: "Avengers"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Harmony Station" }
+    objective: { cmd: intercept, tgt: "Kalon Strike" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Harmony Station"
+    design: Station2
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Kalon Strike"
+    design: Wolf
+    mission: strike
+    count: 2
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Harmony Station" }
+}

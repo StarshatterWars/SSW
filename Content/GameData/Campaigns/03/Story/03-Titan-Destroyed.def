@@ -1,0 +1,42 @@
+MISSION
+
+id: 3003
+story_points: 300
+story_scene: "03-Titan-Destroyed"
+name: "Borova: Titan Withdrawal"
+type: "Sweep"
+system: "Borova"
+region: "Borova"
+start: "03/20:00:00"
+sitrep: "Titan is believed lost. Cover a surviving escort as the carrier group withdraws from Borova orbit."
+objective: "Protect Titan Group Survivor. Intercept Hegemony Pursuit."
+
+element: {
+    name: "Vanguard"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Titan Group Survivor" }
+    objective: { cmd: intercept, tgt: "Hegemony Pursuit" }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Titan Group Survivor"
+    design: Asher
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: "Hegemony Pursuit"
+    design: Viper
+    count: 4
+    iff: 2
+    loc: (4000, 6000, 0)
+    objective: { cmd: strike, tgt: "Titan Group Survivor" }
+}
