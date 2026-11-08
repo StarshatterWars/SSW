@@ -261,6 +261,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
     Legacy->explosion_scale = Row.ExplosionScale;
     Legacy->vlimit = Row.Vlimit;
     Legacy->agility = Row.Agility;
+    Legacy->air_factor = Row.AirFactor;
 
     Legacy->mass = Row.Mass;
     Legacy->integrity = Row.Integrity;

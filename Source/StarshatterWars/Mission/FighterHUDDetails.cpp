@@ -191,7 +191,7 @@ static FSlateRect CarrierLaunchButtonRect(const FVector2D& Size, float Scale)
         GetFontMeasureService()->Measure(TEXT("LAUNCH"), Font);
     const FVector2D Extent(Label.X + 10 * Scale, (Label.Y + 4 * Scale) * 2.0);
     const FVector2D TopLeft(Size.X * 0.5 - Extent.X * 0.5,
-        Size.Y * 0.5 + 158 * Scale);
+        Size.Y * 0.5 - Extent.Y * 0.5);
     return FSlateRect(TopLeft.X, TopLeft.Y,
         TopLeft.X + Extent.X, TopLeft.Y + Extent.Y);
 }
@@ -493,7 +493,7 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
     const FVector2D Extent(220.f * Scale, 215.f * Scale);
     // Legacy carrier launch: clickable only for an aircraft currently staged
     // in ALERT. The player controls the departure, never the mission loader.
-    // Below GEAR DOWN; the frame is visible but inert until READY.
+    // The centered Launch button stays inert until the slot is ready.
     const FSlateRect LaunchRect = CarrierLaunchButtonRect(Size, Scale);
     if (MouseEvent.GetEffectingButton() == EKeys::LeftMouseButton &&
         Local.X >= LaunchRect.Left && Local.X <= LaunchRect.Right &&

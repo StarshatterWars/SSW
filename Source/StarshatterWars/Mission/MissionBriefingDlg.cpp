@@ -3851,8 +3851,17 @@ void UMissionBriefingDlg::ToggleMissionAutoTrack()
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
-    if (Player && !Player->SetAutoTrack(!Player->IsAutoTrackEngaged()))
-        RadioView::Message("Auto Track unavailable. Lock a ship in your sector while in flight.");
+    if (!Player || Player->SetAutoTrack(!Player->IsAutoTrackEngaged())) return;
+
+    const auto* Contact = dynamic_cast<const Ship*>(Player->GetTarget());
+    if (Contact && Contact->GetRegion() != Player->GetRegion())
+        RadioView::Message("Auto Track unavailable. Target is in another sector.");
+    else if (Player->GetSensorMode() == ESensorMode::GM)
+        RadioView::Message("Auto Track unavailable in Ground Map. Switch to Standard radar and lock the drone.");
+    else if (!Contact || !Player->GetSensor() || !Player->GetSensor()->IsTracking(Player->GetTarget()))
+        RadioView::Message("Auto Track unavailable. Acquire a radar lock first.");
+    else
+        RadioView::Message("Auto Track unavailable in the current flight state.");
 }
 
 void UMissionBriefingDlg::ToggleMissionAutoNav()

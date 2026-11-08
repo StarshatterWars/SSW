@@ -62,6 +62,7 @@ bool FFalconPropulsionTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Unnamed navigation is created at runtime"),Runtime->navsystems.size()>0);
     TestNotNull(TEXT("Runtime navigation pointer"),Runtime->navsys);
     TestEqual(TEXT("Runtime lift coefficient"),Runtime->CL,F->CL);
+    TestEqual(TEXT("Runtime atmospheric agility factor"),Runtime->air_factor,F->AirFactor);
     TestEqual(TEXT("Runtime induced drag coefficient"),Runtime->CD,F->CD);
     TestEqual(TEXT("Runtime stall angle"),Runtime->stall,F->Stall);
     PowerSource Reactor(F->Power[0].Type,F->Power[0].Output,F->Power[0].Fuel);
