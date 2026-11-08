@@ -18,10 +18,16 @@
 #include "SSWBootSubsystem.h"
 
 #include "Engine/GameInstance.h"
+#include "Engine/DataTable.h"
 #include "Logging/LogSuppressionInterface.h"
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
+#if WITH_EDITOR
+#include "HAL/PlatformProcess.h"
+#include "Misc/Paths.h"
+#include "UObject/UnrealType.h"
+#endif
 
 #include "Game.h"
 #include "GameStructs.h"
@@ -54,6 +60,41 @@
 
 
 DEFINE_LOG_CATEGORY_STATIC(LogSSWBoot, Log, All);
+
+#if WITH_EDITOR
+void USSWDiagnosticsSettings::PostEditChangeProperty(FPropertyChangedEvent& Event)
+{
+    Super::PostEditChangeProperty(Event);
+    if (Event.GetPropertyName() != GET_MEMBER_NAME_CHECKED(USSWDiagnosticsSettings, bGenerateStagedDataTables) ||
+        !bGenerateStagedDataTables)
+        return;
+
+    bGenerateStagedDataTables = false;
+    static FProcHandle GenerationProcess;
+    if (GenerationProcess.IsValid() && FPlatformProcess::IsProcRunning(GenerationProcess))
+    {
+        UE_LOG(LogSSWBoot, Warning, TEXT("Staged table generation is already running."));
+        return;
+    }
+    if (GenerationProcess.IsValid())
+        FPlatformProcess::CloseProc(GenerationProcess);
+
+    const FString IngestionLogFilename = FPaths::ConvertRelativePathToFull(FPaths::ProjectLogDir() / TEXT("SSWDesignIngestion.log"));
+    const FString Args = FString::Printf(
+        TEXT("\"%s\" -run=SSWDesignIngestion -WriteStaged -unattended -nop4 -abslog=\"%s\""),
+        *FPaths::ConvertRelativePathToFull(FPaths::GetProjectFilePath()), *IngestionLogFilename);
+    GenerationProcess = FPlatformProcess::CreateProc(FPlatformProcess::ExecutablePath(), *Args,
+        true, true, true, nullptr, 0, nullptr, nullptr);
+    if (GenerationProcess.IsValid())
+    {
+        UE_LOG(LogSSWBoot, Display, TEXT("Generating staged tables. See %s for the result."), *IngestionLogFilename);
+    }
+    else
+    {
+        UE_LOG(LogSSWBoot, Error, TEXT("Could not start staged table generation."));
+    }
+}
+#endif
 
 void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
@@ -140,9 +181,14 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
         // Temporary behavior.
         // Later these get split into DEF parse vs table fill.
-        BootSystemDesignLoader(Ctx);
-        BootWeaponDesignLoader(Ctx);
-        BootShipDesignLoader(Ctx);
+        const bool bTryEditorTables = GetDefault<USSWDiagnosticsSettings>()->bUseEditorGeneratedDesignTables ||
+            FParse::Param(FCommandLine::Get(), TEXT("SSWEditorDesignTables"));
+        if (!bTryEditorTables || !BootEditorGeneratedDesignTables(Ctx))
+        {
+            BootSystemDesignLoader(Ctx);
+            BootWeaponDesignLoader(Ctx);
+            BootShipDesignLoader(Ctx);
+        }
         BootGalaxyLoader(Ctx);
         BootCombatGroupLoader(Ctx);
     }
@@ -252,6 +298,7 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("Data.SingleMissionTable"),
         TEXT("Data.MultiplayerMissionTable"),
         TEXT("Data.CustomMissionTable"),
+        TEXT("Data.StoryMissionTable"),
 
         TEXT("Data.OrderOfBattleTable"),
         TEXT("Data.MedalsTable"),
@@ -414,6 +461,37 @@ void USSWBootSubsystem::BootPlayerSave(const FBootContext& Ctx)
 
     bNeedsFirstRun = !Ctx.PlayerSS->HadExistingSaveOnLoad();
     if (Ctx.SaveSS) Ctx.SaveSS->RestoreGameOptions();
+}
+
+bool USSWBootSubsystem::BootEditorGeneratedDesignTables(const FBootContext& Ctx)
+{
+    if (!Ctx.SystemDesignSS || !Ctx.WeaponDesignSS || !Ctx.ShipDesignSS)
+        return false;
+
+    const auto LoadStaged = [](const TCHAR* Name, const UScriptStruct* RowType)
+    {
+        const FString Path = FString::Printf(TEXT("/Game/Editor/GeneratedDesigns/%s.%s"), Name, Name);
+        UDataTable* Table = LoadObject<UDataTable>(nullptr, *Path);
+        return Table && Table->GetRowStruct() == RowType && !Table->GetRowMap().IsEmpty() ? Table : nullptr;
+    };
+
+    UDataTable* Systems = LoadStaged(TEXT("DT_Test_SystemDesign"), FSystemDesign::StaticStruct());
+    UDataTable* Weapons = LoadStaged(TEXT("DT_Test_WeaponDesign"), FWeaponDesign::StaticStruct());
+    UDataTable* Ships = LoadStaged(TEXT("DT_Test_ShipDesign"), FShipDesign::StaticStruct());
+    if (!Systems || !Weapons || !Ships)
+    {
+        UE_LOG(LogSSWBoot, Warning, TEXT("[BOOT] Staged design tables missing or invalid. Using startup ingestion."));
+        return false;
+    }
+
+    Ctx.SystemDesignSS->SystemDesignDataTable = DuplicateObject<UDataTable>(Systems, Ctx.SystemDesignSS);
+    Ctx.WeaponDesignSS->WeaponDesignDataTable = DuplicateObject<UDataTable>(Weapons, Ctx.WeaponDesignSS);
+    Ctx.SystemDesignSS->LoadAll(false);
+    Ctx.WeaponDesignSS->ReadWeaponDesignData();
+    Ctx.ShipDesignSS->LoadStagedShipDesignTable(*Ships);
+    UE_LOG(LogSSWBoot, Display, TEXT("[BOOT] Using editor-generated designs: systems=%d weapons=%d ships=%d"),
+        Systems->GetRowMap().Num(), Weapons->GetRowMap().Num(), Ships->GetRowMap().Num());
+    return true;
 }
 
 void USSWBootSubsystem::BootSystemDesignLoader(const FBootContext& Ctx)

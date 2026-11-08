@@ -96,6 +96,7 @@ public:
 	void LoadShipDesign(const char* InFilename);
 	void ResetCurrentShipArrays();
 	void LoadShipDesignTable();
+	void LoadStagedShipDesignTable(const UDataTable& StagedTable);
 	void EnsureViperLaser();
 
 	const FShipDesign* GetDesignRowByName(const FString& DesignName) const;

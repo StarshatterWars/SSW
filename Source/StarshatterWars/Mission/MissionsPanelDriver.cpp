@@ -518,8 +518,7 @@ void UMissionsPanelDriver::OpenStory()
     }
     auto* Story = CastChecked<UStoryMissionsDlg>(StoryChild);
     Story->Show();
-    const FString Heading = FString(UTF8_TO_TCHAR(Campaign::GetCampaign()->GetName())).ToUpper() + TEXT(" STORY MISSIONS");
-    SelectChild(Story, *Heading);
+    SelectChild(Story, TEXT("STORY MISSIONS"));
 }
 void UMissionsPanelDriver::Back(){if(Manager)Manager->ShowMenuDlg();}
 void UMissionsPanelDriver::RefreshHeaderStatus()

@@ -176,6 +176,12 @@ void UStarshatterShipDesignSubsystem::FinalizeDesignParse()
 	
 }
 
+void UStarshatterShipDesignSubsystem::LoadStagedShipDesignTable(const UDataTable& StagedTable)
+{
+    ShipDesignDataTable = DuplicateObject<UDataTable>(&StagedTable, this);
+    LoadShipDesignTable();
+}
+
 void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
 {
 	if (!ShipDesignDataTable)

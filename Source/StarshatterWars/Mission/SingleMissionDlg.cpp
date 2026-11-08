@@ -159,7 +159,7 @@ void USingleMissionDlg::BuildSingleMissionScreen()
     // Dark-grey title band, shared visually with the Campaign Selection header.
     UBorder* SingleTitleBand = MakePanel(FLinearColor(0.105f, 0.113f, 0.125f, 1.0f));
     SingleTitleBand->SetPadding(FMargin(18.f, 11.f, 18.f, 11.f));
-    SingleTitleBand->SetContent(MakeLabel(IsCampaignMissionView() ? TEXT("CAMPAIGN MISSIONS") : (IsCustomMissionView() ? TEXT("CUSTOM MISSIONS") : TEXT("SINGLE MISSIONS")), 38, SingleMissionColors::Primary));
+    SingleTitleBand->SetContent(MakeLabel(IsStoryMissionView() ? TEXT("STORY MISSIONS") : IsCampaignMissionView() ? TEXT("CAMPAIGN MISSIONS") : (IsCustomMissionView() ? TEXT("CUSTOM MISSIONS") : TEXT("SINGLE MISSIONS")), 38, SingleMissionColors::Primary));
     Heading->AddChildToVerticalBox(SingleTitleBand)->SetPadding(FMargin(0.f, 7.f, 0.f, 7.f));
     // Mission selection hub tabs. The active tab is not clickable; Multiplayer
     // is intentionally disabled until its standalone session workflow is ready.
@@ -378,14 +378,6 @@ void USingleMissionDlg::RefreshMissionRoster()
     MissionId = 0;
     bEditable = false;
 
-    if (IsStoryMissionView())
-    {
-        RefreshMissionDetails();
-        MissionCountLabel->SetText(FText::FromString(TEXT("0 missions")));
-        if (MissionTitle) MissionTitle->SetText(FText::FromString(TEXT("NO STORY MISSIONS AVAILABLE")));
-        return;
-    }
-
     if (IsCampaignMissionView())
     {
         Campaign* ActiveCampaign = GetRosterCampaign();
@@ -424,10 +416,10 @@ void USingleMissionDlg::RefreshMissionRoster()
     {
     UStarshatterGameDataSubsystem* GameData = GetGameInstance()
         ? GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>() : nullptr;
-    UDataTable* DataTable = GameData ? GameData->GetSingleMissionsDataTable() : nullptr;
+    UDataTable* DataTable = GameData ? (IsStoryMissionView() ? GameData->GetStoryMissionsDataTable() : GameData->GetSingleMissionsDataTable()) : nullptr;
     if (!DataTable || DataTable->GetRowStruct() != FS_CampaignMission::StaticStruct())
     {
-        MissionCountLabel->SetText(FText::FromString(TEXT("DT_SingleMissions unavailable or incorrect row structure")));
+        MissionCountLabel->SetText(FText::FromString(IsStoryMissionView() ? TEXT("Story mission table unavailable") : TEXT("DT_SingleMissions unavailable or incorrect row structure")));
         RefreshMissionDetails();
         return;
     }
@@ -444,7 +436,7 @@ void USingleMissionDlg::RefreshMissionRoster()
 
     for (const FS_CampaignMission* Scenario : SortedRows)
     {
-        if (!Scenario || MissionIds.Num() >= 10) continue;
+        if (!Scenario || (!IsStoryMissionView() && MissionIds.Num() >= 10)) continue;
         const int32 DisplayIndex = MissionIds.Num();
         const FString MissionLabel = Scenario->MissionName.IsEmpty()
             ? FString::Printf(TEXT("%02d  /  UNNAMED OPERATION"), Scenario->Id)
@@ -452,7 +444,15 @@ void USingleMissionDlg::RefreshMissionRoster()
         UButton* RowButton = MakeActionButton(MissionLabel, true, true);
         const int32 RequiredRank=MissionRankRules::Required(*Scenario);
         if (!MissionRankRules::Unlocked(RequiredRank)) RowButton->SetToolTipText(FText::FromString(MissionRankRules::Requirement(RequiredRank)));
-        switch (DisplayIndex)
+        if (IsStoryMissionView())
+        {
+            auto* Proxy = NewObject<USingleMissionRowProxy>(this);
+            Proxy->Owner = this;
+            Proxy->Index = DisplayIndex;
+            RowButton->OnClicked.AddDynamic(Proxy, &USingleMissionRowProxy::Activate);
+            RowProxies.Add(Proxy);
+        }
+        else switch (DisplayIndex)
         {
         case 0: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission01Pressed); break;
         case 1: RowButton->OnClicked.AddDynamic(this, &USingleMissionDlg::OnMission02Pressed); break;

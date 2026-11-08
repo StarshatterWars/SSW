@@ -408,6 +408,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // Data.StoryMissionTable
+    if (!Cache.Contains(TEXT("Data.StoryMissionTable")))
+    {
+        if (!Settings->StoryMissionDataTable.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->StoryMissionDataTable.ToSoftObjectPath();
+            Cache.Add(TEXT("Data.StoryMissionTable"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log,
+                TEXT("[ASSETS] Bind Data.StoryMissionTable -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] StoryMissionTable is not set in Project Settings"));
+        }
+    }
 
     // ------------------------------------------------------------------
     // 3) Inject typed UI widget classes (do not overwrite explicit map entries)

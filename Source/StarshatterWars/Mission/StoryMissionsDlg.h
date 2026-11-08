@@ -10,5 +10,6 @@ class STARSHATTERWARS_API UStoryMissionsDlg : public UCampaignMissionDlg
 
 public:
     explicit UStoryMissionsDlg(const FObjectInitializer& ObjectInitializer);
+    virtual bool IsCampaignMissionView() const override { return false; }
     virtual bool IsStoryMissionView() const override { return true; }
 };

@@ -3038,9 +3038,12 @@ struct FS_Campaign : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FS_CampaignMission> Missions;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	TArray<FS_CampaignMission> StoryMissions;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FS_TemplateMission> TemplateMissions;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FS_TemplateMission> ScriptedMissions;
+
 	// UI images as soft refs
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TSoftObjectPtr<UTexture2D> CampaignImage;

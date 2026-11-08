@@ -69,11 +69,11 @@ bool LoadOrderOfBattleOverview(UDataTable& Table)
     return AddForce() && !Table.GetRowMap().IsEmpty();
 }
 
-bool CheckTable(const UDataTable& Imported, const TCHAR* Name)
+bool CheckTable(const UDataTable& Imported, const TCHAR* Name, bool bAllowEmpty)
 {
     const FString ActivePath = FString::Printf(TEXT("/Game/Game/%s.%s"), Name, Name);
     const auto* Active = LoadObject<UDataTable>(nullptr, *ActivePath);
-    if (!Active || Imported.GetRowStruct() != Active->GetRowStruct() || Imported.GetRowMap().IsEmpty())
+    if (!Active || Imported.GetRowStruct() != Active->GetRowStruct() || (!bAllowEmpty && Imported.GetRowMap().IsEmpty()))
     {
         UE_LOG(LogTemp, Error, TEXT("Cannot validate staged table %s."), Name);
         return false;
@@ -177,13 +177,13 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     Weapons->LoadWeaponDesigns();
     Ships->InitializeShipDesigns();
 
-    struct FTableOutput { UDataTable* Table; const TCHAR* Name; };
+    struct FTableOutput { UDataTable* Table; const TCHAR* Name; bool bAllowEmpty = false; };
     TArray<FTableOutput> Tables = {
         {SystemTable, TEXT("DT_SystemDesign")},
         {WeaponTable, TEXT("DT_WeaponDesign")},
         {ShipTable, TEXT("DT_ShipDesign")}
     };
-    const auto Stage = [&Tables](const TCHAR* Name, bool bPreserveAuthoredRows = false)
+    const auto Stage = [&Tables](const TCHAR* Name, bool bPreserveAuthoredRows = false, bool bAllowEmpty = false)
     {
         const FString Path = FString::Printf(TEXT("/Game/Game/%s.%s"), Name, Name);
         const auto* Active = LoadObject<UDataTable>(nullptr, *Path);
@@ -197,7 +197,7 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
         if (bPreserveAuthoredRows)
             for (const auto& Row : Active->GetRowMap())
                 Table->AddRow(Row.Key, *reinterpret_cast<const FTableRowBase*>(Row.Value));
-        Tables.Add({Table, Name});
+        Tables.Add({Table, Name, bAllowEmpty});
         return Table;
     };
 
@@ -207,6 +207,12 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     Campaign->ZonesDataTable = Stage(TEXT("DT_CampaignZone"));
     Campaign->CutsceneDataTable = Stage(TEXT("DT_Cutscene"));
     Campaign->SingleMissionsDataTable = Stage(TEXT("DT_SingleMissions"));
+    const UDataTable* StoryMissions = Stage(TEXT("DT_StoryMissions"), true, true);
+    if (!StoryMissions || StoryMissions->GetRowStruct() != FS_CampaignMission::StaticStruct())
+    {
+        UE_LOG(LogTemp, Error, TEXT("DT_StoryMissions must use FS_CampaignMission rows."));
+        return 1;
+    }
     Campaign->MultiplayerMissionsDataTable = Stage(TEXT("DT_MultiplayerMissions"));
     Campaign->OrderOfBattleDataTable = Stage(TEXT("DT_OrderOfBattle"));
     Campaign->RanksDataTable = Stage(TEXT("FRankInfo"), true);
@@ -295,7 +301,7 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     if (!bWithinLimits || !bAliasesValid) return 1;
 
     for (const auto& Table : Tables)
-        if (!CheckTable(*Table.Table, Table.Name))
+        if (!CheckTable(*Table.Table, Table.Name, Table.bAllowEmpty))
             return 1;
 
     if (FParse::Param(*Params, TEXT("WriteStaged")))

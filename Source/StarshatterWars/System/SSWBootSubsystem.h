@@ -80,6 +80,20 @@ public:
     /** Enable logging for standalone game runs. Takes effect on the next launch. */
     UPROPERTY(Config, EditAnywhere, Category="Logging")
     bool bEnableGameLogging = false;
+
+    /** Trial the reviewed DT_Test system, weapon and ship tables at the next game launch. */
+    UPROPERTY(Config, EditAnywhere, Category="Data Ingestion")
+    bool bUseEditorGeneratedDesignTables = false;
+
+#if WITH_EDITORONLY_DATA
+    /** Check to run the editor generator and refresh the DT_Test tables. */
+    UPROPERTY(Transient, EditAnywhere, Category="Data Ingestion", meta=(DisplayName="Generate Staged Data Tables"))
+    bool bGenerateStagedDataTables = false;
+#endif
+
+#if WITH_EDITOR
+    void PostEditChangeProperty(FPropertyChangedEvent& Event) override;
+#endif
 };
 
 UCLASS()
@@ -162,6 +176,7 @@ private:
 
     void BootShipDesignLoader(const FBootContext& Ctx);
     void BootGalaxyLoader(const FBootContext& Ctx);
+    bool BootEditorGeneratedDesignTables(const FBootContext& Ctx);
     void BootSystemDesignLoader(const FBootContext& Ctx);
     void BootWeaponDesignLoader(const FBootContext& Ctx);
     void BootCombatGroupLoader(const FBootContext& Ctx);

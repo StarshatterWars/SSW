@@ -203,6 +203,7 @@ public:
     UDataTable* GetMultiplayerMissionsDataTable() const { return MultiplayerMissionsDataTable; }
     const TArray<FS_CampaignMission>& GetMultiplayerMissionScenarios() const { return MultiplayerMissionScenarios; }
     UDataTable* GetSingleMissionsDataTable() const { return SingleMissionsDataTable; }
+    UDataTable* GetStoryMissionsDataTable() const { return StoryMissionsDataTable; }
     const TArray<FS_CampaignMissionList>& GetSingleMissionCatalog() const { return SingleMissionCatalog; }
     const TArray<FS_CampaignMission>& GetSingleMissionScenarios() const { return SingleMissionScenarios; }
     const FS_CampaignMission* FindSingleMissionScenario(int32 MissionId) const;
@@ -573,7 +574,11 @@ protected:
 
     UPROPERTY(Transient)
     UDataTable* SingleMissionsDataTable = nullptr;
+
     UPROPERTY(Transient)
+    TObjectPtr<UDataTable> StoryMissionsDataTable;
+
+   UPROPERTY(Transient)
     UDataTable* MultiplayerMissionsDataTable = nullptr;
 
 	FS_Campaign ActiveCampaign;

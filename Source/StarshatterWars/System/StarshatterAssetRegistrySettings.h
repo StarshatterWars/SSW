@@ -148,6 +148,9 @@ public:
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")
     TSoftObjectPtr<UDataTable> CustomMissionDataTable;
 
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")
+    TSoftObjectPtr<UDataTable> StoryMissionDataTable;
+
     // ------------------------------------------------------------------
     // Optional UI bindings (config-backed)
     // ------------------------------------------------------------------
