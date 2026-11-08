@@ -5,6 +5,7 @@
 #include "ShipBriefingPreview.generated.h"
 
 class AActor;
+class Mission;
 class UWorld;
 class UStaticMesh;
 class UMaterialInterface;
@@ -30,7 +31,7 @@ namespace BriefingShipPreview
     STARSHATTERWARS_API FBox CalculateBounds(const TArray<FBriefingShipPreviewPart>& Parts);
     STARSHATTERWARS_API float FitDistance(float Radius, const FVector2D& ViewSize);
     // Rejects main Game/PIE worlds. Only isolated preview worlds are accepted.
-    STARSHATTERWARS_API AActor* CreateVisual(UWorld* PreviewWorld, const TArray<FBriefingShipPreviewPart>& Parts);
+    STARSHATTERWARS_API AActor* CreateVisual(UWorld* PreviewWorld, const TArray<FBriefingShipPreviewPart>& Parts, bool bAddLighting = true);
 }
 
 UCLASS()
@@ -39,6 +40,7 @@ class STARSHATTERWARS_API UShipBriefingPreview : public UUserWidget
     GENERATED_BODY()
 public:
     bool SetShipDesign(const FShipDesign* Design, const TArray<const FWeaponDesign*>& Stores = {});
+    bool SetMissionScene(Mission* MissionDef);
     void SetPreviewActive(bool bActive);
     void ResetView();
 protected:
@@ -59,7 +61,16 @@ private:
     UPROPERTY(Transient) TObjectPtr<UViewport> PreviewViewport;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> UnavailableText;
     UPROPERTY(Transient) TArray<FBriefingShipPreviewPart> Parts;
+    UPROPERTY(Transient) TArray<FBriefingShipPreviewPart> RouteShipParts;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> RouteCaption;
+    TArray<FVector> Route;
+    TArray<FString> RouteLabels;
+    TWeakObjectPtr<AActor> RouteShip;
     TWeakObjectPtr<AActor> PreviewVisual;
+    FBox MissionBounds = FBox(ForceInit);
+    int32 ActiveLeg = INDEX_NONE;
+    float RouteTime = 0.f;
+    bool bMissionScene = false;
     FString DesignKey;
     FVector2D LastViewSize = FVector2D::ZeroVector;
     float OrbitYaw = -130.f;

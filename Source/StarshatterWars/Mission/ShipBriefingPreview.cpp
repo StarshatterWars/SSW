@@ -1,6 +1,9 @@
 
 #include "ShipBriefingPreview.h"
 #include "ShipVisualCatalog.h"
+#include "Mission.h"
+#include "MissionElement.h"
+#include "Instruction.h"
 #include "GameStructs_System.h"
 #include "ShipActor.h"
 #include "ShipWeaponMountComponent.h"
@@ -227,7 +230,7 @@ float BriefingShipPreview::FitDistance(float Radius, const FVector2D& ViewSize)
     return static_cast<float>(Radius / FMath::Sin(FMath::Atan(LimitingAspect)) * 1.18);
 }
 
-AActor* BriefingShipPreview::CreateVisual(UWorld* PreviewWorld, const TArray<FBriefingShipPreviewPart>& Parts)
+AActor* BriefingShipPreview::CreateVisual(UWorld* PreviewWorld, const TArray<FBriefingShipPreviewPart>& Parts, bool bAddLighting)
 {
     if (!PreviewWorld || (PreviewWorld->WorldType != EWorldType::GamePreview &&
         PreviewWorld->WorldType != EWorldType::EditorPreview) || Parts.IsEmpty()) return nullptr;
@@ -255,6 +258,10 @@ AActor* BriefingShipPreview::CreateVisual(UWorld* PreviewWorld, const TArray<FBr
             if (Part.Materials[Index]) Mesh->SetMaterial(Index, Part.Materials[Index]);
         Mesh->RegisterComponent();
     }
+    Visual->SetActorEnableCollision(false);
+    Visual->SetActorTickEnabled(false);
+    if (!bAddLighting) return Visual;
+
     UDirectionalLightComponent* Fill = NewObject<UDirectionalLightComponent>(Visual);
     Visual->AddInstanceComponent(Fill);
     Fill->SetupAttachment(Root);
@@ -277,8 +284,6 @@ AActor* BriefingShipPreview::CreateVisual(UWorld* PreviewWorld, const TArray<FBr
         Sky->SetIntensity(0.8f);
         Sky->RegisterComponent();
     }
-    Visual->SetActorEnableCollision(false);
-    Visual->SetActorTickEnabled(false);
     return Visual;
 }
 
@@ -303,6 +308,14 @@ TSharedRef<SWidget> UShipBriefingPreview::RebuildWidget()
         UOverlaySlot* Message = Overlay->AddChildToOverlay(UnavailableText);
         Message->SetHorizontalAlignment(HAlign_Center);
         Message->SetVerticalAlignment(VAlign_Center);
+        RouteCaption = WidgetTree->ConstructWidget<UTextBlock>();
+        RouteCaption->SetFont(MissionUIStyle::GetInfoValueFont(16));
+        RouteCaption->SetColorAndOpacity(FSlateColor(FLinearColor(.55f, .9f, 1.f)));
+        RouteCaption->SetVisibility(ESlateVisibility::Collapsed);
+        UOverlaySlot* CaptionSlot = Overlay->AddChildToOverlay(RouteCaption);
+        CaptionSlot->SetPadding(FMargin(14.f));
+        CaptionSlot->SetHorizontalAlignment(HAlign_Left);
+        CaptionSlot->SetVerticalAlignment(VAlign_Bottom);
     }
     return Super::RebuildWidget();
 }
@@ -327,6 +340,8 @@ void UShipBriefingPreview::ClearVisual()
     if (HasMouseCapture() && FSlateApplication::IsInitialized()) FSlateApplication::Get().ReleaseMouseCapture();
     if (AActor* Visual = PreviewVisual.Get()) Visual->Destroy();
     PreviewVisual.Reset();
+    if (AActor* Visual = RouteShip.Get()) Visual->Destroy();
+    RouteShip.Reset();
 }
 
 void UShipBriefingPreview::NativeDestruct()
@@ -334,11 +349,25 @@ void UShipBriefingPreview::NativeDestruct()
     ClearVisual();
     Parts.Empty();
     DesignKey.Empty();
+    RouteShipParts.Reset();
+    Route.Reset();
+    RouteLabels.Reset();
+    bMissionScene = false;
     Super::NativeDestruct();
 }
 
 bool UShipBriefingPreview::SetShipDesign(const FShipDesign* Design, const TArray<const FWeaponDesign*>& Stores)
 {
+    if (bMissionScene)
+    {
+        ClearVisual();
+        Parts.Reset();
+        RouteShipParts.Reset();
+        Route.Reset();
+        RouteLabels.Reset();
+        bMissionScene = false;
+        if (RouteCaption) RouteCaption->SetVisibility(ESlateVisibility::Collapsed);
+    }
     FString NewKey = Design ? Design->ShipName + TEXT("|") + Design->Mesh.ToSoftObjectPath().ToString() : FString();
     const FString ShipKey = NewKey;
     for (const FWeaponDesign* Store : Stores)
@@ -359,6 +388,124 @@ bool UShipBriefingPreview::SetShipDesign(const FShipDesign* Design, const TArray
     return true;
 }
 
+bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
+{
+    MissionElement* Player = MissionDef ? MissionDef->GetPlayer() : nullptr;
+    if (!Player || !Player->GetShipDesign()) return false;
+
+    TArray<FBriefingShipPreviewPart> PlayerParts;
+    if (!BriefingShipPreview::ResolveParts(*Player->GetShipDesign(), PlayerParts)) return false;
+
+    ClearVisual();
+    Parts.Reset();
+    DesignKey.Reset();
+    Route.Reset();
+    RouteLabels.Reset();
+    RouteTime = 0.f;
+    ActiveLeg = INDEX_NONE;
+    bMissionScene = true;
+
+    // Use authored coordinates within each sector. Separate sectors in the
+    // display so astronomical distances do not flatten the tactical route.
+    TMap<FString, int32> SectorIndices;
+    const FVector Origin = Player->GetLocation();
+    const FString PlayerSector = ANSI_TO_TCHAR(Player->GetRegion().data());
+    SectorIndices.Add(PlayerSector, 0);
+    auto ScenePosition = [&](FVector Position, const char* Region) {
+        const FString Sector = Region && *Region ? FString(ANSI_TO_TCHAR(Region)) : PlayerSector;
+        int32* Existing = SectorIndices.Find(Sector);
+        const int32 Index = Existing ? *Existing : SectorIndices.Add(Sector, SectorIndices.Num());
+        const FVector Local = Index == 0 ? Position - Origin : Position;
+        return FVector(Local.Z, Local.X, Local.Y) + FVector(Index * 120000.0, 0.0, 0.0);
+    };
+
+    Route.Add(FVector::ZeroVector);
+    for (ListIter<Instruction> Point = Player->NavList(); ++Point;)
+    {
+        Route.Add(ScenePosition(Point->GetLocation(), Point->GetRegionName()));
+        RouteLabels.Add(FString::Printf(TEXT("NAV %02d  %s"), RouteLabels.Num() + 1,
+            ANSI_TO_TCHAR(Point->GetRegionName())));
+    }
+
+    struct FPlacement { MissionElement* Element; FVector Position; };
+    TArray<FPlacement> Ships;
+    FBox Layout(ForceInit);
+    for (const FVector& Point : Route) Layout += Point;
+    for (ListIter<MissionElement> Entry = MissionDef->GetElements(); ++Entry;)
+    {
+        MissionElement* Element = Entry.value();
+        if (!Element || Element->IsSquadron() || !Element->GetShipDesign() || Element->Count() <= 0)
+            continue;
+        const FVector Position = ScenePosition(Element->GetLocation(), Element->GetRegion().data());
+        Ships.Add({Element, Position});
+        Layout += Position;
+    }
+    const double Scale = 650.0 / FMath::Max(Layout.GetExtent().Size(), 1000.0);
+    const FVector Center = Layout.GetCenter();
+    for (FVector& Point : Route) Point = (Point - Center) * Scale;
+
+    auto AddParts = [](TArray<FBriefingShipPreviewPart>& Destination,
+        const TArray<FBriefingShipPreviewPart>& Source, const FTransform& Placement) {
+        for (FBriefingShipPreviewPart Part : Source)
+        {
+            Part.Transform = Part.Transform * Placement;
+            Destination.Add(MoveTemp(Part));
+        }
+    };
+    RouteShipParts.Reset();
+    AddParts(RouteShipParts, PlayerParts, FTransform(FQuat::Identity, FVector::ZeroVector, FVector(.26)));
+
+    TMap<const FShipDesign*, TArray<FBriefingShipPreviewPart>> Models;
+    Models.Add(Player->GetShipDesign(), MoveTemp(PlayerParts));
+    for (const FPlacement& Placement : Ships)
+    {
+        MissionElement* Element = Placement.Element;
+        const FShipDesign* Design = Element->GetShipDesign();
+        auto* Model = Models.Find(Design);
+        if (!Model)
+        {
+            Model = &Models.Add(Design);
+            BriefingShipPreview::ResolveParts(*Design, *Model);
+        }
+        const double Size = Element->IsStarship() ? .52 : .20;
+        const FQuat Heading(FVector::UpVector, Element->GetHeading() + PI);
+        const FVector Position = (Placement.Position - Center) * Scale;
+        for (int32 ShipIndex = 0; ShipIndex < FMath::Min(Element->Count(), 8); ++ShipIndex)
+        {
+            if (Element == Player && ShipIndex + 1 == Player->GetPlayerIndex()) continue;
+            const FVector Offset = Heading.RotateVector(FVector(-30.0 * ShipIndex, 32.0 * ShipIndex, 0.0));
+            AddParts(Parts, *Model, FTransform(Heading, Position + Offset, FVector(Size)));
+        }
+    }
+
+    UStaticMesh* Marker = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+    UStaticMesh* Line = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
+    for (int32 Index = 0; Index < Route.Num(); ++Index)
+    {
+        FBriefingShipPreviewPart& Point = Parts.AddDefaulted_GetRef();
+        Point.Mesh = Marker;
+        Point.Transform = FTransform(FQuat::Identity, Route[Index], FVector(.13));
+        if (Index == 0) continue;
+        const FVector Leg = Route[Index] - Route[Index - 1];
+        if (Leg.IsNearlyZero()) continue;
+        FBriefingShipPreviewPart& Segment = Parts.AddDefaulted_GetRef();
+        Segment.Mesh = Line;
+        Segment.Transform = FTransform(Leg.Rotation(), (Route[Index] + Route[Index - 1]) * .5,
+            FVector(Leg.Size() / 100.0, .028, .028));
+    }
+
+    MissionBounds = BriefingShipPreview::CalculateBounds(Parts);
+    for (const FVector& Point : Route)
+    {
+        MissionBounds += Point + FVector(26.0);
+        MissionBounds += Point - FVector(26.0);
+    }
+    ResetView();
+    OrbitPitch = 48.f;
+    UpdateVisual();
+    return true;
+}
+
 void UShipBriefingPreview::SetPreviewActive(bool bActive)
 {
     bPreviewActive = bActive;
@@ -373,6 +520,13 @@ void UShipBriefingPreview::UpdateVisual()
     if (PreviewVisual.IsValid() && PreviewVisual->GetWorld() == PreviewViewport->GetViewportWorld()) return;
     ClearVisual();
     PreviewVisual = BriefingShipPreview::CreateVisual(PreviewViewport->GetViewportWorld(), Parts);
+    if (bMissionScene && PreviewVisual.IsValid())
+    {
+        RouteShip = BriefingShipPreview::CreateVisual(PreviewViewport->GetViewportWorld(), RouteShipParts, false);
+        if (AActor* Visual = RouteShip.Get()) Visual->SetActorLocation(Route[0]);
+    }
+    if (RouteCaption) RouteCaption->SetVisibility(bMissionScene && RouteShip.IsValid()
+        ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
     if (UnavailableText) UnavailableText->SetVisibility(PreviewVisual.IsValid()
         ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
     UpdateCamera();
@@ -392,7 +546,7 @@ void UShipBriefingPreview::UpdateCamera()
     FVector2D Size = PreviewViewport->GetCachedGeometry().GetLocalSize();
     if (Size.X <= 1.f || Size.Y <= 1.f) Size = GetCachedGeometry().GetLocalSize();
     LastViewSize = Size;
-    const FBox Bounds = BriefingShipPreview::CalculateBounds(Parts);
+    const FBox Bounds = bMissionScene ? MissionBounds : BriefingShipPreview::CalculateBounds(Parts);
     const FVector Center = Bounds.IsValid ? Bounds.GetCenter() : FVector::ZeroVector;
     const float Radius = Bounds.IsValid ? static_cast<float>(Bounds.GetExtent().Size()) : 100.f;
     const FVector Direction = FRotator(OrbitPitch, OrbitYaw, 0.f).Vector();
@@ -403,8 +557,29 @@ void UShipBriefingPreview::UpdateCamera()
 void UShipBriefingPreview::NativeTick(const FGeometry& Geometry, float DeltaTime)
 {
     Super::NativeTick(Geometry, DeltaTime);
-    if (bPreviewActive && PreviewVisual.IsValid() && PreviewViewport &&
-        !LastViewSize.Equals(PreviewViewport->GetCachedGeometry().GetLocalSize(), 1.f)) UpdateCamera();
+    if (!bPreviewActive || !PreviewVisual.IsValid() || !PreviewViewport) return;
+    if (bMissionScene && !bDragging)
+    {
+        OrbitYaw = FMath::UnwindDegrees(OrbitYaw + DeltaTime * 3.f);
+        if (AActor* Visual = RouteShip.Get(); Visual && Route.Num() > 1)
+        {
+            constexpr float SecondsPerLeg = 4.f;
+            RouteTime = FMath::Fmod(RouteTime + DeltaTime, (Route.Num() - 1) * SecondsPerLeg);
+            const int32 Leg = FMath::Min(FMath::FloorToInt(RouteTime / SecondsPerLeg), Route.Num() - 2);
+            const double Along = FMath::Frac(RouteTime / SecondsPerLeg);
+            const FVector Direction = Route[Leg + 1] - Route[Leg];
+            Visual->SetActorLocationAndRotation(FMath::Lerp(Route[Leg], Route[Leg + 1], Along),
+                Direction.Rotation());
+            if (RouteCaption && ActiveLeg != Leg)
+            {
+                ActiveLeg = Leg;
+                RouteCaption->SetText(FText::FromString(RouteLabels[Leg]));
+            }
+        }
+        UpdateCamera();
+    }
+    else if (!LastViewSize.Equals(PreviewViewport->GetCachedGeometry().GetLocalSize(), 1.f))
+        UpdateCamera();
 }
 
 FReply UShipBriefingPreview::NativeOnMouseButtonDown(const FGeometry& Geometry, const FPointerEvent& Event)

@@ -96,9 +96,10 @@ void UMissionObjectiveDlg::BuildSituationLayout()
     ObjectivesScroll = Section(TextColumn, NSLOCTEXT("MissionBriefing", "ObjectivesHeading", "OBJECTIVES"), ObjectivesText);
 
     UVerticalBox* ShipColumn = WidgetTree->ConstructWidget<UVerticalBox>();
-    Row->AddChildToHorizontalBox(ShipColumn)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    FSlateChildSize PreviewSize(ESlateSizeRule::Fill); PreviewSize.Value = 3.f;
+    Row->AddChildToHorizontalBox(ShipColumn)->SetSize(PreviewSize);
     UTextBlock* ShipTitle = WidgetTree->ConstructWidget<UTextBlock>();
-    ShipTitle->SetText(NSLOCTEXT("MissionBriefing", "PlayerShipHeading", "PLAYER SHIP"));
+    ShipTitle->SetText(NSLOCTEXT("MissionBriefing", "MissionSceneHeading", "MISSION REHEARSAL"));
     ShipTitle->SetFont(MissionUIStyle::GetHeaderFont(22));
     ShipTitle->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f)));
     ShipColumn->AddChildToVerticalBox(ShipTitle)->SetPadding(FMargin(12.f, 8.f));
@@ -365,7 +366,8 @@ void UMissionObjectiveDlg::RefreshPreviewPlaceholder(Mission* MissionPtr)
     const FShipDesign* Design = PlayerElem ? PlayerElem->GetShipDesign() : nullptr;
     if (ShipPreview)
     {
-        const bool bHasModel = bUse3DShipPreview && ShipPreview->SetShipDesign(Design);
+        const bool bHasModel = bUse3DShipPreview &&
+            (ShipPreview->SetMissionScene(MissionPtr) || ShipPreview->SetShipDesign(Design));
         ShipPreview->SetPreviewActive(bHasModel && bShipPreviewActive);
         if (bHasModel)
         {
