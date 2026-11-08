@@ -35,6 +35,8 @@
 #include "StarshatterPlayerSubsystem.h"
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Styling/CoreStyle.h"
 #include "Components/VerticalBox.h"
 
 
@@ -132,8 +134,19 @@ void UMissionDebriefDlg::EnsureUi()
     if (!Box || !WidgetTree) return;
     // Cover the legacy Blueprint layout without replacing an already-built Slate root.
     if (RootCanvas)
+    {
         for (UWidget* Child : RootCanvas->GetAllChildren())
             if (Child != Box) Child->SetVisibility(ESlateVisibility::Collapsed);
+
+        auto* Background = WidgetTree->ConstructWidget<UBorder>();
+        Background->SetBrush(*FCoreStyle::Get().GetBrush("WhiteBrush"));
+        Background->SetBrushColor(FLinearColor(0.10f, 0.11f, 0.12f, 1.f));
+        Background->SetVisibility(ESlateVisibility::HitTestInvisible);
+        auto* BackgroundSlot = RootCanvas->AddChildToCanvas(Background);
+        BackgroundSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+        BackgroundSlot->SetOffsets(FMargin(0.f));
+        BackgroundSlot->SetZOrder(-1);
+    }
     Box->ClearChildren();
     auto Label = [this](const TCHAR* Text, int32 Size, bool Header=false)
     {
