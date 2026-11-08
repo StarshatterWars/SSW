@@ -380,13 +380,19 @@ NavAI::Navigator()
         ship->SetDirectorInfo("AutoStop");
     }
 
-    Accumulate(AvoidTerrain());
-    Accumulate(AvoidCollision());
+    const Steer TerrainRecovery = AvoidTerrain();
+    if (terrain_warning) {
+        // Do not let a waypoint turn overwrite the atmospheric pull-up.
+        accumulator = TerrainRecovery;
+    }
+    else {
+        Accumulate(AvoidCollision());
 
-    if (bTrackingTarget)
-        Accumulate(SeekTarget());
-    else if (!hold)
-        accumulator = SeekTarget();
+        if (bTrackingTarget)
+            Accumulate(SeekTarget());
+        else if (!hold)
+            accumulator = SeekTarget();
+    }
 
     HelmControl();
     ThrottleControl();
@@ -514,7 +520,7 @@ void NavAI::ThrottleControl()
 
     // Ensure fighter-class airborne craft don't stall:
     if (ship->IsAirborne() && ship->GetClassification() < CLASSIFICATION::LCA) {
-        if (ShipSpeed < 250.0) {
+        if (terrain_warning || ShipSpeed < 250.0) {
             throttle = 100.0;
             brakes = 0.0;
 

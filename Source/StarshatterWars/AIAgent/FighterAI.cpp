@@ -1170,12 +1170,12 @@ FighterAI::AvoidTerrain()
     if (ship->IsAirborne() && ship->GetFlightPhase() == EOPSMode::ACTIVE) {
         // too high?
         if (ship->GetAltitudeMSL() > 25e3) {
-            if (!navpt || (navpt->GetRegion() == ship->GetRegion() && navpt->GetLocation().Z < 27e3)) {
+            if (!navpt || (navpt->GetRegion() == ship->GetRegion() && navpt->GetLocation().Y < 27e3)) {
                 terrain_warning = true;
                 ship->SetDirectorInfo("Too High");
 
                 // where will we be?
-                const FVector SelfPt = ship->GetLocation() + ship->GetVelocity() + FVector(0.0, 0.0, -15e3);
+                const FVector SelfPt = ship->GetLocation() + ship->GetVelocity() + FVector(0.0, -15e3, 0.0);
 
                 // transform into camera coords:
                 const FVector Obj = Transform(SelfPt);
@@ -1198,7 +1198,7 @@ FighterAI::AvoidTerrain()
             }
 
             // where will we be?
-            const FVector SelfPt = ship->GetLocation() + ship->GetVelocity() + FVector(0.0, 0.0, 10e3);
+            const FVector SelfPt = ship->GetLocation() + ship->GetVelocity() + FVector(0.0, 10e3, 0.0);
 
             // transform into camera coords:
             const FVector Obj = Transform(SelfPt);

@@ -93,6 +93,7 @@
 #include "ShipDesignRegistry.h"
 #include "Engine/World.h"
 #include "Engine/StaticMesh.h"
+#include "Materials/MaterialInterface.h"
 #include "EngineUtils.h"
 
 
@@ -434,7 +435,22 @@ void USSWRuntimeSubsystem::UpdateWorld()
         if(SimRegion* Region=SimInstance->GetActiveRegion())
         {
             if(Region->GetTerrain() && !NativeTerrain.IsValid() && GetWorld())NativeTerrain=GetWorld()->SpawnActor<ANativeTerrainActor>();
-            if(auto* Surface=NativeTerrain.Get())Surface->UpdateTerrain(Region->GetTerrain(),SimInstance->GetPlayerShip()?SimInstance->GetPlayerShip()->GetLocation():FVector::ZeroVector,GetVisualLocationForRegion(Region,FVector::ZeroVector));
+            if (auto* Surface = NativeTerrain.Get())
+            {
+                AActor* SurfacePlanet = nullptr;
+                if (Region->GetTerrain() && FCStringAnsi::Stricmp(Region->GetName(), "Janek Station") == 0)
+                    if (const ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
+                        for (const FSpawnedSystemBody& Body : Builder->GetSpawnedBodies())
+                            if (!Body.bIsOrbit && Body.BodyName.Equals(TEXT("Janek"), ESearchCase::IgnoreCase))
+                            {
+                                SurfacePlanet = Body.Actor.Get();
+                                break;
+                            }
+                Surface->SetSurfaceSky(SurfacePlanet);
+                Surface->UpdateTerrain(Region->GetTerrain(),
+                    SimInstance->GetPlayerShip() ? SimInstance->GetPlayerShip()->GetLocation() : FVector::ZeroVector,
+                    GetVisualLocationForRegion(Region, FVector::ZeroVector));
+            }
         }
         WaypointRefreshSeconds += Seconds;
         if (WaypointRefreshSeconds >= 0.25) { WaypointRefreshSeconds = 0; UpdateMissionWaypoints(); }
@@ -1244,7 +1260,14 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
         return nullptr;
     }
 
-    UClass* BPClass = ShipVisualCatalog::Resolve(DesignName, Row->Model);
+    const SimRegion* ShipRegion = RuntimeShip->GetRegion();
+    const bool bJanekAirbase = ShipRegion &&
+        FCStringAnsi::Stricmp(ShipRegion->GetName(), "Janek Station") == 0 &&
+        FCStringAnsi::Stricmp(RuntimeShip->GetName(), "Janek Station") == 0 &&
+        DesignName.Equals(TEXT("Airbase1"), ESearchCase::IgnoreCase);
+    UClass* BPClass = bJanekAirbase
+        ? ShipVisualCatalog::Resolve(TEXT("Airbase1"), TEXT("Base1"))
+        : ShipVisualCatalog::Resolve(DesignName, Row->Model);
     if (!BPClass)
     {
         UE_LOG(LogSSWRuntime, Warning, TEXT("[RuntimeVisual] Missing ship Blueprint for Design='%s' Expected='%s'"),
@@ -1293,6 +1316,20 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
     MissionPresentationShips.AddUnique(ShipActor);
     ShipActor->BindRuntimeShip(
         RuntimeShip);
+    if (bJanekAirbase && ShipActor->HullMesh)
+    {
+        if (UStaticMesh* Runway = LoadObject<UStaticMesh>(nullptr,
+            TEXT("/Game/Assets/Ground/Airbases/Base1.Base1")))
+        {
+            ShipActor->SetHullMesh(Runway);
+            if (UMaterialInterface* Material = LoadObject<UMaterialInterface>(nullptr,
+                TEXT("/Game/Assets/Ground/Airbases/M_Airbase_PBR.M_Airbase_PBR")))
+            {
+                for (int32 Slot = 0; Slot < Runway->GetStaticMaterials().Num(); ++Slot)
+                    ShipActor->HullMesh->SetMaterial(Slot, Material);
+            }
+        }
+    }
 
     // Runtime positions already include the region transform. Parenting to a
     // presentation region would apply its transform a second time between updates.

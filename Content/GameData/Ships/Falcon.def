@@ -229,11 +229,11 @@ thruster: {
    port_bottom: {loc:(-148.1481, -11.1111, -11.1111), fire: 0x0220, rotation:(0, -90, 0)},
    port_bottom: {loc:(-148.1481, 11.1111, -11.1111), fire: 0x0220, rotation:(0, -90, 0)},
 
-   port_top: {loc:(-88.8889, -111.1111, 18.5185), fire: 0x0410, rotation:(0, 90, 0)},
-   port_top: {loc:(-107.4074, -111.1111, 18.5185), fire: 0x0410, rotation:(0, 90, 0)},
+   port_top: {loc:(-88.8889, -111.1111, 0), fire: 0x0410, rotation:(0, 90, 0)},
+   port_top: {loc:(-107.4074, -111.1111, 0), fire: 0x0410, rotation:(0, 90, 0)},
 
-   port_top: {loc:(-88.8889, 111.1111, 18.5185), fire: 0x0810, rotation:(0, 90, 0)},
-   port_top: {loc:(-107.4074, 111.1111, 18.5185), fire: 0x0810, rotation:(0, 90, 0)},
+   port_top: {loc:(-88.8889, 111.1111, 0), fire: 0x0810, rotation:(0, 90, 0)},
+   port_top: {loc:(-107.4074, 111.1111, 0), fire: 0x0810, rotation:(0, 90, 0)},
 
    port_bottom: {loc:(-88.8889, -111.1111, -11.1111), fire: 0x0820, rotation:(0, -90, 0)},
    port_bottom: {loc:(-107.4074, -111.1111, -11.1111), fire: 0x0820, rotation:(0, -90, 0)},

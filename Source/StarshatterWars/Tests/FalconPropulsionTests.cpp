@@ -61,6 +61,9 @@ bool FFalconPropulsionTest::RunTest(const FString& Parameters)
     if(!TestNotNull(TEXT("Runtime Falcon design"),Runtime))return false;
     TestTrue(TEXT("Unnamed navigation is created at runtime"),Runtime->navsystems.size()>0);
     TestNotNull(TEXT("Runtime navigation pointer"),Runtime->navsys);
+    TestEqual(TEXT("Runtime lift coefficient"),Runtime->CL,F->CL);
+    TestEqual(TEXT("Runtime induced drag coefficient"),Runtime->CD,F->CD);
+    TestEqual(TEXT("Runtime stall angle"),Runtime->stall,F->Stall);
     PowerSource Reactor(F->Power[0].Type,F->Power[0].Output,F->Power[0].Fuel);
     Drive Engine(F->Drive[0].Type,F->Drive[0].Thrust,F->Drive[0].Augmenter,false);
     Reactor.AddClient(&Engine);

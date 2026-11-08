@@ -1547,6 +1547,9 @@ SimRegion::CrashShips()
 
 				if (ship->GetIntegrity() < 1.0f) {
 
+                    UE_LOG(LogTemp, Display, TEXT("[TerrainImpact] Ship='%hs' MSL=%.2f AGL=%.2f Velocity=%s Heading=%s"),
+                        ship->GetName(), ship->GetAltitudeMSL(), ship->GetAltitudeAGL(),
+                        *ship->GetVelocity().ToString(), *ship->GetCam().vpn().ToString());
 					ShipStats* r = ShipStats::Find(ship->GetName());
 					if (r) r->AddEvent(ESimEvent::CRASH);
 

@@ -281,6 +281,9 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
 
     Legacy->drag = Row.Drag;
     Legacy->arcade_drag = Row.ArcadeDrag;
+    Legacy->CL = Row.CL;
+    Legacy->CD = Row.CD;
+    Legacy->stall = Row.Stall;
 
     //-------------------------------------------------------------
     // Sensors

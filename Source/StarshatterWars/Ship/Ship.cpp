@@ -3447,6 +3447,52 @@ Ship::ExecFrame(double seconds)
             GetName(), Travel, Clearance);
     }
 
+    if (flight_phase == EOPSMode::TAKEOFF && dock &&
+        carrier && !carrier->IsDead() && !carrier->IsDying())
+    {
+        // Runway departures use the authored deck heading until both the
+        // runway and the terrain are clear. Navigation and input resume in ACTIVE.
+        Camera RunwayFrame;
+        RunwayFrame.Clone(carrier->GetCam());
+        RunwayFrame.Yaw(dock->Azimuth());
+        const FVector RunwayForward = FVector(RunwayFrame.vpn().X, 0.0, RunwayFrame.vpn().Z).GetSafeNormal();
+        const FVector RunwayStart = dock->StartPoint();
+        const FVector RunwayEnd = dock->RunwayPoint(1);
+        const double RunwayLength = FMath::Max(0.0, FVector::DotProduct(RunwayEnd - RunwayStart, RunwayForward));
+        const double RunwayTravel = FVector::DotProduct(GetLocation() - RunwayStart, RunwayForward);
+        // Match the fighter AI terrain-avoidance floor before allowing a turn.
+        const double Clearance = FMath::Max(2500.0, static_cast<double>(GetRadius()) + 50.0);
+        if (GetVelocity().IsNearlyZero())
+        {
+            UE_LOG(LogTemp, Display, TEXT("[RunwayTakeoff][START] Fighter=%hs Length=%.2f Travel=%.2f AGL=%.2f Clearance=%.2f"),
+                GetName(), RunwayLength, RunwayTravel, GetAltitudeAGL(), Clearance);
+        }
+        if (RunwayTravel < RunwayLength + GetRadius() || GetAltitudeAGL() < Clearance)
+        {
+            constexpr double RotationSpeed = 200.0;
+            constexpr double DepartureSpeed = 250.0;
+            constexpr double RunwayAcceleration = 50.0;
+            const double Speed = FMath::Min(DepartureSpeed,
+                GetVelocity().Size() + RunwayAcceleration * seconds);
+            const FVector Direction = Speed >= RotationSpeed
+                ? (RunwayForward + FVector(0.0, 0.18, 0.0)).GetSafeNormal()
+                : RunwayForward;
+            const FVector Position = GetLocation();
+            RunwayFrame.LookAt(Position + Direction, Position, FVector(0.0, 1.0, 0.0));
+            CloneCam(RunwayFrame);
+            SetThrottle(100);
+            SetVelocity(Direction * Speed);
+            MoveTo(Position + GetVelocity() * seconds);
+            GetThrust(seconds);
+            return;
+        }
+        if (launch_point && launch_point->GetStatus() <= INSTRUCTION_STATUS::ACTIVE)
+            launch_point->SetStatus(INSTRUCTION_STATUS::COMPLETE);
+
+        UE_LOG(LogTemp, Display, TEXT("[RunwayTakeoff] Fighter='%hs' Travel=%.2f AGL=%.2f"),
+            GetName(), RunwayTravel, GetAltitudeAGL());
+    }
+
 	if (flight_phase == EOPSMode::LAUNCH ||
 		(flight_phase == EOPSMode::TAKEOFF && GetAltitudeAGL() > GetRadius())) {
 		SetFlightPhase(EOPSMode::ACTIVE);
@@ -7187,7 +7233,7 @@ void Ship::ExecManualRotation(double Seconds)
         ClearManualRotationInput();
         return;
     }
-    ApplyPitch(ManualRotationInput.X);
+    ApplyPitch(IsAirborne() ? -ManualRotationInput.X : ManualRotationInput.X);
     ApplyYaw(ManualRotationInput.Y);
     ApplyRoll(ManualRotationInput.Z);
     if (design)

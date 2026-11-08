@@ -89,6 +89,7 @@ public:
     OrbitalRegion* ActiveRegion() { return active_region; }
 
     Orbital* FindOrbital(const char* in_name);
+    OrbitalRegion* LoadTerrainRegion(const FString& Definition, const char* RegionName, Orbital* Parent);
     OrbitalRegion* FindRegion(const char* in_name);
 
     static void   SetSimulationTime(double t);
@@ -170,7 +171,7 @@ protected:
     void          ParsePlanet(TermStruct* val);
     void          ParseMoon(TermStruct* val);
     void          ParseRegion(TermStruct* val);
-    void          ParseTerrain(TermStruct* val);
+    void          ParseTerrain(TermStruct* val, Orbital* Parent = nullptr);
     void          ParseLayer(TerrainRegion* rgn, TermStruct* val);
 
     // -----------------------------------------------------------------

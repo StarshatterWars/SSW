@@ -2605,18 +2605,8 @@ void AShipActor::AddRuntimeNavLightComponent(const FShipNavLightDef& Def, int32 
     NavLightBulbMeshes.Add(Bulb);
     NavLightBulbMIDs.Add(Glow);
 
-    auto* PointLight = NewObject<UPointLightComponent>(this);
-    if (PointLight)
-    {
-        PointLight->SetupAttachment(VFXRoot);
-        PointLight->SetRelativeLocation(Def.LocalOffset);
-        PointLight->SetLightColor(Def.Color);
-        PointLight->SetIntensity(0.0f);
-        PointLight->SetAttenuationRadius(Def.Radius);
-        PointLight->SetCastShadows(false);
-        PointLight->RegisterComponent();
-    }
-    NavLightPointLights.Add(PointLight);
+    // UNavLightComponent already supplies the point light for this beacon.
+    NavLightPointLights.Add(nullptr);
 }
 
 void AShipActor::CreateEngineAudioComponents()

@@ -63,6 +63,7 @@ public:
 
 	double            Height(double x, double y) const;
     double NativeSampleSpacing() const {return scale;}
+    bool HasHeightfield() const { return patches != nullptr; }
 
 	const Vec3B* Normals()      const { return terrain_normals; }
 	TerrainRegion* GetRegion() { return region; }

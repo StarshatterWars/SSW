@@ -32,6 +32,8 @@
 #include "ParseUtil.h"
 
 #include "Misc/DateTime.h"
+#include "Misc/FileHelper.h"
+#include "Misc/ScopeExit.h"
 #include "Misc/Timespan.h"
 
 static const double epoch = 0.5e9;
@@ -788,9 +790,61 @@ void StarSystem::ParseRegion(TermStruct* val)
 
 // +--------------------------------------------------------------------+
 
-void StarSystem::ParseTerrain(TermStruct* val)
+OrbitalRegion* StarSystem::LoadTerrainRegion(const FString& Definition, const char* RegionName, Orbital* Parent)
 {
-	Orbital* primary = primary_moon;
+    if (!Parent)
+        return nullptr;
+
+    if (OrbitalRegion* Existing = FindRegion(RegionName))
+        return Existing->GetType() == Orbital::TERRAIN ? Existing : nullptr;
+
+    TArray<uint8> Source;
+    if (!FFileHelper::LoadFileToArray(Source, *Definition))
+        return nullptr;
+
+    Source.Add(0);
+    Parser Reader(new BlockReader(reinterpret_cast<const char*>(Source.GetData())));
+    TUniquePtr<Term> Header(Reader.ParseTerm());
+    if (!Header || !Header->isText() || Header->isText()->value() != "STARSYSTEM")
+        return nullptr;
+
+    DataLoader* Loader = DataLoader::GetLoader();
+    if (!Loader)
+        return nullptr;
+    const Text PreviousPath = Loader->GetDataPath();
+    Loader->SetDataPath("Galaxy/");
+    ON_SCOPE_EXIT { Loader->SetDataPath(PreviousPath.data()); };
+
+    for (TUniquePtr<Term> Entry(Reader.ParseTerm()); Entry; Entry.Reset(Reader.ParseTerm()))
+    {
+        TermDef* Def = Entry->isDef();
+        if (!Def || Def->name()->value() != "terrain" || !Def->term())
+            continue;
+        TermStruct* TerrainDef = Def->term()->isStruct();
+        if (!TerrainDef)
+            continue;
+
+        for (int Index = 0; Index < TerrainDef->elements()->size(); ++Index)
+        {
+            TermDef* Field = TerrainDef->elements()->at(Index)->isDef();
+            if (!Field || Field->name()->value() != "name")
+                continue;
+            Text Name;
+            GetDefText(Name, Field, TCHAR_TO_UTF8(*Definition));
+            if (Name == RegionName)
+            {
+                ParseTerrain(TerrainDef, Parent);
+                return FindRegion(RegionName);
+            }
+            break;
+        }
+    }
+    return nullptr;
+}
+
+void StarSystem::ParseTerrain(TermStruct* val, Orbital* Parent)
+{
+	Orbital* primary = Parent ? Parent : primary_moon;
 	if (!primary) primary = primary_planet;
 
 	if (!primary) {

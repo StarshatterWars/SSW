@@ -30,7 +30,8 @@ bool FNativeTerrainPresentationTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("Native center vertex uses the simulation ground height"),double(Section->ProcVertexBuffer[128*257+128].Position.Z),Model.Height(0,0));
         TestTrue(TEXT("Native section also supplies collision geometry"),Section->bEnableCollision);
         const FVector A=Section->ProcVertexBuffer[Section->ProcIndexBuffer[0]].Position,B=Section->ProcVertexBuffer[Section->ProcIndexBuffer[1]].Position,C=Section->ProcVertexBuffer[Section->ProcIndexBuffer[2]].Position;
-        TestTrue(TEXT("Terrain triangle faces upward"),FVector::CrossProduct(B-A,C-A).Z>0);
+        TestTrue(TEXT("Terrain uses clockwise winding for an upward Unreal front face"),FVector::CrossProduct(B-A,C-A).Z<0);
+        TestTrue(TEXT("Terrain vertex normals point up"),Section->ProcVertexBuffer[0].Normal.Z>0);
     }
     TestTrue(TEXT("Terrain uses the mission region presentation offset"),Actor->GetActorLocation().Equals(FVector(100,200,300)));
     Actor->UpdateTerrain(nullptr,FVector::ZeroVector,FVector::ZeroVector);

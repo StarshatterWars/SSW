@@ -17,6 +17,7 @@
 =============================================================================*/
 
 #include "StarSystemRegistry.h"
+#include "Misc/Paths.h"
 
 #include "StarSystem.h"
 #include "Orbital.h"
@@ -266,6 +267,22 @@ StarSystem* StarSystemRegistry::BuildStarSystem(
                     BuildRegion(System, MoonBody, RegionRow, Env);
                 }
             }
+        }
+    }
+
+    if (Row.Name.Equals(TEXT("Janus"), ESearchCase::IgnoreCase) ||
+        Row.Name.Equals(TEXT("Janus System"), ESearchCase::IgnoreCase))
+    {
+        const FString Definition = FPaths::ProjectContentDir() /
+            TEXT("GameData/Galaxy/Janus System/Janus System.def");
+        if (OrbitalRegion* Janek = System->LoadTerrainRegion(
+            Definition, "Janek Station", System->FindOrbital("Janek")))
+        {
+            Env->RegisterRegion(Janek);
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Could not register Janek Station airspace from %s"), *Definition);
         }
     }
 

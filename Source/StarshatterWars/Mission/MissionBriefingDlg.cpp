@@ -2331,7 +2331,7 @@ void UMissionBriefingDlg::NextMissionTarget()
     if (!Player || Player->IsDead() || Player->IsDying() || !Player->GetSensor()) return;
 
     // Use the legacy sensor cycle for flight. T2 limits it to the current exercise group.
-    SimElement* DroneGroup = nullptr;
+    SimElement* AssignedTargetGroup = nullptr;
     const Mission* CurrentMission = Simulation->GetMission();
     const Instruction* Next = Player->GetNextNavPoint();
     if (CurrentMission && CurrentMission->GetIdentity() == 102 &&
@@ -2346,21 +2346,26 @@ void UMissionBriefingDlg::NextMissionTarget()
                 const Ship* Drone = Group->GetShip(Index);
                 if (Drone && !Drone->IsDead() && !Drone->IsDying())
                 {
-                    DroneGroup = Group;
+                    AssignedTargetGroup = Group;
                     break;
                 }
             }
         }
     }
 
-    SimObject* Target = Player->GetSensor()->LockTarget(ESimObject::SHIP, DroneGroup != nullptr, true, DroneGroup);
+    const bool bGroundStrikeTraining = CurrentMission && CurrentMission->GetIdentity() == 104 &&
+        CurrentMission->GetMissionType() == int(EMissionType::TRAINING);
+    if (bGroundStrikeTraining)
+        AssignedTargetGroup = Simulation->FindElement("Cooling Tower");
+
+    SimObject* Target = Player->GetSensor()->LockTarget(ESimObject::SHIP, AssignedTargetGroup != nullptr, true, AssignedTargetGroup);
     Player->SetTarget(Target);
     SelectedMissionTarget.Reset();
     SelectedMissionTargetName = FText::GetEmpty();
-    if (DroneGroup)
+    if (AssignedTargetGroup && !bGroundStrikeTraining)
     {
         UE_LOG(LogTemp, Display, TEXT("[T2TargetCycle] Group='%hs' Lock='%hs'"),
-            DroneGroup->GetName().data(), Target ? Target->GetName() : "none");
+            AssignedTargetGroup->GetName().data(), Target ? Target->GetName() : "none");
         if (!Target)
             RadioView::Message("No assigned drone available in this sector.");
     }
@@ -2800,7 +2805,7 @@ bool UMissionBriefingDlg::StartLiveMission()
     bLiveMissionStarted = true;
     bMissionCompleteHandedOff = false;
     Simulation->ExecMission();
-    if (!Simulation->GetActiveRegion()) return false;
+    if (!Simulation->GetActiveRegion() || !Simulation->GetPlayerShip()) return false;
     Runtime->SetGameMode(EGameMode::PLAY);
     Runtime->SetPaused(true); // Remain behind the scene cover until camera warmup completes.
     UE_LOG(LogTemp, Log, TEXT("[MissionBriefing] Live mission started: %hs"), MissionPtr->GetName());

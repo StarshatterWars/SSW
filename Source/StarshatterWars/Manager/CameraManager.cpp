@@ -697,7 +697,8 @@ CameraManager::ExecFrame(double seconds)
 	default:
 	case MODE_COCKPIT:      Cockpit(seconds);    break;
 	case MODE_CHASE:
-		if (bCarrierLaunchCameraHeld)
+		// A runway roll uses the normal chase view while takeoff control is still held.
+		if (bCarrierLaunchCameraHeld && ship->GetFlightPhase() != EOPSMode::TAKEOFF)
 			LaunchBayChase(seconds);
 		else
 			Chase(seconds);

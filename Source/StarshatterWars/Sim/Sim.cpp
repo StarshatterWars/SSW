@@ -1783,6 +1783,8 @@ Sim::CreateShip(
 	// LEGACY:
 	// CreateShip receives mission/map-authored location.
 	// Convert once here when placing the live sim object.
+	if (rgn && rgn->GetTerrain() && !rgn->GetTerrain()->HasHeightfield())
+		rgn->GetTerrain()->BuildTerrain();
 	ship->MoveTo(OtherHand(loc));
 
 	if (rgn)

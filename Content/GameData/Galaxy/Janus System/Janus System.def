@@ -101,19 +101,19 @@ terrain: {
    radius:        480e3,
    grid:          20e3,
 
-   patch:         "Janus/Janek/terrain.pcx",
-   patch_texture: "Janus/Janek/terrain_big.pcx",
-   apron:         "Janus/Janek/terrain_apron.pcx",
-   apron_texture: "Janus/Janek/terrain_apron_tex.pcx",
-   sky_color:     "Janus/Janek/terrain_sky.pcx",
+   patch:         "Janus System/Janek/terrain.pcx",
+   patch_texture: "Janus System/Janek/terrain_big+.pcx",
+   apron:         "Janus System/Janek/terrain_apron.pcx",
+   apron_texture: "Janus System/Janek/terrain_apron_tex.pcx",
+   sky_color:     "Janus System/Janek/terrain_sky.pcx",
 
-   layer: { tile: "Janus/Janek/Layer0.pcx"  height:    0  detail: "Janus/Janek/noise0.pcx" }
-   layer: { tile: "Janus/Janek/Layer1.pcx"  height: 2800  detail: "Janus/Janek/noise1.pcx" }
-   layer: { tile: "Janus/Janek/Layer2.pcx"  height: 9800  detail: "Janus/Janek/noise1.pcx" }
+   layer: { tile: "Janus System/Janek/Layer0.pcx"  height:    0  detail: "Janus System/Janek/noise0.pcx" }
+   layer: { tile: "Janus System/Janek/Layer1.pcx"  height: 2800  detail: "Janus System/Janek/noise1.pcx" }
+   layer: { tile: "Janus System/Janek/Layer2.pcx"  height: 9800  detail: "Janus System/Janek/noise1.pcx" }
 
-   clouds_high:   "Janus/Janek/terrain_cloud0.pcx",
-   clouds_low:    "Janus/Janek/terrain_cloud1.pcx",
-   shades_low:    "Janus/Janek/terrain_cloud1a.pcx",
+   clouds_high:   "Janus System/Janek/terrain_cloud0.pcx",
+   clouds_low:    "Janus System/Janek/terrain_cloud1.pcx",
+   shades_low:    "Janus System/Janek/terrain_cloud1a.pcx",
    clouds_alt_high: 16.5e3,
    clouds_alt_low:  10.2e3,
 

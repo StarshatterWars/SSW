@@ -683,6 +683,7 @@ FlightDeck::LaunchShip(Ship* slot_ship)
 			slot_ship->SetFlightPhase(EOPSMode::LAUNCH);
 		}
 		else {
+            slot_ship->BeginCarrierLaunchClearance();
 			slot_ship->SetFlightPhase(EOPSMode::TAKEOFF);
 		}
 
@@ -869,17 +870,16 @@ FlightDeck::Orient(const Physical* rep)
 		slots[i].spot_loc = ToWorld(slots[i].spot_rel);
 
 	// ------------------------------------------------------------------
-	// Recovery deck logic:
-	// ------------------------------------------------------------------
+	// Runway endpoints serve takeoff as well as recovery.
+	if (carrier && carrier->IsAirborne())
+	{
+		runway_point[0] = ToWorld(runway_rel[0]);
+		runway_point[1] = ToWorld(runway_rel[1]);
+	}
 
+	// Recovery deck logic:
 	if (IsRecoveryDeck())
 	{
-		if (carrier && carrier->IsAirborne())
-		{
-			runway_point[0] = ToWorld(runway_rel[0]);
-			runway_point[1] = ToWorld(runway_rel[1]);
-		}
-
 		if (num_hoops < 1)
 		{
 			num_hoops = 4;

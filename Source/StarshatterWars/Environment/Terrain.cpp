@@ -27,6 +27,7 @@
 #include "SimScene.h"
 #include "Bitmap.h"
 #include "DataLoader.h"
+#include "Misc/ScopeExit.h"
 #include "Game.h"
 
 // Unreal:
@@ -152,7 +153,9 @@ Terrain::BuildTerrain()
 
     if(!Loader || !region)return;
 	// Text -> const char* for legacy loader API:
+	const Text PreviousPath = Loader->GetDataPath();
 	Loader->SetDataPath(datapath.data());
+	ON_SCOPE_EXIT { Loader->SetDataPath(PreviousPath.data()); };
 
     if(!Loader->LoadGameBitmap(region->PatchName(),terrain_patch) || terrain_patch.Width()<PATCH_SIZE || terrain_patch.Height()<PATCH_SIZE)
     {

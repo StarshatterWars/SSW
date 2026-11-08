@@ -177,7 +177,7 @@ namespace
 // GEAR DOWN is at HUD center +126; LAUNCH is below it at +158.
 static FVector2D GearButtonOrigin(FVector2D Size,float Scale,bool Mini)
 {
-    return Mini ? FVector2D(Size.X*.5-330*Scale,20*Scale)+FVector2D(190,77)*Scale
+    return Mini ? FVector2D(Size.X*.5-330*Scale,20*Scale)+FVector2D(-49,78)*Scale
                 : FVector2D(180*Scale,Size.Y-208*Scale);
 }
 static FSlateRect CarrierLaunchButtonRect(const FVector2D& Size, float Scale)
@@ -739,11 +739,74 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         const FVector2D UnitsExtent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(TEXT("m/s"),UnitsFont);
         const FVector2D UnitsPosition=P+FVector2D(120*Scale+SpeedExtent.X+7*Scale,37*Scale+SpeedExtent.Y-UnitsExtent.Y);
         FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(UnitsExtent),FSlateLayoutTransform(FVector2f(UnitsPosition))),TEXT("m/s"),UnitsFont,ESlateDrawEffect::None,Muted);
+        const bool bAtmospheric = HUDPlayer && HUDPlayer->IsAirborne();
+        if (bAtmospheric)
+        {
+            const FVector2D DialCenter = P + FVector2D(56,48)*Scale;
+            constexpr double Radius = 36.0;
+            const double Horizon = FMath::Clamp(PitchDegrees*1.35,-Radius,Radius);
+            const double BankCos = FMath::Cos(BankRadians);
+            const double BankSin = FMath::Sin(BankRadians);
+            auto DialPoint = [&](double X,double Y)
+            {
+                return DialCenter + FVector2D(X*BankCos-Y*BankSin,X*BankSin+Y*BankCos)*Scale;
+            };
+            auto DialLine = [&](FVector2D A,FVector2D B,FLinearColor Color)
+            {
+                FSlateDrawElement::MakeLines(E,L+4,G.ToPaintGeometry(),{A,B},
+                    ESlateDrawEffect::None,Color,true,1.25f);
+            };
+            const auto* Brush = FCoreStyle::Get().GetBrush("WhiteBrush");
+            const auto Resource = FSlateApplication::Get().GetRenderer()->GetResourceHandle(*Brush);
+            auto FillArc = [&](double Start,double End,FColor Color)
+            {
+                TArray<FSlateVertex> Vertices;
+                TArray<SlateIndex> Indices;
+                const auto Transform = G.GetAccumulatedRenderTransform();
+                for (int32 Index=0; Index<=32; ++Index)
+                {
+                    const double Angle = FMath::Lerp(Start,End,Index/32.0);
+                    const FVector2D Point = DialPoint(Radius*FMath::Cos(Angle),Radius*FMath::Sin(Angle));
+                    Vertices.Add(FSlateVertex::Make<ESlateVertexRounding::Disabled>(
+                        Transform,FVector2f(Point),FVector2f(.5f,.5f),Color));
+                    if (Index>=2)
+                        Indices.Append({0,static_cast<SlateIndex>(Index-1),static_cast<SlateIndex>(Index)});
+                }
+                FSlateDrawElement::MakeCustomVerts(E,L+3,Resource,Vertices,Indices,nullptr,0,0);
+            };
+            const double Split = FMath::Asin(Horizon/Radius);
+            FillArc(PI-Split,2*PI+Split,FColor(49,111,170));
+            FillArc(Split,PI-Split,FColor(128,83,52));
+            for (int32 Pitch=-20; Pitch<=20; Pitch+=5)
+            {
+                const double Y=Horizon-Pitch*1.35;
+                if (FMath::Abs(Y)>=Radius) continue;
+                const double Edge=FMath::Sqrt(Radius*Radius-Y*Y);
+                const double Half=Pitch==0 ? Edge : FMath::Min(Edge,Pitch%10==0 ? 12.0 : 6.0);
+                DialLine(DialPoint(-Half,Y),DialPoint(Half,Y),White);
+            }
+            for (int32 Degrees=-60; Degrees<=60; Degrees+=15)
+            {
+                const double Angle=FMath::DegreesToRadians(static_cast<double>(Degrees));
+                const FVector2D Direction(FMath::Sin(Angle),-FMath::Cos(Angle));
+                DialLine(DialCenter+Direction*Scale*38,DialCenter+Direction*Scale*42,White);
+            }
+            const FLinearColor AircraftMark(1.0f,.78f,.25f);
+            for (double Side : {-1.0,1.0})
+            {
+                const FVector2D Inner=DialCenter+FVector2D(Side*8,0)*Scale;
+                DialLine(DialCenter+FVector2D(Side*24,0)*Scale,Inner,AircraftMark);
+                DialLine(Inner,Inner+FVector2D(0,4)*Scale,AircraftMark);
+            }
+            DialLine(DialCenter-FVector2D(2,0)*Scale,DialCenter+FVector2D(2,0)*Scale,AircraftMark);
+            DialLine(DialPoint(0,-Radius),DialPoint(0,-Radius+5),AircraftMark);
+        }
         const FString Attitude = FString::Printf(TEXT("%03d MARK %d"),
             (FMath::RoundToInt(HeadingDegrees) % 360 + 360) % 360, FMath::RoundToInt(PitchDegrees));
         const auto AttitudeFont = MissionUIStyle::GetInfoLabelFont(FMath::Max(9, int(10 * Scale)));
         const FVector2D AttitudeExtent = Measure->Measure(Attitude, AttitudeFont);
-        const FVector2D AttitudePosition(P.X + 56 * Scale - AttitudeExtent.X * .5, P.Y + 92 * Scale);
+        constexpr double AttitudeReadoutY = 92.0;
+        const FVector2D AttitudePosition(P.X + 56 * Scale - AttitudeExtent.X * .5, P.Y + AttitudeReadoutY * Scale);
         FSlateDrawElement::MakeText(E, L + 2,
             G.ToPaintGeometry(FVector2f(AttitudeExtent), FSlateLayoutTransform(FVector2f(AttitudePosition))),
             Attitude, AttitudeFont, ESlateDrawEffect::None, HUDBlue);
@@ -756,6 +819,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         MiniText(366,43,CompactNavLabel,13,White,138);
         if (NavReadouts.Num() > 0)
             MiniText(366,62,NavReadouts[0],10,Muted,138);
+        if (HUDPlayer && HUDPlayer->IsAirborne())
+            MiniText(120,AttitudeReadoutY,FString::Printf(TEXT("MSL %.0f m"),HUDPlayer->GetAltitudeMSL()),10,Muted);
         if(bAugmenterActive)MiniText(120,82,TEXT("AUG"),10,Green);
         if (bShowWeapons && !bCapitalWeapons)
         {
@@ -1021,7 +1086,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     DrawILS(G, E, L);
     if(bHasPlayer && Symbology){
         Symbology->Paint(G,E,L+3,ThirdPerson.Get(),SelectedTarget.Get().Get(),bShowWeapons && !bPreTakeoff);
-        if (!bPreTakeoff && (ThirdPerson.Get() || bHelmMode))
+        if (!bPreTakeoff && (ThirdPerson.Get() || bHelmMode) &&
+            !(bMiniHUD && HUDPlayer && HUDPlayer->IsAirborne()))
             Symbology->PaintCompass(G,E,L+3,HeadingDegrees,OrderedHeading,PitchDegrees,OrderedPitch,bHelmMode,ThirdPerson.Get(),FMath::RadiansToDegrees(BankRadians));
     }
     return SCompoundWidget::OnPaint(Args,G,Cull,E,L+7,Style,Enabled);

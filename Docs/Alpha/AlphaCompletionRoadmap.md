@@ -54,6 +54,8 @@ Move the asset and presentation scale conversion here. Start with Falcon and Ori
 
 ## Current evidence and limitations
 
+- 2026-11-08: T3 Flight School opened its briefing and launched in the isolated Ensign build. The runtime could not resolve Janek Station and failed to spawn Alpha, leaving the HUD at No Player Ship. Alpha 2 remains open pending terrain-region registration and a passing live T3 retest. The same build displayed 10 Highland story missions.
+
 - 2026-11-04: Fleet authoring scaffolds completed for 70 space-entity DEFs: 47 canonical Blueprint assets and 20 native classes added. 42 new HullMesh slots await user mesh assignment; visual fleet completion remains open. Build and 15 automated checks passed. See FleetScaffolds.md.
 
 - 2026-11-04: Turrets verified by the user. Turret verification is accepted as complete; remaining ship/fighter visual coverage remains open. Recheck affected mounts when adding new ships or changing turret code/assets.
