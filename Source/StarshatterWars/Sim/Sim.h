@@ -217,6 +217,7 @@ public:
     Hangar* FindSquadron(const char* name, int& index);
 
     void ResolveInstructionTargets();
+    void SpawnMissionElement(const char* Name);
 
     void SkipCutscene();
     void ResolveTimeSkip(double seconds);
@@ -233,7 +234,7 @@ public:
 
 protected:
     void CreateRegions();
-    void CreateElements();
+    void CreateElements(const char* SpawnName = nullptr);
     void CopyEvents();
     void BuildLinks();
 

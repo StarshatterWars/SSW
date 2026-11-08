@@ -58,6 +58,7 @@
 #include "SimContact.h"
 #include "CombatUnit.h"
 #include "SimElement.h"
+#include "Mission.h"
 #include "Instruction.h"
 #include "RadioMessage.h"
 #include "RadioHandler.h"
@@ -3216,6 +3217,18 @@ Ship::RangeToNavPoint(
 void
 Ship::SetNavptStatus(Instruction* navpt, INSTRUCTION_STATUS status)
 {
+    // Echo 1 can lead the launch and fly the current leg, but the trainee
+    // owns progression of the shared Target Practice route.
+    const Mission* MissionDef = sim ? sim->GetMission() : nullptr;
+    if (navpt && element && MissionDef && MissionDef->GetIdentity() == 102 &&
+        MissionDef->GetMissionType() == int(EMissionType::TRAINING) &&
+        (status == INSTRUCTION_STATUS::COMPLETE || status == INSTRUCTION_STATUS::SKIPPED))
+    {
+        Ship* Trainee = sim->GetPlayerShip();
+        if (Trainee && Trainee->GetElement() == element && element->GetNavIndex(navpt) > 0 &&
+            (this != Trainee || status == INSTRUCTION_STATUS::SKIPPED || navpt != element->GetNextNavPoint()))
+            return;
+    }
 	if (navpt && navpt->GetStatus() != status) {
 		if (status == INSTRUCTION_STATUS::COMPLETE) {
 			if (navpt->GetAction() == EInstruction::Assault) {
@@ -3502,7 +3515,20 @@ Ship::ExecFrame(double seconds)
 
 	if (flight_phase == EOPSMode::LAUNCH ||
 		(flight_phase == EOPSMode::TAKEOFF && GetAltitudeAGL() > GetRadius())) {
+        const bool bPlayerCarrierDeparture = flight_phase == EOPSMode::LAUNCH &&
+            dock && dock->IsLaunchDeck() && sim && sim->GetPlayerShip() == this;
 		SetFlightPhase(EOPSMode::ACTIVE);
+        if (bPlayerCarrierDeparture) {
+            // The catapult constrains attitude. Start free flight with no
+            // angular motion or steering demand carried over from the deck.
+            SetAngularVelocity(FVector::ZeroVector);
+            ClearManualRotationInput();
+            ApplyPitch(0);
+            ApplyYaw(0);
+            ApplyRoll(0);
+            if (!IsAutoNavEngaged() && !IsAutoTrackEngaged() && !IsAutoLandEngaged())
+                EnableManualFlight();
+        }
 	}
 
 	if (transition_time > 0) {

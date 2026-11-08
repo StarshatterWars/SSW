@@ -426,6 +426,10 @@ MissionEvent::Execute(bool silent)
 		}
 		break;
 
+	case SPAWN:
+        sim->SpawnMissionElement(event_ship.data());
+        break;
+
 	case IFF:
 		if (elem) {
 			elem->SetIFF(event_param[0]);
@@ -854,7 +858,8 @@ static const char* event_names[] = {
 	"Volume",
 	"Display",
 	"Fire",
-	"EndScene"
+	"EndScene",
+	"Spawn"
 };
 
 static const char* trigger_names[] = {

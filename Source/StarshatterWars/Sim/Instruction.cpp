@@ -20,6 +20,7 @@
 #include "RadioMessage.h"
 #include "Ship.h"
 #include "Sim.h"
+#include "MissionEvent.h"
 
 #include "Game.h"
 #include "Text.h"
@@ -366,6 +367,14 @@ Instruction::Evaluate(Ship* ship)
 		}
 
 		if (status == INSTRUCTION_STATUS::PENDING && !alive) {
+            // A staged target is absent until its spawn event fires.
+            ListIter<MissionEvent> Events = sim->GetEvents();
+            while (++Events) {
+                const MissionEvent* Event = Events.value();
+                if (Event->Event() == MissionEvent::SPAWN && Event->EventShip() == tgt_name &&
+                    (!Event->IsComplete() || !sim->FindElement(tgt_name)))
+                    return;
+            }
 			SetStatus(INSTRUCTION_STATUS::COMPLETE);
 		}
 	}

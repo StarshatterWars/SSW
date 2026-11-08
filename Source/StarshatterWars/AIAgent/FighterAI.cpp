@@ -35,6 +35,7 @@
 #include "FlightDeck.h"
 #include "Hangar.h"
 #include "Sim.h"
+#include "Mission.h"
 #include "StarSystem.h"
 #include "RadioMessage.h"
 #include "RadioTraffic.h"
@@ -48,6 +49,19 @@
 #include "GameStructs_System.h"
 
 static const double TIME_TO_DOCK = 30.0;
+
+static bool IsWaitingForTrainee(Ship* Leader, Instruction* Waypoint)
+{
+    Sim* Simulation = Sim::GetSim();
+    const Mission* MissionDef = Simulation ? Simulation->GetMission() : nullptr;
+    Ship* Trainee = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    SimElement* Flight = Leader->GetElement();
+    return MissionDef && MissionDef->GetIdentity() == 102 &&
+        MissionDef->GetMissionType() == int(EMissionType::TRAINING) &&
+        Flight && Trainee && Trainee != Leader && !Trainee->IsDead() &&
+        Trainee->GetElement() == Flight && Flight->GetShip(1) == Leader &&
+        Waypoint == Flight->GetNextNavPoint();
+}
 
 // +----------------------------------------------------------------------+
 
@@ -326,7 +340,7 @@ FighterAI::FindObjective()
 
         if (navpt && action == RadioMessageAction::NONE) {
             FindObjectiveNavPoint();
-            if (distance < 5e3) {
+            if (distance < 5e3 && !IsWaitingForTrainee(ship, navpt)) {
                 action = LegacyAIParity::RecoveryAction(navpt->GetAction(),navpt->GetRadioAction());
             }
         }
@@ -525,6 +539,28 @@ FighterAI::FindObjectiveNavPoint()
     }
 
     ShipAI::FindObjectiveNavPoint();
+
+    if (self_rgn != nav_rgn || farcaster || !IsWaitingForTrainee(ship, navpt))
+    {
+        TrainingLoiterWaypoint = 0;
+        return;
+    }
+
+    const int WaypointIndex = ship->GetElement()->GetNavIndex(navpt);
+    constexpr double LoiterRadius = 1000.0;
+    if (TrainingLoiterWaypoint != WaypointIndex && distance >= LoiterRadius)
+        return;
+
+    TrainingLoiterWaypoint = WaypointIndex;
+    const FVector Center = obj_w;
+    const FVector Offset = ship->GetLocation() - Center;
+    FVector Radial = FVector(Offset.X, 0.0, Offset.Z).GetSafeNormal();
+    if (Radial.IsNearlyZero())
+        Radial = FVector::ForwardVector;
+    const FVector Tangent(-Radial.Z, 0.0, Radial.X);
+    obj_w = Center + (Radial + Tangent * 0.65).GetSafeNormal() * LoiterRadius;
+    objective = Transform(obj_w);
+    distance = FVector::Distance(obj_w, ship->GetLocation());
 }
 
 // +--------------------------------------------------------------------+

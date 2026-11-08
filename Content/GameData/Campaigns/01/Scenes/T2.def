@@ -54,6 +54,10 @@ element: {
         cmd: intercept,
         tgt: Bravo
     },
+    objective: {
+        cmd: intercept,
+        tgt: Delta
+    },
     player: 2,
     alert: true,
     count: 2,
@@ -151,7 +155,7 @@ element: {
     design: Viper,
     loc: (40e3, 60e3, 0),
     count: 2,
-    iff: 200,
+    iff: 2,
     loadout: {
         ship: -1,
         name: "ACM Medium Range"
@@ -278,8 +282,8 @@ event: {
     id: 193,
     type: Message,
     trigger: Navpoint,
-    trigger_param: 3,
-    trigger_ship: "Echo 2",
+    trigger_param: 2,
+    trigger_ship: Echo,
     message: "Alpha sweep point reached. Press T to cycle Alpha drones. Track and destroy all four."
 }
 
@@ -287,9 +291,40 @@ event: {
     id: 194,
     type: Message,
     trigger: Navpoint,
+    trigger_param: 3,
+    trigger_ship: Echo,
+}
+
+event: {
+    id: 195,
+    type: Spawn,
+    event_ship: Alpha,
+    trigger: Event,
+    trigger_param: 193
+}
+
+event: {
+    id: 196,
+    type: Spawn,
+    event_ship: Bravo,
+    trigger: "Event (ALL)",
+    trigger_param: (194, 101, 102, 103, 104)
+}
+
+event: {
+    id: 197,
+    type: Message,
+    trigger: Event,
+    trigger_param: 196,
+    message: "Bravo drones in range. Press T to cycle Bravo drones. Track and destroy all four."
+}
+
+event: {
+    id: 198,
+    type: Message,
+    trigger: Navpoint,
     trigger_param: 4,
-    trigger_ship: "Echo 2",
-    message: "Bravo sweep point reached. Press T to cycle Bravo drones. Track and destroy all four."
+    trigger_ship: Echo
 }
 
 event: {
@@ -323,7 +358,7 @@ event: {
     id: 205,
     type: Message,
     sound: "Train-02-07",
-    message: "Alpha drones destroyed. Re-engage Autonav and proceed to waypoint 4 for Bravo.",
+    message: "Alpha drones destroyed. Re-engage Autonav and proceed to waypoint 3 for Bravo.",
     trigger: "Event (ALL)",
     trigger_param: (101, 102, 103, 104, 201),
     delay: 1
@@ -333,9 +368,9 @@ event: {
     id: 210,
     type: Message,
     sound: "Train-02-08",
-    event_message: "All Drones Destroyed",
+    event_message: "All drones destroyed. Proceed to waypoint 4 for the Vampires.",
     trigger: "Event (ALL)",
-    trigger_param: (205, 106, 107, 108, 109),
+    trigger_param: (196, 106, 107, 108, 109),
 }
 
 event: {
@@ -343,16 +378,15 @@ event: {
     type: Message,
     sound: "Train-02-09",
     message: "Engage Vampires",
-    trigger: Event,
-    trigger_param: 210,
+    trigger: "Event (ALL)",
+    trigger_param: (198, 210),
     delay: 3
 }
 
 event: {
     id: 212,
-    type: IFF,
-    event_param: 2,
-    event_ship: "Delta 1",
+    type: Spawn,
+    event_ship: Delta,
     trigger: Event,
     trigger_param: 211,
     delay: 3

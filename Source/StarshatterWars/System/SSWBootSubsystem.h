@@ -80,6 +80,10 @@ public:
     UPROPERTY(Config, EditAnywhere, Category="Logging")
     bool bEnableGameLogging = false;
 
+    /** Enables Shift+X target damage in T2 development builds. */
+    UPROPERTY(Config, EditAnywhere, Category="Debug", meta=(DisplayName="Enable Combat Debug Mode"))
+    bool bEnableCombatDebugMode = false;
+
     /** Trial the reviewed DT_Test system, weapon and ship tables at the next game launch. */
     UPROPERTY(Config, EditAnywhere, Category="Data Ingestion")
     bool bUseEditorGeneratedDesignTables = false;

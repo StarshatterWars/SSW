@@ -18,6 +18,7 @@
 
 #include "SimRegion.h"
 #include "Sim.h"
+#include "MissionEvent.h"
 
 // Core world types:
 #include "StarSystem.h"
@@ -854,12 +855,18 @@ void SimRegion::UpdateShips(double seconds)
     if (ai_index > ships.size()) ai_index=0;
     int ShipIndex=0;
 
+    auto QueueDestroyedShip = [this](Ship* Destroyed) {
+        if (dead_ships.contains(Destroyed)) return;
+        dead_ships.append(Destroyed);
+        if (sim)
+            sim->ProcessEventTrigger(MissionEvent::TRIGGER_DESTROYED, 0, Destroyed->GetName());
+    };
+
     for (int i = 0; i < ships.size(); /* manual */) {
         Ship* s = ships[i];
 
         if (!s || s->IsDead()) {
-            if (s && !dead_ships.contains(s))
-                dead_ships.append(s);
+            if (s) QueueDestroyedShip(s);
 
             ships.removeIndex(i);
             continue;
@@ -876,8 +883,7 @@ void SimRegion::UpdateShips(double seconds)
             carriers.append(s);
 
         if (s->IsDead()) {
-            if (!dead_ships.contains(s))
-                dead_ships.append(s);
+            QueueDestroyedShip(s);
 
             ships.removeIndex(i);
             continue;

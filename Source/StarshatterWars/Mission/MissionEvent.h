@@ -80,6 +80,7 @@ public:
         DISPLAY,
         FIRE_WEAPON,
         END_SCENE,
+        SPAWN,
 
         NUM_EVENTS
     };

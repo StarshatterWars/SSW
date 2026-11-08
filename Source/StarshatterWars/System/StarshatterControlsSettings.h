@@ -46,6 +46,7 @@ class USSWMouseFlightModifier : public UInputModifier
 public:
     UPROPERTY()
     bool bVerticalAxis = false;
+    static bool bMouseSteeringEnabled;
     virtual FInputActionValue ModifyRaw_Implementation(
         const UEnhancedPlayerInput* PlayerInput, FInputActionValue CurrentValue, float DeltaTime) override;
 };

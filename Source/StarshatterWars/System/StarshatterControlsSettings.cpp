@@ -18,9 +18,12 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 
+bool USSWMouseFlightModifier::bMouseSteeringEnabled = false;
+
 FInputActionValue USSWMouseFlightModifier::ModifyRaw_Implementation(
     const UEnhancedPlayerInput*, FInputActionValue CurrentValue, float)
 {
+    if (!bMouseSteeringEnabled) return FInputActionValue(0.0f);
     const auto& Config = UStarshatterControlsSettings::Get()->GetControlsConfig();
     const float Scale = Config.MouseSensitivity / 25.0f;
     const float Direction = bVerticalAxis && Config.bMouseInvert ? -1.0f : 1.0f;

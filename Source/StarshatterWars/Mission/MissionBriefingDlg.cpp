@@ -44,6 +44,9 @@
 
 #include "Sensor.h"
 #include "RadioView.h"
+#include "ShipDesign.h"
+#include "SSWBootSubsystem.h"
+#include "StarshatterControlsSettings.h"
 #include "WeaponGroup.h"
 
 #include "EngineeringPopup.h"
@@ -384,10 +387,56 @@ void UMissionBriefingDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaT
     }
 }
 
+static SimElement* FindTargetPracticeWave(Sim* Simulation)
+{
+    const Mission* MissionDef = Simulation ? Simulation->GetMission() : nullptr;
+    if (!MissionDef || MissionDef->GetIdentity() != 102 ||
+        MissionDef->GetMissionType() != int(EMissionType::TRAINING))
+        return nullptr;
+
+    for (const char* Name : {"Alpha", "Bravo", "Delta"})
+    {
+        SimElement* Group = Simulation->FindElement(Name);
+        for (int Index = 1; Group && Index <= Group->GetNumShips(); ++Index)
+        {
+            const Ship* Craft = Group->GetShip(Index);
+            if (Craft && !Craft->IsDead() && !Craft->IsDying())
+                return Group;
+        }
+    }
+    return nullptr;
+}
+
 void UMissionBriefingDlg::UpdateLiveMission()
 {
     if (!bLiveMissionStarted) return;
     SyncMissionNavigationTarget();
+
+#if !UE_BUILD_SHIPPING && !UE_BUILD_TEST
+    if (GetDefault<USSWDiagnosticsSettings>()->bEnableCombatDebugMode &&
+        CanUseFighterHUD() && GetWorld() && !GetWorld()->IsPaused())
+    {
+        APlayerController* PC = GetOwningPlayer();
+        if (PC && PC->WasInputKeyJustPressed(EKeys::X) &&
+            (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)))
+        {
+            Sim* Simulation = Sim::GetSim();
+            SimElement* Wave = FindTargetPracticeWave(Simulation);
+            const Ship* Pilot = Simulation ? Simulation->GetPlayerShip() : nullptr;
+            SimObject* Target = Pilot ? Pilot->GetTarget() : nullptr;
+            Ship* Enemy = Target && Target->GetType() == ESimObject::SHIP
+                ? static_cast<Ship*>(Target) : nullptr;
+            if (Wave && Enemy && Enemy->GetElement() == Wave &&
+                Enemy->GetIFF() != Pilot->GetIFF() && Enemy->GetRegion() == Pilot->GetRegion() &&
+                !Enemy->IsDead() && !Enemy->IsDying() && Enemy->Design())
+            {
+                Enemy->Physical::InflictDamage(Enemy->Design()->integrity * 0.5);
+                if (Enemy->GetIntegrity() < 1.0) Enemy->DeathSpiral();
+            }
+        }
+    }
+#endif
+
     // Fallback for a plain mapped Boolean key when another action consumes
     // IA_AutoNav before its callback. The callback and this path are deduplicated.
     // Complex/chorded mappings remain owned by Enhanced Input.
@@ -1962,6 +2011,15 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     MissionTargetContext->MapKey(FighterHUDToggleAction.Get(), EKeys::H);
     MissionMenuInput->BindAction(FighterHUDToggleAction.Get(), ETriggerEvent::Started,
         this, &UMissionBriefingDlg::ToggleFighterHUD);
+    auto* MouseSteeringToggle = NewObject<UInputAction>(MissionTargetContext.Get(), TEXT("SSW_MouseSteering"), RF_Transient);
+    MouseSteeringToggle->ActionDescription = NSLOCTEXT("SSW.InputActions", "MouseSteering", "Toggle Mouse Steering");
+    MissionTargetContext->MapKey(MouseSteeringToggle, FKey(TEXT("#")));
+    MissionMenuInput->BindAction(MouseSteeringToggle, ETriggerEvent::Started,
+        this, &UMissionBriefingDlg::ToggleMouseSteering);
+    if (MissionPitchAction && MissionPitchAction->ValueType == EInputActionValueType::Axis1D)
+        MissionTargetContext->MapKey(MissionPitchAction.Get(), EKeys::MouseY);
+    if (MissionYawAction && MissionYawAction->ValueType == EInputActionValueType::Axis1D)
+        MissionTargetContext->MapKey(MissionYawAction.Get(), EKeys::MouseX);
     bFighterHUDVisible = true;
     if (!FighterHUDPanels.IsValid() && GetWorld() && GetWorld()->GetGameViewport())
     {
@@ -2334,6 +2392,7 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     MissionShieldsDownAction = nullptr;
     MissionShieldsFullAction = nullptr;
     MissionShieldsZeroAction = nullptr;
+    USSWMouseFlightModifier::bMouseSteeringEnabled = false;
     MissionPitchAction = nullptr;
     MissionYawAction = nullptr;
     MissionRollAction = nullptr;
@@ -2372,24 +2431,21 @@ void UMissionBriefingDlg::NextMissionTarget()
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
     if (!Player || Player->IsDead() || Player->IsDying() || !Player->GetSensor()) return;
 
-    // Use the legacy sensor cycle for flight. T2 limits it to the current exercise group.
-    SimElement* AssignedTargetGroup = nullptr;
+    SimElement* AssignedTargetGroup = FindTargetPracticeWave(Simulation);
     const Mission* CurrentMission = Simulation->GetMission();
-    const Instruction* Next = Player->GetNextNavPoint();
     if (CurrentMission && CurrentMission->GetIdentity() == 102 &&
-        CurrentMission->GetMissionType() == int(EMissionType::TRAINING) && Next)
+        CurrentMission->GetMissionType() == int(EMissionType::TRAINING))
     {
-        const int NavIndex = Player->GetNavIndex(Next);
-        if (NavIndex == 4 || NavIndex == 5)
+        // Between waves, select the route marker, which is not a sensor contact.
+        if (!AssignedTargetGroup)
         {
-            SimElement* Group = Simulation->FindElement(NavIndex == 4 ? "Alpha" : "Bravo");
-            for (int Index = 1; Group && Index <= Group->GetNumShips(); ++Index)
+            for (AActor* Candidate : GetSelectableMissionContacts())
             {
-                const Ship* Drone = Group->GetShip(Index);
-                if (Drone && !Drone->IsDead() && !Drone->IsDying())
+                const AWaypointActor* Waypoint = Cast<AWaypointActor>(Candidate);
+                if (Waypoint && Waypoint->WaypointIndex > 0)
                 {
-                    AssignedTargetGroup = Group;
-                    break;
+                    SelectMissionContact(Candidate);
+                    return;
                 }
             }
         }
@@ -3127,6 +3183,14 @@ void UMissionBriefingDlg::ApplyMissionThrottle(double Amount, bool bRelative)
         Requested, PlayerShip->GetThrottle());
 }
 
+
+void UMissionBriefingDlg::ToggleMouseSteering()
+{
+    if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+    USSWMouseFlightModifier::bMouseSteeringEnabled = !USSWMouseFlightModifier::bMouseSteeringEnabled;
+    if (!USSWMouseFlightModifier::bMouseSteeringEnabled) ClearMissionRotationInput();
+    RadioView::Message(USSWMouseFlightModifier::bMouseSteeringEnabled ? "Mouse steering on" : "Mouse steering off");
+}
 
 void UMissionBriefingDlg::ApplyMissionRotation(int32 Axis, float Value)
 {
@@ -3929,34 +3993,6 @@ void UMissionBriefingDlg::ToggleMissionAutoNav()
     {
         Player->SetAutoNav(false);
         return;
-    }
-    // Explicit autonav input commits a selected route waypoint. Selection alone
-    // never changes the flight plan. B on the current destination remains a toggle.
-    if (AWaypointActor* Chosen = Cast<AWaypointActor>(SelectedMissionTarget.Get())) {
-        SimElement* Flight = Player->GetElement();
-        if (Flight && Chosen->ElementIdentity == Flight->GetIdentity()) {
-            List<Instruction>& Plan = Player->GetFlightPlan();
-            const int RouteOffset = Chosen->WaypointIndex - 1;
-            if (RouteOffset >= 0 && RouteOffset < Plan.size()) {
-                Instruction* Destination = Plan.at(RouteOffset);
-                if (Destination && Destination->GetStatus() <= INSTRUCTION_STATUS::ACTIVE && Destination != Player->GetNextNavPoint()) {
-                    // Skipping is not completion: do not emit arrival mission events.
-                    for (int RoutePrior = 0; RoutePrior < RouteOffset; ++RoutePrior) {
-                        Instruction* Prior = Plan.at(RoutePrior);
-                        if (Prior && (Prior->GetStatus() <= INSTRUCTION_STATUS::ACTIVE ||
-                            (Prior->GetStatus() == INSTRUCTION_STATUS::COMPLETE && Prior->GetHoldTime() > 0)))
-                            Prior->SetStatus(INSTRUCTION_STATUS::SKIPPED);
-                    }
-                    Flight->SetHoldTime(0);
-                    Destination->SetStatus(INSTRUCTION_STATUS::PENDING);
-                    bAutoNavSelectionActive = false;
-                    Player->SetAutoNav(true);
-                    UE_LOG(LogTemp, Display, TEXT("[AutoNavInput] Selected waypoint=%d Engaged=%d"),
-                        Chosen->WaypointIndex, Player->IsAutoNavEngaged() ? 1 : 0);
-                    return;
-                }
-            }
-        }
     }
     Player->SetAutoNav(true);
 }

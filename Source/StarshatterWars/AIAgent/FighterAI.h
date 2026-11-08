@@ -83,6 +83,7 @@ protected:
     FVector           jink = FVector::ZeroVector;
     bool              over_threshold = false;
     bool              form_up = false;
+    int               TrainingLoiterWaypoint = 0;
     bool              go_manual = false;
 };
 

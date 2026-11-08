@@ -371,6 +371,7 @@ enum class MISSIONEVENT_TYPE : uint8
 	DISPLAY			UMETA(DisplayName = "Display"),
 	FIRE_WEAPON		UMETA(DisplayName = "Fire Weapon"),
 	END_SCENE		UMETA(DisplayName = "End Scene"),
+	SPAWN			UMETA(DisplayName = "Spawn"),
 	NUM_EVENTS
 };
 

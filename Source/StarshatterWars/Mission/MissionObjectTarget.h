@@ -3,6 +3,7 @@
 #include "SystemSceneBuilder.h"
 #include "Ship.h"
 #include "SimRegion.h"
+#include "SimElement.h"
 #include "Game.h"
 #include "EngineUtils.h"
 struct FMissionObjectData
@@ -17,6 +18,13 @@ inline bool ReadMissionObject(AActor* Actor, Ship* Player, SimRegion* Region, FM
     if (AWaypointActor* Waypoint = Cast<AWaypointActor>(Actor))
     {
         if (!Waypoint->SectorName.Equals(ANSI_TO_TCHAR(Region->GetName()), ESearchCase::IgnoreCase)) return false;
+        if (Waypoint->WaypointIndex > 0)
+        {
+            SimElement* Flight = Player->GetElement();
+            Instruction* Next = Flight ? Flight->GetNextNavPoint() : nullptr;
+            if (!Next || Waypoint->ElementIdentity != Flight->GetIdentity() ||
+                Waypoint->WaypointIndex != Flight->GetNavIndex(Next)) return false;
+        }
         Out.Name = Waypoint->CompactLabel();
         Out.Type = !Waypoint->NamedLocationType.IsEmpty() ? Waypoint->NamedLocationType :
             Waypoint->bNextWaypoint ? TEXT("Waypoint (next)") : TEXT("Waypoint");

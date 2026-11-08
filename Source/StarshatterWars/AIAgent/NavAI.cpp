@@ -600,13 +600,13 @@ NavAI::SeekTarget()
             }
             const int CompletedIndex = ship->GetNavIndex(navpt);
             ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
-            // Target Practice uses its two sweep arrivals to hand control to the pilot.
+            // Target Practice hands control to the pilot at each combat waypoint.
             // NavAI is a route director; the pilot handles weapons during these exercises.
             Sim* Simulation = Sim::GetSim();
             const Mission* CurrentMission = Simulation ? Simulation->GetMission() : nullptr;
             if (CurrentMission && CurrentMission->GetIdentity() == 102 &&
                 CurrentMission->GetMissionType() == int(EMissionType::TRAINING) &&
-                ship == Simulation->GetPlayerShip() && navpt->GetAction() == EInstruction::Sweep)
+                ship == Simulation->GetPlayerShip() && CompletedIndex >= 2 && CompletedIndex <= 4)
             {
                 bCombatHandoffPending = true;
                 UE_LOG(LogTemp, Display, TEXT("[AutoNavCombatHandoff] Reached=%d"), CompletedIndex);

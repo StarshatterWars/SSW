@@ -56,6 +56,7 @@ UInputMappingContext* StarshatterInputBindings::SupplementalContext(UObject* Own
     MapTargetTracking(Context);
     Add(TEXT("SSW_TargetZoom"),TEXT("Target View Zoom"),EKeys::MouseWheelAxis,EInputActionValueType::Axis1D);
     Add(TEXT("SSW_HUDVisibility"),TEXT("Show / Hide HUD"),EKeys::H);
+    Add(TEXT("SSW_MouseSteering"),TEXT("Toggle Mouse Steering"),FKey(TEXT("#")));
     Add(TEXT("SSW_WeaponCycle"),TEXT("Cycle Active Weapon"),EKeys::BackSpace);
     Add(TEXT("SSW_SensorRangeUp"),TEXT("Increase Sensor Range (Alternate)"),EKeys::RightBracket);
     Add(TEXT("SSW_SensorRangeDown"),TEXT("Decrease Sensor Range (Alternate)"),EKeys::LeftBracket);
@@ -167,6 +168,7 @@ FString StarshatterInputBindings::Category(const FString& Name)
     if (Name.Contains(TEXT("Sensor")) || Name.Contains(TEXT("Emcon")) || Name.Contains(TEXT("EMCON")) || Name.Contains(TEXT("Probe")) || Name.Contains(TEXT("GroundMode"))) return TEXT("SENSORS");
     if (Name.Contains(TEXT("Target")) || Name.Contains(TEXT("Subtarget"))) return TEXT("TARGETING");
     if (Name.Contains(TEXT("Fire")) || Name.Contains(TEXT("CyclePrimary")) || Name.Contains(TEXT("CycleSecondary")) || Name.Contains(TEXT("Decoy")) || (Name.Contains(TEXT("Weapon")) && !Name.Contains(TEXT("Panel")) && !Name.Contains(TEXT("Dialog")))) return TEXT("WEAPONS");
+    if (Name == TEXT("SSW_MouseSteering")) return TEXT("MOVEMENT & FLIGHT");
     if (Name.Contains(TEXT("Pitch")) || Name.Contains(TEXT("Yaw")) || Name.Contains(TEXT("Roll")) || Name.Contains(TEXT("Throttle")) || Name.Contains(TEXT("Augmenter")) || Name.Contains(TEXT("Plus")) || Name.Contains(TEXT("Minus")) || Name.Contains(TEXT("FLCS")) || Name.Contains(TEXT("Flcs"))) return TEXT("MOVEMENT & FLIGHT");
     if (Name.Contains(TEXT("HUD")) || Name.Contains(TEXT("Hud")) || Name.Contains(TEXT("MFD")) || Name.Contains(TEXT("Panel")) || Name.Contains(TEXT("Dialog"))) return TEXT("HUD & PANELS");
     if (Name.Contains(TEXT("Gear")) || Name.Contains(TEXT("Nav")) || Name.Contains(TEXT("Shield")) || Name.Contains(TEXT("Orbit")) || Name.Contains(TEXT("Quantum"))) return TEXT("NAVIGATION & SHIP SYSTEMS");

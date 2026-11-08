@@ -958,8 +958,24 @@ static bool IsLeaderFirstTraining(const Mission* MissionDef)
 }
 
 void
-Sim::CreateElements()
+Sim::SpawnMissionElement(const char* Name)
 {
+    if (mission && Name && *Name && !FindElement(Name))
+        CreateElements(Name);
+}
+
+void
+Sim::CreateElements(const char* SpawnName)
+{
+    TArray<Text> DeferredNames;
+    if (!SpawnName) {
+        ListIter<MissionEvent> EventIter = mission->GetEvents();
+        while (++EventIter) {
+            const MissionEvent* Event = EventIter.value();
+            if (Event && Event->Event() == MissionEvent::SPAWN)
+                DeferredNames.Add(Event->EventShip());
+        }
+    }
     TSet<MissionElement*> SeenEntries;
     TArray<MissionElement*> SeenSingleUnits;
 
@@ -969,6 +985,8 @@ Sim::CreateElements()
         while (++SourceIter) {
             MissionElement* Entry=SourceIter.value();
             if (!Entry) continue;
+            if (SpawnName ? Entry->GetName() != SpawnName : DeferredNames.Contains(Entry->GetName()))
+                continue;
             const int EntryPass=Entry->IsSquadron() ? 1 :
                 ((Entry->GetSquadron().length() || Entry->GetCarrier().length()) ? 2 : 0);
             if (EntryPass==SpawnPass) OrderedElements.Add(Entry);

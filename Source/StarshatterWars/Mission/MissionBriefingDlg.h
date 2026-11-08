@@ -236,6 +236,7 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UInputAction> MissionPitchAction;
     void OnMissionPitch(const FInputActionValue& Value);
     void ReleaseMissionPitch();
+    void ToggleMouseSteering();
     UPROPERTY(Transient) TObjectPtr<UInputAction> MissionYawAction;
     void OnMissionYaw(const FInputActionValue& Value);
     void ReleaseMissionYaw();
