@@ -3,6 +3,8 @@
 #include "SimElement.h"
 #include "Instruction.h"
 #include "SimEvent.h"
+#include "Sim.h"
+#include "Ship.h"
 
 FMissionDebriefResult EvaluateMissionDebrief(const FMissionDebriefEvidence& E)
 {
@@ -42,6 +44,21 @@ FMissionDebriefEvidence CollectMissionDebriefEvidence(const Mission* MissionPtr,
             Instruction* O=Element->GetObjective(I);
             if (!O || O->GetPriority()!=Instruction::PRIMARY) continue;
             ++E.RequiredObjectives;
+            if (MissionPtr && MissionPtr->IsStoryMission() && O->GetAction() == EInstruction::Defend)
+            {
+                Sim* Simulation = Sim::GetSim();
+                SimElement* Ward = Simulation ? Simulation->FindElement(O->GetTargetName()) : nullptr;
+                bool bWardSafe = Ward && Ward->GetNumShips() > 0;
+                if (Ward)
+                    for (int32 Index = 1; Index <= Ward->GetNumShips(); ++Index)
+                    {
+                        const Ship* Protected = Ward->GetShip(Index);
+                        bWardSafe &= Protected && !Protected->IsDead() && !Protected->IsDying() && Protected->GetIntegrity() >= 1;
+                    }
+                if (bWardSafe) ++E.CompletedObjectives;
+                else E.bFailedObjective = true;
+                continue;
+            }
             if (O->GetStatus()==INSTRUCTION_STATUS::COMPLETE) ++E.CompletedObjectives;
             if (O->GetStatus()==INSTRUCTION_STATUS::FAILED || O->GetStatus()==INSTRUCTION_STATUS::ABORTED) E.bFailedObjective=true;
         }

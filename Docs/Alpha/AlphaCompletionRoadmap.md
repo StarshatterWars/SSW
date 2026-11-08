@@ -18,8 +18,8 @@ The earlier unresolved physical-waypoint render capture remains an open regressi
 
 1. Measure CPU/game/render/GPU time, memory, streaming, simulation costs and scene captures with repeatable flights before optimization. Establish target hardware/resolution and budgets from those measurements. Reduce observed bottlenecks while preserving simulation results; add scalable visual quality and regression captures.
 2. Space beauty pass: stars, nebulae, planets/moons, lighting, atmosphere, exposure and consistent ship materials; correct celestial textures and scale.
-3. Planet-to-ground transitions for ground/group missions; preserve navigation/mission state across streaming, scale/origin and flight-regime transitions.
-4. Build authored landscape mission areas from imported asset packs, with collision, landing surfaces, ground targets, navigation, lighting and performance budgets.
+3. Planet-to-ground transitions for ground/group missions moved to the Alpha 3 terrestrial closeout.
+4. Surface mission areas moved to the Alpha 3 terrestrial closeout.
 5. New splash screen and startup/loading presentation using game assets.
 6. Convert selected Campaign 2–5 cutscene-only missions into playable story missions. Keep existing dialogue/story continuity and campaign ordering; each needs objectives, fail/success conditions, actors, scripting and save progression. The specific scene-to-mission conversion list is not yet chosen.
 
@@ -33,6 +33,21 @@ Two workstreams remain for the milestone:
 2. Playable story missions. Select mission-capable cutscenes from Campaigns 2–5, preserve their dialogue and story, and build objectives, success and failure conditions, debriefs and saved story progress. Keep dynamic missions under Campaigns.
 
 The editor ingestion comparison is a migration checkpoint. Keep startup ingestion active until the staged tables have been reviewed. Deferred scope above remains tracked separately from these two closeout workstreams.
+
+## Alpha 3 closeout — terrestrial missions
+
+Start with T3 (Flight School) at Janek Station for takeoff and landing. Follow with T4 (Ground Strike), whose mission DEF names the terrain region, Airbase1 and the strike targets. The legacy StarSystem parser can construct a TerrainRegion, and SimRegion uses it to enter airspace. Unreal already has an ANativeTerrainActor presentation path for an active SimRegion with terrain. Verify which region the live mission resolves and whether it retains its terrain before changing the mission or adding a second terrain system.
+
+1. Launch T3 from the Training screen. Verify Janek Station resolves as airspace and the base and fighters spawn at their authored positions. In T4, also verify the ground target positions.
+2. Use a separate temporary Unreal surface level for Janek presentation. Use /Game/Maps/Ground/JanekSurface for staging. It contains the Airbase1 preview and a temporary flat datum. Before binding it into flight, align the runway and surface presentation to the legacy terrain and region origin. Keep simulation terrain authoritative for altitude, contact, landing and combat. WorldScape can replace the presentation later through the same region binding.
+3. Verify takeoff, navigation, recovery and debrief in T3. Verify targeting and strike in T4 with an Ensign pilot. Check ground impact, objective success and failure, and saved completion after reload. Where a mission crosses from orbit to the surface, verify that streaming and the region handoff preserve the active ship and objective state.
+4. Use the same region path for Campaign 2–5 terrestrial story missions. Keep named locations available for HUD targeting, and leave objective completion to the mission script and simulation. Verify a representative story mission before closing Alpha 3.
+
+Keep the current 1/100 presentation scale and legacy simulation coordinates for this milestone. Alpha 3 remains open pending the live terrestrial checks.
+
+## Alpha 4 — scale conversion
+
+Move the asset and presentation scale conversion here. Start with Falcon and Orion. Preserve legacy simulation coordinates, distances and timing. Verify camera framing, launch and recovery, terrain contact, attachment points and collision alignment before extending the conversion to the fleet.
 
 ## Current evidence and limitations
 

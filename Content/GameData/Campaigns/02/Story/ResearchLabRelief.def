@@ -1,0 +1,60 @@
+MISSION
+
+id: 2201
+story_points: 250
+story_scene: "07-Research-Lab"
+name: "Research Lab: Relief Corridor"
+type: "Sweep"
+system: "Solus"
+region: "Meridian"
+start: "02/09:00:00"
+sitrep: "The Tal Vesta University Stellar Observatory in Meridian orbit has been cut off by Separatist patrols and is facing severe shortages of food and consumable supplies. Alliance Theater Command has made humanitarian aid to Meridian a top priority."
+objective: "Protect Tal Vesta Stellar Observatory. Intercept Kendra and Pelorat."
+
+element: {
+    name: "Vanguard"
+    design: Falcon
+    mission: sweep
+    player: 1
+    count: 2
+    iff: 1
+    loc: (0, -8000, 0)
+    objective: { cmd: defend, tgt: "Tal Vesta Stellar Observatory" }
+    objective: { cmd: intercept, tgt: Kendra }
+    objective: { cmd: intercept, tgt: Pelorat }
+    navpt: { cmd: vector, loc: (0, -3000, 0), speed: 290 }
+}
+
+element: {
+    name: "Tal Vesta Stellar Observatory"
+    design: Observatory
+    count: 1
+    iff: 1
+    loc: (0, -14000, 0)
+}
+
+element: {
+    name: Kendra
+    design: Wolf
+    mission: strike
+    region: Solus
+    count: 1
+    iff: 2
+    loc: (4000, 1000, 0)
+    objective: { cmd: strike, tgt: "Tal Vesta Stellar Observatory" }
+}
+
+event: { type: Jump, time: 35, event_ship: Kendra, target: Meridian }
+
+element: {
+    name: Pelorat
+    design: Baikal
+    mission: strike
+    region: Solus
+    count: 1
+    iff: 2
+    loc: (7000, 1000, 0)
+    objective: { cmd: strike, tgt: "Tal Vesta Stellar Observatory" }
+}
+
+event: { type: Jump, time: 55, event_ship: Pelorat, target: Meridian }

@@ -18,7 +18,8 @@ inline bool ReadMissionObject(AActor* Actor, Ship* Player, SimRegion* Region, FM
     {
         if (!Waypoint->SectorName.Equals(ANSI_TO_TCHAR(Region->GetName()), ESearchCase::IgnoreCase)) return false;
         Out.Name = Waypoint->CompactLabel();
-        Out.Type = Waypoint->bNextWaypoint ? TEXT("Waypoint (next)") : TEXT("Waypoint");
+        Out.Type = !Waypoint->NamedLocationType.IsEmpty() ? Waypoint->NamedLocationType :
+            Waypoint->bNextWaypoint ? TEXT("Waypoint (next)") : TEXT("Waypoint");
         Out.RangeKm = FVector::Distance(OtherHand(Player->GetLocation()), Waypoint->LegacyLocation)/1000.0;
         return true;
     }

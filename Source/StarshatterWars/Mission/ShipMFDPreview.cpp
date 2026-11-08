@@ -1,5 +1,6 @@
 
 #include "ShipMFDPreview.h"
+#include "WaypointActor.h"
 #include "ProfilingDebugging/CpuProfilerTrace.h"
 #include "ShipBriefingPreview.h"
 #include "GameStructs_System.h"
@@ -25,23 +26,28 @@ void FShipMFDPreview::Clear()
     NextStaticCaptureAt = 0.0;
     NextLiveCaptureAt = 0.0;
 }
+void FShipMFDPreview::RefreshStaticCapture()
+{
+    // The player's preview has a fixed view and HUD tint. Refresh briefly
+    // during streaming, then reuse the render target until the design changes.
+    const double Now = FPlatformTime::Seconds();
+    const bool bCaptureDue = StaticWarmupCaptures > 0 && Now >= NextStaticCaptureAt;
+    if(!GUsingNullRHI && Capture.IsValid() && !bHasLiveView && bCaptureDue)
+    {
+        Scene->GetWorld()->SendAllEndOfFrameUpdates();
+        Capture->GetCaptureComponent2D()->CaptureScene();
+        --StaticWarmupCaptures;
+        NextStaticCaptureAt = Now + 1.0;
+    }
+}
+
 bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
 {
     if(!Design){Clear();return false;}
     const FString NextKey=Design->ShipName+Design->Mesh.ToSoftObjectPath().ToString();
     if(Key==NextKey && IsReady())
     {
-        // The player's preview has a fixed view and HUD tint. Refresh briefly
-        // during streaming, then reuse the render target until the design changes.
-        const double Now = FPlatformTime::Seconds();
-        const bool bCaptureDue = StaticWarmupCaptures > 0 && Now >= NextStaticCaptureAt;
-        if(!GUsingNullRHI && Capture.IsValid() && !bHasLiveView && bCaptureDue)
-        {
-            Scene->GetWorld()->SendAllEndOfFrameUpdates();
-            Capture->GetCaptureComponent2D()->CaptureScene();
-            --StaticWarmupCaptures;
-            NextStaticCaptureAt = Now + 1.0;
-        }
+        RefreshStaticCapture();
         return true;
     }
     Clear();
@@ -52,6 +58,37 @@ bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
     UWorld* World=Scene->GetWorld();
     Visual=BriefingShipPreview::CreateVisual(World,Parts);
     if(!Visual.IsValid()){Clear();return false;}
+    return BeginCapture(NextKey, BriefingShipPreview::CalculateBounds(Parts));
+}
+
+bool FShipMFDPreview::SetWaypoint()
+{
+    const FString WaypointKey(TEXT("SSW_WaypointMarker"));
+    if (Key == WaypointKey && IsReady())
+    {
+        RefreshStaticCapture();
+        return true;
+    }
+
+    Clear();
+    Scene = MakeUnique<FPreviewScene>(FPreviewScene::ConstructionValues().SetEditor(false)
+        .SetCreatePhysicsScene(false).SetLightBrightness(4.f).SetSkyBrightness(0.f));
+    FActorSpawnParameters Params;
+    Params.ObjectFlags = RF_Transient;
+    auto* Marker = Scene->GetWorld()->SpawnActor<AWaypointActor>(Params);
+    if (!Marker) { Clear(); return false; }
+
+    Marker->SetActorTickEnabled(false);
+    Marker->bNextWaypoint = true;
+    Marker->RefreshAppearance(true);
+    Visual = Marker;
+    const FVector Extent(Marker->MarkerWidth * 0.5, Marker->MarkerWidth * 0.5, Marker->MarkerHeight * 0.5);
+    return BeginCapture(WaypointKey, FBox(-Extent, Extent));
+}
+
+bool FShipMFDPreview::BeginCapture(const FString& NextKey, const FBox& Bounds)
+{
+    UWorld* World = Scene->GetWorld();
     Target.Reset(NewObject<UTextureRenderTarget2D>(GetTransientPackage(),NAME_None,RF_Transient));
     Target->RenderTargetFormat=RTF_RGBA16f;
     Target->ClearColor=bPlayerPanel ? FLinearColor(0,0,0,1) : FLinearColor::Black;
@@ -69,7 +106,6 @@ bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
     {
         // Fit the projected hull bounds to the entire 2:1 player image area.
         // Orthographic framing avoids perspective-dependent cropping.
-        const FBox Bounds=BriefingShipPreview::CalculateBounds(Parts);
         const FQuat View=Capture->GetActorQuat();
         FVector2D Min(DBL_MAX,DBL_MAX),Max(-DBL_MAX,-DBL_MAX);
         for(int32 Corner=0;Corner<8;++Corner)

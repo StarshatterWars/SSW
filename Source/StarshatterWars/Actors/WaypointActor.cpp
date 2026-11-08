@@ -50,7 +50,7 @@ void AWaypointActor::SetArrivalHullRadius(double HullRadius)
     if (ArrivalSphere) ArrivalSphere->SetSphereRadius(float(ArrivalRadiusMeters), false);
 }
 
-FString AWaypointActor::CompactLabel() const{return SectorName.IsEmpty()?FString::Printf(TEXT("NAV %02d"),WaypointIndex):FString::Printf(TEXT("NAV %02d\n%s"),WaypointIndex,*SectorName);}
+FString AWaypointActor::CompactLabel() const{if (!NamedLocationType.IsEmpty()) return Description; return SectorName.IsEmpty()?FString::Printf(TEXT("NAV %02d"),WaypointIndex):FString::Printf(TEXT("NAV %02d\n%s"),WaypointIndex,*SectorName);}
 void AWaypointActor::BuildPlumbob(TArray<FVector>& V,TArray<int32>& T,TArray<FVector>& N,TArray<FVector2D>& UV,TArray<FLinearColor>& C,double H,double W){
  V.Reset();T.Reset();N.Reset();UV.Reset();C.Reset();const FVector Rim[]={FVector(W*.5,0,0),FVector(0,W*.5,0),FVector(-W*.5,0,0),FVector(0,-W*.5,0)};
  for(int Side=0;Side<2;++Side)for(int I=0;I<4;++I){const FVector A(0,0,(Side==0?1:-1)*H*.5),B=Rim[I],D=Rim[(I+1)%4];const FVector P[]={A,Side==0?B:D,Side==0?D:B};const FVector Normal=FVector::CrossProduct(P[1]-P[0],P[2]-P[0]).GetSafeNormal();const int Start=V.Num();const double Shade=.55+.12*I;

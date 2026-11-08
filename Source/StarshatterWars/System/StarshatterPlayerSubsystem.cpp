@@ -170,6 +170,14 @@ bool UStarshatterPlayerSubsystem::SavePlayer(bool bForce)
     return bOk;
 }
 
+bool UStarshatterPlayerSubsystem::SaveActivePlayerProgress()
+{
+    if (!SavePlayer(true)) return false;
+    const FString ActiveSlot = GetActiveSavedPlayerSlot();
+    return ActiveSlot.IsEmpty() ||
+        (IsManagedPlayerSlot(ActiveSlot) && SaveGameInternal(ActiveSlot, UserIndex, PlayerInfo, CURRENT_SAVE_VERSION));
+}
+
 bool UStarshatterPlayerSubsystem::SaveGameInternal(
     const FString& InSlotName, int32 InUserIndex,
     const FS_PlayerGameInfo& InPlayerData, int32 InSaveVersion)

@@ -199,6 +199,7 @@ public:
 
     void LoadMissionList(FString Path);
     void LoadSingleMissions();
+    bool ImportStoryMissions(UDataTable& Output);
     void LoadMultiplayerMissions();
     UDataTable* GetMultiplayerMissionsDataTable() const { return MultiplayerMissionsDataTable; }
     const TArray<FS_CampaignMission>& GetMultiplayerMissionScenarios() const { return MultiplayerMissionScenarios; }

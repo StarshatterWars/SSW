@@ -143,6 +143,9 @@ public:
     void              IncreaseEventPriority(int index);
     void              DecreaseEventPriority(int index);
 
+    bool IsStoryMission() const { return bStoryMission; }
+    void SetStoryMission(int32 Points) { bStoryMission = true; StoryPoints = FMath::Max(0, Points); }
+    int32 GetStoryPoints() const { return StoryPoints; }
     EMissionSource GetSource() const { return Source; }
     void SetSource(EMissionSource InSource) { Source = InSource; }
 
@@ -206,5 +209,7 @@ protected:
     MissionElement* current;
 
     EMissionSource Source = EMissionSource::Unknown;
+    bool bStoryMission = false;
+    int32 StoryPoints = 0;
 };
 

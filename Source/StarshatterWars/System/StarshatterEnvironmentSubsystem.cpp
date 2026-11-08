@@ -997,6 +997,36 @@ void UStarshatterEnvironmentSubsystem::ParseRegion(TermStruct* Val, const char* 
 }
 
 
+static void ParseNamedBodyLocation(TermStruct* Struct, const char* Filename, TArray<FNamedBodyLocation>& Locations)
+{
+    FNamedBodyLocation Location;
+    for (int32 Index = 0; Index < Struct->elements()->size(); ++Index)
+    {
+        TermDef* Field = Struct->elements()->at(Index)->isDef();
+        if (!Field) continue;
+        const Text& Key = Field->name()->value();
+        if (Key == "name")
+        {
+            Text Name;
+            GetDefText(Name, Field, Filename);
+            Location.Name = FString(Name).TrimStartAndEnd();
+        }
+        else if (Key == "position" || Key == "loc")
+        {
+            GetDefVec(Location.Position, Field, Filename);
+        }
+        else if (Key == "type")
+        {
+            Text Type;
+            GetDefText(Type, Field, Filename);
+            const int64 Value = StaticEnum<ELocationType>()->GetValueByNameString(FString(Type), EGetByNameFlags::None);
+            if (Value != INDEX_NONE) Location.Type = static_cast<ELocationType>(Value);
+        }
+    }
+    if (!Location.Name.IsEmpty() && !Location.Position.ContainsNaN())
+        Locations.Add(MoveTemp(Location));
+}
+
 void UStarshatterEnvironmentSubsystem::ParseMoonMap(TermStruct* val, const char* fn)
 {
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseMoonMap()"));
@@ -1030,6 +1060,10 @@ void UStarshatterEnvironmentSubsystem::ParseMoonMap(TermStruct* val, const char*
 		{
 			GetDefText(MoonName, pdef, fn);
 			NewMoonMap.Name = FString(MoonName);
+		}
+		else if (Key == "location" && pdef->term() && pdef->term()->isStruct())
+		{
+			ParseNamedBodyLocation(pdef->term()->isStruct(), fn, NewMoonMap.Locations);
 		}
 		else if (Key == "type")
 		{
@@ -1318,6 +1352,10 @@ void UStarshatterEnvironmentSubsystem::ParsePlanetMap(TermStruct* val, const cha
 		{
 			GetDefText(PlanetName, pdef, fn);
 			NewPlanetMap.Name = FString(PlanetName);
+		}
+		else if (Key == "location" && pdef->term() && pdef->term()->isStruct())
+		{
+			ParseNamedBodyLocation(pdef->term()->isStruct(), fn, NewPlanetMap.Locations);
 		}
 		else if (Key == "type")
 		{

@@ -35,6 +35,7 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation") int32 WaypointIndex = 0;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation") FString SectorName;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation") FString Description;
+    FString NamedLocationType;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation") FVector LegacyLocation = FVector::ZeroVector;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation") bool bNextWaypoint = false;
 };

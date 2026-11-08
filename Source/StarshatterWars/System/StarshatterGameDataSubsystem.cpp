@@ -1567,6 +1567,51 @@ void UStarshatterGameDataSubsystem::InitializeCampaignData() {
 // Load standalone missions independently from campaign scenario/cutscene arrays.
 // The catalog (Missions.def) supplies IDs and scripts; the numbered .def files
 // supply the complete authored mission models for previews and later execution.
+bool UStarshatterGameDataSubsystem::ImportStoryMissions(UDataTable& Output)
+{
+#if WITH_EDITOR
+    if (Output.GetRowStruct() != FS_CampaignMission::StaticStruct()) return false;
+    const FString CampaignsFolder = FPaths::ProjectContentDir() / TEXT("GameData/Campaigns");
+
+    TGuardValue<bool> Standalone(bParsingStandaloneMission, true);
+    TGuardValue<TArray<FS_CampaignMission>> Missions(MissionArray, {});
+    decltype(MissionElementArray) EmptyElements;
+    decltype(MissionEventArray) EmptyEvents;
+    TGuardValue Elements(MissionElementArray, EmptyElements);
+    TGuardValue Events(MissionEventArray, EmptyEvents);
+    TGuardValue<double> EventTime(LastParsedMissionEventTime, 0.0);
+    TSet<int32> Ids;
+    for (int32 CampaignId = 2; CampaignId <= 5; ++CampaignId)
+    {
+        const FString Folder = CampaignsFolder / FString::Printf(TEXT("%02d/Story"), CampaignId);
+        TArray<FString> Files;
+        IFileManager::Get().FindFiles(Files, *(Folder / TEXT("*.def")), true, false);
+        Files.Sort();
+        for (const FString& File : Files)
+    {
+        const int32 Before = MissionArray.Num();
+        const FString Path = Folder / File;
+        ParseMission(TCHAR_TO_ANSI(*Path));
+        if (MissionArray.Num() != Before + 1) return false;
+        FS_CampaignMission& Mission = MissionArray.Last();
+        if (Mission.Id <= 0 || Ids.Contains(Mission.Id) || Mission.MissionName.IsEmpty() ||
+            !Mission.Scene.IsEmpty() || Mission.Element.IsEmpty())
+            return false;
+        Ids.Add(Mission.Id);
+        Mission.StoryCampaignId = CampaignId;
+        Mission.RowName = FName(*FString::Printf(TEXT("Story_%d"), Mission.Id));
+        Mission.DisplayType = EMissionDisplayType::PlayerMission;
+        Mission.Source = EMissionSource::Scripted;
+    }
+    }
+    for (const FS_CampaignMission& Mission : MissionArray)
+        Output.AddRow(Mission.RowName, Mission);
+    return true;
+#else
+    return false;
+#endif
+}
+
 void UStarshatterGameDataSubsystem::LoadSingleMissions()
 {
     UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][02] LoadSingleMissions ENTER content=%s existingTable=%s"),
@@ -3495,7 +3540,17 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 			NewMission.MissionName = FString(Name);
 			UE_LOG(LogTemp, Log, TEXT("mission name '%s'"), *FString(Name));
 		}
-		else if (Key == "scene")
+		else if (Key == "story_scene")
+        {
+            Text SceneName;
+            GetDefText(SceneName, def, fn);
+            NewMission.StoryUnlockScene = ANSI_TO_TCHAR(SceneName.data());
+        }
+        else if (Key == "story_points")
+        {
+            GetDefNumber(NewMission.StoryPoints, def, fn);
+        }
+        else if (Key == "scene")
 		{
 			GetDefText(Scene, def, fn);
 			NewMission.Scene = FString(Scene);

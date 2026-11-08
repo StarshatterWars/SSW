@@ -25,6 +25,8 @@
 #include "Components/VerticalBoxSlot.h"
 #include "Styling/CoreStyle.h"
 #include "Campaign.h"
+#include "CombatEvent.h"
+#include "ShipDesign.h"
 #include "MissionInfo.h"
 #include "ConfirmDlg.h"
 #include "Mission.h"
@@ -37,6 +39,66 @@
 #include "MenuScreen.h"
 #include "StarshatterUIStyleSubsystem.h"
 #include "MissionUIStyle.h"
+
+static bool StoryComesBefore(const FS_CampaignMission& A, const FS_CampaignMission& B)
+{
+    if (A.StoryCampaignId != B.StoryCampaignId) return A.StoryCampaignId < B.StoryCampaignId;
+    if (A.StoryUnlockScene != B.StoryUnlockScene) return A.StoryUnlockScene < B.StoryUnlockScene;
+    return A.Id < B.Id;
+}
+
+static FString StoryUnavailableReason(const FS_CampaignMission& Scenario, UGameInstance* Instance)
+{
+    const auto* GI = Cast<USSWGameInstance>(Instance);
+    Campaign* Active = Campaign::GetCampaign();
+    if (!Active || Active->GetCampaignId() != Scenario.StoryCampaignId)
+        return TEXT("Select this story's campaign first.");
+
+    const int32 RequiredRank = MissionRankRules::Required(Scenario);
+    if (!MissionRankRules::Unlocked(RequiredRank))
+        return MissionRankRules::Requirement(RequiredRank);
+    auto* Pilot = PlayerCharacter::GetCurrentPlayer();
+    auto* GameData = Instance ? Instance->GetSubsystem<UStarshatterGameDataSubsystem>() : nullptr;
+    const auto* Players = Instance ? Instance->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    if (const UDataTable* Table = GameData ? GameData->GetStoryMissionsDataTable() : nullptr)
+    {
+        for (const auto& Row : Table->GetRowMap())
+        {
+            const auto& Previous = *reinterpret_cast<const FS_CampaignMission*>(Row.Value);
+            if (Previous.Id > 0 && Previous.StoryCampaignId == Scenario.StoryCampaignId &&
+                StoryComesBefore(Previous, Scenario) &&
+                (!Players || !Players->GetPlayerInfo().HasCompletedMission(Scenario.StoryCampaignId, Previous.Id)))
+                return TEXT("Complete the earlier story mission first.");
+        }
+    }
+    for (const FS_MissionElement& Element : Scenario.Element)
+    {
+        if (Element.Player <= 0) continue;
+        const ShipDesign* Design = ShipDesignRegistry::FindLegacy(Element.Design);
+        FRankInfo RankInfo;
+        const bool bGranted = Pilot && Design && (Pilot->CanCommand(Design->type) ||
+            (GameData && GameData->GetRankInfo(Pilot->GetRank(), RankInfo) &&
+                (RankInfo.GrantedShipClasses & Design->type) != 0));
+        if (!bGranted)
+            return TEXT("Your pilot has not been granted this ship class.");
+    }
+
+    if (Scenario.StoryUnlockScene.IsEmpty())
+        return FString();
+    const UCampaignSave* Save = GI ? GI->CampaignSave : nullptr;
+    if (Save && Save->CampaignIndex == Scenario.StoryCampaignId && Save->HasPlayedScene(Scenario.StoryUnlockScene))
+        return FString();
+
+    ListIter<CombatEvent> Events = Active->GetEvents();
+    while (++Events)
+    {
+        const CombatEvent* Event = Events.value();
+        if (Event && Event->SceneFile() && Scenario.StoryUnlockScene.Equals(ANSI_TO_TCHAR(Event->SceneFile()), ESearchCase::IgnoreCase) &&
+            Event->GetTime() <= Active->GetTime())
+            return FString();
+    }
+    return TEXT("Available when the corresponding campaign scene becomes due.");
+}
 
 namespace SingleMissionColors
 {
@@ -432,7 +494,12 @@ void USingleMissionDlg::RefreshMissionRoster()
         const FS_CampaignMission* Scenario = DataTable->FindRow<FS_CampaignMission>(RowName, TEXT("SingleMissionRoster"), false);
         if (Scenario && Scenario->Id > 0) SortedRows.Add(Scenario);
     }
-    SortedRows.Sort([](const FS_CampaignMission& A, const FS_CampaignMission& B) { return A.Id < B.Id; });
+    const bool bStoryView = IsStoryMissionView();
+    SortedRows.Sort([bStoryView](const FS_CampaignMission& A, const FS_CampaignMission& B)
+    {
+        if (bStoryView) return StoryComesBefore(A, B);
+        return A.Id < B.Id;
+    });
 
     for (const FS_CampaignMission* Scenario : SortedRows)
     {
@@ -442,6 +509,8 @@ void USingleMissionDlg::RefreshMissionRoster()
             ? FString::Printf(TEXT("%02d  /  UNNAMED OPERATION"), Scenario->Id)
             : Scenario->MissionName;
         UButton* RowButton = MakeActionButton(MissionLabel, true, true);
+        const FString StoryLock = IsStoryMissionView() ? StoryUnavailableReason(*Scenario, GetGameInstance()) : FString();
+        if (!StoryLock.IsEmpty()) RowButton->SetToolTipText(FText::FromString(StoryLock));
         const int32 RequiredRank=MissionRankRules::Required(*Scenario);
         if (!MissionRankRules::Unlocked(RequiredRank)) RowButton->SetToolTipText(FText::FromString(MissionRankRules::Requirement(RequiredRank)));
         if (IsStoryMissionView())
@@ -536,13 +605,14 @@ void USingleMissionDlg::SelectMissionAt(int32 Index)
         {
             FButtonStyle Style = Button->GetStyle();
             Campaign* Active = IsCampaignMissionView() ? GetRosterCampaign() : CustomCampaign;
-            const int32 Scope = Active ? Active->GetCampaignId() : Campaign::SINGLE_MISSIONS;
+            const FS_CampaignMission* Scenario = ScenarioRows.IsValidIndex(i) ? ScenarioRows[i] : nullptr;
+            const int32 Scope = IsStoryMissionView() && Scenario ? Scenario->StoryCampaignId :
+                Active ? Active->GetCampaignId() : Campaign::SINGLE_MISSIONS;
             const auto* GI = Cast<USSWGameInstance>(GetGameInstance());
             const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
             const bool bCompleted = MissionCompletionStatus::IsCompleted(GI ? GI->CampaignSave : nullptr,
                 Players ? &Players->GetPlayerInfo() : nullptr, Scope, MissionIds[i]);
-            const FS_CampaignMission* Scenario = ScenarioRows.IsValidIndex(i) ? ScenarioRows[i] : nullptr;
-            const bool bUnavailable = IsCampaignMissionView()
+            const bool bUnavailable = IsStoryMissionView() && Scenario ? !StoryUnavailableReason(*Scenario, GetGameInstance()).IsEmpty() : IsCampaignMissionView()
                 ? (!Active || !Active->IsMissionRankUnlocked(MissionIds[i]))
                 : (!IsCustomMissionView() && (!Scenario || !MissionRankRules::Unlocked(MissionRankRules::Required(*Scenario))));
             const FLinearColor Tint = bCompleted ? FLinearColor(0.25f, 1.f, 0.35f)
@@ -716,6 +786,7 @@ void USingleMissionDlg::LaunchSelected()
     const FS_CampaignMission* SelectedRow = ScenarioRows.IsValidIndex(ChosenIndex)
         ? ScenarioRows[ChosenIndex] : nullptr;
     if (!bCustom && (!SelectedRow || !MissionRankRules::Unlocked(MissionRankRules::Required(*SelectedRow)))) return;
+    if (IsStoryMissionView() && SelectedRow && !StoryUnavailableReason(*SelectedRow, GetGameInstance()).IsEmpty()) return;
     if (SelectedRow && !bCustom)
     {
         if (!StandaloneBriefingMission || StandaloneBriefingMissionId != MissionId)
@@ -730,6 +801,7 @@ void USingleMissionDlg::LaunchSelected()
                 delete NewModel;
                 return;
             }
+            if (IsStoryMissionView()) NewModel->SetStoryMission(SelectedRow->StoryPoints);
             StandaloneBriefingModels.Add(NewModel);
             StandaloneBriefingMission = NewModel;
             StandaloneBriefingMissionId = MissionId;

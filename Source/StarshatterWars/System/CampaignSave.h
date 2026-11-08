@@ -12,6 +12,9 @@ struct FMissionDebriefRecord
     UPROPERTY(SaveGame,BlueprintReadOnly) int32 MissionId = 0;
     UPROPERTY(SaveGame,BlueprintReadOnly) FString MissionName;
     UPROPERTY(SaveGame,BlueprintReadOnly) FString Pilot;
+    UPROPERTY(SaveGame,BlueprintReadOnly) FString PilotProfileSlot;
+    UPROPERTY(SaveGame,BlueprintReadOnly) bool bStoryMission = false;
+    UPROPERTY(SaveGame,BlueprintReadOnly) bool bStoryCompleted = false;
     UPROPERTY(SaveGame,BlueprintReadOnly) FString Outcome;
     UPROPERTY(SaveGame,BlueprintReadOnly) FString Evidence;
     UPROPERTY(SaveGame,BlueprintReadOnly) int32 Points = 0;

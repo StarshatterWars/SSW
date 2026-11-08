@@ -66,7 +66,6 @@ class UStarshatterAssetRegistrySubsystem;
 class UStarshatterEnvironmentSubsystem;
 class UStarshatterUIStyleSubsystem;
 class UStarshatterPlayerSubsystem;
-class UStarshatterFormSubsystem;
 class USSWCombatGroupSubsystem;
 
 DECLARE_MULTICAST_DELEGATE(FOnSSWBootComplete);
@@ -147,7 +146,6 @@ private:
         UStarshatterControlsSubsystem* ControlsSS = nullptr;
         UStarshatterKeyboardSubsystem* KeyboardSS = nullptr;
         UStarshatterPlayerSubsystem* PlayerSS = nullptr;
-        UStarshatterFormSubsystem* FormSS = nullptr;
 
         UStarshatterShipDesignSubsystem* ShipDesignSS = nullptr;
         UStarshatterSystemDesignSubsystem* SystemDesignSS = nullptr;
@@ -170,7 +168,6 @@ private:
     void BootVideo(const FBootContext& Ctx);
     void BootControls(const FBootContext& Ctx);
     void BootKeyboard(const FBootContext& Ctx);
-    void BootForms(const FBootContext& Ctx);
     void BootPlayerSave(const FBootContext& Ctx);
     void BootUIStyle(const FBootContext& Ctx);
 

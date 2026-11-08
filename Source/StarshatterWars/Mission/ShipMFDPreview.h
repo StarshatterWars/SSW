@@ -15,6 +15,7 @@ public:
     explicit FShipMFDPreview(bool bInPlayerPanel = false);
     ~FShipMFDPreview();
     bool SetDesign(const FShipDesign* Design);
+    bool SetWaypoint();
     void SetView(const FQuat& TargetRotation,const FVector& ToObserver,const FVector& ObserverUp);
     bool IsReady() const { return Visual.IsValid() && Target.IsValid(); }
     const FSlateBrush& GetBrush() const { return Brush; }
@@ -29,6 +30,8 @@ private:
     FVector LastObserverUp = FVector::ZeroVector;
     int32 StaticWarmupCaptures = 0;
     void Clear();
+    void RefreshStaticCapture();
+    bool BeginCapture(const FString& NextKey, const FBox& Bounds);
     FString Key;
     TUniquePtr<FPreviewScene> Scene;
     TWeakObjectPtr<AActor> Visual;

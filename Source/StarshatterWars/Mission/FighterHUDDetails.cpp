@@ -434,9 +434,18 @@ void SFighterHUDDetails::Refresh()
     }
     else
     {
-        if(TargetMFDPreview)TargetMFDPreview->SetDesign(nullptr);
+        AActor* SelectedObject = SelectedTarget.Get().Get();
+        const bool bWaypoint = IsValid(SelectedObject) && SelectedObject->IsA<AWaypointActor>();
         FMissionObjectData ObjectData;
-        if (ReadMissionObject(SelectedTarget.Get().Get(), P, R, ObjectData))
+        const bool bObjectAvailable = ReadMissionObject(SelectedObject, P, R, ObjectData);
+        if (bWaypoint && bObjectAvailable)
+        {
+            if (!TargetMFDPreview) TargetMFDPreview = MakeUnique<FShipMFDPreview>(true);
+            TargetMFDPreview->SetWaypoint();
+        }
+        else if (TargetMFDPreview)
+            TargetMFDPreview->SetDesign(nullptr);
+        if (bObjectAvailable)
         {
             bHasTarget = true;
             TargetName = ObjectData.Name; TargetClass = ObjectData.Type;
@@ -961,7 +970,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         if(TargetMFDPreview && TargetMFDPreview->IsReady())
             FSlateDrawElement::MakeBox(E,L+1,
                 G.ToPaintGeometry(FVector2f(176*Scale,88*Scale),FSlateLayoutTransform(FVector2f(P+FVector2D(0,22)*Scale))),
-                &TargetMFDPreview->GetBrush(),ESlateDrawEffect::None,ShipHealthColor(TargetHull));
+                &TargetMFDPreview->GetBrush(),ESlateDrawEffect::None,TargetHull < 0 ? FLinearColor::White : ShipHealthColor(TargetHull));
         else if(TargetHull<0)
             Icon(P+FVector2D(48,24)*Scale,TargetBrush,TargetTexture.IsValid(),TargetHull);
         ShipText(P+FVector2D(0,112)*Scale,

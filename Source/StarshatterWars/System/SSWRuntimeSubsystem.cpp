@@ -1807,6 +1807,42 @@ void USSWRuntimeSubsystem::UpdateMissionWaypoints()
 #endif
         }
     }
+    SimRegion* Sector = LiveSim->GetActiveRegion();
+    OrbitalRegion* Orbit = Sector ? Sector->GetOrbitalRegion() : nullptr;
+    Orbital* Body = Orbit ? Orbit->Primary() : nullptr;
+    auto* Environment = GetGameInstance()->GetSubsystem<UStarshatterEnvironmentSubsystem>();
+    if (Body && Environment)
+    {
+        const FString BodyName = UTF8_TO_TCHAR(Body->GetName());
+        const FMoon* Moon = Environment->MoonMapByName.Find(BodyName);
+        const FPlanet* Planet = Moon ? nullptr : Environment->PlanetMapByName.Find(BodyName);
+        const TArray<FNamedBodyLocation>* Locations = Moon ? &Moon->Locations : Planet ? &Planet->Locations : nullptr;
+        if (Locations)
+            for (const FNamedBodyLocation& Location : *Locations)
+            {
+                if (Location.Name.IsEmpty() || Location.Position.ContainsNaN()) continue;
+                const FString Key = FString::Printf(TEXT("Location:%hs:%s:%s"), Sector->GetName(), *BodyName, *Location.Name);
+                ActiveKeys.Add(Key);
+                AWaypointActor* Actor = MissionWaypoints.FindRef(Key).Get();
+                if (!IsValid(Actor))
+                {
+                    FActorSpawnParameters Params;
+                    Params.Owner = Builder;
+                    Params.OverrideLevel = Builder->GetLevel();
+                    Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+                    Actor = World->SpawnActor<AWaypointActor>(Params);
+                    if (!Actor) continue;
+                    Actor->NamedLocationType = StaticEnum<ELocationType>()->GetDisplayNameTextByValue(static_cast<int64>(Location.Type)).ToString();
+                    Actor->Description = Location.Name;
+                    Actor->SectorName = UTF8_TO_TCHAR(Sector->GetName());
+                    Actor->bShowWorldLabel = true;
+                    Actor->RefreshAppearance(true);
+                    MissionWaypoints.Add(Key, Actor);
+                }
+                Actor->LegacyLocation = Body->Location() + Location.Position - Sector->GetLocation();
+                Actor->SetActorLocation(GetVisualLocationForRegion(Sector, OtherHand(Actor->LegacyLocation)));
+            }
+    }
     for (auto It = MissionWaypoints.CreateIterator(); It; ++It)
         if (!ActiveKeys.Contains(It.Key())) { if (It.Value().IsValid()) It.Value()->Destroy(); It.RemoveCurrent(); }
 }

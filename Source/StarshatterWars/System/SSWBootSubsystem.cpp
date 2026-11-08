@@ -47,7 +47,6 @@
 #include "StarshatterGameDataSubsystem.h"
 #include "StarshatterShipDesignSubsystem.h"
 #include "StarshatterPlayerSubsystem.h"
-#include "StarshatterFormSubsystem.h"
 #include "StarshatterSystemDesignSubsystem.h"
 #include "StarshatterWeaponDesignSubsystem.h"
 #include "StarshatterAssetRegistrySubsystem.h"
@@ -122,7 +121,6 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Collection.InitializeDependency(UStarshatterControlsSubsystem::StaticClass());
     Collection.InitializeDependency(UStarshatterKeyboardSubsystem::StaticClass());
     Collection.InitializeDependency(UStarshatterPlayerSubsystem::StaticClass());
-    Collection.InitializeDependency(UStarshatterFormSubsystem::StaticClass());
 
     Collection.InitializeDependency(UStarshatterGameDataSubsystem::StaticClass());
 
@@ -176,7 +174,6 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
         BootVideo(Ctx);
         BootControls(Ctx);
         BootKeyboard(Ctx);
-        BootForms(Ctx);
         BootPlayerSave(Ctx);
 
         // Temporary behavior.
@@ -229,7 +226,6 @@ bool USSWBootSubsystem::BuildContext(FBootContext& OutCtx)
     OutCtx.ControlsSS = OutCtx.GI->GetSubsystem<UStarshatterControlsSubsystem>();
     OutCtx.KeyboardSS = OutCtx.GI->GetSubsystem<UStarshatterKeyboardSubsystem>();
     OutCtx.PlayerSS = OutCtx.GI->GetSubsystem<UStarshatterPlayerSubsystem>();
-    OutCtx.FormSS = OutCtx.GI->GetSubsystem<UStarshatterFormSubsystem>();
 
     OutCtx.ShipDesignSS = OutCtx.GI->GetSubsystem<UStarshatterShipDesignSubsystem>();
     OutCtx.SystemDesignSS = OutCtx.GI->GetSubsystem<UStarshatterSystemDesignSubsystem>();
@@ -434,14 +430,6 @@ void USSWBootSubsystem::BootKeyboard(const FBootContext& Ctx)
     }
 
     Ctx.KeyboardSS->ApplySettingsToRuntime(this);
-}
-
-void USSWBootSubsystem::BootForms(const FBootContext& Ctx)
-{
-    if (!Ctx.FormSS)
-        return;
-
-    // Ctx.FormSS->BootLoadForms();
 }
 
 void USSWBootSubsystem::BootPlayerSave(const FBootContext& Ctx)

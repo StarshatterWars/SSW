@@ -711,15 +711,28 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
         if (DebriefResult.bSuccess) MissionPtr->SetComplete(true);
     }
     if (!SimPtr || !MissionPtr || (RecordedMission==MissionPtr && RecordedStartTime==SimPtr->StartTime())) return;
+    const bool bStoryMission = MissionPtr->IsStoryMission();
     // Snapshot before CommitMission clears ShipStats. Save evidence and score separately.
     if (auto* GI=Cast<USSWGameInstance>(GetGameInstance()))
     {
-        if (DebriefResult.bSuccess && CampaignPtr && CampaignPtr->OwnsMission(MissionPtr)
+        if (DebriefResult.bSuccess && CampaignPtr && (bStoryMission || CampaignPtr->OwnsMission(MissionPtr))
             && !CampaignPtr->IsCutsceneMission(MissionPtr->GetIdentity()))
             if (auto* Players=GI->GetSubsystem<UStarshatterPlayerSubsystem>())
             {
                 auto& Info=Players->GetMutablePlayerInfo();
-                Info.MarkMissionCompleted(CampaignPtr->GetCampaignId(),MissionPtr->GetIdentity());
+                const bool bFirstCompletion = Info.MarkMissionCompleted(CampaignPtr->GetCampaignId(), MissionPtr->GetIdentity());
+                if (bStoryMission && bFirstCompletion)
+                {
+                    const int32 Bonus = MissionPtr->GetStoryPoints();
+                    if (auto* Pilot = PlayerCharacter::GetCurrentPlayer())
+                    {
+                        Pilot->AddPoints(Bonus);
+                        Info.PlayerPoints = Pilot->GetPoints();
+                    }
+                    Points += Bonus;
+                    if (UTextBlock* MissionScore = GetLabel(211))
+                        MissionScore->SetText(FText::FromString(FString::Printf(TEXT("%d points (%d story completion)"), Points, Bonus)));
+                }
                 if(CampaignPtr->GetCampaignId()==1 && MissionPtr->GetIdentity()==103
                     && MissionPtr->GetMissionType()==int(EMissionType::TRAINING))
                 {
@@ -727,21 +740,27 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
                     if(auto* Pilot=PlayerCharacter::GetCurrentPlayer()){Pilot->CompleteFlightTraining();Info.Rank=Pilot->GetRank();}
                 }
                 Players->MarkDirty();
-                if (!Players->SavePlayer(true))
+                if (!(bStoryMission ? Players->SaveActivePlayerProgress() : Players->SavePlayer(true)))
                     UE_LOG(LogTemp,Warning,TEXT("[MissionDebrief] Could not save player mission completion"));
             }
         if (UCampaignSave* Save=GI->CampaignSave; Save && CampaignPtr
-            && Save->CampaignIndex==CampaignPtr->GetCampaignId() && CampaignPtr->OwnsMission(MissionPtr))
+            && Save->CampaignIndex==CampaignPtr->GetCampaignId() && (bStoryMission || CampaignPtr->OwnsMission(MissionPtr)))
         {
             FMissionDebriefRecord Record;
             Record.MissionId=MissionPtr->GetIdentity(); Record.MissionName=ANSI_TO_TCHAR(MissionPtr->GetName());
-            if (auto* Players=GI->GetSubsystem<UStarshatterPlayerSubsystem>()) Record.Pilot=Players->GetPlayerInfo().Name;
+            if (auto* Players = GI->GetSubsystem<UStarshatterPlayerSubsystem>())
+            {
+                Record.Pilot = Players->GetPlayerInfo().Name;
+                if (bStoryMission) Record.PilotProfileSlot = Players->GetActiveSavedPlayerSlot();
+            }
+            Record.bStoryMission = bStoryMission;
+            Record.bStoryCompleted = bStoryMission && DebriefResult.bSuccess;
             Record.Outcome=DebriefResult.Outcome; Record.Evidence=DebriefResult.Reason;
             Record.Points=Points; Record.RecordedAt=FDateTime::UtcNow();
             Save->MissionDebriefs.Add(Record);
             if (DebriefResult.bSuccess)
             {
-                Save->RecordCompletedMission(CampaignPtr,MissionPtr);
+                if (!bStoryMission) Save->RecordCompletedMission(CampaignPtr,MissionPtr);
                 if(CampaignPtr->GetCampaignId()==1 && MissionPtr->GetIdentity()==103
                     && MissionPtr->GetMissionType()==int(EMissionType::TRAINING)) Save->bTrainingGraduate=true;
             }

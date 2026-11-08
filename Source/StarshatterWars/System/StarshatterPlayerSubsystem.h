@@ -58,6 +58,7 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Starshatter|PlayerSave")
     bool SavePlayer(bool bForce = false);
+    bool SaveActivePlayerProgress();
 
 
     UFUNCTION(BlueprintCallable,Category="Starshatter|PlayerSave")

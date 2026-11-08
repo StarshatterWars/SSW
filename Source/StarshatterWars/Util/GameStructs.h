@@ -1748,6 +1748,32 @@ struct FRegion : public FTableRowBase {
 	}
 };
 
+UENUM(BlueprintType)
+enum class ELocationType : uint8
+{
+    Landmark,
+    City,
+    Airbase,
+    Installation,
+    TargetArea
+};
+
+USTRUCT(BlueprintType)
+struct FNamedBodyLocation
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString Name;
+
+    /** Legacy Cartesian offset in meters from the owning body. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FVector Position = FVector::ZeroVector;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    ELocationType Type = ELocationType::Landmark;
+};
+
 USTRUCT(BlueprintType)
 struct FMoon : public FTableRowBase {
 	GENERATED_BODY()
@@ -1786,6 +1812,9 @@ struct FMoon : public FTableRowBase {
 	EPlanetType  PlanetType = EPlanetType::Terran;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FRegion> Region; 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FNamedBodyLocation> Locations;
 
 	FMoon() {
 		Name = "";
@@ -1860,6 +1889,9 @@ struct FPlanet : public FTableRowBase {
 	TArray<FRegion> Region;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	TArray<FMoon> Moon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FNamedBodyLocation> Locations;
 
 	FPlanet() {
 		Name = "";
@@ -2833,6 +2865,13 @@ USTRUCT(BlueprintType)
 struct FS_CampaignMission : public FTableRowBase {
 
 	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 StoryCampaignId = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString StoryUnlockScene;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 StoryPoints = 0;
 
 	UPROPERTY()
 	FName RowName;
@@ -4457,7 +4496,7 @@ struct FCampaignMissionReq
 	UPROPERTY() uint64 StartUniverseSeconds = 0;    // absolute universe time
 	UPROPERTY() int32 OwningIff = -1;
 
-	// “Primary group” in SS terms:
+	// ï¿½Primary groupï¿½ in SS terms:
 	UPROPERTY() int32 PrimaryGroupId = -1;
 	UPROPERTY() ECOMBATGROUP_TYPE PrimaryGroupType = ECOMBATGROUP_TYPE::UNKNOWN;
 
@@ -4632,7 +4671,7 @@ enum class EStarshatterInputAction : uint8
 	PlusZ                   UMETA(DisplayName = "Translate +Z"),         // legacy KEY_PLUS_Z
 	MinusZ                  UMETA(DisplayName = "Translate -Z"),         // legacy KEY_MINUS_Z
 
-	// Primary “actions” (legacy KEY_ACTION_0/1)
+	// Primary ï¿½actionsï¿½ (legacy KEY_ACTION_0/1)
 	Action0                 UMETA(DisplayName = "Action 0"),
 	Action1                 UMETA(DisplayName = "Action 1"),
 
@@ -4808,7 +4847,7 @@ struct FStarshatterKeyboardConfig
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-// INPUT BINDINGS (ENHANCED INPUT–FRIENDLY)
+// INPUT BINDINGS (ENHANCED INPUTï¿½FRIENDLY)
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 USTRUCT(BlueprintType)

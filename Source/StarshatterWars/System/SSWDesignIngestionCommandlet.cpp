@@ -118,12 +118,12 @@ bool CheckTable(const UDataTable& Imported, const TCHAR* Name, bool bAllowEmpty)
     return true;
 }
 
-bool SaveStagedTable(UDataTable& Imported, const TCHAR* Name)
+bool SaveOutputTable(UDataTable& Imported, const TCHAR* Name, bool bStaged = true)
 {
     FString BaseName(Name);
     BaseName.RemoveFromStart(TEXT("DT_"));
-    const FString TestName = TEXT("DT_Test_") + BaseName;
-    const FString PackageName = TEXT("/Game/Editor/GeneratedDesigns/") + TestName;
+    const FString TestName = bStaged ? TEXT("DT_Test_") + BaseName : FString(Name);
+    const FString PackageName = (bStaged ? TEXT("/Game/Editor/GeneratedDesigns/") : TEXT("/Game/Game/")) + TestName;
     const FString ObjectPath = PackageName + TEXT(".") + TestName;
     auto* Package = CreatePackage(*PackageName);
     auto* Staged = LoadObject<UDataTable>(nullptr, *ObjectPath, nullptr, LOAD_NoWarn);
@@ -207,10 +207,15 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     Campaign->ZonesDataTable = Stage(TEXT("DT_CampaignZone"));
     Campaign->CutsceneDataTable = Stage(TEXT("DT_Cutscene"));
     Campaign->SingleMissionsDataTable = Stage(TEXT("DT_SingleMissions"));
-    const UDataTable* StoryMissions = Stage(TEXT("DT_StoryMissions"), true, true);
+    UDataTable* StoryMissions = Stage(TEXT("DT_StoryMissions"), true, true);
     if (!StoryMissions || StoryMissions->GetRowStruct() != FS_CampaignMission::StaticStruct())
     {
         UE_LOG(LogTemp, Error, TEXT("DT_StoryMissions must use FS_CampaignMission rows."));
+        return 1;
+    }
+    if (!Campaign->ImportStoryMissions(*StoryMissions))
+    {
+        UE_LOG(LogTemp, Error, TEXT("Story mission DEF validation failed."));
         return 1;
     }
     Campaign->MultiplayerMissionsDataTable = Stage(TEXT("DT_MultiplayerMissions"));
@@ -307,9 +312,11 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     if (FParse::Param(*Params, TEXT("WriteStaged")))
     {
         for (const auto& Table : Tables)
-            if (!SaveStagedTable(*Table.Table, Table.Name))
+            if (!SaveOutputTable(*Table.Table, Table.Name))
                 return 2;
     }
+    if (FParse::Param(*Params, TEXT("WriteStoryMissions")) &&
+        !SaveOutputTable(*StoryMissions, TEXT("DT_StoryMissions"), false)) return 2;
     return 0;
 #else
     return 1;
