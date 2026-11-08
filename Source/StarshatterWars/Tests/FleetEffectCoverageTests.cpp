@@ -55,7 +55,7 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
     ON_SCOPE_EXIT {World->DestroyWorld(false);};
     const bool bUseBootDesigns = IsRunningGame();
     if (bUseBootDesigns)
-        TestEqual(TEXT("Boot version shown by main menu"), Game::VersionInfo, FString(TEXT("6.0 Alpha 2")));
+        TestEqual(TEXT("Boot version shown by main menu"), Game::VersionInfo, FString(TEXT("6.0 Alpha 3")));
     int32 Checked=0;
     int32 MountShips=0;
     int32 MountedTurrets=0;
