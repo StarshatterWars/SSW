@@ -46,6 +46,9 @@
 // Helpers
 #include "FormattingUtils.h"
 #include "AwardInfoRegistry.h"
+#include "FactionInsignia.h"
+#include "Campaign.h"
+#include "CombatGroup.h"
 
 // Manager
 #include "MenuScreen.h"
@@ -396,6 +399,15 @@ void UPlayerDlg::BuildRosterPanel()
             S->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
     }
     BuildSavedPlayerControls();
+
+    EmpireLogo = WidgetTree->ConstructWidget<UImage>();
+    if (UVerticalBoxSlot* LogoSlot = LeftPanel->AddChildToVerticalBox(EmpireLogo))
+    {
+        LogoSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        LogoSlot->SetHorizontalAlignment(HAlign_Left);
+        LogoSlot->SetVerticalAlignment(VAlign_Bottom);
+        LogoSlot->SetPadding(FMargin(0.f, 16.f, 0.f, 12.f));
+    }
 }
 
 // ------------------------------------------------------------------------
@@ -415,20 +427,19 @@ void UPlayerDlg::BuildStatsRows()
     edt_name = MakeEditBox(false);
     edt_password = MakeEditBox(true);
     edt_callsign = MakeEditBox(false);
-    edt_squadron = MakeEditBox(false);
+    txt_current_unit = MakeValueText();
     edt_signature = MakeEditBox(false);
 
     AddStatRow(FText::FromString(TEXT("NAME")), edt_name);
     AddStatRow(FText::FromString(TEXT("PASSWORD")), edt_password);
     AddStatRow(FText::FromString(TEXT("CALLSIGN")), edt_callsign);
-    AddStatRow(FText::FromString(TEXT("SQUADRON")), edt_squadron);
+    AddStatRow(FText::FromString(TEXT("CURRENT UNIT")), txt_current_unit);
     AddStatRow(FText::FromString(TEXT("SIGNATURE")), edt_signature);
 
 
     ApplyDefaultEditBoxStyle(edt_name, 18);
     ApplyDefaultEditBoxStyle(edt_password, 18);
     ApplyDefaultEditBoxStyle(edt_callsign, 18);
-    ApplyDefaultEditBoxStyle(edt_squadron, 18);
     ApplyDefaultEditBoxStyle(edt_signature, 18);
 
     // READ-ONLY FIELDS
@@ -438,8 +449,6 @@ void UPlayerDlg::BuildStatsRows()
     txt_kills = MakeValueText();
     txt_losses = MakeValueText();
     txt_points = MakeValueText();
-    txt_rank = MakeValueText();
-    txt_empire = MakeValueText();
 
     AddStatRow(FText::FromString(TEXT("CREATED")), txt_created);
     AddStatRow(FText::FromString(TEXT("FLIGHT TIME")), txt_flighttime);
@@ -447,10 +456,6 @@ void UPlayerDlg::BuildStatsRows()
     AddStatRow(FText::FromString(TEXT("KILLS")), txt_kills);
     AddStatRow(FText::FromString(TEXT("LOSSES")), txt_losses);
     AddStatRow(FText::FromString(TEXT("POINTS")), txt_points);
-    AddStatRow(FText::FromString(TEXT("RANK")), txt_rank);
-
-    // FIXED: EMPIRE row uses txt_empire, not txt_rank
-    AddStatRow(FText::FromString(TEXT("EMPIRE")), txt_empire);
 
     img_rank = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("RankImage"));
     if (img_rank)
@@ -596,8 +601,6 @@ bool UPlayerDlg::UpdatePlayerFromUI_Subsystem()
     if (edt_callsign)
         Info.Callsign = edt_callsign->GetText().ToString().TrimStartAndEnd();
 
-    if (edt_squadron)
-        Info.Squadron = edt_squadron->GetText().ToString().TrimStartAndEnd();
 
     if (edt_signature)
         Info.Signature = edt_signature->GetText().ToString().TrimStartAndEnd();
@@ -642,7 +645,15 @@ void UPlayerDlg::RefreshUIFromSubsystem()
     // Editable fields
     if (edt_name)      edt_name->SetText(FText::FromString(Info.Name));
     if (edt_callsign)  edt_callsign->SetText(FText::FromString(Info.Callsign));
-    if (edt_squadron)  edt_squadron->SetText(FText::FromString(Info.Squadron));
+    if (txt_current_unit)
+    {
+        FString UnitName = TEXT("UNASSIGNED");
+        if (!bNewPilot)
+            if (Campaign* Live = Campaign::GetCampaign())
+                if (CombatGroup* Group = Live->GetPlayerGroup())
+                    UnitName = Group->GetDescription();
+        txt_current_unit->SetText(FText::FromString(UnitName));
+    }
     if (edt_signature) edt_signature->SetText(FText::FromString(Info.Signature));
 
     // Password not in FS_PlayerGameInfo (leave blank)
@@ -657,89 +668,23 @@ void UPlayerDlg::RefreshUIFromSubsystem()
     if (txt_losses)     txt_losses->SetText(FText::AsNumber(Info.PlayerLosses));
     if (txt_points)     txt_points->SetText(FText::AsNumber(Info.PlayerPoints));
 
-    // ------------------------------------------------------------
-    // Empire text
-    // ------------------------------------------------------------
-    if (txt_empire)
+    const UEnum* EmpireEnum = StaticEnum<EEMPIRE_NAME>();
+    const FString EmpireName = EmpireEnum && EmpireEnum->IsValidEnumValue(Info.Empire)
+        ? EmpireEnum->GetDisplayNameTextByValue(Info.Empire).ToString() : FString();
+    FactionInsignia::Set(EmpireLogo, EmpireName, 96.f);
+
+    if (img_rank)
     {
-        const UEnum* Enum = StaticEnum<EEMPIRE_NAME>();
-        if (Enum && Enum->IsValidEnumValue(Info.Empire))
-            txt_empire->SetText(Enum->GetDisplayNameTextByValue((int64)Info.Empire));
-        else
-            txt_empire->SetText(FText::FromString(TEXT("UNKNOWN EMPIRE")));
+        const bool bEnsignFloor = Info.bStartedAsEnsign || Info.bTrainingGraduate || Info.HasCompletedMission(1, 103);
+        const int32 RankId = bEnsignFloor
+            ? FMath::Max(Info.Rank, UAwardInfoRegistry::RankFromName(TEXT("Ensign"))) : Info.Rank;
+        const FRankInfo* Rank = UAwardInfoRegistry::FindRank(RankId);
+        UTexture2D* Texture = Rank ? Rank->SmallImage.LoadSynchronous() : nullptr;
+        img_rank->SetBrushFromTexture(Texture, true);
+        SetImageTextureFixed64(img_rank, Texture);
+        img_rank->SetVisibility(Texture ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
     }
-
-    // ------------------------------------------------------------
-    // GameData subsystem for Rank + Medals
-    // Rank is 0-based in save; tables are 1-based -> +1.
-    // ------------------------------------------------------------
-    const int32 RankId = Info.Rank + 1;
-
-    UStarshatterGameDataSubsystem* GD = nullptr;
-    if (UWorld* W = GetWorld())
-    {
-        if (UGameInstance* GI = W->GetGameInstance())
-            GD = GI->GetSubsystem<UStarshatterGameDataSubsystem>();
-    }
-
-    if (GD)
-    {
-        // -------------------------
-        // RANK (text + 64x64 icon)
-        // -------------------------
-        FRankInfo RankRow;
-        const bool bHaveRank = GD->GetRankInfo(RankId, RankRow);
-
-        if (txt_rank)
-        {
-            const FString RankNameStr = bHaveRank ? RankRow.Name : FString();
-            txt_rank->SetText(!RankNameStr.IsEmpty()
-                ? FText::FromString(RankNameStr)
-                : FText::FromString(TEXT("UNKNOWN RANK")));
-        }
-
-        if (img_rank)
-        {
-            UTexture2D* Tex = nullptr;
-
-            if (bHaveRank)
-            {
-                // NOTE: adjust field name if your struct uses SmallRankTexture etc.
-                if (RankRow.SmallImage.IsValid())
-                    Tex = RankRow.SmallImage.Get();
-                else if (!RankRow.SmallImage.IsNull())
-                    Tex = RankRow.SmallImage.LoadSynchronous();
-            }
-
-            img_rank->SetBrushFromTexture(Tex, true);
-            SetImageTextureFixed64(img_rank, Tex); // ensure brush ImageSize=64x64 + desired size override
-            img_rank->SetVisibility(Tex ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-        }
-
-        // -------------------------
-        // MEDALS (fixed 16-slot 4x4 board)
-        // bit 0..15 => MedalId 1..16
-        // -------------------------
-        //ApplyMedalsMask((uint32)Info.MedalsMask);
-        ApplyMedalsMask((uint32)Info.MedalsMask);
-    }
-    else
-    {
-        // Fallback: legacy registry for text only
-        if (txt_rank)
-        {
-            const TCHAR* RankName = UAwardInfoRegistry::RankName(RankId);
-            txt_rank->SetText((RankName && FCString::Strlen(RankName) > 0)
-                ? FText::FromString(RankName)
-                : FText::FromString(TEXT("UNKNOWN RANK")));
-        }
-
-        if (img_rank)
-            img_rank->SetVisibility(ESlateVisibility::Collapsed);
-
-        // If no GD, just dim/clear medals
-        ApplyMedalsMask((uint32)Info.MedalsMask);
-    }
+    ApplyMedalsMask((uint32)Info.MedalsMask);
 
     // ------------------------------------------------------------
     // Macros

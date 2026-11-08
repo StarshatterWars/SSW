@@ -100,5 +100,6 @@ protected:
 
 private:
     void ClearShipPreview();
+    void FramePreview(UStaticMeshComponent* Hull, AActor* Visual);
     TUniquePtr<Ship> PreviewShip;
 };

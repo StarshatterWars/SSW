@@ -6991,6 +6991,7 @@ Ship::ClearRadioOrders()
 {
 	if (radio_orders) {
 		radio_orders->SetAction(EInstruction::None);
+		radio_orders->SetRadioAction(RadioMessageAction::NONE);
 		radio_orders->ClearTarget();
 		radio_orders->SetLocation(FVector::ZeroVector);
 	}

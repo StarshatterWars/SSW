@@ -444,6 +444,37 @@ void UMissionBriefingDlg::UpdateLiveMission()
     if (bLiveMissionStarted && !bMissionCompleteHandedOff)
     {
         Sim* Simulation = Sim::GetSim();
+        Ship* Pilot = Simulation ? Simulation->GetPlayerShip() : nullptr;
+        SimElement* Flight = Pilot ? Pilot->GetElement() : nullptr;
+        if (!bPrimaryObjectivesAnnounced && Flight && !Pilot->IsDead() && !Pilot->IsDying())
+        {
+            bool bHasPrimary = false;
+            bool bComplete = true;
+            for (int32 Index = 0; Index < Flight->NumObjectives(); ++Index)
+            {
+                const Instruction* Objective = Flight->GetObjective(Index);
+                if (!Objective || Objective->GetPriority() != Instruction::PRIMARY) continue;
+                bHasPrimary = true;
+                bComplete &= Objective->GetStatus() == INSTRUCTION_STATUS::COMPLETE;
+            }
+            if (bHasPrimary && bComplete)
+            {
+                bPrimaryObjectivesAnnounced = true;
+                RadioView::Message("Mission objectives complete.");
+                if (Instruction* Return = Pilot->GetPendingRTBWaypoint();
+                    Return && Pilot->CanRequestAutoLand() && !Pilot->GetInbound())
+                {
+                    // The wingman follows the same flight plan. Skip remaining
+                    // outbound legs without reporting them as reached.
+                    ListIter<Instruction> Route = Flight->GetFlightPlan();
+                    while (++Route && Route.value() != Return)
+                        if (Route->GetStatus() <= INSTRUCTION_STATUS::ACTIVE)
+                            Route->SetStatus(INSTRUCTION_STATUS::SKIPPED);
+                    Flight->SetHoldTime(0);
+                    Pilot->SetAutoLand(true);
+                }
+            }
+        }
         // A recovered player stays parked until the debrief has been presented.
         if (Simulation && (Simulation->IsComplete() || Simulation->HasPlayerDocked()))
         {
@@ -2814,6 +2845,7 @@ bool UMissionBriefingDlg::StartLiveMission()
     Simulation->OnMissionUnloading.AddUObject(this, &UMissionBriefingDlg::HandleSimulationUnloading);
     Simulation->LoadMission(MissionPtr, false);
     bLiveMissionStarted = true;
+    bPrimaryObjectivesAnnounced = false;
     bMissionCompleteHandedOff = false;
     Simulation->ExecMission();
     if (!Simulation->GetActiveRegion() || !Simulation->GetPlayerShip()) return false;

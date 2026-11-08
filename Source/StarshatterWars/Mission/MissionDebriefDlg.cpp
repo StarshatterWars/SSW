@@ -795,12 +795,16 @@ void UMissionDebriefDlg::OnCloseClicked()
     PlayerCharacter* PlayerObj = PlayerCharacter::GetCurrentPlayer();
     if (PlayerObj && PlayerObj->ShowAward())
     {
-        if (Manager)
+        if (Manager && Manager->GetAwardDlg())
         {
             Manager->ShowAwardDlg();
+            return;
         }
-        else if (GetMenuManager()) GetMenuManager()->ShowAwardDlg();
-        return;
+        if (UMenuScreen* Menu = GetMenuManager())
+        {
+            Menu->ShowAwardDlg();
+            return;
+        }
     }
 
     UGameInstance* GI = GetGameInstance();

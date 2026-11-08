@@ -1162,7 +1162,7 @@ void UMenuScreen::ShowTacRefDlg()
 void UMenuScreen::ShowAwardDlg()
 {
     HideAll();
-    EnsureDialog<UAwardShowDlg>(AwardDlgClass, AwardDlg);
+    EnsureDialog<UAwardShowDlg>(AwardDlgClass ? AwardDlgClass : TSubclassOf<UAwardShowDlg>(UAwardShowDlg::StaticClass()), AwardDlg);
     if(AwardDlg)
     {
         if(auto* P=PlayerCharacter::GetCurrentPlayer();P && P->ShowAward())

@@ -149,6 +149,14 @@ FString PlayerCharacter::AwardDesc() const
     if (PendingAwardId == 0)
         return FString();
 
+    if (bPendingAwardIsRank)
+    {
+        if (const FRankInfo* Row = UAwardInfoRegistry::FindRank(PendingAwardId); Row && !Row->AwardText.IsEmpty())
+            return Row->AwardText;
+    }
+    else if (const FMedalInfo* Row = UAwardInfoRegistry::FindMedal(PendingAwardId); Row && !Row->AwardText.IsEmpty())
+        return Row->AwardText;
+
     const TCHAR* T = bPendingAwardIsRank
         ? UAwardInfoRegistry::RankDescription(PendingAwardId)
         : UAwardInfoRegistry::MedalDescription(PendingAwardId);
@@ -262,10 +270,16 @@ void PlayerCharacter::SetCreateDate(int32 InUtcSeconds)
 
 void PlayerCharacter::CompleteFlightTraining()
 {
-    const int32 Before=GetRank();
-    bTrainingGraduate=true; bDirty=true;
-    const int32 After=GetRank();
-    if(After>Before){PendingAwardId=After; bPendingAwardIsRank=true; Rank=After;}
+    if (bTrainingGraduate) return;
+    bTrainingGraduate = true;
+    bDirty = true;
+    Rank = GetRank();
+    const int32 EnsignRank = UAwardInfoRegistry::RankFromName(TEXT("Ensign"));
+    if (EnsignRank > 0 && Rank == EnsignRank)
+    {
+        PendingAwardId = EnsignRank;
+        bPendingAwardIsRank = true;
+    }
 }
 
 void PlayerCharacter::SetRank(int32 RankId)

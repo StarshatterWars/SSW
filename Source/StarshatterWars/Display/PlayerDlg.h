@@ -146,7 +146,7 @@ protected:
     TObjectPtr<UEditableTextBox> edt_callsign = nullptr;
 
     UPROPERTY()
-    TObjectPtr<UEditableTextBox> edt_squadron = nullptr;
+    TObjectPtr<UTextBlock> txt_current_unit = nullptr;
 
     UPROPERTY()
     TObjectPtr<UEditableTextBox> edt_signature = nullptr;
@@ -170,10 +170,7 @@ protected:
     TObjectPtr<UTextBlock> txt_points = nullptr;
 
     UPROPERTY()
-    TObjectPtr<UTextBlock> txt_empire = nullptr;
-
-    UPROPERTY()
-    TObjectPtr<UTextBlock> txt_rank = nullptr;
+    TObjectPtr<UImage> EmpireLogo = nullptr;
 
     UPROPERTY()
     TObjectPtr<UImage> img_rank = nullptr;

@@ -343,6 +343,8 @@ bool TacticalAI::ProcessOrders()
 
 		case RadioMessageAction::WEP_HOLD:
 		case RadioMessageAction::FORM_UP:
+			if (ship_ai->GetType() == ESteerAIType::FIGHTER && ship->GetElementIndex() > 1)
+				ship_ai->SetWard(nullptr);
 			roe = NONE;
 			ship_ai->DropTarget(5);
 			break;

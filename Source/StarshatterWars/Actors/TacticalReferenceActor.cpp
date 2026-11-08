@@ -33,7 +33,7 @@ ATacticalReferenceActor::ATacticalReferenceActor()
     Arm->bDoCollisionTest = false;
 
     Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
-    Camera->SetupAttachment(Arm);
+    Camera->SetupAttachment(Arm, USpringArmComponent::SocketName);
 
     MessageText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("MessageText"));
     MessageText->SetupAttachment(Root);
@@ -133,6 +133,9 @@ void ATacticalReferenceActor::ShowShip(const FString& DesignName)
                     VisualShip->BindRuntimeShip(PreviewShip.Get());
                     VisualShip->SetActorTickEnabled(false);
                 }
+                VisualShip->SetActorHiddenInGame(false);
+                VisualShip->HullMesh->SetVisibility(true);
+                FramePreview(VisualShip->HullMesh, VisualShip);
                 ShowUnavailableMessage(false);
                 return;
             }
@@ -159,7 +162,24 @@ void ATacticalReferenceActor::SetDisplayMesh(UStaticMesh* Mesh)
     if (!Mesh) return;
     ShipMesh->SetStaticMesh(Mesh);
     ShipMesh->SetVisibility(true);
+    ShipMesh->SetRelativeLocation(FVector::ZeroVector);
+    FramePreview(ShipMesh, nullptr);
     ShowUnavailableMessage(false);
+}
+
+void ATacticalReferenceActor::FramePreview(UStaticMeshComponent* Hull, AActor* Visual)
+{
+    const FBoxSphereBounds Bounds = Hull->CalcBounds(Hull->GetComponentTransform());
+    const FVector Offset = GetActorLocation() - Bounds.Origin;
+    if (Visual) Visual->AddActorWorldOffset(Offset);
+    else Hull->AddWorldOffset(Offset);
+
+    // Fit the same preview area for small fighters and large capital ships.
+    const float Radius = FMath::Max(1.0, Bounds.SphereRadius);
+    MinDistance = Radius * 2.0f;
+    MaxDistance = Radius * 20.0f;
+    Distance = Radius * 5.0f;
+    ApplyView();
 }
 
 void ATacticalReferenceActor::AddOrbitDelta(float YawDelta, float PitchDelta)

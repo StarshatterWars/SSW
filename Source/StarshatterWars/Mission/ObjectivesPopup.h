@@ -88,7 +88,10 @@ private:
         if(Element->NumObjectives()>0){
             Body+=TEXT("\n\nELEMENT OBJECTIVES\n");
             for(int32 I=0;I<Element->NumObjectives();++I)if(auto* O=Element->GetObjective(I)){
-                Body+=TEXT("[")+String(Instruction::StatusName(O->GetStatus()))+TEXT("] ");
+                if (O->GetStatus() == INSTRUCTION_STATUS::COMPLETE)
+                    Body += TEXT("\u2713 ");
+                else
+                    Body += TEXT("[") + String(Instruction::StatusName(O->GetStatus())) + TEXT("] ");
                 Body+=String(O->GetShortDescription())+TEXT("\n");
             }
         }

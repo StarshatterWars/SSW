@@ -20,6 +20,7 @@
 #include "Components/CanvasPanel.h"
 #include "MenuScreen.h"
 #include "AwardInfoRegistry.h"
+#include "AudioRouting.h"
 
 // UMG:
 #include "Components/TextBlock.h"
@@ -135,7 +136,7 @@ FString UAwardShowDlg::GetLegacyFormText() const
 {
     // You did not provide AwardShowDlg.frm in the snippet.
     // Return empty for now so BaseScreen does not attempt to parse.
-    // If you paste the FORM, I’ll embed it exactly like AwardDlg.
+    // If you paste the FORM, Iï¿½ll embed it exactly like AwardDlg.
     return FString();
 }
 
@@ -154,6 +155,10 @@ void UAwardShowDlg::ShowDialog()
     SetVisibility(ESlateVisibility::Visible);
 
     ShowAward();
+    if (Rank >= 0)
+        if (const FRankInfo* Row = UAwardInfoRegistry::FindRank(Rank))
+            if (USoundBase* Sound = Row->GrantSound.LoadSynchronous())
+                SSWAudioRouting::Play2D(this, Sound, EStarshatterAudioChannel::Voice);
 
     bExitLatch = true;
 }
@@ -182,8 +187,9 @@ void UAwardShowDlg::ShowAward()
 
         if (lbl_info)
         {
-            // Assuming RankDescription returns FString/Text-compatible.
-            lbl_info->SetText(FText::FromString(PlayerCharacter::RankDescription(Rank)));
+            const FRankInfo* Row = UAwardInfoRegistry::FindRank(Rank);
+            lbl_info->SetText(Row && !Row->AwardText.IsEmpty() ? FText::FromString(Row->AwardText)
+                : FText::FromString(PlayerCharacter::RankDescription(Rank)));
         }
 
         if (img_rank)

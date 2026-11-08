@@ -130,6 +130,7 @@ protected:
     bool bClosingMissionPreview = false;
     bool StartLiveMission();
     bool bLiveMissionStarted = false;
+    bool bPrimaryObjectivesAnnounced = false;
     bool bMissionCompleteHandedOff = false;
     bool EnableMissionMenuInput();
     void DisableMissionMenuInput();

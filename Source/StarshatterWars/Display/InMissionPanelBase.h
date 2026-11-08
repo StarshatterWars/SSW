@@ -33,6 +33,7 @@ protected:
     virtual TSharedRef<SWidget> CreatePanelContent();
     virtual FText GetPanelCaption() const;
     virtual bool UsesFlightPanelStyle() const { return false; }
+    virtual bool ShowsFooter() const { return true; }
     virtual bool UsesCheckmarkFooter() const { return UsesFlightPanelStyle(); }
     Ship* ResolvePanelShip() const;
 };

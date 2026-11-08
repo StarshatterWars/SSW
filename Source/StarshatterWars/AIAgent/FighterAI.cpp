@@ -681,6 +681,38 @@ FighterAI::Navigator()
         (navpt && navpt->GetStatus() == INSTRUCTION_STATUS::COMPLETE && navpt->GetHoldTime() > 0))
         hold = true;
 
+    if (ship->IsAirborne() && ship->GetFlightPhase() == EOPSMode::ACTIVE &&
+        !(inbound && inbound->Final()))
+    {
+        constexpr double Clearance = 2500.0;
+        constexpr double RecoveryLeadSeconds = 6.0;
+        const double VerticalSpeed = ship->GetVelocity().Y;
+        const double ProjectedClearance = ship->GetAltitudeAGL() +
+            FMath::Min(0.0, VerticalSpeed) * RecoveryLeadSeconds;
+        if (ProjectedClearance < Clearance)
+        {
+            const Camera& Frame = ship->GetCam();
+            const double Bank = FMath::Atan2(Frame.vrt().Y, Frame.vup().Y);
+            const double Pitch = FMath::Asin(FMath::Clamp(Frame.vpn().Y, -1.0, 1.0));
+            constexpr double ClimbPitch = 15.0 * DEGREES;
+
+            ship->SetDirectorInfo("Terrain recovery");
+            ship->ApplyRoll(FMath::Clamp(-Bank, -1.0, 1.0));
+            ship->ApplyYaw(0.0);
+            // Recover roll first when inverted so pitch does not point into terrain.
+            ship->ApplyPitch(Frame.vup().Y > 0.0
+                ? FMath::Clamp((Pitch - ClimbPitch) * 3.0, -1.0, 1.0) : 0.0);
+            ship->SetTransX(0.0);
+            ship->SetTransY(0.0);
+            ship->SetTransZ(0.0);
+            ship->SetThrottle(100);
+            ship->SetFLCSMode(EFLCSMode::AUTO);
+            AdjustDefenses();
+            ship->ExecFLCSFrame();
+            return;
+        }
+    }
+
     if (ship->GetMissionClockMS() < 10000) {
         if (ship->IsAirborne())
             Accumulate(SeekTarget());
@@ -695,14 +727,6 @@ FighterAI::Navigator()
             ship->RaiseGear();
 
         Accumulate(AvoidTerrain());
-        if (terrain_warning && ship->GetAltitudeAGL() < 2500) {
-            // Keep collision steering from fighting the terrain pull-up.
-            HelmControl();
-            ThrottleControl();
-            AdjustDefenses();
-            ship->ExecFLCSFrame();
-            return;
-        }
         Steer avoid = AvoidCollision();
 
         if (other && inbound && inbound->GetDeck() && inbound->Cleared()) {
@@ -1001,8 +1025,14 @@ FighterAI::ThrottleControl()
             if (lead)
                 desired = (lead->GetVelocity() | lead->GetHeading());
 
-            // try to prevent porpoising
-            if (FMath::Abs(slot_dist) < distance / 4.0) {
+            // An explicit regroup must close on the slot even when the gap is mostly lateral.
+            if (form_up && lead && distance > 10e3 && objective.Z > 0.0) {
+                throttle = 100.0;
+                brakes = 0.0;
+            }
+
+            // try to prevent porpoising near the formation
+            else if (FMath::Abs(slot_dist) < distance / 4.0) {
                 throttle = old_throttle;
             }
 

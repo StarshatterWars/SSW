@@ -92,7 +92,7 @@ void UInMissionPanelBase::NativeConstruct()
     MissionUIStyle::ApplyMenuButtonStyle(StyleButton, GetGameInstance());
     FooterButtonStyle = StyleButton->GetStyle();
 
-    if (UCanvasPanel* FooterCanvas = Cast<UCanvasPanel>(RuntimeHost->GetParent()))
+    if (UCanvasPanel* FooterCanvas = Cast<UCanvasPanel>(RuntimeHost->GetParent()); FooterCanvas && ShowsFooter())
     {
         if (!FooterWidgetHost)
             FooterWidgetHost = WidgetTree->ConstructWidget<UNativeWidgetHost>();
@@ -123,7 +123,7 @@ void UInMissionPanelBase::NativeConstruct()
                     .ToolTipText(FText::FromString(TEXT("Close")))
                     [CloseContent]]]);
     }
-    else
+    else if (ShowsFooter())
     {
         UE_LOG(LogTemp, Error, TEXT("%s: RuntimeHost must be a direct child of a CanvasPanel to position the footer."), *GetName());
     }

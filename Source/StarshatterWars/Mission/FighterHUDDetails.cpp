@@ -233,11 +233,11 @@ void SFighterHUDDetails::Construct(const FArguments& A)
     [ SNew(SOverlay)
         + SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Bottom)
         [ SNew(SBox)
-            .WidthOverride_Lambda([this]{ return 512.f * InformationScale; })
-            .HeightOverride_Lambda([this]{ return 256.f * InformationScale; })
+            .WidthOverride_Lambda([this]{ return 326.f * InformationScale; })
+            .HeightOverride_Lambda([this]{ return 124.f * InformationScale; })
             .Visibility_Lambda([this]{ return ShowHUD.Get() && bShowInformation && !InformationCaptions.IsEmpty() ? EVisibility::Visible : EVisibility::Collapsed; })
             [ SNew(SBox)
-                .Padding_Lambda([this]{ return FMargin(112,150,112,28) * InformationScale; })
+                .Padding_Lambda([this]{ return FMargin(12,29,12,10) * InformationScale; })
                 [ SAssignNew(InformationScroll,SScrollBox)
                     .Clipping(EWidgetClipping::ClipToBoundsAlways)
                     + SScrollBox::Slot()
@@ -1065,11 +1065,15 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         for (int32 I=0; I<MissileCount; ++I)
             Text(P+FVector2D(12+156*(I%2),65+18*(I/2))*Scale,MissileReadouts[I]);
     }
-    // Both panels share the same 512x256 native artwork extents and anchor.
-    for(int32 I=7;bShowInformation && !InformationCaptions.IsEmpty() && I<9;++I)
+    if (bShowInformation && !InformationCaptions.IsEmpty())
     {
-        const FVector2D D=FVector2D(256,256)*Scale;
-        Artwork(I,FVector2D(Size.X*0.5+(I==7?-D.X:0.0),Size.Y-D.Y),D);
+        const FVector2D D = FVector2D(326,124) * Scale;
+        const FVector2D P((Size.X - D.X) * 0.5, Size.Y - D.Y);
+        const FSlateBrush& Glass = FlightPanelStyle::Glass();
+        FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(P))),
+            &Glass,ESlateDrawEffect::None,Glass.TintColor.GetSpecifiedColor());
+        Text(P+FVector2D(12,8)*Scale,TEXT("INFORMATION"),HUDBlue);
+        Box(P+FVector2D(12,24)*Scale,FVector2D(302,1)*Scale,FlightPanelStyle::DividerColor());
     }
     if (IsRadioOpen())
     {
