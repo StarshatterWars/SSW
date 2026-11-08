@@ -67,21 +67,21 @@ flightdeck: {
 
 flightdeck: {
    name:       "Runway 31",
-   loc:        ( -320,   4,  -128),
-   cam:        (  200, 100,     0),
-   start:      (-2700, 500, -2500),
-   end:        ( -380,   4,  -190),
+   loc:        (-442, 4, -130),
+   cam:        (-570, 100, 390),
+   start:      (1930, 500, -2510),
+   end:        (-380, 4, -190),
 
-   approach:   ( -4e3, 750,  -4e3),
-   approach:   ( -5e3, 1e3,  -2e3),
-   approach:   ( -5e3, 1e3,   2e3),
-   approach:   ( -2e3, 1e3,   4e3),
+   approach:   (3430, 750, -3810),
+   approach:   (1430, 1e3, -4810),
+   approach:   (-2570, 1e3, -4810),
+   approach:   (-4570, 1e3, -1810),
 
-   runway:     ( -660,   4,  -460),
-   runway:     (  256,   4,   448),
+   runway:     (-110, 4, -470),
+   runway:     (-1018, 4, 446),
 
-   spot:       ( -192,   4,     0),
-   azimuth:    45,
+   spot:       (-570, 4, -2),
+   azimuth:    -45,
 
    recovery:   true,
    max_ships:  1,

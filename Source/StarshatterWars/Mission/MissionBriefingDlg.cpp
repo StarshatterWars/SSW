@@ -562,14 +562,8 @@ void UMissionBriefingDlg::BuildBriefingChrome()
     BriefingFrame->SetClipping(EWidgetClipping::ClipToBounds);
     UBorder* FrameBorder = WidgetTree->ConstructWidget<UBorder>();
     FrameBorder->SetPadding(FMargin(0.f));
-    FrameBorder->SetBrushColor(FLinearColor::Transparent);
-    if (UTexture2D* Panel = LoadObject<UTexture2D>(nullptr, TEXT("/Game/UI/Panel.Panel")))
-    {
-        FSlateBrush Brush;
-        Brush.SetResourceObject(Panel);
-        Brush.DrawAs = ESlateBrushDrawType::Image;
-        FrameBorder->SetBrush(Brush);
-    }
+    FrameBorder->SetBrush(*FCoreStyle::Get().GetBrush("WhiteBrush"));
+    FrameBorder->SetBrushColor(FLinearColor(0.10f, 0.11f, 0.12f, 1.f));
     BriefingFrame->SetContent(FrameBorder);
     UScaleBox* Fit = WidgetTree->ConstructWidget<UScaleBox>();
     Fit->SetStretch(EStretch::ScaleToFit);
@@ -932,6 +926,11 @@ void UMissionBriefingDlg::ClearStandaloneMission()
 void UMissionBriefingDlg::ShowMsnDlg()
 {
     CloseEmptySectorPreview();
+    // A briefing can open after another screen owned the previous presentation.
+    // Clear its world actors even when this dialog never started that mission.
+    if (UGameInstance* GI = GetGameInstance())
+        if (auto* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
+            Runtime->EndMissionPresentation();
     PackageIndex = -1;
     if (bStandaloneMission)
     {

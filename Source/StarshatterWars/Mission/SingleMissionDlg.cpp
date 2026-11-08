@@ -623,7 +623,8 @@ void USingleMissionDlg::SelectMissionAt(int32 Index)
                 : bUnavailable ? FLinearColor(1.f, 0.2f, 0.2f)
                 : i == Index ? SingleMissionColors::Selected : SingleMissionColors::Row;
             Style.Normal.TintColor = FSlateColor(Tint);
-            Style.Hovered.TintColor = FSlateColor(bCompleted || bUnavailable ? Tint : SingleMissionColors::Selected);
+            Style.Hovered.TintColor = FSlateColor(bCompleted ? FLinearColor(0.58f, 1.f, 0.65f)
+                : bUnavailable ? Tint : SingleMissionColors::Selected);
             Style.Pressed.TintColor = FSlateColor(bCompleted || bUnavailable ? Tint : SingleMissionColors::Accent);
             Button->SetStyle(Style);
         }

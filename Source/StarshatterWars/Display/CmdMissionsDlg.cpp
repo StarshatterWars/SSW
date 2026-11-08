@@ -959,6 +959,12 @@ void UCmdMissionsDlg::RefreshModernMissionRows()
         if (CampaignPtr && !CampaignPtr->IsMissionRankUnlocked(Item->MissionId))
             Button->SetToolTipText(FText::FromString(CampaignPtr->MissionRankRequirement(Item->MissionId)));
         Button->SetBackgroundColor(FLinearColor(0.16f, 0.23f, 0.31f, 1.f));
+        if (Item->MissionStatus == TEXT("Completed"))
+        {
+            FButtonStyle Style = Button->GetStyle();
+            Style.Hovered.TintColor = FSlateColor(FLinearColor(0.58f, 1.f, 0.65f));
+            Button->SetStyle(Style);
+        }
         UVerticalBox* Content = WidgetTree->ConstructWidget<UVerticalBox>();
         if (UButtonSlot* ButtonContentSlot = Cast<UButtonSlot>(Button->AddChild(Content)))
         {

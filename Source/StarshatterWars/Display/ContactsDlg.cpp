@@ -103,7 +103,7 @@ private:
                 Row->Name=ANSI_TO_TCHAR(Data->GetName());
                 Row->Type=ANSI_TO_TCHAR(Data->GetShipClassName());
                 Row->Range=FVector::Distance(Data->GetLocation(),Player->GetLocation())/1000.0;
-                const int Team=Simulation->GetMission()?Simulation->GetMission()->GetTeam():Player->GetIFF();
+                const int Team=Player->GetIFF();
                 Row->Enemy=Data->GetIFF()>0 && Data->GetIFF()!=Team;
                 if(Data->GetIFF()>0)Row->Color=Row->Enemy?FLinearColor::Red:FLinearColor(0.25f,0.65f,1,1);
                 if(!Row->IconLoadAttempted){
