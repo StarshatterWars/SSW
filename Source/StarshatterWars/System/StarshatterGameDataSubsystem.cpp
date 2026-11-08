@@ -408,7 +408,7 @@ void UStarshatterGameDataSubsystem::Initialize(FSubsystemCollectionBase& Collect
 
 	CutsceneDataTable = Assets->GetDataTable(TEXT("Data.CutsceneTable"), true);
 
-    StoryMissionsDataTable = Assets->GetDataTable(TEXT("Data.StoryMissionTable"), false);
+    StoryMissionsDataTable = Assets->GetDataTable(TEXT("Data.StoryMissionTable"), true);
     if (StoryMissionsDataTable && StoryMissionsDataTable->GetRowStruct() != FS_CampaignMission::StaticStruct())
     {
         UE_LOG(LogTemp, Error, TEXT("[StoryMissions] Data.StoryMissionTable must use FS_CampaignMission rows."));
