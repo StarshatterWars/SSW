@@ -41,7 +41,13 @@ bool FFirstRunPresentationTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Only Alliance and Marakan are first-run choices"),Setup->EmpireCombo->GetOptionCount(),2);
     TestEqual(TEXT("Dantari remains campaign-only"),Setup->EmpireCombo->FindOptionIndex(TEXT("Dantari Separatists")),INDEX_NONE);
     TestEqual(TEXT("Both flight models preserved"),Setup->PlayStyleCombo->GetOptionCount(),2);
-    TestEqual(TEXT("Both experience choices preserved"),Setup->ExperienceCombo->GetOptionCount(),2);
+    TArray<UWidget*> Widgets;
+    Setup->WidgetTree->GetAllWidgets(Widgets);
+    const int32 ComboCount = Widgets.FilterByPredicate([](const UWidget* Widget)
+    {
+        return Widget->IsA<UComboBoxString>();
+    }).Num();
+    TestEqual(TEXT("Only empire and flight model are selectable"), ComboCount, 2);
     Setup->NameEdit->SetText(FText::FromString(TEXT("Caloy")));Setup->CallsignEdit->SetText(FText::FromString(TEXT("Caloy")));
     auto* Menu=NewObject<UMenuDlg>(World);Menu->Initialize();auto MenuSlate=Menu->TakeWidget();
     auto* Logo=Cast<UImage>(Menu->WidgetTree->FindWidget(TEXT("SSWMenu_CircularLogo")));

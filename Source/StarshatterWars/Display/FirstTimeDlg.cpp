@@ -18,7 +18,6 @@
 
 #include "FirstTimeDlg.h"
 #include "FactionInsignia.h"
-#include "AwardInfoRegistry.h"
 #include "PlayerCharacter.h"
 #include "Campaign.h"
 #include "SSWGameInstance.h"
@@ -121,33 +120,12 @@ void UFirstTimeDlg::PopulateDefaultsIfNeeded()
         UE_LOG(LogFirstTimeDlg, Warning, TEXT("PlayStyleCombo is NULL (BindWidget mismatch)."));
     }
 
-    // Experience
-    if (ExperienceCombo)
-    {
-        if (ExperienceCombo->GetOptionCount() == 0)
-        {
-            ExperienceCombo->ClearOptions();
-            ExperienceCombo->AddOption(TEXT("Cadet (First timer)"));
-            ExperienceCombo->AddOption(TEXT("Ensign (Experienced)"));
-        }
-
-        if (ExperienceCombo->GetSelectedIndex() < 0)
-            ExperienceCombo->SetSelectedIndex(0);
-    }
-    else
-    {
-        UE_LOG(LogFirstTimeDlg, Warning, TEXT("ExperienceCombo is NULL (BindWidget mismatch)."));
-    }
-
-    // Name hint
     if (NameEdit && NameEdit->GetHintText().IsEmpty())
         NameEdit->SetHintText(FText::FromString(TEXT("Player Name")));
 
-    // Callsign hint
     if (CallsignEdit && CallsignEdit->GetHintText().IsEmpty())
         CallsignEdit->SetHintText(FText::FromString(TEXT("Player Callsign")));
 
-    // Empire (only the 3 you want selectable)
     PopulateEmpireOptionsIfNeeded();
 }
 
@@ -252,26 +230,8 @@ void UFirstTimeDlg::ApplyUiToPlayerInfo(FS_PlayerGameInfo& Info) const
         Info.GunSightMode = false;
     }
 
-    // -----------------------------
-    // Experience
-    // -----------------------------
-    int32 ExpIndex = 0;
-    if (ExperienceCombo)
-    {
-        ExpIndex = ExperienceCombo->GetSelectedIndex();
-        if (ExpIndex < 0) ExpIndex = 0;
-    }
-
-    Info.bStartedAsEnsign = ExpIndex > 0;
-    if (Info.bStartedAsEnsign)
-    {
-        Info.Rank = UAwardInfoRegistry::RankFromName(TEXT("Ensign"));
-    }
-    else
-    {
-        // First timer (don�t overwrite if you already have something meaningful)
-        if (Info.Rank < 0) Info.Rank = 0;
-    }
+    Info.Rank = 0;
+    Info.bStartedAsEnsign = false;
 }
 
 void UFirstTimeDlg::OnCancelClicked()
@@ -299,7 +259,7 @@ void UFirstTimeDlg::OnAcceptClicked()
     ApplyUiToPlayerInfo(Info);
     EnsureMinimalFirstRunDefaults(Info);
 
-    Info.Campaign = Info.bStartedAsEnsign ? Campaign::TRAINING_CAMPAIGN + 1 : Campaign::TRAINING_CAMPAIGN;
+    Info.Campaign = Campaign::TRAINING_CAMPAIGN;
     auto* GI = Cast<USSWGameInstance>(GetGameInstance());
     const auto* Data = GI ? GI->GetSubsystem<UStarshatterGameDataSubsystem>() : nullptr;
     const FS_Campaign* InitialCampaign = Data ? Data->GetCampaignByIndex1Based(Info.Campaign) : nullptr;
@@ -367,7 +327,7 @@ void UFirstTimeDlg::BuildModernDialog()
     FactionLogo=WidgetTree->ConstructWidget<UImage>();FactionInsignia::Set(FactionLogo,TEXT("Terellian"),42.f);
     HeaderRow->AddChildToHorizontalBox(FactionLogo)->SetPadding(FMargin(0,0,12,0));
     HeaderRow->AddChildToHorizontalBox(Text(TEXT("NEW PILOT"),26,true))->SetVerticalAlignment(VAlign_Center);Header->SetContent(HeaderRow);Column->AddChildToVerticalBox(Header)->SetPadding(FMargin(0,0,0,12));
-    auto* Intro=Text(TEXT("Create your pilot profile to begin."),16);Column->AddChildToVerticalBox(Intro)->SetPadding(FMargin(0,0,0,12));
+    auto* Intro=Text(TEXT("Create your pilot profile to begin Flight Training."),16);Column->AddChildToVerticalBox(Intro)->SetPadding(FMargin(0,0,0,12));
     auto Row=[&](const TCHAR* Label,UWidget* Input){auto* H=WidgetTree->ConstructWidget<UHorizontalBox>();
         auto* LabelBox=WidgetTree->ConstructWidget<USizeBox>();LabelBox->SetWidthOverride(140);LabelBox->SetContent(Text(Label,16));
         H->AddChildToHorizontalBox(LabelBox)->SetVerticalAlignment(VAlign_Center);
@@ -378,15 +338,15 @@ void UFirstTimeDlg::BuildModernDialog()
     CallsignEdit=WidgetTree->ConstructWidget<UEditableTextBox>(UEditableTextBox::StaticClass(),TEXT("ModernCallsignEdit"));
     for(auto* Edit:{NameEdit.Get(),CallsignEdit.Get()}){auto Style=Edit->GetWidgetStyle();Style.SetFont(MissionUIStyle::GetRowFont(16));
         Style.SetForegroundColor(FLinearColor::White);Style.SetBackgroundColor(FLinearColor(0.025f,0.045f,0.065f));Style.SetPadding(FMargin(10,5));Edit->SetWidgetStyle(Style);}
-    EmpireCombo=WidgetTree->ConstructWidget<UComboBoxString>();PlayStyleCombo=WidgetTree->ConstructWidget<UComboBoxString>();ExperienceCombo=WidgetTree->ConstructWidget<UComboBoxString>();
-    for(auto* Combo:{EmpireCombo.Get(),PlayStyleCombo.Get(),ExperienceCombo.Get()}){Combo->Font=MissionUIStyle::GetRowFont(15);Combo->ForegroundColor=FSlateColor(FLinearColor::White);
+    EmpireCombo=WidgetTree->ConstructWidget<UComboBoxString>();PlayStyleCombo=WidgetTree->ConstructWidget<UComboBoxString>();
+    for(auto* Combo:{EmpireCombo.Get(),PlayStyleCombo.Get()}){Combo->Font=MissionUIStyle::GetRowFont(15);Combo->ForegroundColor=FSlateColor(FLinearColor::White);
         auto ComboStyle=Combo->GetWidgetStyle();
         ComboStyle.ComboButtonStyle.ButtonStyle.Normal.TintColor=FSlateColor(FLinearColor(0.025f,0.045f,0.065f));
         ComboStyle.ComboButtonStyle.ButtonStyle.Hovered.TintColor=FSlateColor(FLinearColor(0.08f,0.16f,0.22f));
         ComboStyle.ComboButtonStyle.ButtonStyle.Pressed.TintColor=FSlateColor(FLinearColor(0.08f,0.16f,0.22f));
         Combo->SetWidgetStyle(ComboStyle);}
     EmpireCombo->OnSelectionChanged.AddUniqueDynamic(this,&UFirstTimeDlg::OnEmpireLogoChanged);
-    Row(TEXT("Pilot name"),NameEdit);Row(TEXT("Callsign"),CallsignEdit);Row(TEXT("Empire"),EmpireCombo);Row(TEXT("Flight model"),PlayStyleCombo);Row(TEXT("Experience"),ExperienceCombo);
+    Row(TEXT("Pilot name"),NameEdit);Row(TEXT("Callsign"),CallsignEdit);Row(TEXT("Empire"),EmpireCombo);Row(TEXT("Flight model"),PlayStyleCombo);
     auto* Actions=WidgetTree->ConstructWidget<UHorizontalBox>();
     auto Action=[&](TObjectPtr<UButton>& Button,const TCHAR* Color,const TCHAR* Icon,const TCHAR* Tooltip){
         auto* Box=WidgetTree->ConstructWidget<USizeBox>();Box->SetWidthOverride(72);Box->SetHeightOverride(48);

@@ -89,9 +89,6 @@ private:
     TObjectPtr<UComboBoxString> PlayStyleCombo;
 
     UPROPERTY(meta = (BindWidgetOptional))
-    TObjectPtr<UComboBoxString> ExperienceCombo;
-
-    UPROPERTY(meta = (BindWidgetOptional))
     TObjectPtr<UButton> AcceptBtn;
 
     UPROPERTY(meta = (BindWidgetOptional))
