@@ -1952,6 +1952,18 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     if (!FighterInputContext)
         FighterInputContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_Fighter.IMC_Fighter"));
     FighterInputContext=StarshatterInputBindings::RuntimeContext(FighterInputContext.Get(),this);
+    if (GearToggleAction && GearToggleAction->ValueType == EInputActionValueType::Boolean)
+    {
+        const auto HasGearMapping = [this](const UInputMappingContext* Context)
+        {
+            return Context && Context->GetMappings().ContainsByPredicate([this](const FEnhancedActionKeyMapping& Mapping)
+            {
+                return Mapping.Action.Get() == GearToggleAction.Get();
+            });
+        };
+        if (!HasGearMapping(FighterInputContext.Get()) && !HasGearMapping(MissionMenuContext.Get()))
+            MissionTargetContext->MapKey(GearToggleAction.Get(), EKeys::G);
+    }
     bAddedFighterInputContext = FighterInputContext && !Input->HasMappingContext(FighterInputContext.Get());
     if (bAddedFighterInputContext) Input->AddMappingContext(FighterInputContext.Get(), 1000);
     if (!FighterInputContext)
@@ -3344,6 +3356,7 @@ void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value,
     const bool Shift = PC && (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")));
     // Guard the unmodified F1/F2 actions when a chord fires in another IMC.
     if ((Command == 0 || Command == 2) && Shift) return;
+    if ((Command == 1 || Command == 3) && !Shift) return;
     if (Command >= 10)
     {
         const float Axis = Value.Get<float>();
@@ -3881,6 +3894,11 @@ void UMissionBriefingDlg::ToggleMissionAutoNav()
         SyncMissionNavigationTarget();
         return;
     }
+    if (Player->IsAutoNavEngaged())
+    {
+        Player->SetAutoNav(false);
+        return;
+    }
     // Explicit autonav input commits a selected route waypoint. Selection alone
     // never changes the flight plan. B on the current destination remains a toggle.
     if (AWaypointActor* Chosen = Cast<AWaypointActor>(SelectedMissionTarget.Get())) {
@@ -3909,7 +3927,7 @@ void UMissionBriefingDlg::ToggleMissionAutoNav()
             }
         }
     }
-    Player->SetAutoNav(!Player->IsAutoNavEngaged());
+    Player->SetAutoNav(true);
 }
 
 

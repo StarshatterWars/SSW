@@ -181,7 +181,7 @@ namespace
 static FVector2D GearButtonOrigin(FVector2D Size,float Scale,bool Mini)
 {
     return Mini ? FVector2D(Size.X*.5-330*Scale,20*Scale)+FVector2D(-49,78)*Scale
-                : FVector2D(180*Scale,Size.Y-208*Scale);
+                : FVector2D(182*Scale,Size.Y-36*Scale);
 }
 static FSlateRect CarrierLaunchButtonRect(const FVector2D& Size, float Scale)
 {
@@ -486,7 +486,7 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
         const bool bPreTakeoff = P && P->GetDock() && P->GetDock()->IsLaunchDeck() && P->GetFlightPhase()<EOPSMode::ACTIVE;
         if (!bPreTakeoff && CockpitDisplays && CockpitDisplays->HandleGearClick()) return FReply::Handled();
         const bool Mini=ThirdPerson.Get() && !bPreTakeoff && !IsCockpitDisplayActive();
-        if(!bPreTakeoff && !IsCockpitDisplayActive() && P && P->GetGear() && SSWGearIndicator::Contains(Local,GearButtonOrigin(Size,Scale,Mini),FVector2D(28,26)*Scale))
+        if(!bPreTakeoff && !IsCockpitDisplayActive() && (Mini || Modes[0] == EMode::Ship) && P && P->GetGear() && SSWGearIndicator::Contains(Local,GearButtonOrigin(Size,Scale,Mini),FVector2D(28,26)*Scale))
         {P->ToggleGear();Refresh();return FReply::Handled();}
     }
     const FVector2D Right(Size.X - 220.f * Scale, Size.Y - 215.f * Scale);
@@ -614,7 +614,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     const bool bMiniHUD = bHasPlayer && bThirdPerson && !bPreTakeoff && !IsCockpitDisplayActive();
     if (!IsCockpitDisplayActive())
     {
-    if(!bPreTakeoff && bHasPlayer && HUDPlayer && HUDPlayer->GetGear())SSWGearIndicator::Draw(E,G,L+5,GearButtonOrigin(Size,Scale,bMiniHUD),FVector2D(28,26)*Scale,HUDPlayer);
+    if(!bPreTakeoff && bHasPlayer && (bMiniHUD || Modes[0] == EMode::Ship) && HUDPlayer && HUDPlayer->GetGear())SSWGearIndicator::Draw(E,G,L+5,GearButtonOrigin(Size,Scale,bMiniHUD),FVector2D(28,26)*Scale,HUDPlayer);
     if (bHasPlayer && !ThirdPerson.Get() && !bPreTakeoff)
     {
 
@@ -735,13 +735,14 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
 
         MiniText(120,14,TEXT("VELOCITY"),10,Muted);
         const FString Speed=FString::Printf(TEXT("%.0f"),FlightSpeed);
-        MiniText(120,37,Speed,26,White);
+        const FLinearColor SpeedColor = bAugmenterActive ? Green : White;
+        MiniText(120,37,Speed,26,SpeedColor);
         const auto SpeedFont=FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(10,int(26*Scale)));
         const FVector2D SpeedExtent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Speed,SpeedFont);
         const auto UnitsFont=MissionUIStyle::GetInfoLabelFont(FMath::Max(9,int(10*Scale)));
         const FVector2D UnitsExtent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(TEXT("m/s"),UnitsFont);
         const FVector2D UnitsPosition=P+FVector2D(120*Scale+SpeedExtent.X+7*Scale,37*Scale+SpeedExtent.Y-UnitsExtent.Y);
-        FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(UnitsExtent),FSlateLayoutTransform(FVector2f(UnitsPosition))),TEXT("m/s"),UnitsFont,ESlateDrawEffect::None,Muted);
+        FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(UnitsExtent),FSlateLayoutTransform(FVector2f(UnitsPosition))),TEXT("m/s"),UnitsFont,ESlateDrawEffect::None,bAugmenterActive ? Green : Muted);
         const bool bAtmospheric = HUDPlayer && HUDPlayer->IsAirborne();
         if (bAtmospheric)
         {
@@ -824,7 +825,6 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             MiniText(366,62,NavReadouts[0],10,Muted,138);
         if (HUDPlayer && HUDPlayer->IsAirborne())
             MiniText(120,AttitudeReadoutY,FString::Printf(TEXT("MSL %.0f m"),HUDPlayer->GetAltitudeMSL()),10,Muted);
-        if(bAugmenterActive)MiniText(120,82,TEXT("AUG"),10,Green);
         if (bShowWeapons && !bCapitalWeapons)
         {
             MiniText(244,14,TEXT("WEAPONS"),10,Muted);

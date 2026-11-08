@@ -8,7 +8,7 @@
 
     ORIGINAL AUTHOR AND STUDIO:
     John DiCamillo / Destroyer Studios LLC
-    Copyright © 1997-2004. All Rights Reserved.
+    Copyright ï¿½ 1997-2004. All Rights Reserved.
 
     OVERVIEW
     ========
@@ -695,6 +695,14 @@ FighterAI::Navigator()
             ship->RaiseGear();
 
         Accumulate(AvoidTerrain());
+        if (terrain_warning && ship->GetAltitudeAGL() < 2500) {
+            // Keep collision steering from fighting the terrain pull-up.
+            HelmControl();
+            ThrottleControl();
+            AdjustDefenses();
+            ship->ExecFLCSFrame();
+            return;
+        }
         Steer avoid = AvoidCollision();
 
         if (other && inbound && inbound->GetDeck() && inbound->Cleared()) {

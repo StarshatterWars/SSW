@@ -696,13 +696,16 @@ CameraManager::ExecFrame(double seconds)
 	switch (op_mode) {
 	default:
 	case MODE_COCKPIT:      Cockpit(seconds);    break;
-	case MODE_CHASE:
-		// A runway roll uses the normal chase view while takeoff control is still held.
-		if (bCarrierLaunchCameraHeld && ship->GetFlightPhase() != EOPSMode::TAKEOFF)
+	case MODE_CHASE: {
+		// Keep the runway view until the fighter reaches the ground camera handoff altitude.
+		constexpr double GroundCameraHandoffMSL = 1000.0;
+		if (bCarrierLaunchCameraHeld &&
+			(ship->GetFlightPhase() != EOPSMode::TAKEOFF || ship->GetAltitudeMSL() < GroundCameraHandoffMSL))
 			LaunchBayChase(seconds);
 		else
 			Chase(seconds);
 		break;
+	}
 	case MODE_TARGET:       Target(seconds);     break;
 	case MODE_THREAT:       Threat(seconds);     break;
 	case MODE_VIRTUAL:      Virtual(seconds);    break;

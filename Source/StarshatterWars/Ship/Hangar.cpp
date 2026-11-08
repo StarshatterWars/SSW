@@ -245,7 +245,7 @@ Hangar::FinishPrep(HangarSlot* slot)
 			(ShipDesign*)slot->design,
 			ship->GetRegion()->GetName(),
 			InitialSpawnMap,
-			slot->iff,
+			slot->package ? slot->package->GetIFF() : slot->iff,
 			ship->GetCommandAILevel(),
 			slot->loadout);
 
@@ -417,7 +417,7 @@ Hangar::GotoActiveFlight(int squadron, int slot_index, SimElement* elem, int* lo
 				(ShipDesign*)slot->design,
 				ship->GetRegion()->GetName(),
 				spawn,
-				slot->iff,
+				elem->GetIFF(),
 				ship->GetCommandAILevel(),
 				slot->loadout);
 

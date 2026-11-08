@@ -2171,7 +2171,8 @@ Ship::LowerGear()
 
 bool Ship::CanRaiseGear() const
 {
-    if (!gear || (flight_phase!=EOPSMode::ACTIVE && flight_phase!=EOPSMode::APPROACH)) return false;
+    const bool bRunwayClimb = flight_phase == EOPSMode::TAKEOFF && IsAirborne() && GetAltitudeAGL() >= 50.0;
+    if (!gear || (!bRunwayClimb && flight_phase != EOPSMode::ACTIVE && flight_phase != EOPSMode::APPROACH)) return false;
     if (IsAirborne())
     {
         const double GroundLevel=GetLocation().Y-GetAltitudeAGL();
@@ -3460,14 +3461,17 @@ Ship::ExecFrame(double seconds)
         const FVector RunwayEnd = dock->RunwayPoint(1);
         const double RunwayLength = FMath::Max(0.0, FVector::DotProduct(RunwayEnd - RunwayStart, RunwayForward));
         const double RunwayTravel = FVector::DotProduct(GetLocation() - RunwayStart, RunwayForward);
-        // Match the fighter AI terrain-avoidance floor before allowing a turn.
-        const double Clearance = FMath::Max(2500.0, static_cast<double>(GetRadius()) + 50.0);
+        // Match the ground camera handoff while retaining legacy ground clearance.
+        constexpr double RunwayHandoffMSL = 1000.0;
+        if (gear && gear->GetState() == LandingGear::GEAR_DOWN)
+            RaiseGear();
         if (GetVelocity().IsNearlyZero())
         {
-            UE_LOG(LogTemp, Display, TEXT("[RunwayTakeoff][START] Fighter=%hs Length=%.2f Travel=%.2f AGL=%.2f Clearance=%.2f"),
-                GetName(), RunwayLength, RunwayTravel, GetAltitudeAGL(), Clearance);
+            UE_LOG(LogTemp, Display, TEXT("[RunwayTakeoff][START] Fighter=%hs Length=%.2f Travel=%.2f AGL=%.2f HandoffMSL=%.2f"),
+                GetName(), RunwayLength, RunwayTravel, GetAltitudeAGL(), RunwayHandoffMSL);
         }
-        if (RunwayTravel < RunwayLength + GetRadius() || GetAltitudeAGL() < Clearance)
+        if (RunwayTravel < RunwayLength + GetRadius() ||
+            GetAltitudeMSL() < RunwayHandoffMSL || GetAltitudeAGL() <= GetRadius())
         {
             constexpr double RotationSpeed = 200.0;
             constexpr double DepartureSpeed = 250.0;
@@ -3489,8 +3493,8 @@ Ship::ExecFrame(double seconds)
         if (launch_point && launch_point->GetStatus() <= INSTRUCTION_STATUS::ACTIVE)
             launch_point->SetStatus(INSTRUCTION_STATUS::COMPLETE);
 
-        UE_LOG(LogTemp, Display, TEXT("[RunwayTakeoff] Fighter='%hs' Travel=%.2f AGL=%.2f"),
-            GetName(), RunwayTravel, GetAltitudeAGL());
+        UE_LOG(LogTemp, Display, TEXT("[RunwayTakeoff] Fighter='%hs' Travel=%.2f MSL=%.2f AGL=%.2f"),
+            GetName(), RunwayTravel, GetAltitudeMSL(), GetAltitudeAGL());
     }
 
 	if (flight_phase == EOPSMode::LAUNCH ||
@@ -7233,9 +7237,25 @@ void Ship::ExecManualRotation(double Seconds)
         ClearManualRotationInput();
         return;
     }
+    const bool bAtmosphericTurn = IsAirborne() && GetFlightModel() >= 2 && IsDropship();
+    const double Turn = ManualRotationInput.Y;
+    const double Roll = ManualRotationInput.Z;
     ApplyPitch(IsAirborne() ? -ManualRotationInput.X : ManualRotationInput.X);
-    ApplyYaw(ManualRotationInput.Y);
-    ApplyRoll(ManualRotationInput.Z);
+    if (bAtmosphericTurn && FMath::IsNearlyZero(Roll, 0.001))
+    {
+        // Command a bank angle instead of rolling continuously while held.
+        // Level the wings on release and carry the new Arcade flight path forward.
+        constexpr double MaxTurnBank = PI / 6.0;
+        const double Bank = FMath::Atan2(GetCam().vrt().Y, GetCam().vup().Y);
+        const double DesiredBank = -Turn * MaxTurnBank;
+        ApplyRoll(FMath::Clamp((DesiredBank - Bank) / MaxTurnBank, -1.0, 1.0));
+        ApplyYaw(FMath::Clamp(-Bank / MaxTurnBank, -1.0, 1.0));
+    }
+    else
+    {
+        ApplyYaw(Turn);
+        ApplyRoll(Roll);
+    }
     if (design)
     {
         SetTransX(ManualTranslationInput.X * design->trans_x);

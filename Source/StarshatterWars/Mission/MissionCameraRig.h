@@ -189,8 +189,11 @@ struct FMissionCameraRig
             const FVector Start = HeldLaunchDeck->StartPoint();
             const FVector TubeForward = Player->GetCarrier()->GetCam().vpn().GetSafeNormal();
             const double ExitClearance = FMath::Max(1.0, double(Player->GetRadius()) * 1.5);
-            bLaunchDeckHold = Phase < EOPSMode::ACTIVE ||
-                FVector::DotProduct(Player->GetLocation() - Start, TubeForward) < ExitClearance;
+            constexpr double GroundCameraHandoffMSL = 1000.0;
+            bLaunchDeckHold = Player->IsAirborne()
+                ? Phase < EOPSMode::ACTIVE && Player->GetAltitudeMSL() < GroundCameraHandoffMSL
+                : Phase < EOPSMode::ACTIVE ||
+                    FVector::DotProduct(Player->GetLocation() - Start, TubeForward) < ExitClearance;
             if (!bLaunchDeckHold)
             {
                 // Start from the *last displayed* camera pose for a seamless

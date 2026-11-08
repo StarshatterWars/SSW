@@ -201,7 +201,7 @@ element: {
     mission: "Misc",
     intel: "Located",
     count: 4,
-    iff: 2,
+    iff: 1,
     playable: false,
     region: "Janek Station",
     loc: (70000, -10000, 0),

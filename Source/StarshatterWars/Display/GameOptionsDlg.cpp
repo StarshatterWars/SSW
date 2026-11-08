@@ -217,12 +217,15 @@ static void EnsureComboEmptyOrClear(UComboBoxString* Combo)
 void UGameOptionsDlg::BuildFlightModelListIfNeeded()
 {
     if (!FlightModelCombo) return;
-    if (FlightModelCombo->GetOptionCount() > 0) return;
+    if (FlightModelCombo->GetOptionCount() == 3 &&
+        FlightModelCombo->GetOptionAtIndex(0) == TEXT("STANDARD") &&
+        FlightModelCombo->GetOptionAtIndex(1) == TEXT("RELAXED") &&
+        FlightModelCombo->GetOptionAtIndex(2) == TEXT("ARCADE")) return;
 
     FlightModelCombo->ClearOptions();
+    FlightModelCombo->AddOption(TEXT("STANDARD"));
+    FlightModelCombo->AddOption(TEXT("RELAXED"));
     FlightModelCombo->AddOption(TEXT("ARCADE"));
-    FlightModelCombo->AddOption(TEXT("FLIGHTSIM"));
-    FlightModelCombo->AddOption(TEXT("EXPERT"));
     FlightModelCombo->SetSelectedIndex(0);
 }
 

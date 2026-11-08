@@ -5,4 +5,10 @@ void UMissionViewCameraComponent::GetCameraView(float DeltaTime,FMinimalViewInfo
 {
     Super::GetCameraView(DeltaTime,DesiredView);
     DesiredView.PerspectiveNearClipPlane=bCockpitView?.05f:-1.f;
+    if (bCockpitView)
+    {
+        DesiredView.PostProcessSettings.bOverride_MotionBlurAmount = true;
+        DesiredView.PostProcessSettings.MotionBlurAmount = 0.0f;
+        DesiredView.PostProcessBlendWeight = 1.0f;
+    }
 }

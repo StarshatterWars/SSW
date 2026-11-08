@@ -453,7 +453,9 @@ NavAI::HelmControl()
             }
         }
 
-        if (!ship->IsAirborne() || ship->GetAltitudeAGL() > 100)
+        // The player launch handoff retracts gear once. Keep pilot gear commands during AutoNav.
+        if ((!Sim::GetSim() || ship != Sim::GetSim()->GetPlayerShip()) &&
+            (!ship->IsAirborne() || ship->GetAltitudeAGL() > 100))
             ship->RaiseGear();
     }
 
