@@ -44,10 +44,14 @@ public:
 	void           EngageAutoNav();
 	void           DisengageAutoNav();
 	void           BeginRTBRecovery();
+	void           SelectRTBForAutoLand(bool select) { autoland_rtb = select; }
+	bool           IsAutoLandRTB() const { return autoland_rtb; }
+	bool           HasReachedRTB() const { return rtb_recovery; }
 
 protected:
 	bool           autonav = false;
 	bool           rtb_recovery = false;
+	bool           autoland_rtb = false;
 	double         recovery_call_delay = 0.0;
 };
 

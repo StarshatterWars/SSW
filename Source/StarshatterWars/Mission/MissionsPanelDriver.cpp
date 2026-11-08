@@ -528,7 +528,7 @@ void UMissionsPanelDriver::RefreshHeaderStatus()
         if (UStarshatterPlayerSubsystem* PlayerSS = GI->GetSubsystem<UStarshatterPlayerSubsystem>())
         {
             if (!PlayerSS->HasLoaded()) PlayerSS->LoadPlayer();
-            if (PlayerNameText) PlayerNameText->SetText(FText::FromString(PlayerSS->GetPlayerInfo().Name));
+            if (PlayerNameText) PlayerNameText->SetText(FText::FromString(PlayerSS->GetPlayerInfo().GetRankedDisplayName()));
         }
         if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>())
         {

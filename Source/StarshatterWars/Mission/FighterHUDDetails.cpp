@@ -1207,7 +1207,7 @@ void SFighterHUDDetails::BuildRadioRows(TArray<FString>& Labels, TArray<int32>& 
         Add(TEXT("Call finals"),RadioMessageAction::CALL_FINALS,P->GetInbound() && P->GetInbound()->Cleared());
         Labels.Add(P->IsAutoLandEngaged() ? TEXT("Disengage autoland") : TEXT("Engage autoland"));
         Commands.Add(10001);
-        Enabled.Add(P->IsAutoLandEngaged() ? P->GetFlightPhase() < EOPSMode::DOCKING : P->CanAutoLand());
+        Enabled.Add(P->IsAutoLandEngaged() ? P->GetFlightPhase() < EOPSMode::DOCKING : P->CanRequestAutoLand());
         Labels.Add(bILSMode ? TEXT("Hide ILS hoops") : TEXT("Show ILS hoops"));
         Commands.Add(10002);
         Enabled.Add(P->IsDropship());

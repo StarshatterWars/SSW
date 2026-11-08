@@ -106,7 +106,7 @@ void UInMissionPanelBase::NativeConstruct()
         FooterWidgetHost->SetContent(SAssignNew(FooterContent,SBox).VAlign(VAlign_Center));
         TSharedRef<SWidget> CloseContent = SNew(STextBlock).Text(StyleText->GetText())
             .Font(StyleText->GetFont()).ColorAndOpacity(FLinearColor::Black);
-        if (UsesFlightPanelStyle())
+        if (UsesCheckmarkFooter())
         {
             if (!FooterCheckIcon) FooterCheckIcon = WidgetTree->ConstructWidget<UImage>();
             MissionUIStyle::SetActionIcon(FooterCheckIcon,

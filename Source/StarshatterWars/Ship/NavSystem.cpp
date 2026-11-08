@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright 2025-2026. All Rights Reserved.
 
@@ -90,9 +90,9 @@ void NavSystem::ExecFrame(double seconds)
 			}
 		}
 	}
-	if (autonav && ship && !ship->GetNextNavPoint()) {
-        UE_LOG(LogTemp, Display, TEXT("[AutoNavCancel] No next route instruction Ship='%hs'"), ship->GetName());
-        autonav = false;
+	if (autonav && ship && (!ship->GetNextNavPoint() || (autoland_rtb && !IsPowerOn()))) {
+        UE_LOG(LogTemp, Display, TEXT("[AutoNavCancel] Route or navigation power unavailable Ship='%hs'"), ship->GetName());
+        DisengageAutoNav();
     }
 
 	energy = 0.0f;
@@ -132,6 +132,7 @@ void NavSystem::DisengageAutoNav()
 
 	autonav = false;
 	rtb_recovery = false;
+	autoland_rtb = false;
 }
 
 void NavSystem::BeginRTBRecovery()

@@ -166,7 +166,7 @@ void UMissionLoading::NativeConstruct()
     // Player name from subsystem
     if (PlayerNameText)
     {
-        PlayerNameText->SetText(FText::FromString(PlayerInfo.Name));
+        PlayerNameText->SetText(FText::FromString(PlayerInfo.GetRankedDisplayName()));
     }
 }
 

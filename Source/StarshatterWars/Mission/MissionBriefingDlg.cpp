@@ -275,7 +275,7 @@ void UMissionBriefingDlg::NativeConstruct()
 
     if (PlayerNameText)
     {
-        PlayerNameText->SetText(FText::FromString(PlayerInfo.Name));
+        PlayerNameText->SetText(FText::FromString(PlayerInfo.GetRankedDisplayName()));
 
         UE_LOG(LogTemp, Log,
             TEXT("[MissionBriefingDlg] Player Name: %s"),
@@ -1094,7 +1094,7 @@ void UMissionBriefingDlg::RefreshHeader()
     if (PlayerNameText)
         if (auto* GI = GetGameInstance())
             if (const auto* Players = GI->GetSubsystem<UStarshatterPlayerSubsystem>())
-                PlayerNameText->SetText(FText::FromString(Players->GetPlayerInfo().Name));
+                PlayerNameText->SetText(FText::FromString(Players->GetPlayerInfo().GetRankedDisplayName()));
     if (MissionNameText)
     {
         MissionNameText->SetText(

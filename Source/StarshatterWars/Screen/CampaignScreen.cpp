@@ -123,7 +123,7 @@ void UCampaignScreen::NativeConstruct()
 	// Player name
 	if (PlayerNameText)
 	{
-		PlayerNameText->SetText(FText::FromString(PlayerInfo.Name));
+		PlayerNameText->SetText(FText::FromString(PlayerInfo.GetRankedDisplayName()));
 		UE_LOG(LogTemp, Log, TEXT("[CampaignScreen] Player Name: %s"), *PlayerInfo.Name);
 	}
 

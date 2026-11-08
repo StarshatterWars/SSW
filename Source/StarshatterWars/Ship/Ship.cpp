@@ -3160,6 +3160,9 @@ Ship::CommandMode()
 Instruction*
 Ship::GetNextNavPoint()
 {
+    if (navsys && navsys->IsAutoLandRTB())
+        return GetPendingRTBWaypoint();
+
 	if (launch_point && launch_point->GetStatus() <= INSTRUCTION_STATUS::ACTIVE)
 		return launch_point;
 

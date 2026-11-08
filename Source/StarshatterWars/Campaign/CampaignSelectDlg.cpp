@@ -679,7 +679,7 @@ void UCampaignSelectDlg::PopulateCampaignDropdown()
 
     if (PlayerNameText)
     {
-        PlayerNameText->SetText(FText::FromString(PlayerSS->GetPlayerInfo().Name));
+        PlayerNameText->SetText(FText::FromString(PlayerSS->GetPlayerInfo().GetRankedDisplayName()));
     }
 
     int32 SelectedOptionIndex = 0;

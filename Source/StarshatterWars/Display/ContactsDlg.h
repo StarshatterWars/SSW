@@ -14,4 +14,5 @@ protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual TSharedRef<SWidget> CreatePanelContent() override;
     virtual FText GetPanelCaption() const override;
+    virtual bool UsesCheckmarkFooter() const override { return true; }
 };

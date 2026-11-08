@@ -464,7 +464,9 @@ public:
     Ship*                   GetAutoTrackTarget() const;
     void                    SetAutoNav(bool engage = true);
     bool                    CanAutoLand() const;
-    bool                    IsAutoLandEngaged() const { return bAutoLand; }
+    bool                    CanRequestAutoLand() const;
+    Instruction*            GetPendingRTBWaypoint() const;
+    bool                    IsAutoLandEngaged() const;
     bool                    SetAutoLand(bool engage = true);
     void                    CommandMode();
 

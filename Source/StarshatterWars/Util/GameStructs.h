@@ -1299,6 +1299,7 @@ struct FS_PlayerGameInfo : public FTableRowBase
     UPROPERTY(SaveGame) bool bStartedAsEnsign = false;
     /** Successful assignments, scoped by campaign; additive for existing saves. */
     UPROPERTY(BlueprintReadWrite, SaveGame) TArray<FS_CompletedMission> CompletedMissions;
+    FString GetRankedDisplayName() const;
     bool HasCompletedMission(int32 CampaignId, int32 MissionId) const
     {
         return CompletedMissions.ContainsByPredicate([=](const FS_CompletedMission& M){ return M.CampaignId==CampaignId && M.MissionId==MissionId; });

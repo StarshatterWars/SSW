@@ -91,6 +91,17 @@ const FString& PlayerCharacter::ChatMacro(int32 Index) const
     return Empty;
 }
 
+FString FS_PlayerGameInfo::GetRankedDisplayName() const
+{
+    if (Name.IsEmpty() || Name.Equals(TEXT("NEW PILOT"), ESearchCase::IgnoreCase))
+        return Name;
+
+    const bool bEnsignFloor = bStartedAsEnsign || bTrainingGraduate || HasCompletedMission(1, 103);
+    const int32 DisplayRank = bEnsignFloor
+        ? FMath::Max(Rank, UAwardInfoRegistry::RankFromName(TEXT("Ensign"))) : Rank;
+    return FString::Printf(TEXT("%s %s"), UAwardInfoRegistry::RankName(DisplayRank), *Name);
+}
+
 int32 PlayerCharacter::GetRank() const
 {
     const int32 PointsRank=UAwardInfoRegistry::RankForPoints(PlayerPoints, CachedRankId);
@@ -337,7 +348,14 @@ void PlayerCharacter::AddPoints(int32 InPoints)
     // NOTE: legacy typically only adds positive points
     if (InPoints != 0)
     {
+        const int32 PreviousRank = GetRank();
         PlayerPoints = int32(FMath::Clamp(int64(PlayerPoints) + InPoints, int64(0), int64(MAX_int32)));
+        Rank = GetRank();
+        if (Rank > PreviousRank)
+        {
+            PendingAwardId = Rank;
+            bPendingAwardIsRank = true;
+        }
         bDirty = true;
     }
 }
@@ -938,7 +956,6 @@ void PlayerCharacter::ProcessStats(ShipStats* Stats, uint32 StartTimeMs)
     if (!Stats)
         return;
 
-    const int32 OldRankId = GetRank();
     const int32 EarnedMissionPoints = GetMissionPoints(Stats, StartTimeMs);
 
     AddPoints(EarnedMissionPoints);
@@ -952,12 +969,7 @@ void PlayerCharacter::ProcessStats(ShipStats* Stats, uint32 StartTimeMs)
 
     Rank = GetRank();
 
-    if (OldRankId != Rank)
-    {
-        PendingAwardId = Rank;
-        bPendingAwardIsRank = true;
-    }
-    else
+    if (PendingAwardId == 0)
     {
         UAwardInfoRegistry::ForEachMedal([&](const FMedalInfo& Medal)
         {

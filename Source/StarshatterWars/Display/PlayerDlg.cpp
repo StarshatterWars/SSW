@@ -637,7 +637,7 @@ void UPlayerDlg::RefreshUIFromSubsystem()
     // Left panel
     // ------------------------------------------------------------
     if (txt_profile_name)
-        txt_profile_name->SetText(FText::FromString(Info.Name.IsEmpty() ? TEXT("<UNNAMED>") : Info.Name));
+        txt_profile_name->SetText(FText::FromString(Info.Name.IsEmpty() ? TEXT("<UNNAMED>") : Info.GetRankedDisplayName()));
 
     // Editable fields
     if (edt_name)      edt_name->SetText(FText::FromString(Info.Name));

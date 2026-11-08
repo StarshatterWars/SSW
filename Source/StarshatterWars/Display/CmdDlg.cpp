@@ -226,7 +226,7 @@ void UCmdDlg::NativeConstruct()
 
     if (PlayerNameText)
     {
-        PlayerNameText->SetText(FText::FromString(PlayerInfo.Name));
+        PlayerNameText->SetText(FText::FromString(PlayerInfo.GetRankedDisplayName()));
         UE_LOG(LogTemp, Log, TEXT("[CmdDlg] Player Name: %s"), *PlayerInfo.Name);
     }
 
@@ -527,7 +527,7 @@ void UCmdDlg::RefreshOperationsHeader()
     const FString Name = CampaignPtr ? FString(UTF8_TO_TCHAR(CampaignPtr->GetName()))
         : Row ? Row->Name : FString();
     if (CampaignNameText) CampaignNameText->SetText(FText::FromString(Name.ToUpper()));
-    if (PlayerNameText) PlayerNameText->SetText(Player ? FText::FromString(Player->GetPlayerInfo().Name) : FText::GetEmpty());
+    if (PlayerNameText) PlayerNameText->SetText(Player ? FText::FromString(Player->GetPlayerInfo().GetRankedDisplayName()) : FText::GetEmpty());
     if (CurrentLocationText) CurrentLocationText->SetText(FText::FromString(
         Row && !Row->System.IsEmpty() ? Row->System + TEXT(" System") : FString()).ToUpper());
 }

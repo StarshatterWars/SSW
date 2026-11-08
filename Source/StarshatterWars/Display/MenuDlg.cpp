@@ -171,7 +171,7 @@ void UMenuDlg::RefreshIdentityLabels()
             if (PlayerSS->HadExistingSaveOnLoad())
             {
                 const FS_PlayerGameInfo& Info = PlayerSS->GetPlayerInfo();
-                Name = Info.Name.IsEmpty() ? TEXT("UNNAMED PLAYER") : Info.Name;
+                Name = Info.Name.IsEmpty() ? TEXT("UNNAMED PLAYER") : Info.GetRankedDisplayName();
                 if(auto* Logo=Cast<UImage>(GetWidgetFromName(TEXT("SSWMenu_CircularLogo"))))
                 {
                     if(Info.Empire==static_cast<int32>(EEMPIRE_NAME::Marakan))FactionInsignia::Set(Logo,TEXT("Marakan"),214.f);
