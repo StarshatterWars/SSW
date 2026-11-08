@@ -695,8 +695,17 @@ void UMissionDebriefDlg::DrawSelectedUnit(int32 StatsIndex)
 void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
 {
     ShipStats* Stats = PlayerShip ? ShipStats::Find(PlayerShip->GetName()) : nullptr;
-    FMissionDebriefEvidence E=CollectMissionDebriefEvidence(MissionPtr,
-        SimPtr ? SimPtr->GetPlayerElement() : nullptr,Stats);
+    SimElement* Flight = PlayerShip ? PlayerShip->GetElement() : nullptr;
+    if (!Flight && SimPtr)
+        Flight = SimPtr->GetPlayerElement();
+    if ((!Flight || Flight->NumObjectives() == 0) && SimPtr && MissionPtr &&
+        MissionPtr->GetIdentity() == 102 && MissionPtr->GetMissionType() == int(EMissionType::TRAINING))
+    {
+        // The trainee's runtime flight retains its evaluated objectives after recovery.
+        if (SimElement* Echo = SimPtr->FindElement("Echo"))
+            Flight = Echo;
+    }
+    FMissionDebriefEvidence E = CollectMissionDebriefEvidence(MissionPtr, Flight, Stats);
     DebriefResult=EvaluateMissionDebrief(E);
     if (OutcomeWidget)
     {

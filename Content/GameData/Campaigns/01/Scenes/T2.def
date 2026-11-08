@@ -48,15 +48,18 @@ element: {
     mission: sweep,
     objective: {
         cmd: intercept,
-        tgt: Alpha
+        tgt: Alpha,
+        priority: 1
     },
     objective: {
         cmd: intercept,
-        tgt: Bravo
+        tgt: Bravo,
+        priority: 1
     },
     objective: {
         cmd: intercept,
-        tgt: Delta
+        tgt: Delta,
+        priority: 1
     },
     player: 2,
     alert: true,
