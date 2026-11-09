@@ -11,6 +11,8 @@ class UStaticMesh;
 class UMaterialInterface;
 class UViewport;
 class UTextBlock;
+class UVerticalBox;
+class UBorder;
 class UHorizontalBox;
 struct FShipDesign;
 struct FWeaponDesign;
@@ -69,6 +71,9 @@ private:
     UPROPERTY(Transient) TArray<FBriefingShipPreviewPart> Parts;
     UPROPERTY(Transient) TArray<FBriefingShipPreviewPart> RouteShipParts;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> RouteCaption;
+    UPROPERTY(Transient) TObjectPtr<UVerticalBox> RouteChecklist;
+    UPROPERTY(Transient) TObjectPtr<UBorder> EventPopup;
+    UPROPERTY(Transient) TObjectPtr<UTextBlock> EventPopupText;
     TArray<FVector> Route;
     TArray<FString> RouteLabels;
     TArray<double> RouteArrivals;

@@ -5,6 +5,10 @@
 #include "MissionElement.h"
 #include "MissionEvent.h"
 #include "Components/Button.h"
+#include "Components/ButtonSlot.h"
+#include "Components/Image.h"
+#include "Components/SizeBox.h"
+#include "Components/VerticalBox.h"
 #include "Components/HorizontalBox.h"
 #include "Components/HorizontalBoxSlot.h"
 #include "Instruction.h"
@@ -29,6 +33,7 @@
 #include "Engine/TextureCube.h"
 #include "Engine/World.h"
 #include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Misc/PackageName.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Input/Reply.h"
@@ -323,25 +328,68 @@ TSharedRef<SWidget> UShipBriefingPreview::RebuildWidget()
         CaptionSlot->SetPadding(FMargin(14.f, 14.f, 14.f, 62.f));
         RouteCaption->SetAutoWrapText(true);
 
+        EventPopup = WidgetTree->ConstructWidget<UBorder>();
+        EventPopup->SetBrushColor(MissionUIStyle::PanelBG);
+        EventPopup->SetPadding(FMargin(18.f, 10.f));
+        EventPopup->SetVisibility(ESlateVisibility::Collapsed);
+        EventPopupText = WidgetTree->ConstructWidget<UTextBlock>();
+        EventPopupText->SetFont(MissionUIStyle::GetInfoValueFont(18));
+        EventPopupText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+        EventPopupText->SetWrapTextAt(540.f);
+        EventPopup->SetContent(EventPopupText);
+        UOverlaySlot* EventSlot = Overlay->AddChildToOverlay(EventPopup);
+        EventSlot->SetHorizontalAlignment(HAlign_Center);
+        EventSlot->SetVerticalAlignment(VAlign_Top);
+        EventSlot->SetPadding(FMargin(12.f, 24.f));
+
+        auto* ChecklistPanel = WidgetTree->ConstructWidget<UBorder>();
+        ChecklistPanel->SetBrushColor(MissionUIStyle::PanelBG);
+        ChecklistPanel->SetPadding(FMargin(14.f, 10.f));
+        ChecklistPanel->SetVisibility(ESlateVisibility::Collapsed);
+        auto* ChecklistSlot = Overlay->AddChildToOverlay(ChecklistPanel);
+        ChecklistSlot->SetHorizontalAlignment(HAlign_Right);
+        ChecklistSlot->SetVerticalAlignment(VAlign_Bottom);
+        ChecklistSlot->SetPadding(FMargin(12.f, 12.f, 16.f, 62.f));
+        RouteChecklist = WidgetTree->ConstructWidget<UVerticalBox>();
+        ChecklistPanel->SetContent(RouteChecklist);
+
         PlaybackControls = WidgetTree->ConstructWidget<UHorizontalBox>();
         PlaybackControls->SetVisibility(ESlateVisibility::Collapsed);
         UOverlaySlot* ControlsSlot = Overlay->AddChildToOverlay(PlaybackControls);
         ControlsSlot->SetHorizontalAlignment(HAlign_Center);
         ControlsSlot->SetVerticalAlignment(VAlign_Bottom);
         ControlsSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
-        auto AddControl = [this](const FText& Label) {
+        auto AddControl = [this](const FText& Label, const TCHAR* IconName, const TCHAR* Color) {
             auto* Button = WidgetTree->ConstructWidget<UButton>();
-            auto* Text = WidgetTree->ConstructWidget<UTextBlock>();
-            Text->SetText(Label);
-            Button->SetContent(Text);
+            auto* Icon = WidgetTree->ConstructWidget<UImage>();
+            const FString Path = FString::Printf(
+                TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/%s.%s"), IconName, IconName);
+            MissionUIStyle::SetActionIcon(Icon, *Path, FLinearColor::White);
+            Icon->SetDesiredSizeOverride(FVector2D(24.f, 24.f));
+            Button->SetContent(Icon);
+            Button->SetToolTipText(Label);
             MissionUIStyle::ApplyMenuButtonStyle(Button, GetGameInstance());
-            PlaybackControls->AddChildToHorizontalBox(Button)->SetPadding(FMargin(5.f, 0.f));
+            MissionUIStyle::ApplyActionButtonStyle(Button, Color);
+            if (auto* IconSlot = Cast<UButtonSlot>(Icon->Slot))
+            {
+                IconSlot->SetHorizontalAlignment(HAlign_Center);
+                IconSlot->SetVerticalAlignment(VAlign_Center);
+            }
+            auto* Size = WidgetTree->ConstructWidget<USizeBox>();
+            Size->SetWidthOverride(80.f);
+            Size->SetHeightOverride(42.f);
+            Size->SetContent(Button);
+            PlaybackControls->AddChildToHorizontalBox(Size)->SetPadding(FMargin(5.f, 0.f));
             return Button;
         };
-        AddControl(NSLOCTEXT("MissionRehearsal", "Play", "PLAY"))->OnClicked.AddDynamic(this, &UShipBriefingPreview::PlayRehearsal);
-        AddControl(NSLOCTEXT("MissionRehearsal", "Rewind", "REWIND"))->OnClicked.AddDynamic(this, &UShipBriefingPreview::RewindRehearsal);
-        AddControl(NSLOCTEXT("MissionRehearsal", "Pause", "PAUSE"))->OnClicked.AddDynamic(this, &UShipBriefingPreview::PauseRehearsal);
-        AddControl(NSLOCTEXT("MissionRehearsal", "Stop", "STOP"))->OnClicked.AddDynamic(this, &UShipBriefingPreview::StopRehearsal);
+        AddControl(NSLOCTEXT("MissionRehearsal", "Play", "Play"), TEXT("T_Play_256x256"), TEXT("Green"))
+            ->OnClicked.AddDynamic(this, &UShipBriefingPreview::PlayRehearsal);
+        AddControl(NSLOCTEXT("MissionRehearsal", "Rewind", "Rewind"), TEXT("T_Play_Rev_256x256"), TEXT("Cyan"))
+            ->OnClicked.AddDynamic(this, &UShipBriefingPreview::RewindRehearsal);
+        AddControl(NSLOCTEXT("MissionRehearsal", "Pause", "Pause"), TEXT("T_Pause_256x256"), TEXT("Blue"))
+            ->OnClicked.AddDynamic(this, &UShipBriefingPreview::PauseRehearsal);
+        AddControl(NSLOCTEXT("MissionRehearsal", "Stop", "Stop"), TEXT("T_Stop_256x256"), TEXT("Red"))
+            ->OnClicked.AddDynamic(this, &UShipBriefingPreview::StopRehearsal);
     }
     return Super::RebuildWidget();
 }
@@ -456,6 +504,7 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
     RouteArrivals.Add(0.0);
     RouteDepartures.Add(0.0);
     FVector PreviousLocation = Origin;
+    bool bReturnsToBase = false;
     for (ListIter<Instruction> Point = Player->NavList(); ++Point;)
     {
         const double Speed = Point->GetSpeed() > 0 ? Point->GetSpeed() : 250.0;
@@ -465,15 +514,52 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         RouteDepartures.Add(Arrival + FMath::Max(Point->GetHoldTime(), 0.0));
         PreviousLocation = Point->GetLocation();
         Route.Add(ScenePosition(Point->GetLocation(), Point->GetRegionName()));
+        bReturnsToBase = Point->GetAction() == EInstruction::RTB;
         RouteLabels.Add(FString::Printf(TEXT("NAV %02d  %s"), RouteLabels.Num() + 1,
             ANSI_TO_TCHAR(Point->GetRegionName())));
     }
 
+    if (bReturnsToBase && Player->GetCarrier().length())
+    {
+        for (ListIter<MissionElement> Entry = MissionDef->GetElements(); ++Entry;)
+        {
+            const MissionElement* Base = Entry.value();
+            if (!Base || Base->GetName() != Player->GetCarrier()) continue;
+            const FVector Destination = ScenePosition(Base->GetLocation(), Base->GetRegion().data());
+            RouteLabels.Last() = TEXT("RTB APPROACH");
+            if (!Destination.Equals(Route.Last(), 1.0))
+            {
+                const double Arrival = RouteDepartures.Last() + FMath::Max(FVector::Dist(Route.Last(), Destination) / 250.0, 1.0);
+                Route.Add(Destination);
+                RouteArrivals.Add(Arrival);
+                RouteDepartures.Add(Arrival);
+                RouteLabels.Add(TEXT("RETURN TO BASE"));
+            }
+            break;
+        }
+    }
+
+    if (RouteChecklist)
+    {
+        RouteChecklist->ClearChildren();
+        auto* Title = WidgetTree->ConstructWidget<UTextBlock>();
+        Title->SetText(NSLOCTEXT("MissionRehearsal", "RouteObjectives", "ROUTE OBJECTIVES"));
+        Title->SetFont(MissionUIStyle::GetHeaderFont(14));
+        RouteChecklist->AddChildToVerticalBox(Title);
+        for (const FString& Label : RouteLabels)
+        {
+            auto* Row = WidgetTree->ConstructWidget<UTextBlock>();
+            Row->SetFont(MissionUIStyle::GetInfoValueFont(14));
+            RouteChecklist->AddChildToVerticalBox(Row);
+        }
+    }
+
     RehearsalDuration = RouteDepartures.Last();
+    TMap<int32, double> EventTimes;
     for (ListIter<MissionEvent> Events = MissionDef->GetEvents(); ++Events;)
     {
         const MissionEvent* Event = Events.value();
-        if (!Event || !Event->EventMessage().length()) continue;
+        if (!Event) continue;
         double At = 0.0;
         if (Event->Trigger() == MissionEvent::TRIGGER_TIME)
             At = Event->Time();
@@ -481,10 +567,18 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
             RouteArrivals.IsValidIndex(Event->TriggerParam()) &&
             Event->TriggerShip().indexOf(Player->GetName()) == 0)
             At = RouteArrivals[Event->TriggerParam()];
+        else if (Event->Trigger() == MissionEvent::TRIGGER_EVENT)
+        {
+            const double* Prerequisite = EventTimes.Find(Event->TriggerParam());
+            if (!Prerequisite) continue;
+            At = *Prerequisite;
+        }
         else
-            continue; // A rehearsal cannot predict combat-dependent event timing.
+            continue; // Combat-dependent events have no fixed rehearsal timestamp.
 
         At += FMath::Max(Event->Delay(), 0.0);
+        if (Event->EventID() > 0) EventTimes.Add(Event->EventID(), At);
+        if (!Event->EventMessage().length()) continue;
         TimedCues.Add({At, UTF8_TO_TCHAR(Event->EventMessage().data())});
         RehearsalDuration = FMath::Max(RehearsalDuration, At + 3.0);
     }
@@ -541,20 +635,40 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         }
     }
 
-    UStaticMesh* Marker = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Sphere.Sphere"));
     UStaticMesh* Line = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
-    for (int32 Index = 0; Index < Route.Num(); ++Index)
+    UMaterialInterface* Emissive = LoadObject<UMaterialInterface>(nullptr,
+        TEXT("/Game/Materials/M_NavlightEmissive.M_NavlightEmissive"));
+    UMaterialInstanceDynamic* RouteGlow = Emissive ? UMaterialInstanceDynamic::Create(Emissive, this) : nullptr;
+    if (RouteGlow)
     {
-        FBriefingShipPreviewPart& Point = Parts.AddDefaulted_GetRef();
-        Point.Mesh = Marker;
-        Point.Transform = FTransform(FQuat::Identity, Route[Index], FVector(.22));
-        if (Index == 0) continue;
-        const FVector Leg = Route[Index] - Route[Index - 1];
-        if (Leg.IsNearlyZero()) continue;
-        FBriefingShipPreviewPart& Segment = Parts.AddDefaulted_GetRef();
-        Segment.Mesh = Line;
-        Segment.Transform = FTransform(Leg.Rotation(), (Route[Index] + Route[Index - 1]) * .5,
-            FVector(Leg.Size() / 100.0, .075, .075));
+        RouteGlow->SetVectorParameterValue(TEXT("GlowColor"), FLinearColor(.08f, .65f, 1.f));
+        RouteGlow->SetScalarParameterValue(TEXT("GlowIntensity"), 4.f);
+    }
+    auto AddLine = [&](const FVector& Start, const FVector& End, double Width) {
+        const FVector Direction = End - Start;
+        if (Direction.IsNearlyZero()) return;
+        FBriefingShipPreviewPart& Part = Parts.AddDefaulted_GetRef();
+        Part.Mesh = Line;
+        if (RouteGlow) Part.Materials.Add(RouteGlow);
+        Part.Transform = FTransform(Direction.Rotation(), (Start + End) * .5,
+            FVector(Direction.Size() / 100.0, Width, Width));
+    };
+    constexpr int32 RingSegments = 16;
+    constexpr double MarkerRadius = 13.0;
+    const FVector Axes[] = {FVector::ForwardVector, FVector::RightVector, FVector::UpVector};
+    for (int32 Index = 1; Index < Route.Num(); ++Index)
+    {
+        AddLine(Route[Index - 1], Route[Index], .032);
+        for (int32 Plane = 0; Plane < 3; ++Plane)
+        {
+            auto RingPoint = [&](int32 Step) {
+                const double Angle = 2.0 * PI * Step / RingSegments;
+                return Route[Index] + MarkerRadius * (Axes[Plane] * FMath::Cos(Angle)
+                    + Axes[(Plane + 1) % 3] * FMath::Sin(Angle));
+            };
+            for (int32 Step = 0; Step < RingSegments; ++Step)
+                AddLine(RingPoint(Step), RingPoint(Step + 1), .014);
+        }
     }
 
     MissionBounds = BriefingShipPreview::CalculateBounds(Parts);
@@ -590,6 +704,10 @@ void UShipBriefingPreview::UpdateVisual()
         RouteShip = BriefingShipPreview::CreateVisual(PreviewViewport->GetViewportWorld(), RouteShipParts, false);
         if (AActor* Visual = RouteShip.Get()) Visual->SetActorLocation(Route[0]);
     }
+    if (EventPopup) EventPopup->SetVisibility(ESlateVisibility::Collapsed);
+    if (RouteChecklist && RouteChecklist->GetParent())
+        RouteChecklist->GetParent()->SetVisibility(bMissionScene && RouteShip.IsValid() && !RouteLabels.IsEmpty()
+            ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
     if (RouteCaption) RouteCaption->SetVisibility(bMissionScene && RouteShip.IsValid()
         ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
     if (PlaybackControls) PlaybackControls->SetVisibility(bMissionScene && RouteShip.IsValid()
@@ -664,17 +782,43 @@ void UShipBriefingPreview::UpdateRehearsal()
     }
 
     const int32 Second = FMath::FloorToInt(RouteTime);
-    if (!RouteCaption || LastCaptionSecond == Second) return;
-    LastCaptionSecond = Second;
-    FString Caption = FString::Printf(TEXT("MISSION TIME %02d:%02d  |  %s"),
-        Second / 60, Second % 60, RouteLabels.IsValidIndex(Leg) ? *RouteLabels[Leg] : TEXT("MISSION START"));
-    for (int32 Index = TimedCues.Num() - 1; Index >= 0; --Index)
+    if (RouteCaption && LastCaptionSecond != Second)
     {
-        if (TimedCues[Index].Time > RouteTime) continue;
-        if (RouteTime - TimedCues[Index].Time < 7.0) Caption += TEXT("\n") + TimedCues[Index].Text;
-        break;
+        LastCaptionSecond = Second;
+        const int32 LabelIndex = RouteArrivals.IsValidIndex(Leg + 1) && RouteTime >= RouteArrivals[Leg + 1]
+            ? Leg + 1 : Leg;
+        const TCHAR* Label = RouteLabels.IsValidIndex(LabelIndex) ? *RouteLabels[LabelIndex] : TEXT("MISSION COMPLETE");
+        RouteCaption->SetText(FText::FromString(FString::Printf(TEXT("MISSION TIME %02d:%02d  |  %s"),
+            Second / 60, Second % 60, Label)));
     }
-    RouteCaption->SetText(FText::FromString(Caption));
+
+    if (RouteChecklist)
+    {
+        for (int32 Index = 0; Index < RouteLabels.Num(); ++Index)
+        {
+            auto* Row = Cast<UTextBlock>(RouteChecklist->GetChildAt(Index + 1));
+            if (!Row || !RouteArrivals.IsValidIndex(Index + 1)) continue;
+            const bool bPassed = RouteTime >= RouteArrivals[Index + 1];
+            Row->SetText(FText::FromString(FString(bPassed ? TEXT("\u2713  ") : TEXT("    ")) + RouteLabels[Index]));
+            Row->SetColorAndOpacity(FSlateColor(bPassed ? FLinearColor(.28f, 1.f, .46f) : FLinearColor::White));
+        }
+    }
+
+    if (EventPopup && EventPopupText)
+    {
+        const double PlaybackSeconds = FMath::Clamp(RehearsalDuration / 4.0, 15.0, 30.0);
+        const double CueWindow = 2.5 * RehearsalDuration / PlaybackSeconds;
+        FString Message;
+        for (const auto& Cue : TimedCues)
+        {
+            const double Age = RouteTime - Cue.Time;
+            if (Age < 0.0 || Age >= CueWindow) continue;
+            if (!Message.IsEmpty()) Message += TEXT("\n");
+            Message += Cue.Text;
+        }
+        EventPopupText->SetText(FText::FromString(Message));
+        EventPopup->SetVisibility(Message.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+    }
 }
 
 void UShipBriefingPreview::NativeTick(const FGeometry& Geometry, float DeltaTime)
