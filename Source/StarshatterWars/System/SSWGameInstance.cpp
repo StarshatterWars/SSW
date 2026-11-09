@@ -8,7 +8,9 @@
 #include "PlayerCharacter.h"
 #include "Misc/SecureHash.h"
 #include "MissionUIStyle.h"
+#include "PlatformSignInDlg.h"
 #include "Widgets/SBoxPanel.h"
+#include "Widgets/SOverlay.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
@@ -247,46 +249,127 @@ bool USSWGameInstance::RestoreSavedActiveCampaign()
 void USSWGameInstance::ShowPlatformSignIn(APlayerController* PC)
 {
     if (PlatformSignInView || !GetGameViewportClient()) return;
-    auto SignInButton = [this](const FText& Label, FName Provider) {
-        return SNew(SButton)
+
+    UClass* ScreenClass = UPlatformSignInDlg::StaticClass();
+    if (auto* Assets = GetSubsystem<UStarshatterAssetRegistrySubsystem>())
+    {
+        UClass* Registered = Assets->GetWidgetClass(TEXT("UI.PlatformSignInClass")).Get();
+        if (Registered && Registered->IsChildOf(UPlatformSignInDlg::StaticClass()))
+            ScreenClass = Registered;
+    }
+    PlatformSignInView = CreateWidget<UPlatformSignInDlg>(PC, ScreenClass);
+    if (!PlatformSignInView) return;
+
+    PlatformSignInView->AddToViewport(200);
+    PC->SetInputMode(FInputModeUIOnly());
+    PC->SetShowMouseCursor(true);
+}
+
+TSharedRef<SWidget> USSWGameInstance::BuildPlatformSignInContent()
+{
+    const auto LoadBrush = [](const TCHAR* Path, FVector2D Size) {
+        return FDeferredCleanupSlateBrush::CreateBrush(LoadObject<UTexture2D>(nullptr, Path), Size);
+    };
+    const auto Splash = LoadBrush(
+        TEXT("/Game/UI/Splash/SSW_OrionLaunch_1080p.SSW_OrionLaunch_1080p"), FVector2D(1920, 1080));
+    const auto Power = LoadBrush(
+        TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_OnOff_256x256.T_OnOff_256x256"), FVector2D(22, 22));
+    const auto ExitNormal = LoadBrush(
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_n.T_Btn01Red_n"), FVector2D(420, 48));
+    const auto ExitPressed = LoadBrush(
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Red_p.T_Btn01Red_p"), FVector2D(420, 48));
+    const auto ExitStyle = MakeShared<FButtonStyle>(FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button"));
+    ExitStyle->SetNormal(*ExitNormal->GetSlateBrush())
+        .SetHovered(*ExitNormal->GetSlateBrush())
+        .SetPressed(*ExitPressed->GetSlateBrush());
+
+    const auto ProviderNormal = LoadBrush(
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Blue_n.T_Btn01Blue_n"), FVector2D(420, 54));
+    const auto ProviderPressed = LoadBrush(
+        TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn01Blue_p.T_Btn01Blue_p"), FVector2D(420, 54));
+    const auto ProviderStyle = MakeShared<FButtonStyle>(FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button"));
+    ProviderStyle->SetNormal(*ProviderNormal->GetSlateBrush())
+        .SetHovered(*ProviderNormal->GetSlateBrush())
+        .SetPressed(*ProviderPressed->GetSlateBrush());
+
+    const auto SignInButton = [this, ProviderStyle, ProviderNormal, ProviderPressed](
+        const FText& Label, FName Provider, const TCHAR* LogoPath) {
+        UTexture2D* Logo = LoadObject<UTexture2D>(nullptr, LogoPath, nullptr, LOAD_NoWarn);
+        auto Content = SNew(SHorizontalBox);
+        if (Logo)
+        {
+            const auto Brush = FDeferredCleanupSlateBrush::CreateBrush(
+                Logo, FVector2D(34, 34));
+            Content->AddSlot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 12, 0)
+                [SNew(SImage).Image_Lambda([Brush] { return Brush->GetSlateBrush(); })];
+        }
+        Content->AddSlot().VAlign(VAlign_Center)
+            [SNew(STextBlock).Text(Label).Font(MissionUIStyle::GetInfoValueFont(18))];
+
+        return SNew(SButton).ButtonStyle(&ProviderStyle.Get())
             .IsEnabled_Lambda([this] { return !PendingPlatformIdentity.IsValid(); })
             .ContentPadding(FMargin(16.f, 10.f))
-            .OnClicked_Lambda([this, Provider] {
+            .OnClicked_Lambda([this, Provider, ProviderStyle, ProviderNormal, ProviderPressed] {
                 BeginPlatformSignIn(Provider);
                 return FReply::Handled();
             })
-            [SNew(STextBlock).Text(Label).Font(MissionUIStyle::GetInfoValueFont(18))];
+            [Content];
     };
 
-    PlatformSignInView = SNew(SBorder)
-        .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-        .BorderBackgroundColor(FLinearColor(.025f, .04f, .065f))
-        .HAlign(HAlign_Center).VAlign(VAlign_Center)
+    return SNew(SOverlay)
+        + SOverlay::Slot()
         [
-            SNew(SBox).WidthOverride(420.f)
+            SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
+            [SNew(SImage).Image_Lambda([Splash] { return Splash->GetSlateBrush(); })]
+        ]
+        + SOverlay::Slot()
+        [
+            SNew(SBorder)
+            .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+            .BorderBackgroundColor(FLinearColor(0.f, 0.f, 0.f, .32f))
+        ]
+        + SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)
+        [
+            SNew(SBorder)
+            .Padding(24.f)
+            .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+            .BorderBackgroundColor(FLinearColor(.025f, .04f, .065f, .96f))
             [
-                SNew(SVerticalBox)
-                + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 20.f)
-                [SNew(STextBlock).Text(NSLOCTEXT("SSWSignIn", "Title", "STARSHATTER WARS"))
-                    .Font(MissionUIStyle::GetHeaderFont(28))]
-                + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 10.f)
-                [SignInButton(NSLOCTEXT("SSWSignIn", "Steam", "Sign in with Steam"), TEXT("STEAM"))]
-                + SVerticalBox::Slot().AutoHeight()
-                [SignInButton(NSLOCTEXT("SSWSignIn", "Epic", "Sign in with Epic Games"), TEXT("EOS"))]
-                + SVerticalBox::Slot().AutoHeight().Padding(0.f, 14.f, 0.f, 0.f)
-                [SAssignNew(PlatformSignInStatus, STextBlock).AutoWrapText(true)
-                    .Text(NSLOCTEXT("SSWSignIn", "Prompt", "Sign in to continue."))]
-                + SVerticalBox::Slot().AutoHeight().Padding(0.f, 14.f, 0.f, 0.f)
-                [SNew(SButton).Text(NSLOCTEXT("SSWSignIn", "Quit", "Exit to Windows"))
-                    .OnClicked_Lambda([this] {
-                        UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, true);
-                        return FReply::Handled();
-                    })]
+                SNew(SBox).WidthOverride(420.f)
+                [
+                    SNew(SVerticalBox)
+                    + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 16)
+                    [SNew(STextBlock).Text(NSLOCTEXT("SSWSignIn", "Heading", "SIGN IN"))
+                        .Font(MissionUIStyle::GetHeaderFont(28))]
+                    + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 10)
+                    [SignInButton(NSLOCTEXT("SSWSignIn", "Epic", "Sign in with Epic Games"), TEXT("EOS"),
+                        TEXT("/Game/UI/SignIn/T_EpicGamesLogo.T_EpicGamesLogo"))]
+                    + SVerticalBox::Slot().AutoHeight()
+                    [SignInButton(NSLOCTEXT("SSWSignIn", "Steam", "Sign in with Steam"), TEXT("STEAM"),
+                        TEXT("/Game/UI/SignIn/T_SteamLogo.T_SteamLogo"))]
+                    + SVerticalBox::Slot().AutoHeight().Padding(0, 14, 0, 0)
+                    [SAssignNew(PlatformSignInStatus, STextBlock).AutoWrapText(true)
+                        .Text(NSLOCTEXT("SSWSignIn", "Prompt", "Sign in to continue."))]
+                    + SVerticalBox::Slot().AutoHeight().Padding(0, 16, 0, 0)
+                    [
+                        SNew(SButton).ButtonStyle(&ExitStyle.Get())
+                        .HAlign(HAlign_Center).ContentPadding(FMargin(12, 10))
+                        .OnClicked_Lambda([this, ExitStyle, ExitNormal, ExitPressed] {
+                            UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, true);
+                            return FReply::Handled();
+                        })
+                        [
+                            SNew(SHorizontalBox)
+                            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0, 0, 8, 0)
+                            [SNew(SImage).Image_Lambda([Power] { return Power->GetSlateBrush(); })]
+                            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
+                            [SNew(STextBlock).Text(NSLOCTEXT("SSWSignIn", "Quit", "Exit to Windows"))
+                                .Font(MissionUIStyle::GetInfoValueFont(16))]
+                        ]
+                    ]
+                ]
             ]
         ];
-    GetGameViewportClient()->AddViewportWidgetContent(PlatformSignInView.ToSharedRef(), 200);
-    PC->SetInputMode(FInputModeUIOnly());
-    PC->SetShowMouseCursor(true);
 }
 
 void USSWGameInstance::BeginPlatformSignIn(FName Provider)
@@ -361,9 +444,9 @@ void USSWGameInstance::FinishPlatformSignIn(FName Provider, bool bSuccess, const
     if (PlayerCharacter* Pilot = PlayerCharacter::GetCurrentPlayer())
         Pilot->FromPlayerInfo(Players->GetPlayerInfo());
 
-    if (PlatformSignInView && GetGameViewportClient())
-        GetGameViewportClient()->RemoveViewportWidgetContent(PlatformSignInView.ToSharedRef());
-    PlatformSignInView.Reset();
+    if (PlatformSignInView)
+        PlatformSignInView->RemoveFromParent();
+    PlatformSignInView = nullptr;
     PlatformSignInStatus.Reset();
     ShowMainMenuScreen();
 }
@@ -585,9 +668,9 @@ UUserWidget* USSWGameInstance::GetActiveWidget() {
 void USSWGameInstance::Shutdown()
 {
     ClearPlatformSignInRequest();
-    if (PlatformSignInView && GetGameViewportClient())
-        GetGameViewportClient()->RemoveViewportWidgetContent(PlatformSignInView.ToSharedRef());
-    PlatformSignInView.Reset();
+    if (PlatformSignInView)
+        PlatformSignInView->RemoveFromParent();
+    PlatformSignInView = nullptr;
     PlatformSignInStatus.Reset();
 	USound::SetWorldContext(nullptr);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);

@@ -87,6 +87,7 @@ class ACombatGroupLoader;
 class UExitDlg;
 class IOnlineIdentity;
 class SWidget;
+class UPlatformSignInDlg;
 class STextBlock;
 class UMainMenu;
 class UMenuDlg;
@@ -164,7 +165,11 @@ private:
     void ClearPlatformSignInRequest();
     TSharedPtr<IOnlineIdentity, ESPMode::ThreadSafe> PendingPlatformIdentity;
     FDelegateHandle PlatformLoginHandle;
-    TSharedPtr<SWidget> PlatformSignInView;
+    friend class UPlatformSignInDlg;
+    TSharedRef<SWidget> BuildPlatformSignInContent();
+
+    UPROPERTY(Transient)
+    TObjectPtr<UPlatformSignInDlg> PlatformSignInView;
     TSharedPtr<STextBlock> PlatformSignInStatus;
     FString PlatformPilotName;
 

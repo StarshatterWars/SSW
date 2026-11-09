@@ -201,6 +201,9 @@ public:
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> FirstTimeScreenClass;
 
+    UPROPERTY(Config, EditAnywhere, Category="UI")
+    TSoftClassPtr<UUserWidget> PlatformSignInScreenClass;
+
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> ExitDlgClass;
 

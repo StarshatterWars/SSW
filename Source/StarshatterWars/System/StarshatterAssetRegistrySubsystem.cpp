@@ -593,6 +593,12 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
                 TEXT("[ASSETS] PlayerLogbookScreenClass is not set in Project Settings"));
         }
     }
+    if (!Cache.Contains(TEXT("UI.PlatformSignInClass")) && !Settings->PlatformSignInScreenClass.IsNull())
+    {
+        Cache.Add(TEXT("UI.PlatformSignInClass"),
+            TSoftObjectPtr<UObject>(Settings->PlatformSignInScreenClass.ToSoftObjectPath()));
+    }
+
     // UI.FirstRunDlgClass (property name: FirstRunScreenClass)
     if (!Cache.Contains(TEXT("UI.FirstTimeDlgClass")))
     {
