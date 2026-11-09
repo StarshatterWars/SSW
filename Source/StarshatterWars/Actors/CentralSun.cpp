@@ -2,6 +2,7 @@
 
 #include "Components/ChildActorComponent.h"
 #include "Components/SceneComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "UObject/ConstructorHelpers.h"
 
 ACentralSun::ACentralSun()
@@ -12,6 +13,10 @@ ACentralSun::ACentralSun()
         TEXT("SceneRoot"));
 
     SetRootComponent(SceneRoot);
+
+    SunMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("SunMesh"));
+    SunMesh->SetupAttachment(SceneRoot);
+    SunMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     SunComponent = CreateDefaultSubobject<UChildActorComponent>(
         TEXT("CentralSun"));

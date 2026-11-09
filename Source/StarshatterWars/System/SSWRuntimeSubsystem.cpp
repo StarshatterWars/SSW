@@ -1651,7 +1651,7 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
             return nullptr;
         };
         if(Shot->IsPrimary()){
-            if(Shot->IsBeam()){
+            if(Shot->IsBeam() && Shot->GetDesign()){
                 const FVector Start=VisualPoint(Shot->GetOrigin());
                 Alive.Add(Shot);
                 ABeamWeaponActor* Beam=Cast<ABeamWeaponActor>(ProjectileVisuals.FindRef(Shot).Get());

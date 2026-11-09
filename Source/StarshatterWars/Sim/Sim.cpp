@@ -2931,40 +2931,21 @@ Sim::ResolveSplashList()
 void
 Sim::ResolveTimeSkip(double seconds)
 {
+	if (!FMath::IsFinite(seconds) || seconds <= 0.0)
+		return;
+
 	double skipped = 0.0;
 
-	// allow elements to process hold time, and release as needed:
-	ListIter<SimElement> elem = elements;
-
-	while (++elem) {
-		elem->ExecFrame(seconds);
-	}
-
-	// prevent camera interpolation/follow updates during skip:
+	// Check safety before every step, including a final partial step.
 	bResolvingTimeSkip = true;
+	while (skipped < seconds && active_region && active_region->CanTimeSkip()) {
+		const double Step = FMath::Min(10.0, seconds - skipped);
+		ListIter<SimElement> Element = elements;
+		while (++Element)
+			Element->ExecFrame(Step);
 
-	// step through the skip, ten seconds at a time:
-	if (active_region) {
-		double total_skip = seconds;
-		double frame_skip = 10.0;
-
-		while (total_skip > frame_skip) {
-			// break out early if player runs into bad guys...
-			if (!active_region->CanTimeSkip()) {
-				total_skip = 0.0;
-				break;
-			}
-
-			active_region->ResolveTimeSkip(frame_skip);
-
-			total_skip -= frame_skip;
-			skipped += frame_skip;
-		}
-
-		if (total_skip > 0.0) {
-			active_region->ResolveTimeSkip(total_skip);
-			skipped += total_skip;
-		}
+		active_region->ResolveTimeSkip(Step);
+		skipped += Step;
 	}
 
 	bResolvingTimeSkip = false;

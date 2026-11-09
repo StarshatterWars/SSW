@@ -26,7 +26,7 @@ AWorldScape_SnapSpawnerActor::AWorldScape_SnapSpawnerActor()
 	Billboard_Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Billboard_Component->SetCollisionProfileName(TEXT("NoCollision"));
 	Billboard_Component->SetupAttachment(RootComponent);
-	static const TCHAR* GLevelSpriteAssetName = TEXT("/WorldScape/Ressources/Textures/WorldScape128");
+	static const TCHAR* GLevelSpriteAssetName = TEXT("/Engine/EditorResources/S_Actor.S_Actor");
 	Billboard_Component->SetSprite(LoadObject<UTexture2D>(this, GLevelSpriteAssetName));
 	//Billboard_Component->RegisterComponent();
 #endif

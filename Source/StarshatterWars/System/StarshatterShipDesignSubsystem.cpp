@@ -54,6 +54,9 @@
 =============================================================================*/
 
 #include "StarshatterShipDesignSubsystem.h"
+#include "Farcaster.h"
+#include "FlightDeck.h"
+#include "LandingGear.h"
 #include "NativeSkinDefinition.h"
 #include "Misc/Paths.h"
 #include "HAL/FileManager.h"
@@ -1744,8 +1747,7 @@ void UStarshatterShipDesignSubsystem::ParseFarcaster(TermStruct* Val, const char
 	FShipFarcaster NewCaster;
 	NewCaster.SourceFile = FString(ANSI_TO_TCHAR(Fn));
 
-	// If you still want a legacy cap (NUM_APPROACH_PTS), set it here:
-	const int32 MaxApproachPts = 8; // TODO: match Farcaster::NUM_APPROACH_PTS from legacy
+	constexpr int32 MaxApproachPts = Farcaster::NUM_APPROACH_PTS;
 	NewCaster.ApproachPoints.Reserve(MaxApproachPts);
 
 	const int32 ElemCount = (int32)Val->elements()->size();
@@ -2688,7 +2690,7 @@ void UStarshatterShipDesignSubsystem::ParseFlightDeck(TermStruct* Val, const cha
 	// Caps (legacy uses fixed arrays: slots[10], filters[10], runway[2], approach[NUM_APPROACH_PTS])
 	const int32 MaxSlots = 10;
 	const int32 MaxRunwayPts = 2;
-	const int32 MaxApproachPts = 8; // TODO: set to FlightDeck::NUM_APPROACH_PTS from legacy
+	constexpr int32 MaxApproachPts = FlightDeck::NUM_APPROACH_PTS;
 
 	NewDeck.Slots.Reserve(MaxSlots);
 	NewDeck.RunwayPoints.Reserve(MaxRunwayPts);
@@ -2923,7 +2925,7 @@ void UStarshatterShipDesignSubsystem::ParseLandingGear(TermStruct* Val, const ch
 	NewGear.SourceFile = FString(ANSI_TO_TCHAR(Fn));
 
 	// Legacy cap:
-	const int32 MaxGear = 8; // TODO: set to LandingGear::MAX_GEAR from legacy
+	constexpr int32 MaxGear = LandingGear::MAX_GEAR;
 	NewGear.GearItems.Reserve(MaxGear);
 
 	const int32 ElemCount = (int32)Val->elements()->size();

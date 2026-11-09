@@ -4,6 +4,7 @@
 #include "GameStructs_System.h"
 #include "Power.h"
 #include "Drive.h"
+#include "Ship.h"
 #include "ShipDesignRegistry.h"
 #include "WeaponDesignRegistry.h"
 #include "Misc/ScopeExit.h"
@@ -57,7 +58,7 @@ bool FFalconPropulsionTest::RunTest(const FString& Parameters)
     FShipDesign Unnamed=*F;
     for(auto& N:Unnamed.NavSys)N.DesignName.Empty();
     ShipDesignRegistry::RegisterDesign(FName(TEXT("Falcon")),Unnamed);
-    const auto* Runtime=ShipDesignRegistry::FindLegacy(FName(TEXT("Falcon")));
+    auto* Runtime=ShipDesignRegistry::FindLegacy(FName(TEXT("Falcon")));
     if(!TestNotNull(TEXT("Runtime Falcon design"),Runtime))return false;
     TestTrue(TEXT("Unnamed navigation is created at runtime"),Runtime->navsystems.size()>0);
     TestNotNull(TEXT("Runtime navigation pointer"),Runtime->navsys);
@@ -81,6 +82,38 @@ bool FFalconPropulsionTest::RunTest(const FString& Parameters)
     TestFalse(TEXT("Released augmenter spools off"),Engine.IsAugmenterOn());
     Engine.SetThrottle(0,false,2.);Reactor.ExecFrame(1./60.);
     TestEqual(TEXT("Zero throttle gives zero thrust"),Engine.GetThrust(1./60.),0.f);
+
+    class FArcadeBoostProbe : public Ship
+    {
+    public:
+        explicit FArcadeBoostProbe(ShipDesign* Design) : Ship("Boost fixture", "", Design, 1, 0, nullptr, false) {}
+        void SetSpeedComponents(double Linear, double Arcade)
+        {
+            velocity = GetHeading() * Linear;
+            arcade_velocity = GetHeading() * Arcade;
+        }
+    };
+
+    const int SavedModel = Ship::GetFlightModel();
+    ON_SCOPE_EXIT { Ship::SetFlightModel(SavedModel); };
+    Ship::SetFlightModel(Ship::FM_ARCADE);
+    FArcadeBoostProbe Boosted(Runtime);
+    Drive* BoostDrive = Boosted.GetMainDrive();
+    if (!TestNotNull(TEXT("Arcade fixture main drive"), BoostDrive)) return false;
+    BoostDrive->SetPowerOn();
+    Boosted.SetThrottle(100.0);
+    Boosted.ExecThrottle(2.0);
+    Boosted.SetAugmenter(true);
+    BoostDrive->SetThrottle(100.0, true, 2.0);
+    TestTrue(TEXT("Arcade fixture starts with an active augmenter"), BoostDrive->IsAugmenterOn());
+
+    const double Limit = Boosted.GetVLimit() * 1.5;
+    Boosted.SetSpeedComponents(Limit * 0.7, Limit * 0.6);
+    Boosted.ExecPhysics(0.001);
+    TestTrue(TEXT("Augmenter caps combined arcade and linear velocity"), FMath::IsNearlyEqual(Boosted.GetVelocity().Size(), Limit, 0.01));
+    Boosted.SetSpeedComponents(Limit * 0.2, Limit * 0.2);
+    Boosted.ExecPhysics(0.001);
+    TestTrue(TEXT("Below cap, the arcade component is counted once"), FMath::IsNearlyEqual(Boosted.GetVelocity().Size(), Limit * 0.4, 0.2));
     return true;
 }
 #endif

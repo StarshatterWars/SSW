@@ -72,6 +72,7 @@ bool FTravelOwnershipTest::RunTest(const FString& Parameters)
     Destination.TransferObject(Pilot);
     TestFalse(TEXT("Source releases ship ownership"), Source.GetShips().contains(Pilot));
     TestNull(TEXT("Source releases player ownership"), Source.GetPlayerShip());
+    TestTrue(TEXT("Destination retains the actual player"), Destination.GetPlayerShip() == Pilot);
     TestFalse(TEXT("Source selection releases traveler"), Source.IsSelected(Pilot));
     TestTrue(TEXT("Destination owns traveler"), Destination.GetShips().contains(Pilot));
     TestTrue(TEXT("Traveler points to destination"), Pilot->GetRegion()==&Destination);
@@ -91,6 +92,16 @@ bool FTravelOwnershipTest::RunTest(const FString& Parameters)
     Drive.CancelJump();
     TestEqual(TEXT("Cancel resets traveler warp"), Pilot->GetWarpFactor(),1.0);
     TestEqual(TEXT("Cancel discharges drive"), Drive.GetEnergy(),0.0);
+
+    Source.SetPlayerShip(Pilot);
+    Pilot->SetIFF(1);
+    Neighbor->SetIFF(0);
+    TestTrue(TEXT("Nearby neutral craft does not block time skip"), Source.CanTimeSkip());
+    Neighbor->SetIFF(2);
+    Neighbor->MoveTo(Pilot->GetLocation() + FVector(30000, 0, 0));
+    TestFalse(TEXT("Untracked hostile fighter at the legacy boundary blocks time skip"), Source.CanTimeSkip());
+    Neighbor->MoveTo(Pilot->GetLocation() + FVector(30001, 0, 0));
+    TestTrue(TEXT("Untracked fighter outside the legacy boundary permits time skip"), Source.CanTimeSkip());
     return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FQuantumTravelSafetyTest,

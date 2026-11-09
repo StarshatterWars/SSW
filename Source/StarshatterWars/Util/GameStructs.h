@@ -81,7 +81,7 @@ enum class EMISSIONSTATUS : uint8 {
 	Pending UMETA(DisplayName = "Pending"),
 };
 
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta=(ScriptName="SSWGameMode"))
 enum class EGameMode : uint8
 {
 	BOOT    UMETA(DisplayName = "Booting up"),

@@ -290,6 +290,14 @@ SimRegion::ExecFrame(double seconds)
     }
     sim_time = Game::GetGameTime();
     if (orbital_region) location = orbital_region->Location();
+
+    // Stars45 updated asteroids in the active region's sky pass.
+    if (active) {
+        ListIter<Asteroid> Rock = asteroids;
+        while (++Rock)
+            if (Rock.value()) Rock->ExecFrame(seconds);
+    }
+
     UpdateTracking(seconds);
     UpdateShips(seconds);
     UpdateShots(seconds);
@@ -333,8 +341,10 @@ void SimRegion::NextView()
 
 bool SimRegion::CanTimeSkip() const
 {
-    if (shots.size() > 0)  return false;
-    if (drones.size() > 0) return false;
+    if (!player_ship || shots.size() > 0 || drones.size() > 0) return false;
+
+    const FVector PlayerLocation = player_ship->GetLocation();
+    const int PlayerIFF = player_ship->GetIFF();
 
     for (int i = 0; i < ships.size(); ++i) {
         Ship* s = ships[i];
@@ -345,6 +355,14 @@ bool SimRegion::CanTimeSkip() const
 
         if (s->IsDying() || s->IsDead())
             return false;
+
+        // Legacy safety also stops the skip before an undetected hostile is reached.
+        if (s != player_ship && s->GetIFF() > 0 && s->GetIFF() != PlayerIFF)
+        {
+            const double Limit = s->IsStarship() ? 60e3 : 30e3;
+            if (FVector::DistSquared(PlayerLocation, s->GetLocation()) <= FMath::Square(Limit))
+                return false;
+        }
     }
 
     return true;
@@ -425,7 +443,7 @@ SimRegion::ResolveTimeSkip(double seconds)
         }
         else if (ward) {
             FVector delta = ship->GetLocation() - ward->GetLocation();
-            delta.Z = 0.0f;
+            delta.Y = 0.0f;
 
             if (delta.Size() > 25e3) {
                 delta.Normalize();
@@ -475,7 +493,7 @@ SimRegion::ResolveTimeSkip(double seconds)
 
         if (ward) {
             FVector ward_heading = ward->GetHeading();
-            ward_heading.Z = 0.0f;
+            ward_heading.Y = 0.0f;
 
             if (!ward_heading.IsNearlyZero())
                 ward_heading.Normalize();
@@ -587,14 +605,18 @@ void SimRegion::TransferObject(Ship* ShipToMove)
 {
     if (!ShipToMove) return;
     SimRegion* Previous = ShipToMove->GetRegion();
-    if (Previous && Previous != this)
+    const bool bChangingRegion = Previous && Previous != this;
+    const bool bMovingPlayer = bChangingRegion && Previous->player_ship == ShipToMove;
+    if (bChangingRegion)
     {
         Previous->ships.remove(ShipToMove);
         Previous->carriers.remove(ShipToMove);
         Previous->selection.remove(ShipToMove);
-        if (Previous->player_ship == ShipToMove) Previous->player_ship = nullptr;
+        if (bMovingPlayer) Previous->player_ship = nullptr;
     }
     InsertObject(ShipToMove);
+    if (bMovingPlayer) SetPlayerShip(ShipToMove);
+    if (sim && bChangingRegion) sim->OnShipTransferred.Broadcast(*ShipToMove, *Previous, *this);
 }
 
 void SimRegion::InsertObject(Ship* s)
@@ -611,13 +633,6 @@ void SimRegion::InsertObject(Ship* s)
     }
 
     TranslateObject((SimObject*)s);
-
-    if (!player_ship) {
-        SimElement* elem = s->GetElement();
-        if (elem && elem->GetPlayer() > 0) {
-            player_ship = s;
-        }
-    }
 }
 
 void SimRegion::InsertObject(SimShot* shot)
@@ -625,16 +640,20 @@ void SimRegion::InsertObject(SimShot* shot)
     if (!shot)
         return;
 
+    bool bAdded = false;
     if (Drone* d = dynamic_cast<Drone*>(shot)) {
-        if (!drones.contains(d))
+        if (!drones.contains(d)) {
             drones.append(d);
+            bAdded = true;
+        }
     }
-    else {
-        if (!shots.contains(shot))
-            shots.append(shot);
+    else if (!shots.contains(shot)) {
+        shots.append(shot);
+        bAdded = true;
     }
 
     TranslateObject((SimObject*)shot);
+    if (sim && bAdded) sim->OnProjectileAdded.Broadcast(*shot, *this);
 }
 
 void SimRegion::InsertObject(Explosion* e)
@@ -1108,6 +1127,7 @@ SimRegion::DestroyShip(Ship* ship)
         TSet<Ship*> DetachedShip;
         DetachedShip.Add(ship);
         DetachRegionShipActors(DetachedShip);
+        if (sim) sim->OnShipRetired.Broadcast(*ship, *this);
     }
 }
 

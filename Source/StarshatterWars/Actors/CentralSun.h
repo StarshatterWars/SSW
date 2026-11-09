@@ -5,6 +5,7 @@
 #include "CentralSun.generated.h"
 
 class UChildActorComponent;
+class UStaticMeshComponent;
 
 UCLASS()
 class STARSHATTERWARS_API ACentralSun : public AActor
@@ -30,6 +31,10 @@ protected:
     virtual void BeginPlay() override;
 
 private:
+    // Legacy central-star Blueprints bind material controls to this component.
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "System|Sun", meta = (AllowPrivateAccess = "true"))
+    TObjectPtr<UStaticMeshComponent> SunMesh;
+
     UPROPERTY(VisibleAnywhere, Category = "System|Sun")
     TObjectPtr<USceneComponent> SceneRoot;
 

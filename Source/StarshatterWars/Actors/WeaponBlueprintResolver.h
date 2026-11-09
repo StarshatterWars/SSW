@@ -28,7 +28,10 @@ namespace WeaponBlueprintResolver
     inline UClass* ResolveProjectile(const FString& Reference)
     {
         const FString Path=ProjectileClassPath(Reference);
-        return Path.IsEmpty()?nullptr:LoadClass<AActor>(nullptr,*Path);
+        if (Path.IsEmpty()) return nullptr;
+        if (UClass* Loaded = FindObject<UClass>(nullptr, *Path); Loaded && Loaded->IsChildOf(AActor::StaticClass()))
+            return Loaded;
+        return LoadClass<AActor>(nullptr, *Path);
     }
 
     inline UClass* Resolve(const FString& Model, const FString& WeaponName)
@@ -38,8 +41,10 @@ namespace WeaponBlueprintResolver
             const FString Name = FPaths::GetBaseFilename(Source);
             if (Name.IsEmpty() || Name.Contains(TEXT(" "))) continue;
             const FString Package = FString::Printf(TEXT("/Game/Models/Weapons/%s/BP_%s"), *Name, *Name);
-            if (!FPackageName::DoesPackageExist(Package)) continue;
             const FString ClassPath = Package + TEXT(".BP_") + Name + TEXT("_C");
+            if (UClass* Loaded = FindObject<UClass>(nullptr, *ClassPath); Loaded && Loaded->IsChildOf(AActor::StaticClass()))
+                return Loaded;
+            if (!FPackageName::DoesPackageExist(Package)) continue;
             if (UClass* Class = LoadClass<AActor>(nullptr, *ClassPath)) return Class;
         }
         return nullptr;

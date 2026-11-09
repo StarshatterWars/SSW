@@ -47,11 +47,18 @@ Account sign-in and saves are closed at the project owner's direction. Look and 
 
 Keep the current 1/100 presentation scale and legacy simulation coordinates for this milestone.
 
-## Alpha 4 — scale conversion
+## Alpha 4 — optimization, cleanup, bug fixes and scale conversion
 
-**Open as of 2026-11-09.** Falcon and Orion are the first conversion targets.
+**Open as of 2026-11-09.** Begin with a major optimization, cleanup and bug-fixing pass. Profile representative missions, prioritize measured bottlenecks and gameplay defects, and rerun the affected workflows before starting scale conversion.
 
-Move the asset and presentation scale conversion here. Start with Falcon and Orion. Preserve legacy simulation coordinates, distances and timing. Verify camera framing, launch and recovery, terrain contact, attachment points and collision alignment before extending the conversion to the fleet.
+After stabilization, start asset and presentation scale conversion with Falcon and Orion. Preserve legacy simulation coordinates, distances and timing. Verify camera framing, launch and recovery, terrain contact, attachment points and collision alignment before extending the conversion to the fleet.
+
+## Alpha 5 — multiplayer
+
+Phase 5 is a project-wide refactor to integrate Unreal Engine multiplayer across nearly every gameplay system. Extend the existing A1.4 session and lobby work to create and join sessions through EOS and Steam. Establish server authority, player ownership, input routing and replication across mission flow, world and actor lifecycles, flight controls, ships, weapons, damage, AI, objectives, HUD state, debrief and results. Cover readiness, mission travel, disconnects and reconnects. Verify standalone play as each system moves to the multiplayer architecture.
+
+Verify create and join with two separate game processes on each provider. Complete a supported multiplayer mission and compare state and results on both clients. Exercise join failures, disconnect recovery and latency.
+
 
 ## Current evidence and limitations
 

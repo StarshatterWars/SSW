@@ -157,6 +157,15 @@ public:
 
     // Native subscribers release UI, input, actors and timers before deletion.
     FSimpleMulticastDelegate OnMissionUnloading;
+
+    // Simulation lifecycle notifications for presentation and future UE networking.
+    // Subscribers receive borrowed objects synchronously and must not mutate region lists.
+    DECLARE_MULTICAST_DELEGATE_ThreeParams(FShipTransferred, const Ship&, const SimRegion&, const SimRegion&);
+    DECLARE_MULTICAST_DELEGATE_TwoParams(FProjectileAdded, const SimShot&, const SimRegion&);
+    DECLARE_MULTICAST_DELEGATE_TwoParams(FShipRetired, const Ship&, const SimRegion&);
+    FShipTransferred OnShipTransferred;
+    FProjectileAdded OnProjectileAdded;
+    FShipRetired OnShipRetired;
     Mission* GetMission() { return mission; }
     List<MissionEvent>& GetEvents() { return events; }
     List<SimRegion>& GetRegions() { return regions; }

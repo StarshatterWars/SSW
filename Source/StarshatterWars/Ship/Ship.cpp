@@ -3862,6 +3862,23 @@ Ship::ExecEvalFrame(double seconds)
 void
 Ship::ExecPhysics(double seconds)
 {
+    const auto ClampAugmentedSpeed = [this]()
+    {
+        // GetVelocity combines physical and arcade velocity. Scale both so the
+        // boost cap preserves heading and does not add arcade velocity twice.
+        if (!IsDying() && vlimit > 0.0 && main_drive && main_drive->IsAugmenterOn())
+        {
+            const double Limit = vlimit * 1.5;
+            const double SpeedSquared = GetVelocity().SizeSquared();
+            if (SpeedSquared > FMath::Square(Limit))
+            {
+                const double Ratio = Limit / FMath::Sqrt(SpeedSquared);
+                velocity *= Ratio;
+                arcade_velocity *= Ratio;
+            }
+        }
+    };
+
     if (bManualRotation && sim && sim->GetPlayerShip()==this && !InTransition() && !IsDead() && !IsDying())
     {
         if (!design || seconds<=0 || !FMath::IsFinite(seconds) || mass<=0) return;
@@ -3872,6 +3889,7 @@ Ship::ExecPhysics(double seconds)
         if (IsAirborne()) AeroFrame(seconds);
         else if (flight_model<2) Physical::ExecFrame(seconds);
         else Physical::ArcadeFrame(seconds);
+        ClampAugmentedSpeed();
         ManualFlightLogElapsed += seconds;
         if (ManualFlightLogElapsed>=1.0)
         {
@@ -4058,10 +4076,7 @@ Ship::ExecPhysics(double seconds)
         Physical::ArcadeFrame(seconds);
     }
 
-    // The DEF's vlimit is the normal flight limit. Legacy augmentation
-    // allows 150% of it; enforce that ceiling while the booster is producing thrust.
-    if (!IsDying() && thrust > 0.f && vlimit > 0.0 && main_drive && main_drive->IsAugmenterOn())
-        SetVelocity(GetVelocity().GetClampedToMaxSize(vlimit * 1.5));
+    ClampAugmentedSpeed();
 }
 
 // +--------------------------------------------------------------------+
@@ -5005,32 +5020,19 @@ Ship::IsInCombat()
 	if (IsRogue())
 		return true;
 
-	bool combat = false;
-
-	ListIter<SimContact> c_iter = GetContactList();
-	while (++c_iter) {
-		SimContact* c = c_iter.value();
-		Ship* cship = c->GetShip();
-		const int ciff = c->GetIFF(this);
-		const FVector delta = c->Location() - GetLocation();
-		const double dist = delta.Length();
-
-		if (c->Threat(this) && !cship) {
-			if (IsStarship())
-				combat = dist < 120e3;
-			else
-				combat = dist < 60e3;
-		}
-
-		else if (cship && ciff > 0 && ciff != GetIFF()) {
-			if (IsStarship() && cship->IsStarship())
-				combat = dist < 120e3;
-			else
-				combat = dist < 60e3;
-		}
+	const bool bStarship = IsStarship();
+	const FVector Location = GetLocation();
+	ListIter<SimContact> Contact = GetContactList();
+	while (++Contact) {
+		const Ship* Other = Contact->GetShip();
+		const int IFF = Contact->GetIFF(this);
+		const bool bThreat = Other ? IFF > 0 && IFF != GetIFF() : Contact->Threat(this);
+		const double Range = bStarship && (!Other || Other->IsStarship()) ? 120e3 : 60e3;
+		if (bThreat && FVector::DistSquared(Contact->Location(), Location) < FMath::Square(Range))
+			return true;
 	}
 
-	return combat;
+	return false;
 }
 
 // +--------------------------------------------------------------------+
@@ -5078,8 +5080,7 @@ Ship::CanTimeSkip()
 
 	if (bCanSkip)
 	{
-		bCanSkip =
-			!IsInCombat();
+		bCanSkip = GetRegion() && GetRegion()->CanTimeSkip();
 	}
 
 	return bCanSkip;
