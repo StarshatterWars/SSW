@@ -11,6 +11,7 @@ class UStaticMesh;
 class UMaterialInterface;
 class UViewport;
 class UTextBlock;
+class UHorizontalBox;
 struct FShipDesign;
 struct FWeaponDesign;
 
@@ -55,6 +56,11 @@ protected:
     virtual FReply NativeOnMouseButtonDoubleClick(const FGeometry& Geometry, const FPointerEvent& Event) override;
     virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& Event) override;
 private:
+    UFUNCTION() void PlayRehearsal();
+    UFUNCTION() void RewindRehearsal();
+    UFUNCTION() void PauseRehearsal();
+    UFUNCTION() void StopRehearsal();
+    void UpdateRehearsal();
     void UpdateVisual();
     void UpdateCamera();
     void ClearVisual();
@@ -65,11 +71,18 @@ private:
     UPROPERTY(Transient) TObjectPtr<UTextBlock> RouteCaption;
     TArray<FVector> Route;
     TArray<FString> RouteLabels;
+    TArray<double> RouteArrivals;
+    TArray<double> RouteDepartures;
+    struct FTimedCue { double Time; FString Text; };
+    TArray<FTimedCue> TimedCues;
+    UPROPERTY(Transient) TObjectPtr<UHorizontalBox> PlaybackControls;
+    double RehearsalDuration = 0.0;
+    int32 LastCaptionSecond = INDEX_NONE;
+    bool bRehearsalPlaying = false;
     TWeakObjectPtr<AActor> RouteShip;
     TWeakObjectPtr<AActor> PreviewVisual;
     FBox MissionBounds = FBox(ForceInit);
-    int32 ActiveLeg = INDEX_NONE;
-    float RouteTime = 0.f;
+    double RouteTime = 0.0;
     bool bMissionScene = false;
     FString DesignKey;
     FVector2D LastViewSize = FVector2D::ZeroVector;

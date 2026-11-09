@@ -536,6 +536,7 @@ protected:
     bool bManualThrottle = false;
     bool bManualRotation = false;
     FVector ManualRotationInput = FVector::ZeroVector;
+    FVector SmoothedManualRotation = FVector::ZeroVector;
     FVector ManualTranslationInput = FVector::ZeroVector;
     double ManualFlightLogElapsed = 0;
 

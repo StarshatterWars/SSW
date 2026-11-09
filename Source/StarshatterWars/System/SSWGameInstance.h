@@ -85,6 +85,9 @@ class AAwardInfoLoader;
 class AMusicController;
 class ACombatGroupLoader;
 class UExitDlg;
+class IOnlineIdentity;
+class SWidget;
+class STextBlock;
 class UMainMenu;
 class UMenuDlg;
 class UFirstTimeDlg;
@@ -152,6 +155,20 @@ public:
 	// =====================================================================
 	UFUNCTION(BlueprintCallable, Category = "Game Variables")
 	void ShowMainMenuScreen();
+    const FString& GetPlatformPilotName() const { return PlatformPilotName; }
+
+private:
+    void ShowPlatformSignIn(APlayerController* PC);
+    void BeginPlatformSignIn(FName Provider);
+    void FinishPlatformSignIn(FName Provider, bool bSuccess, const FString& AccountId);
+    void ClearPlatformSignInRequest();
+    TSharedPtr<IOnlineIdentity, ESPMode::ThreadSafe> PendingPlatformIdentity;
+    FDelegateHandle PlatformLoginHandle;
+    TSharedPtr<SWidget> PlatformSignInView;
+    TSharedPtr<STextBlock> PlatformSignInStatus;
+    FString PlatformPilotName;
+
+public:
 	void ShowStartupSplashes();
 	void ShowStartupSplash(int32 Index);
 

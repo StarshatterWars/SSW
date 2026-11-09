@@ -1,5 +1,7 @@
 
 #include "ContactsDlg.h"
+#include "FlightPanelStyle.h"
+#include "MissionUIStyle.h"
 #include "ShipVisualCatalog.h"
 #include "FormattingUtils.h"
 #include "MissionBriefingDlg.h"
@@ -24,6 +26,15 @@
 #include "Styling/CoreStyle.h"
 
 namespace {
+const FButtonStyle& ContactButtonStyle()
+{
+    static const FButtonStyle Style = FButtonStyle()
+        .SetNormal(FSlateRoundedBoxBrush(FLinearColor(.035f, .075f, .115f), 6.f))
+        .SetHovered(FSlateRoundedBoxBrush(FLinearColor(.075f, .21f, .32f), 6.f))
+        .SetPressed(FSlateRoundedBoxBrush(FLinearColor(.11f, .28f, .4f), 6.f));
+    return Style;
+}
+
 struct FContactRowData {
     TWeakObjectPtr<AActor> Actor;
     FString Name, Type;
@@ -42,25 +53,28 @@ public:
     SLATE_END_ARGS()
     void Construct(const FArguments& Args) {
         Host = Args._Host;
-        ChildSlot[SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(FLinearColor(0.01f,0.02f,0.035f,0.96f)).Padding(10)
+        ChildSlot[SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("NoBrush")).Padding(10)
             [SNew(SVerticalBox)
                 +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,12)
-                [SNew(SButton).IsFocusable(false).OnClicked_Lambda([this](){EnemiesOnly=!EnemiesOnly;Refresh();return FReply::Handled();})
-                    [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this](){return FText::FromString(EnemiesOnly?TEXT("ENEMIES - SHOW ALL"):TEXT("ALL CONTACTS - SHOW ENEMIES"));})]]
+                [SNew(SBox).HeightOverride(1)
+                    [SNew(SBorder).Padding(0).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+                        .BorderBackgroundColor(FlightPanelStyle::DividerColor())]]
+                +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,12)
+                [SNew(SButton).ButtonStyle(&ContactButtonStyle()).IsFocusable(false).OnClicked_Lambda([this](){EnemiesOnly=!EnemiesOnly;Refresh();return FReply::Handled();})
+                    [SNew(STextBlock).Font(MissionUIStyle::GetInfoLabelFont(15)).ColorAndOpacity(FLinearColor::White).Text_Lambda([this](){return FText::FromString(EnemiesOnly?TEXT("ENEMIES - SHOW ALL"):TEXT("ALL CONTACTS - SHOW ENEMIES"));})]]
                 +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)
                 [SNew(SHorizontalBox)
-                    +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).IsFocusable(false).OnClicked_Lambda([this](){Sort(true);return FReply::Handled();})
-                        [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this](){return FText::FromString(ByName?(Ascending?TEXT("NAME A-Z"):TEXT("NAME Z-A")):TEXT("NAME"));})]]
-                    +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).IsFocusable(false).OnClicked_Lambda([this](){Sort(false);return FReply::Handled();})
-                        [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this](){return FText::FromString(!ByName?(Ascending?TEXT("DISTANCE NEAREST"):TEXT("DISTANCE FARTHEST")):TEXT("DISTANCE"));})]]]
+                    +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&ContactButtonStyle()).IsFocusable(false).OnClicked_Lambda([this](){Sort(true);return FReply::Handled();})
+                        [SNew(STextBlock).Font(MissionUIStyle::GetInfoLabelFont(15)).ColorAndOpacity(FLinearColor::White).Text_Lambda([this](){return FText::FromString(ByName?(Ascending?TEXT("NAME A-Z"):TEXT("NAME Z-A")):TEXT("NAME"));})]]
+                    +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&ContactButtonStyle()).IsFocusable(false).OnClicked_Lambda([this](){Sort(false);return FReply::Handled();})
+                        [SNew(STextBlock).Font(MissionUIStyle::GetInfoLabelFont(15)).ColorAndOpacity(FLinearColor::White).Text_Lambda([this](){return FText::FromString(!ByName?(Ascending?TEXT("DISTANCE NEAREST"):TEXT("DISTANCE FARTHEST")):TEXT("DISTANCE"));})]]]
                 +SVerticalBox::Slot().FillHeight(1)
                 [SAssignNew(List,SListView<FContactRow>).ListItemsSource(&Rows).SelectionMode(ESelectionMode::None)
                     .OnGenerateRow_Lambda([this](FContactRow Row,const TSharedRef<STableViewBase>& Owner)->TSharedRef<ITableRow> {
                         return SNew(STableRow<FContactRow>,Owner).Padding(2)
-                            [SNew(SButton).IsFocusable(false)
+                            [SNew(SButton).ButtonStyle(&ContactButtonStyle()).IsFocusable(false)
                                 .ButtonColorAndOpacity_Lambda([this,Row](){return Host.IsValid() && Host->GetSelectedMissionContact()==Row->Actor.Get()
-                                    ?FLinearColor(0.2f,0.45f,0.65f,1):FLinearColor(0.035f,0.035f,0.035f,1);})
+                                    ?FLinearColor(1.4f,1.8f,2.0f,1):FLinearColor::White;})
                                 .OnClicked_Lambda([this,Row](){if(Host.IsValid() && Row->Actor.IsValid())Host->SelectMissionContact(Row->Actor.Get());return FReply::Handled();})
                                 [SNew(SHorizontalBox)
                                     +SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0,0,8,0)
@@ -68,7 +82,7 @@ public:
                                         [SNew(SImage).ColorAndOpacity(FLinearColor::White)
                                         .Image_Lambda([Row](){return Row->Brush.IsValid()?Row->Brush.Get():FCoreStyle::Get().GetBrush("WhiteBrush");})]]
                                     +SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)
-                                    [SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",16)).ColorAndOpacity_Lambda([Row](){return Row->Color;}).AutoWrapText(true)
+                                    [SNew(STextBlock).Font(MissionUIStyle::GetInfoValueFont(16)).ColorAndOpacity_Lambda([Row](){return Row->Color;}).AutoWrapText(true)
                                     .Text_Lambda([this,Row](){return FText::FromString(FString::Printf(TEXT("%s%s\n%s  |  %s"),
                                         Host.IsValid() && Host->GetSelectedMissionContact()==Row->Actor.Get()?TEXT("> "):TEXT(""),*Row->Name,*Row->Type,*UFormattingUtils::FormatDistance(Row->Range * 1000.0)));})]]];
                     })]
@@ -181,4 +195,4 @@ TSharedRef<SWidget> UContactsDlg::RebuildWidget() {
     return Super::RebuildWidget();
 }
 TSharedRef<SWidget> UContactsDlg::CreatePanelContent(){return SNew(SContactsList).Host(MissionHost);}
-FText UContactsDlg::GetPanelCaption() const{return FText::FromString(TEXT("Contacts"));}
+FText UContactsDlg::GetPanelCaption() const{return FText::FromString(TEXT("CONTACTS"));}

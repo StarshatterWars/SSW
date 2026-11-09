@@ -120,8 +120,17 @@ void UFirstTimeDlg::PopulateDefaultsIfNeeded()
         UE_LOG(LogFirstTimeDlg, Warning, TEXT("PlayStyleCombo is NULL (BindWidget mismatch)."));
     }
 
-    if (NameEdit && NameEdit->GetHintText().IsEmpty())
-        NameEdit->SetHintText(FText::FromString(TEXT("Player Name")));
+    if (NameEdit)
+    {
+        const auto* GameInstance = Cast<USSWGameInstance>(GetGameInstance());
+        if (GameInstance && !GameInstance->GetPlatformPilotName().IsEmpty())
+        {
+            NameEdit->SetText(FText::FromString(GameInstance->GetPlatformPilotName()));
+            NameEdit->SetIsReadOnly(true);
+        }
+        else if (NameEdit->GetHintText().IsEmpty())
+            NameEdit->SetHintText(FText::FromString(TEXT("Player Name")));
+    }
 
     if (CallsignEdit && CallsignEdit->GetHintText().IsEmpty())
         CallsignEdit->SetHintText(FText::FromString(TEXT("Player Callsign")));
@@ -177,7 +186,10 @@ void UFirstTimeDlg::ApplyUiToPlayerInfo(FS_PlayerGameInfo& Info) const
     // -----------------------------
     // Identity
     // -----------------------------
-    if (NameEdit)
+    const auto* GameInstance = Cast<USSWGameInstance>(GetGameInstance());
+    if (GameInstance && !GameInstance->GetPlatformPilotName().IsEmpty())
+        Info.Name = GameInstance->GetPlatformPilotName();
+    else if (NameEdit)
     {
         const FString PlayerName = NameEdit->GetText().ToString().TrimStartAndEnd();
         if (!PlayerName.IsEmpty())

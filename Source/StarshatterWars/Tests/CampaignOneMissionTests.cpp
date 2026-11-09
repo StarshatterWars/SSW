@@ -3,6 +3,7 @@
 #include "Engine/DataTable.h"
 #include "GameStructs.h"
 #include "Mission.h"
+#include "ShipBriefingPreview.h"
 #include "Campaign.h"
 #include "MissionInfo.h"
 #include "CampaignPresentationRules.h"
@@ -86,6 +87,12 @@ bool FCampaignOneMissionAudit::RunTest(const FString& Parameters)
     Mission& Converted=*Loaded;
     TestTrue(TEXT("Actual authored mission converts successfully"),Converted.IsOK());
     TestEqual(TEXT("Selected mission identity survives loading"),Converted.GetIdentity(),Id);
+    if (Id >= 101 && Id <= 103)
+    {
+        auto* Rehearsal = NewObject<UShipBriefingPreview>();
+        TestTrue(TEXT("Training mission builds a 3D rehearsal from its own ship and route"),
+            Rehearsal->SetMissionScene(&Converted));
+    }
     TestEqual(TEXT("All authored elements survive conversion"),Converted.GetElements().size(),Row->Element.Num());
     int32 PlayerElements=0;
     for(int32 Index=0;Index<Converted.GetElements().size();++Index)

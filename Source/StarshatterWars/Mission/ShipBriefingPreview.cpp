@@ -3,6 +3,10 @@
 #include "ShipVisualCatalog.h"
 #include "Mission.h"
 #include "MissionElement.h"
+#include "MissionEvent.h"
+#include "Components/Button.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
 #include "Instruction.h"
 #include "GameStructs_System.h"
 #include "ShipActor.h"
@@ -316,6 +320,28 @@ TSharedRef<SWidget> UShipBriefingPreview::RebuildWidget()
         CaptionSlot->SetPadding(FMargin(14.f));
         CaptionSlot->SetHorizontalAlignment(HAlign_Left);
         CaptionSlot->SetVerticalAlignment(VAlign_Bottom);
+        CaptionSlot->SetPadding(FMargin(14.f, 14.f, 14.f, 62.f));
+        RouteCaption->SetAutoWrapText(true);
+
+        PlaybackControls = WidgetTree->ConstructWidget<UHorizontalBox>();
+        PlaybackControls->SetVisibility(ESlateVisibility::Collapsed);
+        UOverlaySlot* ControlsSlot = Overlay->AddChildToOverlay(PlaybackControls);
+        ControlsSlot->SetHorizontalAlignment(HAlign_Center);
+        ControlsSlot->SetVerticalAlignment(VAlign_Bottom);
+        ControlsSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
+        auto AddControl = [this](const FText& Label) {
+            auto* Button = WidgetTree->ConstructWidget<UButton>();
+            auto* Text = WidgetTree->ConstructWidget<UTextBlock>();
+            Text->SetText(Label);
+            Button->SetContent(Text);
+            MissionUIStyle::ApplyMenuButtonStyle(Button, GetGameInstance());
+            PlaybackControls->AddChildToHorizontalBox(Button)->SetPadding(FMargin(5.f, 0.f));
+            return Button;
+        };
+        AddControl(NSLOCTEXT("MissionRehearsal", "Play", "PLAY"))->OnClicked.AddDynamic(this, &UShipBriefingPreview::PlayRehearsal);
+        AddControl(NSLOCTEXT("MissionRehearsal", "Rewind", "REWIND"))->OnClicked.AddDynamic(this, &UShipBriefingPreview::RewindRehearsal);
+        AddControl(NSLOCTEXT("MissionRehearsal", "Pause", "PAUSE"))->OnClicked.AddDynamic(this, &UShipBriefingPreview::PauseRehearsal);
+        AddControl(NSLOCTEXT("MissionRehearsal", "Stop", "STOP"))->OnClicked.AddDynamic(this, &UShipBriefingPreview::StopRehearsal);
     }
     return Super::RebuildWidget();
 }
@@ -367,6 +393,8 @@ bool UShipBriefingPreview::SetShipDesign(const FShipDesign* Design, const TArray
         RouteLabels.Reset();
         bMissionScene = false;
         if (RouteCaption) RouteCaption->SetVisibility(ESlateVisibility::Collapsed);
+        if (PlaybackControls) PlaybackControls->SetVisibility(ESlateVisibility::Collapsed);
+        bRehearsalPlaying = false;
     }
     FString NewKey = Design ? Design->ShipName + TEXT("|") + Design->Mesh.ToSoftObjectPath().ToString() : FString();
     const FString ShipKey = NewKey;
@@ -401,8 +429,13 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
     DesignKey.Reset();
     Route.Reset();
     RouteLabels.Reset();
-    RouteTime = 0.f;
-    ActiveLeg = INDEX_NONE;
+    RouteTime = 0.0;
+    RehearsalDuration = 0.0;
+    LastCaptionSecond = INDEX_NONE;
+    bRehearsalPlaying = false;
+    RouteArrivals.Reset();
+    RouteDepartures.Reset();
+    TimedCues.Reset();
     bMissionScene = true;
 
     // Use authored coordinates within each sector. Separate sectors in the
@@ -420,12 +453,42 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
     };
 
     Route.Add(FVector::ZeroVector);
+    RouteArrivals.Add(0.0);
+    RouteDepartures.Add(0.0);
+    FVector PreviousLocation = Origin;
     for (ListIter<Instruction> Point = Player->NavList(); ++Point;)
     {
+        const double Speed = Point->GetSpeed() > 0 ? Point->GetSpeed() : 250.0;
+        const double Travel = FVector::Distance(PreviousLocation, Point->GetLocation()) / Speed;
+        const double Arrival = RouteDepartures.Last() + FMath::Max(Travel, 1.0);
+        RouteArrivals.Add(Arrival);
+        RouteDepartures.Add(Arrival + FMath::Max(Point->GetHoldTime(), 0.0));
+        PreviousLocation = Point->GetLocation();
         Route.Add(ScenePosition(Point->GetLocation(), Point->GetRegionName()));
         RouteLabels.Add(FString::Printf(TEXT("NAV %02d  %s"), RouteLabels.Num() + 1,
             ANSI_TO_TCHAR(Point->GetRegionName())));
     }
+
+    RehearsalDuration = RouteDepartures.Last();
+    for (ListIter<MissionEvent> Events = MissionDef->GetEvents(); ++Events;)
+    {
+        const MissionEvent* Event = Events.value();
+        if (!Event || !Event->EventMessage().length()) continue;
+        double At = 0.0;
+        if (Event->Trigger() == MissionEvent::TRIGGER_TIME)
+            At = Event->Time();
+        else if (Event->Trigger() == MissionEvent::TRIGGER_NAVPT &&
+            RouteArrivals.IsValidIndex(Event->TriggerParam()) &&
+            Event->TriggerShip().indexOf(Player->GetName()) == 0)
+            At = RouteArrivals[Event->TriggerParam()];
+        else
+            continue; // A rehearsal cannot predict combat-dependent event timing.
+
+        At += FMath::Max(Event->Delay(), 0.0);
+        TimedCues.Add({At, UTF8_TO_TCHAR(Event->EventMessage().data())});
+        RehearsalDuration = FMath::Max(RehearsalDuration, At + 3.0);
+    }
+    TimedCues.StableSort([](const FTimedCue& A, const FTimedCue& B) { return A.Time < B.Time; });
 
     struct FPlacement { MissionElement* Element; FVector Position; };
     TArray<FPlacement> Ships;
@@ -453,7 +516,7 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         }
     };
     RouteShipParts.Reset();
-    AddParts(RouteShipParts, PlayerParts, FTransform(FQuat::Identity, FVector::ZeroVector, FVector(.26)));
+    AddParts(RouteShipParts, PlayerParts, FTransform(FQuat::Identity, FVector::ZeroVector, FVector(.42)));
 
     TMap<const FShipDesign*, TArray<FBriefingShipPreviewPart>> Models;
     Models.Add(Player->GetShipDesign(), MoveTemp(PlayerParts));
@@ -467,7 +530,7 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
             Model = &Models.Add(Design);
             BriefingShipPreview::ResolveParts(*Design, *Model);
         }
-        const double Size = Element->IsStarship() ? .52 : .20;
+        const double Size = Element->IsStarship() ? .82 : .32;
         const FQuat Heading(FVector::UpVector, Element->GetHeading() + PI);
         const FVector Position = (Placement.Position - Center) * Scale;
         for (int32 ShipIndex = 0; ShipIndex < FMath::Min(Element->Count(), 8); ++ShipIndex)
@@ -484,14 +547,14 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
     {
         FBriefingShipPreviewPart& Point = Parts.AddDefaulted_GetRef();
         Point.Mesh = Marker;
-        Point.Transform = FTransform(FQuat::Identity, Route[Index], FVector(.13));
+        Point.Transform = FTransform(FQuat::Identity, Route[Index], FVector(.22));
         if (Index == 0) continue;
         const FVector Leg = Route[Index] - Route[Index - 1];
         if (Leg.IsNearlyZero()) continue;
         FBriefingShipPreviewPart& Segment = Parts.AddDefaulted_GetRef();
         Segment.Mesh = Line;
         Segment.Transform = FTransform(Leg.Rotation(), (Route[Index] + Route[Index - 1]) * .5,
-            FVector(Leg.Size() / 100.0, .028, .028));
+            FVector(Leg.Size() / 100.0, .075, .075));
     }
 
     MissionBounds = BriefingShipPreview::CalculateBounds(Parts);
@@ -501,7 +564,6 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         MissionBounds += Point - FVector(26.0);
     }
     ResetView();
-    OrbitPitch = 48.f;
     UpdateVisual();
     return true;
 }
@@ -511,7 +573,7 @@ void UShipBriefingPreview::SetPreviewActive(bool bActive)
     bPreviewActive = bActive;
     SetVisibility(bActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
     if (bActive) UpdateVisual();
-    else ClearVisual();
+    else { PauseRehearsal(); ClearVisual(); }
 }
 
 void UShipBriefingPreview::UpdateVisual()
@@ -519,6 +581,9 @@ void UShipBriefingPreview::UpdateVisual()
     if (IsDesignTime() || !bPreviewActive || !PreviewViewport || !PreviewViewport->GetViewportWorld()) return;
     if (PreviewVisual.IsValid() && PreviewVisual->GetWorld() == PreviewViewport->GetViewportWorld()) return;
     ClearVisual();
+    PreviewViewport->SetShowFlag(TEXT("EyeAdaptation"), !bMissionScene);
+    PreviewViewport->SetBackgroundColor(bMissionScene ? FLinearColor(.002f, .004f, .009f, 1.f)
+        : FLinearColor(.018f, .025f, .035f, 1.f));
     PreviewVisual = BriefingShipPreview::CreateVisual(PreviewViewport->GetViewportWorld(), Parts);
     if (bMissionScene && PreviewVisual.IsValid())
     {
@@ -527,6 +592,10 @@ void UShipBriefingPreview::UpdateVisual()
     }
     if (RouteCaption) RouteCaption->SetVisibility(bMissionScene && RouteShip.IsValid()
         ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+    if (PlaybackControls) PlaybackControls->SetVisibility(bMissionScene && RouteShip.IsValid()
+        ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+    LastCaptionSecond = INDEX_NONE;
+    if (bMissionScene) UpdateRehearsal();
     if (UnavailableText) UnavailableText->SetVisibility(PreviewVisual.IsValid()
         ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
     UpdateCamera();
@@ -535,8 +604,8 @@ void UShipBriefingPreview::UpdateVisual()
 void UShipBriefingPreview::ResetView()
 {
     OrbitYaw = -130.f;
-    OrbitPitch = 20.f;
-    Zoom = 1.f;
+    OrbitPitch = bMissionScene ? 48.f : 20.f;
+    Zoom = bMissionScene ? .43f : 1.f;
     UpdateCamera();
 }
 
@@ -554,29 +623,76 @@ void UShipBriefingPreview::UpdateCamera()
     PreviewViewport->SetViewRotation((-Direction).Rotation());
 }
 
+void UShipBriefingPreview::PlayRehearsal()
+{
+    if (RouteTime >= RehearsalDuration) RewindRehearsal();
+    bRehearsalPlaying = RehearsalDuration > 0.0;
+}
+
+void UShipBriefingPreview::RewindRehearsal()
+{
+    RouteTime = 0.0;
+    LastCaptionSecond = INDEX_NONE;
+    UpdateRehearsal();
+}
+
+void UShipBriefingPreview::PauseRehearsal()
+{
+    bRehearsalPlaying = false;
+}
+
+void UShipBriefingPreview::StopRehearsal()
+{
+    PauseRehearsal();
+    RewindRehearsal();
+    ResetView();
+}
+
+void UShipBriefingPreview::UpdateRehearsal()
+{
+    AActor* Visual = RouteShip.Get();
+    if (!Visual || Route.IsEmpty()) return;
+
+    int32 Leg = 0;
+    if (Route.Num() > 1)
+    {
+        while (Leg + 2 < Route.Num() && RouteTime >= RouteDepartures[Leg + 1]) ++Leg;
+        const double Travel = RouteArrivals[Leg + 1] - RouteDepartures[Leg];
+        const double Along = FMath::Clamp((RouteTime - RouteDepartures[Leg]) / Travel, 0.0, 1.0);
+        Visual->SetActorLocationAndRotation(FMath::Lerp(Route[Leg], Route[Leg + 1], Along),
+            (Route[Leg + 1] - Route[Leg]).Rotation());
+    }
+
+    const int32 Second = FMath::FloorToInt(RouteTime);
+    if (!RouteCaption || LastCaptionSecond == Second) return;
+    LastCaptionSecond = Second;
+    FString Caption = FString::Printf(TEXT("MISSION TIME %02d:%02d  |  %s"),
+        Second / 60, Second % 60, RouteLabels.IsValidIndex(Leg) ? *RouteLabels[Leg] : TEXT("MISSION START"));
+    for (int32 Index = TimedCues.Num() - 1; Index >= 0; --Index)
+    {
+        if (TimedCues[Index].Time > RouteTime) continue;
+        if (RouteTime - TimedCues[Index].Time < 7.0) Caption += TEXT("\n") + TimedCues[Index].Text;
+        break;
+    }
+    RouteCaption->SetText(FText::FromString(Caption));
+}
+
 void UShipBriefingPreview::NativeTick(const FGeometry& Geometry, float DeltaTime)
 {
     Super::NativeTick(Geometry, DeltaTime);
     if (!bPreviewActive || !PreviewVisual.IsValid() || !PreviewViewport) return;
-    if (bMissionScene && !bDragging)
+    if (bMissionScene && bRehearsalPlaying)
     {
-        OrbitYaw = FMath::UnwindDegrees(OrbitYaw + DeltaTime * 3.f);
-        if (AActor* Visual = RouteShip.Get(); Visual && Route.Num() > 1)
+        // Keep authored timing ratios while fitting the whole briefing into a short viewing window.
+        const double PlaybackSeconds = FMath::Clamp(RehearsalDuration / 4.0, 15.0, 30.0);
+        RouteTime = FMath::Min(RouteTime + DeltaTime * RehearsalDuration / PlaybackSeconds, RehearsalDuration);
+        UpdateRehearsal();
+        if (RouteTime >= RehearsalDuration) PauseRehearsal();
+        if (!bDragging)
         {
-            constexpr float SecondsPerLeg = 4.f;
-            RouteTime = FMath::Fmod(RouteTime + DeltaTime, (Route.Num() - 1) * SecondsPerLeg);
-            const int32 Leg = FMath::Min(FMath::FloorToInt(RouteTime / SecondsPerLeg), Route.Num() - 2);
-            const double Along = FMath::Frac(RouteTime / SecondsPerLeg);
-            const FVector Direction = Route[Leg + 1] - Route[Leg];
-            Visual->SetActorLocationAndRotation(FMath::Lerp(Route[Leg], Route[Leg + 1], Along),
-                Direction.Rotation());
-            if (RouteCaption && ActiveLeg != Leg)
-            {
-                ActiveLeg = Leg;
-                RouteCaption->SetText(FText::FromString(RouteLabels[Leg]));
-            }
+            OrbitYaw = FMath::UnwindDegrees(OrbitYaw + DeltaTime * 3.f);
+            UpdateCamera();
         }
-        UpdateCamera();
     }
     else if (!LastViewSize.Equals(PreviewViewport->GetCachedGeometry().GetLocalSize(), 1.f))
         UpdateCamera();
@@ -619,7 +735,7 @@ FReply UShipBriefingPreview::NativeOnMouseWheel(const FGeometry& Geometry, const
 {
     if (bPreviewActive && PreviewVisual.IsValid())
     {
-        Zoom = FMath::Clamp(Zoom * FMath::Pow(0.85f, Event.GetWheelDelta()), 0.7f, 3.f);
+        Zoom = FMath::Clamp(Zoom * FMath::Pow(0.85f, Event.GetWheelDelta()), bMissionScene ? .30f : .70f, 3.f);
         UpdateCamera();
         return FReply::Handled();
     }

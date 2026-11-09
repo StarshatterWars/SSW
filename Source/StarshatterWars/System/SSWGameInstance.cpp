@@ -2,6 +2,16 @@
 
 
 #include "SSWGameInstance.h"
+#include "SSWBootSubsystem.h"
+#include "OnlineSubsystem.h"
+#include "Interfaces/OnlineIdentityInterface.h"
+#include "PlayerCharacter.h"
+#include "Misc/SecureHash.h"
+#include "MissionUIStyle.h"
+#include "Widgets/SBoxPanel.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Text/STextBlock.h"
 #include "GameFramework/Actor.h"
 #include "SimUniverse.h"
 #include "Galaxy.h"
@@ -20,6 +30,7 @@
 #include "PlayerSaveGame.h"
 #include "UniverseSaveGame.h" 
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "UObject/UObjectGlobals.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -233,8 +244,139 @@ bool USSWGameInstance::RestoreSavedActiveCampaign()
     return true;
 }
 
+void USSWGameInstance::ShowPlatformSignIn(APlayerController* PC)
+{
+    if (PlatformSignInView || !GetGameViewportClient()) return;
+    auto SignInButton = [this](const FText& Label, FName Provider) {
+        return SNew(SButton)
+            .IsEnabled_Lambda([this] { return !PendingPlatformIdentity.IsValid(); })
+            .ContentPadding(FMargin(16.f, 10.f))
+            .OnClicked_Lambda([this, Provider] {
+                BeginPlatformSignIn(Provider);
+                return FReply::Handled();
+            })
+            [SNew(STextBlock).Text(Label).Font(MissionUIStyle::GetInfoValueFont(18))];
+    };
+
+    PlatformSignInView = SNew(SBorder)
+        .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+        .BorderBackgroundColor(FLinearColor(.025f, .04f, .065f))
+        .HAlign(HAlign_Center).VAlign(VAlign_Center)
+        [
+            SNew(SBox).WidthOverride(420.f)
+            [
+                SNew(SVerticalBox)
+                + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 20.f)
+                [SNew(STextBlock).Text(NSLOCTEXT("SSWSignIn", "Title", "STARSHATTER WARS"))
+                    .Font(MissionUIStyle::GetHeaderFont(28))]
+                + SVerticalBox::Slot().AutoHeight().Padding(0.f, 0.f, 0.f, 10.f)
+                [SignInButton(NSLOCTEXT("SSWSignIn", "Steam", "Sign in with Steam"), TEXT("STEAM"))]
+                + SVerticalBox::Slot().AutoHeight()
+                [SignInButton(NSLOCTEXT("SSWSignIn", "Epic", "Sign in with Epic Games"), TEXT("EOS"))]
+                + SVerticalBox::Slot().AutoHeight().Padding(0.f, 14.f, 0.f, 0.f)
+                [SAssignNew(PlatformSignInStatus, STextBlock).AutoWrapText(true)
+                    .Text(NSLOCTEXT("SSWSignIn", "Prompt", "Sign in to continue."))]
+                + SVerticalBox::Slot().AutoHeight().Padding(0.f, 14.f, 0.f, 0.f)
+                [SNew(SButton).Text(NSLOCTEXT("SSWSignIn", "Quit", "Exit to Windows"))
+                    .OnClicked_Lambda([this] {
+                        UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, true);
+                        return FReply::Handled();
+                    })]
+            ]
+        ];
+    GetGameViewportClient()->AddViewportWidgetContent(PlatformSignInView.ToSharedRef(), 200);
+    PC->SetInputMode(FInputModeUIOnly());
+    PC->SetShowMouseCursor(true);
+}
+
+void USSWGameInstance::BeginPlatformSignIn(FName Provider)
+{
+    if (PendingPlatformIdentity || !PlatformSignInStatus) return;
+    IOnlineSubsystem* Online = IOnlineSubsystem::Get(Provider);
+    PendingPlatformIdentity = Online ? Online->GetIdentityInterface() : nullptr;
+    if (!PendingPlatformIdentity)
+    {
+        PlatformSignInStatus->SetText(NSLOCTEXT("SSWSignIn", "Unavailable",
+            "This provider is unavailable. Check the platform setup or try the other provider."));
+        return;
+    }
+
+    PlatformSignInStatus->SetText(NSLOCTEXT("SSWSignIn", "Connecting", "Signing in..."));
+    // Steam may complete synchronously. Retain the interface through the call.
+    const IOnlineIdentityPtr Identity = PendingPlatformIdentity;
+    if (Identity->GetLoginStatus(0) == ELoginStatus::LoggedIn)
+    {
+        const FUniqueNetIdPtr Id = Identity->GetUniquePlayerId(0);
+        FinishPlatformSignIn(Provider, Id.IsValid(), Id.IsValid() ? Id->ToString() : FString());
+        return;
+    }
+
+    PlatformLoginHandle = Identity->AddOnLoginCompleteDelegate_Handle(0,
+        FOnLoginCompleteDelegate::CreateWeakLambda(this,
+            [this, Provider](int32, bool bSuccess, const FUniqueNetId& Id, const FString&) {
+                FinishPlatformSignIn(Provider, bSuccess && Id.IsValid(), bSuccess ? Id.ToString() : FString());
+            }));
+    const FOnlineAccountCredentials Credentials(
+        Provider == TEXT("EOS") ? TEXT("accountportal") : TEXT(""), TEXT(""), TEXT(""));
+    if (!Identity->Login(0, Credentials) && PendingPlatformIdentity)
+        FinishPlatformSignIn(Provider, false, FString());
+}
+
+void USSWGameInstance::ClearPlatformSignInRequest()
+{
+    if (PendingPlatformIdentity && PlatformLoginHandle.IsValid())
+        PendingPlatformIdentity->ClearOnLoginCompleteDelegate_Handle(0, PlatformLoginHandle);
+    PlatformLoginHandle.Reset();
+    PendingPlatformIdentity.Reset();
+}
+
+void USSWGameInstance::FinishPlatformSignIn(FName Provider, bool bSuccess, const FString& AccountId)
+{
+    const FString DisplayName = bSuccess && PendingPlatformIdentity
+        ? PendingPlatformIdentity->GetPlayerNickname(0).TrimStartAndEnd() : FString();
+    ClearPlatformSignInRequest();
+
+    auto* Players = GetSubsystem<UStarshatterPlayerSubsystem>();
+    if (AccountId.IsEmpty() || DisplayName.IsEmpty() || !Players)
+    {
+        if (PlatformSignInStatus)
+            PlatformSignInStatus->SetText(Provider == TEXT("STEAM")
+                ? NSLOCTEXT("SSWSignIn", "SteamFailed", "Sign into the Steam client and try again.")
+                : NSLOCTEXT("SSWSignIn", "EpicFailed", "Epic sign-in did not complete. Try again."));
+        return;
+    }
+
+    const FString AccountKey = Provider.ToString() + TEXT(":") + AccountId;
+    Players->SetSaveSlot(TEXT("PlayerSave_") + FMD5::HashAnsiString(*AccountKey), 0);
+    Players->ResetToDefaults();
+    if (!Players->LoadFromBoot())
+    {
+        if (PlatformSignInStatus)
+            PlatformSignInStatus->SetText(NSLOCTEXT("SSWSignIn", "ProfileFailed", "Could not load this account's pilot save."));
+        return;
+    }
+    PlatformPilotName = DisplayName;
+    Players->GetMutablePlayerInfo().Name = DisplayName;
+    PlayerCharacter::SetWorldContext(this);
+    if (PlayerCharacter* Pilot = PlayerCharacter::GetCurrentPlayer())
+        Pilot->FromPlayerInfo(Players->GetPlayerInfo());
+
+    if (PlatformSignInView && GetGameViewportClient())
+        GetGameViewportClient()->RemoveViewportWidgetContent(PlatformSignInView.ToSharedRef());
+    PlatformSignInView.Reset();
+    PlatformSignInStatus.Reset();
+    ShowMainMenuScreen();
+}
+
 void USSWGameInstance::ShowMainMenuScreen()
 {
+    if (GetDefault<USSWDiagnosticsSettings>()->bRequirePlatformSignIn && PlatformPilotName.IsEmpty())
+    {
+        if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+            ShowPlatformSignIn(PC);
+        return;
+    }
+
 	RestoreSavedActiveCampaign();
 	RemoveScreens();
 
@@ -442,6 +584,11 @@ UUserWidget* USSWGameInstance::GetActiveWidget() {
 
 void USSWGameInstance::Shutdown()
 {
+    ClearPlatformSignInRequest();
+    if (PlatformSignInView && GetGameViewportClient())
+        GetGameViewportClient()->RemoveViewportWidgetContent(PlatformSignInView.ToSharedRef());
+    PlatformSignInView.Reset();
+    PlatformSignInStatus.Reset();
 	USound::SetWorldContext(nullptr);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 

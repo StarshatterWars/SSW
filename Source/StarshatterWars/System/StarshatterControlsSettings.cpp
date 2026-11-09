@@ -21,13 +21,17 @@
 bool USSWMouseFlightModifier::bMouseSteeringEnabled = false;
 
 FInputActionValue USSWMouseFlightModifier::ModifyRaw_Implementation(
-    const UEnhancedPlayerInput*, FInputActionValue CurrentValue, float)
+    const UEnhancedPlayerInput*, FInputActionValue CurrentValue, float DeltaTime)
 {
     if (!bMouseSteeringEnabled) return FInputActionValue(0.0f);
     const auto& Config = UStarshatterControlsSettings::Get()->GetControlsConfig();
     const float Scale = Config.MouseSensitivity / 25.0f;
     const float Direction = bVerticalAxis && Config.bMouseInvert ? -1.0f : 1.0f;
-    return FInputActionValue(CurrentValue.Get<float>() * Scale * Direction);
+    // Mouse axes report counts per frame. Normalize around 60 Hz and
+    // soften large deltas so an ordinary movement does not saturate steering.
+    const float FrameScale = 1.0f / FMath::Clamp(DeltaTime * 60.0f, 0.5f, 3.0f);
+    const float Demand = CurrentValue.Get<float>() * Scale * FrameScale * 0.25f;
+    return FInputActionValue(Direction * Demand / (1.0f + FMath::Abs(Demand)));
 }
 
 UStarshatterControlsSettings* UStarshatterControlsSettings::Get()

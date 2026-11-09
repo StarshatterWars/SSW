@@ -14,5 +14,6 @@ protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual TSharedRef<SWidget> CreatePanelContent() override;
     virtual FText GetPanelCaption() const override;
+    virtual bool UsesFlightPanelStyle() const override { return true; }
     virtual bool ShowsFooter() const override { return false; }
 };

@@ -63,7 +63,7 @@ void UMissionObjectiveDlg::BuildSituationLayout()
     PresentationRoot->SetContent(Row);
     UVerticalBox* TextColumn = WidgetTree->ConstructWidget<UVerticalBox>();
     UHorizontalBoxSlot* TextSlot = Row->AddChildToHorizontalBox(TextColumn);
-    FSlateChildSize TextSize(ESlateSizeRule::Fill); TextSize.Value = 2.f;
+    FSlateChildSize TextSize(ESlateSizeRule::Fill); TextSize.Value = 1.f;
     TextSlot->SetSize(TextSize);
     TextSlot->SetPadding(FMargin(0.f, 0.f, 16.f, 0.f));
 

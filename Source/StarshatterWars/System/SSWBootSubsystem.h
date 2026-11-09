@@ -80,6 +80,10 @@ public:
     UPROPERTY(Config, EditAnywhere, Category="Logging")
     bool bEnableGameLogging = false;
 
+    /** Require Steam or Epic sign-in before opening the main menu. */
+    UPROPERTY(Config, EditAnywhere, Category="Sign-In")
+    bool bRequirePlatformSignIn = false;
+
     /** Enables Shift+X target damage in T2 development builds. */
     UPROPERTY(Config, EditAnywhere, Category="Debug", meta=(DisplayName="Enable Combat Debug Mode"))
     bool bEnableCombatDebugMode = false;

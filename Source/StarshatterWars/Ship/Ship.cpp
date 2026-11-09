@@ -7255,6 +7255,7 @@ void Ship::SetManualRotationAxis(int32 Axis, double Value)
 void Ship::ClearManualRotationInput()
 {
     ManualRotationInput = FVector::ZeroVector;
+    SmoothedManualRotation = FVector::ZeroVector;
     ManualTranslationInput = FVector::ZeroVector;
     if (bManualRotation) { SetTransX(0); SetTransY(0); SetTransZ(0); SetAugmenter(false); }
     if (bManualRotation) { ApplyPitch(0); ApplyYaw(0); ApplyRoll(0); }
@@ -7268,9 +7269,18 @@ void Ship::ExecManualRotation(double Seconds)
         return;
     }
     const bool bAtmosphericTurn = IsAirborne() && GetFlightModel() >= 2 && IsDropship();
-    const double Turn = ManualRotationInput.Y;
-    const double Roll = ManualRotationInput.Z;
-    ApplyPitch(IsAirborne() ? -ManualRotationInput.X : ManualRotationInput.X);
+    // Ramp up digital commands and settle faster on release or reversal.
+    for (int32 Axis = 0; Axis < 3; ++Axis)
+    {
+        const double Requested = ManualRotationInput[Axis];
+        double& Applied = SmoothedManualRotation[Axis];
+        const bool bIncreasing = Requested * Applied >= 0.0 && FMath::Abs(Requested) > FMath::Abs(Applied);
+        const double MaxStep = (bIncreasing ? 6.0 : 18.0) * FMath::Max(Seconds, 0.0);
+        Applied += FMath::Clamp(Requested - Applied, -MaxStep, MaxStep);
+    }
+    const double Turn = SmoothedManualRotation.Y;
+    const double Roll = SmoothedManualRotation.Z;
+    ApplyPitch(IsAirborne() ? -SmoothedManualRotation.X : SmoothedManualRotation.X);
     if (bAtmosphericTurn && FMath::IsNearlyZero(Roll, 0.001))
     {
         // Command a bank angle instead of rolling continuously while held.
