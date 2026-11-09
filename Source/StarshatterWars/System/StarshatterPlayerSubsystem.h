@@ -64,7 +64,7 @@ public:
     UFUNCTION(BlueprintCallable,Category="Starshatter|PlayerSave")
     TArray<FPlayerSaveSlotInfo> GetSavedPlayers() const;
     UFUNCTION(BlueprintCallable,Category="Starshatter|PlayerSave")
-    bool SavePlayerAs(const FString& DisplayName,const FString& ExistingSlot=TEXT(""));
+    bool SavePlayerAs(const FString& DisplayName,const FString& ExistingSlot=TEXT(""), bool bTimestampedSnapshot=false);
     UFUNCTION(BlueprintCallable,Category="Starshatter|PlayerSave")
     bool LoadSavedPlayer(const FString& SavedSlot);
     UFUNCTION(BlueprintCallable,Category="Starshatter|PlayerSave")

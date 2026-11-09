@@ -57,7 +57,7 @@ protected:
     void BuildRosterPanel();
     void BuildSavedPlayerControls();
     void RefreshSavedPlayerList();
-    bool SaveSelectedPlayer();
+    bool SaveSelectedPlayer(bool bTimestampedSnapshot = false);
     UFUNCTION() void OnLoadSavedPlayer();
     UFUNCTION() void OnSaveSavedPlayer();
     UFUNCTION() void OnConfirmDeleteSavedPlayer();
@@ -71,8 +71,6 @@ protected:
     TArray<FString> SavedPlayerSlots;
     FString SelectedSavedSlot;
     bool bRefreshingSavedPlayers=false;
-    bool bNewPilot=false;
-    TOptional<FS_PlayerGameInfo> NewPilotDraft;
     void BuildStatsRows();
 
     // -------- Model <-> UI (SUBSYSTEM) --------
@@ -82,8 +80,6 @@ protected:
     UStarshatterPlayerSubsystem* GetPlayerSS() const;
 
     // -------- Events --------
-    UFUNCTION()
-    void OnAdd();
 
     UFUNCTION()
     void OnDel();
@@ -140,9 +136,6 @@ protected:
     TObjectPtr<UEditableTextBox> edt_name = nullptr;
 
     UPROPERTY()
-    TObjectPtr<UEditableTextBox> edt_password = nullptr;
-
-    UPROPERTY()
     TObjectPtr<UEditableTextBox> edt_callsign = nullptr;
 
     UPROPERTY()
@@ -187,7 +180,7 @@ protected:
     UPROPERTY(meta = (BindWidgetOptional))
     TObjectPtr<class UUniformGridPanel> grid_medals;
 
-    // Optional cached “empty slot” texture:
+    // Optional cached ï¿½empty slotï¿½ texture:
     UPROPERTY(EditDefaultsOnly, Category = "Awards")
     TSoftObjectPtr<UTexture2D> MedalEmptyTexture;
 };

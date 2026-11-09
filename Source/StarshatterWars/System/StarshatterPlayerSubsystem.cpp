@@ -174,7 +174,7 @@ bool UStarshatterPlayerSubsystem::SaveActivePlayerProgress()
 {
     if (!SavePlayer(true)) return false;
     const FString ActiveSlot = GetActiveSavedPlayerSlot();
-    return ActiveSlot.IsEmpty() ||
+    return ActiveSlot.IsEmpty() || ActiveSlot.StartsWith(TEXT("SV_")) ||
         (IsManagedPlayerSlot(ActiveSlot) && SaveGameInternal(ActiveSlot, UserIndex, PlayerInfo, CURRENT_SAVE_VERSION));
 }
 
@@ -273,6 +273,14 @@ void UStarshatterPlayerSubsystem::DebugDump(const FString& Tag) const
 bool UStarshatterPlayerSubsystem::IsManagedPlayerSlot(const FString& SavedSlot) const
 {
     const FString Prefix=SlotName+TEXT("_Profile_");
+    if (SavedSlot.StartsWith(TEXT("SV_"), ESearchCase::CaseSensitive))
+    {
+        const FString Timestamp = SavedSlot.Mid(3);
+        if (Timestamp.Len() != 17) return false;
+        for (TCHAR Character : Timestamp)
+            if (Character < '0' || Character > '9') return false;
+        return true;
+    }
     if(!SavedSlot.StartsWith(Prefix)) return false;
     FGuid Id;return FGuid::ParseExact(SavedSlot.Mid(Prefix.Len()),EGuidFormats::Digits,Id);
 }
@@ -313,24 +321,40 @@ FString UStarshatterPlayerSubsystem::GetActiveSavedPlayerSlot() const
     if(auto* Index=ReadPlayerIndex(false)) return Index->ActiveSlot;
     return FString();
 }
-bool UStarshatterPlayerSubsystem::SavePlayerAs(const FString& DisplayName,const FString& ExistingSlot)
+bool UStarshatterPlayerSubsystem::SavePlayerAs(const FString& DisplayName,const FString& ExistingSlot, bool bTimestampedSnapshot)
 {
     const FString Name=DisplayName.TrimStartAndEnd();if(Name.IsEmpty()) return false;
     auto* Index=ReadPlayerIndex(false);if(!Index) return false;
     int32 Position=INDEX_NONE;
-    if(!ExistingSlot.IsEmpty())
+    if(!bTimestampedSnapshot && !ExistingSlot.IsEmpty())
     {
         if(!IsManagedPlayerSlot(ExistingSlot)) return false;
         Position=Index->Players.IndexOfByPredicate([&](const auto& Entry){return Entry.Slot==ExistingSlot;});
         if(Position==INDEX_NONE) return false;
     }
     for(int32 I=0;I<Index->Players.Num();++I)
-        if(I!=Position && Index->Players[I].DisplayName.Equals(Name,ESearchCase::IgnoreCase)) return false;
+        if(!bTimestampedSnapshot && I!=Position && Index->Players[I].DisplayName.Equals(Name,ESearchCase::IgnoreCase)) return false;
     if(!SavePlayer(true)) return false;
     const bool bNew=Position==INDEX_NONE;
     FPlayerSaveSlotInfo Entry=bNew?FPlayerSaveSlotInfo():Index->Players[Position];
-    if(bNew) Entry.Slot=SlotName+TEXT("_Profile_")+FGuid::NewGuid().ToString(EGuidFormats::Digits);
-    Entry.DisplayName=Name;Entry.SavedAt=FDateTime::UtcNow();
+    Entry.DisplayName = Name;
+    Entry.SavedAt = FDateTime::UtcNow();
+    if (bTimestampedSnapshot)
+    {
+        FDateTime SlotTime = Entry.SavedAt;
+        for (;;)
+        {
+            Entry.Slot = FString::Printf(TEXT("SV_%s%03d"),
+                *SlotTime.ToString(TEXT("%Y%m%d%H%M%S")), SlotTime.GetMillisecond());
+            if (!UGameplayStatics::DoesSaveGameExist(Entry.Slot, UserIndex))
+                break;
+            SlotTime += FTimespan::FromMilliseconds(1);
+        }
+    }
+    else if (bNew)
+    {
+        Entry.Slot = SlotName + TEXT("_Profile_") + FGuid::NewGuid().ToString(EGuidFormats::Digits);
+    }
     if(!SaveGameInternal(Entry.Slot,UserIndex,PlayerInfo,CURRENT_SAVE_VERSION)) return false;
     if(bNew) Index->Players.Add(Entry);else Index->Players[Position]=Entry;
     Index->ActiveSlot=Entry.Slot;

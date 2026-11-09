@@ -1,7 +1,7 @@
 /*=============================================================================
     Project:        Starshatter Wars (nGenEx Unreal Port)
     Studio:         Fractal Dev Games
-    Copyright:      (C) 2024–2026. All Rights Reserved.
+    Copyright:      (C) 2024ï¿½2026. All Rights Reserved.
 
     DIALOG:         PlayerDlg
     FILE:           PlayerDlg.cpp
@@ -14,7 +14,7 @@
     - Reads/writes FS_PlayerGameInfo via UStarshatterPlayerSubsystem
     - DOES NOT use legacy PlayerCharacter
     - DOES NOT use lambdas
-    - Fixes common “nothing shows up” issues:
+    - Fixes common ï¿½nothing shows upï¿½ issues:
         * edt_callsign was never created
         * empire row incorrectly used txt_rank
         * callsign was being written into edt_squadron
@@ -41,6 +41,7 @@
 #include "Components/UniformGridPanel.h"
 #include "Components/UniformGridSlot.h"
 #include "Components/Image.h"
+#include "Components/ButtonSlot.h"
 #include "Components/Border.h"
 
 // Helpers
@@ -134,12 +135,8 @@ void UPlayerDlg::NativeConstruct()
         CancelButton->OnClicked.AddUniqueDynamic(this, &UPlayerDlg::OnCancel);
     }
 
-    // Optional buttons (present in some blueprints)
     if (AddPlayerButton)
-    {
-        AddPlayerButton->OnClicked.RemoveAll(this);
-        AddPlayerButton->OnClicked.AddUniqueDynamic(this, &UPlayerDlg::OnAdd);
-    }
+        AddPlayerButton->SetVisibility(ESlateVisibility::Collapsed);
 
     if (DeletePlayerButton)
     {
@@ -165,7 +162,6 @@ void UPlayerDlg::NativeConstruct()
 
 void UPlayerDlg::NativeDestruct()
 {
-    if (AddPlayerButton)    AddPlayerButton->OnClicked.RemoveAll(this);
     if (DeletePlayerButton) DeletePlayerButton->OnClicked.RemoveAll(this);
     if (ApplyButton)        ApplyButton->OnClicked.RemoveAll(this);
     if (CancelButton)       CancelButton->OnClicked.RemoveAll(this);
@@ -425,20 +421,17 @@ void UPlayerDlg::BuildStatsRows()
 
     // EDITABLES (FIXED: Callsign edit is created)
     edt_name = MakeEditBox(false);
-    edt_password = MakeEditBox(true);
     edt_callsign = MakeEditBox(false);
     txt_current_unit = MakeValueText();
     edt_signature = MakeEditBox(false);
 
     AddStatRow(FText::FromString(TEXT("NAME")), edt_name);
-    AddStatRow(FText::FromString(TEXT("PASSWORD")), edt_password);
     AddStatRow(FText::FromString(TEXT("CALLSIGN")), edt_callsign);
     AddStatRow(FText::FromString(TEXT("CURRENT UNIT")), txt_current_unit);
     AddStatRow(FText::FromString(TEXT("SIGNATURE")), edt_signature);
 
 
     ApplyDefaultEditBoxStyle(edt_name, 18);
-    ApplyDefaultEditBoxStyle(edt_password, 18);
     ApplyDefaultEditBoxStyle(edt_callsign, 18);
     ApplyDefaultEditBoxStyle(edt_signature, 18);
 
@@ -478,7 +471,7 @@ void UPlayerDlg::BuildStatsRows()
             // Wrap grid to prevent stretching
             USizeBox* GridBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("MedalsGridBox"));
 
-            // 4 medals × 64px + spacing (let's assume 4px spacing)
+            // 4 medals ï¿½ 64px + spacing (let's assume 4px spacing)
             GridBox->SetWidthOverride(4 * 128.0f + 3 * 4.f);
 
             GridBox->AddChild(medals_grid);
@@ -589,15 +582,6 @@ bool UPlayerDlg::UpdatePlayerFromUI_Subsystem()
         SS->LoadPlayer();
 
     FS_PlayerGameInfo& Info = SS->GetMutablePlayerInfo();
-    if(bNewPilot && NewPilotDraft.IsSet()) Info=NewPilotDraft.GetValue();
-
-    if (edt_name)
-    {
-        const FString NewName = edt_name->GetText().ToString().TrimStartAndEnd();
-        if (!NewName.IsEmpty())
-            Info.Name = NewName;
-    }
-
     if (edt_callsign)
         Info.Callsign = edt_callsign->GetText().ToString().TrimStartAndEnd();
 
@@ -631,7 +615,7 @@ void UPlayerDlg::RefreshUIFromSubsystem()
     if (!SS->HasLoaded())
         SS->LoadPlayer();
 
-    const FS_PlayerGameInfo& Info = bNewPilot && NewPilotDraft.IsSet()?NewPilotDraft.GetValue():SS->GetPlayerInfo();
+    const FS_PlayerGameInfo& Info = SS->GetPlayerInfo();
 
     UE_LOG(LogPlayerDlg, Warning, TEXT("[PlayerDlg] Refresh: Name='%s' Callsign='%s' Empire=%d Rank=%d"),
         *Info.Name, *Info.Callsign, Info.Empire, Info.Rank);
@@ -642,23 +626,21 @@ void UPlayerDlg::RefreshUIFromSubsystem()
     if (txt_profile_name)
         txt_profile_name->SetText(FText::FromString(Info.Name.IsEmpty() ? TEXT("<UNNAMED>") : Info.GetRankedDisplayName()));
 
-    // Editable fields
-    if (edt_name)      edt_name->SetText(FText::FromString(Info.Name));
+    if (edt_name)
+    {
+        edt_name->SetIsReadOnly(true);
+        edt_name->SetText(FText::FromString(Info.Name));
+    }
     if (edt_callsign)  edt_callsign->SetText(FText::FromString(Info.Callsign));
     if (txt_current_unit)
     {
         FString UnitName = TEXT("UNASSIGNED");
-        if (!bNewPilot)
-            if (Campaign* Live = Campaign::GetCampaign())
-                if (CombatGroup* Group = Live->GetPlayerGroup())
-                    UnitName = Group->GetDescription();
+        if (Campaign* Live = Campaign::GetCampaign())
+            if (CombatGroup* Group = Live->GetPlayerGroup())
+                UnitName = Group->GetDescription();
         txt_current_unit->SetText(FText::FromString(UnitName));
     }
     if (edt_signature) edt_signature->SetText(FText::FromString(Info.Signature));
-
-    // Password not in FS_PlayerGameInfo (leave blank)
-    if (edt_password)
-        edt_password->SetText(FText::GetEmpty());
 
     // Read-only
     if (txt_created)    txt_created->SetText(FText::FromString(UFormattingUtils::FormatDateFromUnixSeconds(Info.CreateTime)));
@@ -706,18 +688,6 @@ void UPlayerDlg::RefreshUIFromSubsystem()
 // Actions
 // ------------------------------------------------------------------------
 
-void UPlayerDlg::OnAdd()
-{
-    if(auto* SS=GetPlayerSS())
-    {
-        FS_PlayerGameInfo Draft;Draft.CreateTime=FDateTime::UtcNow().ToUnixTimestamp();NewPilotDraft=MoveTemp(Draft);
-        bNewPilot=true;SelectedSavedSlot.Reset();
-        if(SavedPlayersCombo) SavedPlayersCombo->ClearSelection();
-        RefreshUIFromSubsystem();
-        if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(TEXT("Enter a name, then save the new pilot.")));
-    }
-}
-
 void UPlayerDlg::OnDel()
 {
     if(!SelectedSavedSlot.IsEmpty() && DeleteSavedConfirmation) DeleteSavedConfirmation->SetVisibility(ESlateVisibility::Visible);
@@ -735,8 +705,6 @@ void UPlayerDlg::OnApply()
 
 void UPlayerDlg::OnCancel()
 {
-    NewPilotDraft.Reset();
-    bNewPilot=false;
     RefreshUIFromSubsystem();
 
     if (manager)
@@ -913,24 +881,52 @@ void UPlayerDlg::OnMacrosSection() {if(MacroEdits.IsValidIndex(1)) ScrollToSecti
 
 void UPlayerDlg::BuildSavedPlayerControls()
 {
-    auto* Heading=WidgetTree->ConstructWidget<UTextBlock>();Heading->SetText(FText::FromString(TEXT("SAVED PILOTS")));Heading->SetFont(MissionUIStyle::GetHeaderFont(22));Heading->SetColorAndOpacity(FLinearColor::White);
+    auto* Heading=WidgetTree->ConstructWidget<UTextBlock>();Heading->SetText(FText::FromString(TEXT("SAVED GAMES")));Heading->SetFont(MissionUIStyle::GetHeaderFont(22));Heading->SetColorAndOpacity(FLinearColor::White);
     LeftPanel->AddChildToVerticalBox(Heading)->SetPadding(FMargin(0,20,0,10));
     SavedPlayersCombo=WidgetTree->ConstructWidget<UComboBoxString>();
     SavedPlayersCombo->OnSelectionChanged.AddUniqueDynamic(this,&UPlayerDlg::OnSavedPlayerChanged);LeftPanel->AddChildToVerticalBox(SavedPlayersCombo)->SetPadding(FMargin(0,0,0,12));
-    auto Add=[&](UButton* Existing,const TCHAR* Caption,const TCHAR* Color)
+    auto* Row = WidgetTree->ConstructWidget<UHorizontalBox>();
+    auto* Height = WidgetTree->ConstructWidget<USizeBox>();
+    Height->SetHeightOverride(48);
+    Height->SetContent(Row);
+    LeftPanel->AddChildToVerticalBox(Height)->SetPadding(FMargin(0, 4));
+
+    auto Add = [&](UButton* Existing, const TCHAR* Caption, const TCHAR* Color, const TCHAR* IconPath)
     {
-        auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();auto* Button=ModernMenuLayout::AddButton(WidgetTree,Row,Existing,Caption);
-        MissionUIStyle::ApplyActionButtonStyle(Button,Color);
-        if(auto* Text=Cast<UTextBlock>(Button->GetContent())) Text->SetFont(MissionUIStyle::GetHeaderFont(20));
-        auto* Height=WidgetTree->ConstructWidget<USizeBox>();Height->SetHeightOverride(48);Height->SetContent(Row);LeftPanel->AddChildToVerticalBox(Height)->SetPadding(FMargin(0,4));return Button;
+        auto* Button = ModernMenuLayout::AddButton(WidgetTree, Row, Existing, Caption);
+        MissionUIStyle::ApplyActionButtonStyle(Button, Color);
+        Button->SetToolTipText(FText::FromString(Caption));
+        if (auto* Texture = LoadObject<UTexture2D>(nullptr, IconPath))
+        {
+            auto* Icon = WidgetTree->ConstructWidget<UImage>();
+            Icon->SetBrushFromTexture(Texture);
+            Icon->SetVisibility(ESlateVisibility::HitTestInvisible);
+            auto* Size = WidgetTree->ConstructWidget<USizeBox>();
+            Size->SetWidthOverride(24);
+            Size->SetHeightOverride(24);
+            Size->SetContent(Icon);
+            Button->SetContent(Size);
+            if (auto* Slot = Cast<UButtonSlot>(Size->Slot))
+            {
+                Slot->SetHorizontalAlignment(HAlign_Center);
+                Slot->SetVerticalAlignment(VAlign_Center);
+            }
+        }
+        return Button;
     };
-    AddPlayerButton=Add(AddPlayerButton.Get(),TEXT("NEW PILOT"),TEXT("Blue"));AddPlayerButton->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnAdd);
-    LoadSavedButton=Add(nullptr,TEXT("LOAD"),TEXT("Blue"));LoadSavedButton->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnLoadSavedPlayer);
-    SaveSavedButton=Add(nullptr,TEXT("SAVE"),TEXT("Green"));SaveSavedButton->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnSaveSavedPlayer);
-    DeletePlayerButton=Add(DeletePlayerButton.Get(),TEXT("DELETE"),TEXT("Red"));DeletePlayerButton->SetToolTipText(FText::FromString(TEXT("Delete the selected saved copy")));DeletePlayerButton->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnDel);
+
+    SaveSavedButton = Add(nullptr, TEXT("Save Game"), TEXT("Green"),
+        TEXT("/Game/SciFiUIComponents/Textures/Icons3/T_Icon_Save.T_Icon_Save"));
+    SaveSavedButton->OnClicked.AddUniqueDynamic(this, &UPlayerDlg::OnSaveSavedPlayer);
+    DeletePlayerButton = Add(DeletePlayerButton.Get(), TEXT("Delete Game"), TEXT("Red"),
+        TEXT("/Game/SciFiUIComponents/Textures/Icons1/T_ICON_Delete.T_ICON_Delete"));
+    DeletePlayerButton->OnClicked.AddUniqueDynamic(this, &UPlayerDlg::OnDel);
+    LoadSavedButton = Add(nullptr, TEXT("Load Game"), TEXT("Blue"),
+        TEXT("/Game/SciFiUIComponents/Textures/Icons3/T_Icon_Folder.T_Icon_Folder"));
+    LoadSavedButton->OnClicked.AddUniqueDynamic(this, &UPlayerDlg::OnLoadSavedPlayer);
     SavedPlayerStatus=WidgetTree->ConstructWidget<UTextBlock>();SavedPlayerStatus->SetFont(MissionUIStyle::GetRowFont(17));SavedPlayerStatus->SetColorAndOpacity(FLinearColor(0.16f,0.77f,0.91f,1));SavedPlayerStatus->SetWrapTextAt(310);LeftPanel->AddChildToVerticalBox(SavedPlayerStatus)->SetPadding(FMargin(0,14));
     DeleteSavedConfirmation=WidgetTree->ConstructWidget<UVerticalBox>();
-    auto* Question=WidgetTree->ConstructWidget<UTextBlock>();Question->SetText(FText::FromString(TEXT("Delete the selected saved pilot?")));Question->SetAutoWrapText(true);Question->SetFont(MissionUIStyle::GetRowFont(18));Question->SetColorAndOpacity(FLinearColor::White);DeleteSavedConfirmation->AddChildToVerticalBox(Question);
+    auto* Question=WidgetTree->ConstructWidget<UTextBlock>();Question->SetText(FText::FromString(TEXT("Delete the selected saved game?")));Question->SetAutoWrapText(true);Question->SetFont(MissionUIStyle::GetRowFont(18));Question->SetColorAndOpacity(FLinearColor::White);DeleteSavedConfirmation->AddChildToVerticalBox(Question);
     auto* Actions=WidgetTree->ConstructWidget<UHorizontalBox>();DeleteSavedConfirmation->AddChildToVerticalBox(Actions)->SetPadding(FMargin(0,10));
     auto* Delete=ModernMenuLayout::AddButton(WidgetTree,Actions,nullptr,TEXT("DELETE"));MissionUIStyle::ApplyActionButtonStyle(Delete,TEXT("Red"));Delete->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnConfirmDeleteSavedPlayer);
     auto* Keep=ModernMenuLayout::AddButton(WidgetTree,Actions,nullptr,TEXT("CANCEL"));Keep->OnClicked.AddUniqueDynamic(this,&UPlayerDlg::OnKeepSavedPlayer);
@@ -943,11 +939,21 @@ void UPlayerDlg::RefreshSavedPlayerList()
     bRefreshingSavedPlayers=true;SavedPlayersCombo->ClearOptions();SavedPlayerSlots.Reset();
     if(auto* SS=GetPlayerSS())
     {
-        if(SelectedSavedSlot.IsEmpty() && !bNewPilot) SelectedSavedSlot=SS->GetActiveSavedPlayerSlot();
+        if(SelectedSavedSlot.IsEmpty()) SelectedSavedSlot=SS->GetActiveSavedPlayerSlot();
         const auto Saved=SS->GetSavedPlayers();
         // First access may import the pre-existing single pilot save.
-        if(SelectedSavedSlot.IsEmpty() && !bNewPilot) SelectedSavedSlot=SS->GetActiveSavedPlayerSlot();
-        for(const auto& Entry:Saved){SavedPlayersCombo->AddOption(Entry.DisplayName);SavedPlayerSlots.Add(Entry.Slot);}
+        if(SelectedSavedSlot.IsEmpty()) SelectedSavedSlot=SS->GetActiveSavedPlayerSlot();
+        for (const auto& Entry : Saved)
+        {
+            const FString Timestamp = Entry.SavedAt.GetTicks() > 0
+                ? Entry.SavedAt.ToString(TEXT("%Y-%m-%d %H:%M:%S UTC"))
+                : TEXT("Time unknown");
+            const FString Label = Entry.Slot.StartsWith(TEXT("SV_"))
+                ? Entry.Slot + TEXT(".sav")
+                : FString::Printf(TEXT("%s  |  %s"), *Entry.DisplayName, *Timestamp);
+            SavedPlayersCombo->AddOption(Label);
+            SavedPlayerSlots.Add(Entry.Slot);
+        }
         const int32 Selected=SavedPlayerSlots.IndexOfByKey(SelectedSavedSlot);
         if(Selected!=INDEX_NONE) SavedPlayersCombo->SetSelectedIndex(Selected);else SelectedSavedSlot.Reset();
     }
@@ -964,34 +970,33 @@ void UPlayerDlg::OnSavedPlayerChanged(FString Selected,ESelectInfo::Type Selecti
     if(DeletePlayerButton) DeletePlayerButton->SetIsEnabled(!SelectedSavedSlot.IsEmpty());
     OnKeepSavedPlayer();
 }
-bool UPlayerDlg::SaveSelectedPlayer()
+bool UPlayerDlg::SaveSelectedPlayer(bool bTimestampedSnapshot)
 {
-    auto* SS=GetPlayerSS();if(!SS || !edt_name) return false;
-    const FString Name=edt_name->GetText().ToString().TrimStartAndEnd();
-    if(Name.IsEmpty()){if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(TEXT("Enter a pilot name before saving.")));return false;}
-    for(const auto& Entry:SS->GetSavedPlayers())
-        if(Entry.Slot!=SelectedSavedSlot && Entry.DisplayName.Equals(Name,ESearchCase::IgnoreCase))
-        {if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(TEXT("That name is already saved. Select it to overwrite, or choose another name.")));return false;}
+    auto* SS = GetPlayerSS();
+    if (!SS) return false;
+
+    const FString Name = SS->GetPlayerInfo().Name;
+
     const FS_PlayerGameInfo BeforeSave=SS->GetPlayerInfo();
-    if(!UpdatePlayerFromUI_Subsystem() || !SS->SavePlayerAs(Name,SelectedSavedSlot))
-    {SS->GetMutablePlayerInfo()=BeforeSave;if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(TEXT("Unable to save pilot. Please retry.")));return false;}
-    bNewPilot=false;NewPilotDraft.Reset();SelectedSavedSlot=SS->GetActiveSavedPlayerSlot();RefreshSavedPlayerList();RefreshUIFromSubsystem();
-    if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(TEXT("Pilot saved")));return true;
+    if(!UpdatePlayerFromUI_Subsystem() || !(bTimestampedSnapshot ? SS->SavePlayerAs(Name, FString(), true) : SS->SaveActivePlayerProgress()))
+    {SS->GetMutablePlayerInfo()=BeforeSave;if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(TEXT("Unable to save game. Please retry.")));return false;}
+    SelectedSavedSlot=SS->GetActiveSavedPlayerSlot();RefreshSavedPlayerList();RefreshUIFromSubsystem();
+    if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(TEXT("Game saved")));return true;
 }
-void UPlayerDlg::OnSaveSavedPlayer() {SaveSelectedPlayer();}
+void UPlayerDlg::OnSaveSavedPlayer() {SaveSelectedPlayer(true);}
 void UPlayerDlg::OnLoadSavedPlayer()
 {
     auto* SS=GetPlayerSS();if(!SS || SelectedSavedSlot.IsEmpty()) return;
     const bool Loaded=SS->LoadSavedPlayer(SelectedSavedSlot);
-    if(Loaded){bNewPilot=false;NewPilotDraft.Reset();RefreshUIFromSubsystem();OnKeepSavedPlayer();}
-    if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(Loaded?TEXT("Pilot loaded"):TEXT("Unable to load selected pilot")));
+    if(Loaded){RefreshUIFromSubsystem();OnKeepSavedPlayer();}
+    if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(Loaded?TEXT("Game loaded"):TEXT("Unable to load selected save")));
 }
 void UPlayerDlg::OnConfirmDeleteSavedPlayer()
 {
     auto* SS=GetPlayerSS();if(!SS || SelectedSavedSlot.IsEmpty()) return;
     const bool Deleted=SS->DeleteSavedPlayer(SelectedSavedSlot);
     if(Deleted){SelectedSavedSlot.Reset();RefreshSavedPlayerList();}
-    OnKeepSavedPlayer();if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(Deleted?TEXT("Saved pilot deleted"):TEXT("Unable to delete selected save")));
+    OnKeepSavedPlayer();if(SavedPlayerStatus) SavedPlayerStatus->SetText(FText::FromString(Deleted?TEXT("Saved game deleted"):TEXT("Unable to delete selected save")));
 }
 void UPlayerDlg::OnKeepSavedPlayer()
 {

@@ -387,7 +387,14 @@ void UMenuDlg::NativeConstruct()
     // Version text
     if (VersionText)
     {
-        VersionText->SetText(FText::FromString(Game::VersionInfo));
+        // __DATE__ uses the compiler's English "Mmm dd yyyy" format.
+        const FString CompileDate = ANSI_TO_TCHAR(__DATE__);
+        const FString Months = TEXT("Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec");
+        const int32 Month = Months.Find(CompileDate.Left(3)) / 4 + 1;
+        const int32 Day = FCString::Atoi(*CompileDate.Mid(4, 2));
+        const int32 Year = FCString::Atoi(*CompileDate.Right(2));
+        VersionText->SetText(FText::FromString(FString::Printf(
+            TEXT("%s  |  Build %02d%02d.%02d"), *Game::VersionInfo, Year, Month, Day)));
     }
     else
     {
