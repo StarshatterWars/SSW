@@ -823,6 +823,11 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         MiniText(366,43,CompactNavLabel,13,White,138);
         if (NavReadouts.Num() > 0)
             MiniText(366,62,NavReadouts[0],10,Muted,138);
+        if (const Instruction* Waypoint = HUDPlayer && !HUDPlayer->GetInbound() ? HUDPlayer->GetNextNavPoint() : nullptr)
+        {
+            if (Waypoint->GetSpeed() > 0)
+                MiniText(366,80,FString::Printf(TEXT("SPD %d m/s"), Waypoint->GetSpeed()),10,Muted,138);
+        }
         if (HUDPlayer && HUDPlayer->IsAirborne())
             MiniText(120,AttitudeReadoutY,FString::Printf(TEXT("MSL %.0f m"),HUDPlayer->GetAltitudeMSL()),10,Muted);
         if (bShowWeapons && !bCapitalWeapons)
