@@ -469,8 +469,16 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
     MissionElement* Player = MissionDef ? MissionDef->GetPlayer() : nullptr;
     if (!Player || !Player->GetShipDesign()) return false;
 
+    auto ResolveRehearsalParts = [](const FShipDesign& Design, TArray<FBriefingShipPreviewPart>& Model) {
+        if (UClass* VisualClass = ShipVisualCatalog::Resolve(Design.ShipName, Design.Model))
+        {
+            TSet<UClass*> ClassStack;
+            CollectTemplateParts(VisualClass, FTransform::Identity, Model, ClassStack, false);
+        }
+        return !Model.IsEmpty() || BriefingShipPreview::ResolveParts(Design, Model);
+    };
     TArray<FBriefingShipPreviewPart> PlayerParts;
-    if (!BriefingShipPreview::ResolveParts(*Player->GetShipDesign(), PlayerParts)) return false;
+    if (!ResolveRehearsalParts(*Player->GetShipDesign(), PlayerParts)) return false;
 
     ClearVisual();
     Parts.Reset();
@@ -505,6 +513,7 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
     RouteDepartures.Add(0.0);
     FVector PreviousLocation = Origin;
     bool bReturnsToBase = false;
+    Text RecoveryTarget;
     for (ListIter<Instruction> Point = Player->NavList(); ++Point;)
     {
         const double Speed = Point->GetSpeed() > 0 ? Point->GetSpeed() : 250.0;
@@ -515,25 +524,53 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         PreviousLocation = Point->GetLocation();
         Route.Add(ScenePosition(Point->GetLocation(), Point->GetRegionName()));
         bReturnsToBase = Point->GetAction() == EInstruction::RTB;
+        if (bReturnsToBase) RecoveryTarget = Point->GetTargetName();
+        const int32 Waypoint = RouteLabels.Num() + 1;
+        if (!bReturnsToBase)
+        {
+            const bool bSweep = Point->GetAction() == EInstruction::Sweep;
+            const FString Cue = bSweep
+                ? FString::Printf(TEXT("Proceed to NAV %02d for combat patrol"), Waypoint)
+                : FString::Printf(TEXT("Proceed to waypoint %02d"), Waypoint);
+            TimedCues.Add({RouteArrivals[Waypoint - 1], Cue});
+        }
         RouteLabels.Add(FString::Printf(TEXT("NAV %02d  %s"), RouteLabels.Num() + 1,
             ANSI_TO_TCHAR(Point->GetRegionName())));
     }
 
-    if (bReturnsToBase && Player->GetCarrier().length())
+    Text CarrierName = RecoveryTarget.length() ? RecoveryTarget : Player->GetCarrier();
+    // Training flights can inherit their home carrier from the parent squadron.
+    if (bReturnsToBase && !CarrierName.length() && Player->GetSquadron().length())
+    {
+        for (ListIter<MissionElement> Entry = MissionDef->GetElements(); ++Entry;)
+        {
+            const MissionElement* Squadron = Entry.value();
+            if (Squadron && Squadron->GetName() == Player->GetSquadron())
+            {
+                CarrierName = Squadron->GetCarrier();
+                break;
+            }
+        }
+    }
+
+    if (bReturnsToBase && CarrierName.length())
     {
         for (ListIter<MissionElement> Entry = MissionDef->GetElements(); ++Entry;)
         {
             const MissionElement* Base = Entry.value();
-            if (!Base || Base->GetName() != Player->GetCarrier()) continue;
+            if (!Base || Base->GetName() != CarrierName) continue;
+            TimedCues.Add({RouteArrivals.Last(), FString::Printf(
+                TEXT("Return to %s"), UTF8_TO_TCHAR(CarrierName.data()))});
             const FVector Destination = ScenePosition(Base->GetLocation(), Base->GetRegion().data());
-            RouteLabels.Last() = TEXT("RTB APPROACH");
             if (!Destination.Equals(Route.Last(), 1.0))
             {
                 const double Arrival = RouteDepartures.Last() + FMath::Max(FVector::Dist(Route.Last(), Destination) / 250.0, 1.0);
                 Route.Add(Destination);
                 RouteArrivals.Add(Arrival);
                 RouteDepartures.Add(Arrival);
-                RouteLabels.Add(TEXT("RETURN TO BASE"));
+                TimedCues.Add({Arrival, FString::Printf(
+                    TEXT("Arrived at %s"), UTF8_TO_TCHAR(CarrierName.data()))});
+                RouteLabels.Add(FString::Printf(TEXT("RETURN TO %s"), UTF8_TO_TCHAR(CarrierName.data())));
             }
             break;
         }
@@ -555,32 +592,32 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
     }
 
     RehearsalDuration = RouteDepartures.Last();
-    TMap<int32, double> EventTimes;
+    // In the rehearsal, anchor scripted spawns to their navigation milestone.
+    // Combat prerequisites remain enforced by the live mission.
+    TMap<int32, double> NavigationEventTimes;
     for (ListIter<MissionEvent> Events = MissionDef->GetEvents(); ++Events;)
     {
         const MissionEvent* Event = Events.value();
         if (!Event) continue;
-        double At = 0.0;
-        if (Event->Trigger() == MissionEvent::TRIGGER_TIME)
-            At = Event->Time();
-        else if (Event->Trigger() == MissionEvent::TRIGGER_NAVPT &&
+        double At = -1.0;
+        if (Event->Trigger() == MissionEvent::TRIGGER_NAVPT &&
             RouteArrivals.IsValidIndex(Event->TriggerParam()) &&
             Event->TriggerShip().indexOf(Player->GetName()) == 0)
-            At = RouteArrivals[Event->TriggerParam()];
-        else if (Event->Trigger() == MissionEvent::TRIGGER_EVENT)
         {
-            const double* Prerequisite = EventTimes.Find(Event->TriggerParam());
-            if (!Prerequisite) continue;
-            At = *Prerequisite;
+            At = RouteArrivals[Event->TriggerParam()];
         }
-        else
-            continue; // Combat-dependent events have no fixed rehearsal timestamp.
-
-        At += FMath::Max(Event->Delay(), 0.0);
-        if (Event->EventID() > 0) EventTimes.Add(Event->EventID(), At);
-        if (!Event->EventMessage().length()) continue;
-        TimedCues.Add({At, UTF8_TO_TCHAR(Event->EventMessage().data())});
-        RehearsalDuration = FMath::Max(RehearsalDuration, At + 3.0);
+        else if (Event->Trigger() == MissionEvent::TRIGGER_EVENT ||
+                 Event->Trigger() == MissionEvent::TRIGGER_EVENT_ALL)
+        {
+            for (int32 Index = 0; Index < Event->NumTriggerParams(); ++Index)
+                if (const double* Time = NavigationEventTimes.Find(Event->TriggerParam(Index)))
+                    At = FMath::Max(At, *Time);
+        }
+        if (At < 0.0) continue;
+        if (Event->EventID() > 0) NavigationEventTimes.Add(Event->EventID(), At);
+        if (Event->Event() == MissionEvent::SPAWN && Event->EventShip().length())
+            TimedCues.Add({At, FString::Printf(TEXT("Contacts arriving: %s"),
+                UTF8_TO_TCHAR(Event->EventShip().data()))});
     }
     TimedCues.StableSort([](const FTimedCue& A, const FTimedCue& B) { return A.Time < B.Time; });
 
@@ -622,7 +659,7 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         if (!Model)
         {
             Model = &Models.Add(Design);
-            BriefingShipPreview::ResolveParts(*Design, *Model);
+            ResolveRehearsalParts(*Design, *Model);
         }
         const double Size = Element->IsStarship() ? .82 : .32;
         const FQuat Heading(FVector::UpVector, Element->GetHeading() + PI);
@@ -644,12 +681,21 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         RouteGlow->SetVectorParameterValue(TEXT("GlowColor"), FLinearColor(.08f, .65f, 1.f));
         RouteGlow->SetScalarParameterValue(TEXT("GlowIntensity"), 4.f);
     }
-    auto AddLine = [&](const FVector& Start, const FVector& End, double Width) {
+    UMaterialInterface* MarkerBase = LoadObject<UMaterialInterface>(nullptr,
+        TEXT("/Game/Models/Waypoint/M_WaypointMarker.M_WaypointMarker"));
+    UMaterialInstanceDynamic* MarkerGlow = MarkerBase ? UMaterialInstanceDynamic::Create(MarkerBase, this) : nullptr;
+    if (MarkerGlow)
+    {
+        MarkerGlow->SetVectorParameterValue(TEXT("MarkerColor"), FLinearColor(.08f, .65f, 1.f));
+        MarkerGlow->SetScalarParameterValue(TEXT("Intensity"), 2.f);
+        MarkerGlow->SetScalarParameterValue(TEXT("Opacity"), .55f);
+    }
+    auto AddLine = [&](const FVector& Start, const FVector& End, double Width, UMaterialInterface* Material) {
         const FVector Direction = End - Start;
         if (Direction.IsNearlyZero()) return;
         FBriefingShipPreviewPart& Part = Parts.AddDefaulted_GetRef();
         Part.Mesh = Line;
-        if (RouteGlow) Part.Materials.Add(RouteGlow);
+        if (Material) Part.Materials.Add(Material);
         Part.Transform = FTransform(Direction.Rotation(), (Start + End) * .5,
             FVector(Direction.Size() / 100.0, Width, Width));
     };
@@ -658,7 +704,7 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
     const FVector Axes[] = {FVector::ForwardVector, FVector::RightVector, FVector::UpVector};
     for (int32 Index = 1; Index < Route.Num(); ++Index)
     {
-        AddLine(Route[Index - 1], Route[Index], .032);
+        AddLine(Route[Index - 1], Route[Index], .032, RouteGlow);
         for (int32 Plane = 0; Plane < 3; ++Plane)
         {
             auto RingPoint = [&](int32 Step) {
@@ -667,7 +713,7 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
                     + Axes[(Plane + 1) % 3] * FMath::Sin(Angle));
             };
             for (int32 Step = 0; Step < RingSegments; ++Step)
-                AddLine(RingPoint(Step), RingPoint(Step + 1), .014);
+                AddLine(RingPoint(Step), RingPoint(Step + 1), .014, MarkerGlow ? MarkerGlow : RouteGlow);
         }
     }
 

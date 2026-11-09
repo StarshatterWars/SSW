@@ -91,6 +91,7 @@ element: {
     },
     navpt: {
         cmd: rtb,
+        tgt: "Archon",
         loc: (0, 30e3, 0),
         speed: 250
     }

@@ -74,6 +74,7 @@ element: {
     },
     navpt: {
         cmd: rtb,
+        tgt: "Janek Station",
         loc: (50e3, 0, 5e3),
         speed: 400
     },
