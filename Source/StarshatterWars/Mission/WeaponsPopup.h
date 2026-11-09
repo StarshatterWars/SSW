@@ -1,4 +1,4 @@
-﻿#include "Sensor.h"
+#include "Sensor.h"
 #pragma once
 
 #include "Widgets/SCompoundWidget.h"
@@ -171,12 +171,17 @@ private:
         const FString Amount=Unlimited ? TEXT("UNLIMITED") : FString::FromInt(Ammo);
         return FString::Printf(TEXT("AMMO  %s\nCHARGE  %.0f%%\nPOWER  %d / %d"),*Amount,Count?Charge/Count:0.0,Powered,Count);
     }
+    static bool IsListedContact(SimContact* Contact, Ship* Player) {
+        Ship* Target = Contact->GetShip();
+        return Contact->Visible(Player) ||
+            (Target && Target == Player->GetCarrier() && Target->IsGroundUnit());
+    }
     Ship* ContactShip(Ship* Identity) const {
         auto* P=Player(); if (!P) return nullptr;
         auto& Contacts=P->GetContactList();
         for (int32 I=0; I<Contacts.size(); ++I) {
             auto* C=Contacts[I];
-            if (C && C->GetShip()==Identity && C->Visible(P))
+            if (C && C->GetShip()==Identity && IsListedContact(C,P))
                 return Identity && !Identity->IsDead() ? Identity : nullptr;
         }
         return nullptr;
@@ -202,7 +207,7 @@ private:
             State+=FString::Printf(TEXT(":%p:%p"),static_cast<void*>(P->GetTarget()),static_cast<void*>(P->GetSubTarget()));
             auto& List=P->GetContactList();
             for(int32 J=0;J<List.size();++J)if(auto* C=List[J])
-                if(C->Visible(P) && C->GetShip())State+=FString::Printf(TEXT(";%p:%s"),static_cast<void*>(C->GetShip()),*ContactLabel(C,P));
+                if(IsListedContact(C,P) && C->GetShip())State+=FString::Printf(TEXT(";%p:%s"),static_cast<void*>(C->GetShip()),*ContactLabel(C,P));
             if(auto* T=dynamic_cast<Ship*>(P->GetTarget()))for(int32 J=0;J<T->GetSystems().size();++J)
                 if(auto* Sys=T->GetSystems()[J])State+=FString::Printf(TEXT(";%p:%.0f"),static_cast<void*>(Sys),Sys->GetAvailability());
         }
@@ -214,7 +219,7 @@ private:
         TArray<SimContact*> Sorted;
         for (int32 I=0;I<Contacts.size();++I) {
             auto* C=Contacts[I]; auto* T=C?C->GetShip():nullptr;
-            if (T && T!=P && C->Visible(P) && !T->IsDead() && T->GetRegion()==P->GetRegion() && (ContactsOnly || (T->GetIFF()>0 && T->GetIFF()!=P->GetIFF()))) Sorted.Add(C);
+            if (T && T!=P && IsListedContact(C,P) && !T->IsDead() && T->GetRegion()==P->GetRegion() && (ContactsOnly || (T->GetIFF()>0 && T->GetIFF()!=P->GetIFF()))) Sorted.Add(C);
         }
         const FVector Observer=P->GetLocation();
         Sorted.StableSort([this,Observer,P](const SimContact& A,const SimContact& B){
@@ -233,7 +238,7 @@ private:
         });
         for (SimContact* C : Sorted) {
             auto* T=C->GetShip();
-            if (!T || T==P || !C->Visible(P) || T->IsDead()) continue;
+            if (!T || T==P || !IsListedContact(C,P) || T->IsDead()) continue;
             ContactsBox->AddSlot().AutoHeight().Padding(0,2)
             [SNew(SButton).ButtonStyle(&ModernButtons.Cyan).IsFocusable(false)
              .OnClicked_Lambda([this,T](){if (Operable()) if (auto* Current=ContactShip(T)) Player()->LockTarget(Current);ContactState.Empty();RefreshContacts();return FReply::Handled();})
@@ -245,7 +250,7 @@ private:
         if (!Target) {SystemsBox->AddSlot().AutoHeight()[Label(TEXT("Select a ship contact."),14)];return;}
         bool Identified=Target->GetIFF()==P->GetIFF();
         for (int32 I=0;I<Contacts.size();++I) if (auto* C=Contacts[I])
-            if (C->GetShip()==Target && C->Visible(P) && C->GetIFF(P)<=Target->GetIFF()) Identified=true;
+            if (C->GetShip()==Target && IsListedContact(C,P) && C->GetIFF(P)<=Target->GetIFF()) Identified=true;
         if (!Identified) {SystemsBox->AddSlot().AutoHeight()[Label(TEXT("Contact not identified."),14)];return;}
         for (int32 I=0; I<Target->GetSystems().size(); ++I) {
             auto* System=Target->GetSystems()[I]; if (!System) continue;

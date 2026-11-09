@@ -30,6 +30,7 @@
 #include "SSWRuntimeSubsystem.h"
 #include "MissionUIStyle.h"
 #include "MenuScreen.h"
+#include "MissionAwardDlg.h"
 #include "CampaignSave.h"
 #include "SSWGameInstance.h"
 #include "StarshatterPlayerSubsystem.h"
@@ -819,6 +820,7 @@ void UMissionDebriefDlg::OnCloseClicked()
     {
         if (Manager && Manager->GetAwardDlg())
         {
+            Manager->GetAwardDlg()->SetMenuManager(GetMenuManager());
             Manager->ShowAwardDlg();
             return;
         }

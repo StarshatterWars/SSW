@@ -239,11 +239,14 @@ void Sensor::ExecFrame(double seconds)
             az2 = 175 * DEGREES;
         }
 
+        const Ship* Home = ship->IsPlayer() ? ship->GetCarrier() : nullptr;
         ListIter<Ship> ship_iter(ship->GetRegion()->GetShips());
         while (++ship_iter) {
             Ship* c_ship = ship_iter.value();
 
-            if (c_ship != ship) {
+            const bool bHomeAirbase = c_ship == Home && c_ship->IsGroundUnit() &&
+                !c_ship->IsDead() && c_ship->GetIFF() == ship->GetIFF();
+            if (c_ship != ship && !bHomeAirbase) {
                 ProcessContact(c_ship, az1, az2);
             }
             else {
@@ -258,7 +261,7 @@ void Sensor::ExecFrame(double seconds)
                 if (c) {
                     c->loc = c_ship->GetLocation();
                     c->d_pas = 2.0f;
-                    c->d_act = 2.0f;
+                    c->d_act = bHomeAirbase ? 0.0f : 2.0f;
 
                     c->UpdateTrack();
                 }

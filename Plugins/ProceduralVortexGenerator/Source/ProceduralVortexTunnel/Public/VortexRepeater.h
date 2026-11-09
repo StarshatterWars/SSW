@@ -50,7 +50,7 @@ struct FVortexRepeaterInfo
 	FFloatInterval Scale;
 
 	UPROPERTY(EditAnyWhere, Category = "Repeater|Properties")
-	FVector RingOfAvoidance;
+	FVector RingOfAvoidance = FVector::ZeroVector;
 
 	UPROPERTY(EditAnyWhere, Category = "Repeater|Properties")
 	FVector MinLocationOffset;

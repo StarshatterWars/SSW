@@ -130,7 +130,7 @@ static double  range_min = 0;
 static double  range_max = 250e3;
 
 int      Ship::control_model = 0; // standard
-int      Ship::flight_model = 0; // standard
+int      Ship::flight_model = Ship::FM_ARCADE;
 int      Ship::landing_model = 0; // standard
 double   Ship::friendly_fire_level = 1; // 100%
 
@@ -3168,7 +3168,12 @@ Ship::GetNextNavPoint()
 		return launch_point;
 
 	if (element)
-		return element->GetNextNavPoint();
+	{
+		Instruction* Next = element->GetNextNavPoint();
+		if (Next && Next->GetAction() == EInstruction::RTB && !CanBeginRecovery())
+			return nullptr;
+		return Next;
+	}
 
 	return 0;
 }

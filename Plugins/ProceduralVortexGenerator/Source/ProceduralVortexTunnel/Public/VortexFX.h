@@ -94,7 +94,7 @@ struct FVortexFXComponentInfo
 	FVector FXLocation;
 
 	UPROPERTY()
-	FVector FXDirection;
+	FVector FXDirection = FVector::ZeroVector;
 
 	UPROPERTY()
 	float SpawnRate;
@@ -131,16 +131,16 @@ struct FVortexFXGroup
 	GENERATED_BODY()
 
 	UPROPERTY()
-	float StartDistance;
+	float StartDistance = 0.0f;
 	
 	UPROPERTY()
-	float EndDistance;
+	float EndDistance = 0.0f;
 	
 	UPROPERTY()
-	bool GroupEntered;
+	bool GroupEntered = false;
 	
 	UPROPERTY()
-    bool GroupExited;
+    bool GroupExited = false;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VortexFX")
 	TArray<FVortexFXComponentInfo> VortexFXComponentInfo;

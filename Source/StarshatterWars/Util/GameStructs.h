@@ -1370,7 +1370,7 @@ struct FS_PlayerGameInfo : public FTableRowBase
 	int32 HudColor = 0;
 
 	UPROPERTY(BlueprintReadWrite)
-	int32 FlightModel = 0;
+	int32 FlightModel = 2;
 
 	UPROPERTY(BlueprintReadWrite)
 	int32 LandingMode = 0;

@@ -1,5 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "Input/Events.h"
+#include "InputCoreTypes.h"
 #include "MissionAwardDlg.h"
 #include "AwardShowDlg.h"
 #include "Components/TextBlock.h"
@@ -58,6 +60,26 @@ bool FAwardPresentationTest::RunTest(const FString&)
         TArray<FColor> Pixels;RT->GameThread_GetRenderTargetResource()->ReadPixels(Pixels);TArray64<uint8> PNG;FImageUtils::PNGCompressImageArray(1280,720,Pixels,PNG);
         TestTrue(TEXT("Award preview saved"),FFileHelper::SaveArrayToFile(PNG,*Capture));BeginCleanup(Renderer);
     }
+    if (!TestNotNull(TEXT("Mission award accept button"), Mission->btn_close))
+        return false;
+
+    Mission->SetVisibility(ESlateVisibility::Visible);
+    Mission->btn_close->OnClicked.Broadcast();
+    TestTrue(TEXT("Checkmark dismisses the mission award"), Mission->GetVisibility() == ESlateVisibility::Collapsed);
+
+    Mission->SetVisibility(ESlateVisibility::Visible);
+    const FKeyEvent RepeatEnter(EKeys::Enter, FModifierKeysState(), 0, true, 0, 0);
+    Mission->NativeOnKeyDown(FGeometry(), RepeatEnter);
+    TestTrue(TEXT("Held Enter leaves the award open"), Mission->GetVisibility() == ESlateVisibility::Visible);
+
+    for (const FKey Key : {EKeys::Enter, EKeys::Escape})
+    {
+        Mission->SetVisibility(ESlateVisibility::Visible);
+        const FKeyEvent KeyPress(Key, FModifierKeysState(), 0, false, 0, 0);
+        Mission->NativeOnKeyDown(FGeometry(), KeyPress);
+        TestTrue(TEXT("Fresh Enter or Escape dismisses the mission award"), Mission->GetVisibility() == ESlateVisibility::Collapsed);
+    }
+
     return true;
 }
 #endif

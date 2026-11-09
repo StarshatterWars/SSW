@@ -679,6 +679,11 @@ void USSWGameInstance::Shutdown()
         PlatformSignInView->RemoveFromParent();
     PlatformSignInView = nullptr;
     PlatformSignInStatus.Reset();
+
+    // Release the standalone EOS instance before engine module teardown.
+    // Editor play sessions may share the process-wide instance.
+    if (IsRunningGame() && IOnlineSubsystem::DoesInstanceExist(TEXT("EOS")))
+        IOnlineSubsystem::Destroy(TEXT("EOS"));
 	USound::SetWorldContext(nullptr);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 

@@ -415,6 +415,12 @@ RadioHandler::Inbound(RadioMessage* msg, Ship* ship)
     if (!msg || !ship || ship->IsDead() || ship->IsDying()) return false;
 	Ship* inbound = (Ship*)msg->GetSender();
     if (!inbound || inbound == ship || !inbound->IsDropship() || inbound->IsHostileTo(ship)) return false;
+    if (!inbound->CanBeginRecovery()) {
+        RadioMessage* Reply = new RadioMessage(inbound, ship, RadioMessageAction::NACK);
+        Reply->SetInfo("Complete the primary objectives before returning to base");
+        RadioTraffic::Transmit(Reply);
+        return false;
+    }
 	Hangar* hangar = ship->GetHangar();
 	FlightDeck* deck = 0;
 	int         squadron = -1;

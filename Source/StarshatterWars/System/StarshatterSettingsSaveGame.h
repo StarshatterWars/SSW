@@ -42,7 +42,7 @@ USTRUCT(BlueprintType)
 struct FSSWGameOptions
 {
     GENERATED_BODY()
-    UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 FlightModel = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 FlightModel = 2;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 LandingModel = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 FlyingStart = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 AILevel = 0;

@@ -1322,6 +1322,11 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
             TEXT("/Game/Assets/Ground/Airbases/Base1.Base1")))
         {
             ShipActor->SetHullMesh(Runway);
+            // Base1 imports as (right, -forward, up). The flight deck uses
+            // (forward, right, up) in actor space, a positive quarter-turn.
+            ShipActor->HullMesh->SetWorldLocationAndRotation(
+                ShipActor->GetActorLocation(),
+                ShipActor->GetActorQuat() * FQuat(FVector::UpVector, HALF_PI));
             if (UMaterialInterface* Material = LoadObject<UMaterialInterface>(nullptr,
                 TEXT("/Game/Assets/Ground/Airbases/M_Airbase_PBR.M_Airbase_PBR")))
             {

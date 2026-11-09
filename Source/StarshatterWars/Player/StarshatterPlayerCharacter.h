@@ -61,7 +61,7 @@ public:
     UPROPERTY() int32 HudMode = 0;
     UPROPERTY() int32 GunMode = 0;
     UPROPERTY() int32 HudColor = 0;
-    UPROPERTY() int32 FlightModel = 0;
+    UPROPERTY() int32 FlightModel = 2;
     UPROPERTY() int32 LandingMode = 0;
 
     UPROPERTY() bool FlyingStart = false;

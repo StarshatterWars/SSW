@@ -23,7 +23,7 @@ void SFighterHUDDetails::DrawILS(const FGeometry& Geometry, FSlateWindowElementL
     // ILS is available for ALL player spacecraft (fighters, shuttles, etc.),
     // not only vessels classified as dropships.
     if (!bILSMode || !Player || !Region || !Region->GetShips().contains(Player) ||
-        Player->IsDead() || Player->InTransition() ||
+        Player->IsDead() || Player->InTransition() || !Player->CanBeginRecovery() ||
         (Player->GetFlightPhase() != EOPSMode::ACTIVE &&
          Player->GetFlightPhase() != EOPSMode::APPROACH && Player->GetFlightPhase() != EOPSMode::RECOVERY) ||
         !GEngine || !FSlateApplication::IsInitialized()) return;

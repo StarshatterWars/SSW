@@ -345,8 +345,8 @@ FighterAI::FindObjective()
             }
         }
 
-        if (action == RadioMessageAction::RTB ||
-            action == RadioMessageAction::DOCK_WITH) {
+        if ((action == RadioMessageAction::RTB ||
+             action == RadioMessageAction::DOCK_WITH) && ship->CanBeginRecovery()) {
 
             Ship* controller = ship->GetController();
 

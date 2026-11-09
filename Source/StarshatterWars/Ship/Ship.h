@@ -467,6 +467,7 @@ public:
     bool                    CanRequestAutoLand() const;
     Instruction*            GetPendingRTBWaypoint() const;
     bool                    IsAutoLandEngaged() const;
+    bool                    CanBeginRecovery() const;
     bool                    SetAutoLand(bool engage = true);
     void                    CommandMode();
 

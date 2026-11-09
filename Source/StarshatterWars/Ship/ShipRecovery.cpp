@@ -7,6 +7,32 @@
 #include "SteerAI.h"
 #include "RadioView.h"
 #include "Instruction.h"
+#include "Mission.h"
+
+bool Ship::CanBeginRecovery() const
+{
+    const Mission* MissionDef = sim ? sim->GetMission() : nullptr;
+    if (!MissionDef || MissionDef->GetIdentity() != 103 ||
+        MissionDef->GetMissionType() != int(EMissionType::TRAINING))
+        return true;
+
+    Ship* Trainee = sim->GetPlayerShip();
+    if (!Trainee || !element || Trainee->GetElement() != element)
+        return true;
+
+    bool bHasPrimary = false;
+    for (int Index = 0; Index < element->NumObjectives(); ++Index)
+    {
+        const Instruction* Objective = element->GetObjective(Index);
+        if (!Objective || Objective->GetPriority() != Instruction::PRIMARY)
+            continue;
+
+        bHasPrimary = true;
+        if (Objective->GetStatus() != INSTRUCTION_STATUS::COMPLETE)
+            return false;
+    }
+    return bHasPrimary;
+}
 
 bool Ship::IsAutoLandEngaged() const
 {
@@ -15,7 +41,7 @@ bool Ship::IsAutoLandEngaged() const
 
 bool Ship::CanAutoLand() const
 {
-    if (!sim || sim->GetPlayerShip() != this || !IsDropship() || IsDead() || IsDying() ||
+    if (!CanBeginRecovery() || !sim || sim->GetPlayerShip() != this || !IsDropship() || IsDead() || IsDying() ||
         InTransition() || net_control || !inbound || !inbound->Cleared() ||
         (flight_phase != EOPSMode::APPROACH && flight_phase != EOPSMode::RECOVERY &&
          !(flight_phase == EOPSMode::ACTIVE && (bAutoLand || (navsys && navsys->HasReachedRTB()))))) return false;
@@ -38,6 +64,7 @@ Instruction* Ship::GetPendingRTBWaypoint() const
 
 bool Ship::CanRequestAutoLand() const
 {
+    if (!CanBeginRecovery()) return false;
     if (CanAutoLand()) return true;
     return sim && sim->GetPlayerShip() == this && IsDropship() && !IsDead() && !IsDying() &&
         !InTransition() && !net_control && navsys && navsys->IsPowerOn() && GetPendingRTBWaypoint() &&
@@ -48,6 +75,12 @@ bool Ship::SetAutoLand(bool engage)
 {
     if (engage)
     {
+        if (!CanBeginRecovery())
+        {
+            RadioView::Message("Complete the primary objectives before returning to base.");
+            return false;
+        }
+
         if (bAutoLand || (navsys && navsys->IsAutoLandRTB() && !navsys->HasReachedRTB()))
             return true;
 
@@ -67,7 +100,19 @@ bool Ship::SetAutoLand(bool engage)
                 bAutoTrack = false;
                 bManualThrottle = false;
                 SetControls(sim->GetControls());
-                RadioView::Message("Autoland engaged. Flying to the return waypoint.");
+                const Mission* MissionDef = sim->GetMission();
+                if (Home && Home->IsGroundUnit() && Home->GetRegion() == GetRegion() &&
+                    MissionDef && MissionDef->GetIdentity() == 103 &&
+                    MissionDef->GetMissionType() == int(EMissionType::TRAINING))
+                {
+                    // Janek can assign the nearest approach from anywhere in its region.
+                    navsys->BeginRTBRecovery();
+                    RadioView::Message("Autoland engaged. Requesting approach to Janek.");
+                }
+                else
+                {
+                    RadioView::Message("Autoland engaged. Flying to the return waypoint.");
+                }
                 return true;
             }
             navsys->SelectRTBForAutoLand(false);

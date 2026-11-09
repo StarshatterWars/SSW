@@ -17,6 +17,7 @@
 
 
 #include "MissionAwardDlg.h"
+#include "MenuScreen.h"
 #include "AwardPresentation.h"
 #include "AudioRouting.h"
 
@@ -81,58 +82,23 @@ void UMissionAwardDlg::NativeConstruct()
     if (btn_close)
         btn_close->OnClicked.AddUniqueDynamic(this, &UMissionAwardDlg::OnCloseClicked);
 
-    bExitLatch = true;
 }
 
 FReply UMissionAwardDlg::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
-    // Mirror legacy behavior:
-    // - Enter/Escape close only if latch is released.
     const FKey Key = InKeyEvent.GetKey();
-
-    if ((Key == EKeys::Enter || Key == EKeys::Virtual_Accept ||
-        Key == EKeys::Escape || Key == EKeys::Virtual_Back))
+    if (Key == EKeys::Enter || Key == EKeys::Virtual_Accept ||
+        Key == EKeys::Escape || Key == EKeys::Virtual_Back)
     {
-        bool bHandled = false;
-        UpdateExitLatchFromInput(InKeyEvent, bHandled);
+        if (!InKeyEvent.IsRepeat())
+            OnCloseClicked();
 
-        if (bHandled)
-            return FReply::Handled();
-
-        return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
+        return FReply::Handled();
     }
-
-    // Any other key releases the latch in the classic code only after keys are up;
-    // here we keep it simple: first non-Enter/Escape keydown releases latch.
-    bExitLatch = false;
 
     return Super::NativeOnKeyDown(InGeometry, InKeyEvent);
 }
 
-void UMissionAwardDlg::UpdateExitLatchFromInput(const FKeyEvent& InKeyEvent, bool& bOutHandled)
-{
-    bOutHandled = false;
-
-    const FKey Key = InKeyEvent.GetKey();
-
-    const bool bIsAccept = (Key == EKeys::Enter || Key == EKeys::Virtual_Accept);
-    const bool bIsBack = (Key == EKeys::Escape || Key == EKeys::Virtual_Back);
-
-    if (!bIsAccept && !bIsBack)
-        return;
-
-    if (bExitLatch)
-    {
-        // First frame / first key press while latched: do nothing, just release latch.
-        bExitLatch = false;
-        bOutHandled = true;
-        return;
-    }
-
-    // Close once latch is released:
-    OnCloseClicked();
-    bOutHandled = true;
-}
 
 // --------------------------------------------------------------------
 // UBaseScreen overrides
@@ -286,7 +252,8 @@ void UMissionAwardDlg::ShowDialog()
     if (UTextBlock* TitleBlock = Cast<UTextBlock>(WidgetTree ? WidgetTree->FindWidget(TEXT("PanelTitle")) : nullptr))
         TitleBlock->SetText(FText::FromString(TEXT("Congratulations")));
     ShowPlayer();
-    bExitLatch = true;
+    SetIsFocusable(true);
+    SetKeyboardFocus();
 }
 
 void UMissionAwardDlg::ShowPlayer()
@@ -356,11 +323,12 @@ void UMissionAwardDlg::OnCloseClicked()
         P->ClearShowAward();
     }
 
+    SetVisibility(ESlateVisibility::Collapsed);
+
     UGameInstance* GI = GetGameInstance();
     if (!GI)
     {
         UE_LOG(LogTemp, Warning, TEXT("AwardDlg: GameInstance not found."));
-        SetVisibility(ESlateVisibility::Hidden);
         return;
     }
 
@@ -368,7 +336,6 @@ void UMissionAwardDlg::OnCloseClicked()
     if (!RuntimeSS)
     {
         UE_LOG(LogTemp, Warning, TEXT("AwardDlg: Runtime subsystem not found."));
-        SetVisibility(ESlateVisibility::Hidden);
         return;
     }
 
@@ -382,5 +349,6 @@ void UMissionAwardDlg::OnCloseClicked()
         RuntimeSS->SetGameMode(EGameMode::MENU);
     }
 
-    SetVisibility(ESlateVisibility::Hidden);
+    if (UMenuScreen* Menu = GetMenuManager())
+        Menu->ReturnFromMissionBriefing();
 }

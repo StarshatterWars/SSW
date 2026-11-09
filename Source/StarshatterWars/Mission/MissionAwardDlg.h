@@ -78,10 +78,6 @@ protected:
     void OnCloseClicked();
 
 private:
-    /** Prevent immediate Enter/Escape close on first frame (matches exit_latch) */
-    void UpdateExitLatchFromInput(const FKeyEvent& InKeyEvent, bool& bOutHandled);
-
-private:
     friend class FAwardPresentationTest;
     bool bModernUiBuilt=false;
     // ------------------------------------------------------------

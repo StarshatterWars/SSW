@@ -265,7 +265,6 @@ AActor* BriefingShipPreview::CreateVisual(UWorld* PreviewWorld, const TArray<FBr
         Mesh->SetComponentTickEnabled(false);
         for (int32 Index = 0; Index < Part.Materials.Num(); ++Index)
             if (Part.Materials[Index]) Mesh->SetMaterial(Index, Part.Materials[Index]);
-        if (Part.OverlayMaterial) Mesh->SetOverlayMaterial(Part.OverlayMaterial);
         Mesh->RegisterComponent();
     }
     Visual->SetActorEnableCollision(false);
@@ -506,7 +505,8 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         int32* Existing = SectorIndices.Find(Sector);
         const int32 Index = Existing ? *Existing : SectorIndices.Add(Sector, SectorIndices.Num());
         const FVector Local = Index == 0 ? Position - Origin : Position;
-        return FVector(Local.Z, Local.X, Local.Y) + FVector(Index * 120000.0, 0.0, 0.0);
+        // Mission files use (map X, map Y, altitude). Match the live world axes.
+        return FVector(Local.Y, -Local.X, Local.Z) + FVector(Index * 120000.0, 0.0, 0.0);
     };
 
     Route.Add(FVector::ZeroVector);
@@ -658,16 +658,25 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         }
         return Material;
     };
-    auto* Friendly = MakeOverlayMaterial(FLinearColor(.08f, .45f, 1.f), .24f);
-    auto* Neutral = MakeOverlayMaterial(FLinearColor(1.f, .76f, .08f), .24f);
-    auto* Hostile = MakeOverlayMaterial(FLinearColor(1.f, .08f, .14f), .24f);
+    // Use an opaque surface color so the faction tint covers every model section.
+    UMaterialInterface* FactionBase = LoadObject<UMaterialInterface>(nullptr,
+        TEXT("/Engine/BasicShapes/BasicShapeMaterial.BasicShapeMaterial"));
+    auto MakeFactionMaterial = [&](const FLinearColor& Color) {
+        auto* Material = FactionBase ? UMaterialInstanceDynamic::Create(FactionBase, this) : nullptr;
+        if (Material) Material->SetVectorParameterValue(TEXT("Color"), Color);
+        return Material;
+    };
+    auto* Friendly = MakeFactionMaterial(FLinearColor(.03f, .22f, 1.f));
+    auto* Neutral = MakeFactionMaterial(FLinearColor(1.f, .8f, .02f));
+    auto* Hostile = MakeFactionMaterial(FLinearColor(1.f, .025f, .025f));
 
     auto AddParts = [](TArray<FBriefingShipPreviewPart>& Destination,
-        const TArray<FBriefingShipPreviewPart>& Source, const FTransform& Placement, UMaterialInterface* Overlay) {
+        const TArray<FBriefingShipPreviewPart>& Source, const FTransform& Placement, UMaterialInterface* FactionMaterial) {
         for (FBriefingShipPreviewPart Part : Source)
         {
             Part.Transform = Part.Transform * Placement;
-            Part.OverlayMaterial = Overlay;
+            if (Part.Mesh && FactionMaterial)
+                Part.Materials.Init(FactionMaterial, Part.Mesh->GetStaticMaterials().Num());
             Destination.Add(MoveTemp(Part));
         }
     };
@@ -696,7 +705,7 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
             ResolveRehearsalParts(*Design, *Model);
         }
         const int32 Iff = Element->GetIFF();
-        auto* Overlay = Iff == Player->GetIFF() ? Friendly : Iff == 0 ? Neutral : Hostile;
+        auto* FactionMaterial = Iff == 0 ? Neutral : Iff == Player->GetIFF() ? Friendly : Hostile;
         const double Size = Element->IsStarship() ? 160.0 : 44.0;
         const FQuat Heading(FVector::UpVector, Element->GetHeading() + PI);
         const FVector Position = (Placement.Position - Center) * Scale;
@@ -704,7 +713,7 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         {
             if (Element == Player && ShipIndex + 1 == Player->GetPlayerIndex()) continue;
             const FVector Offset = Heading.RotateVector(FVector(-30.0 * ShipIndex, 32.0 * ShipIndex, 0.0));
-            AddParts(Parts, *Model, FitModel(*Model, Heading, Position + Offset, Size), Overlay);
+            AddParts(Parts, *Model, FitModel(*Model, Heading, Position + Offset, Size), FactionMaterial);
         }
     }
 
