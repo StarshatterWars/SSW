@@ -16,7 +16,7 @@ sitrep: "The Third Fleet is participating in wargame "
     "been tasked with practicing take offs and landings, "
     "flying patrol patterns "
     "and destroying target drones in your sector."
-start: "01/13:23:00"
+start: "01/16:23:00"
 stardate: 1084144000
 degrees: true
 element: {

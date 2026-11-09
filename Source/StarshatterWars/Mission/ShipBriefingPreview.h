@@ -24,6 +24,7 @@ struct FBriefingShipPreviewPart
     GENERATED_BODY()
     UPROPERTY() TObjectPtr<UStaticMesh> Mesh;
     UPROPERTY() TArray<TObjectPtr<UMaterialInterface>> Materials;
+    UPROPERTY() TObjectPtr<UMaterialInterface> OverlayMaterial;
     UPROPERTY() FTransform Transform = FTransform::Identity;
 };
 

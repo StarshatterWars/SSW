@@ -7,7 +7,7 @@ name: "Renser Invasion: Archon Screen"
 type: "Sweep"
 system: "Renser"
 region: "Khaital"
-start: "01/00:00:00"
+start: "08/00:00:00"
 sitrep: "The President of the Terellian Alliance has announced the Renser invasion. The Archon Carrier Group is entering Khaital while Hegemony warships operate from Lornas."
 objective: "Protect Archon. Intercept Ironhelm and Mattock."
 

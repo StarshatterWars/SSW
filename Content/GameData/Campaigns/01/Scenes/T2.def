@@ -15,7 +15,7 @@ sitrep: "The Third Fleet is participating in wargame "
     "operations.  As part of the exercise, you have "
     "been tasked with flying patrol patterns "
     "and destroying target drones in your sector. Follow Echo 1 off the deck."
-start: "01/09:23:00"
+start: "01/11:15:00"
 ship: {
     name: Archon,
     design: Orion,

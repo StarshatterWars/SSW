@@ -7,7 +7,7 @@ name: "Research Lab: Relief Corridor"
 type: "Sweep"
 system: "Solus"
 region: "Meridian"
-start: "02/09:00:00"
+start: "04/15:00:00"
 sitrep: "The Tal Vesta University Stellar Observatory in Meridian orbit has been cut off by Separatist patrols and is facing severe shortages of food and consumable supplies. Alliance Theater Command has made humanitarian aid to Meridian a top priority."
 objective: "Protect Tal Vesta Stellar Observatory. Intercept Kendra and Pelorat."
 

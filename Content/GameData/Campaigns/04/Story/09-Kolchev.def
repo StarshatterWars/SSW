@@ -7,7 +7,7 @@ name: "Kolchev: Fleet Picket"
 type: "Sweep"
 system: "Kolchev"
 region: "Kolchev"
-start: "01/00:00:00"
+start: "05/00:00:00"
 sitrep: "The Hegemony Third Fleet has withdrawn to Kolchev. Keep the Sixth Fleet picket intact as it establishes a position in the system."
 objective: "Protect Sixth Fleet Picket. Intercept Hegemony Interceptors."
 

@@ -83,6 +83,11 @@ public:
 	UPROPERTY(SaveGame)
 	uint64 CampaignStartUniverseSeconds = 0;
 
+    UPROPERTY(SaveGame)
+    uint64 CampaignElapsedAtAnchor = 0;
+
+    void AdvanceCampaignClock(uint64 UniverseTimeSecondsNow, uint64 MinimumElapsedSeconds);
+
 	/** Set true after InitializeClock is called at campaign start. */
 	UPROPERTY(SaveGame)
 	bool bInitialized = false;

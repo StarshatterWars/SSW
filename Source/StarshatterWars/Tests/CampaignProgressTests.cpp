@@ -34,6 +34,18 @@ bool FCampaignProgressTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Viewed scenes survive reload"),Loaded->HasPlayedScene(TEXT("01-News-Start")));
     TestEqual(TEXT("Existing campaign clock preserved"),Loaded->CampaignStartUniverseSeconds,uint64(123456));
 
+    Loaded->AdvanceCampaignClock(123500, 7200);
+    TestEqual(TEXT("Later authored mission advances the campaign clock"), Loaded->GetTPlusSeconds(123500), uint64(7200));
+    Loaded->AdvanceCampaignClock(123560, 3600);
+    TestEqual(TEXT("Earlier replay retains elapsed campaign time"), Loaded->GetTPlusSeconds(123560), uint64(7260));
+    TestTrue(TEXT("Save the advanced campaign clock"), UGameplayStatics::SaveGameToMemory(Loaded.Get(), Bytes));
+    TStrongObjectPtr<UCampaignSave> Reopened(Cast<UCampaignSave>(UGameplayStatics::LoadGameFromMemory(Bytes)));
+    if (!TestNotNull(TEXT("Reload advanced campaign clock"), Reopened.Get())) return false;
+    TestEqual(TEXT("Reopening at an earlier universe clock retains the saved time"),
+        Reopened->GetTPlusSeconds(123456), uint64(7260));
+    TestEqual(TEXT("Reopened campaign clock continues advancing"),
+        Reopened->GetTPlusSeconds(123620), uint64(7320));
+
     Campaign Story(2,"Progress fixture",true);
     auto* Viewed=new CombatEvent(&Story,ECombatEventType::NONE,0,0,ECombatEventSource::NONE,"");
     Viewed->SetSceneFile("01-News-Start");Story.GetEvents().append(Viewed);

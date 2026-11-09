@@ -2905,6 +2905,18 @@ bool UMissionBriefingDlg::StartLiveMission()
     bMissionCompleteHandedOff = false;
     Simulation->ExecMission();
     if (!Simulation->GetActiveRegion() || !Simulation->GetPlayerShip()) return false;
+    if (CampaignPtr && (!bStandaloneMission || MissionPtr->IsStoryMission() || CampaignPtr->IsTraining()))
+    {
+        auto* Instance = Cast<USSWGameInstance>(GetGameInstance());
+        const auto* Timer = GetGameInstance()->GetSubsystem<UTimerSubsystem>();
+        if (Instance && Timer && Instance->CampaignSave &&
+            Instance->CampaignSave->CampaignIndex == CampaignPtr->GetCampaignId())
+        {
+            const uint64 AuthoredStart = static_cast<uint64>(FMath::Max(0, MissionPtr->GetStart()));
+            Instance->CampaignSave->AdvanceCampaignClock(Timer->GetUniverseTimeSeconds(), AuthoredStart);
+            Instance->SaveCampaign();
+        }
+    }
     Runtime->SetGameMode(EGameMode::PLAY);
     Runtime->SetPaused(true); // Remain behind the scene cover until camera warmup completes.
     UE_LOG(LogTemp, Log, TEXT("[MissionBriefing] Live mission started: %hs"), MissionPtr->GetName());

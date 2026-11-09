@@ -265,6 +265,7 @@ AActor* BriefingShipPreview::CreateVisual(UWorld* PreviewWorld, const TArray<FBr
         Mesh->SetComponentTickEnabled(false);
         for (int32 Index = 0; Index < Part.Materials.Num(); ++Index)
             if (Part.Materials[Index]) Mesh->SetMaterial(Index, Part.Materials[Index]);
+        if (Part.OverlayMaterial) Mesh->SetOverlayMaterial(Part.OverlayMaterial);
         Mesh->RegisterComponent();
     }
     Visual->SetActorEnableCollision(false);
@@ -645,11 +646,28 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
     const FVector Center = Layout.GetCenter();
     for (FVector& Point : Route) Point = (Point - Center) * Scale;
 
+    UMaterialInterface* MarkerBase = LoadObject<UMaterialInterface>(nullptr,
+        TEXT("/Game/Models/Waypoint/M_WaypointMarker.M_WaypointMarker"));
+    auto MakeOverlayMaterial = [&](const FLinearColor& Color, float Opacity) {
+        auto* Material = MarkerBase ? UMaterialInstanceDynamic::Create(MarkerBase, this) : nullptr;
+        if (Material)
+        {
+            Material->SetVectorParameterValue(TEXT("MarkerColor"), Color);
+            Material->SetScalarParameterValue(TEXT("Intensity"), 1.f);
+            Material->SetScalarParameterValue(TEXT("Opacity"), Opacity);
+        }
+        return Material;
+    };
+    auto* Friendly = MakeOverlayMaterial(FLinearColor(.08f, .45f, 1.f), .24f);
+    auto* Neutral = MakeOverlayMaterial(FLinearColor(1.f, .76f, .08f), .24f);
+    auto* Hostile = MakeOverlayMaterial(FLinearColor(1.f, .08f, .14f), .24f);
+
     auto AddParts = [](TArray<FBriefingShipPreviewPart>& Destination,
-        const TArray<FBriefingShipPreviewPart>& Source, const FTransform& Placement) {
+        const TArray<FBriefingShipPreviewPart>& Source, const FTransform& Placement, UMaterialInterface* Overlay) {
         for (FBriefingShipPreviewPart Part : Source)
         {
             Part.Transform = Part.Transform * Placement;
+            Part.OverlayMaterial = Overlay;
             Destination.Add(MoveTemp(Part));
         }
     };
@@ -663,7 +681,7 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         return FTransform(Heading, Position - CenterOffset, FVector(ModelScale));
     };
     RouteShipParts.Reset();
-    AddParts(RouteShipParts, PlayerParts, FitModel(PlayerParts, FQuat::Identity, FVector::ZeroVector, 48.0));
+    AddParts(RouteShipParts, PlayerParts, FitModel(PlayerParts, FQuat::Identity, FVector::ZeroVector, 48.0), Friendly);
 
     TMap<const FShipDesign*, TArray<FBriefingShipPreviewPart>> Models;
     Models.Add(Player->GetShipDesign(), MoveTemp(PlayerParts));
@@ -677,6 +695,8 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
             Model = &Models.Add(Design);
             ResolveRehearsalParts(*Design, *Model);
         }
+        const int32 Iff = Element->GetIFF();
+        auto* Overlay = Iff == Player->GetIFF() ? Friendly : Iff == 0 ? Neutral : Hostile;
         const double Size = Element->IsStarship() ? 160.0 : 44.0;
         const FQuat Heading(FVector::UpVector, Element->GetHeading() + PI);
         const FVector Position = (Placement.Position - Center) * Scale;
@@ -684,7 +704,7 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         {
             if (Element == Player && ShipIndex + 1 == Player->GetPlayerIndex()) continue;
             const FVector Offset = Heading.RotateVector(FVector(-30.0 * ShipIndex, 32.0 * ShipIndex, 0.0));
-            AddParts(Parts, *Model, FitModel(*Model, Heading, Position + Offset, Size));
+            AddParts(Parts, *Model, FitModel(*Model, Heading, Position + Offset, Size), Overlay);
         }
     }
 
@@ -697,8 +717,6 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         RouteGlow->SetVectorParameterValue(TEXT("GlowColor"), FLinearColor(.08f, .65f, 1.f));
         RouteGlow->SetScalarParameterValue(TEXT("GlowIntensity"), 4.f);
     }
-    UMaterialInterface* MarkerBase = LoadObject<UMaterialInterface>(nullptr,
-        TEXT("/Game/Models/Waypoint/M_WaypointMarker.M_WaypointMarker"));
     UMaterialInstanceDynamic* MarkerGlow = MarkerBase ? UMaterialInstanceDynamic::Create(MarkerBase, this) : nullptr;
     if (MarkerGlow)
     {
@@ -715,16 +733,6 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         Part.Transform = FTransform(Direction.Rotation(), (Start + End) * .5,
             FVector(Direction.Size() / 100.0, Width, Width));
     };
-    auto MakeOverlayMaterial = [&](const FLinearColor& Color, float Opacity) {
-        auto* Material = MarkerBase ? UMaterialInstanceDynamic::Create(MarkerBase, this) : nullptr;
-        if (Material)
-        {
-            Material->SetVectorParameterValue(TEXT("MarkerColor"), Color);
-            Material->SetScalarParameterValue(TEXT("Intensity"), 1.f);
-            Material->SetScalarParameterValue(TEXT("Opacity"), Opacity);
-        }
-        return Material;
-    };
     if (auto* Grid = MakeOverlayMaterial(FLinearColor(.2f, .5f, .8f), .22f))
     {
         constexpr double CellSize = 100.0;
@@ -739,25 +747,6 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
             AddLine(FVector(Offset, -Edge, Height), FVector(Offset, Edge, Height), Width, Grid);
         }
     }
-    if (auto* Disc = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Sphere.Sphere")))
-    {
-        auto* Friendly = MakeOverlayMaterial(FLinearColor(.08f, .45f, 1.f), .32f);
-        auto* Neutral = MakeOverlayMaterial(FLinearColor(1.f, .76f, .08f), .32f);
-        auto* Hostile = MakeOverlayMaterial(FLinearColor(1.f, .08f, .14f), .32f);
-        for (const FPlacement& Placement : Ships)
-        {
-            const int32 Iff = Placement.Element->GetIFF();
-            auto* Material = Iff == Player->GetIFF() ? Friendly : Iff == 0 ? Neutral : Hostile;
-            if (!Material) continue;
-            const double Diameter = Placement.Element->IsStarship() ? 1.65 : .70;
-            auto& Marker = Parts.AddDefaulted_GetRef();
-            Marker.Mesh = Disc;
-            Marker.Materials.Add(Material);
-            Marker.Transform = FTransform(FQuat::Identity, (Placement.Position - Center) * Scale - FVector(0, 0, 16),
-                FVector(Diameter, Diameter, .025));
-        }
-    }
-
     constexpr int32 RingSegments = 16;
     constexpr double MarkerRadius = 13.0;
     const FVector Axes[] = {FVector::ForwardVector, FVector::RightVector, FVector::UpVector};

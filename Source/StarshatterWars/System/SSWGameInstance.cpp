@@ -1280,6 +1280,9 @@ bool USSWGameInstance::SaveCampaign()
 		return false;
 	}
 
+    if (const auto* Timer = GetSubsystem<UTimerSubsystem>())
+        CampaignSave->AdvanceCampaignClock(Timer->GetUniverseTimeSeconds(), 0);
+
 	const FString Slot =
 		UCampaignSave::MakeSlotNameFromRowName(CampaignSave->CampaignRowName);
 

@@ -292,6 +292,7 @@ void UTimerSubsystem::RestartCampaignClock(bool bSaveImmediately)
 	const uint64 Now = UniverseTimeSeconds;
 
 	CS->CampaignStartUniverseSeconds = Now;
+	CS->CampaignElapsedAtAnchor = 0;
 	CS->bInitialized = true;
 
 	LastBroadcastTPlus = MAX_uint64;

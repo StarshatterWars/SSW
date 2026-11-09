@@ -29,17 +29,17 @@ void UCampaignSave::InitializeCampaignClock(uint64 UniverseTimeSecondsNow)
 
 uint64 UCampaignSave::GetTPlusSeconds(uint64 UniverseTimeSecondsNow) const
 {
-	if (CampaignStartUniverseSeconds == 0)
-	{
-		return 0ULL;
-	}
+    if (CampaignStartUniverseSeconds == 0 || UniverseTimeSecondsNow <= CampaignStartUniverseSeconds)
+        return CampaignElapsedAtAnchor;
 
-	if (UniverseTimeSecondsNow <= CampaignStartUniverseSeconds)
-	{
-		return 0ULL;
-	}
+    return CampaignElapsedAtAnchor + (UniverseTimeSecondsNow - CampaignStartUniverseSeconds);
+}
 
-	return UniverseTimeSecondsNow - CampaignStartUniverseSeconds;
+void UCampaignSave::AdvanceCampaignClock(uint64 UniverseTimeSecondsNow, uint64 MinimumElapsedSeconds)
+{
+    CampaignElapsedAtAnchor = FMath::Max(GetTPlusSeconds(UniverseTimeSecondsNow), MinimumElapsedSeconds);
+    CampaignStartUniverseSeconds = UniverseTimeSecondsNow;
+    bInitialized = true;
 }
 
 FString UCampaignSave::FormatTPlus_DD_HHMMSS(uint64 TPlusSeconds)
