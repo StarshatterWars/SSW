@@ -48,6 +48,8 @@ T3 (Flight School) at Janek Station is playable. Its remaining check is the repo
 
 6. Integrate Steam and Epic Online Services (EOS) account sign-in. Require successful sign-in through either provider before entering gameplay. Use the signed-in account's display name as the pilot name and remove manual name entry from first run. Associate saves and progression with a stable provider account ID so display name changes preserve progress and switching accounts selects the correct pilot. Verify Steam and EOS sign-in, cancellation and retry, first run, return visits, account switching, and save isolation. Define and verify how existing local pilot saves can be claimed before replacing the old first-run flow.
 
+3D briefing and replay functional work is closed after 20 automated Alpha 3 closeout checks passed. This includes briefing mission selection, standalone isolation, campaign save round-trip, and mission clock lifecycle. Live Story replay and audiovisual polish were outside this closeout run.
+
 Account sign-in and saves are closed at the project owner's direction. Look and feel changes are deferred to the final alpha beauty and usability passes.
 
 Keep the current 1/100 presentation scale and legacy simulation coordinates for this milestone.
