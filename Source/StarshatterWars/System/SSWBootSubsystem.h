@@ -84,7 +84,7 @@ public:
     UPROPERTY(Config, EditAnywhere, Category="Sign-In")
     bool bRequirePlatformSignIn = false;
 
-    /** Enables Shift+X target damage in T2 development builds. */
+    /** Enables Shift+X damage to the selected hostile ship in development builds. */
     UPROPERTY(Config, EditAnywhere, Category="Debug", meta=(DisplayName="Enable Combat Debug Mode"))
     bool bEnableCombatDebugMode = false;
 

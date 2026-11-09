@@ -414,19 +414,18 @@ void UMissionBriefingDlg::UpdateLiveMission()
 
 #if !UE_BUILD_SHIPPING && !UE_BUILD_TEST
     if (GetDefault<USSWDiagnosticsSettings>()->bEnableCombatDebugMode &&
-        CanUseFighterHUD() && GetWorld() && !GetWorld()->IsPaused())
+        GetWorld() && !GetWorld()->IsPaused())
     {
         APlayerController* PC = GetOwningPlayer();
         if (PC && PC->WasInputKeyJustPressed(EKeys::X) &&
             (PC->IsInputKeyDown(EKeys::LeftShift) || PC->IsInputKeyDown(EKeys::RightShift)))
         {
             Sim* Simulation = Sim::GetSim();
-            SimElement* Wave = FindTargetPracticeWave(Simulation);
             const Ship* Pilot = Simulation ? Simulation->GetPlayerShip() : nullptr;
             SimObject* Target = Pilot ? Pilot->GetTarget() : nullptr;
             Ship* Enemy = Target && Target->GetType() == ESimObject::SHIP
                 ? static_cast<Ship*>(Target) : nullptr;
-            if (Wave && Enemy && Enemy->GetElement() == Wave &&
+            if (Enemy && Enemy->GetIFF() > 0 &&
                 Enemy->GetIFF() != Pilot->GetIFF() && Enemy->GetRegion() == Pilot->GetRegion() &&
                 !Enemy->IsDead() && !Enemy->IsDying() && Enemy->Design())
             {
