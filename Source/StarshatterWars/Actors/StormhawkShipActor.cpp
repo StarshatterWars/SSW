@@ -7,6 +7,40 @@ AStormhawkShipActor::AStormhawkShipActor()
 
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(0.250000f));
+    // Stormhawk's drive and RCS rows are already in unscaled hull units.
+    bPropulsionPortsInModelUnits = true;
+    ThrusterPortHullName = TEXT("Storm");
+    // Hull surface positions in actor axes, ordered as the DEF's RCS ports.
+    HullThrusterPortPositions = {
+        FVector(-16.08, -112.18, 12.46),
+        FVector(-19.69, -73.44, 0.90),
+        FVector(-19.45, 73.80, 0.74),
+        FVector(-14.96, 111.76, 12.46),
+        FVector(-136.80, -81.21, -0.71),
+        FVector(-146.24, -64.97, 0.23),
+        FVector(-145.72, 64.96, 0.33),
+        FVector(-136.91, 81.44, -0.64),
+        FVector(119.99, -11.70, 11.57),
+        FVector(104.00, -11.91, 11.87),
+        FVector(103.97, 11.40, 11.12),
+        FVector(119.96, 11.14, 10.74),
+        FVector(119.90, -10.78, -13.37),
+        FVector(103.92, -11.00, -13.86),
+        FVector(103.89, 10.72, -13.25),
+        FVector(119.86, 10.46, -12.70),
+        FVector(-70.80, -52.25, 9.26),
+        FVector(-95.84, -35.10, 28.35),
+        FVector(-70.96, 52.37, 9.24),
+        FVector(-96.16, 35.49, 28.35),
+        FVector(-81.19, -45.01, -21.49),
+        FVector(-95.88, -44.93, -21.49),
+        FVector(-80.74, 45.24, -21.49),
+        FVector(-96.11, 45.32, -21.49),
+        FVector(-16.09, -113.74, 12.67),
+        FVector(-16.46, -113.22, 16.62),
+        FVector(-14.95, 113.32, 12.67),
+        FVector(-15.32, 112.81, 16.62),
+    };
     ApplyStormhawkDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Stormhawk"));

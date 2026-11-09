@@ -7,6 +7,29 @@ AEagleShipActor::AEagleShipActor()
 
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(0.250000f));
+    bPropulsionPortsInModelUnits = true;
+    ThrusterPortHullName = TEXT("Eagle");
+    // Hull surface positions in actor axes, ordered as the DEF's RCS ports.
+    HullThrusterPortPositions = {
+        FVector(-2.45, -97.73, 12.10),
+        FVector(-6.57, -92.59, -23.82),
+        FVector(-6.58, 92.59, -23.83),
+        FVector(-2.46, 97.73, 11.98),
+        FVector(-182.61, -5.65, -10.14),
+        FVector(-182.61, 5.45, -10.14),
+        FVector(-135.67, -11.08, 15.44),
+        FVector(-135.67, 11.08, 15.43),
+        FVector(-136.01, -12.11, -16.08),
+        FVector(-136.01, 12.10, -16.07),
+        FVector(99.94, -13.01, 9.59),
+        FVector(99.94, 12.99, 9.57),
+        FVector(99.40, -15.42, -13.63),
+        FVector(99.40, 16.00, -13.63),
+        FVector(-2.09, -111.14, 11.77),
+        FVector(9.91, -111.08, 11.89),
+        FVector(-2.09, 111.11, 11.77),
+        FVector(9.91, 111.05, 11.89),
+    };
     ApplyEagleDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Eagle"));

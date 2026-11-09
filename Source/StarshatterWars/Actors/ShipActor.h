@@ -547,7 +547,10 @@ public:
     // Some gate FBXs preserve DEF coordinates in the imported hull basis.
     bool bLegacyEmitterUsesHullAxes = false;
 
-    FVector RuntimeEmitterLocalPosition(const FVector& ImportedPosition) const;
+    bool bPropulsionPortsInModelUnits = false;
+    FName ThrusterPortHullName;
+    TArray<FVector> HullThrusterPortPositions;
+    FVector RuntimeEmitterLocalPosition(const FVector& ImportedPosition, bool bInModelUnits = false) const;
     void BuildMainEnginesFromRuntime();
     void ClearRuntimeMainEngines();
     void UpdateMainEnginesFromRuntime(float DeltaTime);

@@ -425,12 +425,26 @@ void UMissionBriefingDlg::UpdateLiveMission()
             SimObject* Target = Pilot ? Pilot->GetTarget() : nullptr;
             Ship* Enemy = Target && Target->GetType() == ESimObject::SHIP
                 ? static_cast<Ship*>(Target) : nullptr;
-            if (Enemy && Enemy->GetIFF() > 0 &&
-                Enemy->GetIFF() != Pilot->GetIFF() && Enemy->GetRegion() == Pilot->GetRegion() &&
-                !Enemy->IsDead() && !Enemy->IsDying() && Enemy->Design())
+            const auto IsHostileContact = [Pilot](const Ship* Contact) {
+                return Pilot && Contact && Contact->GetIFF() > 0 &&
+                    Contact->GetIFF() != Pilot->GetIFF() && Contact->GetRegion() == Pilot->GetRegion() &&
+                    !Contact->IsDead() && !Contact->IsDying() && Contact->Design();
+            };
+            if (!IsHostileContact(Enemy))
+            {
+                // Ground contacts can be selected on the HUD without a weapons lock.
+                const AShipActor* Selected = Cast<AShipActor>(SelectedMissionTarget.Get());
+                Enemy = Selected ? Selected->GetRuntimeShip() : nullptr;
+            }
+            if (IsHostileContact(Enemy))
             {
                 Enemy->Physical::InflictDamage(Enemy->Design()->integrity * 0.5);
                 if (Enemy->GetIntegrity() < 1.0) Enemy->DeathSpiral();
+                RadioView::Message("Combat debug damage applied.");
+            }
+            else
+            {
+                RadioView::Message("Combat debug: select a hostile contact first.");
             }
         }
     }

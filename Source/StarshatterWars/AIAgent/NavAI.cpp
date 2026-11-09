@@ -482,6 +482,7 @@ void NavAI::ThrottleControl()
     const double ShipSpeed = FVector::DotProduct(ship->GetVelocity(), ship->GetHeading());
 
     bool bAugmenter = false;
+    const bool bFighterRoute = navpt && !bTrackingTarget && ship->GetClassification() < CLASSIFICATION::LCA;
 
     // Defaults each tick (prevents stale values from previous frames)
     brakes = 0.0;
@@ -496,7 +497,28 @@ void NavAI::ThrottleControl()
         if (!bTrackingTarget && DesiredSpeed < 10.0)
             DesiredSpeed = 250.0;
 
-        if (Ship::GetFlightModel() > 0) {
+        if (bFighterRoute) {
+            const Drive* MainDrive = ship->GetMainDrive();
+            const bool bCanBoost = MainDrive && MainDrive->MaxAugmenter() > 0.0f;
+            const double Limit = ship->GetVLimit();
+            if (Limit > 0.0)
+                DesiredSpeed = FMath::Min(DesiredSpeed, Limit * (bCanBoost ? 1.5 : 1.0));
+
+            const double Error = DesiredSpeed - ship->GetVelocity().Size();
+            if (Error < -5.0) {
+                brakes = FMath::Clamp(-Error / 50.0, 0.0, 1.0);
+            }
+            else if (Error > 25.0) {
+                throttle = 100.0;
+                bAugmenter = bCanBoost;
+            }
+            else {
+                // Track small speed errors at a rate independent of the frame rate.
+                throttle = old_throttle + Error * FMath::Max(0.0, seconds);
+                bAugmenter = bCanBoost && Error > 0.0 && ship->GetAugmenter();
+            }
+        }
+        else if (Ship::GetFlightModel() > 0) {
             // Smooth throttle adjustments:
             if (ShipSpeed > DesiredSpeed + 10.0)
                 throttle = old_throttle - 0.25;
@@ -529,7 +551,7 @@ void NavAI::ThrottleControl()
             if (ShipSpeed < 200.0)
                 bAugmenter = true;
         }
-        else if (throttle < 20.0) {
+        else if (throttle < 20.0 && brakes <= 0.0) {
             throttle = 20.0;
         }
     }
@@ -546,7 +568,7 @@ void NavAI::ThrottleControl()
     ship->SetAugmenter(bAugmenter);
 
     // Braking thrust: negative Y translation (same intent as original)
-    if (ShipSpeed > 1.0 && brakes > 0.0) {
+    if (bFighterRoute || (ShipSpeed > 1.0 && brakes > 0.0)) {
         const double MaxTransY = ship->Design() ? ship->Design()->trans_y : 0.0;
         ship->SetTransY(-brakes * MaxTransY);
     }

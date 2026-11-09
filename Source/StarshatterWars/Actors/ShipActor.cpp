@@ -2224,14 +2224,13 @@ void AShipActor::BuildNavLightsFromRuntime()
 
 }
 
-FVector AShipActor::RuntimeEmitterLocalPosition(const FVector& ImportedPosition) const
+FVector AShipActor::RuntimeEmitterLocalPosition(const FVector& ImportedPosition, bool bInModelUnits) const
 {
-    // Import already multiplies every drive/thruster port by design.scale.
-    // Remove that factor before the component hierarchy applies actor/BP scale.
+    // Remove any import scale before the component hierarchy applies actor/BP scale.
     const ShipDesign* Design = RuntimeShip ? RuntimeShip->Design() : nullptr;
     const double DesignScale = Design && FMath::Abs(Design->scale) > SMALL_NUMBER
         ? static_cast<double>(Design->scale) : 1.0;
-    const FVector UnscaledPosition = ImportedPosition / DesignScale;
+    const FVector UnscaledPosition = bInModelUnits ? ImportedPosition : ImportedPosition / DesignScale;
     const FVector AuthoredPosition = bLegacyEmitterCoordinates
         ? FVector(UnscaledPosition.Z, -UnscaledPosition.X, UnscaledPosition.Y) : UnscaledPosition;
     if (!HullMesh || !VFXRoot)
@@ -2293,7 +2292,7 @@ void AShipActor::BuildMainEnginesFromRuntime()
         Point->SetupAttachment(VFXRoot);
         Point->RegisterComponent();
 
-        Point->SetRelativeLocation(RuntimeEmitterLocalPosition(MainDrive->GetPortLocation(i)));
+        Point->SetRelativeLocation(RuntimeEmitterLocalPosition(MainDrive->GetPortLocation(i), bPropulsionPortsInModelUnits));
         Point->SetRelativeRotation(
             ConvertLegacyPortRotation(
                 FRotator(0.0f, 180.0f, 0.0f)));
@@ -2771,6 +2770,9 @@ void AShipActor::BuildThrustersFromRuntime()
 
     UStaticMesh* NozzleMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
     const int32 NumPorts = RuntimeThruster->GetNumThrusters();
+    const UStaticMesh* Hull = HullMesh ? HullMesh->GetStaticMesh() : nullptr;
+    const bool bUseHullPorts = Hull && Hull->GetFName() == ThrusterPortHullName &&
+        HullThrusterPortPositions.Num() == NumPorts;
 
     for (int32 PortIndex = 0; PortIndex < NumPorts; ++PortIndex)
     {
@@ -2783,8 +2785,9 @@ void AShipActor::BuildThrustersFromRuntime()
 
         FRuntimeThrusterFX FX;
 
-        const FVector PortLocation =
-            RuntimeEmitterLocalPosition(Port->Location);
+        const FVector PortLocation = bUseHullPorts
+            ? RuntimeEmitterLocalPosition(HullThrusterPortPositions[PortIndex], true)
+            : RuntimeEmitterLocalPosition(Port->Location, bPropulsionPortsInModelUnits);
         FX.PointName = Port->PointName;
         FX.Direction = Port->Direction;
         FX.Location = Port->Location;

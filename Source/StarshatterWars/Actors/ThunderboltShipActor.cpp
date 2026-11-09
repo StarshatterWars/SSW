@@ -8,6 +8,43 @@ AThunderboltShipActor::AThunderboltShipActor()
 
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(0.270000f));
+    bPropulsionPortsInModelUnits = true;
+    ThrusterPortHullName = TEXT("Thunderbolt");
+    // Hull surface positions in actor axes, ordered as the DEF's RCS ports.
+    HullThrusterPortPositions = {
+        FVector(65.29, -85.19, 2.13),
+        FVector(58.46, -65.74, -3.44),
+        FVector(65.25, 76.33, 3.51),
+        FVector(65.29, 85.19, 2.13),
+        FVector(-93.58, -85.19, 2.13),
+        FVector(-93.54, -76.45, 3.54),
+        FVector(-93.54, 76.35, 3.48),
+        FVector(-93.58, 85.19, 2.13),
+        FVector(118.40, -24.88, -1.35),
+        FVector(-155.56, -38.43, -0.02),
+        FVector(118.40, 24.76, 1.29),
+        FVector(-155.56, 38.30, -0.02),
+        FVector(40.66, -85.08, 9.77),
+        FVector(40.66, 85.08, 9.77),
+        FVector(-68.95, -85.08, 9.77),
+        FVector(-68.95, 85.08, 9.77),
+        FVector(-140.74, -13.99, 20.85),
+        FVector(-173.95, -13.99, 20.85),
+        FVector(-140.74, 13.99, 20.82),
+        FVector(-173.95, 13.99, 20.82),
+        FVector(44.44, -85.19, -23.99),
+        FVector(44.44, 85.19, -23.99),
+        FVector(-74.07, -85.19, -23.99),
+        FVector(-74.07, 85.19, -23.99),
+        FVector(-140.74, -14.58, -20.79),
+        FVector(-173.95, -14.58, -20.79),
+        FVector(-140.74, 14.58, -20.77),
+        FVector(-173.95, 14.58, -20.77),
+        FVector(-93.52, -93.11, -0.28),
+        FVector(65.14, -93.14, -0.27),
+        FVector(-93.52, 93.01, -0.34),
+        FVector(65.11, 93.04, -0.32),
+    };
     ApplyThunderboltDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Thunderbolt"));

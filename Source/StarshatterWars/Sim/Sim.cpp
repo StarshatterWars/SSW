@@ -1802,6 +1802,37 @@ Sim::CreateShip(
 		cmd_ai,
 		loadout);
 
+    // The staged Airbase1 row is shared with Telmera. Janek's Base1 mesh
+    // has a different recovery strip, authored in JanekStation.def.
+    if (FCStringAnsi::Stricmp(name, "Janek Station") == 0 &&
+        FCStringAnsi::Stricmp(rgn->GetName(), "Janek Station") == 0 &&
+        FCStringAnsi::Stricmp(design->name, "Airbase1") == 0)
+    {
+        for (int32 Index = 0; Index < ship->NumFlightDecks(); ++Index)
+        {
+            FlightDeck* Deck = ship->GetFlightDeck(Index);
+            if (!Deck || !Deck->IsRecoveryDeck() || FCStringAnsi::Stricmp(Deck->GetName(), "Runway 31") != 0)
+                continue;
+
+            const double Scale = design->scale;
+            const FVector RunwayStart(306, 4, -498);
+            const FVector RunwayEnd(-691, 4, 499);
+            const FVector RunwayHeading = RunwayEnd - RunwayStart;
+            Deck->Mount(FVector(-72, 4, -119) * Scale, Deck->GetRadius(), Deck->GetHullFactor());
+            Deck->SetCamLoc(FVector(-200, 100, 403) * Scale);
+            Deck->SetStartPoint(FVector(2304, 500, -2496) * Scale);
+            Deck->SetEndPoint(FVector(-11, 4, -180) * Scale);
+            Deck->SetApproachPoint(0, FVector(3818, 750, -3780) * Scale);
+            Deck->SetApproachPoint(1, FVector(1823, 1000, -4788) * Scale);
+            Deck->SetApproachPoint(2, FVector(-2177, 1000, -4806) * Scale);
+            Deck->SetApproachPoint(3, FVector(-4190, 1000, -1815) * Scale);
+            Deck->SetRunwayPoint(0, RunwayStart * Scale);
+            Deck->SetRunwayPoint(1, RunwayEnd * Scale);
+            Deck->SetAzimuth(FMath::Atan2(RunwayHeading.X, RunwayHeading.Z));
+            break;
+        }
+    }
+
 	// LEGACY:
 	// CreateShip receives mission/map-authored location.
 	// Convert once here when placing the live sim object.

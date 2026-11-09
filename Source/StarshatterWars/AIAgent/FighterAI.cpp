@@ -33,6 +33,7 @@
 #include "Farcaster.h"
 #include "FlightComputer.h"
 #include "FlightDeck.h"
+#include "LandingGear.h"
 #include "Hangar.h"
 #include "Sim.h"
 #include "Mission.h"
@@ -131,6 +132,10 @@ FighterAI::ExecFrame(double s)
                 ship->LowerGear();
         }
 
+        const LandingGear* Gear = ship->GetGear();
+        const double RunwayClearance = ship->IsAirborne() && Gear && ship->IsGearDown()
+            ? FMath::Max(0.0, -Gear->GetClearance()) : 0.0;
+
         // CHEAT LANDING:
         if (inbound->Final() && time_to_dock > 0) {
             FlightDeck* deck = inbound->GetDeck();
@@ -165,7 +170,7 @@ FighterAI::ExecFrame(double s)
                 // NOTE: Starshatter original used OtherHand() for coordinate handedness conversion.
                 // In UE, this should already be handled by your coordinate convention. If you still
                 // need the conversion, apply it here (or centralize in a helper).
-                ship->MoveTo(Dst + Approach * (time_to_dock / TIME_TO_DOCK));
+                ship->MoveTo(Dst + Approach * (time_to_dock / TIME_TO_DOCK) + FVector(0.0, RunwayClearance, 0.0));
 
                 ship->SetVelocity(carrier->GetVelocity() + ship->GetHeading() * 50.0);
                 ship->SetThrottle(50);
@@ -189,7 +194,7 @@ FighterAI::ExecFrame(double s)
                 FVector dst = deck->EndPoint();
 
                 if (ship->IsAirborne()) {
-                    const double alt = dst.Y;
+                    const double alt = dst.Y + RunwayClearance;
                     dst = ship->GetLocation();
                     dst.Y = alt;
                 }
