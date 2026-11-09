@@ -529,7 +529,7 @@ bool UCampaignScreen::DoesSelectedCampaignSaveExist() const
 	if (PickedRowName.IsNone())
 		return false;
 
-	const FString GameSlot = UCampaignSave::MakeSlotNameFromRowName(PickedRowName);
+	const FString GameSlot = GI->GetCampaignSaveSlot(PickedRowName);
 	constexpr int32 UserIndex = 0;
 	return UGameplayStatics::DoesSaveGameExist(GameSlot, UserIndex);
 }

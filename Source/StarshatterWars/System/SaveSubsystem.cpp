@@ -234,7 +234,8 @@ bool USaveSubsystem::DoesCampaignSaveExist(FName RowName) const
 	if (RowName.IsNone())
 		return false;
 
-	const FString Slot = UCampaignSave::MakeSlotNameFromRowName(RowName);
+	const auto* GI = Cast<USSWGameInstance>(GetGameInstance());
+	const FString Slot = GI ? GI->GetCampaignSaveSlot(RowName) : UCampaignSave::MakeSlotNameFromRowName(RowName);
 	return UGameplayStatics::DoesSaveGameExist(Slot, UserIndex);
 }
 
@@ -332,6 +333,7 @@ bool USaveSubsystem::SaveCampaign(bool /*bForce*/)
     if (USSWGameInstance* GI = Cast<USSWGameInstance>(GetGameInstance()))
     {
         CampaignSave = GI->CampaignSave;
+        return GI->SaveCampaign();
     }
 	if (!CampaignSave || CampaignSave->CampaignRowName.IsNone())
 		return false;

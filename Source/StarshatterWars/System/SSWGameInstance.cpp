@@ -236,7 +236,7 @@ bool USSWGameInstance::RestoreSavedActiveCampaign()
     // Do not create/reset a campaign save. A saved slot is loaded only if it exists.
     if (!CampaignSave || CampaignSave->CampaignRowName != SavedCampaign->RowName)
     {
-        const FString Slot = UCampaignSave::MakeSlotNameFromRowName(SavedCampaign->RowName);
+        const FString Slot = GetCampaignSaveSlot(SavedCampaign->RowName);
         if (UGameplayStatics::DoesSaveGameExist(Slot, 0))
             LoadOrCreateCampaignSave(SavedIndex, SavedCampaign->RowName, SavedCampaign->Name);
     }
@@ -430,7 +430,14 @@ void USSWGameInstance::FinishPlatformSignIn(FName Provider, bool bSuccess, const
     }
 
     const FString AccountKey = Provider.ToString() + TEXT(":") + AccountId;
-    Players->SetSaveSlot(TEXT("PlayerSave_") + FMD5::HashAnsiString(*AccountKey), 0);
+    const FString AccountSlot = TEXT("PlayerSave_") + FMD5::HashAnsiString(*AccountKey);
+    if (Players->GetSlotName() != AccountSlot)
+    {
+        CampaignSave = nullptr;
+        if (auto* Timer = GetSubsystem<UTimerSubsystem>())
+            Timer->ClearCampaignSave();
+    }
+    Players->SetSaveSlot(AccountSlot, 0);
     Players->ResetToDefaults();
     if (!Players->LoadFromBoot())
     {
@@ -1367,7 +1374,7 @@ bool USSWGameInstance::SaveCampaign()
         CampaignSave->AdvanceCampaignClock(Timer->GetUniverseTimeSeconds(), 0);
 
 	const FString Slot =
-		UCampaignSave::MakeSlotNameFromRowName(CampaignSave->CampaignRowName);
+		GetCampaignSaveSlot(CampaignSave->CampaignRowName);
 
 	constexpr int32 UserIndex = 0;
 
@@ -1383,13 +1390,25 @@ bool USSWGameInstance::SaveCampaign()
 	return bOK;
 }
 
+FString USSWGameInstance::GetCampaignSaveSlot(FName RowName) const
+{
+    const FString BaseSlot = UCampaignSave::MakeSlotNameFromRowName(RowName);
+    if (const auto* Players = GetSubsystem<UStarshatterPlayerSubsystem>())
+    {
+        const FString PlayerSlot = Players->GetSlotName();
+        if (PlayerSlot.StartsWith(TEXT("PlayerSave_")))
+            return BaseSlot + TEXT("_") + PlayerSlot;
+    }
+    return BaseSlot;
+}
+
 UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, FName RowName, const FString& DisplayName)
 {
 	// Normalize
 	CampaignIndex = FMath::Max(1, CampaignIndex);
 
 	const FString CampaignFolder = FString::Printf(TEXT("%02d"), CampaignIndex);
-	const FString Slot = UCampaignSave::MakeSlotNameFromRowName(RowName);
+	const FString Slot = GetCampaignSaveSlot(RowName);
 	constexpr int32 UserIndex = 0;
 
 	UTimerSubsystem* Timer = GetSubsystem<UTimerSubsystem>();
@@ -1497,7 +1516,7 @@ UCampaignSave* USSWGameInstance::CreateNewCampaignSave(int32 CampaignIndex, FNam
 		return nullptr;
 	}
 
-	const FString Slot = UCampaignSave::MakeSlotNameFromRowName(RowName);
+	const FString Slot = GetCampaignSaveSlot(RowName);
 	constexpr int32 UserIndex = 0;
 
 	UTimerSubsystem* Timer = GetSubsystem<UTimerSubsystem>();

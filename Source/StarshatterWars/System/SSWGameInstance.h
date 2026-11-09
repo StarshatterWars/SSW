@@ -331,6 +331,7 @@ public:
 	// Campaign Save API
 	// =====================================================================
 	// Call this when a campaign is chosen OR as a safety in Start
+    FString GetCampaignSaveSlot(FName RowName) const;
 	UCampaignSave* LoadOrCreateCampaignSave(int32 CampaignIndex, FName RowName, const FString& DisplayName);
 	UCampaignSave* CreateNewCampaignSave(int32 CampaignIndex, FName RowName, const FString& DisplayName);
 

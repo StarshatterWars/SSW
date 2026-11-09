@@ -1,3 +1,4 @@
+#include "SSWGameInstance.h"
 #include "TimerSubsystem.h"
 #include "SSWRuntimeSubsystem.h"
 #include "CampaignSave.h"
@@ -307,7 +308,8 @@ void UTimerSubsystem::RestartCampaignClock(bool bSaveImmediately)
 		}
 		else
 		{
-			const FString Slot = UCampaignSave::MakeSlotNameFromRowName(CS->CampaignRowName);
+			const auto* GI = Cast<USSWGameInstance>(GetGameInstance());
+			const FString Slot = GI ? GI->GetCampaignSaveSlot(CS->CampaignRowName) : UCampaignSave::MakeSlotNameFromRowName(CS->CampaignRowName);
 			constexpr int32 UserIndex = 0;
 
 			const bool bOK = UGameplayStatics::SaveGameToSlot(CS, Slot, UserIndex);

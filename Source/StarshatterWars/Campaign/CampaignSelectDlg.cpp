@@ -876,7 +876,7 @@ bool UCampaignSelectDlg::DoesSelectedCampaignSaveExist() const
         return false;
     }
 
-    const FString SlotName = UCampaignSave::MakeSlotNameFromRowName(PickedRowName);
+    const FString SlotName = GI->GetCampaignSaveSlot(PickedRowName);
     return UGameplayStatics::DoesSaveGameExist(SlotName, 0);
 }
 
