@@ -594,13 +594,17 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
     RehearsalDuration = RouteDepartures.Last();
     // In the rehearsal, anchor scripted spawns to their navigation milestone.
     // Combat prerequisites remain enforced by the live mission.
-    TMap<int32, double> NavigationEventTimes;
+    TMap<int32, double> RehearsalEventTimes;
     for (ListIter<MissionEvent> Events = MissionDef->GetEvents(); ++Events;)
     {
         const MissionEvent* Event = Events.value();
         if (!Event) continue;
         double At = -1.0;
-        if (Event->Trigger() == MissionEvent::TRIGGER_NAVPT &&
+        if (Event->Trigger() == MissionEvent::TRIGGER_TIME)
+        {
+            At = FMath::Max(Event->Time(), 0.0);
+        }
+        else if (Event->Trigger() == MissionEvent::TRIGGER_NAVPT &&
             RouteArrivals.IsValidIndex(Event->TriggerParam()) &&
             Event->TriggerShip().indexOf(Player->GetName()) == 0)
         {
@@ -610,14 +614,17 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
                  Event->Trigger() == MissionEvent::TRIGGER_EVENT_ALL)
         {
             for (int32 Index = 0; Index < Event->NumTriggerParams(); ++Index)
-                if (const double* Time = NavigationEventTimes.Find(Event->TriggerParam(Index)))
+                if (const double* Time = RehearsalEventTimes.Find(Event->TriggerParam(Index)))
                     At = FMath::Max(At, *Time);
         }
         if (At < 0.0) continue;
-        if (Event->EventID() > 0) NavigationEventTimes.Add(Event->EventID(), At);
+        if (Event->EventID() > 0) RehearsalEventTimes.Add(Event->EventID(), At);
         if (Event->Event() == MissionEvent::SPAWN && Event->EventShip().length())
+        {
             TimedCues.Add({At, FString::Printf(TEXT("Contacts arriving: %s"),
                 UTF8_TO_TCHAR(Event->EventShip().data()))});
+            RehearsalDuration = FMath::Max(RehearsalDuration, At);
+        }
     }
     TimedCues.StableSort([](const FTimedCue& A, const FTimedCue& B) { return A.Time < B.Time; });
 
@@ -646,8 +653,17 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
             Destination.Add(MoveTemp(Part));
         }
     };
+    // Keep Blueprint import scales from changing the tactical map framing.
+    auto FitModel = [](const TArray<FBriefingShipPreviewPart>& Model, const FQuat& Heading,
+        const FVector& Position, double MaxDimension) {
+        const FBox Bounds = BriefingShipPreview::CalculateBounds(Model);
+        if (!Bounds.IsValid) return FTransform(Heading, Position);
+        const double ModelScale = MaxDimension / FMath::Max(Bounds.GetSize().GetMax(), 1.0);
+        const FVector CenterOffset = Heading.RotateVector(Bounds.GetCenter() * ModelScale);
+        return FTransform(Heading, Position - CenterOffset, FVector(ModelScale));
+    };
     RouteShipParts.Reset();
-    AddParts(RouteShipParts, PlayerParts, FTransform(FQuat::Identity, FVector::ZeroVector, FVector(.42)));
+    AddParts(RouteShipParts, PlayerParts, FitModel(PlayerParts, FQuat::Identity, FVector::ZeroVector, 48.0));
 
     TMap<const FShipDesign*, TArray<FBriefingShipPreviewPart>> Models;
     Models.Add(Player->GetShipDesign(), MoveTemp(PlayerParts));
@@ -661,14 +677,14 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
             Model = &Models.Add(Design);
             ResolveRehearsalParts(*Design, *Model);
         }
-        const double Size = Element->IsStarship() ? .82 : .32;
+        const double Size = Element->IsStarship() ? 160.0 : 44.0;
         const FQuat Heading(FVector::UpVector, Element->GetHeading() + PI);
         const FVector Position = (Placement.Position - Center) * Scale;
         for (int32 ShipIndex = 0; ShipIndex < FMath::Min(Element->Count(), 8); ++ShipIndex)
         {
             if (Element == Player && ShipIndex + 1 == Player->GetPlayerIndex()) continue;
             const FVector Offset = Heading.RotateVector(FVector(-30.0 * ShipIndex, 32.0 * ShipIndex, 0.0));
-            AddParts(Parts, *Model, FTransform(Heading, Position + Offset, FVector(Size)));
+            AddParts(Parts, *Model, FitModel(*Model, Heading, Position + Offset, Size));
         }
     }
 
@@ -699,6 +715,49 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         Part.Transform = FTransform(Direction.Rotation(), (Start + End) * .5,
             FVector(Direction.Size() / 100.0, Width, Width));
     };
+    auto MakeOverlayMaterial = [&](const FLinearColor& Color, float Opacity) {
+        auto* Material = MarkerBase ? UMaterialInstanceDynamic::Create(MarkerBase, this) : nullptr;
+        if (Material)
+        {
+            Material->SetVectorParameterValue(TEXT("MarkerColor"), Color);
+            Material->SetScalarParameterValue(TEXT("Intensity"), 1.f);
+            Material->SetScalarParameterValue(TEXT("Opacity"), Opacity);
+        }
+        return Material;
+    };
+    if (auto* Grid = MakeOverlayMaterial(FLinearColor(.2f, .5f, .8f), .22f))
+    {
+        constexpr double CellSize = 100.0;
+        constexpr int32 HalfCells = 7;
+        constexpr double Edge = CellSize * HalfCells;
+        const double Height = (Layout.Min.Z - Center.Z) * Scale - 45.0;
+        for (int32 Index = -HalfCells; Index <= HalfCells; ++Index)
+        {
+            const double Offset = Index * CellSize;
+            const double Width = Index == 0 ? .012 : .006;
+            AddLine(FVector(-Edge, Offset, Height), FVector(Edge, Offset, Height), Width, Grid);
+            AddLine(FVector(Offset, -Edge, Height), FVector(Offset, Edge, Height), Width, Grid);
+        }
+    }
+    if (auto* Disc = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Sphere.Sphere")))
+    {
+        auto* Friendly = MakeOverlayMaterial(FLinearColor(.08f, .45f, 1.f), .32f);
+        auto* Neutral = MakeOverlayMaterial(FLinearColor(1.f, .76f, .08f), .32f);
+        auto* Hostile = MakeOverlayMaterial(FLinearColor(1.f, .08f, .14f), .32f);
+        for (const FPlacement& Placement : Ships)
+        {
+            const int32 Iff = Placement.Element->GetIFF();
+            auto* Material = Iff == Player->GetIFF() ? Friendly : Iff == 0 ? Neutral : Hostile;
+            if (!Material) continue;
+            const double Diameter = Placement.Element->IsStarship() ? 1.65 : .70;
+            auto& Marker = Parts.AddDefaulted_GetRef();
+            Marker.Mesh = Disc;
+            Marker.Materials.Add(Material);
+            Marker.Transform = FTransform(FQuat::Identity, (Placement.Position - Center) * Scale - FVector(0, 0, 16),
+                FVector(Diameter, Diameter, .025));
+        }
+    }
+
     constexpr int32 RingSegments = 16;
     constexpr double MarkerRadius = 13.0;
     const FVector Axes[] = {FVector::ForwardVector, FVector::RightVector, FVector::UpVector};
@@ -754,12 +813,15 @@ void UShipBriefingPreview::UpdateVisual()
     if (RouteChecklist && RouteChecklist->GetParent())
         RouteChecklist->GetParent()->SetVisibility(bMissionScene && RouteShip.IsValid() && !RouteLabels.IsEmpty()
             ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
+    const bool bHasTimeline = RehearsalDuration > 0.0;
     if (RouteCaption) RouteCaption->SetVisibility(bMissionScene && RouteShip.IsValid()
         ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-    if (PlaybackControls) PlaybackControls->SetVisibility(bMissionScene && RouteShip.IsValid()
+    if (PlaybackControls) PlaybackControls->SetVisibility(bMissionScene && RouteShip.IsValid() && bHasTimeline
         ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
     LastCaptionSecond = INDEX_NONE;
-    if (bMissionScene) UpdateRehearsal();
+    if (bMissionScene && bHasTimeline) UpdateRehearsal();
+    else if (bMissionScene && RouteCaption)
+        RouteCaption->SetText(NSLOCTEXT("MissionRehearsal", "TacticalOverview", "TACTICAL OVERVIEW | NO PLOTTED ROUTE"));
     if (UnavailableText) UnavailableText->SetVisibility(PreviewVisual.IsValid()
         ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
     UpdateCamera();

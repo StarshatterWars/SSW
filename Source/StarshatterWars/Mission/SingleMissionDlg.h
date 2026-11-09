@@ -95,6 +95,7 @@ protected:
     TArray<Mission*> StandaloneBriefingModels; // Owned, released with selector widget.
     Mission* StandaloneBriefingMission = nullptr;
     int32 StandaloneBriefingMissionId = INDEX_NONE;
+    int32 StandaloneBriefingStoryCampaignId = INDEX_NONE;
     Campaign* GetRosterCampaign();
     UFUNCTION() void ToggleTrainingOverview();
     UPROPERTY(Transient) TObjectPtr<UTextBlock> TrainingOverview;

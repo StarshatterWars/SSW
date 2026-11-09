@@ -794,7 +794,9 @@ void USingleMissionDlg::LaunchSelected()
     if (IsStoryMissionView() && SelectedRow && !StoryUnavailableReason(*SelectedRow, GetGameInstance()).IsEmpty()) return;
     if (SelectedRow && !bCustom)
     {
-        if (!StandaloneBriefingMission || StandaloneBriefingMissionId != MissionId)
+        const int32 StoryCampaignId = IsStoryMissionView() ? SelectedRow->StoryCampaignId : INDEX_NONE;
+        if (!StandaloneBriefingMission || StandaloneBriefingMissionId != MissionId ||
+            StandaloneBriefingStoryCampaignId != StoryCampaignId)
         {
             // Retain previously opened models for the lifetime of this widget, since
             // the mission briefing may still reference them while navigating.
@@ -810,6 +812,7 @@ void USingleMissionDlg::LaunchSelected()
             StandaloneBriefingModels.Add(NewModel);
             StandaloneBriefingMission = NewModel;
             StandaloneBriefingMissionId = MissionId;
+            StandaloneBriefingStoryCampaignId = StoryCampaignId;
         }
         Model = StandaloneBriefingMission;
     }
