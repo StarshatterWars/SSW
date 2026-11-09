@@ -37,16 +37,9 @@ The editor ingestion comparison is a migration checkpoint. Keep startup ingestio
 
 ## Alpha 3 — terrestrial missions, 3D briefings and account sign-in
 
-T3 (Flight School) at Janek Station is playable. Its remaining check is the reported 90-degree landing approach offset. T4 (Ground Strike) still needs a full live playthrough. Its mission DEF names the terrain region, Airbase1 and the strike targets. The legacy StarSystem parser can construct a TerrainRegion, and SimRegion uses it to enter airspace. Unreal already has an ANativeTerrainActor presentation path for an active SimRegion with terrain. Verify which region the live mission resolves and whether it retains its terrain before changing the mission or adding a second terrain system.
+**Closed on 2026-11-09 at the project owner's direction.**
 
-1. Retest T3 landing at Janek Station. Verify that the outer marker, ILS hoops and final approach align with the recovery runway centerline and that the fighter lands. The reported discrepancy is 90 degrees.
-2. Use a separate temporary Unreal surface level for Janek presentation. Use /Game/Maps/Ground/JanekSurface for staging. It contains the Airbase1 preview and a legacy heightfield mesh at the current 1/100 presentation scale. Verify runway heading and ground contact when binding it into flight. Keep simulation terrain authoritative for altitude, contact, landing and combat. WorldScape can replace the presentation later through the same region binding.
-3. Run a full live T4 test with an Ensign pilot. Verify Janek Station and ground target placement, launch, atmospheric navigation, target acquisition, weapons and ground impact, return and landing, objective success and failure, debrief, and saved completion after reload. Where a mission crosses from orbit to the surface, verify that streaming and the region handoff preserve the active ship and objective state.
-4. Use the same region path for Campaign 2–5 terrestrial story missions. Keep named locations available for HUD targeting, and leave objective completion to the mission script and simulation. Verify a representative story mission before closing Alpha 3.
-
-5. Build a Wing Commander-style 3D briefing in the existing briefing flow. Stage the route, ships, locations and objectives in sequence with camera moves and existing briefing narration where available. Keep the briefing text accessible and allow the player to skip directly to mission setup. Verify one space sortie and one terrestrial sortie. This is the current milestone for moving 3D briefings originally listed in A1.2.
-
-6. Integrate Steam and Epic Online Services (EOS) account sign-in. Require successful sign-in through either provider before entering gameplay. Use the signed-in account's display name as the pilot name and remove manual name entry from first run. Associate saves and progression with a stable provider account ID so display name changes preserve progress and switching accounts selects the correct pilot. Verify Steam and EOS sign-in, cancellation and retry, first run, return visits, account switching, and save isolation. Define and verify how existing local pilot saves can be claimed before replacing the old first-run flow.
+The live T3 rerun confirmed a successful Janek landing with the wheels sitting on the runway. T4 reached the cockpit in live testing and passed its mission-load audit. A full live T4 run through debrief and save reload, and a representative terrestrial story run, remain follow-up verification. Login caching is deferred.
 
 3D briefing and replay functional work is closed after 20 automated Alpha 3 closeout checks passed. This includes briefing mission selection, standalone isolation, campaign save round-trip, and mission clock lifecycle. Live Story replay and audiovisual polish were outside this closeout run.
 
@@ -55,6 +48,8 @@ Account sign-in and saves are closed at the project owner's direction. Look and 
 Keep the current 1/100 presentation scale and legacy simulation coordinates for this milestone.
 
 ## Alpha 4 — scale conversion
+
+**Open as of 2026-11-09.** Falcon and Orion are the first conversion targets.
 
 Move the asset and presentation scale conversion here. Start with Falcon and Orion. Preserve legacy simulation coordinates, distances and timing. Verify camera framing, launch and recovery, terrain contact, attachment points and collision alignment before extending the conversion to the fleet.
 
