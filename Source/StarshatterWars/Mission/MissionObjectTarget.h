@@ -1,11 +1,16 @@
 ﻿#pragma once
 #include "WaypointActor.h"
+#include "NativeAsteroidActor.h"
+#include "Asteroid.h"
 #include "SystemSceneBuilder.h"
 #include "Ship.h"
 #include "SimRegion.h"
 #include "SimElement.h"
 #include "Game.h"
 #include "EngineUtils.h"
+inline constexpr TCHAR AirbaseContactIcon[] = TEXT("/Game/UI/HUD/AirbaseHud.AirbaseHud");
+inline constexpr TCHAR StationContactIcon[] = TEXT("/Game/UI/HUD/StationHud.StationHud");
+
 struct FMissionObjectData
 {
     FString Name, Type, ImagePath;
@@ -14,6 +19,16 @@ struct FMissionObjectData
 inline bool ReadMissionObject(AActor* Actor, Ship* Player, SimRegion* Region, FMissionObjectData& Out)
 {
     if (!IsValid(Actor) || Actor->IsActorBeingDestroyed() || !Player || !Region) return false;
+    if (const auto* Visual = Cast<ANativeAsteroidActor>(Actor))
+    {
+        const Asteroid* Rock = Visual->ResolveContact(Region);
+        if (!Rock) return false;
+        Out.Name = FString::Printf(TEXT("Asteroid %02d"), Visual->GetContactIndex() + 1);
+        Out.Type = TEXT("Asteroid");
+        Out.ImagePath = AWaypointActor::AsteroidContactIcon;
+        Out.RangeKm = FVector::Distance(Player->GetLocation(), Rock->GetLocation()) / 1000.0;
+        return true;
+    }
     FVector Authored;
     if (AWaypointActor* Waypoint = Cast<AWaypointActor>(Actor))
     {
@@ -28,6 +43,8 @@ inline bool ReadMissionObject(AActor* Actor, Ship* Player, SimRegion* Region, FM
         Out.Name = Waypoint->CompactLabel();
         Out.Type = !Waypoint->NamedLocationType.IsEmpty() ? Waypoint->NamedLocationType :
             Waypoint->bNextWaypoint ? TEXT("Waypoint (next)") : TEXT("Waypoint");
+        if (Out.Type.Equals(TEXT("Airbase"), ESearchCase::IgnoreCase))
+            Out.ImagePath = AirbaseContactIcon;
         if (Waypoint->bAsteroidFieldContact)
         {
             if (!Region->GetTrainingAsteroidField().IsSet()) return false;

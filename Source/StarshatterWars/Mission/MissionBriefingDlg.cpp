@@ -78,6 +78,7 @@
 #include "InputAction.h"
 #include "Engine/LocalPlayer.h"
 #include "SSWRuntimeSubsystem.h"
+#include "Game.h"
 #include "Sim.h"
 #include "TimerSubsystem.h"
 #include "SimEvent.h"
@@ -1769,8 +1770,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     if (!Input || !manager) return false;
     MissionMenuContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_Game.IMC_Game"));
     MissionMenuContext=StarshatterInputBindings::RuntimeContext(MissionMenuContext.Get(),this);
-    UInputAction* Action = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_Quit.IA_Quit"));
-    if (!MissionMenuContext || !Action) return false;
+    if (!MissionMenuContext) return false;
 
     // BaseInput.ini binds F1-F5 to viewmode commands outside Enhanced Input.
     // Remove only those display-mode commands from this player's live bindings.
@@ -1984,6 +1984,10 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 
     // Transient context remains for the wheel and existing HUD shortcuts only.
     MissionTargetContext = NewObject<UInputMappingContext>(this, NAME_None, RF_Transient);
+    UInputAction* TravelSpeedMenu = StarshatterInputBindings::MapTravelSpeed(MissionTargetContext.Get(), false);
+    UInputAction* TravelSpeedReset = StarshatterInputBindings::MapTravelSpeed(MissionTargetContext.Get(), true);
+    MissionMenuInput->BindAction(TravelSpeedMenu, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleTravelSpeedMenu);
+    MissionMenuInput->BindAction(TravelSpeedReset, ETriggerEvent::Started, this, &UMissionBriefingDlg::ResetTravelSpeed);
     // Use the editor-authored actions and IMC mappings, including chord triggers.
     PreviousMissionTargetAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_PreviousTarget.IA_PreviousTarget"));
     NextMissionTargetAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_NextTarget.IA_NextTarget"));
@@ -2010,7 +2014,6 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         MissionMenuInput->BindAction(NextMissionTargetAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::NextMissionTarget);
     }
     else UE_LOG(LogTemp, Warning, TEXT("[MissionInput] Missing Boolean IA_NextTarget."));
-    MissionMenuInput->BindAction(Action, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleMissionMenu);
     // Use the transient wheel context so asset paths, Hold triggers,
     // or boolean action settings cannot suppress the one-frame wheel pulse.
     MissionTargetZoomAction = NewObject<UInputAction>(this, TEXT("SSW_TargetZoom"), RF_Transient);
@@ -2295,7 +2298,13 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         if (!bQuantumMapped) MissionTargetContext->MapKey(QuantumMenuAction.Get(), EKeys::Q);
         MissionMenuInput->BindAction(QuantumMenuAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleQuantumTravel);
     }
-    StarshatterInputBindings::RegisterContext(MissionTargetContext.Get()); Input->AddMappingContext(MissionTargetContext.Get(), 1001);
+    StarshatterInputBindings::RegisterContext(MissionTargetContext.Get());
+    // Mission exit is a fixed Escape shortcut, outside the remappable bindings.
+    auto* MissionExit = NewObject<UInputAction>(MissionTargetContext.Get(), TEXT("MissionExit"), RF_Transient);
+    MissionExit->ValueType = EInputActionValueType::Boolean;
+    MissionTargetContext->MapKey(MissionExit, EKeys::Escape);
+    MissionMenuInput->BindAction(MissionExit, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleMissionMenu);
+    Input->AddMappingContext(MissionTargetContext.Get(), 1001);
     UE_LOG(LogTemp, Log, TEXT("[MissionZoom] MouseWheelAxis bound in mission context (priority 1001)."));
 
     bAddedMissionMenuContext = !Input->HasMappingContext(MissionMenuContext.Get());
@@ -2666,6 +2675,7 @@ void UMissionBriefingDlg::CycleFighterMFDRight()
 }
 void UMissionBriefingDlg::CycleFighterWeapon()
 {
+    if (Game::IsTimeCompressed()) return;
     if (!CanUseFighterHUD() || !FighterHUDDetails.IsValid()) return;
     APlayerController* PC = GetOwningPlayer();
     const bool Primary = PC && (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")));
@@ -2674,6 +2684,7 @@ void UMissionBriefingDlg::CycleFighterWeapon()
 
 void UMissionBriefingDlg::ToggleFighterWeaponsPanel()
 {
+    if (Game::IsTimeCompressed()) return;
     CloseQuantumTravel();
     CloseNavigationPopup();
     CloseFlightOpsPopup();
@@ -2995,7 +3006,7 @@ void UMissionBriefingDlg::OnCommit()
     }
     if (!EnableMissionMenuInput())
     {
-        UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] Missing IMC_Game or IA_Quit"));
+        UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] Could not initialize mission input"));
         CloseEmptySectorPreview();
         return;
     }
@@ -3142,8 +3153,55 @@ void UMissionBriefingDlg::ToggleFighterRadio()
     FighterHUDDetails->ToggleRadio();
     UpdateFighterRadioInput();
 }
+void UMissionBriefingDlg::ToggleTravelSpeedMenu()
+{
+    if (!CanUseFighterHUD() || !FighterHUDDetails.IsValid() || !GetWorld() || GetWorld()->IsPaused()) return;
+    bFighterHUDVisible = true;
+    FighterHUDDetails->ToggleTravelSpeed();
+    Sim* Simulation = Sim::GetSim();
+    if (USSWRuntimeSubsystem::HasTravelThreats(Simulation ? Simulation->GetPlayerShip() : nullptr))
+        if (auto* GI = GetGameInstance())
+            if (auto* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetTimeCompression(1);
+    UpdateFighterRadioInput();
+}
+
+void UMissionBriefingDlg::ResetTravelSpeed()
+{
+    if (auto* GI = GetGameInstance())
+        if (auto* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetTimeCompression(1);
+    if (FighterHUDDetails.IsValid() && FighterHUDDetails->IsTravelSpeedOpen()) FighterHUDDetails->CloseRadio();
+    UpdateFighterRadioInput();
+}
+
 void UMissionBriefingDlg::SelectFighterRadio(int32 Number)
 {
+    if (FighterHUDDetails.IsValid() && FighterHUDDetails->IsTravelSpeedOpen())
+    {
+        constexpr uint32 Rates[] = {1, 2, 5, 10, 20};
+        if (Number < 0 || Number > UE_ARRAY_COUNT(Rates)) return;
+        if (Number > 0)
+        {
+            auto* GI = GetGameInstance();
+            auto* Runtime = GI ? GI->GetSubsystem<USSWRuntimeSubsystem>() : nullptr;
+            if (!Runtime) return;
+            Sim* Simulation = Sim::GetSim();
+            if (Number > 1 && USSWRuntimeSubsystem::HasTravelThreats(Simulation ? Simulation->GetPlayerShip() : nullptr))
+            {
+                Runtime->SetTimeCompression(1);
+                return;
+            }
+            Runtime->SetTimeCompression(Rates[Number - 1]);
+            if (Runtime->GetTimeCompression() != Rates[Number - 1])
+            {
+                RadioView::Message("Travel speed unavailable. Engage Auto Nav or Auto Track in clear cruise.");
+                return;
+            }
+            ClearMissionRotationInput();
+        }
+        FighterHUDDetails->CloseRadio();
+        UpdateFighterRadioInput();
+        return;
+    }
     if (CanUseFighterHUD() && bFighterHUDVisible && FighterHUDDetails.IsValid()) FighterHUDDetails->RadioSelect(Number);
     UpdateFighterRadioInput();
 }
@@ -3160,6 +3218,7 @@ void UMissionBriefingDlg::SelectFighterRadio9() { SelectFighterRadio(9); }
 
 void UMissionBriefingDlg::ToggleMissionGear()
 {
+    if (Game::IsTimeCompressed()) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* S=Sim::GetSim();
     Ship* P=S?S->GetPlayerShip():nullptr;
@@ -3193,6 +3252,7 @@ void UMissionBriefingDlg::OnMissionThrottleFull()
 
 void UMissionBriefingDlg::ApplyMissionThrottle(double Amount, bool bRelative)
 {
+    if (Game::IsTimeCompressed()) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     Ship* PlayerShip = Simulation ? Simulation->GetPlayerShip() : nullptr;
@@ -3745,6 +3805,7 @@ void UMissionBriefingDlg::CloseNavigationPopup()
 
 void UMissionBriefingDlg::FireMissionPrimary()
 {
+    if (Game::IsTimeCompressed()) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation=Sim::GetSim();
     Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
@@ -3754,6 +3815,7 @@ void UMissionBriefingDlg::FireMissionPrimary()
 
 void UMissionBriefingDlg::FireMissionSecondary()
 {
+    if (Game::IsTimeCompressed()) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation=Sim::GetSim();
     Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
@@ -3763,6 +3825,7 @@ void UMissionBriefingDlg::FireMissionSecondary()
 
 void UMissionBriefingDlg::FireMissionDecoy()
 {
+    if (Game::IsTimeCompressed()) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation=Sim::GetSim();
     Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
@@ -3772,6 +3835,7 @@ void UMissionBriefingDlg::FireMissionDecoy()
 
 void UMissionBriefingDlg::LaunchMissionProbe()
 {
+    if (Game::IsTimeCompressed()) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation=Sim::GetSim();
     Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
@@ -3817,6 +3881,7 @@ void UMissionBriefingDlg::CycleMissionSweep()
 
 void UMissionBriefingDlg::DropMissionWeaponTarget()
 {
+    if (Game::IsTimeCompressed()) return;
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation=Sim::GetSim();
     Ship* P=Simulation?Simulation->GetPlayerShip():nullptr;
@@ -3979,12 +4044,38 @@ void UMissionBriefingDlg::LockMissionHostileThreat()
     if(P && !P->IsDead()){P->LockTarget(ESimObject::SHOT,false,true);}
 }
 
+namespace
+{
+bool TrackFixedMissionContact(AActor* Actor, Ship* Player, SimRegion* Region)
+{
+    if (!IsValid(Actor) || !Player || !Region) return false;
+    if (const auto* Waypoint = Cast<AWaypointActor>(Actor))
+    {
+        FMissionObjectData Data;
+        if ((Waypoint->bAsteroidFieldContact || !Waypoint->NamedLocationType.IsEmpty()) &&
+            ReadMissionObject(Actor, Player, Region, Data))
+            return Player->SetFixedAutoTrackPoint(OtherHand(Waypoint->LegacyLocation));
+    }
+    if (const auto* Visual = Cast<ANativeAsteroidActor>(Actor))
+        if (const Asteroid* Rock = Visual->ResolveContact(Region))
+            return Player->SetFixedAutoTrackPoint(Rock->GetLocation());
+    if (const auto* Visual = Cast<AShipActor>(Actor))
+        if (Ship* Station = Visual->GetRuntimeShip(); Station && Region->GetShips().contains(Station) &&
+            Station->IsStatic() && !Station->IsDead())
+            return Player->SetFixedAutoTrackPoint(Station->GetLocation());
+    return false;
+}
+}
+
 void UMissionBriefingDlg::ToggleMissionAutoTrack()
 {
     if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
-    if (!Player || Player->SetAutoTrack(!Player->IsAutoTrackEngaged())) return;
+    if (!Player) return;
+    if (!Player->IsAutoTrackEngaged() &&
+        TrackFixedMissionContact(SelectedMissionTarget.Get(), Player, Simulation->GetActiveRegion())) return;
+    if (Player->SetAutoTrack(!Player->IsAutoTrackEngaged())) return;
 
     const auto* Contact = dynamic_cast<const Ship*>(Player->GetTarget());
     if (Contact && Contact->GetRegion() != Player->GetRegion())
@@ -4019,7 +4110,12 @@ void UMissionBriefingDlg::ToggleMissionAutoNav()
         Player->SetAutoNav(false);
         return;
     }
-    Player->SetAutoNav(true);
+    if (Player->IsAutoTrackEngaged())
+    {
+        Player->SetAutoTrack(false);
+        return;
+    }
+    if (!TrackFixedMissionContact(SelectedMissionTarget.Get(), Player, Region)) Player->SetAutoNav(true);
 }
 
 
@@ -4046,6 +4142,7 @@ void UMissionBriefingDlg::SyncMissionNavigationTarget()
         return;
     }
     bRecoveryTargetSelected=false;
+    if (Pilot->GetFixedAutoTrackPoint()) return;
     Instruction* RoutePoint = Pilot->GetNextNavPoint();
     const bool Engaged = Pilot->IsAutoNavEngaged();
     const bool AutoChanged = Engaged && (!bAutoNavSelectionActive || AutoNavSelectedRoutePoint != RoutePoint);
@@ -4127,6 +4224,9 @@ void UMissionBriefingDlg::ClearTravelPresentation(bool bStopUpdates)
     CloseQuantumTravel();
     if (GetWorld() && GetWorld()->GetGameViewport() && TravelTransition.IsValid()) GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(TravelTransition.ToSharedRef());
     TravelTransition.Reset(); PresentedTravelRegion=nullptr; PendingTravelPackage.Empty(); TravelRevealAt=0;
+    AtmosphereTravelFade = 0.f;
+    bAtmosphereTravel = false;
+    bAtmosphereDescent = false;
     if (PendingTravelLevel)
     {
         PendingTravelLevel->OnLevelShown.RemoveDynamic(this,&UMissionBriefingDlg::HandleTravelSystemShown);
@@ -4143,14 +4243,46 @@ void UMissionBriefingDlg::UpdateTravelPresentation(float DeltaSeconds)
     if (!Pilot || !Region || Pilot->IsDead() || Pilot->IsDying()) { ClearTravelPresentation(false); return; }
     auto* Runtime=GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>();
     const FString Package=Region->GetSystem()?FString(TEXT("/Game/Maps/"))+UTF8_TO_TCHAR(Region->GetSystem()->GetName()):FString();
+    const int TransitionType = Pilot->GetTransitionType();
+    const bool bEnteringAtmosphere = TransitionType == Ship::TRANSITION_DROP_ORBIT;
+    const bool bLeavingAtmosphere = TransitionType == Ship::TRANSITION_MAKE_ORBIT;
+    const bool bOrbitTransition = bEnteringAtmosphere || bLeavingAtmosphere;
+    const bool bSurfaceSwap = PresentedTravelRegion && PresentedTravelRegion != Region &&
+        PresentedTravelRegion->GetSystem() == Region->GetSystem() &&
+        PresentedTravelRegion->IsAirSpace() != Region->IsAirSpace();
+
+    if (bOrbitTransition)
+    {
+        bAtmosphereTravel = true;
+        bAtmosphereDescent = bEnteringAtmosphere;
+        constexpr float FadeInSeconds = 2.0f;
+        AtmosphereTravelFade = FMath::SmoothStep(0.f, FadeInSeconds,
+            FadeInSeconds - Pilot->GetTransitionTimeRemaining());
+    }
+    else if (bSurfaceSwap)
+    {
+        bAtmosphereTravel = true;
+        bAtmosphereDescent = Region->IsAirSpace();
+        AtmosphereTravelFade = 1.f;
+    }
+    else if (bAtmosphereTravel && !GetWorld()->IsPaused())
+    {
+        constexpr float FadeOutSeconds = 2.0f;
+        AtmosphereTravelFade = FMath::Max(0.f, AtmosphereTravelFade - DeltaSeconds / FadeOutSeconds);
+        bAtmosphereTravel = AtmosphereTravelFade > 0.f;
+    }
+
     if (PresentedTravelRegion != Region)
     {
         if (PresentedTravelRegion)
         {
             CloseQuantumTravel(); SelectedMissionTarget.Reset(); SelectedMissionTargetName=FText::GetEmpty(); bMissionTargetInspection=false;
-            MissionPlayerCameraActor.Reset(); MissionPlayerCameraSearchTime=0; MissionPlayerCameraDistance=0;
-            if (MissionCameraRig) MissionCameraRig->Reset(GetOwningPlayer());
-            if (Runtime) Runtime->RefreshTravelPresentation();
+            if (!bSurfaceSwap)
+            {
+                MissionPlayerCameraActor.Reset(); MissionPlayerCameraSearchTime=0; MissionPlayerCameraDistance=0;
+                if (MissionCameraRig) MissionCameraRig->Reset(GetOwningPlayer());
+            }
+            if (Runtime) Runtime->RefreshTravelPresentation(nullptr, bSurfaceSwap);
             UE_LOG(LogTemp,Display,TEXT("[Travel] Presentation arrival %hs"),Region->GetName());
         }
         PresentedTravelRegion=Region;
@@ -4182,7 +4314,8 @@ void UMissionBriefingDlg::UpdateTravelPresentation(float DeltaSeconds)
             PendingTravelLevel->SetShouldBeVisible(false);PendingTravelLevel->SetShouldBeLoaded(false);PendingTravelLevel->SetIsRequestingUnloadAndRemoval(true);PendingTravelLevel=nullptr;
         }
     }
-    const bool Transit=Pilot->GetWarpFactor()>1.01 || PendingTravelLevel || GetWorld()->GetTimeSeconds()<TravelRevealAt;
+    const bool Transit = bAtmosphereTravel || Pilot->GetWarpFactor()>1.01 ||
+        PendingTravelLevel || GetWorld()->GetTimeSeconds()<TravelRevealAt;
     if (Transit)
     {
         CloseQuantumTravel();
@@ -4191,7 +4324,14 @@ void UMissionBriefingDlg::UpdateTravelPresentation(float DeltaSeconds)
             TravelTransition=SNew(STravelTransition);
             GetWorld()->GetGameViewport()->AddViewportWidgetContent(TravelTransition.ToSharedRef(),1800);
         }
-        if (TravelTransition.IsValid()) TravelTransition->Update(GetWorld()->IsPaused()?0.f:DeltaSeconds,Pilot->GetWarpFactor(),PendingTravelLevel || GetWorld()->GetTimeSeconds()<TravelRevealAt,UTF8_TO_TCHAR(Region->GetName()));
+        if (TravelTransition.IsValid())
+        {
+            if (bAtmosphereTravel)
+                TravelTransition->UpdateAtmosphere(AtmosphereTravelFade, bAtmosphereDescent);
+            else
+                TravelTransition->Update(GetWorld()->IsPaused()?0.f:DeltaSeconds,Pilot->GetWarpFactor(),
+                    PendingTravelLevel || GetWorld()->GetTimeSeconds()<TravelRevealAt,UTF8_TO_TCHAR(Region->GetName()));
+        }
     }
     else if (TravelTransition.IsValid())
     {

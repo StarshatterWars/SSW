@@ -38,7 +38,19 @@ public class StarshatterWars : ModuleRules
             "Chaos",
             "RHI",
             "DeveloperSettings",
+            "WorldScapeCore",
+            "WorldScapeVolume",
+            // WorldScapeRoot.h includes these modules' generated headers.
+            "WorldScapeCommon",
+            "WorldScapeNoise",
+            "WorldScapeFoliages",
         });
+
+        // WorldScapeRoot.h includes PCUtils.h only under WITH_EDITOR.
+        if (Target.Type == TargetType.Editor)
+        {
+            PrivateDependencyModuleNames.Add("WorldScapeEditor");
+        }
 
         // Vorbis rules token exists in UE 5.6:
         AddEngineThirdPartyPrivateStaticDependencies(Target, "Vorbis");

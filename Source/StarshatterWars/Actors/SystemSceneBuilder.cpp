@@ -15,6 +15,17 @@
 */
 
 #include "SystemSceneBuilder.h"
+#include "WorldScapeRoot.h"
+#include "HeightMapVolume.h"
+#include "FoliageMaskVolume.h"
+#include "TerrainRegion.h"
+#include "Components/SkyAtmosphereComponent.h"
+#include "Components/VolumetricCloudComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Materials/Material.h"
+#include "Materials/MaterialInterface.h"
+#include "UObject/UnrealType.h"
+#include "EngineUtils.h"
 
 #include "SystemUtils.h"
 #include "StarshatterEnvironmentSubsystem.h"
@@ -590,6 +601,13 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
         ResolvedClass = ResolvePlanetActorClass(PlanetType, false);
     }
 
+    if (PlanetName.TrimStartAndEnd().Equals(TEXT("Janek"), ESearchCase::IgnoreCase))
+    {
+        if (UClass* JanekClass = LoadClass<AActor>(nullptr,
+            TEXT("/Game/Models/Universe/BP_Janek.BP_Janek_C")))
+            ResolvedClass = JanekClass;
+    }
+
     const bool bIsTrellis = PlanetName.TrimStartAndEnd().Equals(TEXT("Trellis"), ESearchCase::IgnoreCase);
     if (bIsTrellis)
     {
@@ -1042,6 +1060,75 @@ void ASystemSceneBuilder::RefreshRuntimeBodyTransforms()
     }
 }
 
+namespace
+{
+constexpr TCHAR JanekPlanetClassPath[] = TEXT("/Game/Models/Universe/BP_Janek.BP_Janek_C");
+const FName JanekWorldScapeTag(TEXT("JanekWorldScape"));
+constexpr TCHAR JanekCloudMaterial[] = TEXT("/WorldScape/Ressources/Materials/WorldScapeMaterials/Cloud/MI_Cloud_WorldScape.MI_Cloud_WorldScape");
+const FName JanekSurfaceShellTag(TEXT("JanekSurfaceShell"));
+
+void SetJanekPresentationRadius(AActor& Planet, double Radius)
+{
+    // WorldScape authors dimensions in centimetres. SSW mission space uses
+    // one Unreal unit per metre and the system view uses a compressed scale.
+    const AActor* Defaults = Planet.GetClass()->GetDefaultObject<AActor>();
+    const auto* PlanetScale = FindFProperty<FFloatProperty>(Planet.GetClass(), TEXT("PlanetScale"));
+    if (!Defaults || !PlanetScale) return;
+    const double AuthoredRadius = PlanetScale->GetPropertyValue_InContainer(Defaults);
+    if (AuthoredRadius <= 0.0) return;
+    PlanetScale->SetPropertyValue_InContainer(&Planet, Radius);
+    for (const FName PropertyName : {FName(TEXT("NoiseIntensity")),
+        FName(TEXT("TriangleSize")), FName(TEXT("OceanTriangleSize"))})
+    {
+        if (const auto* Property = FindFProperty<FFloatProperty>(Planet.GetClass(), PropertyName))
+            Property->SetPropertyValue_InContainer(&Planet,
+                Property->GetPropertyValue_InContainer(Defaults) * Radius / AuthoredRadius);
+    }
+    if (auto* Globe = Cast<AWorldScapeRoot>(&Planet))
+        Globe->OceanHeight = static_cast<float>(-150.0 * Radius / 5400000.0);
+
+    TInlineComponentArray<UStaticMeshComponent*> Meshes(&Planet);
+    for (UStaticMeshComponent* Mesh : Meshes)
+        if (Mesh->ComponentHasTag(JanekSurfaceShellTag))
+            Mesh->SetRelativeScale3D(FVector(Radius * 0.998 / 50.0));
+
+    // The renderer uses kilometres (100000 Unreal units), even in mission space.
+    const float RenderRadiusKm = static_cast<float>(Radius / 100000.0);
+    if (auto* Atmosphere = Planet.FindComponentByClass<USkyAtmosphereComponent>())
+    {
+        Atmosphere->SetBottomRadius(RenderRadiusKm);
+        Atmosphere->SetAtmosphereHeight(RenderRadiusKm * 0.025f);
+    }
+    if (auto* Clouds = Planet.FindComponentByClass<UVolumetricCloudComponent>())
+    {
+        Clouds->SetPlanetRadius(RenderRadiusKm);
+        Clouds->SetLayerBottomAltitude(RenderRadiusKm * (4.0f / 5400.0f));
+        Clouds->SetLayerHeight(RenderRadiusKm * (10.0f / 5400.0f));
+        // Mission distances use one Unreal unit per metre. Include the globe's
+        // orbital presentation range when setting the renderer's cloud cutoff.
+        Clouds->SetTracingStartMaxDistance(1000.0f);
+    }
+}
+
+void AddJanekShell(AActor& Planet, FName Name, const TCHAR* MaterialPath)
+{
+    auto* Sphere = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+    auto* Material = LoadObject<UMaterialInterface>(nullptr, MaterialPath);
+    if (!Sphere || !Material || !Planet.GetRootComponent()) return;
+    auto* Shell = NewObject<UStaticMeshComponent>(&Planet, Name);
+    Shell->SetupAttachment(Planet.GetRootComponent());
+    Shell->SetMobility(EComponentMobility::Movable);
+    Shell->SetStaticMesh(Sphere);
+    Shell->SetMaterial(0, Material);
+    Shell->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    Shell->SetCastShadow(false);
+    Shell->bNeverDistanceCull = true;
+    Shell->ComponentTags.Add(Name);
+    Planet.AddInstanceComponent(Shell);
+    Shell->RegisterComponent();
+}
+}
+
 AActor* ASystemSceneBuilder::SpawnBodyActor(
     TSubclassOf<AActor> BodyClass,
     const FString& BodyName,
@@ -1073,6 +1160,8 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
     Params.SpawnCollisionHandlingOverride =
         ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
+    const bool bJanekWorldScape = BodyClass->GetPathName() == JanekPlanetClassPath;
+    Params.bDeferConstruction = bJanekWorldScape;
     AActor* Spawned = World->SpawnActor<AActor>(
         BodyClass,
         WorldLocation,
@@ -1098,7 +1187,7 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
     Spawned->SetActorLabel(DisplayName);
 #endif
 
-    if (ParentActor)
+    if (ParentActor && !bJanekWorldScape)
     {
         Spawned->AttachToActor(
             ParentActor,
@@ -1107,7 +1196,37 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
 
     const float SafeRadius = FMath::Max(VisualRadiusUnits, 1.0f);
 
-    if (AGasGiantActor* GasGiant = Cast<AGasGiantActor>(Spawned))
+    if (bJanekWorldScape)
+    {
+        Spawned->Tags.AddUnique(JanekWorldScapeTag);
+        SetJanekPresentationRadius(*Spawned, SafeRadius);
+        Spawned->FinishSpawning(FTransform(FRotator::ZeroRotator, WorldLocation));
+        if (ParentActor) Spawned->AttachToActor(ParentActor, FAttachmentTransformRules::KeepWorldTransform);
+        AddJanekShell(*Spawned, JanekSurfaceShellTag,
+            TEXT("/Game/Models/Universe/Planets/Janek/M_JanekLiveSurface.M_JanekLiveSurface"));
+        if (auto* Material = LoadObject<UMaterialInterface>(nullptr, JanekCloudMaterial);
+            Material && Material->GetMaterial()->MaterialDomain == MD_Volume)
+        {
+            auto* Atmosphere = NewObject<USkyAtmosphereComponent>(Spawned);
+            Atmosphere->SetupAttachment(Spawned->GetRootComponent());
+            Atmosphere->TransformMode = ESkyAtmosphereTransformMode::PlanetCenterAtComponentTransform;
+            Atmosphere->SetRayleighScatteringScale(0.15f);
+            Spawned->AddInstanceComponent(Atmosphere);
+            Atmosphere->RegisterComponent();
+
+            auto* Clouds = NewObject<UVolumetricCloudComponent>(Spawned);
+            Clouds->SetupAttachment(Spawned->GetRootComponent());
+            Clouds->SetMaterial(Material);
+            Spawned->AddInstanceComponent(Clouds);
+            Clouds->RegisterComponent();
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("WorldScape Janek cloud material unavailable. Enable the Volumetrics plugin."));
+        }
+        SetJanekPresentationRadius(*Spawned, SafeRadius);
+    }
+    else if (AGasGiantActor* GasGiant = Cast<AGasGiantActor>(Spawned))
     {
         GasGiant->SetPlanetRadius(SafeRadius);
 
@@ -2750,7 +2869,113 @@ void ASystemSceneBuilder::ResetTemporaryCutsceneBodyScales()
 // Authored X/Y orbital plane -> simulation OtherHand -> Unreal ship frame.
 static FVector MissionOrbitalToUE(const FVector& P) { return FVector(P.Y, -P.X, P.Z); }
 
-void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const FVector& Observer, const Orbital* FocusBody, const FVector& CameraForwardUE)
+AWorldScapeRoot* ASystemSceneBuilder::ConfigureJanekSurface(const FVector& Observer)
+{
+    auto* Globe = Cast<AWorldScapeRoot>(BodyActorMap.FindRef(TEXT("Janek")));
+    if (!bMissionSpace || !IsValid(Globe)) return nullptr;
+    const OrbitalBody* Body = RuntimeBodyMap.FindRef(TEXT("Janek"));
+    const auto* Env = UStarshatterEnvironmentSubsystem::Get();
+    const FPlanet* Planet = Env ? Env->PlanetMapByName.Find(TEXT("Janek")) : nullptr;
+    if (!Body || !Planet) return nullptr;
+    const auto* Site = Planet->Locations.FindByPredicate([](const FNamedBodyLocation& Location)
+    {
+        return Location.Name == TEXT("Janek Station") && Location.Type == ELocationType::Airbase;
+    });
+    if (!Site) return nullptr;
+
+    const FVector SiteOnGlobe = MissionOrbitalToUE(Site->Position);
+    const FVector Up = SiteOnGlobe.GetSafeNormal();
+    const FVector East = FVector::VectorPlaneProject(FVector::ForwardVector, Up).GetSafeNormal();
+    const FQuat ToSurface = FRotationMatrix::MakeFromXZ(East, Up).ToQuat().Inverse();
+    const FVector Station = TerrainRegion::JanekStationLocalPosition();
+    const FVector WorldSite = GetActorLocation() + FVector(Station.Z, Station.X, Station.Y);
+    const FVector GlobeCenter = WorldSite - ToSurface.RotateVector(SiteOnGlobe);
+    if (!Globe->GetActorLocation().Equals(GlobeCenter) || !Globe->GetActorQuat().Equals(ToSurface))
+        Globe->SetActorLocationAndRotation(GlobeCenter, ToSurface);
+    Globe->bOverridePlayerPosition = true;
+    Globe->OverridedPlayerPosition = GetActorLocation() + Observer;
+    Globe->bGenerateWorldScape = true;
+    Globe->bFreezeGeneration = false;
+    Globe->bGenerateCollision = true;
+    Globe->bGenerateFoliages = true;
+    Globe->SetActorHiddenInGame(false);
+    for (auto* Mesh : TInlineComponentArray<UStaticMeshComponent*>(Globe))
+        if (Mesh->ComponentHasTag(JanekSurfaceShellTag)) Mesh->SetVisibility(false);
+
+    if (!JanekRunwayGrade.IsValid())
+    {
+        auto* Data = LoadObject<UHeightMapVolumeData>(nullptr,
+            TEXT("/Game/Models/Universe/Planets/Janek/HM_Janek.HM_Janek"));
+        if (!Data) return nullptr;
+        const FTransform Pose(FQuat::Identity, WorldSite, FVector(95.0));
+        auto* Grade = GetWorld()->SpawnActorDeferred<AHeightMapVolume>(AHeightMapVolume::StaticClass(),
+            Pose, this, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+        if (!Grade) return nullptr;
+        Grade->HeightMapData = Data;
+        Grade->Height = true;
+        Grade->HeightAlpha = false;
+        Grade->OverrideHeight = true;
+        Grade->Altitude = static_cast<float>(SiteOnGlobe.Size() - Body->Radius());
+        Grade->MapHeight = 0.0f;
+        Grade->EdgeFalloff = 0.18f;
+        Grade->Priority = 100;
+        Grade->FinishSpawning(Pose);
+        Grade->AttachToActor(Globe, FAttachmentTransformRules::KeepWorldTransform);
+        Grade->WS_ForceRefresh();
+        Globe->CollisionDependantActor.AddUnique(Grade);
+        JanekRunwayGrade = Grade;
+        UE_LOG(LogTemp, Display, TEXT("[JanekSurface] Live WorldScape runway grade at %s, altitude %.1f m"),
+            *WorldSite.ToString(), Grade->Altitude);
+    }
+
+    if (!JanekRunwayFoliageMask.IsValid())
+    {
+        const FTransform Pose(FQuat::Identity, WorldSite, FVector(50.0));
+        auto* Mask = GetWorld()->SpawnActorDeferred<AFoliageMaskVolume>(AFoliageMaskVolume::StaticClass(),
+            Pose, this, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+        if (Mask)
+        {
+            Mask->MaskAll = true;
+            Mask->UseBlending = false;
+            Mask->FinishSpawning(Pose);
+            Mask->AttachToActor(Globe, FAttachmentTransformRules::KeepWorldTransform);
+            Mask->WS_ForceRefresh();
+            JanekRunwayFoliageMask = Mask;
+        }
+    }
+
+    if (!JanekRunwayLake.IsValid())
+    {
+        auto* Data = LoadObject<UHeightMapVolumeData>(nullptr,
+            TEXT("/Game/Models/Universe/Planets/Janek/HM_Janek.HM_Janek"));
+        if (Data)
+        {
+            // The low basin is east of the runway. Only the water elevation
+            // is overridden here, so the same terrain still defines the shore.
+            const FVector BasinCenter = WorldSite + FVector(8000.0, 0.0, 0.0);
+            const FTransform Pose(FQuat::Identity, BasinCenter, FVector(180.0));
+            auto* Lake = GetWorld()->SpawnActorDeferred<AHeightMapVolume>(AHeightMapVolume::StaticClass(),
+                Pose, this, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+            if (Lake)
+            {
+                Lake->HeightMapData = Data;
+                Lake->OceanHeight = true;
+                Lake->OceanHeightAlpha = false;
+                Lake->MinOceanHeight = 150.0f;
+                Lake->MaxOceanHeight = 150.0f;
+                Lake->EdgeFalloff = 0.20f;
+                Lake->Priority = 90;
+                Lake->FinishSpawning(Pose);
+                Lake->AttachToActor(Globe, FAttachmentTransformRules::KeepWorldTransform);
+                Lake->WS_ForceRefresh();
+                JanekRunwayLake = Lake;
+            }
+        }
+    }
+    return Globe;
+}
+
+void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const FVector& Observer, const Orbital* FocusBody, const FVector& CameraForwardUE, bool bSurfaceView)
 {
     if (!bMissionSpace)
     {
@@ -2768,6 +2993,8 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
             }
             BodyActor->Tags.AddUnique(TEXT("MissionNavigationTarget"));
             MissionBodyTransforms.Add(BodyActor, BodyActor->GetActorTransform());
+            if (BodyActor->ActorHasTag(JanekWorldScapeTag))
+                SetJanekPresentationRadius(*BodyActor, 5400000.0);
             MissionBodyParents.Add(BodyActor, BodyActor->GetAttachParentActor());
             // Detach before changing any body scales: planets/moons must not
             // inherit their parent's new astronomical scale.
@@ -2799,6 +3026,25 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
                 RegionActor->SetActorHiddenInGame(true);
             }
     }
+    if (bSurfaceView)
+    {
+        ConfigureJanekSurface(Observer);
+        if (SurfaceHiddenActors.IsEmpty())
+        {
+            auto Hide = [this](AActor* Actor)
+            {
+                if (!IsValid(Actor) || Actor->ActorHasTag(JanekWorldScapeTag)) return;
+                SurfaceHiddenActors.Add(Actor, Actor->IsHidden());
+                Actor->SetActorHiddenInGame(true);
+
+            };
+            for (const auto& Pair : MissionBodyTransforms) Hide(Pair.Key.Get());
+            for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+                if (It->ActorHasTag(TEXT("OrbitalBackdrop"))) Hide(*It);
+        }
+        return;
+    }
+    RestoreOrbitalBackdrop();
     // Keep local ships at simulation scale (1 UE unit per simulation metre).
     // Very distant bodies use view-relative proxies: distance AND radius
     // receive the same factor, preserving apparent size without huge vertices.
@@ -2824,6 +3070,33 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
         const FVector Delta = BodyLocal - Observer;
         const double Distance = Delta.Size();
         const double Projection = Distance > BackgroundDistance ? BackgroundDistance / Distance : 1.0;
+        if (BodyActor->ActorHasTag(JanekWorldScapeTag))
+        {
+            // Keep the globe and its surface marker in the same mission frame.
+            // An observer-relative minimum distance moves the globe out of the
+            // flight path and sends it behind the observer when the bearing flips.
+            if (auto* Globe = Cast<AWorldScapeRoot>(BodyActor); Globe && Globe->bGenerateCollision)
+            {
+                Globe->bGenerateCollision = false;
+                Globe->bGenerateFoliages = false;
+                Globe->bOverridePlayerPosition = false;
+                for (auto* Mesh : TInlineComponentArray<UStaticMeshComponent*>(Globe))
+                    if (Mesh->ComponentHasTag(JanekSurfaceShellTag)) Mesh->SetVisibility(true);
+                if (auto* Mask = JanekRunwayFoliageMask.Get()) Mask->Destroy();
+                JanekRunwayFoliageMask.Reset();
+                if (auto* Grade = JanekRunwayGrade.Get())
+                {
+                    Globe->CollisionDependantActor.Remove(Grade);
+                    Grade->Destroy();
+                }
+                JanekRunwayGrade.Reset();
+                if (auto* Lake = JanekRunwayLake.Get()) Lake->Destroy();
+                JanekRunwayLake.Reset();
+            }
+            BodyActor->SetActorLocationAndRotation(GetActorLocation() + MissionOrbitalToUE(Body->Location() - SectorOrigin),
+                FRotator::ZeroRotator);
+            continue;
+        }
         BodyActor->SetActorLocation(Eye + Delta * Projection);
         const double* MeasuredRadius = MissionBodyRadii.Find(BodyActor);
         const FTransform* Original = MissionBodyTransforms.Find(BodyActor);
@@ -2902,7 +3175,7 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
     }
 }
 
-bool ASystemSceneBuilder::GetFocusedMissionBodyWorldLocation(const Orbital* FocusBody, FVector& OutLocation, FString& OutName) const
+bool ASystemSceneBuilder::GetFocusedMissionBodyWorldLocation(const Orbital* FocusBody, FVector& OutLocation, FString& OutName, AActor** OutActor) const
 {
     if (!FocusBody || !bMissionSpace)
         return false;
@@ -2916,15 +3189,39 @@ bool ASystemSceneBuilder::GetFocusedMissionBodyWorldLocation(const Orbital* Focu
             return false;
         OutLocation = Actor->GetActorLocation();
         OutName = Pair.Key;
+        if (OutActor) *OutActor = Actor;
         return true;
     }
     return false;
 }
 
+void ASystemSceneBuilder::RestoreOrbitalBackdrop()
+{
+    for (const auto& Pair : SurfaceHiddenActors)
+        if (AActor* Actor = Pair.Key.Get()) Actor->SetActorHiddenInGame(Pair.Value);
+    SurfaceHiddenActors.Reset();
+}
+
 void ASystemSceneBuilder::EndMissionSpace()
 {
+    RestoreOrbitalBackdrop();
     if (!bMissionSpace) return;
     bMissionSpace = false;
+    if (auto* Globe = Cast<AWorldScapeRoot>(BodyActorMap.FindRef(TEXT("Janek"))))
+    {
+        Globe->bGenerateCollision = false;
+        Globe->bGenerateFoliages = false;
+        Globe->bOverridePlayerPosition = false;
+        for (auto* Mesh : TInlineComponentArray<UStaticMeshComponent*>(Globe))
+            if (Mesh->ComponentHasTag(JanekSurfaceShellTag)) Mesh->SetVisibility(true);
+        if (auto* Grade = JanekRunwayGrade.Get()) Globe->CollisionDependantActor.Remove(Grade);
+    }
+    if (auto* Grade = JanekRunwayGrade.Get()) Grade->Destroy();
+    JanekRunwayGrade.Reset();
+    if (auto* Lake = JanekRunwayLake.Get()) Lake->Destroy();
+    JanekRunwayLake.Reset();
+    if (auto* Mask = JanekRunwayFoliageMask.Get()) Mask->Destroy();
+    JanekRunwayFoliageMask.Reset();
     for (const auto& Pair : MissionBodyTransforms)
         if (AActor* BodyActor = Pair.Key.Get()) BodyActor->SetActorTransform(Pair.Value);
     for (const auto& Pair : MissionBodyParents)
@@ -2933,6 +3230,9 @@ void ASystemSceneBuilder::EndMissionSpace()
     for (const auto& Pair : MissionHiddenActors)
         if (AActor* HiddenActor = Pair.Key.Get()) HiddenActor->SetActorHiddenInGame(Pair.Value);
     MissionBodyTransforms.Empty(); MissionBodyParents.Empty();
+    for (const FSpawnedSystemBody& Entry : SpawnedBodies)
+        if (AActor* BodyActor = Entry.Actor.Get(); BodyActor && BodyActor->ActorHasTag(JanekWorldScapeTag))
+            SetJanekPresentationRadius(*BodyActor, Entry.VisualRadiusUnits);
     MissionBodyRadii.Empty(); MissionHiddenActors.Empty();
 }
 

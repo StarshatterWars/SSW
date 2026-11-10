@@ -1044,6 +1044,7 @@ system:
 			aphelion: 1.71e11,
 			eccentricity: 0.223,
 			rotation: 20,
+			location: { name: "Janek Station", type: Airbase, position: (93734.416, -158240.206, 5397409.813) },
 			region:     {
 			   name:    Janek,
 			   parent:  Janek,

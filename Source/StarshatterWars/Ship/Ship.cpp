@@ -3096,6 +3096,29 @@ Ship* Ship::GetAutoTrackTarget() const
         !Contact->IsDead() && !Contact->IsDying() && sensor->IsTracking(Contact) ? Contact : nullptr;
 }
 
+const FVector* Ship::GetFixedAutoTrackPoint() const
+{
+    return bAutoTrack && FixedTrackRegion && FixedTrackRegion == GetRegion() &&
+        !IsDead() && !IsDying() && !InTransition() && !inbound &&
+        flight_phase == EOPSMode::ACTIVE && navsys && navsys->IsPowerOn() ? &FixedTrackPoint : nullptr;
+}
+
+bool Ship::SetFixedAutoTrackPoint(const FVector& Point)
+{
+    if (!sim || sim->GetPlayerShip() != this || !GetRegion() || IsDead() || IsDying() ||
+        InTransition() || net_control || inbound || bAutoLand || flight_phase != EOPSMode::ACTIVE ||
+        !navsys || !navsys->IsPowerOn() || Point.ContainsNaN())
+        return false;
+
+    if (IsAutoNavEngaged()) SetAutoNav(false);
+    FixedTrackRegion = GetRegion();
+    FixedTrackPoint = Point;
+    bAutoTrack = true;
+    bManualThrottle = false;
+    SetControls(sim->GetControls());
+    return true;
+}
+
 bool Ship::SetAutoTrack(bool engage)
 {
     if (engage == bAutoTrack) return true;
@@ -3114,6 +3137,7 @@ bool Ship::SetAutoTrack(bool engage)
     else
     {
         bAutoTrack = false;
+        FixedTrackRegion = nullptr;
         SetAutoNav(false);
         UE_LOG(LogTemp, Display, TEXT("[AutoTrack] Disengaged Ship='%hs'"), GetName());
     }
@@ -3658,6 +3682,7 @@ Ship::ExecFrame(double seconds)
 void
 Ship::LaunchProbe()
 {
+    if (Game::IsTimeCompressed() && sim && sim->GetPlayerShip() == this) return;
 	if (net_observer_mode)
 		return;
 
@@ -3725,7 +3750,7 @@ void
 Ship::ExecNavFrame(
 	double Seconds)
 {
-    if (bAutoTrack && !GetAutoTrackTarget()) SetAutoTrack(false);
+    if (bAutoTrack && !GetFixedAutoTrackPoint() && (FixedTrackRegion || !GetAutoTrackTarget())) SetAutoTrack(false);
 
     // Validate the landing clearance before updating the active flight director.
     if (bAutoLand && flight_phase < EOPSMode::DOCKING && !CanAutoLand())
@@ -4146,11 +4171,13 @@ Ship::ExecSystems(double seconds)
 	wep_mass = 0.0f;
 	wep_resist = 0.0f;
 
+    const bool bLockWeapons = Game::IsTimeCompressed() && sim && sim->GetPlayerShip() == this;
 	bool winchester_cycle = false;
 
 	for (i = 0; i < weapons.size(); i++) {
 		WeaponGroup* w_group = weapons[i];
 		if (!w_group) continue;
+		if (bLockWeapons) w_group->SetTrigger(false);
 		w_group->ExecFrame(seconds);
 
 		if (w_group->GetTrigger() && w_group->GetFiringOrders() == WeaponsOrders::MANUAL) {
@@ -4989,6 +5016,15 @@ Ship::DropOrbit()
 			dst_rgn->GetOrbitalRegion()->Primary() ==
 			GetRegion()->GetOrbitalRegion()->Primary()) {
 
+            const auto* Surface = static_cast<const TerrainRegion*>(dst_rgn->GetOrbitalRegion());
+            if (Surface->HasSurfaceSite())
+            {
+                const FVector Offset = GetRegion()->GetLocation() + OtherHand(GetLocation()) - Surface->Location();
+                const FVector Local = Surface->OrbitalVectorToSurface(Offset);
+                if (Local.Y < 0.0 || Local.Y > TERRAIN_ALTITUDE_LIMIT ||
+                    FMath::Abs(Local.X) > 32000.0 || FMath::Abs(Local.Z) > 32000.0) return;
+            }
+
 			transition_time = 10.0f;
 			transition_type = TRANSITION_DROP_ORBIT;
 			transition_loc = GetLocation() + GetHeading() * (float)(-2 * GetRadius());
@@ -5226,6 +5262,16 @@ Ship::CompleteTransition()
 		DstLoc +=
 			RandomDirection() * 2000.0f;
 
+        const auto* Surface = static_cast<const TerrainRegion*>(DstRegion->GetOrbitalRegion());
+        if (Surface && Surface->HasSurfaceSite() && region)
+        {
+            const FVector Offset = region->GetLocation() + OtherHand(GetLocation()) - Surface->Location();
+            FVector Local = TerrainRegion::JanekStationLocalPosition() + Surface->OrbitalVectorToSurface(Offset);
+            if (const Terrain* Ground = DstRegion->GetTerrain())
+                Local.Y = FMath::Max(Local.Y, Ground->Height(Local.X, Local.Z) + GetRadius());
+            DstLoc = OtherHand(Local);
+        }
+
 		sim->RequestHyperJump(
 			this,
 			DstRegion,
@@ -5256,23 +5302,26 @@ Ship::CompleteTransition()
 			return;
 		}
 
-		const double Dist =
-			200.0e3 + 10.0e3 * GetElementIndex();
+        const OrbitalRegion* Origin = region ? region->GetOrbitalRegion() : nullptr;
+        const auto* Surface = Origin && Origin->GetType() == Orbital::TERRAIN
+            ? static_cast<const TerrainRegion*>(Origin) : nullptr;
+        const OrbitalRegion* Destination = DstRegion->GetOrbitalRegion();
+        if (!Destination || !Destination->Primary()) return;
 
-		FVector EscVec =
-			DstRegion->GetOrbitalRegion()->Location() -
-			DstRegion->GetOrbitalRegion()->Primary()->Location();
-
-		EscVec.Z =
-			-100.0f * (float)GetElementIndex();
-
-		EscVec.Normalize();
-
-		EscVec *=
-			(float)(-Dist);
-
-		EscVec +=
-			RandomDirection() * 2000.0f;
+        FVector EscVec;
+        if (Surface && Surface->HasSurfaceSite() && Destination->Primary() == Surface->Primary())
+        {
+            const FVector StationLocal = TerrainRegion::JanekStationLocalPosition();
+            const FVector Exit = Surface->Location() + Surface->SurfaceVectorToOrbital(GetLocation() - StationLocal);
+            EscVec = Exit - Destination->Location();
+        }
+        else
+        {
+            const double Dist = 200.0e3 + 10.0e3 * GetElementIndex();
+            EscVec = Destination->Location() - Destination->Primary()->Location();
+            EscVec.Z = -100.0f * GetElementIndex();
+            EscVec = EscVec.GetSafeNormal() * -Dist + RandomDirection() * 2000.0f;
+        }
 
 		sim->RequestHyperJump(
 			this,
@@ -5991,6 +6040,7 @@ Ship::ApplyPitch(double p)
 bool
 Ship::FireWeapon(int n)
 {
+    if (Game::IsTimeCompressed() && sim && sim->GetPlayerShip() == this) return false;
 	bool fired = false;
 
 	if (n >= 0 && !CheckFire()) {
@@ -6012,6 +6062,7 @@ Ship::FireWeapon(int n)
 bool
 Ship::FireDecoy()
 {
+    if (Game::IsTimeCompressed() && sim && sim->GetPlayerShip() == this) return false;
 	SimShot* drone = 0;
 
 	if (decoy && !CheckFire()) {
@@ -6160,6 +6211,7 @@ Ship::GetTrigger(int i) const
 void
 Ship::SetTrigger(int i)
 {
+    if (Game::IsTimeCompressed() && sim && sim->GetPlayerShip() == this) return;
 	if (i >= 0 && !CheckFire()) {
 		if (i < 4)
 			trigger[i] = true;
@@ -7222,6 +7274,7 @@ bool Ship::HasManualThrottle() const
 
 void Ship::SetManualThrottle(double percent)
 {
+    if (Game::IsTimeCompressed()) return;
     if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (!sim || sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying()) return;
     EnableManualFlight();
@@ -7249,6 +7302,7 @@ namespace
 
 void Ship::SetManualRotationAxis(int32 Axis, double Value)
 {
+    if (Game::IsTimeCompressed()) return;
     if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (Axis < 0 || Axis > 2 || !FMath::IsFinite(Value) || !sim ||
         sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying()) return;
@@ -7336,6 +7390,7 @@ void Ship::EnableManualFlight()
 
 void Ship::SetManualTranslationAxis(int32 Axis, double Value)
 {
+    if (Game::IsTimeCompressed()) return;
     if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (Axis<0 || Axis>2 || !FMath::IsFinite(Value) || !sim || sim->GetPlayerShip()!=this ||
         InTransition() || IsDead() || IsDying()) return;
@@ -7346,6 +7401,7 @@ void Ship::SetManualTranslationAxis(int32 Axis, double Value)
 
 void Ship::SetManualAugmenter(bool Enabled)
 {
+    if (Game::IsTimeCompressed()) return;
     if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
     if (!sim || sim->GetPlayerShip()!=this || InTransition() || IsDead() || IsDying()) return;
     if (Enabled)

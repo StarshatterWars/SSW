@@ -45,6 +45,10 @@
 #include "Game.h"
 #include "WaypointActor.h"
 #include "Instruction.h"
+#include "Terrain.h"
+#include "WorldScapeRoot.h"
+#include "SimContact.h"
+#include "WaypointArrival.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Sim.h"
@@ -102,6 +106,11 @@
 #include <Windows.h>
 #include "Windows/HideWindowsPlatformTypes.h"
 #endif
+
+static bool IsJanekSurface(SimRegion* Region)
+{
+    return Region && Region->GetTerrain() && FCStringAnsi::Stricmp(Region->GetName(), "Janek Station") == 0;
+}
 
 DEFINE_LOG_CATEGORY_STATIC(LogSSWRuntime, Log, All);
 
@@ -309,7 +318,11 @@ void USSWRuntimeSubsystem::StopRuntime()
 bool USSWRuntimeSubsystem::TickRuntime(float DeltaSeconds)
 {
     LastDeltaSeconds = DeltaSeconds;
-    Game::SetFrameClock(DeltaSeconds,TimeCompression,bPaused);
+    if (GameMode == EGameMode::PLAY && TimeCompression > 1 && !CanAccelerateTravel())
+        SetTimeCompression(1);
+    const float SimulationDelta = GameMode == EGameMode::PLAY && TimeCompression > 1
+        ? FMath::Min(DeltaSeconds, 0.1f) : DeltaSeconds;
+    Game::SetFrameClock(SimulationDelta, TimeCompression, bPaused);
 
     GameLoop();
 
@@ -399,14 +412,16 @@ void USSWRuntimeSubsystem::GameLoop()
 void USSWRuntimeSubsystem::UpdateWorld()
 {
     TRACE_CPUPROFILER_EVENT_SCOPE(SSW_UpdateWorld);
-    const double Seconds = Game::FrameTime();
+    double Seconds = Game::FrameTime();
+    const bool bAcceleratedTravel = GameMode == EGameMode::PLAY && TimeCompression > 1 &&
+        SimInstance && SimInstance->GetMission() && !bPaused;
     // Advance the authoritative universe clock once, using the same simulation
     // delta as physics. Environment's independent tick defers while we run.
     if (auto* Env=UStarshatterEnvironmentSubsystem::Get())
     {
         const bool bCampaignScreen = GameMode == EGameMode::MENU ||
             GameMode == EGameMode::CMPN || GameMode == EGameMode::PLAN;
-        Env->TickEnvironmentTime(bCampaignScreen ? Game::GUITime() : Seconds);
+        if (!bAcceleratedTravel) Env->TickEnvironmentTime(bCampaignScreen ? Game::GUITime() : Seconds);
     }
 
     Galaxy* GalaxyInstance = Galaxy::GetInstance();
@@ -426,28 +441,66 @@ void USSWRuntimeSubsystem::UpdateWorld()
         const uint32 BeforeTime =
             Game::GetGameTime();
 
-        if(auto* GI=GetGameInstance())if(auto* Timer=GI->GetSubsystem<UTimerSubsystem>())Timer->ManualMissionTick(float(Seconds));
-        SimInstance->ExecFrame(Seconds);
+        AWorldScapeRoot* LiveJanek = nullptr;
+        SimRegion* PreviousRegion = SimInstance->GetActiveRegion();
+        if (SimRegion* Region = PreviousRegion; IsJanekSurface(Region))
+        {
+            if (auto* Builder = MissionPresentationBuilder.Get())
+            {
+                Ship* Pilot = SimInstance->GetPlayerShip();
+                const FVector Observer = Pilot ? ConvertLegacyShipLocationToUE(Pilot->GetLocation()) : FVector::ZeroVector;
+                LiveJanek = Builder->ConfigureJanekSurface(Observer);
+                Region->GetTerrain()->SetLiveSurface(LiveJanek, GetVisualLocationForRegion(Region, FVector::ZeroVector));
+            }
+        }
+
+        auto* Timer = GetGameInstance() ? GetGameInstance()->GetSubsystem<UTimerSubsystem>() : nullptr;
+        if (bAcceleratedTravel)
+        {
+            constexpr double MaxStep = 1.0 / 60.0;
+            const int32 Steps = FMath::Max(1, FMath::CeilToInt(Seconds / MaxStep));
+            const double Step = Seconds / Steps;
+            Ship* Pilot = SimInstance->GetPlayerShip();
+            Instruction* RoutePoint = Pilot->GetNextNavPoint();
+            SimRegion* Region = Pilot->GetRegion();
+            Seconds = 0.0;
+            for (int32 Index = 0; Index < Steps; ++Index)
+            {
+                Game::SetSimulationStep(Step, TimeCompression);
+                if (auto* Env = UStarshatterEnvironmentSubsystem::Get()) Env->TickEnvironmentTime(Step);
+                if (Timer) Timer->ManualMissionTick(static_cast<float>(Step));
+                SimInstance->ExecFrame(Step);
+                Seconds += Step;
+
+                Ship* Current = SimInstance->GetPlayerShip();
+                if (TimeCompression == 1 || Current != Pilot || !CanAccelerateTravel() ||
+                    Current->GetRegion() != Region || Current->GetNextNavPoint() != RoutePoint)
+                {
+                    SetTimeCompression(1);
+                    break;
+                }
+            }
+            Game::SetSimulationStep(Seconds, TimeCompression);
+        }
+        else
+        {
+            if (Timer) Timer->ManualMissionTick(static_cast<float>(Seconds));
+            SimInstance->ExecFrame(Seconds);
+        }
+        if (PreviousRegion != SimInstance->GetActiveRegion() && IsJanekSurface(PreviousRegion))
+            PreviousRegion->GetTerrain()->SetLiveSurface(nullptr, FVector::ZeroVector);
         UpdateAsteroidVisuals();
         UpdateDebrisVisuals();
         UpdateProjectileVisuals();
         UpdateExplosionVisuals(Seconds);
         if(SimRegion* Region=SimInstance->GetActiveRegion())
         {
-            if(Region->GetTerrain() && !NativeTerrain.IsValid() && GetWorld())NativeTerrain=GetWorld()->SpawnActor<ANativeTerrainActor>();
+            Terrain* LocalTerrain = LiveJanek && IsJanekSurface(Region) ? nullptr : Region->GetTerrain();
+            if(LocalTerrain && !NativeTerrain.IsValid() && GetWorld())NativeTerrain=GetWorld()->SpawnActor<ANativeTerrainActor>();
             if (auto* Surface = NativeTerrain.Get())
             {
-                AActor* SurfacePlanet = nullptr;
-                if (Region->GetTerrain() && FCStringAnsi::Stricmp(Region->GetName(), "Janek Station") == 0)
-                    if (const ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
-                        for (const FSpawnedSystemBody& Body : Builder->GetSpawnedBodies())
-                            if (!Body.bIsOrbit && Body.BodyName.Equals(TEXT("Janek"), ESearchCase::IgnoreCase))
-                            {
-                                SurfacePlanet = Body.Actor.Get();
-                                break;
-                            }
-                Surface->SetSurfaceSky(SurfacePlanet);
-                Surface->UpdateTerrain(Region->GetTerrain(),
+                Surface->SetSurfaceSky(LocalTerrain && IsJanekSurface(Region));
+                Surface->UpdateTerrain(LocalTerrain,
                     SimInstance->GetPlayerShip() ? SimInstance->GetPlayerShip()->GetLocation() : FVector::ZeroVector,
                     GetVisualLocationForRegion(Region, FVector::ZeroVector));
             }
@@ -585,7 +638,7 @@ void USSWRuntimeSubsystem::UpdateWorld()
                 Builder->UpdateMissionSpace(ActiveRegion->GetLocation(), Observer, FocusBody,
                     (bCameraObserver && CamDir && CamDir->GetCamera())
                         ? ConvertLegacyShipLocationToUE(CamDir->GetCamera()->vpn())
-                        : FVector::ZeroVector);
+                        : FVector::ZeroVector, IsJanekSurface(ActiveRegion));
 
                 // Projection must precede final camera aim and viewport copy.
                 // SyncLegacyCameraView handles ship/station orbit clearance and
@@ -918,10 +971,6 @@ void USSWRuntimeSubsystem::GameState()
         HandleCampaignState();
         break;
 
-    case EGameMode::PLAY:
-        HandlePlayState();
-        break;
-
     case EGameMode::EXIT:
         HandleExitState();
         break;
@@ -1039,11 +1088,6 @@ void USSWRuntimeSubsystem::HandleCampaignState()
 {
 }
 
-void USSWRuntimeSubsystem::HandlePlayState()
-{
-    MusicManager::SetMode(MusicMode::FLIGHT);
-}
-
 void USSWRuntimeSubsystem::HandleExitState()
 {
     UE_LOG(LogSSWRuntime, Log, TEXT("[RUNTIME] EXIT state requested."));
@@ -1128,8 +1172,76 @@ uint32 USSWRuntimeSubsystem::GetTimeCompression() const
     return TimeCompression;
 }
 
+bool USSWRuntimeSubsystem::HasTravelThreats(Ship* Pilot)
+{
+    SimRegion* Region = Pilot ? Pilot->GetRegion() : nullptr;
+    if (!Region) return false;
+    if (Pilot->GetThreatList().size()) return true;
+
+    const int ObserverIFF = Pilot->GetIFF();
+    const auto IsThreatIFF = [ObserverIFF](int IFF)
+    {
+        return IFF < 0 || (IFF > 0 && IFF != ObserverIFF);
+    };
+
+    // Contacts lists display opposing ships throughout the active region.
+    ListIter<Ship> Ships = Region->GetShips();
+    while (++Ships)
+    {
+        const Ship* Contact = Ships.value();
+        if (Contact && Contact != Pilot && !Contact->IsDead() && !Contact->IsDying() &&
+            IsThreatIFF(Contact->GetIFF())) return true;
+    }
+
+    // Radar can report indeterminate IFF even for a ship whose team is known to the simulation.
+    ListIter<SimContact> Tracks = Pilot->GetContactList();
+    while (++Tracks)
+    {
+        const SimContact* Track = Tracks.value();
+        if (!Track) continue;
+        const Ship* Contact = Track->GetShip();
+        if (Contact && (Contact == Pilot || Contact->IsDead() || Contact->IsDying())) continue;
+        if ((Contact || Track->GetShot()) && IsThreatIFF(Track->GetIFF(Pilot))) return true;
+    }
+    return false;
+}
+
+bool USSWRuntimeSubsystem::CanAccelerateTravel() const
+{
+    const UWorld* World = GetWorld();
+    if (GameMode != EGameMode::PLAY || bPaused || !World || World->GetNetMode() != NM_Standalone ||
+        !SimInstance || !SimInstance->GetMission()) return false;
+
+    Ship* Pilot = SimInstance->GetPlayerShip();
+    SimRegion* Region = SimInstance->GetActiveRegion();
+    if (!Pilot || !Region || Pilot->GetRegion() != Region || Pilot->IsDead() || Pilot->IsDying() ||
+        Pilot->InTransition() || Pilot->GetInbound() || Pilot->IsAutoLandEngaged() ||
+        Pilot->GetFlightPhase() != EOPSMode::ACTIVE || HasTravelThreats(Pilot)) return false;
+
+    const FVector Position = Pilot->GetLocation();
+    const double ArrivalBuffer = FMath::Max(1500.0, Pilot->GetVelocity().Size() * 5.0);
+    if (Pilot->IsAutoTrackEngaged())
+    {
+        if (const FVector* Point = Pilot->GetFixedAutoTrackPoint())
+            return FVector::DistSquared(Position, *Point) > FMath::Square(3000.0 + ArrivalBuffer);
+        if (const Ship* Target = Pilot->GetAutoTrackTarget())
+            return FVector::DistSquared(Position, Target->GetLocation()) > FMath::Square(7000.0 + ArrivalBuffer);
+        return false;
+    }
+
+    Instruction* Route = Pilot->IsAutoNavEngaged() ? Pilot->GetNextNavPoint() : nullptr;
+    if (!Route) return false;
+    SimRegion* Destination = Route->GetRegion();
+    if (Destination && Destination != Region) return false;
+    const double RouteArrival = LegacyWaypointArrival::Radius(Pilot->GetNavigationHullRadius());
+    return FVector::DistSquared(Position, OtherHand(Route->GetLocation())) > FMath::Square(RouteArrival + ArrivalBuffer);
+}
+
 void USSWRuntimeSubsystem::SetTimeCompression(uint32 Comp)
 {
+    if (Comp == TimeCompression) return;
+    if (GameMode == EGameMode::PLAY && Comp > 1 &&
+        ((Comp != 2 && Comp != 5 && Comp != 10 && Comp != 20) || !CanAccelerateTravel())) return;
     if (Comp > 0 && Comp <= 100)
     {
         UE_LOG(LogSSWRuntime, Log,
@@ -1138,6 +1250,9 @@ void USSWRuntimeSubsystem::SetTimeCompression(uint32 Comp)
             Comp);
 
         TimeCompression = Comp;
+        Game::SetSimulationStep(Game::FrameTime(), Comp);
+        SyncExplosionClock();
+        SyncBeamPresentationClock();
     }
 }
 
@@ -1456,10 +1571,11 @@ void USSWRuntimeSubsystem::BeginMissionPresentation(ASystemSceneBuilder* Builder
     {
         Ship* PlayerShip = Sim::GetSim()->GetPlayerShip();
         Builder->UpdateMissionSpace(Sim::GetSim()->GetActiveRegion()->GetLocation(),
-            PlayerShip ? ConvertLegacyShipLocationToUE(PlayerShip->GetLocation()) : FVector::ZeroVector);
+            PlayerShip ? ConvertLegacyShipLocationToUE(PlayerShip->GetLocation()) : FVector::ZeroVector,
+            nullptr, FVector::ZeroVector, IsJanekSurface(Sim::GetSim()->GetActiveRegion()));
     }
 }
-void USSWRuntimeSubsystem::RefreshTravelPresentation(ASystemSceneBuilder* Builder)
+void USSWRuntimeSubsystem::RefreshTravelPresentation(ASystemSceneBuilder* Builder, bool bSnapShipPose)
 {
     if (Builder && Builder != MissionPresentationBuilder.Get())
     {
@@ -1478,9 +1594,15 @@ void USSWRuntimeSubsystem::RefreshTravelPresentation(ASystemSceneBuilder* Builde
     for (int Index=0; Index<Region->GetShips().size(); ++Index)
         if (Ship* Data = Region->GetShips()[Index])
             if (!Data->IsDead() && !Data->IsDying())
-                if (AShipActor* Visual = SpawnVisualForRuntimeShip(Data)) Visual->SetActorHiddenInGame(false);
+                if (AShipActor* Visual = SpawnVisualForRuntimeShip(Data))
+                {
+                    Visual->SetActorHiddenInGame(false);
+                    if (bSnapShipPose) Visual->UpdateFromRuntimeShip(0.0f);
+                }
     if (ASystemSceneBuilder* Current = MissionPresentationBuilder.Get())
-        Current->UpdateMissionSpace(Region->GetLocation(), Simulation->GetPlayerShip() ? ConvertLegacyShipLocationToUE(Simulation->GetPlayerShip()->GetLocation()) : FVector::ZeroVector);
+        Current->UpdateMissionSpace(Region->GetLocation(),
+            Simulation->GetPlayerShip() ? ConvertLegacyShipLocationToUE(Simulation->GetPlayerShip()->GetLocation()) : FVector::ZeroVector,
+            nullptr, FVector::ZeroVector, IsJanekSurface(Region));
     UpdateMissionWaypoints();
 }
 
@@ -1638,6 +1760,7 @@ void USSWRuntimeSubsystem::UpdateAsteroidVisuals()
             UStaticMesh** Cached = VariantMeshes.Find(Variant);
             UStaticMesh* Mesh = Cached ? *Cached : Library->Meshes[Variant].LoadSynchronous();
             if (!Cached) VariantMeshes.Add(Variant, Mesh);
+            Actor->SetContactIdentity(Region, I);
             Actor->UpdateFromSimulation(*Rock, GetVisualLocationForRegion(Region, Rock->GetLocation()), Mesh);
         }
     }
@@ -1895,6 +2018,8 @@ void USSWRuntimeSubsystem::UpdateMissionWaypoints()
             for (const FNamedBodyLocation& Location : *Locations)
             {
                 if (Location.Name.IsEmpty() || Location.Position.ContainsNaN()) continue;
+                const bool bJanekStation = BodyName == TEXT("Janek") && Location.Name == TEXT("Janek Station");
+                if (bJanekStation && Sector->GetTerrain()) continue;
                 const FString Key = FString::Printf(TEXT("Location:%hs:%s:%s"), Sector->GetName(), *BodyName, *Location.Name);
                 ActiveKeys.Add(Key);
                 AWaypointActor* Actor = MissionWaypoints.FindRef(Key).Get();
@@ -1914,7 +2039,17 @@ void USSWRuntimeSubsystem::UpdateMissionWaypoints()
                     MissionWaypoints.Add(Key, Actor);
                 }
                 Actor->LegacyLocation = Body->Location() + Location.Position - Sector->GetLocation();
-                Actor->SetActorLocation(GetVisualLocationForRegion(Sector, OtherHand(Actor->LegacyLocation)));
+                FVector PlanetCenter;
+                FString PlanetName;
+                AActor* PlanetActor = nullptr;
+                if (bJanekStation && Builder->GetFocusedMissionBodyWorldLocation(Body, PlanetCenter, PlanetName, &PlanetActor))
+                {
+                    Actor->SetActorLocation(PlanetCenter + FVector(Location.Position.Y, -Location.Position.X, Location.Position.Z));
+                    if (Actor->GetAttachParentActor() != PlanetActor)
+                        Actor->AttachToActor(PlanetActor, FAttachmentTransformRules::KeepWorldTransform);
+                }
+                else
+                    Actor->SetActorLocation(GetVisualLocationForRegion(Sector, OtherHand(Actor->LegacyLocation)));
             }
     }
     for (auto It = MissionWaypoints.CreateIterator(); It; ++It)

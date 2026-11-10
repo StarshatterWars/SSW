@@ -44,6 +44,19 @@ UInputAction* StarshatterInputBindings::MapTargetTracking(UInputMappingContext* 
     return Action;
 }
 
+UInputAction* StarshatterInputBindings::MapTravelSpeed(UInputMappingContext* Context, bool bReset)
+{
+    const TCHAR* Name = bReset ? TEXT("SSW_TravelSpeedReset") : TEXT("SSW_TravelSpeedMenu");
+    auto* Action = NewObject<UInputAction>(Context, Name, RF_Transient);
+    Action->ActionDescription = bReset
+        ? NSLOCTEXT("SSW.InputActions", "TravelSpeedReset", "Return Travel Speed to 1x")
+        : NSLOCTEXT("SSW.InputActions", "TravelSpeedMenu", "Toggle Travel Speed Menu");
+    Action->ValueType = EInputActionValueType::Boolean;
+    Context->MapKey(Action, bReset ? EKeys::Delete : EKeys::Insert);
+    Context->MapKey(Action, bReset ? EKeys::F12 : EKeys::F11);
+    return Action;
+}
+
 UInputMappingContext* StarshatterInputBindings::SupplementalContext(UObject* Owner)
 {
     auto* Context=NewObject<UInputMappingContext>(Owner,NAME_None,RF_Transient);
@@ -54,6 +67,8 @@ UInputMappingContext* StarshatterInputBindings::SupplementalContext(UObject* Own
         Context->MapKey(Action,Key);
     };
     MapTargetTracking(Context);
+    MapTravelSpeed(Context, false);
+    MapTravelSpeed(Context, true);
     Add(TEXT("SSW_TargetZoom"),TEXT("Target View Zoom"),EKeys::MouseWheelAxis,EInputActionValueType::Axis1D);
     Add(TEXT("SSW_HUDVisibility"),TEXT("Show / Hide HUD"),EKeys::H);
     Add(TEXT("SSW_MouseSteering"),TEXT("Toggle Mouse Steering"),FKey(TEXT("#")));
@@ -65,7 +80,9 @@ UInputMappingContext* StarshatterInputBindings::SupplementalContext(UObject* Own
     Add(TEXT("SSW_BriefingAccept"),TEXT("Accept Mission Briefing"),EKeys::Enter);
     const FKey Digits[]={EKeys::Zero,EKeys::One,EKeys::Two,EKeys::Three,EKeys::Four,EKeys::Five,EKeys::Six,EKeys::Seven,EKeys::Eight,EKeys::Nine};
     for (int32 Index=0;Index<10;++Index)
-        Add(*FString::Printf(TEXT("SSW_RadioChoice%d"),Index),FString::Printf(TEXT("Radio Menu Choice %d"),Index),Digits[Index]);
+        Add(*FString::Printf(TEXT("SSW_RadioChoice%d"), Index),
+            FString::Printf(TEXT("%s Menu Choice %d"), Index <= 5 ? TEXT("Radio / Travel") : TEXT("Radio"), Index),
+            Digits[Index]);
     return Context;
 }
 
@@ -162,6 +179,7 @@ void StarshatterInputBindings::Refresh()
 
 FString StarshatterInputBindings::Category(const FString& Name)
 {
+    if (Name.StartsWith(TEXT("SSW_TravelSpeed"))) return TEXT("NAVIGATION & SHIP SYSTEMS");
     if (Name.Contains(TEXT("Modifier"))) return TEXT("MODIFIER KEYS");
     if (Name.Contains(TEXT("Cam")) || Name.Contains(TEXT("View")) || Name.Contains(TEXT("Zoom")) || Name.Contains(TEXT("Padlock"))) return TEXT("CAMERA & VIEWS");
     if (Name.Contains(TEXT("Comm")) || Name.Contains(TEXT("Radio")) || Name.Contains(TEXT("Chat"))) return TEXT("COMMUNICATIONS");

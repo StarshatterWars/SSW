@@ -182,11 +182,16 @@ protected:
     FString PendingTravelPackage;
     double TravelLoadStarted = 0;
     double TravelRevealAt = 0;
+    float AtmosphereTravelFade = 0.f;
+    bool bAtmosphereTravel = false;
+    bool bAtmosphereDescent = false;
     bool bQuantumPreviousCursor = false;
     UPROPERTY(Transient) TObjectPtr<UInputAction> RadioMenuAction;
     UPROPERTY(Transient) TObjectPtr<UInputMappingContext> RadioChoiceContext;
     UPROPERTY(Transient) TArray<TObjectPtr<UInputAction>> RadioChoiceActions;
     void ToggleFighterRadio();
+    void ToggleTravelSpeedMenu();
+    void ResetTravelSpeed();
     void UpdateFighterRadioInput();
     void SelectFighterRadio(int32 Number);
     void SelectFighterRadio0();

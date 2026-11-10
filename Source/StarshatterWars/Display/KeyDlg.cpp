@@ -242,6 +242,29 @@ void UKeyDlg::AppendFighterHUDBindings()
     const TSoftObjectPtr<UInputMappingContext> Models[]={Controls->GetArcadeContext(),Controls->GetFlightSimContext(),Controls->GetHybridContext()};
     for (const auto& Model:Models) if (!Model.IsNull()) if(auto* Context=Model.LoadSynchronous()) Contexts.AddUnique(Context);
     Contexts.Add(StarshatterInputBindings::SupplementalContext(this));
+
+    auto AddFixedShortcut = [this](const TCHAR* Category, const FText& Label, const FText& Shortcut)
+    {
+        auto* OverlayRow = WidgetTree->ConstructWidget<UHorizontalBox>();
+        auto* OverlayLabel = WidgetTree->ConstructWidget<UTextBlock>();
+        auto* OverlayKey = WidgetTree->ConstructWidget<UTextBlock>();
+        ApplyStandardValueTextStyle(OverlayLabel);
+        ApplyStandardValueTextStyle(OverlayKey);
+        OverlayLabel->SetText(Label);
+        OverlayKey->SetText(Shortcut);
+        auto* OverlayLabelSlot = OverlayRow->AddChildToHorizontalBox(OverlayLabel);
+        FSlateChildSize OverlayLabelSize(ESlateSizeRule::Fill);
+        OverlayLabelSize.Value = 3;
+        OverlayLabelSlot->SetSize(OverlayLabelSize);
+        OverlayLabelSlot->SetPadding(FMargin(0, 3, 20, 3));
+        OverlayRow->AddChildToHorizontalBox(OverlayKey)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        CategoryBox(Category)->AddChildToVerticalBox(OverlayRow);
+    };
+    AddFixedShortcut(TEXT("COMMUNICATIONS"), NSLOCTEXT("SSW.InputActions", "EOSOverlay", "EOS SOCIAL OVERLAY"),
+        FText::FromString(TEXT("Shift+F3")));
+    AddFixedShortcut(TEXT("GENERAL"), NSLOCTEXT("SSW.InputActions", "FixedMissionExit", "OPEN MISSION PAUSE / EXIT MENU"),
+        EKeys::Escape.GetDisplayName());
+
     for (auto* Context:Contexts)
     {
         BindingContexts.Add(Context);
@@ -250,7 +273,7 @@ void UKeyDlg::AppendFighterHUDBindings()
             if (!Mapping.Action) continue;
             const FName Name=Mapping.Action->GetFName();
             // Superseded camera actions are not bound by the mission camera controller.
-            if(Name==TEXT("IA_ViewCockpit") || Name==TEXT("IA_ViewVirtualCockpit") ||
+            if(Name==TEXT("IA_Quit") || Name==TEXT("IA_ViewCockpit") || Name==TEXT("IA_ViewVirtualCockpit") ||
                 Name==TEXT("IA_ViewChase") || Name==TEXT("IA_ViewOrbit") || Name==TEXT("IA_MouseZoom") || Name==TEXT("IA_GroundMode") || Name==TEXT("IA_HudMode")) continue;
             const FString Id=StarshatterInputBindings::Id(Mapping);
             if (EnhancedRows.Contains(Id)) continue;

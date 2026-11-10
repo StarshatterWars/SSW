@@ -28,6 +28,9 @@
 #include "RadioTraffic.h"
 #include "RadioView.h"
 #include "Instruction.h"
+#include "Game.h"
+#include "SSWRuntimeSubsystem.h"
+#include "StarshatterInputBindings.h"
 #include "Weapon.h"
 #include "WeaponDesign.h"
 #include "WeaponGroup.h"
@@ -1080,6 +1083,11 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         Text(P+FVector2D(12,8)*Scale,TEXT("INFORMATION"),HUDBlue);
         Box(P+FVector2D(12,24)*Scale,FVector2D(302,1)*Scale,FlightPanelStyle::DividerColor());
     }
+    if (Game::IsTimeCompressed() && !IsRadioOpen())
+        Text(FVector2D(Size.X-248*Scale,34*Scale),
+            FString::Printf(TEXT("TRAVEL %uX    %s 1X"), Game::GetSimulationRate(),
+                *StarshatterInputBindings::ResolvedKey(TEXT("SSW_TravelSpeedReset"), EKeys::F12).GetDisplayName().ToString()));
+
     if (IsRadioOpen())
     {
         TArray<FString> Labels; TArray<int32> Commands; TArray<bool> Enabled; FString Title;
@@ -1093,7 +1101,10 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         Text(P+FVector2D(12,10)*Scale,Title);
         for (int32 I=0; I<Labels.Num(); ++I)
             Text(P+FVector2D(12,36+24*I)*Scale,FString::Printf(TEXT("%d. %s"),I+1,*Labels[I]),Enabled[I]?HUDBlue:FLinearColor(0.12f,0.2f,0.25f,1));
-        Text(P+FVector2D(12,40+24*Labels.Num())*Scale,TEXT("0 BACK    R CLOSE"));
+        Text(P+FVector2D(12,40+24*Labels.Num())*Scale,
+            IsTravelSpeedOpen() ? FString::Printf(TEXT("0 CLOSE    %s 1X"),
+                *StarshatterInputBindings::ResolvedKey(TEXT("SSW_TravelSpeedReset"), EKeys::F12).GetDisplayName().ToString())
+                : FString(TEXT("0 BACK    R CLOSE")));
     }
     DrawILS(G, E, L);
     if(bHasPlayer && Symbology){
@@ -1132,6 +1143,15 @@ void SFighterHUDDetails::ToggleRadio()
 void SFighterHUDDetails::BuildRadioRows(TArray<FString>& Labels, TArray<int32>& Commands, TArray<bool>& Enabled, FString& Title) const
 {
     Ship* P = PlayerShip();
+    if (IsTravelSpeedOpen())
+    {
+        const bool bThreats = USSWRuntimeSubsystem::HasTravelThreats(P);
+        Title = bThreats ? TEXT("THREATS DETECTED") : FString::Printf(TEXT("TRAVEL SPEED   %uX"), Game::GetSimulationRate());
+        Labels = {TEXT("1X"), TEXT("2X"), TEXT("5X"), TEXT("10X"), TEXT("20X")};
+        Enabled.Init(!bThreats, Labels.Num());
+        Enabled[0] = true;
+        return;
+    }
     Title = TEXT("RADIO");
     if (!P) return;
     const bool CanTransmit = P->GetEMCON() >= 2;

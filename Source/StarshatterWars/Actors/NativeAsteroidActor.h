@@ -6,6 +6,7 @@
 class UStaticMesh;
 class UStaticMeshComponent;
 class Asteroid;
+class SimRegion;
 
 UCLASS(Config=Game, DefaultConfig, meta=(DisplayName="Starshatter Asteroid Library"))
 class STARSHATTERWARS_API UAsteroidLibrarySettings : public UDeveloperSettings
@@ -28,4 +29,10 @@ public:
     // The mesh is cosmetic; legacy simulation remains the only collision authority.
     void UpdateFromSimulation(const Asteroid& Rock,const FVector& VisualPosition,UStaticMesh* Mesh);
     static double RawRadius(double MeshRadius);
+    void SetContactIdentity(const SimRegion* Region, int32 Index);
+    const Asteroid* ResolveContact(SimRegion* Region) const;
+    int32 GetContactIndex() const { return ContactIndex; }
+private:
+    const SimRegion* ContactRegion = nullptr;
+    int32 ContactIndex = INDEX_NONE;
 };

@@ -40,7 +40,13 @@ public:
 	virtual ~TerrainRegion();
 
 	// operations:
-	virtual void      Update();
+    virtual void Update() override;
+    FVector PredictLocation(double DeltaSeconds) override;
+    void SetSurfaceSiteOffset(const FVector& Offset);
+    bool HasSurfaceSite() const { return SurfaceSiteOffset.IsSet(); }
+    FVector SurfaceVectorToOrbital(const FVector& Vector) const;
+    FVector OrbitalVectorToSurface(const FVector& Vector) const;
+    static FVector JanekStationLocalPosition() { return FVector(-25000.0, 0.0, 0.0); }
 
 	// accessors:
 	const Text& PatchName()       const { return patch_name; }
@@ -83,6 +89,7 @@ public:
 	void              AddLayer(double h, const char* tile, const char* detail = 0);
 
 protected:
+    TOptional<FVector> SurfaceSiteOffset;
 	Text              patch_name;
 	Text              patch_texture;
 	Text              apron_name;

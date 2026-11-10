@@ -135,7 +135,11 @@ private:
                         const FString ShipName = Row->Type;
                         Path = FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"), *ShipName, *ShipName, *ShipName);
                     }
-                    if (Data->GetClassification() == CLASSIFICATION::FARCASTER)
+                    if (Data->GetClassification() == CLASSIFICATION::STARBASE)
+                        Path = AirbaseContactIcon;
+                    else if (Data->GetClassification() == CLASSIFICATION::STATION)
+                        Path = StationContactIcon;
+                    else if (Data->GetClassification() == CLASSIFICATION::FARCASTER)
                         Path = TEXT("/Game/UI/Ships/Farcaster/FarcasterHud.FarcasterHud");
                     Row->Icon.Reset(LoadObject<UTexture2D>(nullptr, *Path));
                     if(Row->Icon.IsValid()){

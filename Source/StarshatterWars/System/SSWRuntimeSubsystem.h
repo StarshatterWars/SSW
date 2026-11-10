@@ -85,6 +85,8 @@ public:
 
     uint32 GetTimeCompression() const;
     void SetTimeCompression(uint32 Comp);
+    bool CanAccelerateTravel() const;
+    static bool HasTravelThreats(Ship* Pilot);
 
     KeyMap& GetKeyMap() { return KeyCfg; }
     void MapKeys();
@@ -119,7 +121,6 @@ private:
     void HandleLoadState();
     void HandlePlanState();
     void HandleCampaignState();
-    void HandlePlayState();
     void HandleExitState();
 
 private:
@@ -130,7 +131,7 @@ public:
     bool GetCarrierVisualPoint(Ship* Carrier, const FVector& SimPoint, FVector& OutPoint) const;
     void BeginMissionPresentation(ASystemSceneBuilder* Builder);
     void EndMissionPresentation();
-    void RefreshTravelPresentation(ASystemSceneBuilder* Builder = nullptr);
+    void RefreshTravelPresentation(ASystemSceneBuilder* Builder = nullptr, bool bSnapShipPose = false);
     // Publish a prepared cinematic camera without advancing simulation time.
     void PrepareCutsceneView() { SyncLegacyCameraView(); }
 private:

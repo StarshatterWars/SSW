@@ -70,6 +70,40 @@ TerrainRegion::~TerrainRegion()
 
 // +--------------------------------------------------------------------+
 
+void TerrainRegion::SetSurfaceSiteOffset(const FVector& Offset)
+{
+    if (Offset.ContainsNaN() || Offset.IsNearlyZero()) return;
+    SurfaceSiteOffset = Offset;
+    Update();
+}
+
+FVector TerrainRegion::SurfaceVectorToOrbital(const FVector& Vector) const
+{
+    const FVector Site = SurfaceSiteOffset.GetValue();
+    const FVector Up = FVector(Site.Y, -Site.X, Site.Z).GetSafeNormal();
+    const FVector East = FVector::VectorPlaneProject(FVector::ForwardVector, Up).GetSafeNormal();
+    const FVector North = FVector::CrossProduct(Up, East);
+    // Same tangent basis used to sample the lakeside terrain. Surface X points
+    // north, surface Y points up, and surface Z points east.
+    const FVector World = North * Vector.X + Up * Vector.Y + East * Vector.Z;
+    return FVector(-World.Y, World.X, World.Z);
+}
+
+FVector TerrainRegion::OrbitalVectorToSurface(const FVector& Vector) const
+{
+    const FVector North = SurfaceVectorToOrbital(FVector::ForwardVector);
+    const FVector Up = SurfaceVectorToOrbital(FVector::RightVector);
+    const FVector East = SurfaceVectorToOrbital(FVector::UpVector);
+    return FVector(FVector::DotProduct(Vector, North), FVector::DotProduct(Vector, Up), FVector::DotProduct(Vector, East));
+}
+
+FVector TerrainRegion::PredictLocation(double DeltaSeconds)
+{
+    if (primary && SurfaceSiteOffset.IsSet())
+        return primary->PredictLocation(DeltaSeconds) + SurfaceSiteOffset.GetValue();
+    return Orbital::PredictLocation(DeltaSeconds);
+}
+
 void
 TerrainRegion::Update()
 {
@@ -81,11 +115,8 @@ TerrainRegion::Update()
 	// -----------------------------
 	phase = primary->RotationPhase();
 
-	loc = primary->Location() + FVector(
-		orbit * FMath::Cos(phase),
-		orbit * FMath::Sin(phase),
-		0.0
-	);
+    loc = primary->Location() + SurfaceSiteOffset.Get(FVector(
+        orbit * FMath::Cos(phase), orbit * FMath::Sin(phase), 0.0));
 
 	if (rep)
 		rep->MoveTo(loc);

@@ -193,6 +193,8 @@ public:
     FVector           GetBridgeLocation() const { return bridge_vec; }
     FVector           GetChaseLocation() const { return chase_vec; }
     FVector           GetTransitionLocation() const { return transition_loc; }
+    int               GetTransitionType() const { return transition_type; }
+    float             GetTransitionTimeRemaining() const { return transition_time; }
 
     // FLIGHT DECK:
     Ship*             GetController() const;
@@ -462,6 +464,8 @@ public:
     bool                    IsAutoTrackEngaged() const { return bAutoTrack; }
     bool                    SetAutoTrack(bool engage);
     Ship*                   GetAutoTrackTarget() const;
+    const FVector*          GetFixedAutoTrackPoint() const;
+    bool                    SetFixedAutoTrackPoint(const FVector& Point);
     void                    SetAutoNav(bool engage = true);
     bool                    CanAutoLand() const;
     bool                    CanRequestAutoLand() const;
@@ -623,6 +627,8 @@ protected:
     InboundSlot* inbound;
     bool bAutoLand = false;
     bool bAutoTrack = false;
+    SimRegion* FixedTrackRegion = nullptr;
+    FVector FixedTrackPoint = FVector::ZeroVector;
 
     SimDirector* net_control;
 

@@ -42,6 +42,8 @@ public:
     void ToggleRadio();
     void RadioSelect(int32 Number);
     bool IsRadioOpen() const { return RadioPage >= 0; }
+    bool IsTravelSpeedOpen() const { return RadioPage == 8; }
+    void ToggleTravelSpeed() { const bool bOpen = IsTravelSpeedOpen(); CloseRadio(); if (!bOpen) RadioPage = 8; }
     void CloseRadio() { RadioPage = -1; RadioRecipient = 0; RadioElementId = 0; RadioRecipientPage = 0; RadioHistory.Reset(); }
     void CycleMFD(int32 Index);
     void ToggleWeaponsPanel() { bShowWeapons = !bShowWeapons; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }

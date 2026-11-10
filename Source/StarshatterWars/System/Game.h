@@ -87,6 +87,9 @@ public:
 
 	// One update per native runtime tick; GUI delta is uncompressed.
     static void       SetFrameClock(double RealDelta, uint32 Compression, bool bIsPaused);
+    static void       SetSimulationStep(double Seconds, uint32 Compression);
+    static uint32     GetSimulationRate();
+    static bool       IsTimeCompressed() { return GetSimulationRate() > 1; }
     static void       SetPausedState(bool bIsPaused);
     static double     FrameRate();
 	static double     FrameTime();

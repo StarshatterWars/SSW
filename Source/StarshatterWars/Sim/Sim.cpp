@@ -53,6 +53,7 @@
 #include "Mission.h"
 #include "MissionEvent.h"
 #include "CameraManager.h"
+#include "TerrainRegion.h"
 #include "MusicManager.h"
 #include "Combatant.h"
 #include "CombatGroup.h"
@@ -2701,6 +2702,18 @@ Sim::ResolveHyperList()
 						}
 					}
 
+                    const OrbitalRegion* Source = jumpship->GetRegion() ? jumpship->GetRegion()->GetOrbitalRegion() : nullptr;
+                    const auto* Surface = Source && Source->GetType() == Orbital::TERRAIN
+                        ? static_cast<const TerrainRegion*>(Source) : nullptr;
+                    const bool bContinuousAscent = jump->type == Ship::TRANSITION_MAKE_ORBIT &&
+                        Surface && Surface->HasSurfaceSite() && dest->GetOrbitalRegion() &&
+                        dest->GetOrbitalRegion()->Primary() == Surface->Primary();
+                    const OrbitalRegion* Destination = dest->GetOrbitalRegion();
+                    const auto* DestinationSurface = Destination && Destination->GetType() == Orbital::TERRAIN
+                        ? static_cast<const TerrainRegion*>(Destination) : nullptr;
+                    const bool bContinuousDescent = jump->type == Ship::TRANSITION_DROP_ORBIT &&
+                        Source && DestinationSurface && DestinationSurface->HasSurfaceSite() &&
+                        Source->Primary() == DestinationSurface->Primary();
 					// now it is safe to move the main jump ship:
 					dest->TransferObject(jumpship);
 
@@ -2752,7 +2765,22 @@ Sim::ResolveHyperList()
 
 						// LEGACY:
 						// Heading is already sim-space.
-						jumpship->SetVelocity(jumpship->GetHeading() * 1.0e3);
+                        if (bContinuousDescent)
+                        {
+                            const FVector Position = jumpship->GetLocation();
+                            const FVector Heading = DestinationSurface->OrbitalVectorToSurface(OtherHand(jumpship->GetHeading()));
+                            const FVector Up = DestinationSurface->OrbitalVectorToSurface(OtherHand(jumpship->GetCam().vup()));
+                            const FVector Velocity = DestinationSurface->OrbitalVectorToSurface(OtherHand(jumpship->GetVelocity()));
+                            Camera Pose = jumpship->GetCam();
+                            Pose.LookAt(Position + Heading, Position, Up);
+                            jumpship->CloneCam(Pose);
+                            jumpship->ArcadeStop();
+                            jumpship->SetVelocity(Velocity);
+                        }
+                        else
+                        {
+                            jumpship->SetVelocity(jumpship->GetHeading() * 1.0e3);
+                        }
 					}
 
 					// make orbit:
@@ -2762,8 +2790,23 @@ Sim::ResolveHyperList()
 							ANSI_TO_TCHAR(jumpship->GetName()),
 							ANSI_TO_TCHAR(dest->GetName()));
 
-						jumpship->LookAt(FVector::ZeroVector);
-						jumpship->SetVelocity(jumpship->GetHeading() * 500.0);
+                        if (bContinuousAscent)
+                        {
+                            const FVector Position = jumpship->GetLocation();
+                            const FVector Heading = OtherHand(Surface->SurfaceVectorToOrbital(jumpship->GetHeading()));
+                            const FVector Up = OtherHand(Surface->SurfaceVectorToOrbital(jumpship->GetCam().vup()));
+                            const FVector Velocity = OtherHand(Surface->SurfaceVectorToOrbital(jumpship->GetVelocity()));
+                            Camera Pose = jumpship->GetCam();
+                            Pose.LookAt(Position + Heading, Position, Up);
+                            jumpship->CloneCam(Pose);
+                            jumpship->ArcadeStop();
+                            jumpship->SetVelocity(Velocity);
+                        }
+                        else
+                        {
+                            jumpship->LookAt(FVector::ZeroVector);
+                            jumpship->SetVelocity(jumpship->GetHeading() * 500.0);
+                        }
 					}
 
 					// hyper jump:

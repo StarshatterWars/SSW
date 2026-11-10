@@ -17,6 +17,7 @@
 =============================================================================*/
 
 #include "StarSystemRegistry.h"
+#include "TerrainRegion.h"
 #include "Misc/Paths.h"
 
 #include "StarSystem.h"
@@ -278,6 +279,10 @@ StarSystem* StarSystemRegistry::BuildStarSystem(
         if (OrbitalRegion* Janek = System->LoadTerrainRegion(
             Definition, "Janek Station", System->FindOrbital("Janek")))
         {
+            if (const FPlanet* Planet = Env->FindPlanetMapByName(TEXT("Janek")))
+                if (const FNamedBodyLocation* Site = Planet->Locations.FindByPredicate([](const FNamedBodyLocation& Location)
+                    { return Location.Name == TEXT("Janek Station") && Location.Type == ELocationType::Airbase; }))
+                    static_cast<TerrainRegion*>(Janek)->SetSurfaceSiteOffset(Site->Position);
             Env->RegisterRegion(Janek);
         }
         else

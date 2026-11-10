@@ -823,21 +823,9 @@ FString UFormattingUtils::FormatDistance(double Metres)
     double Value = Metres;
     int32 Unit = 0;
     while (Value >= 1000.0 && Unit < 4) { Value /= 1000.0; ++Unit; }
-    // Promote values that would round to 1000.0 at the displayed precision.
     if (Value >= 999.95 && Unit < 4) { Value /= 1000.0; ++Unit; }
-    if (Value < 999.95 || Unit < 4)
-        return FString::Printf(TEXT("%.1f %s"), Value, Units[Unit]);
-
-    // Omit redundant exponent '+' and leading zeroes; count the entire field.
-    for (int32 Precision = 1; Precision >= 0; --Precision)
-    {
-        const FString Raw = FString::Printf(TEXT("%.*e"), Precision, Metres);
-        FString Mantissa, Exponent;
-        if (Raw.Split(TEXT("e"), &Mantissa, &Exponent))
-        {
-            const FString Number = FString::Printf(TEXT("%sE%d"), *Mantissa, FCString::Atoi(*Exponent));
-            if (Number.Len() <= 6) return Number + TEXT(" M");
-        }
-    }
-    return TEXT("--");
+    if (Value > 0.0 && (Value < 0.001 || Value >= 1000.0))
+        return FString::Printf(TEXT("%.3e %s"), Value, Units[Unit]);
+    const int32 Decimals = Value > 0.0 ? FMath::Max(1, 3 - FMath::FloorToInt(FMath::LogX(10.0, Value))) : 3;
+    return FString::Printf(TEXT("%.*f %s"), Decimals, Value, Units[Unit]);
 }

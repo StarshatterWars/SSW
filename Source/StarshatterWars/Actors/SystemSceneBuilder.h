@@ -473,9 +473,10 @@ protected:
     TObjectPtr<ACameraActor> SceneCameraActor = nullptr;
 
 public:
-    void UpdateMissionSpace(const FVector& SectorOrigin, const FVector& Observer, const Orbital* FocusBody = nullptr, const FVector& CameraForwardUE = FVector::ZeroVector);
-    bool GetFocusedMissionBodyWorldLocation(const Orbital* FocusBody, FVector& OutLocation, FString& OutName) const;
+    void UpdateMissionSpace(const FVector& SectorOrigin, const FVector& Observer, const Orbital* FocusBody = nullptr, const FVector& CameraForwardUE = FVector::ZeroVector, bool bSurfaceView = false);
+    bool GetFocusedMissionBodyWorldLocation(const Orbital* FocusBody, FVector& OutLocation, FString& OutName, AActor** OutActor = nullptr) const;
     void EndMissionSpace();
+    class AWorldScapeRoot* ConfigureJanekSurface(const FVector& Observer);
     bool GetMissionBodyInfo(AActor* Actor, FString& Name, FString& Type, FVector& AuthoredLocation, FString& ImagePath) const;
 private:
     bool bMissionSpace = false;
@@ -483,9 +484,14 @@ private:
     TMap<TWeakObjectPtr<AActor>, TWeakObjectPtr<AActor>> MissionBodyParents;
     TMap<TWeakObjectPtr<AActor>, double> MissionBodyRadii;
     TMap<TWeakObjectPtr<AActor>, bool> MissionHiddenActors;
+    TMap<TWeakObjectPtr<AActor>, bool> SurfaceHiddenActors;
+    void RestoreOrbitalBackdrop();
 protected:
     TMap<FString, OrbitalBody*> RuntimeBodyMap;
     TMap<FString, TObjectPtr<AActor>> BodyActorMap;
+    TWeakObjectPtr<class AHeightMapVolume> JanekRunwayGrade;
+    TWeakObjectPtr<class AHeightMapVolume> JanekRunwayLake;
+    TWeakObjectPtr<class AFoliageMaskVolume> JanekRunwayFoliageMask;
 
     float DebugTickAccumulator = 0.0f;
     int32 TickCounter = 0;

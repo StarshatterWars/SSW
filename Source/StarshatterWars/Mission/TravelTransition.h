@@ -12,15 +12,34 @@ public:
     void Construct(const FArguments&) { SetVisibility(EVisibility::HitTestInvisible); }
     void Update(float DeltaSeconds, double Warp, bool Loading, const FString& Destination)
     {
+        bAtmosphere = false;
         Phase += FMath::Max(0.f, DeltaSeconds);
         Strength = Loading ? 1.f : FMath::Clamp(static_cast<float>(FMath::Loge(FMath::Max(1.0,Warp))/FMath::Loge(5000.0)),0.f,1.f);
         Caption = Loading ? TEXT("HYPERSPACE — ARRIVING ") + Destination : TEXT("HYPERSPACE TRANSIT");
+        Invalidate(EInvalidateWidget::Paint);
+    }
+    void UpdateAtmosphere(float Opacity, bool bDescending)
+    {
+        bAtmosphere = true;
+        Strength = FMath::Clamp(Opacity, 0.f, 1.f);
+        Caption = bDescending ? TEXT("ENTERING ATMOSPHERE") : TEXT("LEAVING ATMOSPHERE");
         Invalidate(EInvalidateWidget::Paint);
     }
     virtual int32 OnPaint(const FPaintArgs&,const FGeometry& Geometry,const FSlateRect&,FSlateWindowElementList& Out,int32 Layer,const FWidgetStyle&,bool) const override
     {
         const FVector2D Size=Geometry.GetLocalSize();
         const FVector2D Center=Size*0.5;
+        if (bAtmosphere)
+        {
+            FSlateDrawElement::MakeBox(Out, Layer, Geometry.ToPaintGeometry(),
+                FCoreStyle::Get().GetBrush("WhiteBrush"), ESlateDrawEffect::None,
+                FLinearColor(0.015f, 0.032f, 0.055f, Strength));
+            FSlateDrawElement::MakeText(Out, Layer + 1,
+                Geometry.ToPaintGeometry(FVector2D(620,40), FSlateLayoutTransform(FVector2D(Center.X-310, Size.Y*0.84))),
+                Caption, MissionUIStyle::GetHeaderFont(20), ESlateDrawEffect::None,
+                FLinearColor(0.7f, 0.9f, 1.f, Strength));
+            return Layer + 1;
+        }
         const float Radius=FMath::Max(Size.X,Size.Y)*0.8f;
         FSlateDrawElement::MakeBox(Out,Layer,Geometry.ToPaintGeometry(),FCoreStyle::Get().GetBrush("WhiteBrush"),ESlateDrawEffect::None,FLinearColor(0.012f,0.003f,0.035f,Strength));
         // Violet energy rings and cold blue velocity streaks form a moving tunnel.
@@ -51,5 +70,6 @@ public:
     }
 private:
     float Phase=0,Strength=0;
+    bool bAtmosphere = false;
     FString Caption;
 };

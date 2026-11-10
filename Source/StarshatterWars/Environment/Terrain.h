@@ -64,6 +64,7 @@ public:
 	double            Height(double x, double y) const;
     double NativeSampleSpacing() const {return scale;}
     bool HasHeightfield() const { return patches != nullptr; }
+    void SetLiveSurface(class AWorldScapeRoot* Globe, const FVector& RegionOrigin);
 
 	const Vec3B* Normals()      const { return terrain_normals; }
 	TerrainRegion* GetRegion() { return region; }
@@ -87,6 +88,10 @@ public:
 	static void       SetDetailLevel(int detail);
 
 protected:
+    TWeakObjectPtr<class AWorldScapeRoot> LiveSurface;
+    FVector LiveSurfaceOrigin = FVector::ZeroVector;
+	TArray<float> LakesideHeights;
+	TArray<float> JanekSurroundingHeights;
 	TerrainRegion* region;
 	TerrainPatch** patches;
 	TerrainPatch** water_patches;

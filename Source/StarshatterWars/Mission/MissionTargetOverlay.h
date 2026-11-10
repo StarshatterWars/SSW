@@ -1,8 +1,10 @@
 #pragma once
+#include "FormattingUtils.h"
 #include "Widgets/SLeafWidget.h"
 #include "NativeHUDSymbology.h"
 #include "ShipActor.h"
 #include "WaypointActor.h"
+#include "NativeAsteroidActor.h"
 #include "Sim.h"
 #include "SimRegion.h"
 #include "Ship.h"
@@ -113,8 +115,10 @@ public:
         auto DrawRange = [&](const FVector2D& MarkerCenter, double Below, int32 DrawLayer) {
             const double Km = RangeKm.Get();
             if (Km < 0 || !FMath::IsFinite(Km)) return;
-            const FText RangeText = FText::FromString(Km < 1.0 ? FString::Printf(TEXT("%.0f M"),Km*1000.0)
-                : FString::Printf(TEXT("%.1f KM"),Km));
+            FString Details = UFormattingUtils::FormatDistance(Km * 1000.0);
+            if (const auto* Waypoint = Cast<AWaypointActor>(Actor); Waypoint && !Waypoint->NamedLocationType.IsEmpty())
+                Details = Waypoint->NamedLocationType + TEXT("  |  ") + Details;
+            const FText RangeText = FText::FromString(Details);
             const FSlateFontInfo RangeFont = FCoreStyle::GetDefaultFontStyle("Bold",14);
             const FVector2D Extent = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(RangeText,RangeFont);
             const FVector2D Position(FMath::Clamp(MarkerCenter.X-Extent.X*0.5,0.0,FMath::Max(0.0,Size.X-Extent.X)),
@@ -187,12 +191,25 @@ public:
             }
         }
         const auto* Waypoint = Cast<AWaypointActor>(Actor);
-        const bool bAsteroidIcon = Waypoint && Waypoint->bAsteroidFieldContact && AsteroidIcon.IsValid();
+        const bool bAsteroidIcon = AsteroidIcon.IsValid() &&
+            ((Waypoint && Waypoint->bAsteroidFieldContact) || Actor->IsA<ANativeAsteroidActor>());
         if (bAsteroidIcon) MarkerBrush = &AsteroidBrush;
         const FVector2D ReticleSize(MarkerSize * Size.X / Width, MarkerSize * Size.Y / Height);
         const FVector2D TopLeft = Center - ReticleSize * 0.5;
         const FLinearColor Color = TargetColor.Get();
-        if (bAsteroidIcon || ReticleTexture.IsValid())
+        const auto* SelectedShipActor = Cast<AShipActor>(Actor);
+        const Ship* SelectedShip = SelectedShipActor ? SelectedShipActor->GetRuntimeShip() : nullptr;
+        const bool bJanekStation = SelectedShip && TargetName.Get().ToString() == TEXT("Janek Station");
+        if (bJanekStation || (Waypoint && !Waypoint->NamedLocationType.IsEmpty() && !Waypoint->bAsteroidFieldContact))
+        {
+            const FVector2f P(Center);
+            const float R = static_cast<float>(FMath::Max(9.0, ReticleSize.X * 0.25));
+            const TArray<FVector2f> Diamond = {P + FVector2f(0, -R), P + FVector2f(R, 0),
+                P + FVector2f(0, R), P + FVector2f(-R, 0), P + FVector2f(0, -R)};
+            FSlateDrawElement::MakeLines(Elements, Layer + 1, Geometry.ToPaintGeometry(),
+                Diamond, ESlateDrawEffect::None, Color, true, 1.5f);
+        }
+        else if (bAsteroidIcon || ReticleTexture.IsValid())
             FSlateDrawElement::MakeBox(Elements, Layer + 1,
                 Geometry.ToPaintGeometry(FVector2f(ReticleSize), FSlateLayoutTransform(FVector2f(TopLeft))),
                 MarkerBrush, ESlateDrawEffect::None, bAsteroidIcon ? FLinearColor::White : Color);

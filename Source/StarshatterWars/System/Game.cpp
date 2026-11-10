@@ -30,6 +30,12 @@ void Game::SetFrameClock(double Delta, uint32 Compression, bool bIsPaused)
     time_comp=Scale;
     ++frame_number;
 }
+void Game::SetSimulationStep(double Seconds, uint32 Compression)
+{
+    LegacyFrameSeconds = Seconds;
+    time_comp = Compression;
+}
+uint32 Game::GetSimulationRate() { return time_comp; }
 void Game::SetPausedState(bool bIsPaused) { paused=bIsPaused; }
 
 

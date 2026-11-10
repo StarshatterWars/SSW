@@ -82,7 +82,7 @@ public:
 
     // operations:
     virtual void Update();
-    FVector PredictLocation(double delta_t);
+    virtual FVector PredictLocation(double delta_t);
 
     // accessors:
     const char* GetName()       const { return name; }

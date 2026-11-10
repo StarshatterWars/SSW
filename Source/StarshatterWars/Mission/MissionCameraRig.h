@@ -223,7 +223,9 @@ struct FMissionCameraRig
         const bool bDock = (Deck && (Phase < EOPSMode::LOCKED ||
             (Player->IsAirborne() ? Phase >= EOPSMode::DOCKING : Phase >= EOPSMode::RECOVERY))) ||
             bLaunchDeckHold;
-        const bool bTransition = Player->InTransition();
+        // Planetary handoffs keep the selected flight view tracking the hull.
+        // The stationary drop camera is for flybys and other transitions.
+        const bool bTransition = Player->InTransition() && !Player->IsAttaining() && !Player->IsDropping();
         if (bTransition != bWasTransition) { bDropCaptured = false; bWasTransition = bTransition; }
         const bool bPadlock = Mode == Target && Selected && Player->GetTarget() == Selected->GetRuntimeShip();
         const bool bInternalPadlock = bPadlock && Player->GetCockpit() != nullptr;

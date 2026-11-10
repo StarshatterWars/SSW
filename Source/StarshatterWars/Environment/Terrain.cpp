@@ -15,6 +15,7 @@
 */
 
 #include "Terrain.h"
+#include "WorldScapeRoot.h"
 #include "TerrainApron.h"
 #include "TerrainClouds.h"
 #include "TerrainLayer.h"
@@ -28,6 +29,9 @@
 #include "Bitmap.h"
 #include "DataLoader.h"
 #include "Misc/ScopeExit.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "Containers/StringConv.h"
 #include "Game.h"
 
 // Unreal:
@@ -77,6 +81,24 @@ Terrain::Terrain(TerrainRegion* Trgn)
 	}
 
 	if (region) {
+        if (FCStringAnsi::Stricmp(region->GetName(), "Janek Station") == 0)
+        {
+            auto LoadJanekGrid = [](const TCHAR* File, TArray<float>& Heights)
+            {
+                constexpr int32 SampleCount = 257 * 257;
+                TArray<uint8> Data;
+                const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Galaxy") / File;
+                if (FFileHelper::LoadFileToArray(Data, *Path) && Data.Num() == SampleCount * sizeof(float))
+                {
+                    Heights.SetNumUninitialized(SampleCount);
+                    FMemory::Memcpy(Heights.GetData(), Data.GetData(), Data.Num());
+                }
+                else
+                    UE_LOG(LogTemp, Error, TEXT("Missing or invalid Janek terrain grid: %s"), *Path);
+            };
+            LoadJanekGrid(TEXT("JanekLakeside.f32"), LakesideHeights);
+            LoadJanekGrid(TEXT("JanekSurroundings.f32"), JanekSurroundingHeights);
+        }
 		scale = region->LateralScale();
 		mtnscale = region->MountainScale();
 
@@ -553,9 +575,27 @@ Terrain::SelectDetail(SimProjector* projector)
 
 // +--------------------------------------------------------------------+
 
+void Terrain::SetLiveSurface(AWorldScapeRoot* Globe, const FVector& RegionOrigin)
+{
+    LiveSurface = Globe;
+    LiveSurfaceOrigin = RegionOrigin;
+}
+
 double
 Terrain::Height(double x, double y) const
 {
+    if (AWorldScapeRoot* Globe = LiveSurface.Get())
+    {
+        const FVector Center = Globe->GetActorLocation();
+        const FVector Sample = LiveSurfaceOrigin + FVector(y, x, 0.0);
+        const FVector Offset = Sample - Center;
+        const double HorizontalSquared = FMath::Square(Offset.X) + FMath::Square(Offset.Y);
+        const double Radius = Globe->PlanetScale + Globe->GetGroundHeight(Sample, false);
+        const double VerticalSquared = FMath::Square(Radius) - HorizontalSquared;
+        if (FMath::IsFinite(VerticalSquared) && VerticalSquared > 0.0)
+            return Center.Z + FMath::Sqrt(VerticalSquared) - LiveSurfaceOrigin.Z;
+    }
+
 	double h = 0.0;
 
 	if (patches) {
@@ -581,6 +621,29 @@ Terrain::Height(double x, double y) const
 	if (water_patches && h < 30)
 		h = 30;
 
+    if (!LakesideHeights.IsEmpty())
+    {
+        const FVector Station = TerrainRegion::JanekStationLocalPosition();
+        auto BlendGrid = [x, y, &Station](const TArray<float>& Heights, double Spacing, double BlendMetres, double Base)
+        {
+            if (Heights.IsEmpty()) return Base;
+            constexpr int32 Width = 257;
+            const double U = (x - Station.X) / Spacing + 128.0;
+            const double V = (y - Station.Z) / Spacing + 128.0;
+            const double Border = FMath::Min(FMath::Min(U, V), FMath::Min(256.0 - U, 256.0 - V));
+            if (Border <= 0.0) return Base;
+
+            const int32 X = FMath::FloorToInt(U);
+            const int32 Z = FMath::FloorToInt(V);
+            const int32 Index = Z * Width + X;
+            const double A = FMath::Lerp<double>(Heights[Index], Heights[Index + 1], U - X);
+            const double B = FMath::Lerp<double>(Heights[Index + Width], Heights[Index + Width + 1], U - X);
+            return FMath::Lerp(Base, FMath::Lerp(A, B, V - Z),
+                FMath::SmoothStep(0.0, BlendMetres, Border * Spacing));
+        };
+        h = BlendGrid(JanekSurroundingHeights, 1500.0, 24000.0, h);
+        h = BlendGrid(LakesideHeights, 250.0, 8000.0, h);
+    }
 	return h;
 }
 

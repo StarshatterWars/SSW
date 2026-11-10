@@ -4,6 +4,8 @@
 #include "TerrainRegion.h"
 #include "Materials/MaterialInterface.h"
 #include "Components/SkyAtmosphereComponent.h"
+#include "Components/VolumetricCloudComponent.h"
+#include "Materials/Material.h"
 #include "Components/DirectionalLightComponent.h"
 ANativeTerrainActor::ANativeTerrainActor()
 {
@@ -12,41 +14,48 @@ ANativeTerrainActor::ANativeTerrainActor()
     Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);Mesh->SetCollisionResponseToAllChannels(ECR_Block);
     Mesh->SetMaterial(0,LoadObject<UMaterialInterface>(nullptr,TEXT("/Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial")));
 }
-void ANativeTerrainActor::SetSurfaceSky(AActor* OrbitalPlanet)
+void ANativeTerrainActor::SetSurfaceSky(bool bEnabled)
 {
-    if (HiddenPlanet.Get() == OrbitalPlanet)
-        return;
-
-    if (AActor* Previous = HiddenPlanet.Get())
-        Previous->SetActorHiddenInGame(bPlanetWasHidden);
-    HiddenPlanet = OrbitalPlanet;
-    if (OrbitalPlanet)
+    if (bEnabled && !SurfaceAtmosphere)
     {
-        bPlanetWasHidden = OrbitalPlanet->IsHidden();
-        OrbitalPlanet->SetActorHiddenInGame(true);
-        if (!SurfaceAtmosphere)
-        {
-            SurfaceAtmosphere = NewObject<USkyAtmosphereComponent>(this);
-            SurfaceAtmosphere->RegisterComponent();
+        // Mission geometry uses one Unreal unit per metre. The renderer
+        // interprets 100,000 Unreal units as one kilometre.
+        constexpr float JanekRenderRadiusKm = 54.0f;
+        SurfaceAtmosphere = NewObject<USkyAtmosphereComponent>(this);
+        SurfaceAtmosphere->TransformMode = ESkyAtmosphereTransformMode::PlanetTopAtComponentTransform;
+        SurfaceAtmosphere->SetBottomRadius(JanekRenderRadiusKm);
+        SurfaceAtmosphere->SetAtmosphereHeight(0.8f);
+        SurfaceAtmosphere->RegisterComponent();
 
-            SurfaceSun = NewObject<UDirectionalLightComponent>(this);
-            SurfaceSun->SetAtmosphereSunLight(true);
-            SurfaceSun->SetIntensity(4.0f);
-            SurfaceSun->SetForwardShadingPriority(1);
-            SurfaceSun->SetWorldRotation(FRotator(-45.0, -35.0, 0.0));
-            SurfaceSun->RegisterComponent();
+        constexpr TCHAR CloudPath[] = TEXT("/WorldScape/Ressources/Materials/WorldScapeMaterials/Cloud/MI_Cloud_WorldScape.MI_Cloud_WorldScape");
+        auto* Material = LoadObject<UMaterialInterface>(nullptr, CloudPath);
+        if (Material && Material->GetMaterial() && Material->GetMaterial()->MaterialDomain == MD_Volume)
+        {
+            SurfaceClouds = NewObject<UVolumetricCloudComponent>(this);
+            SurfaceClouds->SetMaterial(Material);
+            SurfaceClouds->SetPlanetRadius(JanekRenderRadiusKm);
+            SurfaceClouds->SetLayerBottomAltitude(0.04f);
+            SurfaceClouds->SetLayerHeight(0.10f);
+            SurfaceClouds->RegisterComponent();
         }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("Janek surface WorldScape volumetric cloud material could not be loaded."));
+        }
+
+        SurfaceSun = NewObject<UDirectionalLightComponent>(this);
+        SurfaceSun->SetAtmosphereSunLight(true);
+        SurfaceSun->SetIntensity(4.0f);
+        SurfaceSun->SetForwardShadingPriority(1);
+        SurfaceSun->SetWorldRotation(FRotator(-45.0, -35.0, 0.0));
+        SurfaceSun->RegisterComponent();
     }
     if (SurfaceAtmosphere)
-        SurfaceAtmosphere->SetVisibility(OrbitalPlanet != nullptr);
+        SurfaceAtmosphere->SetVisibility(bEnabled);
+    if (SurfaceClouds)
+        SurfaceClouds->SetVisibility(bEnabled);
     if (SurfaceSun)
-        SurfaceSun->SetVisibility(OrbitalPlanet != nullptr);
-}
-
-void ANativeTerrainActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-    SetSurfaceSky(nullptr);
-    Super::EndPlay(EndPlayReason);
+        SurfaceSun->SetVisibility(bEnabled);
 }
 
 void ANativeTerrainActor::UpdateTerrain(Terrain* Model,const FVector& Observer,const FVector& RegionOrigin)
@@ -57,6 +66,14 @@ void ANativeTerrainActor::UpdateTerrain(Terrain* Model,const FVector& Observer,c
     const FIntPoint Cell(FMath::FloorToInt(Observer.X/(Step*32)),FMath::FloorToInt(Observer.Z/(Step*32)));
     const FVector Center(Cell.X*Step*32,0,Cell.Y*Step*32);
     SetActorLocation(RegionOrigin+FVector(Center.Z,Center.X,0));
+    if (SurfaceAtmosphere && SurfaceAtmosphere->IsVisible())
+    {
+        // Anchor the atmosphere at the graded Janek Station site. Terrain
+        // mesh cells follow the observer, so they cannot own this transform.
+        const FVector Site = RegionOrigin + FVector(0.0, -25000.0, 0.0);
+        if (!SurfaceAtmosphere->GetComponentLocation().Equals(Site))
+            SurfaceAtmosphere->SetWorldLocation(Site);
+    }
     if(Model==LastModel&&Cell==LastCell)return;
     if (Model != LastModel)
     {

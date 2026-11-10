@@ -3,14 +3,30 @@
 #include "Components/SceneComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Asteroid.h"
+#include "SimRegion.h"
 ANativeAsteroidActor::ANativeAsteroidActor()
 {
     PrimaryActorTick.bCanEverTick=false;
+    Tags.Add(TEXT("MissionNavigationTarget"));
     SetRootComponent(CreateDefaultSubobject<USceneComponent>(TEXT("AsteroidRoot")));
     AsteroidMesh=CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AsteroidMesh"));AsteroidMesh->SetupAttachment(GetRootComponent());
     AsteroidMesh->SetMobility(EComponentMobility::Movable);
     AsteroidMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
+void ANativeAsteroidActor::SetContactIdentity(const SimRegion* Region, int32 Index)
+{
+    ContactRegion = Region;
+    ContactIndex = Index;
+}
+
+const Asteroid* ANativeAsteroidActor::ResolveContact(SimRegion* Region) const
+{
+    if (!Region || Region != ContactRegion || ContactIndex < 0 ||
+        ContactIndex >= Region->GetRoids().size() || IsHidden())
+        return nullptr;
+    return Region->GetRoids()[ContactIndex];
+}
+
 double ANativeAsteroidActor::RawRadius(double Radius){return FMath::IsFinite(Radius)&&Radius>0?Radius:0;}
 void ANativeAsteroidActor::UpdateFromSimulation(const Asteroid& Rock,const FVector& Position,UStaticMesh* Mesh)
 {

@@ -8,6 +8,7 @@
 #include "ShipDesign.h"
 #include "ShipDesignRegistry.h"
 #include "SimRegion.h"
+#include "Asteroid.h"
 #include "Instruction.h"
 #include "FlightDeck.h"
 #include "Physical.h"
@@ -222,6 +223,32 @@ bool FRemainingRegionTest::RunTest(const FString& Parameters)
     B->SetFlightPhase(EOPSMode::DOCKED);R.ExecFrame(.02);
     TestFalse(TEXT("Normal region frame consumes a docked ship"),R.GetShips().contains(B));
     TestTrue(TEXT("Other ships remain owned by the region"),R.GetShips().contains(A)&&R.GetShips().contains(C));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAsteroidTumbleTest, "Starshatter.Asteroid.ActiveRegionTumble",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FAsteroidTumbleTest::RunTest(const FString& Parameters)
+{
+    FRegionProbe Region(nullptr, "Asteroid fixture", SimRegion::REAL_SPACE);
+    const FVector Position(30000.0, 100.0, 500.0);
+    auto* Rock = new Asteroid(3, Position, 5e7);
+    Region.InsertObject(Rock);
+    const FVector OriginalHeading = Rock->GetCam().vpn();
+    const FVector OriginalUp = Rock->GetCam().vup();
+
+    Region.ExecFrame(0.1);
+    TestTrue(TEXT("Inactive region leaves the rock orientation alone"),
+        Rock->GetCam().vpn().Equals(OriginalHeading) && Rock->GetCam().vup().Equals(OriginalUp));
+
+    Region.Activate();
+    for (int Step = 0; Step < 20; ++Step)
+        Region.ExecFrame(0.05);
+
+    TestTrue(TEXT("The active asteroid visibly tumbles within a second"),
+        FVector::Distance(Rock->GetCam().vpn(), OriginalHeading) > 0.08 ||
+        FVector::Distance(Rock->GetCam().vup(), OriginalUp) > 0.08);
+    TestTrue(TEXT("Spin does not move the asteroid"), Rock->GetLocation().Equals(Position));
     return true;
 }
 

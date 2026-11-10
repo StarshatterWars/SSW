@@ -94,6 +94,7 @@ NavAI::ExecFrame(double s)
     // Player autonav uses the legacy radius/hold rule in SeekTarget.
 
     Navigator();
+    if (Game::IsTimeCompressed() && Sim::GetSim() && ship == Sim::GetSim()->GetPlayerShip()) return;
 
     // IA_AutoNav and the navigation panel own autonav changes in SSW.
     // Do not poll KEY_AUTO_NAV here: the runtime also has a MultiController,
@@ -177,7 +178,13 @@ void NavAI::FindObjective()
     complete = false;
     bTrackingTarget = ship->IsAutoTrackEngaged();
     if (bTrackingTarget) {
-        if (const Ship* Contact = ship->GetAutoTrackTarget()) {
+        if (const FVector* Point = ship->GetFixedAutoTrackPoint()) {
+            obj_w = *Point;
+            objective = Transform(obj_w);
+            distance = FVector::Distance(obj_w, ship->GetLocation());
+            TrackSpeed = FMath::Clamp((distance - 3000.0) * 0.08, 0.0, 700.0);
+        }
+        else if (const Ship* Contact = ship->GetAutoTrackTarget()) {
             obj_w = Contact->GetLocation();
             objective = Transform(obj_w);
             const FVector Separation = obj_w - ship->GetLocation();
@@ -501,22 +508,28 @@ void NavAI::ThrottleControl()
             const Drive* MainDrive = ship->GetMainDrive();
             const bool bCanBoost = MainDrive && MainDrive->MaxAugmenter() > 0.0f;
             const double Limit = ship->GetVLimit();
+            // Keep the cruise band above the existing 250 m/s stall override.
+            if (ship->IsAirborne()) DesiredSpeed = FMath::Max(265.0, DesiredSpeed);
             if (Limit > 0.0)
                 DesiredSpeed = FMath::Min(DesiredSpeed, Limit * (bCanBoost ? 1.5 : 1.0));
 
+            constexpr double SpeedDeadband = 10.0;
             const double Error = DesiredSpeed - ship->GetVelocity().Size();
-            if (Error < -5.0) {
-                brakes = FMath::Clamp(-Error / 50.0, 0.0, 1.0);
+            throttle = old_throttle;
+            if (FMath::Abs(Error) > SpeedDeadband)
+            {
+                const double Excess = Error - FMath::Sign(Error) * SpeedDeadband;
+                const double Rate = FMath::Clamp(Excess, -40.0, 40.0);
+                throttle += Rate * FMath::Max(0.0, seconds);
             }
-            else if (Error > 25.0) {
-                throttle = 100.0;
-                bAugmenter = bCanBoost;
-            }
-            else {
-                // Track small speed errors at a rate independent of the frame rate.
-                throttle = old_throttle + Error * FMath::Max(0.0, seconds);
-                bAugmenter = bCanBoost && Error > 0.0 && ship->GetAugmenter();
-            }
+
+            const double IdleThrottle = ship->IsAirborne() ? 20.0 : 0.0;
+            if (Error < -2.0 * SpeedDeadband && throttle <= IdleThrottle)
+                brakes = FMath::Clamp((-Error - 2.0 * SpeedDeadband) / 50.0, 0.0, 1.0);
+
+            // Keep boost through the cruise band when the leg calls for boosted speed.
+            bAugmenter = bCanBoost && Limit > 0.0 && DesiredSpeed > Limit && throttle > 50.0 &&
+                (Error > SpeedDeadband || (ship->GetAugmenter() && Error >= -SpeedDeadband));
         }
         else if (Ship::GetFlightModel() > 0) {
             // Smooth throttle adjustments:

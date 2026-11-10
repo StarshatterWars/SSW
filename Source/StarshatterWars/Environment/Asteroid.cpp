@@ -40,6 +40,11 @@ Asteroid::Asteroid(int t, const FVector& pos, double m)
 	: Debris(nullptr, pos, asteroid_velocity, m)
 {
     MeshVariant=((t%6)+6)%6;
+    // Heavy debris spins at a barely visible 0.14 degrees per second.
+    // Seed a sustained, distinct angular velocity for each rock in the field.
+    FRandomStream Spin(t);
+    const double Speed = Spin.FRandRange(0.14, 0.28);
+    SetAngularVelocity(Spin.VRand() * Speed);
     // Only the imported library supplies asteroid geometry and raw bounds.
     radius=library_radii[MeshVariant];
 	life = -1;
