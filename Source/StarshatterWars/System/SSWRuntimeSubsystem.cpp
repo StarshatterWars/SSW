@@ -1545,6 +1545,8 @@ void USSWRuntimeSubsystem::ClearProjectileVisuals()
 {
     for(auto& Entry:AsteroidVisuals)if(auto* Actor=Entry.Value.Get())Actor->Destroy();
     AsteroidVisuals.Reset();
+    if (auto* Marker = AsteroidFieldContact.Get()) Marker->Destroy();
+    AsteroidFieldContact.Reset();
     for (auto& Entry : DebrisVisuals)
         if (auto* Actor = Entry.Value.Get()) Actor->Destroy();
     DebrisVisuals.Reset();
@@ -1592,6 +1594,36 @@ void USSWRuntimeSubsystem::UpdateAsteroidVisuals()
 {
     TRACE_CPUPROFILER_EVENT_SCOPE(SSW_AsteroidVisuals);
     UWorld* World=GetWorld();SimRegion* Region=SimInstance?SimInstance->GetActiveRegion():nullptr;
+    if (World && Region && Region->GetTrainingAsteroidField().IsSet())
+    {
+        const FVector Center = Region->GetTrainingAsteroidField().GetValue();
+        const FVector Position = GetVisualLocationForRegion(Region, Center);
+        if (!AsteroidFieldContact.IsValid())
+        {
+            FActorSpawnParameters Params;
+            Params.ObjectFlags |= RF_Transient;
+            if (auto* Marker = World->SpawnActor<AWaypointActor>(Position, FRotator::ZeroRotator, Params))
+            {
+                Marker->Tags.AddUnique(TEXT("MissionNavigationTarget"));
+                Marker->SectorName = ANSI_TO_TCHAR(Region->GetName());
+                Marker->Description = TEXT("Janek Asteroid Field");
+                Marker->NamedLocationType = TEXT("Asteroid Field");
+                Marker->bAsteroidFieldContact = true;
+                Marker->LegacyLocation = OtherHand(Center);
+                Marker->RefreshAppearance(false);
+                Marker->SetActorTickEnabled(false);
+                AsteroidFieldContact = Marker;
+            }
+        }
+        else
+            AsteroidFieldContact->SetActorLocation(Position);
+    }
+    else if (auto* Marker = AsteroidFieldContact.Get())
+    {
+        Marker->Destroy();
+        AsteroidFieldContact.Reset();
+    }
+
     TSet<Asteroid*> Alive;
     TMap<int32, UStaticMesh*> VariantMeshes;
     const auto* Library=GetDefault<UAsteroidLibrarySettings>();

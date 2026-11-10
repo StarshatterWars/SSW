@@ -150,6 +150,7 @@ private:
     void UpdateDebrisVisuals();
     TMap<class Debris*, TWeakObjectPtr<class ADebrisActor>> DebrisVisuals;
     void UpdateAsteroidVisuals();
+    TWeakObjectPtr<AWaypointActor> AsteroidFieldContact;
     TMap<class Asteroid*,TWeakObjectPtr<AActor>> AsteroidVisuals;
     void UpdateProjectileVisuals();
     void ClearProjectileVisuals();

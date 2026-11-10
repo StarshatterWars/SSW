@@ -2608,7 +2608,8 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
             {
                 const FLinearColor Neutral = FLinearColor::Yellow;
                 if (!WeakThis.IsValid()) return Neutral;
-                if(Cast<AWaypointActor>(WeakThis->SelectedMissionTarget.Get()))return FLinearColor(.25f,1.f,.5f);
+                if (const auto* Waypoint = Cast<AWaypointActor>(WeakThis->SelectedMissionTarget.Get()))
+                    return Waypoint->bAsteroidFieldContact ? FLinearColor::Yellow : FLinearColor(.25f,1.f,.5f);
                 AShipActor* Actor = Cast<AShipActor>(WeakThis->SelectedMissionTarget.Get());
                 Sim* CurrentSim = Sim::GetSim();
                 SimRegion* Region = CurrentSim ? CurrentSim->GetActiveRegion() : nullptr;
@@ -3853,12 +3854,11 @@ void UMissionBriefingDlg::ToggleContactsPanel()
     WeaponsPanelWidget->SetVisibility(ESlateVisibility::Visible);
     const TSharedRef<SWidget> Panel = WeaponsPanelWidget->TakeWidget();
     WeaponsPopup = SNew(SOverlay)
-        + SOverlay::Slot().HAlign(HAlign_Right).VAlign(VAlign_Center).Padding(12)
-        [SNew(SBox)
-            .WidthOverride_Lambda([PC](){ int32 X=0,Y=0;PC->GetViewportSize(X,Y);return FOptionalSize(FMath::Min(640.0f,X*0.38f)); })
-            .HeightOverride_Lambda([PC](){ int32 X=0,Y=0;PC->GetViewportSize(X,Y);return FOptionalSize(Y*0.9f); })
-            [SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
-                [SNew(SBox).WidthOverride(640).HeightOverride(900)[Panel]]]];
+        + SOverlay::Slot().Padding(16)
+        [SNew(SScaleBox)
+            .HAlign(HAlign_Right).VAlign(VAlign_Center)
+            .Stretch(EStretch::ScaleToFit).StretchDirection(EStretchDirection::DownOnly)
+            [SNew(SBox).WidthOverride(480).HeightOverride(680).Clipping(EWidgetClipping::ClipToBounds)[Panel]]];
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(WeaponsPopup.ToSharedRef(),1100);
     FInputModeGameAndUI Mode;
     Mode.SetWidgetToFocus(Panel);

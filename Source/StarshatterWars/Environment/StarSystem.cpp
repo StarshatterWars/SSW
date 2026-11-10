@@ -388,6 +388,7 @@ void StarSystem::Load()
 	} while (term);
 
 	loader->ReleaseBuffer(block);
+	RecalculateRadius();
 }
 
 // +--------------------------------------------------------------------+
@@ -496,6 +497,8 @@ void StarSystem::ParsePlanet(TermStruct* val)
 	double pln_radius = 0.0;
 	double mass = 0.0;
 	double orbit = 0.0;
+	double Eccentricity = 0.0;
+	double InclinationDegrees = 0.0;
 	double rot = 0.0;
 	double minrad = 0.0;
 	double maxrad = 0.0;
@@ -547,6 +550,12 @@ void StarSystem::ParsePlanet(TermStruct* val)
 			else if (pdef->name()->value() == "orbit")
 				GetDefNumber(orbit, pdef, filename);
 
+			else if (pdef->name()->value() == "eccentricity")
+				GetDefNumber(Eccentricity, pdef, filename);
+
+			else if (pdef->name()->value() == "inclination")
+				GetDefNumber(InclinationDegrees, pdef, filename);
+
 			else if (pdef->name()->value() == "retro")
 				GetDefBool(retro, pdef, filename);
 
@@ -595,6 +604,7 @@ void StarSystem::ParsePlanet(TermStruct* val)
 	planet->tscale = tscale;
 	planet->tilt = tilt;
 	planet->retro = retro;
+	planet->SetOrbitShape(Eccentricity, InclinationDegrees);
 	planet->luminous = lumin;
 	planet->rotation = rot * 3600;
 	planet->atmosphere = atmos;
@@ -631,6 +641,8 @@ void StarSystem::ParseMoon(TermStruct* val)
 	double moon_radius = 0.0;
 	double mass = 0.0;
 	double orbit = 0.0;
+	double Eccentricity = 0.0;
+	double InclinationDegrees = 0.0;
 	double rot = 0.0;
 	double tscale = 1.0;
 	double tilt = 0.0;
@@ -667,6 +679,12 @@ void StarSystem::ParseMoon(TermStruct* val)
 			else if (pdef->name()->value() == "orbit")
 				GetDefNumber(orbit, pdef, filename);
 
+			else if (pdef->name()->value() == "eccentricity")
+				GetDefNumber(Eccentricity, pdef, filename);
+
+			else if (pdef->name()->value() == "inclination")
+				GetDefNumber(InclinationDegrees, pdef, filename);
+
 			else if (pdef->name()->value() == "rotation")
 				GetDefNumber(rot, pdef, filename);
 
@@ -679,7 +697,7 @@ void StarSystem::ParseMoon(TermStruct* val)
 			else if (pdef->name()->value() == "tscale")
 				GetDefNumber(tscale, pdef, filename);
 
-			else if (pdef->name()->value() == "inclination")
+			else if (pdef->name()->value() == "tilt")
 				GetDefNumber(tilt, pdef, filename);
 
 			else if (pdef->name()->value() == "atmosphere") {
@@ -699,6 +717,7 @@ void StarSystem::ParseMoon(TermStruct* val)
 	moon->tex_gloss = gloss_name;
 	moon->tscale = tscale;
 	moon->retro = retro;
+	moon->SetOrbitShape(Eccentricity, InclinationDegrees);
 	moon->rotation = rot * 3600;
 	moon->tilt = tilt;
 	moon->atmosphere = atmos;
@@ -1975,17 +1994,58 @@ Orbital::~Orbital()
 
 // +--------------------------------------------------------------------+
 
+void Orbital::SetOrbitShape(double AuthoredEccentricity, double InclinationDegrees)
+{
+    authored_eccentricity = FMath::IsFinite(AuthoredEccentricity) && AuthoredEccentricity > 0
+        ? FMath::Min(AuthoredEccentricity, 0.75) : 0.02;
+    eccentricity = authored_eccentricity;
+    orbit_inclination = FMath::IsFinite(InclinationDegrees)
+        ? FMath::DegreesToRadians(InclinationDegrees) : 0.0;
+}
+
+void Orbital::BoundOrbit(ListIter<OrbitalBody> Siblings)
+{
+    eccentricity = authored_eccentricity;
+    if (orbit <= 0)
+        return;
+
+    while (++Siblings)
+    {
+        const OrbitalBody* Sibling = Siblings.value();
+        if (Sibling && Sibling != this && Sibling->Orbit() > 0)
+        {
+            const double Gap = FMath::Abs(Sibling->Orbit() - orbit);
+            eccentricity = FMath::Min(eccentricity, 0.45 * Gap / orbit);
+        }
+    }
+}
+
+FVector Orbital::OrbitOffset(double MeanAnomaly) const
+{
+    const double Mean = FMath::Fmod(MeanAnomaly, 2.0 * PI);
+    double Anomaly = Mean;
+    if (eccentricity > 0.0)
+    {
+        for (int Iteration = 0; Iteration < 8; ++Iteration)
+        {
+            Anomaly -= (Anomaly - eccentricity * FMath::Sin(Anomaly) - Mean) /
+                (1.0 - eccentricity * FMath::Cos(Anomaly));
+        }
+    }
+    const double X = orbit * (FMath::Cos(Anomaly) - eccentricity);
+    const double Y = orbit * FMath::Sqrt(1.0 - eccentricity * eccentricity) * FMath::Sin(Anomaly);
+    return FVector(X, Y * FMath::Cos(orbit_inclination), Y * FMath::Sin(orbit_inclination));
+}
+
 void Orbital::Update()
 {
-	if (system && primary && orbit > 0) {
+	if (system && primary && period > 0) {
 		const double grade = (retro) ? -1 : 1;
 
 		// orbits are counter clockwise:
 		phase = -2 * PI * grade * StarSystem::GetStardate() / period;
 
-		loc = primary->Location() + FVector((float)(orbit * FMath::Cos(phase)),
-			(float)(orbit * FMath::Sin(phase)),
-			0.0f);
+		loc = primary->Location() + OrbitOffset(phase);
 	}
 
 	ListIter<OrbitalRegion> region = regions;
@@ -2002,7 +2062,7 @@ FVector Orbital::PredictLocation(double delta_t)
 {
 	FVector predicted_loc = Location();
 
-	if (system && primary && orbit > 0) {
+	if (system && primary && period > 0) {
 		predicted_loc = primary->PredictLocation(delta_t);
 
 		const double grade = (retro) ? -1 : 1;
@@ -2010,9 +2070,7 @@ FVector Orbital::PredictLocation(double delta_t)
 		// orbits are(?) counter clockwise:
 		const double predicted_phase = (double)(-2 * PI * grade * (StarSystem::GetStardate() + delta_t) / period);
 
-		predicted_loc += FVector((float)(orbit * FMath::Cos(predicted_phase)),
-			(float)(orbit * FMath::Sin(predicted_phase)),
-			0.0f);
+		predicted_loc += OrbitOffset(predicted_phase);
 	}
 
 	return predicted_loc;
@@ -2174,7 +2232,8 @@ void StarSystem::RecalculateRadius()
 				continue;
 			}
 
-			radius = FMath::Max(radius, Planet->Orbit());
+			Planet->BoundOrbit(Star->Satellites());
+			radius = FMath::Max(radius, Planet->Apoapsis());
 
 			ListIter<OrbitalBody> MoonIter = Planet->Satellites();
 			while (++MoonIter)
@@ -2185,7 +2244,8 @@ void StarSystem::RecalculateRadius()
 					continue;
 				}
 
-				radius = FMath::Max(radius, Moon->Orbit());
+				Moon->BoundOrbit(Planet->Satellites());
+				radius = FMath::Max(radius, Moon->Apoapsis());
 			}
 		}
 	}
@@ -2385,6 +2445,7 @@ OrbitalBody* StarSystem::HydratePlanet(OrbitalBody* ParentStar, const FPlanet& R
 	PlanetBody->ring_max = Row.Maxrad;
 	PlanetBody->tscale = Row.Tscale;
 	PlanetBody->tilt = Row.Tilt;
+	PlanetBody->SetOrbitShape(Row.Eccentricity, Row.Inclination);
 	PlanetBody->retro = Row.Retro;
 	PlanetBody->rotation = Row.Rot * 3600.0;
 	PlanetBody->atmosphere = Row.Atmos;
@@ -2413,6 +2474,7 @@ OrbitalBody* StarSystem::HydrateMoon(OrbitalBody* ParentPlanet, const FMoon& Row
 	MoonBody->tex_name = TCHAR_TO_ANSI(*Row.Texture);
 	MoonBody->tscale = Row.Tscale;
 	MoonBody->tilt = Row.Tilt;
+	MoonBody->SetOrbitShape(Row.Eccentricity, Row.Inclination);
 	MoonBody->retro = Row.Retro;
 	MoonBody->rotation = Row.Rot * 3600.0;
 	MoonBody->atmosphere = Row.Atmos;

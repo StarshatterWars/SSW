@@ -1104,6 +1104,8 @@ void UStarshatterEnvironmentSubsystem::ParseMoonMap(TermStruct* val, const char*
 			GetDefNumber(Inclination, pdef, fn);
 			NewMoonMap.Inclination = Inclination;
 		}
+		else if (Key == "eccentricity")
+			GetDefNumber(NewMoonMap.Eccentricity, pdef, fn);
 		else if (Key == "rotation")
 		{
 			GetDefNumber(Rot, pdef, fn);

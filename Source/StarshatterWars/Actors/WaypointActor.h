@@ -36,6 +36,8 @@ public:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation") FString SectorName;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation") FString Description;
     FString NamedLocationType;
+    bool bAsteroidFieldContact = false;
+    static constexpr const TCHAR* AsteroidContactIcon = TEXT("/Game/UI/PlanetMap/rock_map.rock_map");
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation") FVector LegacyLocation = FVector::ZeroVector;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Navigation") bool bNextWaypoint = false;
 };

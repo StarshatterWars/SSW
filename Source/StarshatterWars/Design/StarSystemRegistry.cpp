@@ -352,6 +352,7 @@ OrbitalBody* StarSystemRegistry::BuildPlanet(
     PlanetBody->SetRingRange(Row.Minrad, Row.Maxrad);
     PlanetBody->SetTimeScale(Row.Tscale);
     PlanetBody->SetTilt(Row.Tilt);
+    PlanetBody->SetOrbitShape(Row.Eccentricity, Row.Inclination);
     PlanetBody->SetRetrograde(Row.Retro);
     PlanetBody->SetRotation(Row.Rot * 3600.0);
     PlanetBody->SetAtmosphere(Row.Atmos);
@@ -386,6 +387,7 @@ OrbitalBody* StarSystemRegistry::BuildMoon(
     MoonBody->SetTextureName(TCHAR_TO_ANSI(*Row.Texture));
     MoonBody->SetTimeScale(Row.Tscale);
     MoonBody->SetTilt(Row.Tilt);
+    MoonBody->SetOrbitShape(Row.Eccentricity, Row.Inclination);
     MoonBody->SetRetrograde(Row.Retro);
     MoonBody->SetRotation(Row.Rot * 3600.0);
     MoonBody->SetAtmosphere(Row.Atmos);

@@ -151,8 +151,9 @@ private:
                 Row->Name=Object.Name;Row->Type=Object.Type;Row->Range=Object.RangeKm;
                 if (!Row->IconLoadAttempted) {
                     Row->IconLoadAttempted = true;
-                    const FString ImagePath = Cast<AWaypointActor>(Actor)
-                        ? TEXT("/Game/UI/HUD/lead.lead") : Object.ImagePath;
+                    FString ImagePath = Object.ImagePath;
+                    if (ImagePath.IsEmpty() && Cast<AWaypointActor>(Actor))
+                        ImagePath = TEXT("/Game/UI/HUD/lead.lead");
                     if (!ImagePath.IsEmpty())
                         Row->Icon.Reset(LoadObject<UTexture2D>(nullptr, *ImagePath));
                     if (Row->Icon.IsValid()) {

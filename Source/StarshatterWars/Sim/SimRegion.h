@@ -122,6 +122,8 @@ public:
     List<Drone>&    GetDrones() { return drones; }
     List<Debris>&   GetRocks() { return debris; }
     List<Asteroid>& GetRoids() { return asteroids; }
+    void SetTrainingAsteroidField(const FVector& Center) { TrainingAsteroidField = Center; }
+    const TOptional<FVector>& GetTrainingAsteroidField() const { return TrainingAsteroidField; }
     List<Explosion>& GetExplosions() { return explosions; }
     List<SimRegion>& GetLinks() { return links; }
 
@@ -164,6 +166,7 @@ protected:
     int             current_view = 0;
 
     Ship* player_ship = nullptr;
+    TOptional<FVector> TrainingAsteroidField;
     Ship* recovered_player = nullptr; // retained until debrief/mission teardown
 
     List<Ship>      ships;

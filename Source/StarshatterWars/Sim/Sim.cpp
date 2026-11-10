@@ -790,6 +790,24 @@ Sim::ExecMission()
 	//-------------------------------------------------------------
 	CreateElements();
 
+    // T1 patrols on the other side of Archon. Keep this practice field
+    // mission-local so the shared Janek region and T2 route stay intact.
+    if (mission->GetIdentity() == 101 &&
+        (FCStringAnsi::Stricmp(mission->GetSystem(), "Janus") == 0 ||
+         FCStringAnsi::Stricmp(mission->GetSystem(), "Janus System") == 0) &&
+        FCStringAnsi::Stricmp(active_region->GetName(), "Janek") == 0)
+    {
+        active_region->SetTrainingAsteroidField(OtherHand(FVector(-30000, 0, 0)));
+        FRandomStream Field(101);
+        for (int Index = 0; Index < 12; ++Index)
+        {
+            const double X = Field.FRandRange(-33000.0, -27000.0);
+            const double Y = Field.FRandRange(-3000.0, 3000.0);
+            const double Z = Field.FRandRange(-1000.0, 1000.0);
+            CreateAsteroid(OtherHand(FVector(X, Y, Z)), Index, 5e7, active_region);
+        }
+    }
+
 	// The authored player element, not its design name or Unreal visual,
 	// owns the mission camera. Bind only after CreateElements has created
 	// the corresponding legacy Ship and registered it in a SimRegion.

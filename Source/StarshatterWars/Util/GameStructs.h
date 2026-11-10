@@ -1799,6 +1799,8 @@ struct FMoon : public FTableRowBase {
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	double Inclination;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	double Eccentricity = 0.0;
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	double Rot;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	double Tscale;

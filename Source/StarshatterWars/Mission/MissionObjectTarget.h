@@ -28,6 +28,11 @@ inline bool ReadMissionObject(AActor* Actor, Ship* Player, SimRegion* Region, FM
         Out.Name = Waypoint->CompactLabel();
         Out.Type = !Waypoint->NamedLocationType.IsEmpty() ? Waypoint->NamedLocationType :
             Waypoint->bNextWaypoint ? TEXT("Waypoint (next)") : TEXT("Waypoint");
+        if (Waypoint->bAsteroidFieldContact)
+        {
+            if (!Region->GetTrainingAsteroidField().IsSet()) return false;
+            Out.ImagePath = AWaypointActor::AsteroidContactIcon;
+        }
         Out.RangeKm = FVector::Distance(OtherHand(Player->GetLocation()), Waypoint->LegacyLocation)/1000.0;
         return true;
     }

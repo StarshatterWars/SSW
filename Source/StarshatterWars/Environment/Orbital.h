@@ -34,6 +34,7 @@ class StarSystem;
 class Graphic;
 class Bitmap;
 class OrbitalRegion;
+class OrbitalBody;
 
 class Orbital
 {
@@ -94,6 +95,9 @@ public:
     double      Rotation() const { return rotation; }
     double      RotationPhase() const { return theta; }
     double      Orbit() const { return orbit; }
+    double      Apoapsis() const { return orbit * (1.0 + eccentricity); }
+    void SetOrbitShape(double AuthoredEccentricity, double InclinationDegrees);
+    void BoundOrbit(ListIter<OrbitalBody> Siblings);
     bool        Retrograde() const { return retro; }
     double      Phase() const { return phase; }
     double      Period() const { return period; }
@@ -136,6 +140,11 @@ protected:
     double      phase;
     double      period;
     double      velocity;
+
+    double authored_eccentricity = 0.0;
+    double eccentricity = 0.0;
+    double orbit_inclination = 0.0;
+    FVector OrbitOffset(double MeanAnomaly) const;
 
     // State:
     FVector     loc;

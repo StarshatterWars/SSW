@@ -1,7 +1,8 @@
-﻿#pragma once
+#pragma once
 #include "Widgets/SLeafWidget.h"
 #include "NativeHUDSymbology.h"
 #include "ShipActor.h"
+#include "WaypointActor.h"
 #include "Sim.h"
 #include "SimRegion.h"
 #include "Ship.h"
@@ -69,6 +70,9 @@ public:
         ReticleBrush.SetResourceObject(ReticleTexture.Get());
         ReticleBrush.DrawAs = ESlateBrushDrawType::Image;
         ReticleBrush.ImageSize = FVector2D(64.0, 64.0);
+        AsteroidIcon.Reset(LoadObject<UTexture2D>(nullptr, AWaypointActor::AsteroidContactIcon));
+        AsteroidBrush.SetResourceObject(AsteroidIcon.Get());
+        AsteroidBrush.DrawAs = ESlateBrushDrawType::Image;
         const TCHAR* Names[]={TEXT("CHASE_L"),TEXT("CHASE_R"),TEXT("CHASE_T"),TEXT("CHASE_B")};
         for (int32 I=0;I<4;++I)
         {
@@ -182,13 +186,16 @@ public:
                 if(CrossTextures[I].IsValid()){MarkerBrush=&CrossBrushes[I];MarkerSize=FNativeHUDSymbology::TargetSize;}
             }
         }
+        const auto* Waypoint = Cast<AWaypointActor>(Actor);
+        const bool bAsteroidIcon = Waypoint && Waypoint->bAsteroidFieldContact && AsteroidIcon.IsValid();
+        if (bAsteroidIcon) MarkerBrush = &AsteroidBrush;
         const FVector2D ReticleSize(MarkerSize * Size.X / Width, MarkerSize * Size.Y / Height);
         const FVector2D TopLeft = Center - ReticleSize * 0.5;
         const FLinearColor Color = TargetColor.Get();
-        if (ReticleTexture.IsValid())
+        if (bAsteroidIcon || ReticleTexture.IsValid())
             FSlateDrawElement::MakeBox(Elements, Layer + 1,
                 Geometry.ToPaintGeometry(FVector2f(ReticleSize), FSlateLayoutTransform(FVector2f(TopLeft))),
-                MarkerBrush, ESlateDrawEffect::None, Color);
+                MarkerBrush, ESlateDrawEffect::None, bAsteroidIcon ? FLinearColor::White : Color);
         const FText Label = TargetName.Get();
         const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold", 14);
         const FVector2D TextSize = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Label, Font);
@@ -204,6 +211,8 @@ private:
     mutable TWeakObjectPtr<AActor> LastTarget;
     mutable FVector2D LastOffscreenDirection = FVector2D(0,1);
     TStrongObjectPtr<UTexture2D> ReticleTexture;
+    TStrongObjectPtr<UTexture2D> AsteroidIcon;
+    FSlateBrush AsteroidBrush;
     FSlateBrush ReticleBrush;
     TStrongObjectPtr<UTexture2D> CrossTextures[4];FSlateBrush CrossBrushes[4];
     TStrongObjectPtr<UTexture2D> ChaseTextures[4];

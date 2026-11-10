@@ -76,7 +76,7 @@ void UInMissionPanelBase::NativeConstruct()
         }
     }
     // Reserve the bevel/footer area independently of content size or texture resolution.
-    ContentInsets.Bottom = FMath::Max(ContentInsets.Bottom, 112.0f);
+    if (ShowsFooter()) ContentInsets.Bottom = FMath::Max(ContentInsets.Bottom, 112.0f);
     if (UCanvasPanelSlot* HostCanvasSlot = Cast<UCanvasPanelSlot>(RuntimeHost->Slot))
     {
         HostCanvasSlot->SetAnchors(FAnchors(0, 0, 1, 1));
