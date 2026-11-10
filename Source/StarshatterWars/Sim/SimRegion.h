@@ -159,7 +159,7 @@ protected:
 
     FVector         location = FVector::ZeroVector;
 
-    Grid* grid = nullptr;
+    class Grid* grid = nullptr;
     Terrain* terrain = nullptr;
 
     bool            active = false;

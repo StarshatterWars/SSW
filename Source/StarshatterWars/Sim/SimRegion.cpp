@@ -189,7 +189,7 @@ SimRegion::SimRegion(Sim* SimPtr, OrbitalRegion* OrbitalRegionPtr)
         name = orbital_region->GetName();
         location = orbital_region->Location();
 
-        grid = new Grid(
+        grid = new class Grid(
             (int32)orbital_region->Radius(),
             (int32)orbital_region->GetGridSpace()
         );
