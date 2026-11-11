@@ -79,9 +79,11 @@ private:
     int32 RadioRecipientPage = 0;
     int32 RadioRecipient = 0; // 1 wingman, 2 element, 3 control
     struct FRow { FString Label; double Percent; };
-    struct FBlip { double Az, El, Range; FLinearColor Color; };
+    struct FBlip { double Az, El, Range; FLinearColor Color; FVector LocalDirection; };
     enum class EMode { Off, Ship, FOV, HSD, ThreeD };
     void Refresh();
+    void PaintRadarVolume(const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer,
+        const FVector2D& Center, double Radius, const FLinearColor& GridColor) const;
     void LoadShipHUDIcon(const FString& Path, FString& CachedPath, TStrongObjectPtr<UTexture2D>& Texture, FSlateBrush& Brush);
     TAttribute<bool> ShowHUD;
     TAttribute<bool> ThirdPerson;

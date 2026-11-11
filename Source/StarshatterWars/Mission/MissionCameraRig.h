@@ -316,7 +316,8 @@ struct FMissionCameraRig
             if (auto* Fighter = Cast<AFighterActor>(Visual))
                 if (Fighter->IsCockpitViewActive() && Fighter->CockpitComponent) CockpitActor = Fighter->CockpitComponent->GetChildActor();
             for (AActor* Actor : Actors)
-                if (IsValid(Actor) && Actor != CockpitActor && !(CockpitActor && Actor->IsAttachedTo(CockpitActor)) && !PC->HiddenActors.Contains(Actor))
+                if (IsValid(Actor) && Actor != CameraActor && Actor != CockpitActor &&
+                    !(CockpitActor && Actor->IsAttachedTo(CockpitActor)) && !PC->HiddenActors.Contains(Actor))
                 {
                     PC->HiddenActors.Add(Actor);
                     HiddenByCamera.Add(Actor);
@@ -505,8 +506,9 @@ struct FMissionCameraRig
         if (Eye.ContainsNaN() || Rotation.ContainsNaN()) return;
         // The actor updates every rendered frame; the old 60 Hz timer left the camera
         // behind on intervening frames (a large offset at fighter speeds).
-        // Attach chase view to the displayed hull so both move together between callbacks.
-        const bool FollowHull = Mode == Chase && !bDock && !bTransition && !bLaunchExitBlendActive;
+        // The cockpit and chase cameras must follow the rendered hull between updates.
+        const bool FollowHull = (Mode == Chase || Mode == Cockpit) &&
+            !bDock && !bTransition && !bLaunchExitBlendActive;
         if (FollowHull) {
             if (CameraActor->GetAttachParentActor() != Visual)
                 CameraActor->AttachToActor(Visual, FAttachmentTransformRules::KeepWorldTransform);

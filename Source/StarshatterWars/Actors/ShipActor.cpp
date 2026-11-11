@@ -51,6 +51,8 @@
 #include "Weapon.h"
 #include "WeaponGroup.h"
 #include "ShipWeaponMountComponent.h"
+#include "WeaponBlueprintResolver.h"
+#include "WeaponDesignRegistry.h"
 #include "ShipDesign.h"
 #include "Thruster.h"
 #include "Sim.h"
@@ -2053,27 +2055,37 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 }
 
 
-uint64 AShipActor::GetCarriedStoreMask() const
+void AShipActor::GetCarriedStoreTypes(TArray<FName>& OutTypes) const
 {
-    uint64 Mask = 0;
-    int32 Station = 0;
+    OutTypes.Reset();
     for (const auto& Base : NativeWeaponHardpoints)
     {
         const auto* Mount = Cast<UShipWeaponMountComponent>(Base.Get());
         if (!Mount || !Mount->bLoadoutHardpoint) continue;
-        if (Station >= 64) break;
-        if (Mount->HasCarriedStore() && Mount->IsStoreAvailable())
-            Mask |= uint64(1) << Station;
-        ++Station;
+        const auto* Design = Mount->RuntimeWeapon ? Mount->RuntimeWeapon->Design() : nullptr;
+        OutTypes.Add(Design && !Design->primary && Mount->HasCarriedStore() && Mount->IsStoreAvailable()
+            ? FName(UTF8_TO_TCHAR(Design->name.data())) : NAME_None);
     }
-    return Mask;
 }
 
-void AShipActor::UpdateSnapshotStores(uint64 CarriedStores)
+void AShipActor::UpdateSnapshotStores(const TArray<FName>& CarriedStores)
 {
-    if (SnapshotCarriedStores.IsSet() && SnapshotCarriedStores.GetValue() == CarriedStores) return;
+    if (bSnapshotStoresInitialized && SnapshotCarriedStores == CarriedStores) return;
+    int32 Station = 0;
+    for (const auto& Base : NativeWeaponHardpoints)
+    {
+        auto* Mount = Cast<UShipWeaponMountComponent>(Base.Get());
+        if (!Mount || !Mount->bLoadoutHardpoint) continue;
+        const FName Type = CarriedStores.IsValidIndex(Station) ? CarriedStores[Station] : NAME_None;
+        ++Station;
+        if (!Type.IsNone() && !Mount->GetChildActorClass())
+            if (const auto* Design = WeaponDesignRegistry::FindLegacy(Type.ToString()))
+                Mount->SetChildActorClass(WeaponBlueprintResolver::Resolve(
+                    UTF8_TO_TCHAR(Design->model.data()), Type.ToString()));
+        if (auto* Store = Mount->GetChildActor()) Store->SetActorHiddenInGame(Type.IsNone());
+    }
     SnapshotCarriedStores = CarriedStores;
-    SyncCarriedMissiles();
+    bSnapshotStoresInitialized = true;
 }
 
 void AShipActor::SyncCarriedMissiles()
@@ -2083,21 +2095,10 @@ void AShipActor::SyncCarriedMissiles()
     // not incidental array order.
     TArray<UShipWeaponMountComponent*, TInlineAllocator<8>> MissileMounts;
 
-    const bool bSnapshot = !RuntimeShip && SnapshotCarriedStores.IsSet();
-    int32 Station = 0;
     for (TObjectPtr<USceneComponent>& Base : NativeWeaponHardpoints)
     {
         UShipWeaponMountComponent* Mount = Cast<UShipWeaponMountComponent>(Base.Get());
         if (!Mount || !Mount->bLoadoutHardpoint) continue;
-        if (bSnapshot)
-        {
-            const bool bCarried = Station < 64 && (SnapshotCarriedStores.GetValue() & (uint64(1) << Station)) != 0;
-            ++Station;
-            if (bCarried && Mount->GetChildActorClass() && !Mount->GetChildActor()) Mount->CreateChildActor();
-            if (auto* Store = Mount->GetChildActor()) Store->SetActorHiddenInGame(!bCarried);
-            else if (bCarried) MissileMounts.Add(Mount);
-            continue;
-        }
         Mount->UpdateRuntimeStore();
         if (!Mount->RuntimeWeapon) continue;
 
@@ -2141,7 +2142,7 @@ void AShipActor::SyncCarriedMissiles()
     {
         UStaticMeshComponent* Mesh = CarriedMissileMeshes[Index];
         UShipWeaponMountComponent* Mount = MissileMounts.IsValidIndex(Index) ? MissileMounts[Index] : nullptr;
-        if (!Mesh || !Mount || (!bSnapshot && !Mount->RuntimeWeapon))
+        if (!Mesh || !Mount || !Mount->RuntimeWeapon)
         {
             if (Mesh) Mesh->SetVisibility(false);
             continue;
@@ -2155,8 +2156,8 @@ void AShipActor::SyncCarriedMissiles()
             Mesh->SetRelativeRotation(FRotator::ZeroRotator);
         }
 
-        const bool bVisible = bSnapshot || ((!HullWeaponRoot || !Mount->GetChildActorClass()) &&
-            Mount->HasCarriedStore() && Mount->IsStoreAvailable());
+        const bool bVisible = (!HullWeaponRoot || !Mount->GetChildActorClass()) &&
+            Mount->HasCarriedStore() && Mount->IsStoreAvailable();
         if (Mesh->IsVisible() != bVisible) Mesh->SetVisibility(bVisible);
     }
 }

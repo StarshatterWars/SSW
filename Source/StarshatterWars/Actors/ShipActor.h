@@ -558,7 +558,8 @@ public:
     void PresentMainEngineEffects(float DeltaTime, float RawPower, float ThrottleRequest, float Throttle, bool bAlive);
     void ConfigurePropulsionAssets(const Drive* MainDrive);
     const ShipDesign* SnapshotVisualDesign = nullptr;
-    TOptional<uint64> SnapshotCarriedStores;
+    TArray<FName> SnapshotCarriedStores;
+    bool bSnapshotStoresInitialized = false;
     uint32 SnapshotNavLights = 0;
     void ClearRuntimeMainEngines();
     void UpdateMainEnginesFromRuntime(float DeltaTime);
@@ -699,8 +700,8 @@ public:
     void SetThrustersActive(bool bActive);
 
     void InitializeSnapshotPropulsion(const ShipDesign* Design);
-    uint64 GetCarriedStoreMask() const;
-    void UpdateSnapshotStores(uint64 CarriedStores);
+    void GetCarriedStoreTypes(TArray<FName>& OutTypes) const;
+    void UpdateSnapshotStores(const TArray<FName>& CarriedStores);
     void UpdateSnapshotPropulsion(float DeltaTime, float DrivePower, float Throttle,
         TConstArrayView<uint8> PortBurns, uint32 EnabledNavLights = 0);
 

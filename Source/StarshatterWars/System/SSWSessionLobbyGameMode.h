@@ -70,8 +70,14 @@ struct FSSWReplicatedShipState
 {
     GENERATED_BODY()
 
+    FString GetPilotLabel() const
+    {
+        return PilotName.IsEmpty() ? Name : FString::Printf(TEXT("%s (%s)"), *Name, *PilotName);
+    }
+
     UPROPERTY(BlueprintReadOnly) int64 ObjectId = 0;
     UPROPERTY(BlueprintReadOnly) FString Name;
+    UPROPERTY(BlueprintReadOnly) FString PilotName;
     UPROPERTY(BlueprintReadOnly) FString Region;
     UPROPERTY(BlueprintReadOnly) FString Element;
     UPROPERTY(BlueprintReadOnly) int32 IFF = 0;
@@ -91,7 +97,7 @@ struct FSSWReplicatedShipState
     UPROPERTY() float DrivePower = 0;
     UPROPERTY() TArray<uint8> ThrusterBurns;
     UPROPERTY() uint32 EnabledNavLights = 0;
-    UPROPERTY() uint64 CarriedStoreMask = 0;
+    UPROPERTY() TArray<FName> CarriedStores;
     UPROPERTY() float SensorRange = 1.0f;
     UPROPERTY() int32 RespawnsRemaining = 0;
     UPROPERTY(BlueprintReadOnly) int32 PrimaryAmmo = 0;
@@ -296,7 +302,7 @@ private:
     void CloseMissionChat();
     void RefreshMissionChat();
     void SubmitMissionChat(const FString& Message);
-    void OpenResignDialog();
+    void OpenResignDialog(bool bSelfDestruct = false);
     void CloseResignDialog();
     TSharedPtr<SWidget> ResignDialog;
     TSharedPtr<SWidget> MissionChatPanel;
@@ -317,6 +323,9 @@ private:
 
     UFUNCTION(Server, Reliable)
     void ServerSensorCommand(FName Action);
+
+    UFUNCTION(Server, Reliable)
+    void ServerSelfDestruct();
 
     bool bPrimaryPressed = false;
 
@@ -380,6 +389,8 @@ private:
         FString Registry;
         ShipDesign* Design = nullptr;
         FVector Position = FVector::ZeroVector;
+        FVector LastPosition = FVector::ZeroVector;
+        double Radius = 0.0;
         double Roll = 0.0;
         double Pitch = 0.0;
         double Yaw = 0.0;

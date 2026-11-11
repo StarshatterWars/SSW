@@ -224,7 +224,7 @@ FSSWReplicatedShipState ASSWSessionGameState::MakeShipState(const Ship& PilotShi
         if (const auto* Light = PilotShip.navlights[Index]; Light && Light->IsEnabled())
             State.EnabledNavLights |= 1u << Index;
     if (const auto* Visual = PilotShip.GetNativePresentation())
-        State.CarriedStoreMask = Visual->GetCarriedStoreMask();
+        Visual->GetCarriedStoreTypes(State.CarriedStores);
     State.RespawnsRemaining = PilotShip.GetRespawnCount();
     if (const Drive* MainDrive = PilotShip.GetMainDrive())
         State.DrivePower = MainDrive->GetVisualPower();
@@ -271,6 +271,12 @@ void ASSWSessionGameState::PublishSimulation(Sim& Simulation, double Now)
 
     MissionShips.Reset();
     MissionProjectiles.Reset();
+    TMap<int64, FString> PilotNames;
+    for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+        if (const auto* Pilot = Cast<ASSWSessionLobbyController>(It->Get()); Pilot && Pilot->GetMissionShipId())
+            if (const auto* PlayerState = Pilot->GetPlayerState<APlayerState>())
+                PilotNames.Add(Pilot->GetMissionShipId(), PlayerState->GetPlayerName());
+
     ListIter<SimRegion> Regions = Simulation.GetRegions();
     while (++Regions)
     {
@@ -282,6 +288,8 @@ void ASSWSessionGameState::PublishSimulation(Sim& Simulation, double Now)
             Ship* PilotShip = Ships.value();
             if (!PilotShip) continue;
             FSSWReplicatedShipState State = MakeShipState(*PilotShip);
+            if (const FString* PilotName = PilotNames.Find(State.ObjectId))
+                State.PilotName = *PilotName;
             ListIter<SimSystem> Systems = PilotShip->GetSystems();
             while (++Systems)
             {
@@ -587,7 +595,7 @@ void ASSWSessionLobbyController::CloseMissionChat()
     bShowMouseCursor = false;
 }
 
-void ASSWSessionLobbyController::OpenResignDialog()
+void ASSWSessionLobbyController::OpenResignDialog(bool bSelfDestruct)
 {
     auto* Viewport = GetWorld()->GetGameViewport();
     if (!Viewport || !FlightCamera || ResignDialog) return;
@@ -598,9 +606,11 @@ void ASSWSessionLobbyController::OpenResignDialog()
     auto* Sessions = GetGameInstance()->GetSubsystem<USSWSessionSubsystem>();
     TSharedPtr<SButton> Cancel;
     auto Status = SNew(STextBlock).AutoWrapText(true);
-    const FText Prompt = GetNetMode() == NM_ListenServer
-        ? NSLOCTEXT("SSW.Multiplayer", "ResignHostPrompt", "Resigning as host ends the match for all pilots.")
-        : NSLOCTEXT("SSW.Multiplayer", "ResignPrompt", "Leave the current match?");
+    const FText Prompt = bSelfDestruct
+        ? NSLOCTEXT("SSW.Multiplayer", "SelfDestructPrompt", "Destroy your fighter? This uses a life.")
+        : GetNetMode() == NM_ListenServer
+            ? NSLOCTEXT("SSW.Multiplayer", "ResignHostPrompt", "Resigning as host ends the match for all pilots.")
+            : NSLOCTEXT("SSW.Multiplayer", "ResignPrompt", "Leave the current match?");
 
     ResignDialog = SNew(SBorder)
         .BorderBackgroundColor(FLinearColor(0.01f, 0.02f, 0.035f, 0.65f))
@@ -614,7 +624,8 @@ void ASSWSessionLobbyController::OpenResignDialog()
                     + SVerticalBox::Slot().AutoHeight()
                     [
                         SNew(STextBlock).Font(MissionUIStyle::GetHeaderFont(28))
-                        .Text(NSLOCTEXT("SSW.Multiplayer", "ResignTitle", "RESIGN GAME"))
+                        .Text(bSelfDestruct ? NSLOCTEXT("SSW.Multiplayer", "SelfDestructTitle", "SELF-DESTRUCT")
+                            : NSLOCTEXT("SSW.Multiplayer", "ResignTitle", "RESIGN GAME"))
                     ]
                     + SVerticalBox::Slot().AutoHeight().Padding(0, 12)
                     [SNew(STextBlock).AutoWrapText(true).Text(Prompt)]
@@ -625,6 +636,24 @@ void ASSWSessionLobbyController::OpenResignDialog()
                         SNew(SHorizontalBox)
                         + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
                         [
+                            SNew(SButton)
+                            .Visibility(bSelfDestruct ? EVisibility::Collapsed : EVisibility::Visible)
+                            .Text(NSLOCTEXT("SSW.Multiplayer", "SelfDestruct", "Self-Destruct"))
+                            .IsEnabled_Lambda([this, Sessions]
+                            {
+                                const auto* Fighter = GetAssignedShipState();
+                                return Fighter && !Fighter->bDestroyed && !Fighter->bRetired &&
+                                    (!Sessions || !Sessions->IsBusy());
+                            })
+                            .OnClicked_Lambda([this]
+                            {
+                                CloseResignDialog();
+                                OpenResignDialog(true);
+                                return FReply::Handled();
+                            })
+                        ]
+                        + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
+                        [
                             SAssignNew(Cancel, SButton)
                             .Text(NSLOCTEXT("SSW.Multiplayer", "ResignCancel", "Cancel"))
                             .OnClicked_Lambda([this] { CloseResignDialog(); return FReply::Handled(); })
@@ -633,10 +662,17 @@ void ASSWSessionLobbyController::OpenResignDialog()
                         + SHorizontalBox::Slot().AutoWidth()
                         [
                             SNew(SButton)
-                            .Text(NSLOCTEXT("SSW.Multiplayer", "ResignConfirm", "Resign"))
-                            .IsEnabled_Lambda([Sessions] { return Sessions && !Sessions->IsBusy(); })
-                            .OnClicked_Lambda([Sessions, Status]
+                            .Text(bSelfDestruct ? NSLOCTEXT("SSW.Multiplayer", "SelfDestructConfirm", "Confirm")
+                                : NSLOCTEXT("SSW.Multiplayer", "ResignConfirm", "Resign"))
+                            .IsEnabled_Lambda([Sessions, bSelfDestruct] { return bSelfDestruct || (Sessions && !Sessions->IsBusy()); })
+                            .OnClicked_Lambda([this, Sessions, Status, bSelfDestruct]
                             {
+                                if (bSelfDestruct)
+                                {
+                                    ServerSelfDestruct();
+                                    CloseResignDialog();
+                                    return FReply::Handled();
+                                }
                                 if (Sessions->LeaveSession())
                                     Status->SetText(TAttribute<FText>::CreateLambda([Sessions]
                                     {
@@ -982,6 +1018,15 @@ bool ASSWSessionLobbyGameMode::LaunchLobbyMission(ASSWSessionGameState& State)
             Spawn.Registry = UTF8_TO_TCHAR(Fighter.Registry());
             Spawn.Design = const_cast<ShipDesign*>(Fighter.Design());
             Spawn.Position = Fighter.GetLocation();
+            Spawn.LastPosition = Spawn.Position;
+            Spawn.Radius = FMath::Min(4000.0, (State.ArenaRadius - Spawn.Position.Size()) * 0.5);
+            for (const Ship* Other : Fighters)
+                if (Other != &Fighter)
+                {
+                    const double Separation = FVector::Dist(Spawn.Position, Other->GetLocation());
+                    if (Separation > UE_SMALL_NUMBER)
+                        Spawn.Radius = FMath::Min(Spawn.Radius, Separation * 0.25);
+                }
             Fighter.GetCam().Orientation().ComputeEulerAngles(Spawn.Roll, Spawn.Pitch, Spawn.Yaw);
             Spawn.Iff = Fighter.GetIFF();
             Spawn.bWasSimulationPlayer = &Fighter == Simulation->GetPlayerShip();
@@ -1034,8 +1079,35 @@ void ASSWSessionLobbyGameMode::UpdateArena()
             Pilot->ForceNetUpdate();
         }
         if (Now < Spawn.RespawnAt) continue;
+        TOptional<FVector> RespawnPosition;
+        const double Clearance = FMath::Min(1500.0, Spawn.Radius * 0.5);
+        for (int32 CandidateIndex = 0; CandidateIndex < 12; ++CandidateIndex)
+        {
+            const double Angle = Spawn.Remaining * 2.399963229728653 + CandidateIndex * (UE_TWO_PI / 12.0);
+            const FVector Candidate = Spawn.Position +
+                FVector(FMath::Cos(Angle), 0.0, FMath::Sin(Angle)) * Spawn.Radius;
+            if (FVector::DistSquared(Candidate, Spawn.LastPosition) <= FMath::Square(Clearance)) continue;
+            bool bClear = true;
+            for (ListIter<Ship> Ships = Region->GetShips(); ++Ships;)
+            {
+                const Ship* Other = Ships.value();
+                if (Other && !Other->IsDead() && !Other->IsDying() &&
+                    FVector::DistSquared(Candidate, Other->GetLocation()) <=
+                        FMath::Square(Clearance + Other->GetNavigationHullRadius()))
+                {
+                    bClear = false;
+                    break;
+                }
+            }
+            if (bClear)
+            {
+                RespawnPosition = Candidate;
+                break;
+            }
+        }
+        if (!RespawnPosition.IsSet()) continue;
         Ship* Fighter = Simulation->CreateShip(TCHAR_TO_UTF8(*Spawn.Name), TCHAR_TO_UTF8(*Spawn.Registry),
-            Spawn.Design, Region->GetName(), OtherHand(Spawn.Position), Spawn.Iff, Spawn.CommandAI,
+            Spawn.Design, Region->GetName(), OtherHand(RespawnPosition.GetValue()), Spawn.Iff, Spawn.CommandAI,
             Spawn.Loadout.IsEmpty() ? nullptr : Spawn.Loadout.GetData());
         if (!Fighter) continue;
         Fighter->SetHeading(Spawn.Roll, Spawn.Pitch, Spawn.Yaw);
@@ -1045,6 +1117,7 @@ void ASSWSessionLobbyGameMode::UpdateArena()
         Fighter->SetRespawnCount(--Spawn.Remaining);
         if (Spawn.bWasSimulationPlayer) Region->SetPlayerShip(Fighter);
         Pilot->AssignMissionShip(Fighter->GetObjID());
+        Spawn.LastPosition = RespawnPosition.GetValue();
         Spawn.RespawnAt = 0.0;
         Pilot->RespawnDeadline = 0.0;
         Pilot->ForceNetUpdate();
@@ -1269,6 +1342,15 @@ void ASSWSessionLobbyController::ServerSensorCommand_Implementation(FName Action
     }
 }
 
+void ASSWSessionLobbyController::ServerSelfDestruct_Implementation()
+{
+    const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
+    Ship* Fighter = State && State->bMissionStartReady ? State->FindMissionShip(MissionShipId) : nullptr;
+    if (!Fighter || !Fighter->HasNetworkPilot() || Fighter->GetFlightPhase() != EOPSMode::ACTIVE) return;
+    Fighter->SetIntegrity(0);
+    Fighter->DeathSpiral();
+}
+
 void ASSWSessionLobbyController::PlayerTick(float DeltaTime)
 {
     Super::PlayerTick(DeltaTime);
@@ -1467,7 +1549,7 @@ void ASSWSessionLobbyController::UpdateFlightView(
             bSnapShip ? Rotation.Quaternion() : FQuat::Slerp(Actor->GetActorQuat(), Rotation.Quaternion(), Blend));
         Actor->UpdateSnapshotPropulsion(DeltaTime, ShipState.DrivePower, ShipState.Throttle,
             ShipState.ThrusterBurns, ShipState.EnabledNavLights);
-        Actor->UpdateSnapshotStores(ShipState.CarriedStoreMask);
+        Actor->UpdateSnapshotStores(ShipState.CarriedStores);
     }
     for (auto It = RemoteFighters.CreateIterator(); It; ++It)
     {
@@ -1713,10 +1795,13 @@ void ASSWSessionFlightHUD::DrawHUD()
         DrawLine(Point.X, Point.Y + Radius, Point.X - Radius, Point.Y, Marker);
         DrawLine(Point.X - Radius, Point.Y, Point.X, Point.Y - Radius, Marker);
         const double RangeKm = FVector::Dist(Contact.Position, Fighter->Position) / 1000.0;
-        const float CaptionX = Point.X > X ? Point.X - 68.0f : Point.X + 13.0f;
         const TCHAR* Tracking = bLocked ? (Fighter->bAutoTracking ? TEXT("  AUTO TRACK") : TEXT("  LOCKED")) : TEXT("");
-        DrawText(FString::Printf(TEXT("%s  %.3f km%s"), *Contact.Name, RangeKm, Tracking),
-            Marker, CaptionX, Point.Y + 12.0f);
+        const FString Caption = FString::Printf(TEXT("%s  %.3f km%s"), *Contact.GetPilotLabel(), RangeKm, Tracking);
+        float Width = 0.0f, Height = 0.0f;
+        GetTextSize(Caption, Width, Height);
+        const float CaptionX = FMath::Clamp(static_cast<float>(Point.X + 13.0), 0.0f,
+            FMath::Max(0.0f, Canvas->ClipX - Width));
+        DrawText(Caption, Marker, CaptionX, Point.Y + 12.0f);
     }
 
     for (const auto& Shot : State->MissionProjectiles)
@@ -1754,7 +1839,7 @@ void ASSWSessionLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 
 void ASSWSessionLobbyGameMode::Logout(AController* Exiting)
 {
-    const auto* Pilot = Cast<ASSWSessionLobbyController>(Exiting);
+    auto* Pilot = Cast<ASSWSessionLobbyController>(Exiting);
     const auto* PilotState = Pilot ? Pilot->GetPlayerState<APlayerState>() : nullptr;
     if (PilotState && !GetWorld()->bIsTearingDown)
     {
@@ -1763,6 +1848,23 @@ void ASSWSessionLobbyGameMode::Logout(AController* Exiting)
             const FString Message = FString::Printf(TEXT("%s left the game."), *PilotState->GetPlayerName());
             if (State->bMissionStartReady)
             {
+                PilotSpawns.Remove(Pilot);
+                const int64 ShipId = Pilot->GetMissionShipId();
+                Pilot->AssignMissionShip(0);
+                if (Sim* Simulation = Sim::GetSim(); Simulation && Simulation->GetMission() == LobbyMission.Get() &&
+                    ShipId > 0 && ShipId <= MAX_uint32)
+                {
+                    if (Ship* Fighter = Simulation->FindShipByObjID(static_cast<uint32>(ShipId)))
+                    {
+                        if (SimRegion* Region = Fighter->GetRegion())
+                            for (ListIter<Ship> Ships = Region->GetShips(); ++Ships;)
+                                if (Ship* Remaining = Ships.value(); Remaining && Remaining->GetTarget() == Fighter)
+                                    Remaining->LockTarget(static_cast<SimObject*>(nullptr));
+                        Fighter->SetRespawnCount(0);
+                        if (SimElement* Element = Fighter->GetElement()) Element->DelShip(Fighter);
+                        Simulation->DestroyShip(Fighter);
+                    }
+                }
                 for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
                     if (auto* Remaining = Cast<ASSWSessionLobbyController>(It->Get()); Remaining && Remaining != Exiting)
                         Remaining->ReceivePilotDeparture(Message);

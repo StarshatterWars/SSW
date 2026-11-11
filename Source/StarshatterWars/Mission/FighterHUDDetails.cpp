@@ -336,7 +336,7 @@ void SFighterHUDDetails::Refresh()
         HeadingDegrees = FMath::RadiansToDegrees(FMath::Atan2(Heading.X, Heading.Z));
         PitchDegrees = FMath::RadiansToDegrees(FMath::Asin(FMath::Clamp(Heading.Y, -1.0, 1.0)));
         PlayerHull = Snapshot->HullPercent;
-        PlayerName = Snapshot->Name;
+        PlayerName = Snapshot->GetPilotLabel();
         PlayerClass = Snapshot->Design;
         if (!PlayerMFDPreview) PlayerMFDPreview = MakeUnique<FShipMFDPreview>(true);
         PlayerMFDPreview->SetDesign(ShipDesignRegistry::Find(Snapshot->Design));
@@ -353,7 +353,7 @@ void SFighterHUDDetails::Refresh()
                     Target = &Contact;
                     bHasTarget = bTargetLocked = true;
                     bTargetTracking = Snapshot->bAutoTracking;
-                    TargetName = Contact.Name;
+                    TargetName = Contact.GetPilotLabel();
                     TargetClass = Contact.Design;
                     TargetHull = Contact.HullPercent;
                     TargetShield = Contact.ShieldStrength;
@@ -370,7 +370,9 @@ void SFighterHUDDetails::Refresh()
                 if (Range > SensorRange || Range <= UE_SMALL_NUMBER) continue;
                 const double Az = FMath::Atan2(FVector::DotProduct(Delta, Right), FVector::DotProduct(Delta, Heading));
                 const double El = FMath::Asin(FMath::Clamp(FVector::DotProduct(Delta, Snapshot->Up) / Range, -1.0, 1.0));
-                Contacts.Add({Az, El, Range, Contact.IFF == Snapshot->IFF ? HUDBlue : FLinearColor::Red});
+                Contacts.Add({Az, El, Range, IdentificationColor(Contact.IFF, Snapshot->IFF),
+                    FVector(FVector::DotProduct(Delta, Right), FVector::DotProduct(Delta, Heading),
+                        FVector::DotProduct(Delta, Snapshot->Up)).GetSafeNormal()});
             }
         if (Symbology) Symbology->RefreshNetwork(Controller, Snapshot, Target);
         bShoot = Target && Snapshot->bMissileLocked;
@@ -476,7 +478,11 @@ void SFighterHUDDetails::Refresh()
                 // Use the sensor contact's perceived IFF, not the underlying ship's true IFF.
                 // Threat status must not override identification color.
                 const FLinearColor C = SensorContactColor(It.value(), P);
-                Contacts.Add({Az, El, Range, C});
+                const FVector Delta = It->Location() - P->GetLocation();
+                const auto& Camera = P->GetCam();
+                Contacts.Add({Az, El, Range, C,
+                    FVector(FVector::DotProduct(Delta, Camera.vrt()), FVector::DotProduct(Delta, Camera.vpn()),
+                        FVector::DotProduct(Delta, Camera.vup())).GetSafeNormal()});
             }
         }
     }
@@ -604,6 +610,73 @@ void SFighterHUDDetails::CycleWeapon(bool bPrimary)
 {
     if (Ship* P = PlayerShip()) { if (bPrimary) P->CyclePrimary(); else P->CycleSecondary(); Refresh(); }
 }
+void SFighterHUDDetails::PaintRadarVolume(const FGeometry& Geometry, FSlateWindowElementList& Elements,
+    int32 Layer, const FVector2D& Center, double Radius, const FLinearColor& GridColor) const
+{
+    constexpr double TiltSin = 0.5;
+    constexpr double TiltCos = 0.866025403784439;
+    const auto Project = [Center, Radius](const FVector& Point)
+    {
+        return Center + FVector2D(Point.X, -Point.Y * TiltSin - Point.Z * TiltCos) * Radius;
+    };
+    const auto DrawLine = [&](const TArray<FVector2D>& Points, const FLinearColor& Color, int32 Offset, float Width)
+    {
+        FSlateDrawElement::MakeLines(Elements, Layer + Offset, Geometry.ToPaintGeometry(),
+            Points, ESlateDrawEffect::None, Color, true, Width);
+    };
+    const auto DrawRing = [&](const FVector& AxisA, const FVector& AxisB, const FLinearColor& Color)
+    {
+        constexpr int32 Segments = 48;
+        TArray<FVector2D> Points;
+        Points.Reserve(Segments + 1);
+        for (int32 Segment = 0; Segment <= Segments; ++Segment)
+        {
+            const double Angle = Segment * UE_TWO_PI / Segments;
+            Points.Add(Project(AxisA * FMath::Cos(Angle) + AxisB * FMath::Sin(Angle)));
+        }
+        DrawLine(Points, Color, 0, 1.0f);
+    };
+
+    const FVector Right(1, 0, 0), Forward(0, 1, 0), Up(0, 0, 1);
+    DrawRing(Right, Forward * TiltSin + Up * TiltCos, GridColor.CopyWithNewOpacity(0.28f));
+    DrawRing(Right, Forward, GridColor.CopyWithNewOpacity(0.55f));
+    DrawRing(Right * 0.5, Forward * 0.5, GridColor.CopyWithNewOpacity(0.24f));
+    DrawRing(Right, Up, GridColor.CopyWithNewOpacity(0.18f));
+    DrawRing((Right + Forward).GetSafeNormal(), Up, GridColor.CopyWithNewOpacity(0.18f));
+    DrawRing((Right - Forward).GetSafeNormal(), Up, GridColor.CopyWithNewOpacity(0.18f));
+    for (const FVector& Axis : {Right, Forward, Up})
+        DrawLine({Project(-Axis), Project(Axis)}, GridColor.CopyWithNewOpacity(0.22f), 0, 1.0f);
+    const auto ForwardTip = Project(Forward);
+    DrawLine({ForwardTip + FVector2D(-4, 4), ForwardTip, ForwardTip + FVector2D(4, 4)}, GridColor, 1, 1.1f);
+
+    struct FTrack { const FBlip* Blip; FVector Position; double Depth; };
+    TArray<FTrack, TInlineAllocator<32>> Tracks;
+    for (const FBlip& Blip : Contacts)
+    {
+        const FVector Position = Blip.LocalDirection * FMath::Clamp(Blip.Range / SensorRange, 0.0, 1.0);
+        Tracks.Add({&Blip, Position, Position.Y * TiltCos - Position.Z * TiltSin});
+    }
+    Tracks.Sort([](const FTrack& A, const FTrack& B) { return A.Depth > B.Depth; });
+
+    const double MarkerSize = FMath::Max(3.0, Radius * 0.065);
+    DrawLine({Center - FVector2D(MarkerSize, 0), Center + FVector2D(MarkerSize, 0)}, GridColor, 1, 1.2f);
+    DrawLine({Center - FVector2D(0, MarkerSize), Center + FVector2D(0, MarkerSize)}, GridColor, 1, 1.2f);
+    for (const FTrack& Track : Tracks)
+    {
+        const FVector2D Position = Project(Track.Position);
+        const FVector2D Foot = Project(FVector(Track.Position.X, Track.Position.Y, 0));
+        const FLinearColor Color = Track.Blip->Color;
+        if (FVector2D::DistSquared(Foot, Position) > 1.0)
+        {
+            DrawLine({Foot, Position}, Color.CopyWithNewOpacity(0.65f), 2, 1.0f);
+            DrawLine({Foot - FVector2D(2, 0), Foot + FVector2D(2, 0)}, Color.CopyWithNewOpacity(0.65f), 2, 1.0f);
+        }
+        const FVector2D X(MarkerSize, 0), Y(0, MarkerSize);
+        DrawLine({Position - Y, Position + X, Position + Y, Position - X, Position - Y},
+            Color.CopyWithNewOpacity(1.0f), 3, 1.6f);
+    }
+}
+
 int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, const FSlateRect& Cull,
     FSlateWindowElementList& E, int32 L, const FWidgetStyle& Style, bool Enabled) const
 {
@@ -1001,9 +1074,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         const TCHAR* Title=M==EMode::Ship?TEXT("SHIP STATUS"):M==EMode::FOV?TEXT("SNSR  FOV"):M==EMode::HSD?TEXT("SNSR  HSD"):TEXT("SNSR  3D");
         Text(P+FVector2D(10,6)*Scale, Title, Amber, 10);
         Box(P+FVector2D(8,20)*Scale, FVector2D(70*Scale, Scale), Dim);
-        if (M != EMode::Ship)
+        if (M == EMode::FOV || M == EMode::HSD)
         {
-            const int32 ArtIndex = M == EMode::FOV ? 2 : M == EMode::HSD ? 3 : 4;
+            const int32 ArtIndex = M == EMode::FOV ? 2 : 3;
             Artwork(ArtIndex,P+FVector2D(30,32)*Scale,FVector2D(160,160)*Scale);
         }
         if (!bHasPlayer) { Text(P+FVector2D(8,36)*Scale,TEXT("NO TRACK"), Amber); continue; }
@@ -1021,6 +1094,13 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         {
             const FVector2D Center=P+FVector2D(110,112)*Scale;
             const double Radius=72*Scale;
+            if (M == EMode::ThreeD)
+            {
+                PaintRadarVolume(G, E, L + 2, Center, Radius, Amber);
+                Text(P+FVector2D(8,192)*Scale,FString::Printf(TEXT("%03.0f KM  %02d TRK"),
+                    SensorRange/1000,Contacts.Num()), Amber, 9);
+                continue;
+            }
             auto Mark = [&](const FVector2D& At, const FLinearColor& Color)
             {
                 FSlateDrawElement::MakeBox(E, L+6,
@@ -1042,8 +1122,6 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
                 {
                     const double R = FMath::Clamp(B.Range / SensorRange, 0.0, 1.0) * Radius;
                     Offset = FVector2D(FMath::Sin(B.Az), -FMath::Cos(B.Az)) * R;
-                    if (M == EMode::ThreeD)
-                        Offset.Y = Offset.Y * 0.55 - FMath::Sin(B.El) * R * 0.45;
                     if (Offset.SizeSquared() > Radius * Radius)
                         Offset = Offset.GetSafeNormal() * Radius;
                 }
