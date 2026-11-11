@@ -772,7 +772,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
 
         MiniText(120,14,TEXT("VELOCITY"),10,Muted);
-        const FString Speed=FString::Printf(TEXT("%.0f"),FlightSpeed);
+        const FString Speed = NetworkController.IsValid() && FlightSpeed > 0.0 && FlightSpeed < 10.0
+            ? FString::Printf(TEXT("%.2f"), FlightSpeed)
+            : FString::Printf(TEXT("%.0f"), FlightSpeed);
         const FLinearColor SpeedColor = bAugmenterActive ? Green : White;
         MiniText(120,37,Speed,26,SpeedColor);
         const auto SpeedFont=FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(10,int(26*Scale)));

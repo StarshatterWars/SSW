@@ -73,6 +73,7 @@ protected:
     double              brakes = 0.0;
     double              z_shift = 0.0;
     double              time_to_dock = 0.0;
+    double              approach_frame_seconds = 0.0;
     InboundSlot*        inbound = nullptr;
     int                 rtb_code = 0;
     bool                evading = false;

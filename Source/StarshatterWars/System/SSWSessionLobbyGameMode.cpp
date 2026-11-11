@@ -750,17 +750,14 @@ void ASSWSessionLobbyController::UpdateFlightView(
         bShowMouseCursor = false;
         SetInputMode(FInputModeGameOnly());
         FlightCamera->SetActorLocation(Fighter.VisualPosition);
-        if (!HasAuthority())
-        {
-            auto* Fill = NewObject<UPointLightComponent>(FlightCamera);
-            FlightCamera->AddInstanceComponent(Fill);
-            Fill->SetupAttachment(FlightCamera->GetRootComponent());
-            Fill->SetMobility(EComponentMobility::Movable);
-            Fill->SetAttenuationRadius(420.0f);
-            Fill->SetIntensity(650.0f);
-            Fill->SetCastShadows(false);
-            Fill->RegisterComponent();
-        }
+        auto* Fill = NewObject<UPointLightComponent>(FlightCamera);
+        FlightCamera->AddInstanceComponent(Fill);
+        Fill->SetupAttachment(FlightCamera->GetRootComponent());
+        Fill->SetMobility(EComponentMobility::Movable);
+        Fill->SetAttenuationRadius(420.0f);
+        Fill->SetIntensity(650.0f);
+        Fill->SetCastShadows(false);
+        Fill->RegisterComponent();
         SetViewTarget(FlightCamera);
         if (auto* Viewport = GetWorld()->GetGameViewport())
         {

@@ -107,6 +107,7 @@ FighterAI::ExecFrame(double s)
     if (!ship)
         return;
 
+    approach_frame_seconds = s;
     evading = false;
     inbound = ship->GetInbound();
     missile_time -= s;
@@ -173,7 +174,8 @@ FighterAI::ExecFrame(double s)
                 ship->MoveTo(Dst + Approach * (time_to_dock / TIME_TO_DOCK) + FVector(0.0, RunwayClearance, 0.0));
 
                 ship->SetVelocity(carrier->GetVelocity() + ship->GetHeading() * 50.0);
-                ship->SetThrottle(50);
+                ship->SetThrottle(ship->IsAirborne() ? 0.0 : 50.0);
+                ship->SetAugmenter(false);
                 ship->ExecFLCSFrame();
 
                 time_to_dock -= s;
@@ -217,6 +219,7 @@ FighterAI::ExecFrame(double s)
                 }
 
                 ship->SetThrottle(0);
+                ship->SetAugmenter(false);
                 ship->ExecFLCSFrame();
             }
 
@@ -915,6 +918,18 @@ FighterAI::ThrottleControl()
         brakes = 0.0;
     }
 
+    // RUNWAY APPROACH
+    else if (inbound && inbound->Cleared() && ship->IsAirborne()) {
+        desired = distance > 25.0e3 ? 750.0 : 300.0;
+        const double error = desired - ship_speed;
+        constexpr double Deadband = 5.0;
+        const double correction = error - FMath::Clamp(error, -Deadband, Deadband);
+        const double rate = FMath::Clamp(correction * 0.5, -30.0, 30.0);
+        throttle = FMath::Clamp(old_throttle + rate * approach_frame_seconds, 20.0, 100.0);
+        if (throttle <= 20.0)
+            brakes = FMath::Clamp(-correction / 100.0, 0.0, 0.25);
+    }
+
     // STATION KEEPING
     else if (station_keeping) {
         // go into a slow orbit if airborne:
@@ -1220,7 +1235,7 @@ FighterAI::ThrottleControl()
 
     old_throttle = throttle;
 
-    ship->SetThrottle((int)throttle);
+    ship->SetThrottle(throttle);
     ship->SetAugmenter(augmenter);
 
     if (accumulator.stop && ship->GetFLCS() != nullptr) {

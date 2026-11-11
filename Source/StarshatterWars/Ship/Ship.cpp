@@ -4113,7 +4113,7 @@ Ship::ExecPhysics(double seconds)
 void
 Ship::ExecThrottle(double seconds)
 {
-	const double spool = 75 * seconds;
+	const double spool = ((bAutoLand || (inbound && IsAirborne())) ? 25.0 : 75.0) * seconds;
 
 	if (throttle < throttle_request) {
 		if (throttle_request - throttle < spool)
@@ -4449,24 +4449,11 @@ Ship::DockFrame(double Seconds)
 		while (++Iter)
 			Iter->Orient(this);
 
-		const double Spool = 75.0 * Seconds;
-
 		if (flight_phase == EOPSMode::DOCKING) {
 			SetThrottleRequest(0);
-			SetThrottle(0);
+			SetAugmenter(false);
 		}
-		else if (throttle < GetThrottleRequest()) {
-			if ((GetThrottleRequest() - throttle) < Spool)
-				SetThrottle(GetThrottleRequest());
-			else
-				SetThrottle(throttle + Spool);
-		}
-		else if (throttle > GetThrottleRequest()) {
-			if ((throttle - GetThrottleRequest()) < Spool)
-				SetThrottle(GetThrottleRequest());
-			else
-				SetThrottle(throttle - Spool);
-		}
+		ExecThrottle(Seconds);
 
 		// make sure there is power to run the drive:
 		for (int ReactorIndex = 0; ReactorIndex < reactors.size(); ReactorIndex++)
@@ -5661,7 +5648,8 @@ Ship::GetThrust(double seconds) const
 		double eff_throttle =
 			GetThrottle();
 
-		if (eff_throttle <= 0.0 && GetThrottleRequest() > 0.0)
+		if (eff_throttle <= 0.0 && GetThrottleRequest() > 0.0 &&
+			!bAutoLand && !(inbound && IsAirborne()))
 		{
 			eff_throttle = GetThrottleRequest();
 		}
@@ -7327,8 +7315,8 @@ void Ship::SetManualRotationAxis(int32 Axis, double Value)
 {
     if (Game::IsTimeCompressed()) return;
     if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
-    if (Axis < 0 || Axis > 2 || !FMath::IsFinite(Value) || !sim ||
-        sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying()) return;
+    if (Axis < 0 || Axis > 2 || !FMath::IsFinite(Value) || !CanUseManualFlight() ||
+        InTransition() || IsDead() || IsDying()) return;
     Value = FMath::Clamp(Value, -1.0, 1.0);
     if (!bManualRotation && FMath::Abs(Value) < 0.001) return;
     EnableManualFlight();
