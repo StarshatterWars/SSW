@@ -224,6 +224,7 @@ public:
 	void              SetThrottleRequest(double t) { if (!HasManualThrottle()) throttle_request = t; }
     void SetManualThrottle(double percent);
     void SetNetworkPilot(bool bAssigned);
+    bool HasNetworkPilot() const { return bNetworkPilot; }
     bool CanUseManualFlight() const;
     bool HasManualThrottle() const;
     void SetManualRotationAxis(int32 Axis, double Value);

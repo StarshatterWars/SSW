@@ -87,6 +87,7 @@ struct FSSWReplicatedShipState
     UPROPERTY(BlueprintReadOnly) int32 DamageEvents = 0;
     UPROPERTY(BlueprintReadOnly) bool bDestroyed = false;
     UPROPERTY(BlueprintReadOnly) bool bRetired = false;
+    UPROPERTY(BlueprintReadOnly) bool bPlayerControlled = false;
     UPROPERTY(BlueprintReadOnly) TArray<FSSWReplicatedSystemState> Systems;
     UPROPERTY(BlueprintReadOnly) TArray<FSSWReplicatedNavPoint> FlightPlan;
     UPROPERTY(BlueprintReadOnly) int32 FlightPhase = 0;

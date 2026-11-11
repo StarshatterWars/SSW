@@ -184,6 +184,7 @@ FSSWReplicatedShipState ASSWSessionGameState::MakeShipState(const Ship& PilotShi
     if (const Weapon* Secondary = PilotShip.GetSecondary()) State.SecondaryAmmo = Secondary->Ammo();
     if (const SimObject* Target = PilotShip.GetTarget()) State.TargetId = Target->GetObjID();
     State.Emcon = PilotShip.GetEMCON();
+    State.bPlayerControlled = PilotShip.HasNetworkPilot();
     State.FlightPhase = static_cast<int32>(PilotShip.GetFlightPhase());
     if (const Ship* Carrier = PilotShip.GetCarrier()) State.CarrierId = Carrier->GetObjID();
     State.bLandingAssigned = PilotShip.GetInbound() != nullptr;
@@ -708,7 +709,9 @@ void ASSWSessionLobbyController::PlayerTick(float DeltaTime)
     const bool bIncreasePressed = WasInputKeyJustPressed(EKeys::A);
     const bool bDecreasePressed = WasInputKeyJustPressed(EKeys::Z);
     const int32 ThrottleInput = int32(bIncrease || bIncreasePressed) - int32(bDecrease || bDecreasePressed);
-    if (ThrottleInput && (IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift)))
+    const bool bShift = IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift) ||
+        WasInputKeyJustPressed(EKeys::LeftShift) || WasInputKeyJustPressed(EKeys::RightShift);
+    if (ThrottleInput && bShift)
         FlightThrottle = ThrottleInput > 0 ? 100.0 : 0.0;
     else
         FlightThrottle = FMath::Clamp(FlightThrottle + 50.0 * DeltaTime * ThrottleInput, 0.0, 100.0);
@@ -765,6 +768,7 @@ void ASSWSessionLobbyController::UpdateFlightView(
                 .ShowHUD(true)
                 .ThirdPerson(true)
                 .NetworkController(TWeakObjectPtr<ASSWSessionLobbyController>(this));
+            FlightMiniHUD->SetVisibility(EVisibility::HitTestInvisible);
             Viewport->AddViewportWidgetContent(FlightMiniHUD.ToSharedRef(), 100);
         }
     }
@@ -991,6 +995,7 @@ void ASSWSessionFlightHUD::DrawHUD()
         const bool bProjected = Controller->ProjectWorldLocationToScreen(Contact.VisualPosition, Point);
         if (!bProjected || FMath::Abs(Point.X - X) > Bounds.X || FMath::Abs(Point.Y - Y) > Bounds.Y)
         {
+            if (!Contact.bPlayerControlled && Contact.ObjectId != Fighter->TargetId) continue;
             const FVector Delta = Contact.VisualPosition - Eye;
             FVector2D Direction = bProjected ? Point - FVector2D(X, Y) :
                 FVector2D(FVector::DotProduct(Delta, Right), -FVector::DotProduct(Delta, Up));
