@@ -5,6 +5,7 @@
 #include "GameFramework/PlayerState.h"
 #include "GameFramework/GameSession.h"
 #include "SSWRuntimeSubsystem.h"
+#include "SSWGameInstance.h"
 #include "Engine/GameInstance.h"
 #include "Net/UnrealNetwork.h"
 #include "Sim.h"
@@ -35,6 +36,11 @@
 #include "SimElement.h"
 ASSWSessionLobbyGameMode::ASSWSessionLobbyGameMode(){PlayerControllerClass=ASSWSessionLobbyController::StaticClass();DefaultPawnClass=ASpectatorPawn::StaticClass();GameStateClass=ASSWSessionGameState::StaticClass();GameSessionClass=AGameSession::StaticClass();PlayerStateClass=ASSWSessionPlayerState::StaticClass();HUDClass=ASSWSessionFlightHUD::StaticClass();bUseSeamlessTravel=true;}
 void ASSWSessionLobbyController::BeginPlay(){Super::BeginPlay();if(!IsLocalController())return;
+ if (const auto* Instance = Cast<USSWGameInstance>(GetGameInstance()))
+ {
+     const FString Name = Instance->GetPlatformPilotName().TrimStartAndEnd().Left(64);
+     if (!Name.IsEmpty()) ServerSetPlatformPilotName(Name);
+ }
  if (GetNetMode() == NM_Client)
  {
      bool bStreamingStarted = false;
@@ -923,4 +929,26 @@ void ASSWSessionLobbyGameMode::PostLogin(APlayerController* NewPlayer)
                 Pilot->AssignMissionShip(Fighter->GetObjID())) return;
         }
     }
+}
+
+void ASSWSessionLobbyController::ServerSetPlatformPilotName_Implementation(const FString& DisplayName)
+{
+    auto* PilotState = GetPlayerState<ASSWSessionPlayerState>();
+    if (!PilotState || DisplayName.Len() > 64) return;
+
+    FString Name = DisplayName.TrimStartAndEnd();
+    for (TCHAR CodeUnit : Name)
+        if (FChar::IsControl(CodeUnit)) return;
+
+    if (Name.IsEmpty() || PilotState->GetPlayerName() == Name) return;
+    PilotState->SetPlayerName(Name);
+    PilotState->OnRep_Ready();
+    PilotState->ForceNetUpdate();
+}
+
+void ASSWSessionPlayerState::OnRep_PlayerName()
+{
+    Super::OnRep_PlayerName();
+    if (auto* State = GetWorld()->GetGameState<ASSWSessionGameState>())
+        State->OnRosterChanged.Broadcast();
 }

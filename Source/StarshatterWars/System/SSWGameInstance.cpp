@@ -2,6 +2,7 @@
 
 
 #include "SSWGameInstance.h"
+#include "SSWSessionLobbyGameMode.h"
 #include "SSWBootSubsystem.h"
 #include "OnlineSubsystem.h"
 #include "Interfaces/OnlineIdentityInterface.h"
@@ -82,6 +83,7 @@ void USSWGameInstance::OnStart()
 
 void USSWGameInstance::ShowStartupSplashes()
 {
+    if (GetWorld() && GetWorld()->GetFirstPlayerController<ASSWSessionLobbyController>()) return;
     UWorld* World = GetWorld();
     UGameViewportClient* Viewport = GetGameViewportClient();
     if (!World || !Viewport || World->WorldType != EWorldType::Game ||
@@ -461,6 +463,7 @@ void USSWGameInstance::FinishPlatformSignIn(FName Provider, bool bSuccess, const
 
 void USSWGameInstance::ShowMainMenuScreen()
 {
+    if (GetWorld() && GetWorld()->GetFirstPlayerController<ASSWSessionLobbyController>()) return;
     if (GetDefault<USSWDiagnosticsSettings>()->bRequirePlatformSignIn && PlatformPilotName.IsEmpty())
     {
         if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))

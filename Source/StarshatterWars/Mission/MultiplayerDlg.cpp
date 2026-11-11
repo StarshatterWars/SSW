@@ -4,6 +4,8 @@
 #include "StarshatterGameDataSubsystem.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
+#include "Components/Image.h"
+#include "Engine/Texture2D.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
 #include "Components/HorizontalBox.h"
@@ -44,10 +46,17 @@ void UMultiplayerDlg::BuildSessionScreen()
 {
     if(WidgetTree->RootWidget && WidgetTree->RootWidget->GetFName()==TEXT("SSWNativeSessionScreen"))return;
     auto* Frame=WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(),TEXT("SSWNativeSessionScreen"));
-    Frame->SetBrushColor(FLinearColor(.008f,.017f,.03f,.98f));Frame->SetPadding(FMargin(28));WidgetTree->RootWidget=Frame;
+    Frame->SetBrushColor(FLinearColor(.008f,.017f,.03f,1.f));Frame->SetPadding(FMargin(28));WidgetTree->RootWidget=Frame;
     auto* Scale=WidgetTree->ConstructWidget<UScaleBox>();Scale->SetStretch(EStretch::ScaleToFit);Frame->SetContent(Scale);
     auto* Size=WidgetTree->ConstructWidget<USizeBox>();Size->SetWidthOverride(1080);Size->SetHeightOverride(740);Scale->SetContent(Size);
     auto* Main=WidgetTree->ConstructWidget<UVerticalBox>();Size->SetContent(Main);
+    Main->SetClipping(EWidgetClipping::ClipToBounds);
+    if (GetOwningPlayer<ASSWSessionLobbyController>())
+    {
+        BuildLobbyScreen(Main);
+        return;
+    }
+
     auto* Header=WidgetTree->ConstructWidget<UVerticalBox>();Main->AddChildToVerticalBox(Header)->SetPadding(FMargin(0,0,0,18));
     auto* ScreenTitle=Label(TEXT("MULTIPLAYER"),30);ScreenTitle->SetFont(MissionUIStyle::GetHeaderFont(30));Header->AddChildToVerticalBox(ScreenTitle);
     Header->AddChildToVerticalBox(Label(TEXT("Create a game or find a session."),16))->SetPadding(FMargin(0,8,0,0));
@@ -103,40 +112,13 @@ void UMultiplayerDlg::BuildSessionScreen()
     JoinPanel->AddChildToVerticalBox(Browser)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));auto* Scroll=WidgetTree->ConstructWidget<UScrollBox>();Browser->SetContent(Scroll);
     Rows=WidgetTree->ConstructWidget<UVerticalBox>();Scroll->AddChild(Rows);
     JoinButton=Button(TEXT("JOIN SELECTED GAME"),JoinPanel);JoinButton->OnClicked.AddUniqueDynamic(this,&ThisClass::Join);
-    if (auto* State = GetWorld()->GetGameState<ASSWSessionGameState>())
-    {
-        LobbyRoster = Label(TEXT(""), 14);
-        Main->AddChildToVerticalBox(LobbyRoster);
-        Button(TEXT("TOGGLE READY"), Main)->OnClicked.AddDynamic(this, &ThisClass::ToggleReady);
-        State->OnRosterChanged.RemoveAll(this);
-        State->OnRosterChanged.AddUObject(this, &ThisClass::RefreshRoster);
-        RefreshRoster();
-        MissionCountdownLabel = Label(TEXT("WAITING FOR PILOTS TO READY UP"), 14);
-        Main->AddChildToVerticalBox(MissionCountdownLabel);
-
-        Main->AddChildToVerticalBox(Label(TEXT("SESSION CHAT"), 14));
-        auto* ChatSize = WidgetTree->ConstructWidget<USizeBox>();
-        ChatSize->SetHeightOverride(100);
-        Main->AddChildToVerticalBox(ChatSize);
-        ChatLog = WidgetTree->ConstructWidget<UScrollBox>();
-        ChatSize->SetContent(ChatLog);
-        ChatEntry = WidgetTree->ConstructWidget<UEditableTextBox>();
-        ChatEntry->SetHintText(FText::FromString(TEXT("Type a message and press Enter")));
-        ChatEntry->SetClearKeyboardFocusOnCommit(false);
-        ChatEntry->OnTextCommitted.AddDynamic(this, &ThisClass::SubmitChat);
-        Main->AddChildToVerticalBox(ChatEntry);
-        State->OnChatChanged.RemoveAll(this);
-        State->OnChatChanged.AddUObject(this, &ThisClass::RefreshChat);
-        RefreshChat();
-    }
-
     auto* StatusBar=WidgetTree->ConstructWidget<UBorder>();StatusBar->SetPadding(FMargin(12));StatusBar->SetBrushColor(FLinearColor(.012f,.033f,.05f));
     Main->AddChildToVerticalBox(StatusBar)->SetPadding(FMargin(0,12,0,8));StatusLabel=Label(TEXT("Create a session or search for games."),14);StatusLabel->SetAutoWrapText(true);StatusBar->SetContent(StatusLabel);
     auto* Footer=WidgetTree->ConstructWidget<UHorizontalBox>();Main->AddChildToVerticalBox(Footer);
     auto FooterGroup=[&](){auto* Group=WidgetTree->ConstructWidget<UVerticalBox>();auto* FooterSlot=Footer->AddChildToHorizontalBox(Group);FooterSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));FooterSlot->SetPadding(FMargin(6,0));return Group;};
     CancelSearchButton=Button(TEXT("CANCEL SEARCH"),FooterGroup());CancelSearchButton->OnClicked.AddUniqueDynamic(this,&ThisClass::CancelSearch);
     LeaveButton=Button(TEXT("LEAVE SESSION"),FooterGroup());LeaveButton->OnClicked.AddUniqueDynamic(this,&ThisClass::Leave);
-    Button(TEXT("BACK"),FooterGroup())->OnClicked.AddUniqueDynamic(this,&ThisClass::Back);RefreshState();
+    AddMainMenuButton(FooterGroup());RefreshState();
 }
 void UMultiplayerDlg::NativeConstruct(){Super::NativeConstruct();BuildSessionScreen();if(auto* S=Service())S->OnChanged.AddUniqueDynamic(this,&ThisClass::RefreshState);RefreshState();}
 void UMultiplayerDlg::NativeDestruct(){if(auto* S=Service())S->OnChanged.RemoveDynamic(this,&ThisClass::RefreshState);Super::NativeDestruct();}
@@ -171,8 +153,8 @@ void UMultiplayerDlg::Search(){Selected=INDEX_NONE;if(auto* S=Service())S->FindS
 void UMultiplayerDlg::Join(){if(auto* S=Service())S->JoinSession(Selected);}
 void UMultiplayerDlg::Leave(){if(auto* S=Service())S->LeaveSession();}
 void UMultiplayerDlg::CancelSearch(){if(auto* S=Service())S->CancelSearch();}
-void UMultiplayerDlg::Back(){if(auto* S=Service()){if(S->IsBusy()){S->CancelSearch();return;}if(S->HasSession()){S->LeaveSession();return;}}RemoveFromParent();if(auto* Manager=GetMenuManager())Manager->ShowMenuDlg();}
-void UMultiplayerDlg::HandleAccept(){if(bHostMode)Create();else Join();}
+void UMultiplayerDlg::Back(){if(LobbyRoster){Leave();return;}if(auto* S=Service()){if(S->IsBusy()){S->CancelSearch();return;}if(S->HasSession()){S->LeaveSession();return;}}RemoveFromParent();if(auto* Manager=GetMenuManager())Manager->ShowMenuDlg();}
+void UMultiplayerDlg::HandleAccept(){if(LobbyRoster)return;if(bHostMode)Create();else Join();}
 void UMultiplayerDlg::HandleCancel(){Back();}
 
 void UMultiplayerDlg::SubmitChat(const FText& Text, ETextCommit::Type CommitMethod)
@@ -212,13 +194,21 @@ void UMultiplayerDlg::RefreshRoster()
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     if (!State || !LobbyRoster) return;
 
-    TArray<FString> Players;
+    LobbyRoster->ClearChildren();
     for (const APlayerState* Entry : State->PlayerArray)
         if (const auto* Player = Cast<ASSWSessionPlayerState>(Entry))
-            Players.Add(FString::Printf(TEXT("%s [%s]"), *Player->GetPlayerName(),
-                Player->bReady ? TEXT("Ready") : TEXT("Waiting")));
+        {
+            const FString Name = Player->GetPlayerName().IsEmpty() ? TEXT("Connecting pilot") : Player->GetPlayerName();
+            auto* Row = Label(FString::Printf(TEXT("%s   ·   %s"), *Name,
+                Player->bReady ? TEXT("Ready") : TEXT("Waiting")), 16);
+            Row->SetClipping(EWidgetClipping::ClipToBounds);
+            LobbyRoster->AddChild(Row);
+        }
 
-    LobbyRoster->SetText(FText::FromString(FString::Join(Players, TEXT("   "))));
+    const auto* Controller = GetOwningPlayer<ASSWSessionLobbyController>();
+    const auto* Local = Controller ? Controller->GetPlayerState<ASSWSessionPlayerState>() : nullptr;
+    if (ReadyLabel)
+        ReadyLabel->SetText(FText::FromString(Local && Local->bReady ? TEXT("CANCEL READY") : TEXT("READY")));
 }
 
 void UMultiplayerDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -226,8 +216,21 @@ void UMultiplayerDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
     Super::NativeTick(MyGeometry, InDeltaTime);
     if (!MissionCountdownLabel) return;
 
-    const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
+    auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     if (!State) return;
+    if (ObservedLobby.Get() != State)
+    {
+        if (auto* Previous = ObservedLobby.Get())
+        {
+            Previous->OnRosterChanged.RemoveAll(this);
+            Previous->OnChatChanged.RemoveAll(this);
+        }
+        ObservedLobby = State;
+        State->OnRosterChanged.AddUObject(this, &ThisClass::RefreshRoster);
+        State->OnChatChanged.AddUObject(this, &ThisClass::RefreshChat);
+        RefreshRoster();
+        RefreshChat();
+    }
 
     if (!State->MissionLaunchError.IsEmpty() && State->MissionStartDeadline <= 0.0)
     {
@@ -250,4 +253,95 @@ void UMultiplayerDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
         MissionCountdownLabel->SetText(FText::FromString(TEXT("MISSION SIMULATION RUNNING")));
     else
         MissionCountdownLabel->SetText(FText::FromString(FString::Printf(TEXT("MISSION START IN %d"), Seconds)));
+}
+
+void UMultiplayerDlg::BuildLobbyScreen(UVerticalBox* Main)
+{
+    auto* LobbyTitle = Label(TEXT("MISSION LOBBY"), 30);
+    LobbyTitle->SetFont(MissionUIStyle::GetHeaderFont(30));
+    Main->AddChildToVerticalBox(LobbyTitle)->SetPadding(FMargin(0, 0, 0, 8));
+    MissionCountdownLabel = Label(TEXT("WAITING FOR PILOTS TO READY UP"), 16);
+    Main->AddChildToVerticalBox(MissionCountdownLabel)->SetPadding(FMargin(0, 0, 0, 20));
+
+    auto* Columns = WidgetTree->ConstructWidget<UHorizontalBox>();
+    Main->AddChildToVerticalBox(Columns)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+
+    auto* PilotCard = WidgetTree->ConstructWidget<UBorder>();
+    auto* PilotSlot = Columns->AddChildToHorizontalBox(PilotCard);
+    FSlateChildSize PilotWidth(ESlateSizeRule::Fill);
+    PilotWidth.Value = 0.38f;
+    PilotSlot->SetSize(PilotWidth);
+    PilotSlot->SetPadding(FMargin(0, 0, 12, 0));
+    PilotCard->SetPadding(FMargin(16));
+    PilotCard->SetBrushColor(FLinearColor(.02f, .055f, .08f));
+    auto* Pilots = WidgetTree->ConstructWidget<UVerticalBox>();
+    PilotCard->SetContent(Pilots);
+    Pilots->AddChildToVerticalBox(Label(TEXT("PILOTS"), 18))->SetPadding(FMargin(0, 0, 0, 12));
+    LobbyRoster = WidgetTree->ConstructWidget<UScrollBox>();
+    Pilots->AddChildToVerticalBox(LobbyRoster)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+
+    auto* ChatCard = WidgetTree->ConstructWidget<UBorder>();
+    auto* ChatSlot = Columns->AddChildToHorizontalBox(ChatCard);
+    FSlateChildSize ChatWidth(ESlateSizeRule::Fill);
+    ChatWidth.Value = 0.62f;
+    ChatSlot->SetSize(ChatWidth);
+    ChatCard->SetPadding(FMargin(16));
+    ChatCard->SetBrushColor(FLinearColor(.02f, .055f, .08f));
+    auto* Chat = WidgetTree->ConstructWidget<UVerticalBox>();
+    ChatCard->SetContent(Chat);
+    Chat->AddChildToVerticalBox(Label(TEXT("SESSION CHAT"), 18))->SetPadding(FMargin(0, 0, 0, 12));
+    ChatLog = WidgetTree->ConstructWidget<UScrollBox>();
+    Chat->AddChildToVerticalBox(ChatLog)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+
+    ChatEntry = WidgetTree->ConstructWidget<UEditableTextBox>();
+    FEditableTextBoxStyle Style = ChatEntry->GetWidgetStyle();
+    FSlateBrush Background = *FCoreStyle::Get().GetBrush(TEXT("WhiteBrush"));
+    Background.TintColor = FSlateColor(FLinearColor(.008f, .025f, .04f));
+    Style.BackgroundImageNormal = Background;
+    Style.BackgroundImageHovered = Background;
+    Style.BackgroundImageFocused = Background;
+    Style.SetForegroundColor(FSlateColor(FLinearColor(.9f, .96f, 1.f)));
+    Style.SetFont(MissionUIStyle::GetRowFont(16));
+    Style.Padding = FMargin(12, 10);
+    ChatEntry->SetWidgetStyle(Style);
+    ChatEntry->SetHintText(FText::FromString(TEXT("Type a message and press Enter")));
+    ChatEntry->SetClearKeyboardFocusOnCommit(false);
+    ChatEntry->OnTextCommitted.AddDynamic(this, &ThisClass::SubmitChat);
+    Chat->AddChildToVerticalBox(ChatEntry)->SetPadding(FMargin(0, 12, 0, 0));
+
+    auto* Actions = WidgetTree->ConstructWidget<UHorizontalBox>();
+    Main->AddChildToVerticalBox(Actions)->SetPadding(FMargin(0, 12, 0, 0));
+    auto* LeaveGroup = WidgetTree->ConstructWidget<UVerticalBox>();
+    Actions->AddChildToHorizontalBox(LeaveGroup)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    AddMainMenuButton(LeaveGroup);
+    auto* ReadyGroup = WidgetTree->ConstructWidget<UVerticalBox>();
+    auto* ReadySlot = Actions->AddChildToHorizontalBox(ReadyGroup);
+    ReadySlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    ReadySlot->SetPadding(FMargin(12, 0, 0, 0));
+    auto* Ready = Button(TEXT("READY"), ReadyGroup);
+    ReadyLabel = Cast<UTextBlock>(Ready->GetChildAt(0));
+    Ready->OnClicked.AddDynamic(this, &ThisClass::ToggleReady);
+}
+
+void UMultiplayerDlg::AddMainMenuButton(UVerticalBox* Parent)
+{
+    auto* ReturnButton = Button(TEXT("MAIN MENU"), Parent);
+    ReturnButton->OnClicked.AddUniqueDynamic(this, &ThisClass::Back);
+
+    auto* Texture = LoadObject<UTexture2D>(nullptr,
+        TEXT("/Game/SciFiUIComponents/Textures/Icons4/T_ICON_Menu.T_ICON_Menu"));
+    if (!Texture) return;
+
+    auto* ContentRow = WidgetTree->ConstructWidget<UHorizontalBox>();
+    auto* Icon = WidgetTree->ConstructWidget<UImage>();
+    FSlateBrush IconBrush;
+    IconBrush.SetResourceObject(Texture);
+    IconBrush.ImageSize = FVector2D(22.0, 22.0);
+    Icon->SetBrush(IconBrush);
+    auto* IconSlot = ContentRow->AddChildToHorizontalBox(Icon);
+    IconSlot->SetVerticalAlignment(VAlign_Center);
+    IconSlot->SetPadding(FMargin(0, 0, 10, 0));
+    ContentRow->AddChildToHorizontalBox(Label(TEXT("MAIN MENU"), 16))->SetVerticalAlignment(VAlign_Center);
+    ReturnButton->ClearChildren();
+    ReturnButton->AddChild(ContentRow);
 }

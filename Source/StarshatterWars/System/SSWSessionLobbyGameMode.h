@@ -111,6 +111,7 @@ public:
     bool bReady = false;
 
     UFUNCTION() void OnRep_Ready();
+    virtual void OnRep_PlayerName() override;
 };
 
 USTRUCT(BlueprintType)
@@ -218,6 +219,9 @@ protected:
 private:
     UFUNCTION(Server, Reliable)
     void ServerSendSessionChat(const FString& Message);
+
+    UFUNCTION(Server, Reliable)
+    void ServerSetPlatformPilotName(const FString& DisplayName);
 
     UFUNCTION(Server, Reliable)
     void ServerSendMissionChat(ESSWChatChannel Channel, const FString& Message, int64 RecipientShipId);

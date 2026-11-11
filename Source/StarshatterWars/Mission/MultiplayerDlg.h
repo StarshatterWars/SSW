@@ -32,13 +32,17 @@ protected:
  virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
  virtual void NativeDestruct()override;
  void BuildSessionScreen();
+ void BuildLobbyScreen(UVerticalBox* Main);
  UTextBlock* Label(const FString& Text,int32 Size=18);
  UButton* Button(const FString& Text,UVerticalBox* Parent);
+ void AddMainMenuButton(UVerticalBox* Parent);
  USSWSessionSubsystem* Service()const;
  void RefreshChat();
  void RefreshRoster();
  UFUNCTION()void ToggleReady();
- UPROPERTY(Transient)TObjectPtr<UTextBlock> LobbyRoster;
+ UPROPERTY(Transient)TObjectPtr<UScrollBox> LobbyRoster;
+ UPROPERTY(Transient)TObjectPtr<UTextBlock> ReadyLabel;
+ TWeakObjectPtr<class ASSWSessionGameState> ObservedLobby;
  UPROPERTY(Transient)TObjectPtr<UTextBlock> MissionCountdownLabel;
  int32 DisplayedCountdown = INDEX_NONE;
  UFUNCTION()void SubmitChat(const FText& Text, ETextCommit::Type CommitMethod);

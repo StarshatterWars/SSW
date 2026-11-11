@@ -9,6 +9,7 @@
 #include "Engine/World.h"
 #include "Engine/Engine.h"
 #include "SSWGameInstance.h"
+#include "SSWSessionLobbyGameMode.h"
 #include "UObject/UObjectGlobals.h"
 #include "TimerManager.h"
 namespace { const FName SSWProjectKey(TEXT("SSW_PROJECT")),SSWTitleKey(TEXT("SSW_TITLE")); }
@@ -90,7 +91,17 @@ void USSWSessionSubsystem::Joined(FName Name,EOnJoinSessionCompleteResult::Type 
 bool USSWSessionSubsystem::LeaveSession(){
  if(IsBusy())return false;
  if(!Sessions.IsValid()){IOnlineSubsystem* OSS=GetWorld()?Online::GetSubsystem(GetWorld()):nullptr;if(OSS)Sessions=OSS->GetSessionInterface();}
- if(!Sessions.IsValid()||!Sessions->GetNamedSession(NAME_GameSession)){Change(ESSWSessionState::Idle,TEXT("No active session."));return false;}
+ if (!Sessions.IsValid() || !Sessions->GetNamedSession(NAME_GameSession))
+ {
+     if (GetWorld() && GetWorld()->GetFirstPlayerController<ASSWSessionLobbyController>())
+     {
+         bReturningToMenu = true;
+         UGameplayStatics::OpenLevel(this, FName(*MenuMap));
+         return true;
+     }
+     Change(ESSWSessionState::Idle, TEXT("No active session."));
+     return false;
+ }
  DestroyHandle=Sessions->AddOnDestroySessionCompleteDelegate_Handle(FOnDestroySessionCompleteDelegate::CreateUObject(this,&ThisClass::Left));Change(ESSWSessionState::Leaving,TEXT("Leaving session..."));
  if(!Sessions->DestroySession(NAME_GameSession)){Sessions->ClearOnDestroySessionCompleteDelegate_Handle(DestroyHandle);DestroyHandle.Reset();Change(ESSWSessionState::Failed,TEXT("Could not leave session."));return false;}return true;
 }
