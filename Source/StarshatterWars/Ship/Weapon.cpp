@@ -634,8 +634,9 @@ int Weapon::Track(SimObject* targ, SimSystem* sub)
 
 SimShot* Weapon::Fire()
 {
-    if (Game::Paused())
-        return 0;
+    const Sim* Simulation = Sim::GetSim();
+    if (Game::Paused() || (Simulation && !Simulation->HasSimulationAuthority()))
+        return nullptr;
 
     if (!ship || !design || nbarrels <= 0)
         return nullptr;
@@ -657,11 +658,7 @@ SimShot* Weapon::Fire()
     {
         refire = design->refire_delay;
 
-        //NetGame* net_game = NetGame::GetInstance();
-        //bool     net_client = net_game ? net_game->IsClient() : false;
-
-        // All barrels (guns and missiles). Networking is not active in this port,
-        // so both primary and secondary follow the legacy non-net fire path.
+        // The authoritative simulation creates gun and missile shots.
         if (active_barrel < 0) {
             for (int i = 0; i < nbarrels; i++)
                 shot = FireBarrel(i);
@@ -757,8 +754,9 @@ SimShot* Weapon::FireBarrel(int n)
     SimShot* shot = 0;
     SimRegion* region = ship->GetRegion();
 
-    if (!region || n < 0 || n >= nbarrels || Game::Paused())
-        return 0;
+    const Sim* Simulation = Sim::GetSim();
+    if (!region || Game::Paused() || (Simulation && !Simulation->HasSimulationAuthority()))
+        return nullptr;
 
     firing = 1;
     Aim();

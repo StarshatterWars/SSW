@@ -86,6 +86,14 @@ void UMissionEditorNavDlg::NativeConstruct()
         if(!Canvas){auto* Old=WidgetTree->RootWidget.Get();Canvas=WidgetTree->ConstructWidget<UCanvasPanel>();WidgetTree->RootWidget=Canvas;if(Old){auto* MapSlot=Canvas->AddChildToCanvas(Old);MapSlot->SetAnchors(FAnchors(0,0,1,1));MapSlot->SetOffsets(FMargin(0));}}
         RouteMap=WidgetTree->ConstructWidget<UMissionRouteMap>();RouteMap->Model=mission;RouteMap->SetClipping(EWidgetClipping::ClipToBounds);
         RouteMap->RegionName=[this](){return CmbRegion?CmbRegion->GetSelectedOption():(mission?FString(ANSI_TO_TCHAR(mission->GetRegion())):FString());};
+        RouteMap->RegionGridSpacing = [this]()
+        {
+            const FString SystemName = mission ? ANSI_TO_TCHAR(mission->GetSystem()) : FString();
+            StarSystem* System = CmbSystem ? FindSystemByName(CmbSystem->GetSelectedOption()) : nullptr;
+            if (!System && !SystemName.IsEmpty()) System = FindSystemByName(SystemName);
+            OrbitalRegion* Region = System ? System->FindRegion(TCHAR_TO_ANSI(*RouteMap->RegionName())) : nullptr;
+            return Region ? Region->GetGridSpace() : 0.0;
+        };
         auto* MapSlot=Canvas->AddChildToCanvas(RouteMap);MapSlot->SetAnchors(FAnchors(.04f,.32f,.96f,.89f));MapSlot->SetOffsets(FMargin(0));MapSlot->SetZOrder(5);
     }
     BindFormWidgets();

@@ -18,6 +18,7 @@
 =============================================================================*/
 
 #include "StarshatterEnvironmentSubsystem.h"
+#include "SSWSessionLobbyGameMode.h"
 #include "SSWRuntimeSubsystem.h"
 
 // Core
@@ -2026,6 +2027,17 @@ void UStarshatterEnvironmentSubsystem::SetSimulationClockMs(int64 InMs)
 
 void UStarshatterEnvironmentSubsystem::AdvanceSimulationClock(double DeltaSeconds)
 {
+    if (const UWorld* World = GetWorld(); World && World->GetNetMode() == NM_Client)
+    {
+        if (const auto* State = World->GetGameState<ASSWSessionGameState>())
+        {
+            SimulationClockMs = State->GalaxyClockMs;
+            StarSystem::SetSimulationTime(GetSimulationClockSeconds());
+            StarSystem::CalcStardate();
+        }
+        return;
+    }
+
 	if (DeltaSeconds <= 0.0)
 	{
 		return;

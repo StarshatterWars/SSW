@@ -634,6 +634,7 @@ void SimRegion::InsertObject(Ship* s)
         return;
 
     if (!ships.contains(s))
+        if (sim) sim->AssignNetworkObjectId(*s);
         ships.append(s);
 
     if (s->NumFlightDecks() > 0) {
@@ -657,6 +658,7 @@ void SimRegion::InsertObject(SimShot* shot)
         }
     }
     else if (!shots.contains(shot)) {
+        if (sim) sim->AssignNetworkObjectId(*shot);
         shots.append(shot);
         bAdded = true;
     }
@@ -886,8 +888,10 @@ void SimRegion::UpdateShips(double seconds)
     auto QueueDestroyedShip = [this](Ship* Destroyed) {
         if (dead_ships.contains(Destroyed)) return;
         dead_ships.append(Destroyed);
-        if (sim)
+        if (sim) {
+            sim->OnShipRetired.Broadcast(*Destroyed, *this);
             sim->ProcessEventTrigger(MissionEvent::TRIGGER_DESTROYED, 0, Destroyed->GetName());
+        }
     };
 
     for (int i = 0; i < ships.size(); /* manual */) {

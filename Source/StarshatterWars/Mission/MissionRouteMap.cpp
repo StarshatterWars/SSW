@@ -37,7 +37,28 @@ public:
         }
         FSlateDrawElement::MakeBox(Out,Layer,G.ToPaintGeometry(),FCoreStyle::Get().GetBrush("WhiteBrush"),ESlateDrawEffect::None,FLinearColor(.015,.025,.04,1));
         auto Line=[&](FVector2D A,FVector2D B,FLinearColor C){TArray<FVector2D> P{A,B};FSlateDrawElement::MakeLines(Out,Layer+1,G.ToPaintGeometry(),P,ESlateDrawEffect::None,C,true,1);};
-        for(int I=0;I<10;++I){Line(FVector2D(Size.X*I/10,0),FVector2D(Size.X*I/10,Size.Y),FLinearColor(.08,.12,.16));Line(FVector2D(0,Size.Y*I/10),FVector2D(Size.X,Size.Y*I/10),FLinearColor(.08,.12,.16));}
+        const double AuthoredSpacing = Source.IsValid() && Source->RegionGridSpacing
+            ? Source->RegionGridSpacing() : 0.0;
+        double GridSpacing = FMath::IsFinite(AuthoredSpacing) && AuthoredSpacing > 0.0 ? AuthoredSpacing : 20000.0;
+        while (GridSpacing / Scale < 24.0) GridSpacing *= 4.0;
+
+        const FVector2D Origin = Project(FVector::ZeroVector, Size);
+        const double PixelSpacing = GridSpacing / Scale;
+        const auto DrawAxis = [&](double OriginPixel, double Extent, bool bVertical)
+        {
+            const int64 First = FMath::CeilToInt64(-OriginPixel / PixelSpacing);
+            const int64 LastLine = FMath::FloorToInt64((Extent - OriginPixel) / PixelSpacing);
+            for (int64 Index = First; Index <= LastLine; ++Index)
+            {
+                const double Pixel = OriginPixel + Index * PixelSpacing;
+                const FLinearColor Color = Index % 4 == 0
+                    ? FLinearColor(.13f,.23f,.32f) : FLinearColor(.08f,.12f,.16f);
+                if (bVertical) Line({Pixel, 0.0}, {Pixel, Size.Y}, Color);
+                else Line({0.0, Pixel}, {Size.X, Pixel}, Color);
+            }
+        };
+        DrawAxis(Origin.X, Size.X, true);
+        DrawAxis(Origin.Y, Size.Y, false);
         auto Label=[&](FVector2D P,FString Text,FLinearColor Color){FSlateDrawElement::MakeText(Out,Layer+2,G.ToPaintGeometry(FVector2D(600,20),FSlateLayoutTransform(P)),Text,FCoreStyle::GetDefaultFontStyle("Regular",10),ESlateDrawEffect::None,Color);};
         Label(FVector2D(8,4),TEXT("Drag ships/points | Shift-click: add point | Delete: remove | wheel: zoom | right-drag: pan | F: fit"),FLinearColor::White);
         Label(FVector2D(8,22),TEXT("Up/Down: altitude +/-100 | +/-: speed +/-50 | A: cycle waypoint action"),FLinearColor::White);

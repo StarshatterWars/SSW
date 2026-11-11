@@ -98,7 +98,7 @@ void USSWDiagnosticsSettings::PostEditChangeProperty(FPropertyChangedEvent& Even
 void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
-    if (IsRunningGame() && GConfig && !GetDefault<USSWDiagnosticsSettings>()->bEnableGameLogging &&
+    if (IsRunningGame() && !IsRunningDedicatedServer() && GConfig && !GetDefault<USSWDiagnosticsSettings>()->bEnableGameLogging &&
         !FParse::Param(FCommandLine::Get(), TEXT("SSWLogging")))
     {
         GConfig->SetString(TEXT("Core.Log"), TEXT("Global"), TEXT("off"), GEngineIni);
@@ -148,6 +148,26 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     if (!BuildContext(Ctx))
     {
         UE_LOG(LogSSWBoot, Error, TEXT("[BOOT] BuildContext failed; aborting boot."));
+        return;
+    }
+
+    if (IsRunningDedicatedServer())
+    {
+        auto* Assets = GI->GetSubsystem<UStarshatterAssetRegistrySubsystem>();
+        if (!Assets || !Assets->InitRegistry())
+        {
+            UE_LOG(LogSSWBoot, Error, TEXT("[StarServer] Data asset registry unavailable"));
+            return;
+        }
+
+        BootLegacyDataLoader(Ctx);
+        BootSystemDesignLoader(Ctx);
+        BootWeaponDesignLoader(Ctx);
+        BootShipDesignLoader(Ctx);
+        BootGalaxyLoader(Ctx);
+        BootCombatGroupLoader(Ctx);
+        BootGameDataLoader(false);
+        MarkBootComplete();
         return;
     }
 

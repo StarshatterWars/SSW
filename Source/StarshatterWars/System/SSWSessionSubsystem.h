@@ -36,6 +36,7 @@ public:
  UFUNCTION(BlueprintCallable) bool JoinSession(int32 Index);
  UFUNCTION(BlueprintCallable) bool LeaveSession();
  UFUNCTION(BlueprintCallable) void CancelSearch();
+ void AdvertiseDedicatedLAN();
  static FOnlineSessionSettings MakeSettings(const FString& Name,int32 Players,bool bLAN);
 private:
  void NetworkFailure(UWorld* World,class UNetDriver* Driver,ENetworkFailure::Type Type,const FString& Message);

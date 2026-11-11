@@ -101,3 +101,45 @@ void USSWSessionSubsystem::ClearDelegates(){if(Sessions.IsValid()){
  Sessions->ClearOnCreateSessionCompleteDelegate_Handle(CreateHandle);Sessions->ClearOnFindSessionsCompleteDelegate_Handle(FindHandle);Sessions->ClearOnJoinSessionCompleteDelegate_Handle(JoinHandle);Sessions->ClearOnDestroySessionCompleteDelegate_Handle(DestroyHandle);}
  CreateHandle.Reset();FindHandle.Reset();JoinHandle.Reset();DestroyHandle.Reset();}
 void USSWSessionSubsystem::Deinitialize(){FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(MapLoadedHandle);if(GEngine){GEngine->OnNetworkFailure().Remove(NetworkFailureHandle);GEngine->OnTravelFailure().Remove(TravelFailureHandle);}ClearDelegates();Search.Reset();SearchResults.Reset();Results.Reset();Sessions.Reset();Super::Deinitialize();}
+
+void USSWSessionSubsystem::AdvertiseDedicatedLAN()
+{
+    UWorld* World = GetWorld();
+    if (!World || World->GetNetMode() != NM_DedicatedServer) return;
+
+    IOnlineSubsystem* OSS = Online::GetSubsystem(World, FName(TEXT("NULL")));
+    Sessions = OSS ? OSS->GetSessionInterface() : nullptr;
+    if (!Sessions.IsValid())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("[StarServer] LAN advertisement unavailable; direct connections remain available"));
+        return;
+    }
+
+    FString Name = TEXT("StarServer");
+    FParse::Value(FCommandLine::Get(), TEXT("ServerName="), Name);
+    FOnlineSessionSettings Settings = MakeSettings(Name, 4, true);
+    Settings.bIsDedicated = true;
+    Settings.bAllowJoinInProgress = true;
+
+    CreateHandle = Sessions->AddOnCreateSessionCompleteDelegate_Handle(
+        FOnCreateSessionCompleteDelegate::CreateWeakLambda(this, [this](FName SessionName, bool bSuccess)
+        {
+            Sessions->ClearOnCreateSessionCompleteDelegate_Handle(CreateHandle);
+            CreateHandle.Reset();
+            if (bSuccess)
+            {
+                Sessions->StartSession(SessionName);
+                Change(ESSWSessionState::Hosting, TEXT("StarServer is hosting on LAN."));
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("[StarServer] LAN session creation failed"));
+            }
+        }));
+    if (!Sessions->CreateSession(0, NAME_GameSession, Settings))
+    {
+        Sessions->ClearOnCreateSessionCompleteDelegate_Handle(CreateHandle);
+        CreateHandle.Reset();
+        UE_LOG(LogTemp, Warning, TEXT("[StarServer] Could not advertise the LAN session"));
+    }
+}

@@ -10,6 +10,7 @@ class STARSHATTERWARS_API UMissionRouteMap : public UWidget
 public:
     Mission* Model=nullptr;
     TFunction<FString()> RegionName;
+    TFunction<double()> RegionGridSpacing;
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
 };

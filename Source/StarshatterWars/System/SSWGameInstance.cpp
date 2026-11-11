@@ -73,6 +73,7 @@ USSWGameInstance::USSWGameInstance(const FObjectInitializer& ObjectInitializer)
 
 void USSWGameInstance::OnStart()
 {
+    if (IsRunningDedicatedServer()) return;
     if (UWorld* World = GetWorld())
     {
         World->GetTimerManager().SetTimerForNextTick(this, &USSWGameInstance::ShowStartupSplashes);

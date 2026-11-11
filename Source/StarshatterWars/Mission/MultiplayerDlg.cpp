@@ -1,4 +1,5 @@
 #include "MultiplayerDlg.h"
+#include "SSWSessionLobbyGameMode.h"
 #include "SSWSessionSubsystem.h"
 #include "StarshatterGameDataSubsystem.h"
 #include "Blueprint/WidgetTree.h"
@@ -102,6 +103,33 @@ void UMultiplayerDlg::BuildSessionScreen()
     JoinPanel->AddChildToVerticalBox(Browser)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));auto* Scroll=WidgetTree->ConstructWidget<UScrollBox>();Browser->SetContent(Scroll);
     Rows=WidgetTree->ConstructWidget<UVerticalBox>();Scroll->AddChild(Rows);
     JoinButton=Button(TEXT("JOIN SELECTED GAME"),JoinPanel);JoinButton->OnClicked.AddUniqueDynamic(this,&ThisClass::Join);
+    if (auto* State = GetWorld()->GetGameState<ASSWSessionGameState>())
+    {
+        LobbyRoster = Label(TEXT(""), 14);
+        Main->AddChildToVerticalBox(LobbyRoster);
+        Button(TEXT("TOGGLE READY"), Main)->OnClicked.AddDynamic(this, &ThisClass::ToggleReady);
+        State->OnRosterChanged.RemoveAll(this);
+        State->OnRosterChanged.AddUObject(this, &ThisClass::RefreshRoster);
+        RefreshRoster();
+        MissionCountdownLabel = Label(TEXT("WAITING FOR PILOTS TO READY UP"), 14);
+        Main->AddChildToVerticalBox(MissionCountdownLabel);
+
+        Main->AddChildToVerticalBox(Label(TEXT("SESSION CHAT"), 14));
+        auto* ChatSize = WidgetTree->ConstructWidget<USizeBox>();
+        ChatSize->SetHeightOverride(100);
+        Main->AddChildToVerticalBox(ChatSize);
+        ChatLog = WidgetTree->ConstructWidget<UScrollBox>();
+        ChatSize->SetContent(ChatLog);
+        ChatEntry = WidgetTree->ConstructWidget<UEditableTextBox>();
+        ChatEntry->SetHintText(FText::FromString(TEXT("Type a message and press Enter")));
+        ChatEntry->SetClearKeyboardFocusOnCommit(false);
+        ChatEntry->OnTextCommitted.AddDynamic(this, &ThisClass::SubmitChat);
+        Main->AddChildToVerticalBox(ChatEntry);
+        State->OnChatChanged.RemoveAll(this);
+        State->OnChatChanged.AddUObject(this, &ThisClass::RefreshChat);
+        RefreshChat();
+    }
+
     auto* StatusBar=WidgetTree->ConstructWidget<UBorder>();StatusBar->SetPadding(FMargin(12));StatusBar->SetBrushColor(FLinearColor(.012f,.033f,.05f));
     Main->AddChildToVerticalBox(StatusBar)->SetPadding(FMargin(0,12,0,8));StatusLabel=Label(TEXT("Create a session or search for games."),14);StatusLabel->SetAutoWrapText(true);StatusBar->SetContent(StatusLabel);
     auto* Footer=WidgetTree->ConstructWidget<UHorizontalBox>();Main->AddChildToVerticalBox(Footer);
@@ -146,3 +174,80 @@ void UMultiplayerDlg::CancelSearch(){if(auto* S=Service())S->CancelSearch();}
 void UMultiplayerDlg::Back(){if(auto* S=Service()){if(S->IsBusy()){S->CancelSearch();return;}if(S->HasSession()){S->LeaveSession();return;}}RemoveFromParent();if(auto* Manager=GetMenuManager())Manager->ShowMenuDlg();}
 void UMultiplayerDlg::HandleAccept(){if(bHostMode)Create();else Join();}
 void UMultiplayerDlg::HandleCancel(){Back();}
+
+void UMultiplayerDlg::SubmitChat(const FText& Text, ETextCommit::Type CommitMethod)
+{
+    if (CommitMethod != ETextCommit::OnEnter) return;
+    if (auto* Controller = GetOwningPlayer<ASSWSessionLobbyController>())
+    {
+        Controller->SendSessionChat(Text.ToString());
+        ChatEntry->SetText(FText::GetEmpty());
+    }
+}
+
+void UMultiplayerDlg::RefreshChat()
+{
+    const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
+    if (!State || !ChatLog) return;
+
+    ChatLog->ClearChildren();
+    for (const auto& Message : State->ChatHistory)
+    {
+        auto* Line = Label(FString::Printf(TEXT("%s: %s"), *Message.Sender, *Message.Text), 14);
+        Line->SetAutoWrapText(true);
+        ChatLog->AddChild(Line);
+    }
+    ChatLog->ScrollToEnd();
+}
+
+void UMultiplayerDlg::ToggleReady()
+{
+    if (auto* Controller = GetOwningPlayer<ASSWSessionLobbyController>())
+        if (const auto* State = Controller->GetPlayerState<ASSWSessionPlayerState>())
+            Controller->SetLobbyReady(!State->bReady);
+}
+
+void UMultiplayerDlg::RefreshRoster()
+{
+    const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
+    if (!State || !LobbyRoster) return;
+
+    TArray<FString> Players;
+    for (const APlayerState* Entry : State->PlayerArray)
+        if (const auto* Player = Cast<ASSWSessionPlayerState>(Entry))
+            Players.Add(FString::Printf(TEXT("%s [%s]"), *Player->GetPlayerName(),
+                Player->bReady ? TEXT("Ready") : TEXT("Waiting")));
+
+    LobbyRoster->SetText(FText::FromString(FString::Join(Players, TEXT("   "))));
+}
+
+void UMultiplayerDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+{
+    Super::NativeTick(MyGeometry, InDeltaTime);
+    if (!MissionCountdownLabel) return;
+
+    const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
+    if (!State) return;
+
+    if (!State->MissionLaunchError.IsEmpty() && State->MissionStartDeadline <= 0.0)
+    {
+        if (DisplayedCountdown != INDEX_NONE - 1)
+            MissionCountdownLabel->SetText(FText::FromString(State->MissionLaunchError));
+        DisplayedCountdown = INDEX_NONE - 1;
+        return;
+    }
+
+    const int32 Seconds = State->bMissionStartReady ? 0 :
+        State->MissionStartDeadline > 0.0 ?
+            FMath::Max(1, FMath::CeilToInt(State->MissionStartDeadline - State->GetServerWorldTimeSeconds())) :
+            INDEX_NONE;
+    if (Seconds == DisplayedCountdown) return;
+
+    DisplayedCountdown = Seconds;
+    if (Seconds == INDEX_NONE)
+        MissionCountdownLabel->SetText(FText::FromString(TEXT("WAITING FOR PILOTS TO READY UP")));
+    else if (Seconds == 0)
+        MissionCountdownLabel->SetText(FText::FromString(TEXT("MISSION SIMULATION RUNNING")));
+    else
+        MissionCountdownLabel->SetText(FText::FromString(FString::Printf(TEXT("MISSION START IN %d"), Seconds)));
+}

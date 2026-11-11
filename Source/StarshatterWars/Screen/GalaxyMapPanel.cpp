@@ -256,14 +256,30 @@ int32 UGalaxyMapPanel::NativePaint(
 
     const FVector2D PanelSize = AllottedGeometry.GetLocalSize();
 
-    if (CachedSystemPositions.Num() == 0 || SystemLookup.Num() == 0)
+    const FSlateRect ClipRect = GetClipPanelRect(PanelSize);
+    const double CenterX = (ClipRect.Left + ClipRect.Right) * 0.5;
+    const double CenterY = (ClipRect.Top + ClipRect.Bottom) * 0.5;
+    const double GridStep = (ClipRect.Right - ClipRect.Left) / 8.0;
+    int32 PaintLayer = LayerId + 1;
+    const auto DrawGridLine = [&](FVector2D Start, FVector2D End)
     {
-        return LayerId;
+        FSlateDrawElement::MakeLines(OutDrawElements, PaintLayer, AllottedGeometry.ToPaintGeometry(),
+            TArray<FVector2D>{Start, End}, ESlateDrawEffect::None, FLinearColor(0.13f, 0.18f, 0.24f, 0.5f), true);
+    };
+    if (GridStep > 0.0)
+    {
+        for (int32 Index = -3; Index <= 3; ++Index)
+        {
+            const double X = CenterX + Index * GridStep;
+            const double Y = CenterY + Index * GridStep;
+            DrawGridLine({X, ClipRect.Top}, {X, ClipRect.Bottom});
+            if (Y >= ClipRect.Top && Y <= ClipRect.Bottom)
+                DrawGridLine({ClipRect.Left, Y}, {ClipRect.Right, Y});
+        }
     }
 
-    const FSlateRect ClipRect = GetClipPanelRect(PanelSize);
-
-    int32 PaintLayer = LayerId;
+    if (CachedSystemPositions.IsEmpty() || SystemLookup.IsEmpty())
+        return PaintLayer;
 
     if (!CurrentMissionSystemName.IsEmpty())
     {

@@ -2437,9 +2437,33 @@ bool Sim::RequestPlayerCarrierLaunch()
     return true;
 }
 
+void Sim::SetNetworkWorld(UWorld* World)
+{
+    NetworkWorld = World;
+}
+
+bool Sim::HasSimulationAuthority() const
+{
+    const UWorld* World = NetworkWorld.Get();
+    return !World || World->GetNetMode() != NM_Client;
+}
+
+bool Sim::IsNetworked() const
+{
+    const UWorld* World = NetworkWorld.Get();
+    return World && World->GetNetMode() != NM_Standalone;
+}
+
+void Sim::AssignNetworkObjectId(SimObject& Object)
+{
+    if (Object.GetObjID() == 0 && IsNetworked() && HasSimulationAuthority())
+        Object.SetObjID(NextNetworkObjectId++);
+}
+
 void
 Sim::ExecFrame(double DeltaSeconds)
 {
+    if (!HasSimulationAuthority()) return;
 	UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[Sim::ExecFrame] Seconds=%.4f GameTime=%u Regions=%d"),
 		DeltaSeconds,
@@ -2893,9 +2917,7 @@ Sim::ResolveSplashList()
 
 				if (distance > 1 && distance < splash->range) {
 					const double damage = splash->damage * (1 - distance / splash->range);
-					//if (!NetGame::IsNetGameClient()) {
-						ship->InflictDamage(damage);
-					//}
+					ship->InflictDamage(damage);
 
 					const int ship_destroyed = (!ship->InTransition() && ship->GetIntegrity() < 1.0f);
 

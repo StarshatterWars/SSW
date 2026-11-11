@@ -3321,6 +3321,7 @@ Ship::SetWard(Ship* s)
 void
 Ship::SetTarget(SimObject* targ, SimSystem* sub, bool from_net)
 {
+    const bool bChanged = target != targ || subtarget != sub;
 	if (targ && targ->GetType() == ESimObject::SHIP) {
 		Ship* targ_ship = (Ship*)targ;
 
@@ -3350,6 +3351,9 @@ Ship::SetTarget(SimObject* targ, SimSystem* sub, bool from_net)
 				weapon->SetSweep(WeaponsSweep::SWEEP_TIGHT);
 		}
 	}
+
+    if (bChanged && !from_net && sim && sim->IsNetworked() && sim->HasSimulationAuthority())
+        sim->OnShipTargetChanged.Broadcast(*this);
 
 	// track engagement:
 	if (target && target->GetType() == ESimObject::SHIP) {
@@ -5079,7 +5083,7 @@ Ship::CanTimeSkip()
 	Instruction* NavPt =
 		GetNextNavPoint();
 
-	if (GetMissionClockMS() < 10000 /* || NetGame::IsNetGame() */)
+	if (GetMissionClockMS() < 10000 || (sim && sim->IsNetworked()))
 	{
 		return false;
 	}
@@ -6277,7 +6281,7 @@ Ship::InflictDamage(double damage, SimShot* shot, int hit_type, FVector impact)
 {
 	double damage_applied = 0;
 
-	if (Game::Paused() || IsNetObserver() || IsInvulnerable())
+	if (Game::Paused() || IsNetObserver() || IsInvulnerable() || (sim && !sim->HasSimulationAuthority()))
 		return damage_applied;
 
 	if (GetIntegrity() == 0) // already dead?
@@ -6388,6 +6392,8 @@ Ship::InflictDamage(double damage, SimShot* shot, int hit_type, FVector impact)
 		}
 	}
 
+    if (damage_applied > 0 && sim && sim->IsNetworked())
+        sim->OnShipDamageApplied.Broadcast(*this);
 	return damage_applied;
 }
 
@@ -7008,12 +7014,13 @@ Ship::IncFriendlyFire(int f)
 void
 Ship::SetEMCON(int e, bool from_net)
 {
+    const int PreviousEmcon = emcon;
 	if (e < 1)        emcon = 1;
 	else if (e > 3)   emcon = 3;
 	else              emcon = (BYTE)e;
 
-	//if (emcon != old_emcon && !from_net && NetGame::GetInstance())
-	//	NetUtil::SendObjEmcon(this);
+    if (emcon != PreviousEmcon && !from_net && sim && sim->IsNetworked() && sim->HasSimulationAuthority())
+        sim->OnShipEmconChanged.Broadcast(*this);
 }
 
 double
@@ -7272,11 +7279,27 @@ bool Ship::HasManualThrottle() const
         !InTransition() && !IsDead() && !IsDying();
 }
 
+bool Ship::CanUseManualFlight() const
+{
+    return sim && (bNetworkPilot || sim->GetPlayerShip() == this);
+}
+
+void Ship::SetNetworkPilot(bool bAssigned)
+{
+    if (bNetworkPilot == bAssigned) return;
+    bNetworkPilot = bAssigned;
+    if (!bAssigned)
+    {
+        SetControls(nullptr);
+        bManualThrottle = false;
+    }
+}
+
 void Ship::SetManualThrottle(double percent)
 {
     if (Game::IsTimeCompressed()) return;
     if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
-    if (!sim || sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying()) return;
+    if (!CanUseManualFlight() || InTransition() || IsDead() || IsDying()) return;
     EnableManualFlight();
     if (navsys && navsys->AutoNavEngaged()) {
         UE_LOG(LogTemp, Display, TEXT("[AutoNavCancel] Manual flight input Ship='%hs'"), GetName());
@@ -7323,7 +7346,7 @@ void Ship::ClearManualRotationInput()
 
 void Ship::ExecManualRotation(double Seconds)
 {
-    if (!bManualRotation || !sim || sim->GetPlayerShip() != this || InTransition() || IsDead() || IsDying())
+    if (!bManualRotation || !CanUseManualFlight() || InTransition() || IsDead() || IsDying())
     {
         ClearManualRotationInput();
         return;
@@ -7370,7 +7393,7 @@ void Ship::ExecManualRotation(double Seconds)
 void Ship::EnableManualFlight()
 {
     if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
-    if (bManualRotation || !sim || sim->GetPlayerShip()!=this || InTransition() || IsDead() || IsDying()) return;
+    if (bManualRotation || !CanUseManualFlight() || InTransition() || IsDead() || IsDying()) return;
     if (navsys && navsys->AutoNavEngaged()) {
         UE_LOG(LogTemp, Display, TEXT("[AutoNavCancel] Manual flight input Ship='%hs'"), GetName());
         navsys->DisengageAutoNav();
@@ -7392,7 +7415,7 @@ void Ship::SetManualTranslationAxis(int32 Axis, double Value)
 {
     if (Game::IsTimeCompressed()) return;
     if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
-    if (Axis<0 || Axis>2 || !FMath::IsFinite(Value) || !sim || sim->GetPlayerShip()!=this ||
+    if (Axis<0 || Axis>2 || !FMath::IsFinite(Value) || !CanUseManualFlight() ||
         InTransition() || IsDead() || IsDying()) return;
     if (!bManualRotation && FMath::Abs(Value)<0.001) return;
     EnableManualFlight();
@@ -7403,7 +7426,7 @@ void Ship::SetManualAugmenter(bool Enabled)
 {
     if (Game::IsTimeCompressed()) return;
     if (dock && (flight_phase <= EOPSMode::LAUNCH || flight_phase >= EOPSMode::DOCKING)) return;
-    if (!sim || sim->GetPlayerShip()!=this || InTransition() || IsDead() || IsDying()) return;
+    if (!CanUseManualFlight() || InTransition() || IsDead() || IsDying()) return;
     if (Enabled)
     {
         EnableManualFlight();

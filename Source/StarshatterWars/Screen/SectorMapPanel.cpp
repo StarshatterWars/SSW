@@ -940,7 +940,7 @@ void USectorMapPanel::DrawRegionGrid(
         };
         for (int64 Offset = -(RegionRadius / Step) * Step; Offset <= RegionRadius; Offset += Step)
         {
-            const FLinearColor Color = Offset == 0 ? FLinearColor(0.13f, 0.33f, 0.46f, 0.75f)
+            const FLinearColor Color = (Offset / Step) % 4 == 0 ? FLinearColor(0.13f, 0.33f, 0.46f, 0.75f)
                 : FLinearColor(0.07f, 0.19f, 0.29f, 0.53f);
             DrawLine({Project(Offset, -RegionRadius), Project(Offset, RegionRadius)}, Color);
             DrawLine({Project(-RegionRadius, Offset), Project(RegionRadius, Offset)}, Color);

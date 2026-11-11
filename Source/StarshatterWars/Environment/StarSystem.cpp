@@ -1,6 +1,6 @@
 /*  Project Starshatter Wars
 	Fractal Dev Studios
-	Copyright © 2025-2026. All Rights Reserved.
+	Copyright ï¿½ 2025-2026. All Rights Reserved.
 
 	ORIGINAL AUTHOR AND STUDIO: John DiCamillo / Destroyer Studios LLC
 
@@ -15,6 +15,8 @@
 */
 
 #include "StarSystem.h"
+#include "StarshatterEnvironmentSubsystem.h"
+#include "SSWSessionLobbyGameMode.h"
 #include "CoreMinimal.h"
 #include "Galaxy.h"
 #include "Sky.h"
@@ -2039,7 +2041,20 @@ FVector Orbital::OrbitOffset(double MeanAnomaly) const
 
 void Orbital::Update()
 {
-	if (system && primary && period > 0) {
+    const auto* Environment = UStarshatterEnvironmentSubsystem::Get();
+    const UWorld* World = Environment ? Environment->GetWorld() : nullptr;
+    if (World && World->GetNetMode() == NM_Client)
+    {
+        if (const auto* State = World->GetGameState<ASSWSessionGameState>())
+        {
+            if (const auto* Position = State->FindOrbitalPosition(*this))
+            {
+                loc = Position->Position;
+                phase = Position->Phase;
+            }
+        }
+    }
+    else if (system && primary && period > 0) {
 		const double grade = (retro) ? -1 : 1;
 
 		// orbits are counter clockwise:

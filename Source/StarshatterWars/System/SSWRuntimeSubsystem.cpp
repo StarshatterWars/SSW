@@ -1,5 +1,6 @@
 
 #include "SSWRuntimeSubsystem.h"
+#include "SSWSessionLobbyGameMode.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "WeaponBlueprintResolver.h"
 #include "ShipVisualCatalog.h"
@@ -130,6 +131,8 @@ void USSWRuntimeSubsystem::Deinitialize()
 
     if (SimInstance)
     {
+        if (UWorld* World = GetWorld())
+            if (auto* State = World->GetGameState<ASSWSessionGameState>()) State->UnbindSimulation(*SimInstance);
         delete SimInstance;
         SimInstance = nullptr;
     }
@@ -176,6 +179,17 @@ bool USSWRuntimeSubsystem::InitGame()
     UE_LOG(LogSSWRuntime, Log, TEXT("[RUNTIME] InitGame"));
 
     FMath::RandInit(static_cast<int32>(FPlatformTime::Cycles()));
+
+    if (GetWorld() && GetWorld()->GetNetMode() == NM_DedicatedServer)
+    {
+        Ship::Initialize();
+        CombatRoster::Initialize();
+        Campaign::Initialize();
+        CreateWorld();
+        bRuntimeInitialized = true;
+        SetPaused(true);
+        return true;
+    }
 
     AudioConfig::Initialize();
 
@@ -254,14 +268,18 @@ void USSWRuntimeSubsystem::CreateWorld()
     UE_LOG(LogSSWRuntime, Log, TEXT("[RUNTIME] CreateWorld"));
 
     RadioTraffic::Initialize();
-    RadioView::Initialize();
-    RadioVox::Initialize(this);
-    QuantumView::Initialize();
-    TacticalView::Initialize();
+    if (!GetWorld() || GetWorld()->GetNetMode() != NM_DedicatedServer)
+    {
+        RadioView::Initialize();
+        RadioVox::Initialize(this);
+        QuantumView::Initialize();
+        TacticalView::Initialize();
+    }
 
     if (!SimInstance)
     {
         SimInstance = new Sim(RuntimeInput);
+        SimInstance->SetNetworkWorld(GetWorld());
         SimInstance->OnMissionUnloading.AddUObject(this, &USSWRuntimeSubsystem::HandleMissionUnloading);
 
         UE_LOG(LogSSWRuntime, Log,
@@ -359,6 +377,22 @@ void USSWRuntimeSubsystem::OnSensorRangeDown()
 
 void USSWRuntimeSubsystem::GameLoop()
 {
+    if (UWorld* World = GetWorld(); World && World->GetNetMode() == NM_DedicatedServer)
+    {
+        auto* State = World->GetGameState<ASSWSessionGameState>();
+        if (!State) return;
+        if (auto* Environment = GetGameInstance()->GetSubsystem<UStarshatterEnvironmentSubsystem>())
+            Environment->TickEnvironmentTime(bPaused ? 0.0 : Game::FrameTime());
+
+        if (SimInstance)
+        {
+            State->BindSimulation(*SimInstance);
+            if (!bPaused && SimInstance->GetMission()) SimInstance->ExecFrame(Game::FrameTime());
+            State->PublishSimulation(*SimInstance, World->GetTimeSeconds());
+        }
+        State->PublishGalaxy(World->GetTimeSeconds());
+        return;
+    }
     if (UWorld* World = GetWorld())
     {
         if (APlayerController* PC = World->GetFirstPlayerController())
@@ -403,7 +437,14 @@ void USSWRuntimeSubsystem::GameLoop()
         ED->Dispatch();
     }
 
+    UWorld* World = GetWorld();
+    auto* SessionState = World && World->GetNetMode() != NM_Client
+        ? World->GetGameState<ASSWSessionGameState>() : nullptr;
+    if (SessionState && SimInstance) SessionState->BindSimulation(*SimInstance);
     UpdateWorld();
+    if (SessionState) SessionState->PublishGalaxy(World->GetTimeSeconds());
+    if (SessionState && SimInstance)
+        SessionState->PublishSimulation(*SimInstance, World->GetTimeSeconds());
     GameState();
     UpdateScreen();
     CollectStats();

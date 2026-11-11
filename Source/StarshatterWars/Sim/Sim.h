@@ -33,10 +33,12 @@
 // Minimal Unreal includes required for FVector / FColor:
 #include "Math/Vector.h"
 #include "Math/Color.h"
+#include "UObject/WeakObjectPtrTemplates.h"
 #include "GameStructs_System.h"
 
 // +--------------------------------------------------------------------+
 
+class UWorld;
 class SimObject;
 class SimObserver;
 class SimHyper;
@@ -90,6 +92,10 @@ public:
     static Sim* GetSim() { return sim; }
 
     virtual void ExecFrame(double seconds);
+    void SetNetworkWorld(UWorld* World);
+    bool HasSimulationAuthority() const;
+    bool IsNetworked() const;
+    void AssignNetworkObjectId(SimObject& Object);
 
     void LoadMission(Mission* msn, bool preload_textures = false);
     void ExecMission();
@@ -157,6 +163,13 @@ public:
 
     // Native subscribers release UI, input, actors and timers before deletion.
     FSimpleMulticastDelegate OnMissionUnloading;
+
+    // Server-side hooks for an Unreal replication consumer. References are
+    // borrowed for the duration of the broadcast.
+    DECLARE_MULTICAST_DELEGATE_OneParam(FShipStateChanged, const Ship&);
+    FShipStateChanged OnShipTargetChanged;
+    FShipStateChanged OnShipEmconChanged;
+    FShipStateChanged OnShipDamageApplied;
 
     // Simulation lifecycle notifications for presentation and future UE networking.
     // Subscribers receive borrowed objects synchronously and must not mutate region lists.
@@ -242,6 +255,8 @@ public:
     uint32 StartTime() const { return start_time; }
 
 protected:
+    TWeakObjectPtr<UWorld> NetworkWorld;
+    uint32 NextNetworkObjectId = 1;
     void CreateRegions();
     void CreateElements(const char* SpawnName = nullptr);
     void CopyEvents();

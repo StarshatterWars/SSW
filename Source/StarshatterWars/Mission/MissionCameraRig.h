@@ -14,6 +14,10 @@
 #include "Engine/GameInstance.h"
 #include "MissionTargetOverlay.h"
 #include "MissionViewCamera.h"
+#include "Components/LineBatchComponent.h"
+#include "SceneTypes.h"
+#include "OrbitalRegion.h"
+#include "PlayerCharacter.h"
 
 // Presentation adapter for Stars45/CameraDirector modes. Simulation positions
 // cannot be used as UE world positions: region-shell placement moves visuals.
@@ -50,6 +54,69 @@ struct FMissionCameraRig
     FVector LaunchExitBlendEye = FVector::ZeroVector;
     FQuat LaunchExitBlendRotation = FQuat::Identity;
 
+    TWeakObjectPtr<ULineBatchComponent> TacticalGrid;
+    FVector TacticalGridCenter = FVector::ZeroVector;
+    double TacticalGridSpacing = 0.0;
+
+    void UpdateTacticalGrid(ACameraActor* Camera, Ship* Player, SimRegion* Region, const FVector& Focus)
+    {
+        const auto* Profile = PlayerCharacter::GetCurrentPlayer();
+        const auto* OrbitalRegion = Region->GetOrbitalRegion();
+        if ((Mode != Orbit && Mode != Overview) || Player->IsAirborne() ||
+            Player->InTransition() || (Profile && Profile->GridMode() == 0) || !OrbitalRegion)
+        {
+            if (auto* Lines = TacticalGrid.Get()) Lines->SetVisibility(false);
+            return;
+        }
+
+        const auto* Instance = Camera->GetGameInstance();
+        const auto* Runtime = Instance ? Instance->GetSubsystem<USSWRuntimeSubsystem>() : nullptr;
+        if (!Runtime) return;
+        const FVector Origin = Runtime->GetVisualLocationForRegion(Region, FVector::ZeroVector);
+        double Spacing = OrbitalRegion->GetGridSpace();
+        if (!FMath::IsFinite(Spacing) || Spacing <= 0.0) return;
+        const double ViewScale = FMath::Max(Distance, FMath::Abs(Focus.Z - Origin.Z));
+        while (Spacing > FMath::Max(10.0, ViewScale * 0.4)) Spacing *= 0.25;
+        const FVector Center = Origin + FVector(
+            FMath::GridSnap(Focus.X - Origin.X, Spacing),
+            FMath::GridSnap(Focus.Y - Origin.Y, Spacing), 0.0);
+
+        auto* Lines = TacticalGrid.Get();
+        if (Lines && Lines->GetOwner() != Camera)
+        {
+            Lines->DestroyComponent();
+            Lines = nullptr;
+        }
+        if (!Lines)
+        {
+            Lines = NewObject<ULineBatchComponent>(Camera);
+            Camera->AddInstanceComponent(Lines);
+            Lines->RegisterComponent();
+            TacticalGrid = Lines;
+            TacticalGridSpacing = 0.0;
+        }
+        Lines->SetVisibility(true);
+        if (TacticalGridSpacing == Spacing && TacticalGridCenter.Equals(Center)) return;
+        TacticalGridSpacing = Spacing;
+        TacticalGridCenter = Center;
+        Lines->Flush();
+
+        constexpr int32 HalfCount = 12;
+        const double Extent = HalfCount * Spacing;
+        for (int32 Index = -HalfCount; Index <= HalfCount; ++Index)
+        {
+            const double Offset = Index * Spacing;
+            const int64 XIndex = FMath::RoundToInt64((Center.X - Origin.X + Offset) / Spacing);
+            const int64 YIndex = FMath::RoundToInt64((Center.Y - Origin.Y + Offset) / Spacing);
+            const FLinearColor Major(0.14f, 0.26f, 0.36f);
+            const FLinearColor Minor(0.06f, 0.12f, 0.18f);
+            Lines->DrawLine(Center + FVector(Offset, -Extent, 0), Center + FVector(Offset, Extent, 0),
+                XIndex % 4 == 0 ? Major : Minor, SDPG_World, 0.0f, -1.0f);
+            Lines->DrawLine(Center + FVector(-Extent, Offset, 0), Center + FVector(Extent, Offset, 0),
+                YIndex % 4 == 0 ? Major : Minor, SDPG_World, 0.0f, -1.0f);
+        }
+    }
+
     void RestoreVisibility(APlayerController* PC)
     {
         if (PC)
@@ -64,6 +131,7 @@ struct FMissionCameraRig
     void HoldRecoveryView(APlayerController* PC, ACameraActor* Camera)
     {
         if (!Camera) return;
+        if (auto* Lines = TacticalGrid.Get()) Lines->SetVisibility(false);
         if (auto* Visual=PlayerActor.Get()) Visual->HoldRecoveryPresentation();
         if (!bRecoveryViewHeld) { RecoveryViewPose=Camera->GetActorTransform(); bRecoveryViewHeld=true; }
         Camera->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
@@ -76,6 +144,7 @@ struct FMissionCameraRig
     {
         RestoreVisibility(PC);
         if (auto* Visual=PlayerActor.Get()) Visual->ReleaseRecoveryPresentation();
+        if (auto* Lines = TacticalGrid.Get()) Lines->DestroyComponent();
         *this = FMissionCameraRig();
     }
 
@@ -99,7 +168,11 @@ struct FMissionCameraRig
     void Tick(APlayerController* PC, ACameraActor* CameraActor, AShipActor* Visual,
               Ship* Player, SimRegion* Region, AShipActor* Selected, double Dt, double& Zoom)
     {
-        if (!PC || !CameraActor || !Visual || !Player || !Region) return;
+        if (!PC || !CameraActor || !Visual || !Player || !Region)
+        {
+            if (auto* Lines = TacticalGrid.Get()) Lines->SetVisibility(false);
+            return;
+        }
         Dt = FMath::Clamp(Dt, 0.0, 0.1);
         if (PlayerActor.Get() != Visual)
         {
@@ -443,6 +516,7 @@ struct FMissionCameraRig
         CameraActor->SetActorLocationAndRotation(Eye, Rotation, false, nullptr, ETeleportType::TeleportPhysics);
         const double Fov = (bWide ? 90.0 : 60.0) * (bInternal ? Zoom : 1.0);
         CameraActor->GetCameraComponent()->SetFieldOfView(float(FMath::Clamp(Fov, 25.0, 110.0)));
+        UpdateTacticalGrid(CameraActor, Player, Region, Center);
         if (PC->GetViewTarget() != CameraActor) PC->SetViewTarget(CameraActor);
     }
 };

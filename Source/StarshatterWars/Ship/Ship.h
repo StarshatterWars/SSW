@@ -223,6 +223,8 @@ public:
     double            GetThrottleRequest() const { return throttle_request; }
 	void              SetThrottleRequest(double t) { if (!HasManualThrottle()) throttle_request = t; }
     void SetManualThrottle(double percent);
+    void SetNetworkPilot(bool bAssigned);
+    bool CanUseManualFlight() const;
     bool HasManualThrottle() const;
     void SetManualRotationAxis(int32 Axis, double Value);
     void ClearManualRotationInput();
@@ -671,6 +673,7 @@ protected:
 
     bool bNativeCockpitRequested=false;
     TWeakObjectPtr<AShipActor> NativePresentation;
+    bool bNetworkPilot = false;
     const FShipDesign* UnrealDesign = nullptr;
     bool               player_ship = false;
 

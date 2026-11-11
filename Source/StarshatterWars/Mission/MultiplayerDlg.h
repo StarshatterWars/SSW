@@ -3,6 +3,7 @@
 #include "BaseScreen.h"
 #include "Components/Button.h"
 #include "MultiplayerDlg.generated.h"
+class UScrollBox;
 class UMultiplayerDlg;class UVerticalBox;class UTextBlock;class UEditableTextBox;class USpinBox;class UCheckBox;class USSWSessionSubsystem;
 UCLASS()
 class STARSHATTERWARS_API USSWSessionRowButton:public UButton {
@@ -28,11 +29,19 @@ public:
 protected:
  virtual TSharedRef<SWidget> RebuildWidget()override;
  virtual void NativeConstruct()override;
+ virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
  virtual void NativeDestruct()override;
  void BuildSessionScreen();
  UTextBlock* Label(const FString& Text,int32 Size=18);
  UButton* Button(const FString& Text,UVerticalBox* Parent);
  USSWSessionSubsystem* Service()const;
+ void RefreshChat();
+ void RefreshRoster();
+ UFUNCTION()void ToggleReady();
+ UPROPERTY(Transient)TObjectPtr<UTextBlock> LobbyRoster;
+ UPROPERTY(Transient)TObjectPtr<UTextBlock> MissionCountdownLabel;
+ int32 DisplayedCountdown = INDEX_NONE;
+ UFUNCTION()void SubmitChat(const FText& Text, ETextCommit::Type CommitMethod);
  UFUNCTION()void RefreshState();
  UFUNCTION()void HostMode();
  UFUNCTION()void JoinMode();
@@ -46,6 +55,8 @@ protected:
  UPROPERTY(Transient)TObjectPtr<UVerticalBox> JoinPanel;
  UPROPERTY(Transient)TObjectPtr<UVerticalBox> Rows;
 
+ UPROPERTY(Transient)TObjectPtr<UScrollBox> ChatLog;
+ UPROPERTY(Transient)TObjectPtr<UEditableTextBox> ChatEntry;
  UPROPERTY(Transient)TObjectPtr<UTextBlock> StatusLabel;
  UPROPERTY(Transient)TObjectPtr<UEditableTextBox> SessionName;
  UPROPERTY(Transient)TObjectPtr<USpinBox> Capacity;
