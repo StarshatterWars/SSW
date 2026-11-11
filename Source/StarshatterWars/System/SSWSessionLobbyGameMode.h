@@ -11,7 +11,8 @@ class Ship;
 class Mission;
 class ULevelStreamingDynamic;
 class ACameraActor;
-class AStaticMeshActor;
+class AShipActor;
+class SFighterHUDDetails;
 class UMultiplayerDlg;
 class Orbital;
 class SimShot;
@@ -72,6 +73,9 @@ struct FSSWReplicatedShipState
     UPROPERTY(BlueprintReadOnly) FVector Heading = FVector::ForwardVector;
     UPROPERTY(BlueprintReadOnly) FVector Up = FVector::UpVector;
     UPROPERTY(BlueprintReadOnly) float Integrity = 0;
+    UPROPERTY(BlueprintReadOnly) float HullPercent = 0;
+    UPROPERTY(BlueprintReadOnly) FString PrimaryReadout;
+    UPROPERTY(BlueprintReadOnly) FString SecondaryReadout;
     UPROPERTY(BlueprintReadOnly) int32 ShieldStrength = 0;
     UPROPERTY(BlueprintReadOnly) int32 FuelPercent = 0;
     UPROPERTY(BlueprintReadOnly) float Throttle = 0;
@@ -207,6 +211,7 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category="Multiplayer")
     bool AssignMissionShip(int64 ObjectId);
     int64 GetMissionShipId() const { return MissionShipId; }
+    const FSSWReplicatedShipState* GetAssignedShipState() const;
 
     UFUNCTION(Server, Reliable, BlueprintCallable, Category="Multiplayer")
     void SetLobbyReady(bool bReady);
@@ -249,11 +254,13 @@ private:
     UFUNCTION(Server, Reliable)
     void ServerCycleCombatTarget();
 
-    bool bTargetKeyDown = false;
+    bool bPrimaryPressed = false;
+    bool bSecondaryPressed = false;
 
     UPROPERTY(Transient) TObjectPtr<UMultiplayerDlg> LobbyDialog;
     UPROPERTY(Transient) TObjectPtr<ACameraActor> FlightCamera;
-    UPROPERTY(Transient) TMap<int64, TObjectPtr<AStaticMeshActor>> RemoteFighters;
+    TSharedPtr<SFighterHUDDetails> FlightMiniHUD;
+    UPROPERTY(Transient) TMap<int64, TObjectPtr<AShipActor>> RemoteFighters;
 
     virtual void PlayerTick(float DeltaTime) override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

@@ -1,5 +1,6 @@
 
 #include "FighterHUDDetails.h"
+#include "SSWSessionLobbyGameMode.h"
 #include "ShipVisualCatalog.h"
 #include "GearIndicator.h"
 #include "NativeHUDSymbology.h"
@@ -203,6 +204,7 @@ void SFighterHUDDetails::Construct(const FArguments& A)
 {
     Symbology=MakeUnique<FNativeHUDSymbology>();
     ThirdPerson = A._ThirdPerson;
+    NetworkController = A._NetworkController;
     ShowHUD = A._ShowHUD; SelectedTarget = A._SelectedTarget; SelectedName = A._SelectedName;
     SetVisibility(EVisibility::Visible);
     ForceVolatile(true);
@@ -256,6 +258,15 @@ void SFighterHUDDetails::Tick(const FGeometry& G, double Now, float Delta)
     SCompoundWidget::Tick(G, Now, Delta);
     const FVector2D Size=G.GetLocalSize();
     InformationScale=FMath::Min(Size.X/1280.0,Size.Y/720.0);
+    if (NetworkController.IsValid())
+    {
+        if (Now >= NextSample)
+        {
+            NextSample = Now + 0.1;
+            Refresh();
+        }
+        return;
+    }
     UpdateInformationMessages();
     bWarningFlash = FMath::Fmod(Now, 1.0) >= 0.5;
     if (Ship* Player = PlayerShip())
@@ -306,6 +317,30 @@ void SFighterHUDDetails::Refresh()
     FlightSpeed = HeadingDegrees = ClosingSpeed = JumpSeconds = 0;
     ThreatLevel = 0;
     bHelmMode=false;CompactNavLabel=TEXT("FREE FLIGHT");
+    if (const auto* Controller = NetworkController.Get())
+    {
+        const auto* Snapshot = Controller->GetAssignedShipState();
+        bHasPlayer = Snapshot != nullptr;
+        if (!Snapshot) return;
+
+        FlightSpeed = Snapshot->Velocity.Size();
+        const FVector Heading = Snapshot->Heading;
+        HeadingDegrees = FMath::RadiansToDegrees(FMath::Atan2(Heading.X, Heading.Z));
+        PitchDegrees = FMath::RadiansToDegrees(FMath::Asin(FMath::Clamp(Heading.Y, -1.0, 1.0)));
+        PlayerHull = Snapshot->HullPercent;
+        PlayerName = Snapshot->Name;
+        PlayerClass = Snapshot->Design;
+        Primary = Snapshot->PrimaryReadout;
+        Secondary = Snapshot->SecondaryReadout;
+        NetworkEmcon = Snapshot->Emcon;
+        CompactNavLabel = Snapshot->bDestroyed ? TEXT("DESTROYED") :
+            Snapshot->bRetired ? TEXT("RETIRED") : TEXT("MULTIPLAYER");
+        StatusRows.Add({TEXT("THRUST"), Snapshot->Throttle});
+        StatusRows.Add({TEXT("FUEL"), double(Snapshot->FuelPercent)});
+        StatusRows.Add({TEXT("HULL"), Snapshot->HullPercent});
+        StatusRows.Add({TEXT("SHIELD"), double(Snapshot->ShieldStrength)});
+        return;
+    }
     Ship* P = PlayerShip(); bHasPlayer = P != nullptr;
     PlayerHull = Hull(P); Primary = Secondary = TEXT("NONE");
     if (P)
@@ -610,7 +645,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         Box(P+FVector2D(D.X-Scale,0),FVector2D(Scale,D.Y),Color);
         Text(P+FVector2D(5,2)*Scale,Label,Color);
     };
-    Ship* HUDPlayer=PlayerShip();
+    Ship* HUDPlayer=NetworkController.IsValid() ? nullptr : PlayerShip();
     const bool bPreTakeoff=HUDPlayer && HUDPlayer->GetDock() && HUDPlayer->GetDock()->IsLaunchDeck() && HUDPlayer->GetFlightPhase()<EOPSMode::ACTIVE;
     const bool bCapitalWeapons = HUDPlayer && HUDPlayer->IsStarship();
     const bool bThirdPerson = ThirdPerson.Get();
@@ -721,8 +756,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             Box(P+FVector2D(X,18)*Scale,FVector2D(Scale,76*Scale),FLinearColor(.2,.4,.5,.35));
 
         MiniText(-204,10,TEXT("SHIP STATUS"),10,Muted);
-        if (HUDPlayer)
-            MiniText(-78,10,FString::Printf(TEXT("EMCON %d"),HUDPlayer->GetEMCON()),10,Muted);
+        if (HUDPlayer || NetworkController.IsValid())
+            MiniText(-78,10,FString::Printf(TEXT("EMCON %d"),HUDPlayer ? HUDPlayer->GetEMCON() : NetworkEmcon),10,Muted);
         for (int32 I=0; I<StatusRows.Num(); ++I)
         {
             const auto& Row = StatusRows[I];
@@ -855,6 +890,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
 
     }
+    if (NetworkController.IsValid()) return L + 5;
     // LAUNCH remains visible while staging but is disabled until the
     // fighter is actually spotted and the flight-deck slot becomes READY.
     {

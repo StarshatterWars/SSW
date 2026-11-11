@@ -1,6 +1,6 @@
 /*  Project STARSHATTER WARS
 	Fractal Dev Studios
-	Copyright © 2025-2026. All Rights Reserved.
+	Copyright ï¿½ 2025-2026. All Rights Reserved.
 
 	ORIGINAL AUTHOR: John DiCamillo
 	ORIGINAL STUDIO: Destroyer Studios
@@ -118,7 +118,7 @@ PowerSource::RemoveClient(SimSystem* client)
 int
 PowerSource::GetCharge() const
 {
-	return (int)capacity;
+	return FMath::Clamp(FMath::CeilToInt(capacity), 0, 100);
 }
 
 void

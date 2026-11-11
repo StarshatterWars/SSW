@@ -21,12 +21,14 @@
 #include "SystemSceneBuilder.h"
 #include "Misc/PackageName.h"
 #include "Camera/CameraActor.h"
+#include "Components/PointLightComponent.h"
 #include "StarSystem.h"
 #include "OrbitalBody.h"
 #include "OrbitalRegion.h"
-#include "Engine/StaticMeshActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "ShipActor.h"
+#include "FighterHUDDetails.h"
+#include "Engine/GameViewportClient.h"
 #include "ShipDesign.h"
 #include "Weapon.h"
 #include "SSWSessionSubsystem.h"
@@ -171,6 +173,10 @@ FSSWReplicatedShipState ASSWSessionGameState::MakeShipState(const Ship& PilotShi
     State.Heading = PilotShip.GetHeading();
     State.Up = PilotShip.GetCam().vup();
     State.Integrity = static_cast<float>(PilotShip.GetIntegrity());
+    if (const auto* Design = PilotShip.Design(); Design && Design->integrity > 0)
+        State.HullPercent = static_cast<float>(FMath::Clamp(PilotShip.GetIntegrity() / Design->integrity * 100.0, 0.0, 100.0));
+    State.PrimaryReadout = SFighterHUDDetails::FormatWeaponReadout(PilotShip.GetPrimaryGroup());
+    State.SecondaryReadout = SFighterHUDDetails::FormatWeaponReadout(PilotShip.GetSecondaryGroup());
     State.ShieldStrength = PilotShip.GetShieldStrength();
     State.FuelPercent = PilotShip.GetFuelLevel();
     State.Throttle = static_cast<float>(PilotShip.GetThrottle());
@@ -695,26 +701,41 @@ void ASSWSessionLobbyController::PlayerTick(float DeltaTime)
     if (!Fighter) return;
 
     UpdateFlightView(*State, *Fighter, DeltaTime);
-    if (Fighter->bDestroyed || Fighter->bRetired || Now < NextFlightInput) return;
+    if (Fighter->bDestroyed || Fighter->bRetired) return;
+
+    const bool bIncrease = IsInputKeyDown(EKeys::A);
+    const bool bDecrease = IsInputKeyDown(EKeys::Z);
+    const bool bIncreasePressed = WasInputKeyJustPressed(EKeys::A);
+    const bool bDecreasePressed = WasInputKeyJustPressed(EKeys::Z);
+    const int32 ThrottleInput = int32(bIncrease || bIncreasePressed) - int32(bDecrease || bDecreasePressed);
+    if (ThrottleInput && (IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift)))
+        FlightThrottle = ThrottleInput > 0 ? 100.0 : 0.0;
+    else
+        FlightThrottle = FMath::Clamp(FlightThrottle + 50.0 * DeltaTime * ThrottleInput, 0.0, 100.0);
+
+    bPrimaryPressed |= WasInputKeyJustPressed(EKeys::LeftControl);
+    bSecondaryPressed |= WasInputKeyJustPressed(EKeys::SpaceBar);
+    if (WasInputKeyJustPressed(EKeys::T)) ServerCycleCombatTarget();
+    if (Now < NextFlightInput) return;
 
     NextFlightInput = Now + 0.05;
     const FVector Rotation(
         int32(IsInputKeyDown(EKeys::Down)) - int32(IsInputKeyDown(EKeys::Up)),
         int32(IsInputKeyDown(EKeys::Right)) - int32(IsInputKeyDown(EKeys::Left)),
         int32(IsInputKeyDown(EKeys::NumPadNine)) - int32(IsInputKeyDown(EKeys::NumPadSeven)));
-    const int32 ThrottleInput = int32(IsInputKeyDown(EKeys::A)) - int32(IsInputKeyDown(EKeys::Z));
-    FlightThrottle = FMath::Clamp(FlightThrottle + 2.5 * ThrottleInput, 0.0, 100.0);
-    ServerFlightInput(Rotation, FlightThrottle, IsInputKeyDown(EKeys::LeftControl), IsInputKeyDown(EKeys::SpaceBar));
-
-    const bool bTargetPressed = IsInputKeyDown(EKeys::T);
-    if (bTargetPressed && !bTargetKeyDown) ServerCycleCombatTarget();
-    bTargetKeyDown = bTargetPressed;
+    ServerFlightInput(Rotation, FlightThrottle,
+        bPrimaryPressed || IsInputKeyDown(EKeys::LeftControl),
+        bSecondaryPressed || IsInputKeyDown(EKeys::SpaceBar));
+    bPrimaryPressed = false;
+    bSecondaryPressed = false;
 }
 
 void ASSWSessionLobbyController::UpdateFlightView(
     const ASSWSessionGameState& State, const FSSWReplicatedShipState& Fighter, float DeltaTime)
 {
     const auto ToUE = [](const FVector& V) { return FVector(V.Z, V.X, V.Y); };
+    const double Blend = 1.0 - FMath::Exp(-12.0 * FMath::Max(0.0f, DeltaTime));
+    constexpr double SnapDistanceSquared = 1000.0 * 1000.0;
 
     if (!FlightCamera)
     {
@@ -726,16 +747,37 @@ void ASSWSessionLobbyController::UpdateFlightView(
         bShowMouseCursor = false;
         SetInputMode(FInputModeGameOnly());
         FlightCamera->SetActorLocation(Fighter.VisualPosition);
+        if (!HasAuthority())
+        {
+            auto* Fill = NewObject<UPointLightComponent>(FlightCamera);
+            FlightCamera->AddInstanceComponent(Fill);
+            Fill->SetupAttachment(FlightCamera->GetRootComponent());
+            Fill->SetMobility(EComponentMobility::Movable);
+            Fill->SetAttenuationRadius(420.0f);
+            Fill->SetIntensity(650.0f);
+            Fill->SetCastShadows(false);
+            Fill->RegisterComponent();
+        }
         SetViewTarget(FlightCamera);
+        if (auto* Viewport = GetWorld()->GetGameViewport())
+        {
+            FlightMiniHUD = SNew(SFighterHUDDetails)
+                .ShowHUD(true)
+                .ThirdPerson(true)
+                .NetworkController(TWeakObjectPtr<ASSWSessionLobbyController>(this));
+            Viewport->AddViewportWidgetContent(FlightMiniHUD.ToSharedRef(), 100);
+        }
     }
 
     const FVector Forward = ToUE(Fighter.Heading).GetSafeNormal();
     const FVector Up = ToUE(Fighter.Up).GetSafeNormal();
     const FVector Eye = Fighter.VisualPosition - Forward * 130.0 + Up * 32.0;
     const FRotator View = FRotationMatrix::MakeFromXZ(Forward, Up).Rotator();
+    const FVector CameraPosition = FlightCamera->GetActorLocation();
+    const bool bSnapCamera = FVector::DistSquared(CameraPosition, Eye) > SnapDistanceSquared;
     FlightCamera->SetActorLocationAndRotation(
-        FMath::VInterpTo(FlightCamera->GetActorLocation(), Eye, DeltaTime, 15.0f),
-        FMath::RInterpTo(FlightCamera->GetActorRotation(), View, DeltaTime, 15.0f));
+        bSnapCamera ? Eye : FMath::Lerp(CameraPosition, Eye, Blend),
+        bSnapCamera ? View.Quaternion() : FQuat::Slerp(FlightCamera->GetActorQuat(), View.Quaternion(), Blend));
 
     if (HasAuthority()) return;
     TSet<int64> Visible;
@@ -749,19 +791,19 @@ void ASSWSessionLobbyController::UpdateFlightView(
         {
             const FShipDesign* Row = ShipDesignRegistry::Find(ShipState.Design);
             UClass* VisualClass = Row ? ShipVisualCatalog::Resolve(ShipState.Design, Row->Model) : nullptr;
-            const auto* Template = VisualClass ? VisualClass->GetDefaultObject<AShipActor>() : nullptr;
-            if (!Template || !Template->HullMesh || !Template->HullMesh->GetStaticMesh()) continue;
+            if (!VisualClass) continue;
 
-            Actor = GetWorld()->SpawnActor<AStaticMeshActor>(ShipState.VisualPosition, Rotation);
+            FActorSpawnParameters Spawn;
+            Spawn.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            Actor = GetWorld()->SpawnActor<AShipActor>(VisualClass, ShipState.VisualPosition, Rotation, Spawn);
             if (!Actor) continue;
-            auto* Mesh = Actor->GetStaticMeshComponent();
-            Mesh->SetMobility(EComponentMobility::Movable);
-            Mesh->SetStaticMesh(Template->HullMesh->GetStaticMesh());
-            for (int32 Index = 0; Index < Template->HullMesh->GetNumMaterials(); ++Index)
-                Mesh->SetMaterial(Index, Template->HullMesh->GetMaterial(Index));
             Actor->SetActorEnableCollision(false);
         }
-        Actor->SetActorLocationAndRotation(ShipState.VisualPosition, Rotation);
+        const FVector CurrentPosition = Actor->GetActorLocation();
+        const bool bSnapShip = FVector::DistSquared(CurrentPosition, ShipState.VisualPosition) > SnapDistanceSquared;
+        Actor->SetActorLocationAndRotation(
+            bSnapShip ? ShipState.VisualPosition : FMath::Lerp(CurrentPosition, ShipState.VisualPosition, Blend),
+            bSnapShip ? Rotation.Quaternion() : FQuat::Slerp(Actor->GetActorQuat(), Rotation.Quaternion(), Blend));
     }
     for (auto It = RemoteFighters.CreateIterator(); It; ++It)
     {
@@ -774,6 +816,12 @@ void ASSWSessionLobbyController::UpdateFlightView(
 void ASSWSessionLobbyController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     if (HasAuthority()) AssignMissionShip(0);
+    if (FlightMiniHUD.IsValid())
+    {
+        if (auto* Viewport = GetWorld()->GetGameViewport())
+            Viewport->RemoveViewportWidgetContent(FlightMiniHUD.ToSharedRef());
+        FlightMiniHUD.Reset();
+    }
     if (FlightCamera) FlightCamera->Destroy();
     for (auto& Entry : RemoteFighters)
         if (Entry.Value) Entry.Value->Destroy();
@@ -907,16 +955,7 @@ void ASSWSessionFlightHUD::DrawHUD()
 
     const FLinearColor TextColor(0.7f, 0.9f, 1.0f);
     const FLinearColor HitColor(1.0f, 0.35f, 0.2f);
-    float Row = 24.0f;
-    DrawText(FString::Printf(TEXT("%s   HULL %.1f   SHIELDS %d   FUEL %d%%"),
-        *Fighter->Name, Fighter->Integrity, Fighter->ShieldStrength, Fighter->FuelPercent), TextColor, 24.0f, Row);
-    Row += 20.0f;
-    DrawText(FString::Printf(TEXT("SPEED %.1f m/s   THROTTLE %.0f%%   GUN %d   MISSILE %d"),
-        Fighter->Velocity.Size(), Fighter->Throttle, Fighter->PrimaryAmmo, Fighter->SecondaryAmmo), TextColor, 24.0f, Row);
-    Row += 20.0f;
-    DrawText(TEXT("CTRL Fire   SPACE Missile   T Target"), TextColor, 24.0f, Row);
-    Row += 24.0f;
-
+    float Row = Canvas->ClipY - 125.0f;
     for (const auto& Entry : State->MissionShips)
     {
         if (Entry.Region != Fighter->Region) continue;
@@ -929,20 +968,49 @@ void ASSWSessionFlightHUD::DrawHUD()
         Row += 18.0f;
     }
 
-    for (const auto& System : Fighter->Systems)
-    {
-        if (System.Availability >= 100.0f && System.bPowered) continue;
-        if (Row > Canvas->ClipY * 0.7f) break;
-        DrawText(FString::Printf(TEXT("%s   CONDITION %.0f%%   %s"),
-            *System.Name, System.Availability, System.bPowered ? TEXT("ON") : TEXT("OFF")), TextColor, 24.0f, Row);
-        Row += 18.0f;
-    }
-
     if (Fighter->bDestroyed || Fighter->bRetired) return;
     const float X = Canvas->ClipX * 0.5f;
     const float Y = Canvas->ClipY * 0.5f;
     DrawLine(X - 12.0f, Y, X + 12.0f, Y, TextColor);
     DrawLine(X, Y - 12.0f, X, Y + 12.0f, TextColor);
+
+    FVector Eye;
+    FRotator View;
+    Controller->GetPlayerViewPoint(Eye, View);
+    const FRotationMatrix CameraBasis(View);
+    const FVector Right = CameraBasis.GetScaledAxis(EAxis::Y);
+    const FVector Up = CameraBasis.GetScaledAxis(EAxis::Z);
+    constexpr double Margin = 75.0;
+    const FVector2D Bounds(FMath::Max(1.0, X - Margin), FMath::Max(1.0, Y - Margin));
+    for (const auto& Contact : State->MissionShips)
+    {
+        if (Contact.ObjectId == FighterId || Contact.bDestroyed || Contact.bRetired ||
+            Contact.Region != Fighter->Region) continue;
+
+        FVector2D Point;
+        const bool bProjected = Controller->ProjectWorldLocationToScreen(Contact.VisualPosition, Point);
+        if (!bProjected || FMath::Abs(Point.X - X) > Bounds.X || FMath::Abs(Point.Y - Y) > Bounds.Y)
+        {
+            const FVector Delta = Contact.VisualPosition - Eye;
+            FVector2D Direction = bProjected ? Point - FVector2D(X, Y) :
+                FVector2D(FVector::DotProduct(Delta, Right), -FVector::DotProduct(Delta, Up));
+            if (Direction.IsNearlyZero()) Direction.Y = 1.0;
+            const double Edge = FMath::Max(FMath::Abs(Direction.X) / Bounds.X,
+                FMath::Abs(Direction.Y) / Bounds.Y);
+            Point = FVector2D(X, Y) + Direction / Edge;
+        }
+
+        const FLinearColor Marker = Contact.ObjectId == Fighter->TargetId ? HitColor : TextColor;
+        constexpr float Radius = 8.0f;
+        DrawLine(Point.X, Point.Y - Radius, Point.X + Radius, Point.Y, Marker);
+        DrawLine(Point.X + Radius, Point.Y, Point.X, Point.Y + Radius, Marker);
+        DrawLine(Point.X, Point.Y + Radius, Point.X - Radius, Point.Y, Marker);
+        DrawLine(Point.X - Radius, Point.Y, Point.X, Point.Y - Radius, Marker);
+        const double RangeKm = FVector::Dist(Contact.Position, Fighter->Position) / 1000.0;
+        const float CaptionX = Point.X > X ? Point.X - 68.0f : Point.X + 13.0f;
+        DrawText(FString::Printf(TEXT("%s  %.3f km"), *Contact.Name, RangeKm),
+            Marker, CaptionX, Point.Y + 12.0f);
+    }
 
     for (const auto& Shot : State->MissionProjectiles)
     {
@@ -1007,4 +1075,13 @@ void ASSWSessionLobbyController::BuildClientMissionScene()
     ClientMissionLevel->OnLevelShown.RemoveDynamic(this, &ThisClass::BuildClientMissionScene);
     if (!BuildLobbySystem(*GetWorld(), *ClientMissionLevel, State->MissionMap))
         UE_LOG(LogTemp, Warning, TEXT("[SessionLobby] Could not build client scene for %s"), *State->MissionMap);
+}
+
+const FSSWReplicatedShipState* ASSWSessionLobbyController::GetAssignedShipState() const
+{
+    const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
+    return State ? State->MissionShips.FindByPredicate([this](const FSSWReplicatedShipState& Entry)
+    {
+        return Entry.ObjectId == MissionShipId;
+    }) : nullptr;
 }

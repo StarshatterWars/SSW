@@ -3908,7 +3908,7 @@ Ship::ExecPhysics(double seconds)
         }
     };
 
-    if (bManualRotation && sim && sim->GetPlayerShip()==this && !InTransition() && !IsDead() && !IsDying())
+    if (bManualRotation && CanUseManualFlight() && !InTransition() && !IsDead() && !IsDying())
     {
         if (!design || seconds<=0 || !FMath::IsFinite(seconds) || mass<=0) return;
         thrust = (float)GetThrust(seconds);
@@ -4951,7 +4951,7 @@ Ship::GetFuelLevel() const
 	if (reactors.size() > 0) {
 		PowerSource* reactor = reactors[0];
 		if (reactor)
-			return reactor->Charge();
+			return reactor->GetCharge();
 	}
 
 	return 0;
@@ -7275,7 +7275,7 @@ void Ship::ApplyLeaderFormation(double seconds)
 
 bool Ship::HasManualThrottle() const
 {
-    return bManualThrottle && sim && sim->GetPlayerShip() == this &&
+    return bManualThrottle && CanUseManualFlight() &&
         !InTransition() && !IsDead() && !IsDying();
 }
 

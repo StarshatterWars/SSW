@@ -12,6 +12,7 @@ class SVerticalBox;
 class AActor;
 class FNativeHUDSymbology;
 class WeaponGroup;
+class ASSWSessionLobbyController;
 class FShipMFDPreview;
 class FCockpitDisplays;
 class SCockpitInstrument;
@@ -25,6 +26,7 @@ public:
         SLATE_ATTRIBUTE(bool, ThirdPerson)
         SLATE_ATTRIBUTE(TWeakObjectPtr<AActor>, SelectedTarget)
         SLATE_ATTRIBUTE(FText, SelectedName)
+        SLATE_ARGUMENT(TWeakObjectPtr<ASSWSessionLobbyController>, NetworkController)
     SLATE_END_ARGS()
     virtual ~SFighterHUDDetails();
     void Construct(const FArguments& Args);
@@ -83,6 +85,8 @@ private:
     void LoadShipHUDIcon(const FString& Path, FString& CachedPath, TStrongObjectPtr<UTexture2D>& Texture, FSlateBrush& Brush);
     TAttribute<bool> ShowHUD;
     TAttribute<bool> ThirdPerson;
+    TWeakObjectPtr<ASSWSessionLobbyController> NetworkController;
+    int32 NetworkEmcon = 0;
     TAttribute<TWeakObjectPtr<AActor>> SelectedTarget;
     TAttribute<FText> SelectedName;
     double NextSample = 0;
