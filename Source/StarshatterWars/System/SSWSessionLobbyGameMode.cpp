@@ -380,12 +380,14 @@ void ASSWSessionPlayerState::OnRep_Ready()
 
 void ASSWSessionLobbyController::SetLobbyReady_Implementation(bool bReady)
 {
-    if (auto* State = GetPlayerState<ASSWSessionPlayerState>())
-    {
-        State->bReady = bReady;
-        State->OnRep_Ready();
-        State->ForceNetUpdate();
-    }
+    const auto* Lobby = GetWorld()->GetGameState<ASSWSessionGameState>();
+    auto* PilotState = GetPlayerState<ASSWSessionPlayerState>();
+    if (!Lobby || Lobby->bMissionStartReady || !PilotState || PilotState->bReady == bReady) return;
+
+    PilotState->bReady = bReady;
+    PilotState->OnRep_Ready();
+    PilotState->ForceNetUpdate();
+    UE_LOG(LogTemp, Log, TEXT("[SessionLobby] Pilot %d ready=%d"), PilotState->GetPlayerId(), bReady);
 }
 
 void ASSWSessionGameState::AddPlayerState(APlayerState* PlayerState)

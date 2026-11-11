@@ -154,7 +154,16 @@ void UMultiplayerDlg::Join(){if(auto* S=Service())S->JoinSession(Selected);}
 void UMultiplayerDlg::Leave(){if(auto* S=Service())S->LeaveSession();}
 void UMultiplayerDlg::CancelSearch(){if(auto* S=Service())S->CancelSearch();}
 void UMultiplayerDlg::Back(){if(LobbyRoster){Leave();return;}if(auto* S=Service()){if(S->IsBusy()){S->CancelSearch();return;}if(S->HasSession()){S->LeaveSession();return;}}RemoveFromParent();if(auto* Manager=GetMenuManager())Manager->ShowMenuDlg();}
-void UMultiplayerDlg::HandleAccept(){if(LobbyRoster)return;if(bHostMode)Create();else Join();}
+void UMultiplayerDlg::HandleAccept()
+{
+    if (LobbyRoster)
+    {
+        ToggleReady();
+        return;
+    }
+    if (bHostMode) Create();
+    else Join();
+}
 void UMultiplayerDlg::HandleCancel(){Back();}
 
 void UMultiplayerDlg::SubmitChat(const FText& Text, ETextCommit::Type CommitMethod)
@@ -319,6 +328,7 @@ void UMultiplayerDlg::BuildLobbyScreen(UVerticalBox* Main)
     ReadySlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     ReadySlot->SetPadding(FMargin(12, 0, 0, 0));
     auto* Ready = Button(TEXT("READY"), ReadyGroup);
+    Ready->SetClickMethod(EButtonClickMethod::MouseDown);
     ReadyLabel = Cast<UTextBlock>(Ready->GetChildAt(0));
     Ready->OnClicked.AddDynamic(this, &ThisClass::ToggleReady);
 }
