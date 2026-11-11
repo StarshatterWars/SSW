@@ -250,7 +250,7 @@ MissionEvent::CheckTrigger()
 			}
 		}
 
-		if (alive <= count)
+		if (alive + sim->CountPendingArenaRespawns(iff) <= count)
 			Activate();
 	}
 						   break;

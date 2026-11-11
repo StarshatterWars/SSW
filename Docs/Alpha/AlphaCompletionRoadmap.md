@@ -1,6 +1,6 @@
 # Starshatter Wars — Alpha completion roadmap
 
-Updated 2026-11-04. Branch abc. This records the requested scope; unchecked work is not declared complete. Preserve legacy simulation coordinates, AI, damage, energy, mission progression and dialogue unless an explicit requirement changes them. Do not modify Starshatter.cpp/.h. Deliver complete replacement files and assets in stage ZIPs.
+Updated 2026-11-11. Branch abc. This records the requested scope; unchecked work is not declared complete. Preserve legacy simulation coordinates, AI, damage, energy, mission progression and dialogue unless an explicit requirement changes them. Do not modify Starshatter.cpp/.h. Deliver complete replacement files and assets in stage ZIPs.
 
 ## Alpha Phase 1 — completion stages
 
@@ -9,7 +9,7 @@ Updated 2026-11-04. Branch abc. This records the requested scope; unchecked work
 | A1.1 Fleet coverage and turrets | Inventory all remaining space ships/fighters and their source models; import missing visuals; native/BP class, hull, cockpit, gear, propulsion, weapons/hardpoints, turret bases and guns. Ground structures tracked for Phase 2. | Every space design resolves to the correct visible actor at legacy scale/orientation; all authored mounts present; every barrel fires from its muzzle; aim/range/timing/damage verified. No placeholders counted as completed models. |
 | A1.2 Campaign cinematics and moving briefings | Verify every Campaign 1–5 cutscene; legacy entry flow and loading gate; dialogue/VO, camera tracks, captions, environments, model scale; animated 3D mission briefing staging. | Every scene parses, required assets resolve, playback starts after readiness and ends/skips into the correct mission/hub; 3D briefings depict the selected mission and clean up actors/captures. |
 | A1.3 System/sector map and travel | Improve sector view with a spatial system-map presentation inspired by Star Citizen: hierarchy, readable orbit/route geometry, pan/zoom/focus and selection. EVE-inspired Farcaster activation/transit effects; integrate installed Procedural Vortex Generator for quantum tunnel. | Correct legacy positions, active campaign selection rules and route destinations; effects begin/end at simulation transitions, survive interruption and do not change travel timing or coordinates; scalable quality settings. |
-| A1.4 Full multiplayer missions | Extend existing native create/join/leave staging to mission selection, readiness, server-authoritative simulation, player ownership/input, replicated ships/weapons/damage/objectives, travel/reconnect/disconnect and results. | Two separate game processes complete a supported multiplayer mission with matching state, damage and results; test join/leave, late join policy, failure recovery and latency. Session discovery alone does not pass. |
+| A1.4 Multiplayer foundation | Native session and lobby work carried forward into Alpha 4. | See Alpha 4 for multiplayer acceptance. |
 | A1.5 UI and integrated acceptance | Empty Mods screen using modern options shell. Campaign 1 missions 2 and 3 full playthroughs. Regress T1 launch/ILS/docking, IFF, weapons and debrief persistence. | T2/T3 objectives, drones, combat, success, debrief, save/reload and T3 Ensign promotion verified. No blocking regressions or unverified critical assets. |
 
 The earlier unresolved physical-waypoint render capture remains an open regression item. Green geometry and concise NAV labels exist; live-flight visibility is not yet verified.
@@ -47,17 +47,19 @@ Account sign-in and saves are closed at the project owner's direction. Look and 
 
 Keep the current 1/100 presentation scale and legacy simulation coordinates for this milestone.
 
-## Alpha 4 — optimization, cleanup, bug fixes and scale conversion
+## Alpha 4 — optimization, cleanup, bug fixes and multiplayer
 
-**Open as of 2026-11-09.** Begin with a major optimization, cleanup and bug-fixing pass. Profile representative missions, prioritize measured bottlenecks and gameplay defects, and rerun the affected workflows before starting scale conversion.
+**Current phase. Opened 2026-11-09.** Profile representative missions, prioritize measured bottlenecks and gameplay defects, and rerun affected workflows. Keep the current presentation scale throughout this phase.
 
-After stabilization, start asset and presentation scale conversion with Falcon and Orion. Preserve legacy simulation coordinates, distances and timing. Verify camera framing, launch and recovery, terrain contact, attachment points and collision alignment before extending the conversion to the fleet.
+Integrate Unreal Engine multiplayer across gameplay, building on the native session and lobby work. Use the legacy simulation on the authoritative host or server, with UE handling player ownership, input, and replication. Cover the galaxy and orbital state, flight controls, ships, weapons, damage, AI, objectives, mission flow, HUD, debrief, chat, and results. Verify standalone play as each system moves to the multiplayer architecture.
 
-## Alpha 5 — multiplayer
+Hawk Match has launched in the Borova sector with two local LAN processes. Both players received fighters, steered, applied throttle, and saw live speed on their mini-HUDs. Matching hit counts and hull damage after a landed shot are still unverified. The propulsion and cockpit presentation fixes passed build and attachment checks and await a live rerun.
 
-Phase 5 is a project-wide refactor to integrate Unreal Engine multiplayer across nearly every gameplay system. Extend the existing A1.4 session and lobby work to create and join sessions through EOS and Steam. Establish server authority, player ownership, input routing and replication across mission flow, world and actor lifecycles, flight controls, ships, weapons, damage, AI, objectives, HUD state, debrief and results. Cover readiness, mission travel, disconnects and reconnects. Verify standalone play as each system moves to the multiplayer architecture.
+Complete a supported mission with matching combat state and results on both screens. Verify EOS and Steam create/join separately, including readiness, mission travel, disconnects, reconnects, join failures, and latency. Track lightweight StarServer deployment as a later multiplayer follow-up.
 
-Verify create and join with two separate game processes on each provider. Complete a supported multiplayer mission and compare state and results on both clients. Exercise join failures, disconnect recovery and latency.
+## Alpha 5 — full-scale conversion
+
+**Queued after Alpha 4.** Start the asset and presentation conversion with Falcon and Orion. Preserve legacy simulation distances and timing. Verify camera framing, launch and recovery, terrain contact, attachment points, and collision alignment before extending full scale to the fleet and mission environments.
 
 
 ## Current evidence and limitations
@@ -70,7 +72,6 @@ Verify create and join with two separate game processes on each provider. Comple
 
 - Empty native Mods page implemented in the existing options shell; editor build, options persistence/navigation checks and rendered capture passed. Remaining stages below are open.
 
-- Native session/lobby support exists; combat replication is not yet implemented or verified.
 - Initial static inventory is in ShipCoverage.md/json. File presence is not runtime validity, and the ingested design table may override source definitions.
 - Existing model, turret and cutscene tests must be rerun on the current build. Passing parser/structure checks will not be described as complete cinematic or flight playback.
 - Imported content and user-authored assets must be preserved. Missing source art is recorded as a dependency, not replaced with an unrelated ship.

@@ -24,6 +24,8 @@ class FNativeShipGeometry;
 class Camera;
 class Ship;
 class Drive;
+class Thruster;
+class ShipDesign;
 class Weapon;
 class UShipWeaponMountComponent;
 class UShipProbeComponent;
@@ -552,6 +554,10 @@ public:
     TArray<FVector> HullThrusterPortPositions;
     FVector RuntimeEmitterLocalPosition(const FVector& ImportedPosition, bool bInModelUnits = false) const;
     void BuildMainEnginesFromRuntime();
+    void BuildMainEngineEffects(const Drive* MainDrive);
+    void PresentMainEngineEffects(float DeltaTime, float RawPower, float ThrottleRequest, float Throttle, bool bAlive);
+    void ConfigurePropulsionAssets(const Drive* MainDrive);
+    const ShipDesign* SnapshotVisualDesign = nullptr;
     void ClearRuntimeMainEngines();
     void UpdateMainEnginesFromRuntime(float DeltaTime);
 
@@ -572,6 +578,8 @@ public:
     TArray<FRuntimeThrusterFX> RuntimeThrusterFX;
 
     void BuildThrustersFromRuntime();
+    void BuildThrusterEffects(const Thruster* Ports);
+    void PresentThrusterEffects(float DriveBurn, const Thruster* RuntimeThruster, TConstArrayView<uint8> PortBurns, bool bCullManeuveringJets);
     void ClearRuntimeThrusters();
     void UpdateThrusterVFXFromRuntime();
 
@@ -687,6 +695,9 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Ship|FX")
     void SetThrustersActive(bool bActive);
+
+    void InitializeSnapshotPropulsion(const ShipDesign* Design);
+    void UpdateSnapshotPropulsion(float DeltaTime, float DrivePower, float Throttle, TConstArrayView<uint8> PortBurns);
 
     UFUNCTION(BlueprintPure, Category = "Ship|FX")
     bool AreThrustersActive() const;

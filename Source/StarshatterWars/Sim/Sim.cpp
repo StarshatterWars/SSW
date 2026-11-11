@@ -13,6 +13,7 @@
 */
 
 #include "Sim.h"
+#include "SSWSessionLobbyGameMode.h"
 #include "SSWGameInstance.h"
 #include "CampaignSave.h"
 #include "Campaign.h"
@@ -2440,6 +2441,13 @@ bool Sim::RequestPlayerCarrierLaunch()
 void Sim::SetNetworkWorld(UWorld* World)
 {
     NetworkWorld = World;
+}
+
+int32 Sim::CountPendingArenaRespawns(int32 Iff)
+{
+    UWorld* World = NetworkWorld.Get();
+    const auto* Lobby = World ? World->GetAuthGameMode<ASSWSessionLobbyGameMode>() : nullptr;
+    return Lobby ? Lobby->CountPendingArenaRespawns(*this, Iff) : 0;
 }
 
 bool Sim::HasSimulationAuthority() const

@@ -44,7 +44,7 @@ AStormhawkShipActor::AStormhawkShipActor()
     ApplyStormhawkDefaults();
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Stormhawk"));
-    InitializeNativeFighterAttachments(TEXT("StormhawkPit"), 0.020000f, FVector(23.000000f, 0.000000f, 102.000000f), {
+    InitializeNativeFighterAttachments(TEXT("StormhawkPit"), 0.020000f, BridgePointOffset, {
         FFighterLandingGearDefinition(TEXT("GearNose1"), FVector(100.000000f, 0.000000f, -18.000000f), FVector(130.000000f, 0.000000f, -38.000000f)),
         FFighterLandingGearDefinition(TEXT("GearLeft1"), FVector(-74.000000f, -20.000000f, -20.000000f), FVector(-70.000000f, -40.000000f, -50.000000f)),
         FFighterLandingGearDefinition(TEXT("GearRight1"), FVector(-74.000000f, 20.000000f, -20.000000f), FVector(-70.000000f, 40.000000f, -50.000000f)),
@@ -55,6 +55,7 @@ void AStormhawkShipActor::OnConstruction(const FTransform& Transform)
 {
     ApplyStormhawkDefaults();
     Super::OnConstruction(Transform);
+    FighterCockpitRoot->SetRelativeLocation(BridgePointOffset);
     ApplyStormhawkFixedPoints();
 }
 void AStormhawkShipActor::ApplyStormhawkDefaults()

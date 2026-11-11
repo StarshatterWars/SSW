@@ -93,6 +93,7 @@ public:
 
     virtual void ExecFrame(double seconds);
     void SetNetworkWorld(UWorld* World);
+    int32 CountPendingArenaRespawns(int32 Iff);
     bool HasSimulationAuthority() const;
     bool IsNetworked() const;
     void AssignNetworkObjectId(SimObject& Object);

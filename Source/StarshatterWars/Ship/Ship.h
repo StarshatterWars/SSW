@@ -508,7 +508,7 @@ public:
     Solid*                  GetShieldRep() { return (Solid*)shieldRep; }
     Sensor*                 GetSensor() { return sensor; }
     NavSystem*              GetNavSystem() { return navsys; }
-    Thruster*               GetThruster() { return thruster; }
+    Thruster*               GetThruster() const { return thruster; }
     Hangar*                 GetHangar() { return hangar; }
     LandingGear*            GetGear() { return gear; }
 

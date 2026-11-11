@@ -8,10 +8,12 @@
 #include "SSWSessionLobbyGameMode.generated.h"
 class Sim;
 class Ship;
+class ShipDesign;
 class Mission;
 class ULevelStreamingDynamic;
 class ACameraActor;
 class AShipActor;
+class ASystemSceneBuilder;
 class SFighterHUDDetails;
 class UMultiplayerDlg;
 class Orbital;
@@ -79,6 +81,9 @@ struct FSSWReplicatedShipState
     UPROPERTY(BlueprintReadOnly) int32 ShieldStrength = 0;
     UPROPERTY(BlueprintReadOnly) int32 FuelPercent = 0;
     UPROPERTY(BlueprintReadOnly) float Throttle = 0;
+    UPROPERTY() float DrivePower = 0;
+    UPROPERTY() TArray<uint8> ThrusterBurns;
+    UPROPERTY() int32 RespawnsRemaining = 0;
     UPROPERTY(BlueprintReadOnly) int32 PrimaryAmmo = 0;
     UPROPERTY(BlueprintReadOnly) int32 SecondaryAmmo = 0;
     UPROPERTY(BlueprintReadOnly) int64 TargetId = 0;
@@ -146,6 +151,10 @@ class STARSHATTERWARS_API ASSWSessionGameState : public AGameState
 public:
     UPROPERTY(Replicated, BlueprintReadOnly) TArray<FSSWReplicatedShipState> MissionShips;
     UPROPERTY(Replicated, BlueprintReadOnly) TArray<FSSWReplicatedProjectileState> MissionProjectiles;
+    UPROPERTY(Replicated) FString ArenaSector;
+    UPROPERTY(Replicated) FVector ArenaVisualCenter = FVector::ZeroVector;
+    UPROPERTY(Replicated) FVector ArenaOrbitalOrigin = FVector::ZeroVector;
+    UPROPERTY(Replicated) double ArenaRadius = 0.0;
 
     UPROPERTY(ReplicatedUsing=OnRep_ChatHistory, BlueprintReadOnly)
     TArray<FSSWSessionChatMessage> ChatHistory;
@@ -212,6 +221,7 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category="Multiplayer")
     bool AssignMissionShip(int64 ObjectId);
     int64 GetMissionShipId() const { return MissionShipId; }
+    double GetRespawnDeadline() const { return RespawnDeadline; }
     const FSSWReplicatedShipState* GetAssignedShipState() const;
 
     UFUNCTION(Server, Reliable, BlueprintCallable, Category="Multiplayer")
@@ -240,17 +250,20 @@ private:
 
     friend class ASSWSessionLobbyGameMode;
     UPROPERTY(Replicated) int64 MissionShipId = 0;
+    UPROPERTY(Replicated) double RespawnDeadline = 0.0;
     double NextChatTime = 0.0;
     bool bMissionMapRequested = false;
 
     UPROPERTY(Transient) TObjectPtr<ULevelStreamingDynamic> ClientMissionLevel;
+    TWeakObjectPtr<ASystemSceneBuilder> ClientSceneBuilder;
     UFUNCTION() void BuildClientMissionScene();
     double LastFlightInput = 0.0;
     double NextFlightInput = 0.0;
     double FlightThrottle = 0.0;
+    int64 LastControlledShipId = 0;
 
     UFUNCTION(Server, Unreliable)
-    void ServerFlightInput(FVector Rotation, float Throttle, bool bFirePrimary, bool bFireSecondary);
+    void ServerFlightInput(FVector Rotation, FVector Translation, float Throttle, bool bFirePrimary, bool bFireSecondary);
 
     UFUNCTION(Server, Reliable)
     void ServerCycleCombatTarget();
@@ -260,6 +273,8 @@ private:
 
     UPROPERTY(Transient) TObjectPtr<UMultiplayerDlg> LobbyDialog;
     UPROPERTY(Transient) TObjectPtr<ACameraActor> FlightCamera;
+    UPROPERTY(Transient) TObjectPtr<ACameraActor> LobbyCamera;
+    UPROPERTY(Transient) TObjectPtr<AActor> ArenaBarrier;
     TSharedPtr<SFighterHUDDetails> FlightMiniHUD;
     UPROPERTY(Transient) TMap<int64, TObjectPtr<AShipActor>> RemoteFighters;
 
@@ -267,6 +282,7 @@ private:
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     void UpdateFlightView(const ASSWSessionGameState& State, const FSSWReplicatedShipState& Fighter, float DeltaTime);
+    void SetLobbySpaceView(const ASystemSceneBuilder& Builder, const FString& Sector);
 };
 UCLASS()
 class STARSHATTERWARS_API ASSWSessionFlightHUD : public AHUD
@@ -281,6 +297,7 @@ class STARSHATTERWARS_API ASSWSessionLobbyGameMode:public AGameMode {
 public:
     ASSWSessionLobbyGameMode();
     virtual void PostLogin(APlayerController* NewPlayer) override;
+    int32 CountPendingArenaRespawns(Sim& Simulation, int32 Iff) const;
 
 protected:
     virtual void BeginPlay() override;
@@ -297,10 +314,33 @@ protected:
 
 private:
     void UpdateMissionCountdown();
+    void UpdateArena();
     bool LaunchLobbyMission(ASSWSessionGameState& State);
     TSharedPtr<Mission> LobbyMission;
     int32 LobbyMissionIndex = INDEX_NONE;
     UPROPERTY(Transient) TObjectPtr<ULevelStreamingDynamic> LobbySystemLevel;
+    TWeakObjectPtr<ASystemSceneBuilder> LobbySceneBuilder;
 
     FTimerHandle MissionCountdownTimer;
+    FTimerHandle ArenaTimer;
+
+    struct FPilotSpawn
+    {
+        FString Name;
+        FString Registry;
+        ShipDesign* Design = nullptr;
+        FVector Position = FVector::ZeroVector;
+        double Roll = 0.0;
+        double Pitch = 0.0;
+        double Yaw = 0.0;
+        int32 Iff = 0;
+        int32 CommandAI = 0;
+        int32 Remaining = 3;
+        double RespawnAt = 0.0;
+        bool bWasSimulationPlayer = false;
+        int32 ElementIndex = 0;
+        FString ElementName;
+        TArray<int32> Loadout;
+    };
+    TMap<TWeakObjectPtr<ASSWSessionLobbyController>, FPilotSpawn> PilotSpawns;
 };

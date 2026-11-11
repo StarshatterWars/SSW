@@ -9,8 +9,14 @@
 #include "Engine/GameInstance.h"
 #include "Net/UnrealNetwork.h"
 #include "Sim.h"
+#include "SimRegion.h"
 #include "SimShot.h"
 #include "Ship.h"
+#include "Game.h"
+#include "Engine/StaticMeshActor.h"
+#include "Materials/MaterialInterface.h"
+#include "Drive.h"
+#include "Thruster.h"
 #include "SimSystem.h"
 #include "Instruction.h"
 #include "TimerManager.h"
@@ -27,6 +33,7 @@
 #include "OrbitalRegion.h"
 #include "Components/StaticMeshComponent.h"
 #include "ShipActor.h"
+#include "FighterActor.h"
 #include "FighterHUDDetails.h"
 #include "Engine/GameViewportClient.h"
 #include "ShipDesign.h"
@@ -64,6 +71,7 @@ namespace
 
 ASSWSessionLobbyGameMode::ASSWSessionLobbyGameMode(){PlayerControllerClass=ASSWSessionLobbyController::StaticClass();DefaultPawnClass=ASpectatorPawn::StaticClass();GameStateClass=ASSWSessionGameState::StaticClass();GameSessionClass=AGameSession::StaticClass();PlayerStateClass=ASSWSessionPlayerState::StaticClass();HUDClass=ASSWSessionFlightHUD::StaticClass();bUseSeamlessTravel=true;}
 void ASSWSessionLobbyController::BeginPlay(){Super::BeginPlay();if(!IsLocalController())return;
+ bAutoManageActiveCameraTarget = false;
  if (const auto* Instance = Cast<USSWGameInstance>(GetGameInstance()))
  {
      const FString Name = Instance->GetPlatformPilotName().TrimStartAndEnd().Left(64);
@@ -85,6 +93,10 @@ void ASSWSessionGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
     DOREPLIFETIME(ASSWSessionGameState, bMissionStartReady);
     DOREPLIFETIME(ASSWSessionGameState, MissionLaunchError);
     DOREPLIFETIME(ASSWSessionGameState, MissionMap);
+    DOREPLIFETIME(ASSWSessionGameState, ArenaSector);
+    DOREPLIFETIME(ASSWSessionGameState, ArenaVisualCenter);
+    DOREPLIFETIME(ASSWSessionGameState, ArenaOrbitalOrigin);
+    DOREPLIFETIME(ASSWSessionGameState, ArenaRadius);
     DOREPLIFETIME(ASSWSessionGameState, GalaxyClockMs);
     DOREPLIFETIME(ASSWSessionGameState, OrbitalPositions);
 }
@@ -120,6 +132,9 @@ void ASSWSessionGameState::ClearMissionState()
 {
     MissionShips.Reset();
     MissionProjectiles.Reset();
+    ArenaSector.Reset();
+    ArenaOrbitalOrigin = FVector::ZeroVector;
+    ArenaRadius = 0.0;
     RetiredShips.Reset();
     ShotCounts.Reset();
     DamageCounts.Reset();
@@ -180,6 +195,16 @@ FSSWReplicatedShipState ASSWSessionGameState::MakeShipState(const Ship& PilotShi
     State.ShieldStrength = PilotShip.GetShieldStrength();
     State.FuelPercent = PilotShip.GetFuelLevel();
     State.Throttle = static_cast<float>(PilotShip.GetThrottle());
+    State.RespawnsRemaining = PilotShip.GetRespawnCount();
+    if (const Drive* MainDrive = PilotShip.GetMainDrive())
+        State.DrivePower = MainDrive->GetVisualPower();
+    if (const Thruster* Jets = PilotShip.GetThruster())
+    {
+        State.ThrusterBurns.Reserve(Jets->GetNumThrusters());
+        for (int32 Port = 0; Port < Jets->GetNumThrusters(); ++Port)
+            State.ThrusterBurns.Add(static_cast<uint8>(FMath::RoundToInt(
+                255.0f * FMath::Clamp(Jets->GetThrusterBurn(Port), 0.0f, 1.0f))));
+    }
     if (const Weapon* Primary = PilotShip.GetPrimary()) State.PrimaryAmmo = Primary->Ammo();
     if (const Weapon* Secondary = PilotShip.GetSecondary()) State.SecondaryAmmo = Secondary->Ammo();
     if (const SimObject* Target = PilotShip.GetTarget()) State.TargetId = Target->GetObjID();
@@ -345,7 +370,10 @@ bool ASSWSessionLobbyController::AssignMissionShip(int64 ObjectId)
     }
     AssignMissionShip(0);
     MissionShipId = ObjectId;
-    State->FindMissionShip(ObjectId)->SetNetworkPilot(true);
+    Ship* Fighter = State->FindMissionShip(ObjectId);
+    Fighter->SetNetworkPilot(true);
+    if (auto* Visual = Cast<AFighterActor>(Fighter->GetNativePresentation()))
+        Visual->UseNetworkChaseView();
     ForceNetUpdate();
     return true;
 }
@@ -455,7 +483,11 @@ void ASSWSessionLobbyGameMode::BeginPlay()
             ? &Data->GetMultiplayerMissionScenarios()[LobbyMissionIndex] : nullptr;
         const FString Map = Scenario
             ? FString::Printf(TEXT("/Game/Maps/%s"), *Scenario->MissionSystem) : TEXT("/Game/Maps/Borova");
-        if (auto* State = GetGameState<ASSWSessionGameState>()) State->MissionMap = Map;
+        if (auto* State = GetGameState<ASSWSessionGameState>())
+        {
+            State->MissionMap = Map;
+            State->ArenaSector = Scenario ? Scenario->MissionRegion : TEXT("Borova");
+        }
         bool bStreamingStarted = false;
         LobbySystemLevel = ULevelStreamingDynamic::LoadLevelInstance(
             GetWorld(), Map, FVector::ZeroVector, FRotator::ZeroRotator, bStreamingStarted);
@@ -479,10 +511,14 @@ void ASSWSessionLobbyGameMode::UpdateMissionCountdown()
 
     int32 PilotCount = 0;
     bool bAllReady = true;
+    if (!LobbySceneBuilder.IsValid() && LobbySystemLevel && LobbySystemLevel->IsLevelVisible())
+        LobbySceneBuilder = BuildLobbySystem(*GetWorld(), *LobbySystemLevel, State->MissionMap);
     for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
     {
-        const auto* Controller = Cast<ASSWSessionLobbyController>(It->Get());
+        auto* Controller = Cast<ASSWSessionLobbyController>(It->Get());
         if (!Controller) continue;
+        if (Controller->IsLocalController() && LobbySceneBuilder.IsValid())
+            Controller->SetLobbySpaceView(*LobbySceneBuilder.Get(), State->ArenaSector);
         ++PilotCount;
         const auto* Player = Controller->GetPlayerState<ASSWSessionPlayerState>();
         bAllReady &= Player && Player->bReady;
@@ -555,6 +591,13 @@ bool ASSWSessionLobbyGameMode::LaunchLobbyMission(ASSWSessionGameState& State)
     State.MissionLaunchError = TEXT("SELECTED MISSION UNAVAILABLE");
     if (!Runtime || !Environment || !Scenario) return false;
 
+    if (Scenario->MissionSystem.TrimStartAndEnd().IsEmpty() ||
+        Scenario->MissionRegion.TrimStartAndEnd().IsEmpty())
+    {
+        State.MissionLaunchError = TEXT("MISSION SYSTEM OR SECTOR IS MISSING");
+        return false;
+    }
+
     TSharedPtr<Mission> Selected = MakeShared<Mission>();
     if (!Selected->LoadFromCampaignMissionData(*Scenario)) return false;
 
@@ -567,7 +610,7 @@ bool ASSWSessionLobbyGameMode::LaunchLobbyMission(ASSWSessionGameState& State)
         return false;
     }
 
-    ASystemSceneBuilder* Builder = LobbySystemLevel
+    ASystemSceneBuilder* Builder = LobbySceneBuilder.IsValid() ? LobbySceneBuilder.Get() : LobbySystemLevel
         ? BuildLobbySystem(*GetWorld(), *LobbySystemLevel, State.MissionMap) : nullptr;
     if (!Builder && GetNetMode() != NM_DedicatedServer)
     {
@@ -578,9 +621,11 @@ bool ASSWSessionLobbyGameMode::LaunchLobbyMission(ASSWSessionGameState& State)
     Simulation->SetNetworkWorld(GetWorld());
     State.BindSimulation(*Simulation);
     Environment->BuildSimRegionsForSim(Simulation);
-    if (!Simulation->FindRegion(Selected->GetRegion()))
+    SimRegion* MissionRegion = Simulation->FindRegion(Selected->GetRegion());
+    if (!MissionRegion || !MissionRegion->GetSystem() ||
+        !Scenario->MissionSystem.Equals(ANSI_TO_TCHAR(MissionRegion->GetSystem()->GetName()), ESearchCase::IgnoreCase))
     {
-        State.MissionLaunchError = TEXT("MISSION REGION UNAVAILABLE");
+        State.MissionLaunchError = TEXT("MISSION SECTOR IS UNAVAILABLE IN THE SELECTED SYSTEM");
         return false;
     }
 
@@ -624,15 +669,114 @@ bool ASSWSessionLobbyGameMode::LaunchLobbyMission(ASSWSessionGameState& State)
     }
 
     LobbyMission = MoveTemp(Selected);
+    if (GetNetMode() == NM_ListenServer)
+    {
+        State.ArenaSector = Scenario->MissionRegion;
+        State.ArenaVisualCenter = Runtime->GetVisualLocationForRegion(MissionRegion, FVector::ZeroVector);
+        State.ArenaOrbitalOrigin = MissionRegion->GetLocation();
+        State.ArenaRadius = 50000.0;
+        for (ListIter<Ship> Ships = MissionRegion->GetShips(); ++Ships;)
+            if (const Ship* Entry = Ships.value())
+                State.ArenaRadius = FMath::Max(State.ArenaRadius, Entry->GetLocation().Size() + 25000.0);
+        for (int32 Index = 0; Index < Pilots.Num(); ++Index)
+        {
+            Ship& Fighter = *Fighters[Index];
+            if (Scenario->MissionName.Equals(TEXT("Hawk Match"), ESearchCase::IgnoreCase))
+                if (const auto* Orbit = MissionRegion->GetOrbitalRegion(); Orbit && Orbit->Primary())
+                    Fighter.LookAt(OtherHand(Orbit->Primary()->Location() - MissionRegion->GetLocation()));
+            FPilotSpawn& Spawn = PilotSpawns.Add(Pilots[Index]);
+            Spawn.Name = UTF8_TO_TCHAR(Fighter.GetName());
+            Spawn.Registry = UTF8_TO_TCHAR(Fighter.Registry());
+            Spawn.Design = const_cast<ShipDesign*>(Fighter.Design());
+            Spawn.Position = Fighter.GetLocation();
+            Fighter.GetCam().Orientation().ComputeEulerAngles(Spawn.Roll, Spawn.Pitch, Spawn.Yaw);
+            Spawn.Iff = Fighter.GetIFF();
+            Spawn.bWasSimulationPlayer = &Fighter == Simulation->GetPlayerShip();
+            Spawn.CommandAI = Fighter.GetCommandAILevel();
+            Spawn.ElementIndex = Fighter.GetOrigElementIndex();
+            Spawn.ElementName = UTF8_TO_TCHAR(Fighter.GetElement()->GetName().data());
+            if (const int* Loadout = Fighter.GetLoadout())
+                Spawn.Loadout.Append(Loadout, Spawn.Design->hardpoints.size());
+            Fighter.SetRespawnCount(Spawn.Remaining);
+        }
+        GetWorldTimerManager().SetTimer(ArenaTimer, this, &ThisClass::UpdateArena, 0.05f, true);
+    }
     State.MissionLaunchError.Reset();
     Runtime->SetGameMode(EGameMode::PLAY);
     Runtime->SetPaused(false);
     return true;
 }
 
+void ASSWSessionLobbyGameMode::UpdateArena()
+{
+    auto* State = GetGameState<ASSWSessionGameState>();
+    Sim* Simulation = Sim::GetSim();
+    if (!State || !State->bMissionStartReady || !Simulation ||
+        Simulation->GetMission() != LobbyMission.Get()) return;
+    SimRegion* Region = Simulation->FindRegion(State->ArenaSector);
+    if (!Region) return;
+    State->ArenaOrbitalOrigin = Region->GetLocation();
+
+    for (ListIter<Ship> Ships = Region->GetShips(); ++Ships;)
+        if (Ship* Fighter = Ships.value(); Fighter && !Fighter->IsStatic() &&
+            !Fighter->IsDead() && !Fighter->IsDying() && Fighter->GetFlightPhase() == EOPSMode::ACTIVE &&
+            Fighter->GetLocation().Size() + Fighter->GetNavigationHullRadius() >= State->ArenaRadius)
+        {
+            Fighter->SetIntegrity(0);
+            Fighter->DeathSpiral();
+        }
+
+    const double Now = State->GetServerWorldTimeSeconds();
+    for (auto It = PilotSpawns.CreateIterator(); It; ++It)
+    {
+        auto* Pilot = It.Key().Get();
+        if (!Pilot) { It.RemoveCurrent(); continue; }
+        FPilotSpawn& Spawn = It.Value();
+        if (!Pilot->MissionShipId || Spawn.Remaining <= 0 ||
+            Simulation->FindShipByObjID(static_cast<uint32>(Pilot->MissionShipId))) continue;
+        if (Spawn.RespawnAt == 0.0)
+        {
+            Spawn.RespawnAt = Now + 3.0;
+            Pilot->RespawnDeadline = Spawn.RespawnAt;
+            Pilot->ForceNetUpdate();
+        }
+        if (Now < Spawn.RespawnAt) continue;
+        Ship* Fighter = Simulation->CreateShip(TCHAR_TO_UTF8(*Spawn.Name), TCHAR_TO_UTF8(*Spawn.Registry),
+            Spawn.Design, Region->GetName(), OtherHand(Spawn.Position), Spawn.Iff, Spawn.CommandAI,
+            Spawn.Loadout.IsEmpty() ? nullptr : Spawn.Loadout.GetData());
+        if (!Fighter) continue;
+        Fighter->SetHeading(Spawn.Roll, Spawn.Pitch, Spawn.Yaw);
+        Fighter->SetFlightPhase(EOPSMode::ACTIVE);
+        if (SimElement* Element = Simulation->FindElement(TCHAR_TO_UTF8(*Spawn.ElementName)))
+            Element->AddShip(Fighter, Spawn.ElementIndex);
+        Fighter->SetRespawnCount(--Spawn.Remaining);
+        if (Spawn.bWasSimulationPlayer) Region->SetPlayerShip(Fighter);
+        Pilot->AssignMissionShip(Fighter->GetObjID());
+        Spawn.RespawnAt = 0.0;
+        Pilot->RespawnDeadline = 0.0;
+        Pilot->ForceNetUpdate();
+    }
+}
+
+int32 ASSWSessionLobbyGameMode::CountPendingArenaRespawns(Sim& Simulation, int32 Iff) const
+{
+    if (!LobbyMission || Simulation.GetMission() != LobbyMission.Get()) return 0;
+    int32 Count = 0;
+    for (const auto& Entry : PilotSpawns)
+    {
+        const auto* Pilot = Entry.Key.Get();
+        const auto& Spawn = Entry.Value;
+        if (Pilot && Pilot->MissionShipId && Spawn.Remaining > 0 && (Iff < 0 || Spawn.Iff == Iff) &&
+            !Simulation.FindShipByObjID(static_cast<uint32>(Pilot->MissionShipId)))
+            ++Count;
+    }
+    return Count;
+}
+
 void ASSWSessionLobbyGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     GetWorldTimerManager().ClearTimer(MissionCountdownTimer);
+    GetWorldTimerManager().ClearTimer(ArenaTimer);
     if (Sim* Simulation = Sim::GetSim(); LobbyMission && Simulation && Simulation->GetMission() == LobbyMission.Get())
     {
         if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
@@ -647,12 +791,15 @@ void ASSWSessionLobbyController::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME_CONDITION(ASSWSessionLobbyController, MissionShipId, COND_OwnerOnly);
+    DOREPLIFETIME_CONDITION(ASSWSessionLobbyController, RespawnDeadline, COND_OwnerOnly);
 }
 
-void ASSWSessionLobbyController::ServerFlightInput_Implementation(FVector Rotation, float Throttle, bool bFirePrimary, bool bFireSecondary)
+void ASSWSessionLobbyController::ServerFlightInput_Implementation(FVector Rotation, FVector Translation,
+    float Throttle, bool bFirePrimary, bool bFireSecondary)
 {
     const double Now = FPlatformTime::Seconds();
-    if (Rotation.ContainsNaN() || !FMath::IsFinite(Throttle) || Now - LastFlightInput < 0.035) return;
+    if (Rotation.ContainsNaN() || Translation.ContainsNaN() ||
+        !FMath::IsFinite(Throttle) || Now - LastFlightInput < 0.035) return;
 
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     Ship* Fighter = State && State->bMissionStartReady ? State->FindMissionShip(MissionShipId) : nullptr;
@@ -661,7 +808,10 @@ void ASSWSessionLobbyController::ServerFlightInput_Implementation(FVector Rotati
     LastFlightInput = Now;
     Fighter->SetManualThrottle(FMath::Clamp(Throttle, 0.0f, 100.0f));
     for (int32 Axis = 0; Axis < 3; ++Axis)
+    {
         Fighter->SetManualRotationAxis(Axis, FMath::Clamp(Rotation[Axis], -1.0, 1.0));
+        Fighter->SetManualTranslationAxis(Axis, Translation[Axis]);
+    }
     if (bFirePrimary) Fighter->FirePrimary();
     if (bFireSecondary) Fighter->FireSecondary();
 }
@@ -684,7 +834,12 @@ void ASSWSessionLobbyController::PlayerTick(float DeltaTime)
             if (ClientMissionLevel->IsLevelVisible()) BuildClientMissionScene();
         }
     }
-    if (!State->bMissionStartReady || !MissionShipId) return;
+    if (!State->bMissionStartReady)
+    {
+        if (ClientSceneBuilder.IsValid()) SetLobbySpaceView(*ClientSceneBuilder.Get(), State->ArenaSector);
+        return;
+    }
+    if (!MissionShipId) return;
 
     const double Now = FPlatformTime::Seconds();
     if (HasAuthority() && LastFlightInput > 0.0 && Now - LastFlightInput > 0.25)
@@ -701,6 +856,12 @@ void ASSWSessionLobbyController::PlayerTick(float DeltaTime)
     });
     if (!Fighter) return;
 
+    if (LastControlledShipId != MissionShipId)
+    {
+        LastControlledShipId = MissionShipId;
+        FlightThrottle = 0.0;
+        bPrimaryPressed = bSecondaryPressed = false;
+    }
     UpdateFlightView(*State, *Fighter, DeltaTime);
     if (Fighter->bDestroyed || Fighter->bRetired) return;
 
@@ -726,7 +887,11 @@ void ASSWSessionLobbyController::PlayerTick(float DeltaTime)
         int32(IsInputKeyDown(EKeys::Down)) - int32(IsInputKeyDown(EKeys::Up)),
         int32(IsInputKeyDown(EKeys::Right)) - int32(IsInputKeyDown(EKeys::Left)),
         int32(IsInputKeyDown(EKeys::NumPadNine)) - int32(IsInputKeyDown(EKeys::NumPadSeven)));
-    ServerFlightInput(Rotation, FlightThrottle,
+    const FVector Translation(
+        int32(IsInputKeyDown(EKeys::NumPadSix)) - int32(IsInputKeyDown(EKeys::NumPadFour)),
+        int32(IsInputKeyDown(EKeys::NumPadEight)) - int32(IsInputKeyDown(EKeys::NumPadTwo)),
+        int32(IsInputKeyDown(EKeys::NumPadFive)) - int32(IsInputKeyDown(EKeys::NumPadZero)));
+    ServerFlightInput(Rotation, Translation, FlightThrottle,
         bPrimaryPressed || IsInputKeyDown(EKeys::LeftControl),
         bSecondaryPressed || IsInputKeyDown(EKeys::SpaceBar));
     bPrimaryPressed = false;
@@ -755,10 +920,12 @@ void ASSWSessionLobbyController::UpdateFlightView(
         Fill->SetupAttachment(FlightCamera->GetRootComponent());
         Fill->SetMobility(EComponentMobility::Movable);
         Fill->SetAttenuationRadius(420.0f);
-        Fill->SetIntensity(650.0f);
+        Fill->SetIntensity(1600.0f);
+        Fill->SetInverseExposureBlend(0.65f);
         Fill->SetCastShadows(false);
         Fill->RegisterComponent();
         SetViewTarget(FlightCamera);
+        if (LobbyCamera) { LobbyCamera->Destroy(); LobbyCamera = nullptr; }
         if (auto* Viewport = GetWorld()->GetGameViewport())
         {
             FlightMiniHUD = SNew(SFighterHUDDetails)
@@ -770,8 +937,36 @@ void ASSWSessionLobbyController::UpdateFlightView(
         }
     }
 
+    const bool bInArena = State.ArenaRadius > 0.0 && Fighter.Region == State.ArenaSector;
+    if (bInArena && !ArenaBarrier)
+    {
+        auto* Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+        auto* Material = LoadObject<UMaterialInterface>(nullptr,
+            TEXT("/Game/sA_EnergyShieldFxPack/Materials/MI_ShieldBase_2_a.MI_ShieldBase_2_a"));
+        if (Mesh && Material)
+        {
+            auto* Barrier = GetWorld()->SpawnActor<AStaticMeshActor>();
+            if (Barrier)
+            {
+                auto* Component = Barrier->GetStaticMeshComponent();
+                Component->SetMobility(EComponentMobility::Movable);
+                Component->SetStaticMesh(Mesh);
+                Component->SetMaterial(0, Material);
+                Component->SetReverseCulling(true);
+                Component->SetCastShadow(false);
+                Component->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+                Barrier->SetActorLocation(State.ArenaVisualCenter);
+                Barrier->SetActorScale3D(FVector(State.ArenaRadius / 50.0));
+                ArenaBarrier = Barrier;
+            }
+        }
+    }
+    if (ArenaBarrier) ArenaBarrier->SetActorHiddenInGame(!bInArena);
+
     const FVector Forward = ToUE(Fighter.Heading).GetSafeNormal();
     const FVector Up = ToUE(Fighter.Up).GetSafeNormal();
+    if (ClientSceneBuilder.IsValid() && Fighter.Region == State.ArenaSector)
+        ClientSceneBuilder->UpdateMissionSpace(State.ArenaOrbitalOrigin, ToUE(Fighter.Position));
     const FVector Eye = Fighter.VisualPosition - Forward * 130.0 + Up * 32.0;
     const FRotator View = FRotationMatrix::MakeFromXZ(Forward, Up).Rotator();
     const FVector CameraPosition = FlightCamera->GetActorLocation();
@@ -799,12 +994,15 @@ void ASSWSessionLobbyController::UpdateFlightView(
             Actor = GetWorld()->SpawnActor<AShipActor>(VisualClass, ShipState.VisualPosition, Rotation, Spawn);
             if (!Actor) continue;
             Actor->SetActorEnableCollision(false);
+            if (auto* Visual = Cast<AFighterActor>(Actor.Get())) Visual->UseNetworkChaseView();
+            Actor->InitializeSnapshotPropulsion(ShipDesign::Get(TCHAR_TO_ANSI(*ShipState.Design)));
         }
         const FVector CurrentPosition = Actor->GetActorLocation();
         const bool bSnapShip = FVector::DistSquared(CurrentPosition, ShipState.VisualPosition) > SnapDistanceSquared;
         Actor->SetActorLocationAndRotation(
             bSnapShip ? ShipState.VisualPosition : FMath::Lerp(CurrentPosition, ShipState.VisualPosition, Blend),
             bSnapShip ? Rotation.Quaternion() : FQuat::Slerp(Actor->GetActorQuat(), Rotation.Quaternion(), Blend));
+        Actor->UpdateSnapshotPropulsion(DeltaTime, ShipState.DrivePower, ShipState.Throttle, ShipState.ThrusterBurns);
     }
     for (auto It = RemoteFighters.CreateIterator(); It; ++It)
     {
@@ -824,6 +1022,8 @@ void ASSWSessionLobbyController::EndPlay(const EEndPlayReason::Type EndPlayReaso
         FlightMiniHUD.Reset();
     }
     if (FlightCamera) FlightCamera->Destroy();
+    if (LobbyCamera) LobbyCamera->Destroy();
+    if (ArenaBarrier) ArenaBarrier->Destroy();
     for (auto& Entry : RemoteFighters)
         if (Entry.Value) Entry.Value->Destroy();
     if (LobbyDialog) LobbyDialog->RemoveFromParent();
@@ -952,10 +1152,18 @@ void ASSWSessionFlightHUD::DrawHUD()
     {
         return Entry.ObjectId == FighterId;
     });
-    if (!Fighter) return;
-
     const FLinearColor TextColor(0.7f, 0.9f, 1.0f);
     const FLinearColor HitColor(1.0f, 0.35f, 0.2f);
+    if (const double Deadline = Controller->GetRespawnDeadline(); Deadline > 0.0)
+    {
+        const int32 Seconds = FMath::Max(1, FMath::CeilToInt(Deadline - State->GetServerWorldTimeSeconds()));
+        const FString Message = FString::Printf(TEXT("RESPAWN IN %d"), Seconds);
+        float Width = 0.0f, Height = 0.0f;
+        GetTextSize(Message, Width, Height, nullptr, 2.0f);
+        DrawText(Message, TextColor, (Canvas->ClipX - Width) * 0.5f,
+            (Canvas->ClipY - Height) * 0.5f, nullptr, 2.0f);
+    }
+    if (!Fighter) return;
     float Row = Canvas->ClipY - 125.0f;
     for (const auto& Entry : State->MissionShips)
     {
@@ -970,6 +1178,8 @@ void ASSWSessionFlightHUD::DrawHUD()
     }
 
     if (Fighter->bDestroyed || Fighter->bRetired) return;
+    DrawText(FString::Printf(TEXT("RESPAWNS %d"), Fighter->RespawnsRemaining),
+        TextColor, 24.0f, Canvas->ClipY - 145.0f);
     const float X = Canvas->ClipX * 0.5f;
     const float Y = Canvas->ClipY * 0.5f;
     DrawLine(X - 12.0f, Y, X + 12.0f, Y, TextColor);
@@ -1075,8 +1285,48 @@ void ASSWSessionLobbyController::BuildClientMissionScene()
     if (!ClientMissionLevel || !State) return;
 
     ClientMissionLevel->OnLevelShown.RemoveDynamic(this, &ThisClass::BuildClientMissionScene);
-    if (!BuildLobbySystem(*GetWorld(), *ClientMissionLevel, State->MissionMap))
+    if (auto* Builder = BuildLobbySystem(*GetWorld(), *ClientMissionLevel, State->MissionMap))
+    {
+        ClientSceneBuilder = Builder;
+        SetLobbySpaceView(*Builder, State->ArenaSector);
+    }
+    else
         UE_LOG(LogTemp, Warning, TEXT("[SessionLobby] Could not build client scene for %s"), *State->MissionMap);
+}
+
+void ASSWSessionLobbyController::SetLobbySpaceView(const ASystemSceneBuilder& Builder, const FString& Sector)
+{
+    if (FlightCamera || !IsLocalController() || Sector.IsEmpty()) return;
+    const auto* Region = Builder.GetSpawnedRegions().FindByPredicate([&Sector](const FSpawnedSystemRegion& Entry)
+    {
+        return Entry.RegionName.Equals(Sector, ESearchCase::IgnoreCase);
+    });
+    const FString& Anchor = Region && !Region->AnchorBodyName.IsEmpty() ? Region->AnchorBodyName : Sector;
+    const auto& Bodies = Builder.GetSpawnedBodies();
+    const auto* Body = Bodies.FindByPredicate([&Anchor](const FSpawnedSystemBody& Entry)
+    {
+        return Entry.Actor && !Entry.bIsOrbit && Entry.BodyName.Equals(Anchor, ESearchCase::IgnoreCase);
+    });
+    if (!Body) return;
+    const FVector Target = Body->Actor->GetActorLocation();
+    const AActor* Illuminator = Body->ParentActor;
+    const FVector TowardLight = Illuminator
+        ? (Illuminator->GetActorLocation() - Target).GetSafeNormal() : FVector::BackwardVector;
+    const FVector Offset = (TowardLight * 4.0 + FVector::UpVector * 0.85) *
+        FMath::Max(100.0f, Body->VisualRadiusUnits);
+    if (LobbyCamera)
+    {
+        LobbyCamera->SetActorLocationAndRotation(Target + Offset, (-Offset).Rotation());
+        if (GetViewTarget() != LobbyCamera) SetViewTarget(LobbyCamera);
+        return;
+    }
+    LobbyCamera = GetWorld()->SpawnActor<ACameraActor>(Target + Offset, (-Offset).Rotation());
+    if (LobbyCamera)
+    {
+        SetViewTarget(LobbyCamera);
+        UE_LOG(LogTemp, Display, TEXT("[SessionLobby] Lobby view sector='%s' body='%s' camera=%s"),
+            *Sector, *Body->BodyName, *(Target + Offset).ToString());
+    }
 }
 
 const FSSWReplicatedShipState* ASSWSessionLobbyController::GetAssignedShipState() const

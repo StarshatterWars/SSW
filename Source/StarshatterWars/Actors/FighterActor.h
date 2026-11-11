@@ -30,7 +30,9 @@ public:
     AFighterActor();
     void SetCockpitViewActive(bool Active) { bCockpitViewActive = Active; }
     bool IsCockpitViewActive() const { return bCockpitViewActive; }
+    void UseNetworkChaseView();
     bool bCockpitViewActive = false;
+    bool bNetworkChaseView = false;
     // Assign meshes and relative transforms directly in each fighter Blueprint.
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Meshes") TObjectPtr<UStaticMeshComponent> LeftGear;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Meshes") TObjectPtr<UStaticMeshComponent> RightGear;

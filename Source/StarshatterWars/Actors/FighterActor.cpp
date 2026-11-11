@@ -73,7 +73,15 @@ void AFighterActor::InitializeNativeFighterAttachments(const TCHAR* CockpitModel
         Gear->SetupAttachment(FighterLandingGearRoot);
         Gear->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
         if (GearMount) GearMount->SetupAttachment(Gear);
-        if (GearMount)
+        if (Def.Model.StartsWith(TEXT("zgear_"), ESearchCase::IgnoreCase))
+        {
+            const FString Asset = Def.Model.StartsWith(TEXT("zgear_l"), ESearchCase::IgnoreCase)
+                ? TEXT("ZGearLeft") : TEXT("ZGearRight");
+            const FString Path = FString::Printf(TEXT("/Game/Models/LandingGear/Zodiac/BP_%s.BP_%s_C"),
+                *Asset, *Asset);
+            if (UClass* Class = LoadClass<AActor>(nullptr, *Path)) Gear->SetChildActorClass(Class);
+        }
+        else if (GearMount)
         {
             // DEF positions are relative to FighterLandingGearRoot, independent of mesh mount edits.
             const FString AssetName = GearMount == LeftGear ? TEXT("RightGear")
@@ -103,7 +111,7 @@ void AFighterActor::OnConstruction(const FTransform& Transform)
 
 void AFighterActor::ConfigureCockpitBlueprint()
 {
-    if (!CockpitComponent) return;
+    if (!CockpitComponent || bNetworkChaseView) return;
     const Ship* Runtime = GetRuntimeShip();
     const bool IsFalcon = AuthoredCockpitModel.Equals(TEXT("FalconPit"),ESearchCase::IgnoreCase)
         || (HullMesh && HullMesh->GetStaticMesh() && HullMesh->GetStaticMesh()->GetName().Equals(TEXT("Falcon"),ESearchCase::IgnoreCase))
@@ -112,15 +120,28 @@ void AFighterActor::ConfigureCockpitBlueprint()
     {
         const FString* Folder = nullptr;
         static const TMap<FString, FString> CockpitFolders = {
+            {TEXT("AvengerPit"), TEXT("Avenger")},
+            {TEXT("CobraPit"), TEXT("Cobra")},
             {TEXT("EaglePit"), TEXT("Eagle")},
+            {TEXT("IntruderPit"), TEXT("Intruder")},
+            {TEXT("JackalPit"), TEXT("Jackal")},
+            {TEXT("RaptorPit"), TEXT("Raptor")},
+            {TEXT("RazorPit"), TEXT("Razor")},
             {TEXT("StormhawkPit"), TEXT("Stormhawk")},
             {TEXT("ThunderboltPit"), TEXT("Thunderbolt")},
+            {TEXT("ViperPit"), TEXT("Viper")},
         };
         Folder = CockpitFolders.Find(AuthoredCockpitModel);
         if (!Folder) return;
-        const FString Package = FString::Printf(TEXT("/Game/Models/Cockpits/%s/BP_%s"),
-            **Folder, *AuthoredCockpitModel);
-        const FString ClassPath = Package + TEXT(".BP_") + AuthoredCockpitModel + TEXT("_C");
+        FString Model = AuthoredCockpitModel;
+        FString Package = FString::Printf(TEXT("/Game/Models/Cockpits/%s/BP_%s"), **Folder, *Model);
+        if (!FPackageName::DoesPackageExist(Package) &&
+            !Model.Equals(TEXT("StormhawkPit"), ESearchCase::IgnoreCase))
+        {
+            Model = TEXT("StormhawkPit");
+            Package = TEXT("/Game/Models/Cockpits/Stormhawk/BP_StormhawkPit");
+        }
+        const FString ClassPath = Package + TEXT(".BP_") + Model + TEXT("_C");
         if (CockpitComponent->GetChildActorClass() &&
             CockpitComponent->GetChildActorClass()->GetPathName() != ClassPath) return;
         if (!CockpitComponent->GetChildActorClass())
@@ -173,14 +194,23 @@ void AFighterActor::ConfigureCockpitBlueprint()
 
 }
 
+void AFighterActor::UseNetworkChaseView()
+{
+    bNetworkChaseView = true;
+    FighterCockpitRoot->SetHiddenInGame(true, true);
+    CockpitComponent->SetChildActorClass(nullptr);
+}
+
 void AFighterActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
     UpdateLandingGearPresentation();
-    if(Ship* Runtime=GetRuntimeShip())
+    Ship* Runtime = GetRuntimeShip();
+    if (Runtime || SnapshotVisualDesign)
     {
-        ConfigureCockpitBlueprint();
-        const bool Visible=Sim::GetSim() && Runtime==Sim::GetSim()->GetPlayerShip() && bCockpitViewActive;
+        if (Runtime) ConfigureCockpitBlueprint();
+        const bool Visible = Runtime && !bNetworkChaseView && !Runtime->HasNetworkPilot() && Sim::GetSim() &&
+            Runtime == Sim::GetSim()->GetPlayerShip() && bCockpitViewActive;
         CockpitComponent->SetVisibility(Visible,true);
         Cockpit->SetVisibility(Visible && !CockpitComponent->GetChildActorClass(), true);
         if(auto* Child=CockpitComponent->GetChildActor())
@@ -202,6 +232,18 @@ void AFighterActor::SynchronizeLandingGearMarkers()
 {
     if (Cockpit && Cockpit->GetAttachParent() != CockpitComponent)
         Cockpit->AttachToComponent(CockpitComponent, FAttachmentTransformRules::KeepRelativeTransform);
+    if (!AuthoredCockpitModel.IsEmpty())
+    {
+        TArray<UFighterLandingGearComponent*> NativeGear;
+        GetComponents(NativeGear);
+        NativeGear.Sort([](const UFighterLandingGearComponent& A, const UFighterLandingGearComponent& B)
+        {
+            return A.AuthoredIndex < B.AuthoredIndex;
+        });
+        LandingGearActors.Reset(NativeGear.Num());
+        for (auto* Gear : NativeGear)
+            LandingGearActors.Add(Gear);
+    }
     // Native components survive reconstruction. Never replace a BP-assigned child actor class.
     for (int32 Index = 0; Index < LandingGearActors.Num(); ++Index)
     {

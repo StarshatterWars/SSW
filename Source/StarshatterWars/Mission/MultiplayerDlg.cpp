@@ -1,4 +1,6 @@
 #include "MultiplayerDlg.h"
+#include "Components/Overlay.h"
+#include "Components/OverlaySlot.h"
 #include "SSWSessionLobbyGameMode.h"
 #include "SSWSessionSubsystem.h"
 #include "StarshatterGameDataSubsystem.h"
@@ -68,7 +70,13 @@ void UMultiplayerDlg::BuildSessionScreen()
     Main->SetClipping(EWidgetClipping::ClipToBounds);
     if (GetOwningPlayer<ASSWSessionLobbyController>())
     {
-        BuildLobbyScreen(Main);
+        Frame->SetBrushColor(FLinearColor(0.008f, 0.017f, 0.03f, 0.18f));
+        auto* PlayField = WidgetTree->ConstructWidget<UOverlay>();
+        Size->SetContent(PlayField);
+        auto* Background = PlayField->AddChildToOverlay(Main);
+        Background->SetHorizontalAlignment(HAlign_Fill);
+        Background->SetVerticalAlignment(VAlign_Fill);
+        BuildLobbyScreen(Main, PlayField);
         return;
     }
 
@@ -125,11 +133,9 @@ void UMultiplayerDlg::BuildSessionScreen()
             const auto& Mission = Missions[Index];
             auto* Card = WidgetTree->ConstructWidget<UVerticalBox>();
             Card->AddChildToVerticalBox(Label(Mission.MissionName, 18));
-            FString Location = Mission.MissionSystem;
-            if (!Mission.MissionRegion.IsEmpty() && !Mission.MissionRegion.Equals(Location, ESearchCase::IgnoreCase))
-                Location += Location.IsEmpty() ? Mission.MissionRegion : TEXT("  ·  ") + Mission.MissionRegion;
-            if (!Location.IsEmpty())
-                Card->AddChildToVerticalBox(Label(Location, 13))->SetPadding(FMargin(0, 3, 0, 0));
+            const FString Location = FString::Printf(TEXT("System: %s  ·  Sector: %s"),
+                *Mission.MissionSystem, *Mission.MissionRegion);
+            Card->AddChildToVerticalBox(Label(Location, 13))->SetPadding(FMargin(0, 3, 0, 0));
             Row->AddChild(Card);
             if (!Mission.Desc.IsEmpty()) Row->SetToolTipText(FText::FromString(Mission.Desc));
             MissionUIStyle::ApplyActionButtonStyle(Row, TEXT("Cyan"));
@@ -257,16 +263,24 @@ void UMultiplayerDlg::RefreshRoster()
         if (const auto* Player = Cast<ASSWSessionPlayerState>(Entry))
         {
             const FString Name = Player->GetPlayerName().IsEmpty() ? TEXT("Connecting pilot") : Player->GetPlayerName();
-            auto* Row = Label(FString::Printf(TEXT("%s   ·   %s"), *Name,
-                Player->bReady ? TEXT("Ready") : TEXT("Waiting")), 16);
-            Row->SetClipping(EWidgetClipping::ClipToBounds);
+            auto* Row = WidgetTree->ConstructWidget<UHorizontalBox>();
+            auto* PilotName = Label(Name, 13);
+            PilotName->SetTextOverflowPolicy(ETextOverflowPolicy::Ellipsis);
+            PilotName->SetToolTipText(FText::FromString(Name));
+            auto* NameSlot = Row->AddChildToHorizontalBox(PilotName);
+            NameSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            NameSlot->SetPadding(FMargin(0, 0, 8, 0));
+            auto* Status = Label(Player->bReady ? TEXT("\u2713 Ready") : TEXT("Waiting"), 13);
+            if (Player->bReady) Status->SetColorAndOpacity(FSlateColor(FLinearColor(0.53f, 1.0f, 0.75f)));
+            Row->AddChildToHorizontalBox(Status);
             LobbyRoster->AddChild(Row);
         }
 
     const auto* Controller = GetOwningPlayer<ASSWSessionLobbyController>();
     const auto* Local = Controller ? Controller->GetPlayerState<ASSWSessionPlayerState>() : nullptr;
     if (ReadyLabel)
-        ReadyLabel->SetText(FText::FromString(Local && Local->bReady ? TEXT("CANCEL READY") : TEXT("READY")));
+        ReadyLabel->SetText(FText::FromString(Local && Local->bReady
+            ? TEXT("\u2715  CANCEL READY") : TEXT("\u2713  READY")));
 }
 
 void UMultiplayerDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
@@ -313,16 +327,26 @@ void UMultiplayerDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
         MissionCountdownLabel->SetText(FText::FromString(FString::Printf(TEXT("MISSION START IN %d"), Seconds)));
 }
 
-void UMultiplayerDlg::BuildLobbyScreen(UVerticalBox* Main)
+void UMultiplayerDlg::BuildLobbyScreen(UVerticalBox* Main, UOverlay* PlayField)
 {
     auto* LobbyTitle = Label(TEXT("MISSION LOBBY"), 30);
     LobbyTitle->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 22));
     Main->AddChildToVerticalBox(LobbyTitle)->SetPadding(FMargin(0, 0, 0, 8));
-    MissionCountdownLabel = Label(TEXT("WAITING FOR PILOTS TO READY UP"), 16);
-    Main->AddChildToVerticalBox(MissionCountdownLabel)->SetPadding(FMargin(0, 0, 0, 20));
+    MissionCountdownLabel = Label(TEXT("WAITING FOR PILOTS TO READY UP"), 28);
+    MissionCountdownLabel->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 26));
+    MissionCountdownLabel->SetShadowColorAndOpacity(FLinearColor::Black);
+    MissionCountdownLabel->SetShadowOffset(FVector2D(1.0, 2.0));
+    auto* Countdown = PlayField->AddChildToOverlay(MissionCountdownLabel);
+    Countdown->SetHorizontalAlignment(HAlign_Center);
+    Countdown->SetVerticalAlignment(VAlign_Center);
 
+    auto* Spacer = WidgetTree->ConstructWidget<USizeBox>();
+    Main->AddChildToVerticalBox(Spacer)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     auto* Columns = WidgetTree->ConstructWidget<UHorizontalBox>();
-    Main->AddChildToVerticalBox(Columns)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    auto* PanelSize = WidgetTree->ConstructWidget<USizeBox>();
+    PanelSize->SetHeightOverride(180.0f);
+    PanelSize->SetContent(Columns);
+    Main->AddChildToVerticalBox(PanelSize);
 
     auto* PilotCard = WidgetTree->ConstructWidget<UBorder>();
     auto* PilotSlot = Columns->AddChildToHorizontalBox(PilotCard);
@@ -331,12 +355,26 @@ void UMultiplayerDlg::BuildLobbyScreen(UVerticalBox* Main)
     PilotSlot->SetSize(PilotWidth);
     PilotSlot->SetPadding(FMargin(0, 0, 12, 0));
     PilotCard->SetPadding(FMargin(16));
-    PilotCard->SetBrushColor(FLinearColor(.02f, .055f, .08f));
+    PilotCard->SetBrushColor(FLinearColor(.02f, .055f, .08f, 0.85f));
     auto* Pilots = WidgetTree->ConstructWidget<UVerticalBox>();
     PilotCard->SetContent(Pilots);
     Pilots->AddChildToVerticalBox(Label(TEXT("PILOTS"), 18))->SetPadding(FMargin(0, 0, 0, 12));
     LobbyRoster = WidgetTree->ConstructWidget<UScrollBox>();
     Pilots->AddChildToVerticalBox(LobbyRoster)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+
+    auto* Actions = WidgetTree->ConstructWidget<UVerticalBox>();
+    auto* ActionSize = WidgetTree->ConstructWidget<USizeBox>();
+    ActionSize->SetWidthOverride(200.0f);
+    ActionSize->SetContent(Actions);
+    auto* ActionSlot = Columns->AddChildToHorizontalBox(ActionSize);
+    ActionSlot->SetVerticalAlignment(VAlign_Center);
+    ActionSlot->SetPadding(FMargin(0, 0, 12, 0));
+    auto* Ready = Button(TEXT("\u2713  READY"), Actions);
+    Ready->SetToolTipText(FText::GetEmpty());
+    Ready->SetClickMethod(EButtonClickMethod::MouseDown);
+    ReadyLabel = Cast<UTextBlock>(Ready->GetChildAt(0));
+    Ready->OnClicked.AddDynamic(this, &ThisClass::ToggleReady);
+    AddMainMenuButton(Actions);
 
     auto* ChatCard = WidgetTree->ConstructWidget<UBorder>();
     auto* ChatSlot = Columns->AddChildToHorizontalBox(ChatCard);
@@ -344,7 +382,7 @@ void UMultiplayerDlg::BuildLobbyScreen(UVerticalBox* Main)
     ChatWidth.Value = 0.62f;
     ChatSlot->SetSize(ChatWidth);
     ChatCard->SetPadding(FMargin(16));
-    ChatCard->SetBrushColor(FLinearColor(.02f, .055f, .08f));
+    ChatCard->SetBrushColor(FLinearColor(.02f, .055f, .08f, 0.85f));
     auto* Chat = WidgetTree->ConstructWidget<UVerticalBox>();
     ChatCard->SetContent(Chat);
     Chat->AddChildToVerticalBox(Label(TEXT("SESSION CHAT"), 18))->SetPadding(FMargin(0, 0, 0, 12));
@@ -367,19 +405,6 @@ void UMultiplayerDlg::BuildLobbyScreen(UVerticalBox* Main)
     ChatEntry->OnTextCommitted.AddDynamic(this, &ThisClass::SubmitChat);
     Chat->AddChildToVerticalBox(ChatEntry)->SetPadding(FMargin(0, 12, 0, 0));
 
-    auto* Actions = WidgetTree->ConstructWidget<UHorizontalBox>();
-    Main->AddChildToVerticalBox(Actions)->SetPadding(FMargin(0, 12, 0, 0));
-    auto* LeaveGroup = WidgetTree->ConstructWidget<UVerticalBox>();
-    Actions->AddChildToHorizontalBox(LeaveGroup)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    AddMainMenuButton(LeaveGroup);
-    auto* ReadyGroup = WidgetTree->ConstructWidget<UVerticalBox>();
-    auto* ReadySlot = Actions->AddChildToHorizontalBox(ReadyGroup);
-    ReadySlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    ReadySlot->SetPadding(FMargin(12, 0, 0, 0));
-    auto* Ready = Button(TEXT("READY"), ReadyGroup);
-    Ready->SetClickMethod(EButtonClickMethod::MouseDown);
-    ReadyLabel = Cast<UTextBlock>(Ready->GetChildAt(0));
-    Ready->OnClicked.AddDynamic(this, &ThisClass::ToggleReady);
 }
 
 void UMultiplayerDlg::AddMainMenuButton(UVerticalBox* Parent)

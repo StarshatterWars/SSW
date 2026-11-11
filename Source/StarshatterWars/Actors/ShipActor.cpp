@@ -1905,15 +1905,7 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     {
         // Older visual Blueprints can have empty FX overrides. Preserve any
         // authored assignments, and supply the game's existing exhaust systems.
-        if (Cast<AFighterActor>(this) && (!MainEngineEmitterSystem || MainEngineEmitterSystem->GetPathName()==FighterExhaustTuning::StockSystem))
-            if(auto* Tuned=LoadObject<UNiagaraSystem>(nullptr,FighterExhaustTuning::FighterSystem))MainEngineEmitterSystem=Tuned;
-        if (!MainEngineEmitterSystem)
-            MainEngineEmitterSystem=LoadObject<UNiagaraSystem>(nullptr,FighterExhaustTuning::StockSystem);
-        if (!ThrusterFlareSystem && !ThrusterTrailSystem && MainDrive && MainDrive->GetDriveType() == EDriveType::YELLOW)
-            ThrusterTrailSystem = LoadObject<UNiagaraSystem>(nullptr,
-                TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_Yellow.NS_RocketExhaust_Yellow"));
-        if (!ThrusterFlareSystem && !ThrusterTrailSystem)
-            ThrusterTrailSystem=LoadObject<UNiagaraSystem>(nullptr,TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_White.NS_RocketExhaust_White"));
+        ConfigurePropulsionAssets(MainDrive);
         CreateEngineAudioComponents();
     }
     else
@@ -2227,7 +2219,7 @@ void AShipActor::BuildNavLightsFromRuntime()
 FVector AShipActor::RuntimeEmitterLocalPosition(const FVector& ImportedPosition, bool bInModelUnits) const
 {
     // Remove any import scale before the component hierarchy applies actor/BP scale.
-    const ShipDesign* Design = RuntimeShip ? RuntimeShip->Design() : nullptr;
+    const ShipDesign* Design = RuntimeShip ? RuntimeShip->Design() : SnapshotVisualDesign;
     const double DesignScale = Design && FMath::Abs(Design->scale) > SMALL_NUMBER
         ? static_cast<double>(Design->scale) : 1.0;
     const FVector UnscaledPosition = bInModelUnits ? ImportedPosition : ImportedPosition / DesignScale;
@@ -2257,14 +2249,53 @@ FVector AShipActor::RuntimeEmitterLocalPosition(const FVector& ImportedPosition,
 
 void AShipActor::BuildMainEnginesFromRuntime()
 {
+    BuildMainEngineEffects(RuntimeShip ? RuntimeShip->GetMainDrive() : nullptr);
+}
+
+void AShipActor::InitializeSnapshotPropulsion(const ShipDesign* Design)
+{
+    if (!Design) return;
+    SnapshotVisualDesign = Design;
+    const int32 MainIndex = Design->main_drive;
+    const Drive* MainDrive = Design->drives.size() > 0
+        ? Design->drives[MainIndex >= 0 && MainIndex < Design->drives.size() ? MainIndex : 0] : nullptr;
+
+    ClearComponentArray(MainEngineEmitters);
+    ClearPointLights(MainEngineLights);
+    ClearSceneComponentArray(MainEnginePoints);
+    SetThrustersActive(false);
+    ClearComponentArray(ThrusterEmitters);
+    ClearComponentArray(ThrusterPoints);
+    ConfigurePropulsionAssets(MainDrive);
+    BuildMainEngineEffects(MainDrive);
+    BuildThrusterEffects(Design->thruster);
+}
+
+void AShipActor::UpdateSnapshotPropulsion(float DeltaTime, float DrivePower, float Throttle,
+    TConstArrayView<uint8> PortBurns)
+{
+    PresentMainEngineEffects(DeltaTime, DrivePower, Throttle, Throttle, true);
+    PresentThrusterEffects(FMath::Clamp(DrivePower, 0.0f, 1.0f), nullptr, PortBurns, false);
+}
+
+void AShipActor::ConfigurePropulsionAssets(const Drive* MainDrive)
+{
+    if (Cast<AFighterActor>(this) && (!MainEngineEmitterSystem ||
+        MainEngineEmitterSystem->GetPathName() == FighterExhaustTuning::StockSystem))
+        if (auto* Tuned = LoadObject<UNiagaraSystem>(nullptr, FighterExhaustTuning::FighterSystem))
+            MainEngineEmitterSystem = Tuned;
+    if (!MainEngineEmitterSystem)
+        MainEngineEmitterSystem = LoadObject<UNiagaraSystem>(nullptr, FighterExhaustTuning::StockSystem);
+    if (!ThrusterFlareSystem && !ThrusterTrailSystem)
+        ThrusterTrailSystem = LoadObject<UNiagaraSystem>(nullptr,
+            MainDrive && MainDrive->GetDriveType() == EDriveType::YELLOW
+                ? TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_Yellow.NS_RocketExhaust_Yellow")
+                : TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_White.NS_RocketExhaust_White"));
+}
+
+void AShipActor::BuildMainEngineEffects(const Drive* MainDrive)
+{
     ClearRuntimeMainEngines();
-
-    if (!RuntimeShip)
-    {
-        return;
-    }
-
-    Drive* MainDrive = RuntimeShip->GetMainDrive();
 
     if (!MainDrive)
     {
@@ -2445,6 +2476,13 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
     const float SpoolPower = RuntimeShip->GetFlightPhase() == EOPSMode::LOCKED
         ? FMath::Clamp(ThrottleRequest / 100.f, 0.f, 1.f) : 0.f;
     const float RawPower = FMath::Max(SpoolPower, FMath::Clamp(MainDrive->GetVisualPower(),0.0f,1.5f));
+    PresentMainEngineEffects(DeltaTime, RawPower, ThrottleRequest, Throttle,
+        !RuntimeShip->IsDead() && !RuntimeShip->IsDying());
+}
+
+void AShipActor::PresentMainEngineEffects(float DeltaTime, float RawPower, float ThrottleRequest,
+    float Throttle, bool bAlive)
+{
     const float RequestAlpha = Cast<AFighterActor>(this) ? FighterExhaustTuning::VisualPower(RawPower) : RawPower;
 
     const bool bRequested =
@@ -2483,7 +2521,7 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
     for (UPointLightComponent* Glow : RuntimeIdleEngineLights)
         if (Glow)
         {
-            Glow->SetVisibility(!RuntimeShip->IsDead() && !RuntimeShip->IsDying());
+            Glow->SetVisibility(bAlive);
             Glow->SetIntensity(.5f+2.f*FMath::Clamp(MainEngineVisualPower,0.f,1.f));
         }
 
@@ -2752,14 +2790,12 @@ AShipActor::UpdateEngineAudioFromRuntime(float DeltaTime)
 
 void AShipActor::BuildThrustersFromRuntime()
 {
+    BuildThrusterEffects(RuntimeShip ? RuntimeShip->GetThruster() : nullptr);
+}
+
+void AShipActor::BuildThrusterEffects(const Thruster* RuntimeThruster)
+{
     ClearRuntimeThrusters();
-
-    if (!RuntimeShip)
-    {
-        return;
-    }
-
-    Thruster* RuntimeThruster = RuntimeShip->GetThruster();
 
     if (!RuntimeThruster)
     {
@@ -2941,16 +2977,21 @@ void AShipActor::UpdateThrusterVFXFromRuntime()
         }
     }
 
+    PresentThrusterEffects(DriveBurn, RuntimeThruster, {}, bCullManeuveringJets);
+}
+
+void AShipActor::PresentThrusterEffects(float DriveBurn, const Thruster* RuntimeThruster,
+    TConstArrayView<uint8> PortBurns, bool bCullManeuveringJets)
+{
     // Visit each cached emitter once, rather than searching the array per port.
     for (FRuntimeThrusterFX& Entry : RuntimeThrusterFX)
     {
         const int32 RuntimePortIndex = Entry.RuntimePortIndex;
-        if (RuntimePortIndex < 0 || RuntimePortIndex >= RuntimeThruster->GetNumThrusters()) continue;
-        const FThrusterPort* RuntimePort = RuntimeThruster->GetPort(RuntimePortIndex);
-        if (!RuntimePort) continue;
         FRuntimeThrusterFX* FX = &Entry;
-        const bool bMainEngine = RuntimePort->Direction == EThrusterPortDir::AFT;
-        const float Burn = FMath::Clamp(RuntimeThruster->GetThrusterBurn(RuntimePortIndex), 0.0f, 1.0f);
+        const bool bMainEngine = Entry.Direction == EThrusterPortDir::AFT;
+        const float Burn = RuntimeThruster
+            ? FMath::Clamp(RuntimeThruster->GetThrusterBurn(RuntimePortIndex), 0.0f, 1.0f)
+            : (PortBurns.IsValidIndex(RuntimePortIndex) ? PortBurns[RuntimePortIndex] / 255.0f : 0.0f);
 
         // Thruster::ExecTrans already resolves the Fire mask into Port->Burn.
         // Applying another directional test here suppressed rotational jets.

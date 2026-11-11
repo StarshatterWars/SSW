@@ -34,7 +34,7 @@ protected:
  virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
  virtual void NativeDestruct()override;
  void BuildSessionScreen();
- void BuildLobbyScreen(UVerticalBox* Main);
+    void BuildLobbyScreen(UVerticalBox* Main, class UOverlay* PlayField);
  UTextBlock* Label(const FString& Text,int32 Size=18);
  UButton* Button(const FString& Text,UVerticalBox* Parent);
  void AddMainMenuButton(UVerticalBox* Parent);
