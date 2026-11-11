@@ -42,6 +42,7 @@ FText UStarshatterInputLabels::GetDefaultActionLabel(FName ActionName)
     if (ActionName==TEXT("IA_CameraThreat")) return NSLOCTEXT("SSW.InputActions","IA_CameraThreat","Threat Camera");
     if (ActionName==TEXT("IA_CameraVirtual")) return NSLOCTEXT("SSW.InputActions","IA_CameraVirtual","Virtual Cockpit View");
     if (ActionName==TEXT("IA_CameraWide")) return NSLOCTEXT("SSW.InputActions","IA_CameraWide","Wide Camera View");
+    if (ActionName==TEXT("SSW_CameraPanel")) return NSLOCTEXT("SSW.InputActions","SSW_CameraPanel","Toggle Camera Panel");
     if (ActionName==TEXT("IA_ContactsPanel")) return NSLOCTEXT("SSW.InputActions","IA_ContactsPanel","Open Contacts Panel");
     if (ActionName==TEXT("IA_Decoy")) return NSLOCTEXT("SSW.InputActions","IA_Decoy","Deploy Countermeasure");
     if (ActionName==TEXT("IA_DropWeaponTarget")) return NSLOCTEXT("SSW.InputActions","IA_DropWeaponTarget","Clear Weapon Target");

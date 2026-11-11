@@ -4,6 +4,7 @@
 #include "ShipVisualCatalog.h"
 #include "GearIndicator.h"
 #include "NativeHUDSymbology.h"
+#include "MissionCameraRig.h"
 #include "FlightPanelStyle.h"
 #include "CockpitDisplays.h"
 #include "FighterActor.h"
@@ -205,7 +206,7 @@ void SFighterHUDDetails::Construct(const FArguments& A)
     Symbology=MakeUnique<FNativeHUDSymbology>();
     ThirdPerson = A._ThirdPerson;
     NetworkController = A._NetworkController;
-    ShowHUD = A._ShowHUD; SelectedTarget = A._SelectedTarget; SelectedName = A._SelectedName;
+    ShowHUD = A._ShowHUD; CameraMode = A._CameraMode; SelectedTarget = A._SelectedTarget; SelectedName = A._SelectedName;
     SetVisibility(EVisibility::Visible);
     ForceVolatile(true);
     LaunchTexture.Reset(LoadObject<UTexture2D>(nullptr,
@@ -554,13 +555,44 @@ void SFighterHUDDetails::CycleMFD(int32 Index)
 {
     if (Index == 0)
     {
-        Modes[0] = EMode::Ship;
+        Modes[0] = Modes[0] == EMode::Mission ? EMode::Ship : EMode::Mission;
+        Invalidate(EInvalidateWidgetReason::Paint);
         return;
     }
     Modes[1] = Modes[1] == EMode::FOV ? EMode::HSD
         : Modes[1] == EMode::HSD ? EMode::ThreeD
         : EMode::FOV;
     Invalidate(EInvalidateWidgetReason::Paint);
+}
+
+bool SFighterHUDDetails::CycleFlightHUDMode(bool bCurrentlyVisible)
+{
+    if (!bCurrentlyVisible)
+        FlightHUDMode = EFlightHUDMode::Tactical;
+    else if (FlightHUDMode == EFlightHUDMode::Tactical)
+        FlightHUDMode = EFlightHUDMode::Navigation;
+    else if (FlightHUDMode == EFlightHUDMode::Navigation)
+    {
+        FlightHUDMode = EFlightHUDMode::ILS;
+        bILSMode = true;
+    }
+    else
+        return false;
+    Invalidate(EInvalidateWidgetReason::Paint);
+    return true;
+}
+
+TArray<FString> SFighterHUDDetails::MissionStatusRows(const Ship* Player)
+{
+    TArray<FString> Rows;
+    if (!Player) return Rows;
+    const int32 Seconds = FMath::Max(0, Player->GetMissionClockMS()) / 1000;
+    Rows.Add(FString::Printf(TEXT("%02d:%02d:%02d   %uX"), Seconds/3600, Seconds/60%60,
+        Seconds%60, Game::GetSimulationRate()));
+    if (const SimRegion* Region = Player->GetRegion())
+        Rows.Add(FString(ANSI_TO_TCHAR(Region->GetName())).ToUpper());
+    Rows.Add(StaticEnum<EOPSMode>()->GetDisplayNameTextByValue(int64(Player->GetFlightPhase())).ToString().ToUpper());
+    return Rows;
 }
 
 FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const FPointerEvent& MouseEvent)
@@ -576,6 +608,14 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
         const bool Mini=ThirdPerson.Get() && !bPreTakeoff && !IsCockpitDisplayActive();
         if(!bPreTakeoff && !IsCockpitDisplayActive() && (Mini || Modes[0] == EMode::Ship) && P && P->GetGear() && SSWGearIndicator::Contains(Local,GearButtonOrigin(Size,Scale,Mini),FVector2D(28,26)*Scale))
         {P->ToggleGear();Refresh();return FReply::Handled();}
+        const FVector2D StatusHeader = Mini
+            ? FVector2D(Size.X*.5-550*Scale,20*Scale) : FVector2D(0,Size.Y-215*Scale);
+        if (ShowHUD.Get() && P && !bPreTakeoff && !IsCockpitDisplayActive() &&
+            SSWGearIndicator::Contains(Local, StatusHeader, FVector2D(Mini ? 206 : 220,24)*Scale))
+        {
+            CycleMFD(0);
+            return FReply::Handled();
+        }
     }
     const FVector2D Right(Size.X - 220.f * Scale, Size.Y - 215.f * Scale);
     const FVector2D Extent(220.f * Scale, 215.f * Scale);
@@ -767,6 +807,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     const bool bCapitalWeapons = HUDPlayer && HUDPlayer->IsStarship();
     const bool bThirdPerson = ThirdPerson.Get();
     const bool bMiniHUD = bHasPlayer && bThirdPerson && !bPreTakeoff && !IsCockpitDisplayActive();
+    const FString CurrentCameraMode = CameraMode.Get(FString());
     if (!IsCockpitDisplayActive())
     {
     if(!bPreTakeoff && bHasPlayer && (bMiniHUD || Modes[0] == EMode::Ship) && HUDPlayer && HUDPlayer->GetGear())SSWGearIndicator::Draw(E,G,L+5,GearButtonOrigin(Size,Scale,bMiniHUD),FVector2D(28,26)*Scale,HUDPlayer);
@@ -872,10 +913,17 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         for (double X : {-12.0, 104.0, 228.0, 350.0, 510.0})
             Box(P+FVector2D(X,18)*Scale,FVector2D(Scale,76*Scale),FLinearColor(.2,.4,.5,.35));
 
-        MiniText(-204,10,TEXT("SHIP STATUS"),10,Muted);
-        if (HUDPlayer || NetworkController.IsValid())
+        const bool bMissionStatus = Modes[0] == EMode::Mission && HUDPlayer;
+        MiniText(-204,10,bMissionStatus ? TEXT("MISSION STATUS") : TEXT("SHIP STATUS"),10,Muted);
+        if (bMissionStatus)
+        {
+            const auto Rows = MissionStatusRows(HUDPlayer);
+            for (int32 Index = 0; Index < Rows.Num(); ++Index)
+                MiniText(-204,31+Index*19,Rows[Index],10,White,177);
+        }
+        else if (HUDPlayer || NetworkController.IsValid())
             MiniText(-78,10,FString::Printf(TEXT("EMCON %d"),HUDPlayer ? HUDPlayer->GetEMCON() : NetworkEmcon),10,Muted);
-        for (int32 I=0; I<StatusRows.Num(); ++I)
+        for (int32 I=0; !bMissionStatus && I<StatusRows.Num(); ++I)
         {
             const auto& Row = StatusRows[I];
             const bool bThrust = Row.Label == TEXT("THRUST");
@@ -889,6 +937,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
 
         MiniText(120,14,TEXT("VELOCITY"),10,Muted);
+        if (!CurrentCameraMode.IsEmpty()) MiniText(120,73,CurrentCameraMode,10,Muted,105);
         const FString Speed = NetworkController.IsValid() && FlightSpeed > 0.0 && FlightSpeed < 10.0
             ? FString::Printf(TEXT("%.2f"), FlightSpeed)
             : FString::Printf(TEXT("%.0f"), FlightSpeed);
@@ -1071,8 +1120,10 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         Corner(P + FVector2D(D.X - Scale, 0), -1.f, 1.f);
         Corner(P + FVector2D(0, D.Y - Scale), 1.f, -1.f);
         Corner(P + FVector2D(D.X - Scale, D.Y - Scale), -1.f, -1.f);
-        const TCHAR* Title=M==EMode::Ship?TEXT("SHIP STATUS"):M==EMode::FOV?TEXT("SNSR  FOV"):M==EMode::HSD?TEXT("SNSR  HSD"):TEXT("SNSR  3D");
+        const TCHAR* Title=M==EMode::Mission?TEXT("MISSION STATUS"):M==EMode::Ship?TEXT("SHIP STATUS"):M==EMode::FOV?TEXT("SNSR  FOV"):M==EMode::HSD?TEXT("SNSR  HSD"):TEXT("SNSR  3D");
         Text(P+FVector2D(10,6)*Scale, Title, Amber, 10);
+        if (Index == 0 && !CurrentCameraMode.IsEmpty())
+            Text(P+FVector2D(112,6)*Scale,CurrentCameraMode,Amber,9);
         Box(P+FVector2D(8,20)*Scale, FVector2D(70*Scale, Scale), Dim);
         if (M == EMode::FOV || M == EMode::HSD)
         {
@@ -1080,7 +1131,13 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             Artwork(ArtIndex,P+FVector2D(30,32)*Scale,FVector2D(160,160)*Scale);
         }
         if (!bHasPlayer) { Text(P+FVector2D(8,36)*Scale,TEXT("NO TRACK"), Amber); continue; }
-        if (M==EMode::Ship)
+        if (M==EMode::Mission)
+        {
+            const auto Rows = MissionStatusRows(HUDPlayer);
+            for (int32 Row = 0; Row < Rows.Num(); ++Row)
+                Text(P+FVector2D(10,34+Row*24)*Scale,Rows[Row],Amber,11);
+        }
+        else if (M==EMode::Ship)
         {
             for (int32 I=0;I<StatusRows.Num();++I) Gauge(P+FVector2D(8,28+I*20)*Scale,StatusRows[I].Label,StatusRows[I].Percent);
             if (Ship* PShip = PlayerShip())
@@ -1281,11 +1338,19 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         Text(P+FVector2D(12,40+24*Labels.Num())*Scale,
             IsTravelSpeedOpen() ? FString::Printf(TEXT("0 CLOSE    %s 1X"),
                 *StarshatterInputBindings::ResolvedKey(TEXT("SSW_TravelSpeedReset"), EKeys::F12).GetDisplayName().ToString())
+                : IsCameraPanelOpen() ? FString::Printf(TEXT("0 BACK / CLOSE    %s CLOSE"),
+                    *StarshatterInputBindings::ResolvedKey(TEXT("SSW_CameraPanel"), EKeys::Apostrophe).GetDisplayName().ToString().ToUpper())
                 : FString(TEXT("0 BACK    R CLOSE")));
+    }
+    if (HUDPlayer && !bPreTakeoff)
+    {
+        if (FlightHUDMode == EFlightHUDMode::Tactical) DrawSensorTracks(*HUDPlayer, G, E, L);
+        DrawFlightNavigation(*HUDPlayer, G, E, L+3);
     }
     DrawILS(G, E, L);
     if(bHasPlayer && Symbology){
-        Symbology->Paint(G,E,L+3,ThirdPerson.Get(),SelectedTarget.Get().Get(),bShowWeapons && !bPreTakeoff);
+        Symbology->Paint(G,E,L+3,ThirdPerson.Get(),SelectedTarget.Get().Get(),
+            bShowWeapons && !bPreTakeoff && FlightHUDMode == EFlightHUDMode::Tactical);
         if (!bPreTakeoff && (ThirdPerson.Get() || bHelmMode) &&
             !(bMiniHUD && HUDPlayer && HUDPlayer->IsAirborne()))
             Symbology->PaintCompass(G,E,L+3,HeadingDegrees,OrderedHeading,PitchDegrees,OrderedPitch,bHelmMode,ThirdPerson.Get(),FMath::RadiansToDegrees(BankRadians));
@@ -1317,8 +1382,89 @@ void SFighterHUDDetails::ToggleRadio()
     Ship* P = PlayerShip();
     if (P && (P->IsDropship() || P->IsStarship())) { CloseRadio(); RadioPage = 0; }
 }
+
+void SFighterHUDDetails::ToggleCameraPanel(const TSharedPtr<FMissionCameraRig>& Camera)
+{
+    const bool bWasOpen = IsCameraPanelOpen();
+    CloseRadio();
+    if (!bWasOpen && Camera)
+    {
+        PanelCamera = Camera;
+        CameraPage = ECameraPage::Views;
+    }
+}
+
+void SFighterHUDDetails::BuildCameraRows(TArray<FString>& Labels, TArray<int32>& Commands, FString& Title) const
+{
+    const auto Camera = PanelCamera.Pin();
+    if (!Camera) return;
+    const auto Add = [&](const TCHAR* Label, int32 Command, bool bActive = false)
+    {
+        Labels.Add(bActive ? FString::Printf(TEXT("%s  [ACTIVE]"), Label) : FString(Label));
+        Commands.Add(Command);
+    };
+    using Rig = FMissionCameraRig;
+    if (CameraPage == ECameraPage::Views)
+    {
+        Title = TEXT("CAMERA");
+        Add(TEXT("Cockpit"), 0, Camera->Mode == Rig::Cockpit);
+        Add(TEXT("Virtual Cockpit"), 1, Camera->Mode == Rig::Virtual);
+        Add(TEXT("Chase"), 2, Camera->Mode == Rig::Chase);
+        Add(TEXT("Orbit"), 4, Camera->Mode == Rig::Orbit && !Camera->ViewObject.IsValid());
+        Add(TEXT("Drop"), 3, Camera->Mode == Rig::Drop);
+        Add(TEXT("Overview"), Rig::OverviewCommand, Camera->Mode == Rig::Overview);
+        Add(TEXT("Look Direction"), -1);
+        Add(TEXT("Follow"), -2);
+        Add(TEXT("Wide Angle"), 9, Camera->bWide);
+    }
+    else if (CameraPage == ECameraPage::Look)
+    {
+        Title = TEXT("CAMERA  /  LOOK");
+        const TCHAR* Directions[] = {TEXT("Center"), TEXT("Left"), TEXT("Right"),
+            TEXT("Left Aft"), TEXT("Right Aft"), TEXT("Up"), TEXT("Down")};
+        for (int32 Index = 0; Index < UE_ARRAY_COUNT(Directions); ++Index)
+            Add(Directions[Index], Rig::FirstLookCommand + Index,
+                Camera->Mode == Rig::Virtual && FMath::IsNearlyEqual(Camera->HeadYaw, Rig::LookYaw[Index]) &&
+                FMath::IsNearlyEqual(Camera->HeadPitch, Rig::LookPitch[Index]));
+    }
+    else if (CameraPage == ECameraPage::Follow)
+    {
+        Title = TEXT("CAMERA  /  FOLLOW");
+        Add(TEXT("Padlock Target"), 5, Camera->Mode == Rig::Target);
+        Add(TEXT("Padlock Threat"), 6, Camera->Mode == Rig::Threat);
+        Add(TEXT("View Selected"), 7);
+        Add(TEXT("Next Object"), 8);
+    }
+}
+
+TOptional<int32> SFighterHUDDetails::SelectCameraPanel(int32 Number)
+{
+    if (Number == 0)
+    {
+        if (CameraPage == ECameraPage::Views) CloseRadio();
+        else CameraPage = ECameraPage::Views;
+        return {};
+    }
+    TArray<FString> Labels;
+    TArray<int32> Commands;
+    FString Title;
+    BuildCameraRows(Labels, Commands, Title);
+    if (!Commands.IsValidIndex(Number - 1)) return {};
+    const int32 Command = Commands[Number - 1];
+    if (Command == -1) CameraPage = ECameraPage::Look;
+    else if (Command == -2) CameraPage = ECameraPage::Follow;
+    else return Command;
+    return {};
+}
+
 void SFighterHUDDetails::BuildRadioRows(TArray<FString>& Labels, TArray<int32>& Commands, TArray<bool>& Enabled, FString& Title) const
 {
+    if (IsCameraPanelOpen())
+    {
+        BuildCameraRows(Labels, Commands, Title);
+        Enabled.Init(true, Labels.Num());
+        return;
+    }
     Ship* P = PlayerShip();
     if (IsTravelSpeedOpen())
     {

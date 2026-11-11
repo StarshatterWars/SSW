@@ -2275,6 +2275,9 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         TWeakObjectPtr<UMissionBriefingDlg> Owner(this);
         FighterHUDDetails = SNew(SFighterHUDDetails)
             .ThirdPerson_Lambda([Owner]() { return Owner.IsValid() && Owner->MissionCameraRig.IsValid() && Owner->MissionCameraRig->bThirdPersonView; })
+            .CameraMode_Lambda([Owner]() -> FString {
+                return Owner.IsValid() && Owner->MissionCameraRig ? Owner->MissionCameraRig->ModeLabel() : TEXT("");
+            })
             .ShowHUD_Lambda([Owner]() { return Owner.IsValid() && Owner->bFighterHUDVisible && Owner->CanShowFighterHUD(); })
             .SelectedTarget_Lambda([Owner]() { return Owner.IsValid() ? Owner->SelectedMissionTarget : TWeakObjectPtr<AActor>(); })
             .SelectedName_Lambda([Owner]() { return Owner.IsValid() ? Owner->SelectedMissionTargetName : FText::GetEmpty(); });
@@ -2745,7 +2748,7 @@ void UMissionBriefingDlg::ToggleFighterHUD()
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
     APlayerController* PC = GetOwningPlayer();
     if (PC && (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")))) return;
-    bFighterHUDVisible = !bFighterHUDVisible;
+    bFighterHUDVisible = FighterHUDDetails.IsValid() && FighterHUDDetails->CycleFlightHUDMode(bFighterHUDVisible);
     if (!bFighterHUDVisible && FighterHUDDetails.IsValid())
     {
         FighterHUDDetails->CloseRadio();
@@ -3175,6 +3178,14 @@ void UMissionBriefingDlg::ResetTravelSpeed()
 
 void UMissionBriefingDlg::SelectFighterRadio(int32 Number)
 {
+    if (FighterHUDDetails.IsValid() && FighterHUDDetails->IsCameraPanelOpen())
+    {
+        if (!CanUseFighterHUD() || !GetWorld() || GetWorld()->IsPaused()) return;
+        if (const TOptional<int32> Command = FighterHUDDetails->SelectCameraPanel(Number))
+            ExecuteMissionCameraCommand(*Command);
+        UpdateFighterRadioInput();
+        return;
+    }
     if (FighterHUDDetails.IsValid() && FighterHUDDetails->IsTravelSpeedOpen())
     {
         constexpr uint32 Rates[] = {1, 2, 5, 10, 20};
@@ -3463,11 +3474,12 @@ void UMissionBriefingDlg::BindMissionCameraInput()
         TEXT("IA_CameraCockpit"), TEXT("IA_CameraVirtual"), TEXT("IA_CameraChase"),
         TEXT("IA_CameraDrop"), TEXT("IA_CameraOrbit"), TEXT("IA_CameraTarget"),
         TEXT("IA_CameraThreat"), TEXT("IA_ViewTarget"), TEXT("IA_CameraNextObject"),
-        TEXT("IA_CameraWide"), TEXT("IA_CameraLookX"), TEXT("IA_CameraLookY"), TEXT("IA_CameraRange")
+        TEXT("IA_CameraWide"), TEXT("IA_CameraLookX"), TEXT("IA_CameraLookY"), TEXT("IA_CameraRange"),
+        TEXT("SSW_CameraPanel")
     };
     const FKey Keys[] = {EKeys::F1, EKeys::F1, EKeys::F2, EKeys::F2, EKeys::F3,
         EKeys::F4, EKeys::Invalid, EKeys::V, EKeys::Invalid, EKeys::K,
-        EKeys::Right, EKeys::Up, EKeys::Add};
+        EKeys::Right, EKeys::Up, EKeys::Add, EKeys::Apostrophe};
     auto IsMapped = [this](UInputAction* Action)
     {
         const UInputMappingContext* Contexts[] = {MissionMenuContext.Get(), FighterInputContext.Get()};
@@ -3480,8 +3492,10 @@ void UMissionBriefingDlg::BindMissionCameraInput()
     for (int32 Command = 0; Command < UE_ARRAY_COUNT(Names); ++Command)
     {
         const FString Path = FString::Printf(TEXT("/Game/Input/%s.%s"), Names[Command], Names[Command]);
-        UInputAction* Action = LoadObject<UInputAction>(nullptr, *Path);
-        const EInputActionValueType Type = Command >= 10 ? EInputActionValueType::Axis1D : EInputActionValueType::Boolean;
+        const bool bPanel = Command == FMissionCameraRig::PanelCommand;
+        const bool bAxis = Command >= 10 && !bPanel;
+        UInputAction* Action = bPanel ? nullptr : LoadObject<UInputAction>(nullptr, *Path);
+        const EInputActionValueType Type = bAxis ? EInputActionValueType::Axis1D : EInputActionValueType::Boolean;
         if (Action && Action->ValueType != Type)
         {
             UE_LOG(LogTemp, Warning, TEXT("[MissionCamera] %s has the wrong value type; using the default binding."), Names[Command]);
@@ -3489,7 +3503,7 @@ void UMissionBriefingDlg::BindMissionCameraInput()
         }
         if (!Action)
         {
-            Action = NewObject<UInputAction>(this, NAME_None, RF_Transient);
+            Action = NewObject<UInputAction>(MissionCameraContext.Get(), bPanel ? FName(Names[Command]) : NAME_None, RF_Transient);
             Action->ValueType = Type;
         }
         MissionCameraActions.Add(Action);
@@ -3511,9 +3525,9 @@ void UMissionBriefingDlg::BindMissionCameraInput()
             if (Command == 11) Map(EKeys::Down, true);
             if (Command == 12) Map(EKeys::Subtract, true);
         }
-        MissionMenuInput->BindAction(Action, Command >= 10 ? ETriggerEvent::Triggered : ETriggerEvent::Started,
+        MissionMenuInput->BindAction(Action, bAxis ? ETriggerEvent::Triggered : ETriggerEvent::Started,
             this, &UMissionBriefingDlg::OnMissionCameraCommand, Command);
-        if (Command >= 10)
+        if (bAxis)
         {
             MissionMenuInput->BindAction(Action, ETriggerEvent::Completed, this, &UMissionBriefingDlg::ReleaseMissionCameraCommand, Command);
             MissionMenuInput->BindAction(Action, ETriggerEvent::Canceled, this, &UMissionBriefingDlg::ReleaseMissionCameraCommand, Command);
@@ -3538,6 +3552,14 @@ void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value,
     // Guard the unmodified F1/F2 actions when a chord fires in another IMC.
     if ((Command == 0 || Command == 2) && Shift) return;
     if ((Command == 1 || Command == 3) && !Shift) return;
+    if (Command == FMissionCameraRig::PanelCommand)
+    {
+        if (!FighterHUDDetails.IsValid()) return;
+        bFighterHUDVisible = true;
+        FighterHUDDetails->ToggleCameraPanel(MissionCameraRig);
+        UpdateFighterRadioInput();
+        return;
+    }
     if (Command >= 10)
     {
         const float Axis = Value.Get<float>();
@@ -3548,6 +3570,22 @@ void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value,
         if (Command == 12) MissionCameraRig->RangeInput = Amount;
         return;
     }
+    ExecuteMissionCameraCommand(Command);
+}
+
+void UMissionBriefingDlg::ExecuteMissionCameraCommand(int32 Command)
+{
+    if (!MissionCameraRig) return;
+    using Rig = FMissionCameraRig;
+    const int32 LookIndex = Command - Rig::FirstLookCommand;
+    if (LookIndex >= 0 && LookIndex < UE_ARRAY_COUNT(Rig::LookYaw))
+    {
+        MissionCameraRig->SetMode(Rig::Virtual);
+        MissionCameraRig->HeadYaw = Rig::LookYaw[LookIndex];
+        MissionCameraRig->HeadPitch = Rig::LookPitch[LookIndex];
+        MissionCameraRig->LookX = MissionCameraRig->LookY = 0.0;
+    }
+    else
     switch (Command)
     {
     case 0: MissionCameraRig->SetMode(FMissionCameraRig::Cockpit); break;
@@ -3579,6 +3617,7 @@ void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value,
         break;
     case 8: CycleMissionViewObject(); break;
     case 9: MissionCameraRig->bWide = !MissionCameraRig->bWide; break;
+    case Rig::OverviewCommand: MissionCameraRig->SetMode(Rig::Overview); break;
     default: return;
     }
     bMissionTargetInspection = false; // View-object and weapon-target selection are independent.

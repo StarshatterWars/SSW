@@ -53,36 +53,30 @@ public:
             if(H->JumpSeconds>0)Text(340,80,FString::Printf(TEXT("QUANTUM JUMP: %d"),FMath::CeilToInt(H->JumpSeconds)),Blue,24);
             else if(H->ThreatLevel==2 && H->bWarningFlash)Text(340,80,TEXT("MISSILE WARNING"),FLinearColor::Red,24);
             else if(H->ThreatLevel==1)Text(350,80,TEXT("LOCK WARNING"),FLinearColor::Yellow,24);
-            if(H->bShoot && H->bShowWeapons)Text(465,365,TEXT("SHOOT"),Blue,24);
+            const bool bTacticalWeapons = H->bShowWeapons && H->FlightHUDMode == SFighterHUDDetails::EFlightHUDMode::Tactical;
+            if(H->bShoot && bTacticalWeapons)Text(465,365,TEXT("SHOOT"),Blue,24);
             if(H->bAutoAvailable)Text(465,120,TEXT("AUTO"),Blue,24);
-            if(H->bShowWeapons){Text(70,418,H->Primary.ToUpper(),Blue,24);
+            if(bTacticalWeapons){Text(70,418,H->Primary.ToUpper(),Blue,24);
             Text(660,418,H->Secondary.ToUpper(),Blue,24);}
             if(H->NavReadouts.Num())Text(70,465,H->NavReadouts[0],Blue,22);
             if(H->bGearDown)Text(720,465,TEXT("GEAR DOWN"),Blue,22);
             return L+1;
         }
-        if (Panel == 3)
+        if (Panel == 3 || (Panel == 0 && H->Modes[0] == SFighterHUDDetails::EMode::Mission))
         {
             const AFighterActor* Actor = Fighter.Get();
             Sim* Simulation = Sim::GetSim();
             const Ship* Player = Actor && Simulation ? Simulation->GetPlayerShip() : nullptr;
             if (Player && Player != Actor->GetRuntimeShip()) Player = nullptr;
             Text(20, 16, TEXT("MISSION STATUS"), Blue);
-            if (Player)
+            Text(20, 92, H->PlayerName, Blue);
+            const auto Rows = H->MissionStatusRows(Player);
+            for (int32 Row = 0; Row < Rows.Num(); ++Row)
+                Text(20, 160+Row*70, Rows[Row], Blue);
+            if (Panel == 0)
             {
-                const int32 Time = FMath::Max(0, Player->GetMissionClockMS()) / 1000;
-                FString Clock = FString::Printf(TEXT("%02d:%02d:%02d"), Time / 3600, Time / 60 % 60, Time % 60);
-                const UGameInstance* GameInstance = Actor->GetGameInstance();
-                const auto* Runtime = GameInstance ? GameInstance->GetSubsystem<USSWRuntimeSubsystem>() : nullptr;
-                const int32 Compression = Runtime ? Runtime->GetTimeCompression() : 1;
-                if (Compression > 1)
-                    Clock += FString::Printf(TEXT(" x%d"), Compression);
-                Text(20, 92, H->PlayerName, Blue);
-                Text(20, 160, Clock, Blue);
-                if (const SimRegion* Region = Player->GetRegion())
-                    Text(20, 230, ANSI_TO_TCHAR(Region->GetName()), Blue);
-                if (const UEnum* Phase = StaticEnum<EOPSMode>())
-                    Text(20, 300, Phase->GetNameStringByValue(static_cast<int64>(Player->GetFlightPhase())).ToUpper(), Blue);
+                const FString ModeName = H->CameraMode.Get(FString());
+                if (!ModeName.IsEmpty()) Text(20, 477, ModeName, Blue, 20);
             }
             return L+1;
         }
@@ -100,6 +94,8 @@ public:
             else if(H->PlayerMFDPreview && H->PlayerMFDPreview->IsReady())Image({120,270},{270,135},H->PlayerMFDPreview->GetBrush());
             Text(20,440,H->HomeCarrierReadout,Blue,20);
             Text(20,477,H->PlayerClass,Blue,20);
+            const FString ModeName = H->CameraMode.Get(FString());
+            if (!ModeName.IsEmpty()) Text(190,477,ModeName,Blue,20);
         }
         else if(Mode==SFighterHUDDetails::EMode::Ship)
         {

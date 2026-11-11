@@ -13,6 +13,7 @@ class AActor;
 class FNativeHUDSymbology;
 class WeaponGroup;
 class ASSWSessionLobbyController;
+struct FMissionCameraRig;
 class FShipMFDPreview;
 class FCockpitDisplays;
 class SCockpitInstrument;
@@ -24,6 +25,7 @@ public:
     SLATE_BEGIN_ARGS(SFighterHUDDetails) : _ThirdPerson(false) {}
         SLATE_ATTRIBUTE(bool, ShowHUD)
         SLATE_ATTRIBUTE(bool, ThirdPerson)
+        SLATE_ATTRIBUTE(FString, CameraMode)
         SLATE_ATTRIBUTE(TWeakObjectPtr<AActor>, SelectedTarget)
         SLATE_ATTRIBUTE(FText, SelectedName)
         SLATE_ARGUMENT(TWeakObjectPtr<ASSWSessionLobbyController>, NetworkController)
@@ -43,11 +45,15 @@ public:
     }
     void ToggleRadio();
     void RadioSelect(int32 Number);
-    bool IsRadioOpen() const { return RadioPage >= 0; }
+    bool IsRadioOpen() const { return RadioPage >= 0 || IsCameraPanelOpen(); }
     bool IsTravelSpeedOpen() const { return RadioPage == 8; }
+    bool IsCameraPanelOpen() const { return CameraPage != ECameraPage::Closed; }
+    void ToggleCameraPanel(const TSharedPtr<FMissionCameraRig>& Camera);
+    TOptional<int32> SelectCameraPanel(int32 Number);
     void ToggleTravelSpeed() { const bool bOpen = IsTravelSpeedOpen(); CloseRadio(); if (!bOpen) RadioPage = 8; }
-    void CloseRadio() { RadioPage = -1; RadioRecipient = 0; RadioElementId = 0; RadioRecipientPage = 0; RadioHistory.Reset(); }
+    void CloseRadio() { RadioPage = -1; CameraPage = ECameraPage::Closed; RadioRecipient = 0; RadioElementId = 0; RadioRecipientPage = 0; RadioHistory.Reset(); }
     void CycleMFD(int32 Index);
+    bool CycleFlightHUDMode(bool bCurrentlyVisible);
     void ToggleWeaponsPanel() { bShowWeapons = !bShowWeapons; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
     void ToggleCautionPanel() { bShowCaution = !bShowCaution; if (bShowCaution) bShowInformation = false; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
     void ToggleInformationPanel() { bShowInformation = !bShowInformation; if (bShowInformation) bShowCaution = false; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
@@ -65,6 +71,9 @@ private:
     bool bHelmMode=false;
     FString CompactNavLabel=TEXT("FREE FLIGHT");
     void DrawILS(const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
+    void DrawFlightNavigation(Ship& Player, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
+    static TArray<FString> MissionStatusRows(const Ship* Player);
+    void DrawSensorTracks(Ship& Player, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
     friend class FRecoveryILSHUDTest;
     void UpdateILSMode(int32 PlayerId, bool bInbound);
     bool bILSMode = false;
@@ -74,13 +83,20 @@ private:
     FSlateBrush ILSBrush;
     void BuildRadioRows(TArray<FString>& Labels, TArray<int32>& Commands, TArray<bool>& Enabled, FString& Title) const;
     int32 RadioPage = -1; // 0 root, 1 categories, 2 target, 3 combat, 4 formation, 5 mission, 6 sensors, 7 control
+    enum class ECameraPage { Closed, Views, Look, Follow };
+    ECameraPage CameraPage = ECameraPage::Closed;
+    TWeakPtr<FMissionCameraRig> PanelCamera;
+    void BuildCameraRows(TArray<FString>& Labels, TArray<int32>& Commands, FString& Title) const;
     TArray<int32> RadioHistory;
     int32 RadioElementId = 0;
     int32 RadioRecipientPage = 0;
     int32 RadioRecipient = 0; // 1 wingman, 2 element, 3 control
     struct FRow { FString Label; double Percent; };
     struct FBlip { double Az, El, Range; FLinearColor Color; FVector LocalDirection; };
-    enum class EMode { Off, Ship, FOV, HSD, ThreeD };
+    enum class EMode { Off, Ship, Mission, FOV, HSD, ThreeD };
+    enum class EFlightHUDMode { Tactical, Navigation, ILS };
+    EFlightHUDMode FlightHUDMode = EFlightHUDMode::Tactical;
+    TAttribute<FString> CameraMode;
     void Refresh();
     void PaintRadarVolume(const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer,
         const FVector2D& Center, double Radius, const FLinearColor& GridColor) const;

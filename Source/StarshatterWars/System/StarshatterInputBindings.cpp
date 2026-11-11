@@ -85,8 +85,9 @@ UInputMappingContext* StarshatterInputBindings::SupplementalContext(UObject* Own
     AddFlightTranslationMappings(Context);
     MapTravelSpeed(Context, false);
     MapTravelSpeed(Context, true);
+    Add(TEXT("SSW_CameraPanel"), TEXT("Toggle Camera Panel"), EKeys::Apostrophe);
     Add(TEXT("SSW_TargetZoom"),TEXT("Target View Zoom"),EKeys::MouseWheelAxis,EInputActionValueType::Axis1D);
-    Add(TEXT("SSW_HUDVisibility"),TEXT("Show / Hide HUD"),EKeys::H);
+    Add(TEXT("SSW_HUDVisibility"),TEXT("Cycle Flight HUD Mode"),EKeys::H);
     Add(TEXT("SSW_MouseSteering"),TEXT("Toggle Mouse Steering"),FKey(TEXT("#")));
     Add(TEXT("SSW_WeaponCycle"),TEXT("Cycle Active Weapon"),EKeys::BackSpace);
     Add(TEXT("SSW_SensorRangeUp"),TEXT("Increase Sensor Range (Alternate)"),EKeys::RightBracket);
@@ -97,7 +98,7 @@ UInputMappingContext* StarshatterInputBindings::SupplementalContext(UObject* Own
     const FKey Digits[]={EKeys::Zero,EKeys::One,EKeys::Two,EKeys::Three,EKeys::Four,EKeys::Five,EKeys::Six,EKeys::Seven,EKeys::Eight,EKeys::Nine};
     for (int32 Index=0;Index<10;++Index)
         Add(*FString::Printf(TEXT("SSW_RadioChoice%d"), Index),
-            FString::Printf(TEXT("%s Menu Choice %d"), Index <= 5 ? TEXT("Radio / Travel") : TEXT("Radio"), Index),
+            FString::Printf(TEXT("HUD Menu Choice %d"), Index),
             Digits[Index]);
     return Context;
 }

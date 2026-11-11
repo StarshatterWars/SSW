@@ -25,6 +25,31 @@
 struct FMissionCameraRig
 {
     enum EMode { Cockpit, Virtual, Chase, Drop, Orbit, Overview, Target, Threat };
+    enum { PanelCommand = 13, OverviewCommand, FirstLookCommand };
+    static constexpr double LookYaw[] = {0, -60, 60, -120, 120, 0, 0};
+    static constexpr double LookPitch[] = {0, 0, 0, 0, 0, 30, -22.5};
+    const TCHAR* ModeLabel() const
+    {
+        switch (Mode)
+        {
+        case Cockpit: return TEXT("COCKPIT");
+        case Virtual:
+            if (HeadYaw < -100) return TEXT("LEFT AFT");
+            if (HeadYaw < -30) return TEXT("LEFT");
+            if (HeadYaw > 100) return TEXT("RIGHT AFT");
+            if (HeadYaw > 30) return TEXT("RIGHT");
+            if (HeadPitch > 15) return TEXT("UP");
+            if (HeadPitch < -15) return TEXT("DOWN");
+            return TEXT("VIRTUAL COCKPIT");
+        case Chase: return TEXT("CHASE");
+        case Drop: return TEXT("DROP");
+        case Orbit: return TEXT("ORBIT");
+        case Overview: return TEXT("OVERVIEW");
+        case Target: return TEXT("PADLOCK TARGET");
+        case Threat: return TEXT("PADLOCK THREAT");
+        }
+        return TEXT("");
+    }
     EMode Mode = Chase;
     bool bThirdPersonView = false;
     TWeakObjectPtr<AShipActor> ViewObject;

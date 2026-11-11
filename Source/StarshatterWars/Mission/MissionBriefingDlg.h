@@ -258,6 +258,7 @@ protected:
     void UpdateMissionTargetCamera();
     void BindMissionCameraInput();
     void OnMissionCameraCommand(const FInputActionValue& Value, int32 Command);
+    void ExecuteMissionCameraCommand(int32 Command);
     void ReleaseMissionCameraCommand(const FInputActionValue& Value, int32 Command);
     void CycleMissionViewObject();
     TSharedPtr<FMissionCameraRig> MissionCameraRig;
