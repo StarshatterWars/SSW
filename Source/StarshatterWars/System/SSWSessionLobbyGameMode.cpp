@@ -16,8 +16,10 @@
 #include "TimerManager.h"
 #include "Mission.h"
 #include "Engine/LevelStreamingDynamic.h"
+#include "Kismet/GameplayStatics.h"
 #include "EngineUtils.h"
 #include "SystemSceneBuilder.h"
+#include "Misc/PackageName.h"
 #include "Camera/CameraActor.h"
 #include "StarSystem.h"
 #include "OrbitalBody.h"
@@ -34,6 +36,30 @@
 #include "StarshatterEnvironmentSubsystem.h"
 #include "StarshatterGameDataSubsystem.h"
 #include "SimElement.h"
+namespace
+{
+    ASystemSceneBuilder* BuildLobbySystem(UWorld& World, ULevelStreamingDynamic& Level, const FString& Map)
+    {
+        if (!Level.IsLevelVisible()) return nullptr;
+        const FString SystemName = FPackageName::GetShortName(Map);
+        for (TActorIterator<ASystemSceneBuilder> It(&World); It; ++It)
+        {
+            if (It->GetLevel() != Level.GetLoadedLevel()) continue;
+            if (!It->GetLastResolvedSystemName().Equals(SystemName, ESearchCase::IgnoreCase) ||
+                It->GetSpawnedBodies().IsEmpty())
+            {
+                It->bBuildOnBeginPlay = false;
+                It->DataSource = ESystemSceneSource::StarSystem;
+                It->TargetSystemName = SystemName;
+                It->TargetGalaxyName.Reset();
+                It->BuildSystemScene();
+            }
+            return It->GetSpawnedRegions().IsEmpty() ? nullptr : *It;
+        }
+        return nullptr;
+    }
+}
+
 ASSWSessionLobbyGameMode::ASSWSessionLobbyGameMode(){PlayerControllerClass=ASSWSessionLobbyController::StaticClass();DefaultPawnClass=ASpectatorPawn::StaticClass();GameStateClass=ASSWSessionGameState::StaticClass();GameSessionClass=AGameSession::StaticClass();PlayerStateClass=ASSWSessionPlayerState::StaticClass();HUDClass=ASSWSessionFlightHUD::StaticClass();bUseSeamlessTravel=true;}
 void ASSWSessionLobbyController::BeginPlay(){Super::BeginPlay();if(!IsLocalController())return;
  if (const auto* Instance = Cast<USSWGameInstance>(GetGameInstance()))
@@ -41,12 +67,7 @@ void ASSWSessionLobbyController::BeginPlay(){Super::BeginPlay();if(!IsLocalContr
      const FString Name = Instance->GetPlatformPilotName().TrimStartAndEnd().Left(64);
      if (!Name.IsEmpty()) ServerSetPlatformPilotName(Name);
  }
- if (GetNetMode() == NM_Client)
- {
-     bool bStreamingStarted = false;
-     ULevelStreamingDynamic::LoadLevelInstance(GetWorld(), TEXT("/Game/Maps/Borova"),
-         FVector::ZeroVector, FRotator::ZeroRotator, bStreamingStarted);
- }
+
  if(auto* Runtime=GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())Runtime->SetPaused(true);
  LobbyDialog=CreateWidget<UMultiplayerDlg>(this,UMultiplayerDlg::StaticClass());
  if(auto* Dialog=LobbyDialog.Get()){Dialog->AddToViewport(300);Dialog->Show();bShowMouseCursor=true;FInputModeUIOnly Input;Input.SetWidgetToFocus(Dialog->TakeWidget());SetInputMode(Input);}
@@ -61,6 +82,7 @@ void ASSWSessionGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
     DOREPLIFETIME(ASSWSessionGameState, MissionStartDeadline);
     DOREPLIFETIME(ASSWSessionGameState, bMissionStartReady);
     DOREPLIFETIME(ASSWSessionGameState, MissionLaunchError);
+    DOREPLIFETIME(ASSWSessionGameState, MissionMap);
     DOREPLIFETIME(ASSWSessionGameState, GalaxyClockMs);
     DOREPLIFETIME(ASSWSessionGameState, OrbitalPositions);
 }
@@ -420,9 +442,16 @@ void ASSWSessionLobbyGameMode::BeginPlay()
     }
     else
     {
+        LobbyMissionIndex = UGameplayStatics::GetIntOption(OptionsString, TEXT("SSWMission"), INDEX_NONE);
+        const auto* Data = GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>();
+        const auto* Scenario = Data && Data->GetMultiplayerMissionScenarios().IsValidIndex(LobbyMissionIndex)
+            ? &Data->GetMultiplayerMissionScenarios()[LobbyMissionIndex] : nullptr;
+        const FString Map = Scenario
+            ? FString::Printf(TEXT("/Game/Maps/%s"), *Scenario->MissionSystem) : TEXT("/Game/Maps/Borova");
+        if (auto* State = GetGameState<ASSWSessionGameState>()) State->MissionMap = Map;
         bool bStreamingStarted = false;
         LobbySystemLevel = ULevelStreamingDynamic::LoadLevelInstance(
-            GetWorld(), TEXT("/Game/Maps/Borova"), FVector::ZeroVector, FRotator::ZeroRotator, bStreamingStarted);
+            GetWorld(), Map, FVector::ZeroVector, FRotator::ZeroRotator, bStreamingStarted);
         if (!bStreamingStarted) LobbySystemLevel = nullptr;
     }
     GetWorldTimerManager().SetTimer(MissionCountdownTimer, this,
@@ -465,6 +494,7 @@ void ASSWSessionLobbyGameMode::UpdateMissionCountdown()
 
     if (State->bMissionStartReady) return;
 
+    if (LobbySystemLevel && !LobbySystemLevel->IsLevelVisible()) return;
     const double Now = State->GetServerWorldTimeSeconds();
     if (State->MissionStartDeadline <= 0.0)
     {
@@ -503,10 +533,19 @@ bool ASSWSessionLobbyGameMode::LaunchLobbyMission(ASSWSessionGameState& State)
     auto* Runtime = Instance->GetSubsystem<USSWRuntimeSubsystem>();
     auto* Environment = Instance->GetSubsystem<UStarshatterEnvironmentSubsystem>();
     const auto* Data = Instance->GetSubsystem<UStarshatterGameDataSubsystem>();
-    const FS_CampaignMission* Scenario = Data ? Data->GetMultiplayerMissionScenarios().FindByPredicate(
-        [](const FS_CampaignMission& Row) { return Row.MissionName.Equals(TEXT("Hawk Match"), ESearchCase::IgnoreCase); }) : nullptr;
+    const FS_CampaignMission* Scenario = nullptr;
+    if (Data)
+    {
+        const auto& Missions = Data->GetMultiplayerMissionScenarios();
+        if (Missions.IsValidIndex(LobbyMissionIndex)) Scenario = &Missions[LobbyMissionIndex];
+        else if (LobbyMissionIndex == INDEX_NONE)
+            Scenario = Missions.FindByPredicate([](const FS_CampaignMission& Row)
+            {
+                return Row.MissionName.Equals(TEXT("Hawk Match"), ESearchCase::IgnoreCase);
+            });
+    }
 
-    State.MissionLaunchError = TEXT("HAWK MATCH MISSION UNAVAILABLE");
+    State.MissionLaunchError = TEXT("SELECTED MISSION UNAVAILABLE");
     if (!Runtime || !Environment || !Scenario) return false;
 
     TSharedPtr<Mission> Selected = MakeShared<Mission>();
@@ -521,21 +560,11 @@ bool ASSWSessionLobbyGameMode::LaunchLobbyMission(ASSWSessionGameState& State)
         return false;
     }
 
-    ASystemSceneBuilder* Builder = nullptr;
-    if (LobbySystemLevel && LobbySystemLevel->IsLevelVisible())
-    {
-        for (TActorIterator<ASystemSceneBuilder> It(GetWorld()); It; ++It)
-        {
-            if (It->GetLevel() == LobbySystemLevel->GetLoadedLevel() && !It->GetSpawnedRegions().IsEmpty())
-            {
-                Builder = *It;
-                break;
-            }
-        }
-    }
+    ASystemSceneBuilder* Builder = LobbySystemLevel
+        ? BuildLobbySystem(*GetWorld(), *LobbySystemLevel, State.MissionMap) : nullptr;
     if (!Builder && GetNetMode() != NM_DedicatedServer)
     {
-        State.MissionLaunchError = TEXT("BOROVA SCENE IS UNAVAILABLE OR STILL LOADING");
+        State.MissionLaunchError = TEXT("MISSION SCENE IS UNAVAILABLE OR STILL LOADING");
         return false;
     }
 
@@ -544,7 +573,7 @@ bool ASSWSessionLobbyGameMode::LaunchLobbyMission(ASSWSessionGameState& State)
     Environment->BuildSimRegionsForSim(Simulation);
     if (!Simulation->FindRegion(Selected->GetRegion()))
     {
-        State.MissionLaunchError = TEXT("HAWK MATCH REGION UNAVAILABLE");
+        State.MissionLaunchError = TEXT("MISSION REGION UNAVAILABLE");
         return false;
     }
 
@@ -563,7 +592,7 @@ bool ASSWSessionLobbyGameMode::LaunchLobbyMission(ASSWSessionGameState& State)
         ListIter<Ship> Ships = Region->GetShips();
         while (++Ships)
             if (Ship* Candidate = Ships.value(); Candidate && Candidate->GetElement() &&
-                Candidate->GetElement()->IsPlayable() && !Candidate->IsStarship() && !Candidate->IsDropship())
+                Candidate->GetElement()->IsPlayable() && !Candidate->IsStatic())
                 Fighters.Add(Candidate);
     }
 
@@ -572,6 +601,8 @@ bool ASSWSessionLobbyGameMode::LaunchLobbyMission(ASSWSessionGameState& State)
             return (&A == LocalFighter) > (&B == LocalFighter);
         });
 
+    UE_LOG(LogTemp, Log, TEXT("[SessionLobby] Mission %hs has %d playable ships for %d pilots"),
+        Selected->GetName(), Fighters.Num(), Pilots.Num());
     bool bAssigned = Fighters.Num() >= Pilots.Num();
     for (int32 Index = 0; bAssigned && Index < Pilots.Num(); ++Index)
         bAssigned = Pilots[Index]->AssignMissionShip(Fighters[Index]->GetObjID());
@@ -633,7 +664,20 @@ void ASSWSessionLobbyController::PlayerTick(float DeltaTime)
     Super::PlayerTick(DeltaTime);
 
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
-    if (!State || !State->bMissionStartReady || !MissionShipId) return;
+    if (!State) return;
+    if (GetNetMode() == NM_Client && IsLocalController() && !bMissionMapRequested && !State->MissionMap.IsEmpty())
+    {
+        bMissionMapRequested = true;
+        bool bStreamingStarted = false;
+        ClientMissionLevel = ULevelStreamingDynamic::LoadLevelInstance(GetWorld(), State->MissionMap,
+            FVector::ZeroVector, FRotator::ZeroRotator, bStreamingStarted);
+        if (bStreamingStarted && ClientMissionLevel)
+        {
+            ClientMissionLevel->OnLevelShown.AddUniqueDynamic(this, &ThisClass::BuildClientMissionScene);
+            if (ClientMissionLevel->IsLevelVisible()) BuildClientMissionScene();
+        }
+    }
+    if (!State->bMissionStartReady || !MissionShipId) return;
 
     const double Now = FPlatformTime::Seconds();
     if (HasAuthority() && LastFlightInput > 0.0 && Now - LastFlightInput > 0.25)
@@ -927,7 +971,7 @@ void ASSWSessionLobbyGameMode::PostLogin(APlayerController* NewPlayer)
         {
             Ship* Fighter = Ships.value();
             if (Fighter && Fighter->GetElement() && Fighter->GetElement()->IsPlayable() &&
-                !Fighter->IsStarship() && !Fighter->IsDropship() &&
+                !Fighter->IsStatic() &&
                 Pilot->AssignMissionShip(Fighter->GetObjID())) return;
         }
     }
@@ -953,4 +997,14 @@ void ASSWSessionPlayerState::OnRep_PlayerName()
     Super::OnRep_PlayerName();
     if (auto* State = GetWorld()->GetGameState<ASSWSessionGameState>())
         State->OnRosterChanged.Broadcast();
+}
+
+void ASSWSessionLobbyController::BuildClientMissionScene()
+{
+    const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
+    if (!ClientMissionLevel || !State) return;
+
+    ClientMissionLevel->OnLevelShown.RemoveDynamic(this, &ThisClass::BuildClientMissionScene);
+    if (!BuildLobbySystem(*GetWorld(), *ClientMissionLevel, State->MissionMap))
+        UE_LOG(LogTemp, Warning, TEXT("[SessionLobby] Could not build client scene for %s"), *State->MissionMap);
 }

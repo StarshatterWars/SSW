@@ -11,6 +11,7 @@ USTRUCT(BlueprintType)
 struct FSSWSessionEntry {
  GENERATED_BODY()
  UPROPERTY(BlueprintReadOnly) FString Name;
+ UPROPERTY(BlueprintReadOnly) FString Mission;
  UPROPERTY(BlueprintReadOnly) int32 Players=0;
  UPROPERTY(BlueprintReadOnly) int32 Capacity=0;
  UPROPERTY(BlueprintReadOnly) int32 Ping=0;
@@ -37,6 +38,7 @@ public:
  UFUNCTION(BlueprintCallable) bool LeaveSession();
  UFUNCTION(BlueprintCallable) void CancelSearch();
  void AdvertiseDedicatedLAN();
+ bool CreateMissionSession(const FString& Name, int32 Players, bool bLAN, int32 MissionIndex);
  static FOnlineSessionSettings MakeSettings(const FString& Name,int32 Players,bool bLAN);
 private:
  void NetworkFailure(UWorld* World,class UNetDriver* Driver,ENetworkFailure::Type Type,const FString& Message);
@@ -56,4 +58,5 @@ private:
  TArray<FOnlineSessionSearchResult> SearchResults;
  FDelegateHandle CreateHandle,FindHandle,JoinHandle,DestroyHandle;
  bool bSearchCancelled=false;
+ int32 HostingMissionIndex = INDEX_NONE;
 };

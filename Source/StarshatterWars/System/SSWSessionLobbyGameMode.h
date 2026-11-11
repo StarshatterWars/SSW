@@ -163,6 +163,7 @@ public:
     void AddChatMessage(const FString& Sender, const FString& Text);
     void BindSimulation(Sim& Simulation);
     void PublishGalaxy(double Now);
+    UPROPERTY(Replicated, BlueprintReadOnly) FString MissionMap;
     const FSSWOrbitalPosition* FindOrbitalPosition(const Orbital& Body) const;
     UPROPERTY(Replicated, BlueprintReadOnly) int64 GalaxyClockMs = 0;
     void PublishSimulation(Sim& Simulation, double Now);
@@ -234,6 +235,10 @@ private:
     friend class ASSWSessionLobbyGameMode;
     UPROPERTY(Replicated) int64 MissionShipId = 0;
     double NextChatTime = 0.0;
+    bool bMissionMapRequested = false;
+
+    UPROPERTY(Transient) TObjectPtr<ULevelStreamingDynamic> ClientMissionLevel;
+    UFUNCTION() void BuildClientMissionScene();
     double LastFlightInput = 0.0;
     double NextFlightInput = 0.0;
     double FlightThrottle = 0.0;
@@ -286,6 +291,7 @@ private:
     void UpdateMissionCountdown();
     bool LaunchLobbyMission(ASSWSessionGameState& State);
     TSharedPtr<Mission> LobbyMission;
+    int32 LobbyMissionIndex = INDEX_NONE;
     UPROPERTY(Transient) TObjectPtr<ULevelStreamingDynamic> LobbySystemLevel;
 
     FTimerHandle MissionCountdownTimer;

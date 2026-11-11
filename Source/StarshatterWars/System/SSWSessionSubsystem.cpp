@@ -1,4 +1,5 @@
 #include "SSWSessionSubsystem.h"
+#include "StarshatterGameDataSubsystem.h"
 #include "OnlineSubsystem.h"
 #include "Interfaces/OnlineIdentityInterface.h"
 #include "OnlineSubsystemUtils.h"
@@ -12,7 +13,7 @@
 #include "SSWSessionLobbyGameMode.h"
 #include "UObject/UObjectGlobals.h"
 #include "TimerManager.h"
-namespace { const FName SSWProjectKey(TEXT("SSW_PROJECT")),SSWTitleKey(TEXT("SSW_TITLE")); }
+namespace { const FName SSWProjectKey(TEXT("SSW_PROJECT")),SSWTitleKey(TEXT("SSW_TITLE")), SSWMissionKey(TEXT("SSW_MISSION")); }
 void USSWSessionSubsystem::Initialize(FSubsystemCollectionBase& Collection){Super::Initialize(Collection);if(GEngine){NetworkFailureHandle=GEngine->OnNetworkFailure().AddUObject(this,&ThisClass::NetworkFailure);TravelFailureHandle=GEngine->OnTravelFailure().AddUObject(this,&ThisClass::TravelFailure);MapLoadedHandle=FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this,&ThisClass::MapLoaded);}}
 bool USSWSessionSubsystem::HasSession() const{return Sessions.IsValid() && Sessions->GetNamedSession(NAME_GameSession)!=nullptr;}
 void USSWSessionSubsystem::NetworkFailure(UWorld* World,UNetDriver*,ENetworkFailure::Type,const FString& Message){if(World && World==GetWorld())Change(ESSWSessionState::Failed,TEXT("Connection failed: ")+Message);}
@@ -37,20 +38,40 @@ bool USSWSessionSubsystem::Acquire(bool bLAN){
  }
  Sessions=OSS->GetSessionInterface();return true;
 }
-bool USSWSessionSubsystem::CreateSession(const FString& Name,int32 Players,bool bLAN){
+bool USSWSessionSubsystem::CreateSession(const FString& Name,int32 Players,bool bLAN)
+{
+    return CreateMissionSession(Name, Players, bLAN, INDEX_NONE);
+}
+
+bool USSWSessionSubsystem::CreateMissionSession(const FString& Name,int32 Players,bool bLAN,int32 MissionIndex){
  if(!Acquire(bLAN))return false;
  if(Name.TrimStartAndEnd().IsEmpty()){Change(ESSWSessionState::Failed,TEXT("Enter a session name."));return false;}
  if(!FPackageName::IsValidLongPackageName(LobbyMap)||!FPackageName::DoesPackageExist(LobbyMap)){Change(ESSWSessionState::Failed,TEXT("The lobby map is unavailable."));return false;}
  if(Sessions->GetNamedSession(NAME_GameSession)){Change(ESSWSessionState::Failed,TEXT("Leave the current session before creating another."));return false;}
  CreateHandle=Sessions->AddOnCreateSessionCompleteDelegate_Handle(FOnCreateSessionCompleteDelegate::CreateUObject(this,&ThisClass::Created));
  Change(ESSWSessionState::Creating,TEXT("Creating session..."));
- if(!Sessions->CreateSession(0,NAME_GameSession,MakeSettings(Name,Players,bLAN))){Sessions->ClearOnCreateSessionCompleteDelegate_Handle(CreateHandle);CreateHandle.Reset();Change(ESSWSessionState::Failed,TEXT("Session creation could not start."));return false;}return true;
+ auto Settings = MakeSettings(Name, FMath::Min(Players, 4), bLAN);
+ const auto* Data = GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>();
+ const auto* Scenario = Data && Data->GetMultiplayerMissionScenarios().IsValidIndex(MissionIndex)
+     ? &Data->GetMultiplayerMissionScenarios()[MissionIndex] : nullptr;
+ if (MissionIndex != INDEX_NONE && !Scenario)
+ {
+     Sessions->ClearOnCreateSessionCompleteDelegate_Handle(CreateHandle);
+     CreateHandle.Reset();
+     Change(ESSWSessionState::Failed, TEXT("The selected mission is unavailable."));
+     return false;
+ }
+ HostingMissionIndex = MissionIndex;
+ Settings.Set(SSWMissionKey, Scenario ? Scenario->MissionName : FString(TEXT("Hawk Match")),
+     EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
+ if(!Sessions->CreateSession(0,NAME_GameSession,Settings)){Sessions->ClearOnCreateSessionCompleteDelegate_Handle(CreateHandle);CreateHandle.Reset();Change(ESSWSessionState::Failed,TEXT("Session creation could not start."));return false;}return true;
 }
 void USSWSessionSubsystem::Created(FName Name,bool bOK){
  Sessions->ClearOnCreateSessionCompleteDelegate_Handle(CreateHandle);CreateHandle.Reset();
  if(!bOK){Change(ESSWSessionState::Failed,TEXT("Could not create the session."));return;}
  Sessions->StartSession(Name);Change(ESSWSessionState::Hosting,TEXT("Hosting session."));
- UGameplayStatics::OpenLevel(this,FName(*LobbyMap),true,TEXT("listen?game=/Script/StarshatterWars.SSWSessionLobbyGameMode"));
+ const FString Options = FString::Printf(TEXT("listen?game=/Script/StarshatterWars.SSWSessionLobbyGameMode?SSWMission=%d"), HostingMissionIndex);
+ UGameplayStatics::OpenLevel(this,FName(*LobbyMap),true,Options);
 }
 bool USSWSessionSubsystem::FindSessions(bool bLAN){
  if(!Acquire(bLAN))return false;
@@ -68,7 +89,7 @@ void USSWSessionSubsystem::Found(bool bOK){
  if(bOK && Search)for(const auto& Match:Search->SearchResults){
   FString Project;Match.Session.SessionSettings.Get(SSWProjectKey,Project);
   if(Project!=TEXT("StarshatterWars") || !Match.IsValid() || Match.Session.SessionSettings.BuildUniqueId!=GetBuildUniqueId())continue;
-  FSSWSessionEntry Row;Match.Session.SessionSettings.Get(SSWTitleKey,Row.Name);if(Row.Name.IsEmpty())Row.Name=Match.Session.OwningUserName;
+  FSSWSessionEntry Row;Match.Session.SessionSettings.Get(SSWMissionKey,Row.Mission);Match.Session.SessionSettings.Get(SSWTitleKey,Row.Name);if(Row.Name.IsEmpty())Row.Name=Match.Session.OwningUserName;
   Row.Capacity=Match.Session.SessionSettings.NumPublicConnections;Row.Players=FMath::Max(0,Row.Capacity-Match.Session.NumOpenPublicConnections);Row.Ping=Match.PingInMs;
   Results.Add(Row);SearchResults.Add(Match);
  }

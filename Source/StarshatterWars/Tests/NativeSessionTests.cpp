@@ -43,7 +43,7 @@ bool FNativeSessionUITest::RunTest(const FString&)
   if(auto* B=Cast<UButton>(W)){auto* Resource=B->GetStyle().Normal.GetResourceObject();TestTrue(TEXT("Session buttons use modern cyan textures"),Resource&&Resource->GetPathName().Contains(TEXT("T_Btn01Cyan_")));}
  }
  TestTrue(TEXT("Host tab"),Labels.Contains(TEXT("CREATE SESSION")));TestTrue(TEXT("Join tab"),Labels.Contains(TEXT("JOIN SESSION")));
- TestTrue(TEXT("Host action"),Labels.Contains(TEXT("CREATE GAME")));TestTrue(TEXT("Search action"),Labels.Contains(TEXT("FIND GAMES / REFRESH")));
+ TestTrue(TEXT("Host action"),Labels.Contains(TEXT("CHOOSE A MISSION")));TestTrue(TEXT("Search action"),Labels.Contains(TEXT("FIND GAMES / REFRESH")));
  TestTrue(TEXT("Join action"),Labels.Contains(TEXT("JOIN SELECTED GAME")));TestFalse(TEXT("No legacy mission/briefing selection"),Screen->HasSelectedMission());
  Screen->JoinMode();TestEqual(TEXT("Join mode displays browser"),Screen->JoinPanel->GetVisibility(),ESlateVisibility::Visible);TestEqual(TEXT("Join mode hides host form"),Screen->HostPanel->GetVisibility(),ESlateVisibility::Collapsed);
  Screen->HostMode();TestEqual(TEXT("Host form returns"),Screen->HostPanel->GetVisibility(),ESlateVisibility::Visible);

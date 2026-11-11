@@ -23,15 +23,29 @@
 #include "MissionUIStyle.h"
 #include "StarshatterUIStyleSubsystem.h"
 #include "MenuScreen.h"
-void USSWSessionRowButton::Configure(UMultiplayerDlg* Screen,int32 Row){Dialog=Screen;Index=Row;OnClicked.AddUniqueDynamic(this,&ThisClass::Clicked);}
-void USSWSessionRowButton::Clicked(){if(Dialog.IsValid())Dialog->SelectSession(Index);}
+void USSWSessionRowButton::Configure(UMultiplayerDlg* Screen,int32 Row,bool bMissionRow)
+{
+    Dialog=Screen;
+    Index=Row;
+    bMission=bMissionRow;
+    OnClicked.AddUniqueDynamic(this,&ThisClass::Clicked);
+}
+
+void USSWSessionRowButton::Clicked()
+{
+    if (auto* Screen = Dialog.Get())
+    {
+        if (bMission) Screen->HostMission(Index);
+        else Screen->SelectSession(Index);
+    }
+}
 UMultiplayerDlg::UMultiplayerDlg(const FObjectInitializer& I):Super(I){SetIsFocusable(true);}
 USSWSessionSubsystem* UMultiplayerDlg::Service()const{return GetGameInstance()?GetGameInstance()->GetSubsystem<USSWSessionSubsystem>():nullptr;}
 TSharedRef<SWidget> UMultiplayerDlg::RebuildWidget(){if(!WidgetTree)WidgetTree=NewObject<UWidgetTree>(this);BuildSessionScreen();return Super::RebuildWidget();}
 UTextBlock* UMultiplayerDlg::Label(const FString& Text,int32 Size)
 {
     auto* W=WidgetTree->ConstructWidget<UTextBlock>();
-    W->SetText(FText::FromString(Text));W->SetFont(MissionUIStyle::GetRowFont(Size));
+    W->SetText(FText::FromString(Text));W->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), FMath::Clamp(Size - 2, 11, 22)));
     W->SetColorAndOpacity(FSlateColor(FLinearColor(.78f,.9f,.96f)));W->SetAutoWrapText(false);
     return W;
 }
@@ -39,6 +53,7 @@ UButton* UMultiplayerDlg::Button(const FString& Text,UVerticalBox* Parent)
 {
     auto* B=WidgetTree->ConstructWidget<UButton>();B->AddChild(Label(Text,16));
     B->SetToolTipText(FText::FromString(Text));MissionUIStyle::ApplyActionButtonStyle(B,TEXT("Cyan"));
+    CastChecked<UTextBlock>(B->GetContent())->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 13));
     auto* Height=WidgetTree->ConstructWidget<USizeBox>();Height->SetHeightOverride(48);Height->SetContent(B);
     Parent->AddChildToVerticalBox(Height)->SetPadding(FMargin(0,6));return B;
 }
@@ -58,7 +73,7 @@ void UMultiplayerDlg::BuildSessionScreen()
     }
 
     auto* Header=WidgetTree->ConstructWidget<UVerticalBox>();Main->AddChildToVerticalBox(Header)->SetPadding(FMargin(0,0,0,18));
-    auto* ScreenTitle=Label(TEXT("MULTIPLAYER"),30);ScreenTitle->SetFont(MissionUIStyle::GetHeaderFont(30));Header->AddChildToVerticalBox(ScreenTitle);
+    auto* ScreenTitle=Label(TEXT("MULTIPLAYER"),30);ScreenTitle->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 22));Header->AddChildToVerticalBox(ScreenTitle);
     Header->AddChildToVerticalBox(Label(TEXT("Create a game or find a session."),16))->SetPadding(FMargin(0,8,0,0));
     auto* Modes=WidgetTree->ConstructWidget<UHorizontalBox>();Main->AddChildToVerticalBox(Modes)->SetPadding(FMargin(0,0,0,12));
     auto* Left=WidgetTree->ConstructWidget<UVerticalBox>();auto* Right=WidgetTree->ConstructWidget<UVerticalBox>();
@@ -73,36 +88,63 @@ void UMultiplayerDlg::BuildSessionScreen()
     auto* HostCard=WidgetTree->ConstructWidget<UBorder>();HostCard->SetBrushColor(FLinearColor(.02f,.055f,.08f));HostCard->SetPadding(FMargin(24));
     HostPanel->AddChildToVerticalBox(HostCard)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     auto* Form=WidgetTree->ConstructWidget<UVerticalBox>();HostCard->SetContent(Form);
-    Form->AddChildToVerticalBox(Label(TEXT("SESSION SETTINGS"),20))->SetPadding(FMargin(0,0,0,22));
-    Form->AddChildToVerticalBox(Label(TEXT("SESSION NAME"),14))->SetPadding(FMargin(0,0,0,8));
+    auto* Settings = WidgetTree->ConstructWidget<UHorizontalBox>();
+    Form->AddChildToVerticalBox(Settings)->SetPadding(FMargin(0, 0, 0, 20));
+    auto* NameField = WidgetTree->ConstructWidget<UVerticalBox>();
+    auto* NameSlot = Settings->AddChildToHorizontalBox(NameField);
+    NameSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    NameSlot->SetPadding(FMargin(0, 0, 16, 0));
+    NameField->AddChildToVerticalBox(Label(TEXT("SESSION NAME"), 14))->SetPadding(FMargin(0, 0, 0, 6));
     SessionName=WidgetTree->ConstructWidget<UEditableTextBox>();SessionName->SetText(FText::FromString(TEXT("Starshatter Wars")));
     FEditableTextBoxStyle InputStyle=SessionName->GetWidgetStyle();
     FSlateBrush InputBrush=*FCoreStyle::Get().GetBrush(TEXT("WhiteBrush"));InputBrush.TintColor=FSlateColor(FLinearColor(.008f,.025f,.04f));
     InputStyle.BackgroundImageNormal=InputBrush;InputStyle.BackgroundImageHovered=InputBrush;InputStyle.BackgroundImageFocused=InputBrush;InputStyle.BackgroundImageReadOnly=InputBrush;
-    InputStyle.SetForegroundColor(FSlateColor(FLinearColor(.9f,.96f,1.f)));InputStyle.SetFont(MissionUIStyle::GetRowFont(18));InputStyle.Padding=FMargin(12,8);
-    SessionName->SetWidgetStyle(InputStyle);Form->AddChildToVerticalBox(SessionName)->SetPadding(FMargin(0,0,0,24));
-    Form->AddChildToVerticalBox(Label(TEXT("PLAYER LIMIT"),14))->SetPadding(FMargin(0,0,0,8));
+    InputStyle.SetForegroundColor(FSlateColor(FLinearColor(.9f,.96f,1.f)));InputStyle.SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), 14));InputStyle.Padding=FMargin(12,8);
+    SessionName->SetWidgetStyle(InputStyle);
+    NameField->AddChildToVerticalBox(SessionName);
+    auto* PlayerField = WidgetTree->ConstructWidget<UVerticalBox>();
+    Settings->AddChildToHorizontalBox(PlayerField);
+    PlayerField->AddChildToVerticalBox(Label(TEXT("PLAYER LIMIT"), 14))->SetPadding(FMargin(0, 0, 0, 6));
     auto* CapacitySize=WidgetTree->ConstructWidget<USizeBox>();CapacitySize->SetWidthOverride(160);CapacitySize->SetHeightOverride(44);
-    Form->AddChildToVerticalBox(CapacitySize)->SetHorizontalAlignment(HAlign_Left);
-    Capacity=WidgetTree->ConstructWidget<USpinBox>();Capacity->SetMinValue(2);Capacity->SetMaxValue(16);Capacity->SetMinSliderValue(2);Capacity->SetMaxSliderValue(16);Capacity->SetDelta(1);Capacity->SetValue(8);
-    Capacity->SetMinFractionalDigits(0);Capacity->SetMaxFractionalDigits(0);Capacity->SetFont(MissionUIStyle::GetRowFont(18));Capacity->SetForegroundColor(FSlateColor(FLinearColor::White));
+    PlayerField->AddChildToVerticalBox(CapacitySize);
+    Capacity=WidgetTree->ConstructWidget<USpinBox>();Capacity->SetMinValue(2);Capacity->SetMaxValue(4);Capacity->SetMinSliderValue(2);Capacity->SetMaxSliderValue(4);Capacity->SetDelta(1);Capacity->SetValue(4);
+    Capacity->SetMinFractionalDigits(0);Capacity->SetMaxFractionalDigits(0);Capacity->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), 14));Capacity->SetForegroundColor(FSlateColor(FLinearColor::White));
     FSpinBoxStyle SpinStyle=Capacity->GetWidgetStyle();SpinStyle.BackgroundBrush=InputBrush;SpinStyle.HoveredBackgroundBrush=InputBrush;SpinStyle.InactiveFillBrush=InputBrush;SpinStyle.ActiveFillBrush=InputBrush;Capacity->SetWidgetStyle(SpinStyle);CapacitySize->SetContent(Capacity);
-    if (const auto* GI = GetGameInstance())
+    Form->AddChildToVerticalBox(Label(TEXT("CHOOSE A MISSION"), 18))->SetPadding(FMargin(0, 0, 0, 10));
+    auto* Catalog = WidgetTree->ConstructWidget<UScrollBox>();
+    Catalog->SetClipping(EWidgetClipping::ClipToBounds);
+    Catalog->SetAlwaysShowScrollbar(true);
+    Form->AddChildToVerticalBox(Catalog)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    if (const auto* Data = GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>())
     {
-        if (const auto* Data = GI->GetSubsystem<UStarshatterGameDataSubsystem>())
+        const auto& Missions = Data->GetMultiplayerMissionScenarios();
+        for (int32 Index = 0; Index < Missions.Num(); ++Index)
         {
-            const auto& Missions = Data->GetMultiplayerMissionScenarios();
-            if (!Missions.IsEmpty())
-            {
-                Form->AddChildToVerticalBox(Label(TEXT("MULTIPLAYER MISSION CATALOG"),14))->SetPadding(FMargin(0,16,0,8));
-                auto* Catalog = WidgetTree->ConstructWidget<UScrollBox>();
-                Form->AddChildToVerticalBox(Catalog)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-                for (const auto& Mission : Missions)
-                    Catalog->AddChild(Label(Mission.MissionName,16));
-            }
+            auto* Row = WidgetTree->ConstructWidget<USSWSessionRowButton>();
+            Row->Configure(this, Index, true);
+            const auto& Mission = Missions[Index];
+            auto* Card = WidgetTree->ConstructWidget<UVerticalBox>();
+            Card->AddChildToVerticalBox(Label(Mission.MissionName, 18));
+            FString Location = Mission.MissionSystem;
+            if (!Mission.MissionRegion.IsEmpty() && !Mission.MissionRegion.Equals(Location, ESearchCase::IgnoreCase))
+                Location += Location.IsEmpty() ? Mission.MissionRegion : TEXT("  ·  ") + Mission.MissionRegion;
+            if (!Location.IsEmpty())
+                Card->AddChildToVerticalBox(Label(Location, 13))->SetPadding(FMargin(0, 3, 0, 0));
+            Row->AddChild(Card);
+            if (!Mission.Desc.IsEmpty()) Row->SetToolTipText(FText::FromString(Mission.Desc));
+            MissionUIStyle::ApplyActionButtonStyle(Row, TEXT("Cyan"));
+            for (int32 Line = 0; Line < Card->GetChildrenCount(); ++Line)
+                CastChecked<UTextBlock>(Card->GetChildAt(Line))->SetFont(FCoreStyle::GetDefaultFontStyle(
+                    Line == 0 ? TEXT("Bold") : TEXT("Regular"), Line == 0 ? 14 : 11));
+            Row->SetClickMethod(EButtonClickMethod::MouseDown);
+            auto* Height = WidgetTree->ConstructWidget<USizeBox>();
+            Height->SetHeightOverride(56);
+            Height->SetContent(Row);
+            Catalog->AddChild(Height);
+            MissionButtons.Add(Row);
         }
     }
-    CreateButton=Button(TEXT("CREATE GAME"),HostPanel);CreateButton->OnClicked.AddUniqueDynamic(this,&ThisClass::Create);
+    if (MissionButtons.IsEmpty()) Catalog->AddChild(Label(TEXT("No multiplayer missions available."), 16));
     JoinPanel=WidgetTree->ConstructWidget<UVerticalBox>();Main->AddChildToVerticalBox(JoinPanel)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     SearchButton=Button(TEXT("FIND GAMES / REFRESH"),JoinPanel);SearchButton->OnClicked.AddUniqueDynamic(this,&ThisClass::Search);
     auto* Columns=WidgetTree->ConstructWidget<UHorizontalBox>();JoinPanel->AddChildToVerticalBox(Columns)->SetPadding(FMargin(16,12,16,8));
@@ -125,19 +167,19 @@ void UMultiplayerDlg::NativeDestruct(){if(auto* S=Service())S->OnChanged.RemoveD
 void UMultiplayerDlg::Show(){Super::Show();BuildSessionScreen();RefreshState();}
 void UMultiplayerDlg::RefreshState(){
  if(!HostPanel||!JoinPanel)return;auto* S=Service();const bool Busy=S&&S->IsBusy();const bool Active=S&&S->HasSession();
- HostPanel->SetVisibility(bHostMode?ESlateVisibility::Visible:ESlateVisibility::Collapsed);JoinPanel->SetVisibility(bHostMode?ESlateVisibility::Collapsed:ESlateVisibility::Visible);
- CreateButton->SetIsEnabled(S&&!Busy&&!Active);SearchButton->SetIsEnabled(S&&!Busy&&!Active);LAN->SetIsEnabled(!Busy&&!Active);SessionName->SetIsEnabled(!Busy&&!Active);Capacity->SetIsEnabled(!Busy&&!Active);
+ HostPanel->SetVisibility(bModeSelected&&bHostMode?ESlateVisibility::Visible:ESlateVisibility::Collapsed);JoinPanel->SetVisibility(bModeSelected&&!bHostMode?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+ for (UButton* MissionButton : MissionButtons) MissionButton->SetIsEnabled(S&&!Busy&&!Active);SearchButton->SetIsEnabled(S&&!Busy&&!Active);LAN->SetIsEnabled(!Busy&&!Active);SessionName->SetIsEnabled(!Busy&&!Active);Capacity->SetIsEnabled(!Busy&&!Active);
  if(S && !S->Results.IsValidIndex(Selected))Selected=INDEX_NONE;
  JoinButton->SetIsEnabled(S&&!Busy&&!Active&&S->Results.IsValidIndex(Selected)&&S->Results[Selected].Players<S->Results[Selected].Capacity);
  LeaveButton->SetIsEnabled(!Busy);LeaveButton->SetVisibility(Active?ESlateVisibility::Visible:ESlateVisibility::Collapsed);CancelSearchButton->SetVisibility(S&&S->State==ESSWSessionState::Searching?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
  if(HostTab&&JoinTab){
-  for(UButton* Tab:{HostTab.Get(),JoinTab.Get()}){MissionUIStyle::ApplyActionButtonStyle(Tab,TEXT("Cyan"));if((Tab==HostTab&&bHostMode)||(Tab==JoinTab&&!bHostMode)){FButtonStyle Style=Tab->GetStyle();Style.Normal=Style.Pressed;Tab->SetStyle(Style);}}
+  for(UButton* Tab:{HostTab.Get(),JoinTab.Get()}){MissionUIStyle::ApplyActionButtonStyle(Tab,TEXT("Cyan"));CastChecked<UTextBlock>(Tab->GetContent())->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"),13));if((Tab==HostTab&&bHostMode)||(Tab==JoinTab&&!bHostMode)){FButtonStyle Style=Tab->GetStyle();Style.Normal=Style.Pressed;Tab->SetStyle(Style);}}
  }
  StatusLabel->SetText(FText::FromString(S?S->Status:TEXT("Session service unavailable.")));Rows->ClearChildren();
  if(!S||S->Results.IsEmpty())Rows->AddChildToVerticalBox(Label(TEXT("No games listed. Select Find games to refresh."),16))->SetPadding(FMargin(12,20));
  if(S)for(int I=0;I<S->Results.Num();++I){
   const auto& R=S->Results[I];auto* B=WidgetTree->ConstructWidget<USSWSessionRowButton>();B->Configure(this,I);
-  auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();B->AddChild(Row);auto* Name=Label(R.Name,16);Name->SetAutoWrapText(false);Name->SetClipping(EWidgetClipping::ClipToBounds);
+  auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();B->AddChild(Row);auto* Name=Label(R.Mission.IsEmpty()?R.Name:FString::Printf(TEXT("%s  ·  %s"),*R.Name,*R.Mission),16);Name->SetAutoWrapText(false);Name->SetClipping(EWidgetClipping::ClipToBounds);
   auto* NameSlot=Row->AddChildToHorizontalBox(Name);NameSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));NameSlot->SetPadding(FMargin(16,10));
   for(const FString& Text:{FString::Printf(TEXT("%d / %d"),R.Players,R.Capacity),FString::Printf(TEXT("%d ms"),R.Ping)}){auto* Cell=WidgetTree->ConstructWidget<USizeBox>();Cell->SetWidthOverride(120);Cell->SetContent(Label(Text,16));Row->AddChildToHorizontalBox(Cell)->SetVerticalAlignment(VAlign_Center);}
   MissionUIStyle::ApplyActionButtonStyle(B,TEXT("Cyan"));if(I==Selected){FButtonStyle Style=B->GetStyle();Style.Normal=Style.Pressed;B->SetStyle(Style);}
@@ -146,9 +188,16 @@ void UMultiplayerDlg::RefreshState(){
 
 }
 void UMultiplayerDlg::SelectSession(int32 Index){Selected=Index;RefreshState();}
-void UMultiplayerDlg::HostMode(){bHostMode=true;RefreshState();}
-void UMultiplayerDlg::JoinMode(){bHostMode=false;RefreshState();}
-void UMultiplayerDlg::Create(){if(auto* S=Service())S->CreateSession(SessionName->GetText().ToString(),FMath::RoundToInt(Capacity->GetValue()),LAN->IsChecked());}
+void UMultiplayerDlg::HostMode(){bModeSelected=true;bHostMode=true;RefreshState();}
+void UMultiplayerDlg::JoinMode(){bModeSelected=true;bHostMode=false;RefreshState();}
+void UMultiplayerDlg::Create(){HostMode();}
+
+void UMultiplayerDlg::HostMission(int32 Index)
+{
+    if (auto* S = Service())
+        S->CreateMissionSession(SessionName->GetText().ToString(), FMath::RoundToInt(Capacity->GetValue()),
+            LAN->IsChecked(), Index);
+}
 void UMultiplayerDlg::Search(){Selected=INDEX_NONE;if(auto* S=Service())S->FindSessions(LAN->IsChecked());}
 void UMultiplayerDlg::Join(){if(auto* S=Service())S->JoinSession(Selected);}
 void UMultiplayerDlg::Leave(){if(auto* S=Service())S->LeaveSession();}
@@ -267,7 +316,7 @@ void UMultiplayerDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 void UMultiplayerDlg::BuildLobbyScreen(UVerticalBox* Main)
 {
     auto* LobbyTitle = Label(TEXT("MISSION LOBBY"), 30);
-    LobbyTitle->SetFont(MissionUIStyle::GetHeaderFont(30));
+    LobbyTitle->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 22));
     Main->AddChildToVerticalBox(LobbyTitle)->SetPadding(FMargin(0, 0, 0, 8));
     MissionCountdownLabel = Label(TEXT("WAITING FOR PILOTS TO READY UP"), 16);
     Main->AddChildToVerticalBox(MissionCountdownLabel)->SetPadding(FMargin(0, 0, 0, 20));
@@ -310,7 +359,7 @@ void UMultiplayerDlg::BuildLobbyScreen(UVerticalBox* Main)
     Style.BackgroundImageHovered = Background;
     Style.BackgroundImageFocused = Background;
     Style.SetForegroundColor(FSlateColor(FLinearColor(.9f, .96f, 1.f)));
-    Style.SetFont(MissionUIStyle::GetRowFont(16));
+    Style.SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Regular"), 13));
     Style.Padding = FMargin(12, 10);
     ChatEntry->SetWidgetStyle(Style);
     ChatEntry->SetHintText(FText::FromString(TEXT("Type a message and press Enter")));

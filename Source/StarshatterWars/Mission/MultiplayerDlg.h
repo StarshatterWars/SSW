@@ -9,11 +9,12 @@ UCLASS()
 class STARSHATTERWARS_API USSWSessionRowButton:public UButton {
  GENERATED_BODY()
 public:
- void Configure(UMultiplayerDlg* Screen,int32 Row);
+ void Configure(UMultiplayerDlg* Screen,int32 Row,bool bMissionRow = false);
 private:
  UFUNCTION()void Clicked();
  UPROPERTY()TWeakObjectPtr<UMultiplayerDlg> Dialog;
  int32 Index=INDEX_NONE;
+ bool bMission = false;
 };
 UCLASS()
 class STARSHATTERWARS_API UMultiplayerDlg:public UBaseScreen {
@@ -26,6 +27,7 @@ public:
  virtual void HandleCancel() override;
  bool HasSelectedMission()const{return false;} // Sessions never use legacy briefing handoff.
  void SelectSession(int32 Index);
+ void HostMission(int32 Index);
 protected:
  virtual TSharedRef<SWidget> RebuildWidget()override;
  virtual void NativeConstruct()override;
@@ -65,7 +67,7 @@ protected:
  UPROPERTY(Transient)TObjectPtr<UEditableTextBox> SessionName;
  UPROPERTY(Transient)TObjectPtr<USpinBox> Capacity;
  UPROPERTY(Transient)TObjectPtr<UCheckBox> LAN;
- UPROPERTY(Transient)TObjectPtr<UButton> CreateButton;
+ UPROPERTY(Transient)TArray<TObjectPtr<UButton>> MissionButtons;
  UPROPERTY(Transient)TObjectPtr<UButton> SearchButton;
  UPROPERTY(Transient)TObjectPtr<UButton> JoinButton;
  UPROPERTY(Transient)TObjectPtr<UButton> LeaveButton;
@@ -76,4 +78,5 @@ protected:
  friend class FNativeSessionUITest;
  int32 Selected=INDEX_NONE;
  bool bHostMode=true;
+ bool bModeSelected=false;
 };

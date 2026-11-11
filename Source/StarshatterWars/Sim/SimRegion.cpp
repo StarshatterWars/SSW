@@ -633,8 +633,8 @@ void SimRegion::InsertObject(Ship* s)
     if (!s)
         return;
 
+    if (sim) sim->AssignNetworkObjectId(*s);
     if (!ships.contains(s))
-        if (sim) sim->AssignNetworkObjectId(*s);
         ships.append(s);
 
     if (s->NumFlightDecks() > 0) {
