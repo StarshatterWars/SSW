@@ -1,5 +1,6 @@
 #include "SSWSessionLobbyGameMode.h"
 #include "MultiplayerDlg.h"
+#include "MissionUIStyle.h"
 #include "GameFramework/SpectatorPawn.h"
 #include "GameFramework/GameState.h"
 #include "GameFramework/PlayerState.h"
@@ -17,6 +18,8 @@
 #include "Materials/MaterialInterface.h"
 #include "Drive.h"
 #include "Thruster.h"
+#include "NavLight.h"
+#include "Sensor.h"
 #include "SimSystem.h"
 #include "Instruction.h"
 #include "TimerManager.h"
@@ -27,6 +30,7 @@
 #include "SystemSceneBuilder.h"
 #include "Misc/PackageName.h"
 #include "Camera/CameraActor.h"
+#include "Camera/CameraComponent.h"
 #include "Components/PointLightComponent.h"
 #include "StarSystem.h"
 #include "OrbitalBody.h"
@@ -34,10 +38,20 @@
 #include "Components/StaticMeshComponent.h"
 #include "ShipActor.h"
 #include "FighterActor.h"
+#include "StarshatterInputBindings.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
+#include "EnhancedPlayerInput.h"
+#include "InputMappingContext.h"
+#include "InputAction.h"
+#include "InputKeyEventArgs.h"
+#include "Engine/LocalPlayer.h"
 #include "FighterHUDDetails.h"
 #include "Engine/GameViewportClient.h"
 #include "ShipDesign.h"
 #include "Weapon.h"
+#include "WeaponDesign.h"
+#include "WeaponGroup.h"
 #include "SSWSessionSubsystem.h"
 #include "Engine/Canvas.h"
 #include "ShipDesignRegistry.h"
@@ -45,6 +59,15 @@
 #include "StarshatterEnvironmentSubsystem.h"
 #include "StarshatterGameDataSubsystem.h"
 #include "SimElement.h"
+#include "StarshatterPlayerSubsystem.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/SBoxPanel.h"
+#include "Widgets/SOverlay.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SEditableTextBox.h"
+#include "Widgets/Text/STextBlock.h"
 namespace
 {
     ASystemSceneBuilder* BuildLobbySystem(UWorld& World, ULevelStreamingDynamic& Level, const FString& Map)
@@ -195,6 +218,13 @@ FSSWReplicatedShipState ASSWSessionGameState::MakeShipState(const Ship& PilotShi
     State.ShieldStrength = PilotShip.GetShieldStrength();
     State.FuelPercent = PilotShip.GetFuelLevel();
     State.Throttle = static_cast<float>(PilotShip.GetThrottle());
+    if (const auto* Sensors = PilotShip.GetSensor())
+        State.SensorRange = Sensors->GetBeamRange();
+    for (int32 Index = 0; Index < FMath::Min(32, PilotShip.navlights.size()); ++Index)
+        if (const auto* Light = PilotShip.navlights[Index]; Light && Light->IsEnabled())
+            State.EnabledNavLights |= 1u << Index;
+    if (const auto* Visual = PilotShip.GetNativePresentation())
+        State.CarriedStoreMask = Visual->GetCarriedStoreMask();
     State.RespawnsRemaining = PilotShip.GetRespawnCount();
     if (const Drive* MainDrive = PilotShip.GetMainDrive())
         State.DrivePower = MainDrive->GetVisualPower();
@@ -207,10 +237,20 @@ FSSWReplicatedShipState ASSWSessionGameState::MakeShipState(const Ship& PilotShi
     }
     if (const Weapon* Primary = PilotShip.GetPrimary()) State.PrimaryAmmo = Primary->Ammo();
     if (const Weapon* Secondary = PilotShip.GetSecondary()) State.SecondaryAmmo = Secondary->Ammo();
+    if (const WeaponDesign* Primary = PilotShip.GetPrimaryDesign())
+    {
+        State.PrimaryRange = Primary->max_range;
+        State.PrimaryShotSpeed = Primary->speed;
+    }
+    if (const WeaponGroup* Missiles = PilotShip.GetSecondaryGroup(); Missiles && Missiles->IsMissile() && Missiles->Ammo() > 0)
+        if (const Weapon* Selected = Missiles->GetSelected())
+            State.bMissileLocked = Selected->Locked() != 0;
     if (const SimObject* Target = PilotShip.GetTarget()) State.TargetId = Target->GetObjID();
+    State.bAutoTracking = PilotShip.IsAutoTrackEngaged();
     State.Emcon = PilotShip.GetEMCON();
     State.bPlayerControlled = PilotShip.HasNetworkPilot();
     State.FlightPhase = static_cast<int32>(PilotShip.GetFlightPhase());
+    State.bAirborne = PilotShip.IsAirborne();
     if (const Ship* Carrier = PilotShip.GetCarrier()) State.CarrierId = Carrier->GetObjID();
     State.bLandingAssigned = PilotShip.GetInbound() != nullptr;
     State.ShotsFired = ShotCounts.FindRef(PilotShip.GetObjID());
@@ -389,7 +429,7 @@ void ASSWSessionLobbyController::ServerSendMissionChat_Implementation(
 {
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     const auto* Sender = GetPlayerState<APlayerState>();
-    if (!State || !Sender || !AcceptChat(Message)) return;
+    if (!State || !State->bMissionStartReady || !Sender || !AcceptChat(Message)) return;
 
     const Ship* Source = State->FindMissionShip(MissionShipId);
     if (!Source) return;
@@ -421,6 +461,247 @@ void ASSWSessionLobbyController::ReceiveMissionChat_Implementation(
 {
     if (PrivateChatHistory.Num() >= 32) PrivateChatHistory.RemoveAt(0);
     PrivateChatHistory.Add(Message);
+    RefreshMissionChat();
+}
+
+void ASSWSessionLobbyController::ReceivePilotDeparture_Implementation(const FString& Message)
+{
+    const double Now = FPlatformTime::Seconds();
+    DepartureNotices.RemoveAll([Now](const auto& Notice) { return Notice.Key <= Now; });
+    if (DepartureNotices.Num() >= 4) DepartureNotices.RemoveAt(0);
+    DepartureNotices.Emplace(Now + 6.0, Message);
+    ReceiveMissionChat_Implementation(ESSWChatChannel::Broadcast,
+        {TEXT("System"), Message, ESSWChatChannel::Broadcast});
+}
+
+namespace
+{
+    const TCHAR* MissionChatChannelLabel(ESSWChatChannel Channel)
+    {
+        switch (Channel)
+        {
+        case ESSWChatChannel::Team: return TEXT("Team");
+        case ESSWChatChannel::Wing: return TEXT("Wing");
+        case ESSWChatChannel::Direct: return TEXT("Direct");
+        default: return TEXT("All");
+        }
+    }
+}
+
+void ASSWSessionLobbyController::OpenMissionChat()
+{
+    auto* Viewport = GetWorld()->GetGameViewport();
+    if (!Viewport || !FlightCamera || MissionChatPanel) return;
+
+    auto Channels = SNew(SHorizontalBox);
+    for (const auto Channel : {ESSWChatChannel::Broadcast, ESSWChatChannel::Team, ESSWChatChannel::Wing, ESSWChatChannel::Direct})
+    {
+        Channels->AddSlot().AutoWidth().Padding(0, 0, 4, 0)
+        [
+            SNew(SButton)
+            .Text(FText::FromString(MissionChatChannelLabel(Channel)))
+            .OnClicked_Lambda([this, Channel]
+            {
+                MissionChatChannel = Channel;
+                return FReply::Handled().SetUserFocus(MissionChatEntry.ToSharedRef());
+            })
+        ];
+    }
+    Channels->AddSlot().HAlign(HAlign_Right)
+    [
+        SNew(SButton).Text(FText::FromString(TEXT("Close")))
+        .OnClicked_Lambda([this] { CloseMissionChat(); return FReply::Handled(); })
+    ];
+
+    auto Taunts = SNew(SVerticalBox);
+    const auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if (Players)
+    {
+        const auto& Macros = Players->GetPlayerInfo().ChatMacros;
+        for (int32 Index = 0; Index < Macros.Num(); ++Index)
+        {
+            if (Macros[Index].TrimStartAndEnd().IsEmpty()) continue;
+            Taunts->AddSlot().AutoHeight().Padding(0, 1)
+            [
+                SNew(SButton)
+                .Text(FText::FromString(FString::Printf(TEXT("%d. %s"), Index, *Macros[Index])))
+                .OnClicked_Lambda([this, Message = Macros[Index]]
+                {
+                    SubmitMissionChat(Message);
+                    return FReply::Handled();
+                })
+            ];
+        }
+    }
+    if (!Taunts->NumSlots())
+        Taunts->AddSlot().AutoHeight()[SNew(STextBlock).Text(FText::FromString(TEXT("Set chat macros in the Pilot Logbook.")))];
+
+    MissionChatPanel = SNew(SOverlay)
+        + SOverlay::Slot().HAlign(HAlign_Right).VAlign(VAlign_Top).Padding(0, 24, 16, 0)
+        [
+            SNew(SBox).WidthOverride(360)
+            [
+                SNew(SBorder).BorderBackgroundColor(FLinearColor(.025f, .07f, .11f, .95f)).Padding(12)
+                [
+                    SNew(SVerticalBox)
+                    + SVerticalBox::Slot().AutoHeight()[SNew(STextBlock).Text(FText::FromString(TEXT("RADIO")))]
+                    + SVerticalBox::Slot().AutoHeight().Padding(0, 8)[Channels]
+                    + SVerticalBox::Slot().AutoHeight()[SNew(SBox).HeightOverride(116)[SAssignNew(MissionChatLog, SScrollBox)]]
+                    + SVerticalBox::Slot().AutoHeight().Padding(0, 8)
+                    [
+                        SAssignNew(MissionChatEntry, SEditableTextBox)
+                        .HintText_Lambda([this]
+                        {
+                            return FText::FromString(FString::Printf(TEXT("Message to %s"), MissionChatChannelLabel(MissionChatChannel)));
+                        })
+                        .OnTextCommitted_Lambda([this](const FText& Text, ETextCommit::Type Commit)
+                        {
+                            if (Commit == ETextCommit::OnEnter) SubmitMissionChat(Text.ToString());
+                            else if (Commit == ETextCommit::OnCleared && MissionChatPanel) OpenResignDialog();
+                        })
+                    ]
+                    + SVerticalBox::Slot().AutoHeight()[SNew(STextBlock).Text(FText::FromString(TEXT("TAUNTS")))]
+                    + SVerticalBox::Slot().AutoHeight()[SNew(SBox).MaxDesiredHeight(128)[SNew(SScrollBox) + SScrollBox::Slot()[Taunts]]]
+                ]
+            ]
+        ];
+    Viewport->AddViewportWidgetContent(MissionChatPanel.ToSharedRef(), 110);
+    RefreshMissionChat();
+    bPrimaryPressed = false;
+    PendingTranslation = FVector::ZeroVector;
+    FInputModeUIOnly Mode;
+    Mode.SetWidgetToFocus(MissionChatEntry);
+    SetInputMode(Mode);
+    bShowMouseCursor = true;
+}
+
+void ASSWSessionLobbyController::CloseMissionChat()
+{
+    if (!MissionChatPanel) return;
+    auto Panel = MoveTemp(MissionChatPanel);
+    if (auto* Viewport = GetWorld()->GetGameViewport())
+        Viewport->RemoveViewportWidgetContent(Panel.ToSharedRef());
+    MissionChatEntry.Reset();
+    MissionChatLog.Reset();
+    SetInputMode(FInputModeGameOnly());
+    bShowMouseCursor = false;
+}
+
+void ASSWSessionLobbyController::OpenResignDialog()
+{
+    auto* Viewport = GetWorld()->GetGameViewport();
+    if (!Viewport || !FlightCamera || ResignDialog) return;
+
+    CloseMissionChat();
+    bPrimaryPressed = false;
+    PendingTranslation = FVector::ZeroVector;
+    auto* Sessions = GetGameInstance()->GetSubsystem<USSWSessionSubsystem>();
+    TSharedPtr<SButton> Cancel;
+    auto Status = SNew(STextBlock).AutoWrapText(true);
+    const FText Prompt = GetNetMode() == NM_ListenServer
+        ? NSLOCTEXT("SSW.Multiplayer", "ResignHostPrompt", "Resigning as host ends the match for all pilots.")
+        : NSLOCTEXT("SSW.Multiplayer", "ResignPrompt", "Leave the current match?");
+
+    ResignDialog = SNew(SBorder)
+        .BorderBackgroundColor(FLinearColor(0.01f, 0.02f, 0.035f, 0.65f))
+        .HAlign(HAlign_Center).VAlign(VAlign_Center)
+        [
+            SNew(SBox).WidthOverride(440)
+            [
+                SNew(SBorder).Padding(24).BorderBackgroundColor(FLinearColor(0.06f, 0.13f, 0.19f))
+                [
+                    SNew(SVerticalBox)
+                    + SVerticalBox::Slot().AutoHeight()
+                    [
+                        SNew(STextBlock).Font(MissionUIStyle::GetHeaderFont(28))
+                        .Text(NSLOCTEXT("SSW.Multiplayer", "ResignTitle", "RESIGN GAME"))
+                    ]
+                    + SVerticalBox::Slot().AutoHeight().Padding(0, 12)
+                    [SNew(STextBlock).AutoWrapText(true).Text(Prompt)]
+                    + SVerticalBox::Slot().AutoHeight()
+                    [Status]
+                    + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Right).Padding(0, 12, 0, 0)
+                    [
+                        SNew(SHorizontalBox)
+                        + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 8, 0)
+                        [
+                            SAssignNew(Cancel, SButton)
+                            .Text(NSLOCTEXT("SSW.Multiplayer", "ResignCancel", "Cancel"))
+                            .OnClicked_Lambda([this] { CloseResignDialog(); return FReply::Handled(); })
+                            .IsEnabled_Lambda([Sessions] { return !Sessions || !Sessions->IsBusy(); })
+                        ]
+                        + SHorizontalBox::Slot().AutoWidth()
+                        [
+                            SNew(SButton)
+                            .Text(NSLOCTEXT("SSW.Multiplayer", "ResignConfirm", "Resign"))
+                            .IsEnabled_Lambda([Sessions] { return Sessions && !Sessions->IsBusy(); })
+                            .OnClicked_Lambda([Sessions, Status]
+                            {
+                                if (Sessions->LeaveSession())
+                                    Status->SetText(TAttribute<FText>::CreateLambda([Sessions]
+                                    {
+                                        return FText::FromString(Sessions->Status);
+                                    }));
+                                else
+                                    Status->SetText(FText::FromString(Sessions->Status));
+                                return FReply::Handled();
+                            })
+                        ]
+                    ]
+                ]
+            ]
+        ];
+    Viewport->AddViewportWidgetContent(ResignDialog.ToSharedRef(), 120);
+    FInputModeUIOnly Mode;
+    Mode.SetWidgetToFocus(Cancel);
+    SetInputMode(Mode);
+    bShowMouseCursor = true;
+}
+
+void ASSWSessionLobbyController::CloseResignDialog()
+{
+    if (!ResignDialog) return;
+    auto Dialog = MoveTemp(ResignDialog);
+    if (auto* Viewport = GetWorld()->GetGameViewport())
+        Viewport->RemoveViewportWidgetContent(Dialog.ToSharedRef());
+    SetInputMode(FInputModeGameOnly());
+    bShowMouseCursor = false;
+}
+
+void ASSWSessionLobbyController::RefreshMissionChat()
+{
+    if (!MissionChatLog) return;
+    MissionChatLog->ClearChildren();
+    for (const auto& Message : PrivateChatHistory)
+        MissionChatLog->AddSlot()
+        [
+            SNew(STextBlock).AutoWrapText(true).Text(FText::FromString(FString::Printf(
+                TEXT("[%s] %s: %s"), MissionChatChannelLabel(Message.Channel), *Message.Sender, *Message.Text)))
+        ];
+    MissionChatLog->ScrollToEnd();
+}
+
+void ASSWSessionLobbyController::SubmitMissionChat(const FString& Message)
+{
+    if (Message.TrimStartAndEnd().IsEmpty()) return;
+    const auto* Fighter = GetAssignedShipState();
+    const int64 Target = Fighter ? Fighter->TargetId : 0;
+    const auto* Contacts = GetFlightContacts();
+    if (MissionChatChannel == ESSWChatChannel::Direct && (!Target || !Contacts ||
+        !Contacts->ContainsByPredicate([Target](const FSSWReplicatedShipState& Contact)
+        {
+            return Contact.ObjectId == Target && Contact.bPlayerControlled && !Contact.bDestroyed && !Contact.bRetired;
+        })))
+    {
+        if (MissionChatEntry) MissionChatEntry->SetError(FText::FromString(TEXT("Lock a pilot to send a direct message.")));
+        return;
+    }
+    SendMissionChat(MissionChatChannel, Message, Target);
+    if (MissionChatEntry)
+    {
+        MissionChatEntry->SetError(FText::GetEmpty());
+        MissionChatEntry->SetText(FText::GetEmpty());
+    }
 }
 
 void ASSWSessionPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -671,6 +952,21 @@ bool ASSWSessionLobbyGameMode::LaunchLobbyMission(ASSWSessionGameState& State)
     LobbyMission = MoveTemp(Selected);
     if (GetNetMode() == NM_ListenServer)
     {
+        const auto* Orbit = MissionRegion->GetOrbitalRegion();
+        const bool bHawkMatch = Scenario->MissionName.Equals(TEXT("Hawk Match"), ESearchCase::IgnoreCase);
+        const auto* Planet = Orbit ? Orbit->Primary() : nullptr;
+        if (bHawkMatch && Planet)
+        {
+            const FVector PlanetCenter = OtherHand(Planet->Location() - MissionRegion->GetLocation());
+            for (int32 Index = 0; Index < Fighters.Num(); ++Index)
+            {
+                Ship& Fighter = *Fighters[Index];
+                const FVector Position = Fighter.GetLocation();
+                const double HeightOffset = 500.0 * (Index - (Fighters.Num() - 1) * 0.5);
+                Fighter.MoveTo(Position + (Position - PlanetCenter).GetSafeNormal() * HeightOffset);
+                Fighter.LookAt(PlanetCenter);
+            }
+        }
         State.ArenaSector = Scenario->MissionRegion;
         State.ArenaVisualCenter = Runtime->GetVisualLocationForRegion(MissionRegion, FVector::ZeroVector);
         State.ArenaOrbitalOrigin = MissionRegion->GetLocation();
@@ -681,9 +977,6 @@ bool ASSWSessionLobbyGameMode::LaunchLobbyMission(ASSWSessionGameState& State)
         for (int32 Index = 0; Index < Pilots.Num(); ++Index)
         {
             Ship& Fighter = *Fighters[Index];
-            if (Scenario->MissionName.Equals(TEXT("Hawk Match"), ESearchCase::IgnoreCase))
-                if (const auto* Orbit = MissionRegion->GetOrbitalRegion(); Orbit && Orbit->Primary())
-                    Fighter.LookAt(OtherHand(Orbit->Primary()->Location() - MissionRegion->GetLocation()));
             FPilotSpawn& Spawn = PilotSpawns.Add(Pilots[Index]);
             Spawn.Name = UTF8_TO_TCHAR(Fighter.GetName());
             Spawn.Registry = UTF8_TO_TCHAR(Fighter.Registry());
@@ -795,7 +1088,7 @@ void ASSWSessionLobbyController::GetLifetimeReplicatedProps(TArray<FLifetimeProp
 }
 
 void ASSWSessionLobbyController::ServerFlightInput_Implementation(FVector Rotation, FVector Translation,
-    float Throttle, bool bFirePrimary, bool bFireSecondary)
+    float Throttle, bool bAugmenter, bool bFirePrimary)
 {
     const double Now = FPlatformTime::Seconds();
     if (Rotation.ContainsNaN() || Translation.ContainsNaN() ||
@@ -803,17 +1096,177 @@ void ASSWSessionLobbyController::ServerFlightInput_Implementation(FVector Rotati
 
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     Ship* Fighter = State && State->bMissionStartReady ? State->FindMissionShip(MissionShipId) : nullptr;
-    if (!Fighter) return;
+    if (!Fighter || Fighter->IsDead() || Fighter->IsDying()) return;
 
     LastFlightInput = Now;
-    Fighter->SetManualThrottle(FMath::Clamp(Throttle, 0.0f, 100.0f));
-    for (int32 Axis = 0; Axis < 3; ++Axis)
+    if (!Fighter->IsAutoTrackEngaged())
     {
-        Fighter->SetManualRotationAxis(Axis, FMath::Clamp(Rotation[Axis], -1.0, 1.0));
-        Fighter->SetManualTranslationAxis(Axis, Translation[Axis]);
+        Fighter->SetManualThrottle(FMath::Clamp(Throttle, 0.0f, 100.0f));
+        Fighter->SetManualAugmenter(bAugmenter);
+        for (int32 Axis = 0; Axis < 3; ++Axis)
+        {
+            Fighter->SetManualRotationAxis(Axis, FMath::Clamp(Rotation[Axis], -1.0, 1.0));
+            Fighter->SetManualTranslationAxis(Axis, Translation[Axis]);
+        }
     }
     if (bFirePrimary) Fighter->FirePrimary();
-    if (bFireSecondary) Fighter->FireSecondary();
+}
+
+void ASSWSessionLobbyController::ServerFireSecondary_Implementation()
+{
+    const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
+    Ship* Fighter = State && State->bMissionStartReady ? State->FindMissionShip(MissionShipId) : nullptr;
+    if (Fighter && !Fighter->IsDead() && !Fighter->IsDying()) Fighter->FireSecondary();
+}
+
+void ASSWSessionLobbyController::BindFlightInputs()
+{
+    auto* LocalPlayer = GetLocalPlayer();
+    auto* Input = LocalPlayer ? LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>() : nullptr;
+    if (!Input || FlightInputComponent) return;
+
+    FlightInputComponent = NewObject<UEnhancedInputComponent>(this);
+    FlightInputComponent->RegisterComponent();
+    FlightInputComponent->Priority = 1000;
+    PushInputComponent(FlightInputComponent);
+    for (const TCHAR* Path : {TEXT("/Game/Input/IMC_FighterHUD.IMC_FighterHUD"), TEXT("/Game/Input/IMC_Game.IMC_Game")})
+    {
+        auto* Source = LoadObject<UInputMappingContext>(nullptr, Path);
+        auto* Context = StarshatterInputBindings::RuntimeContext(Source, this);
+        if (!Context) continue;
+        for (int32 Index = 0; Index < Context->GetMappings().Num(); ++Index)
+            StarshatterInputBindings::ConfigureAugmenterHold(Context->GetMapping(Index), Context);
+        FlightInputContexts.Add(Context);
+        Input->AddMappingContext(Context, 1000);
+    }
+
+    auto* RadioContext = NewObject<UInputMappingContext>(this);
+    for (const auto& Context : FlightInputContexts)
+        for (const auto& Mapping : Context->GetMappings())
+            if (Mapping.Action && Mapping.Action->GetFName() == TEXT("IA_RadioMenu"))
+                RadioContext->MapKey(Mapping.Action, Mapping.Key) = Mapping;
+    auto* ZoomAction = NewObject<UInputAction>(RadioContext, TEXT("SSW_TargetZoom"), RF_Transient);
+    ZoomAction->ValueType = EInputActionValueType::Axis1D;
+    RadioContext->MapKey(ZoomAction, EKeys::MouseWheelAxis);
+    StarshatterInputBindings::RegisterContext(RadioContext);
+    FlightInputContexts.Insert(RadioContext, 0);
+    Input->AddMappingContext(RadioContext, 1105);
+
+    auto* TrackingContext = NewObject<UInputMappingContext>(this);
+    StarshatterInputBindings::MapTargetTracking(TrackingContext);
+    StarshatterInputBindings::RegisterContext(TrackingContext);
+    FlightInputContexts.Add(TrackingContext);
+    Input->AddMappingContext(TrackingContext, 1000);
+
+    for (const FName Name : {FName(TEXT("IA_Pitch")), FName(TEXT("IA_Yaw")), FName(TEXT("IA_Roll")),
+        FName(TEXT("SSW_Strafe")), FName(TEXT("SSW_ForwardThrust")), FName(TEXT("SSW_VerticalThrust")),
+        FName(TEXT("IA_Augmenter")), FName(TEXT("IA_Throttle")), FName(TEXT("IA_ThrottleFull")),
+        FName(TEXT("IA_ThrottleZero")), FName(TEXT("IA_FirePrimary")), FName(TEXT("IA_FireSecondary")),
+        FName(TEXT("IA_NextTarget")), FName(TEXT("IA_PreviousTarget")), FName(TEXT("IA_TargetNearest")),
+        FName(TEXT("IA_TargetHostile")), FName(TEXT("IA_DropWeaponTarget")), FName(TEXT("SSW_TargetTracking")),
+        FName(TEXT("IA_RadioMenu")), FName(TEXT("SSW_TargetZoom")), FName(TEXT("IA_MFDLeftCycle")),
+        FName(TEXT("IA_MFDRightCycle")), FName(TEXT("IA_SensorMode")), FName(TEXT("IA_SensorGroundMode")),
+        FName(TEXT("IA_SensorRangeUp")), FName(TEXT("IA_SensorRangeDown")),
+        FName(TEXT("IA_EMCONUp")), FName(TEXT("IA_EMCONDown"))})
+    {
+        for (const auto& Context : FlightInputContexts)
+            if (auto* Action = StarshatterInputBindings::FindAction(Context, Name))
+            {
+                FlightActions.Add(Name, Action);
+                const bool bRange = Name == TEXT("IA_SensorRangeUp") || Name == TEXT("IA_SensorRangeDown");
+                const bool bContinuous = bRange || Name == TEXT("IA_FirePrimary") || Name == TEXT("SSW_TargetZoom");
+                if (Action->ValueType == EInputActionValueType::Boolean || Name == TEXT("IA_Throttle") || bContinuous)
+                    FlightInputComponent->BindAction(Action, bContinuous ? ETriggerEvent::Triggered : ETriggerEvent::Started,
+                        this, &ThisClass::OnFlightButton, Name);
+                if (bRange)
+                {
+                    FlightInputComponent->BindAction(Action, ETriggerEvent::Completed, this, &ThisClass::ReleaseSensorRange, Name);
+                    FlightInputComponent->BindAction(Action, ETriggerEvent::Canceled, this, &ThisClass::ReleaseSensorRange, Name);
+                }
+                break;
+            }
+    }
+}
+
+bool ASSWSessionLobbyController::InputKey(const FInputKeyEventArgs& Params)
+{
+    if (Params.Key == EKeys::Escape && FlightCamera && IsLocalController())
+    {
+        if (Params.Event == IE_Pressed) OpenResignDialog();
+        return true;
+    }
+    return Super::InputKey(Params);
+}
+
+void ASSWSessionLobbyController::OnFlightButton(const FInputActionValue& Value, FName Action)
+{
+    if (Action == TEXT("IA_Throttle"))
+    {
+        const float Axis = Value.Get<float>();
+        if (FMath::Abs(Axis) >= 0.1f)
+            FlightThrottle = FMath::Clamp(FlightThrottle + (Axis > 0.0f ? 5.0 : -5.0), 0.0, 100.0);
+    }
+    else if (Action == TEXT("IA_ThrottleFull")) FlightThrottle = 100.0;
+    else if (Action == TEXT("IA_ThrottleZero")) FlightThrottle = 0.0;
+    else if (Action == TEXT("IA_FirePrimary")) bPrimaryPressed = true;
+    else if (Action == TEXT("IA_FireSecondary")) ServerFireSecondary();
+    else if (Action == TEXT("IA_RadioMenu")) OpenMissionChat();
+    else if (Action == TEXT("SSW_TargetZoom"))
+    {
+        const double Wheel = FMath::Clamp(Value.Get<float>(), -10.0f, 10.0f);
+        ChaseZoom = FMath::Clamp(ChaseZoom * FMath::Pow(0.85, Wheel), 0.5, 3.0);
+    }
+    else if (Action == TEXT("IA_MFDLeftCycle") || Action == TEXT("IA_MFDRightCycle"))
+    {
+        if (FlightMiniHUD) FlightMiniHUD->CycleMFD(Action == TEXT("IA_MFDRightCycle") ? 1 : 0);
+    }
+    else if (Action == TEXT("IA_SensorRangeUp") || Action == TEXT("IA_SensorRangeDown"))
+    {
+        if (!HeldSensorRange.Contains(Action))
+        {
+            HeldSensorRange.Add(Action);
+            ServerSensorCommand(Action);
+        }
+    }
+    else if (Action == TEXT("IA_SensorMode"))
+    {
+        if (!StarshatterInputBindings::IsModifierDown(this, TEXT("Shift")) &&
+            !StarshatterInputBindings::IsModifierDown(this, TEXT("Control")))
+            ServerSensorCommand(Action);
+    }
+    else if (Action == TEXT("IA_SensorGroundMode") || Action == TEXT("IA_EMCONUp") || Action == TEXT("IA_EMCONDown"))
+        ServerSensorCommand(Action);
+    else if (Action != TEXT("IA_Augmenter")) ServerTargetCommand(Action);
+}
+
+void ASSWSessionLobbyController::ReleaseSensorRange(const FInputActionValue&, FName Action)
+{
+    HeldSensorRange.Remove(Action);
+}
+
+void ASSWSessionLobbyController::ServerSensorCommand_Implementation(FName Action)
+{
+    const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
+    Ship* Fighter = State && State->bMissionStartReady ? State->FindMissionShip(MissionShipId) : nullptr;
+    if (!Fighter) return;
+    if (Action == TEXT("IA_EMCONUp")) Fighter->SetEMCON(Fighter->GetEMCON() + 1);
+    else if (Action == TEXT("IA_EMCONDown")) Fighter->SetEMCON(Fighter->GetEMCON() - 1);
+    else if (auto* Sensors = Fighter->GetSensor())
+    {
+        if (Action == TEXT("IA_SensorRangeUp")) Sensors->IncreaseRange();
+        else if (Action == TEXT("IA_SensorRangeDown")) Sensors->DecreaseRange();
+        else if (Action == TEXT("IA_SensorGroundMode"))
+        {
+            if (Fighter->IsAirborne() && Sensors->GetMode() < ESensorMode::PST) Fighter->SetSensorMode(ESensorMode::GM);
+        }
+        else if (Action == TEXT("IA_SensorMode"))
+        {
+            const auto Mode = Sensors->GetMode();
+            if (Mode >= ESensorMode::PST) Fighter->DropTarget();
+            else Fighter->SetSensorMode(Mode == ESensorMode::GM ? ESensorMode::PAS :
+                static_cast<ESensorMode>(static_cast<int32>(Mode) + 1));
+        }
+    }
 }
 
 void ASSWSessionLobbyController::PlayerTick(float DeltaTime)
@@ -860,42 +1313,46 @@ void ASSWSessionLobbyController::PlayerTick(float DeltaTime)
     {
         LastControlledShipId = MissionShipId;
         FlightThrottle = 0.0;
-        bPrimaryPressed = bSecondaryPressed = false;
+        PendingTranslation = FVector::ZeroVector;
+        bPrimaryPressed = false;
     }
     UpdateFlightView(*State, *Fighter, DeltaTime);
+    if (MissionChatPanel || ResignDialog) return;
     if (Fighter->bDestroyed || Fighter->bRetired) return;
 
-    const bool bIncrease = IsInputKeyDown(EKeys::A);
-    const bool bDecrease = IsInputKeyDown(EKeys::Z);
-    const bool bIncreasePressed = WasInputKeyJustPressed(EKeys::A);
-    const bool bDecreasePressed = WasInputKeyJustPressed(EKeys::Z);
-    const int32 ThrottleInput = int32(bIncrease || bIncreasePressed) - int32(bDecrease || bDecreasePressed);
-    const bool bShift = IsInputKeyDown(EKeys::LeftShift) || IsInputKeyDown(EKeys::RightShift) ||
-        WasInputKeyJustPressed(EKeys::LeftShift) || WasInputKeyJustPressed(EKeys::RightShift);
-    if (ThrottleInput && bShift)
-        FlightThrottle = ThrottleInput > 0 ? 100.0 : 0.0;
-    else
-        FlightThrottle = FMath::Clamp(FlightThrottle + 50.0 * DeltaTime * ThrottleInput, 0.0, 100.0);
+    if (const auto* Radio = FlightActions.Find(TEXT("IA_RadioMenu"));
+        Radio && *Radio && (*Radio)->Triggers.IsEmpty() && (*Radio)->Modifiers.IsEmpty())
+        for (const auto& Mapping : FlightInputContexts[0]->GetMappings())
+            if (Mapping.Action == *Radio && Mapping.Triggers.IsEmpty() && Mapping.Modifiers.IsEmpty() &&
+                WasInputKeyJustPressed(Mapping.Key))
+            {
+                OpenMissionChat();
+                return;
+            }
 
-    bPrimaryPressed |= WasInputKeyJustPressed(EKeys::LeftControl);
-    bSecondaryPressed |= WasInputKeyJustPressed(EKeys::SpaceBar);
-    if (WasInputKeyJustPressed(EKeys::T)) ServerCycleCombatTarget();
+    const auto* Input = Cast<UEnhancedPlayerInput>(PlayerInput);
+    const auto Read = [this, Input](FName Name)
+    {
+        const auto* Action = FlightActions.Find(Name);
+        return Input && Action && *Action ? Input->GetActionValue(Action->Get()) : FInputActionValue();
+    };
+    const FVector Translation(
+        Read(TEXT("SSW_Strafe")).Get<float>(),
+        Read(TEXT("SSW_ForwardThrust")).Get<float>(),
+        Read(TEXT("SSW_VerticalThrust")).Get<float>());
+    for (int32 Axis = 0; Axis < 3; ++Axis)
+        if (Translation[Axis] != 0.0) PendingTranslation[Axis] = Translation[Axis];
     if (Now < NextFlightInput) return;
 
     NextFlightInput = Now + 0.05;
     const FVector Rotation(
-        int32(IsInputKeyDown(EKeys::Down)) - int32(IsInputKeyDown(EKeys::Up)),
-        int32(IsInputKeyDown(EKeys::Right)) - int32(IsInputKeyDown(EKeys::Left)),
-        int32(IsInputKeyDown(EKeys::NumPadNine)) - int32(IsInputKeyDown(EKeys::NumPadSeven)));
-    const FVector Translation(
-        int32(IsInputKeyDown(EKeys::NumPadSix)) - int32(IsInputKeyDown(EKeys::NumPadFour)),
-        int32(IsInputKeyDown(EKeys::NumPadEight)) - int32(IsInputKeyDown(EKeys::NumPadTwo)),
-        int32(IsInputKeyDown(EKeys::NumPadFive)) - int32(IsInputKeyDown(EKeys::NumPadZero)));
-    ServerFlightInput(Rotation, Translation, FlightThrottle,
-        bPrimaryPressed || IsInputKeyDown(EKeys::LeftControl),
-        bSecondaryPressed || IsInputKeyDown(EKeys::SpaceBar));
+        Read(TEXT("IA_Pitch")).Get<float>(), Read(TEXT("IA_Yaw")).Get<float>(), Read(TEXT("IA_Roll")).Get<float>());
+    const bool bAugmenter = Read(TEXT("IA_Augmenter")).Get<bool>();
+    if (bAugmenter) FlightThrottle = 100.0;
+    ServerFlightInput(Rotation, PendingTranslation, FlightThrottle, bAugmenter,
+        bPrimaryPressed);
+    PendingTranslation = FVector::ZeroVector;
     bPrimaryPressed = false;
-    bSecondaryPressed = false;
 }
 
 void ASSWSessionLobbyController::UpdateFlightView(
@@ -911,17 +1368,23 @@ void ASSWSessionLobbyController::UpdateFlightView(
         Params.Owner = this;
         FlightCamera = GetWorld()->SpawnActor<ACameraActor>(Params);
         if (!FlightCamera) return;
+        FlightCamera->GetCameraComponent()->SetFieldOfView(95.0f);
         if (LobbyDialog) LobbyDialog->RemoveFromParent();
         bShowMouseCursor = false;
         SetInputMode(FInputModeGameOnly());
+        BindFlightInputs();
         FlightCamera->SetActorLocation(Fighter.VisualPosition);
         auto* Fill = NewObject<UPointLightComponent>(FlightCamera);
         FlightCamera->AddInstanceComponent(Fill);
         Fill->SetupAttachment(FlightCamera->GetRootComponent());
         Fill->SetMobility(EComponentMobility::Movable);
+        Fill->SetRelativeLocation(FVector(0.0, 26.0, 55.0));
+        Fill->SetLightingChannels(false, true, false);
         Fill->SetAttenuationRadius(420.0f);
-        Fill->SetIntensity(1600.0f);
-        Fill->SetInverseExposureBlend(0.65f);
+        Fill->SetUseInverseSquaredFalloff(false);
+        Fill->SetLightFalloffExponent(2.0f);
+        Fill->SetIntensity(3.0f);
+        Fill->SetInverseExposureBlend(0.85f);
         Fill->SetCastShadows(false);
         Fill->RegisterComponent();
         SetViewTarget(FlightCamera);
@@ -967,7 +1430,7 @@ void ASSWSessionLobbyController::UpdateFlightView(
     const FVector Up = ToUE(Fighter.Up).GetSafeNormal();
     if (ClientSceneBuilder.IsValid() && Fighter.Region == State.ArenaSector)
         ClientSceneBuilder->UpdateMissionSpace(State.ArenaOrbitalOrigin, ToUE(Fighter.Position));
-    const FVector Eye = Fighter.VisualPosition - Forward * 130.0 + Up * 32.0;
+    const FVector Eye = Fighter.VisualPosition - Forward * (130.0 * ChaseZoom) + Up * 32.0;
     const FRotator View = FRotationMatrix::MakeFromXZ(Forward, Up).Rotator();
     const FVector CameraPosition = FlightCamera->GetActorLocation();
     const bool bSnapCamera = FVector::DistSquared(CameraPosition, Eye) > SnapDistanceSquared;
@@ -995,14 +1458,16 @@ void ASSWSessionLobbyController::UpdateFlightView(
             if (!Actor) continue;
             Actor->SetActorEnableCollision(false);
             if (auto* Visual = Cast<AFighterActor>(Actor.Get())) Visual->UseNetworkChaseView();
-            Actor->InitializeSnapshotPropulsion(ShipDesign::Get(TCHAR_TO_ANSI(*ShipState.Design)));
+            Actor->InitializeSnapshotPropulsion(ShipDesign::GetDesignName(TCHAR_TO_UTF8(*ShipState.Design)));
         }
         const FVector CurrentPosition = Actor->GetActorLocation();
         const bool bSnapShip = FVector::DistSquared(CurrentPosition, ShipState.VisualPosition) > SnapDistanceSquared;
         Actor->SetActorLocationAndRotation(
             bSnapShip ? ShipState.VisualPosition : FMath::Lerp(CurrentPosition, ShipState.VisualPosition, Blend),
             bSnapShip ? Rotation.Quaternion() : FQuat::Slerp(Actor->GetActorQuat(), Rotation.Quaternion(), Blend));
-        Actor->UpdateSnapshotPropulsion(DeltaTime, ShipState.DrivePower, ShipState.Throttle, ShipState.ThrusterBurns);
+        Actor->UpdateSnapshotPropulsion(DeltaTime, ShipState.DrivePower, ShipState.Throttle,
+            ShipState.ThrusterBurns, ShipState.EnabledNavLights);
+        Actor->UpdateSnapshotStores(ShipState.CarriedStoreMask);
     }
     for (auto It = RemoteFighters.CreateIterator(); It; ++It)
     {
@@ -1014,6 +1479,12 @@ void ASSWSessionLobbyController::UpdateFlightView(
 
 void ASSWSessionLobbyController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+    CloseResignDialog();
+    CloseMissionChat();
+    if (FlightInputComponent) PopInputComponent(FlightInputComponent);
+    if (auto* LocalPlayer = GetLocalPlayer())
+        if (auto* Input = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+            for (const auto& Context : FlightInputContexts) Input->RemoveMappingContext(Context);
     if (HasAuthority()) AssignMissionShip(0);
     if (FlightMiniHUD.IsValid())
     {
@@ -1108,36 +1579,46 @@ void ASSWSessionGameState::OnRep_OrbitalPositions()
     }
 }
 
-void ASSWSessionLobbyController::ServerCycleCombatTarget_Implementation()
+void ASSWSessionLobbyController::ServerTargetCommand_Implementation(FName Action)
 {
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     Ship* Fighter = State && State->bMissionStartReady ? State->FindMissionShip(MissionShipId) : nullptr;
-    SimRegion* Region = Fighter ? Fighter->GetRegion() : nullptr;
-    if (!Region) return;
+    if (!Fighter || Fighter->IsDead() || Fighter->IsDying()) return;
 
-    Ship* First = nullptr;
-    Ship* Next = nullptr;
-    const SimObject* Current = Fighter->GetTarget();
-    bool bPassedCurrent = Current == nullptr;
+    if (Action == TEXT("SSW_TargetTracking"))
+    {
+        Fighter->SetAutoTrack(!Fighter->IsAutoTrackEngaged());
+        return;
+    }
+    if (Action == TEXT("IA_DropWeaponTarget"))
+    {
+        Fighter->DropTarget();
+        return;
+    }
+    if (Action == TEXT("IA_TargetNearest") || Action == TEXT("IA_TargetHostile"))
+    {
+        Fighter->LockTarget(ESimObject::SHIP, true, Action == TEXT("IA_TargetHostile"));
+        return;
+    }
+    const bool bPrevious = Action == TEXT("IA_PreviousTarget");
+    SimRegion* Region = Fighter->GetRegion();
+    if (!Region || (!bPrevious && Action != TEXT("IA_NextTarget"))) return;
+
+    TArray<Ship*> Candidates;
+    int32 CurrentIndex = INDEX_NONE;
     for (ListIter<Ship> Ships = Region->GetShips(); ++Ships;)
     {
         Ship* Candidate = Ships.value();
-        if (Candidate == Current)
-        {
-            bPassedCurrent = true;
-            continue;
-        }
         if (!Candidate || Candidate == Fighter || Candidate->IsDead() || Candidate->IsDying() ||
             Candidate->GetIFF() == Fighter->GetIFF() || Candidate->GetIFF() == 0) continue;
-        if (!First) First = Candidate;
-        if (bPassedCurrent)
-        {
-            Next = Candidate;
-            break;
-        }
+        if (Candidate == Fighter->GetTarget()) CurrentIndex = Candidates.Num();
+        Candidates.Add(Candidate);
     }
-    if (Next || First || (Current && Current->GetRegion() != Region))
-        Fighter->SetTarget(Next ? Next : First);
+    if (Candidates.IsEmpty()) return;
+    const int32 Offset = bPrevious ? -1 : 1;
+    const int32 NextIndex = CurrentIndex == INDEX_NONE ? (bPrevious ? Candidates.Num() - 1 : 0) :
+        (CurrentIndex + Offset + Candidates.Num()) % Candidates.Num();
+    Fighter->LockTarget(Candidates[NextIndex]);
 }
 
 void ASSWSessionFlightHUD::DrawHUD()
@@ -1163,8 +1644,22 @@ void ASSWSessionFlightHUD::DrawHUD()
         DrawText(Message, TextColor, (Canvas->ClipX - Width) * 0.5f,
             (Canvas->ClipY - Height) * 0.5f, nullptr, 2.0f);
     }
+    float NoticeY = Canvas->ClipY * 0.22f;
+    const double Now = FPlatformTime::Seconds();
+    for (const auto& Notice : Controller->GetDepartureNotices())
+    {
+        if (Notice.Key <= Now) continue;
+        float Width = 0.0f, Height = 0.0f;
+        GetTextSize(Notice.Value, Width, Height, nullptr, 1.15f);
+        const float NoticeX = (Canvas->ClipX - Width) * 0.5f;
+        DrawText(Notice.Value, FLinearColor::Black, NoticeX + 1.0f, NoticeY + 1.0f, nullptr, 1.15f);
+        DrawText(Notice.Value, TextColor, NoticeX, NoticeY, nullptr, 1.15f);
+        NoticeY += Height + 4.0f;
+    }
     if (!Fighter) return;
-    float Row = Canvas->ClipY - 125.0f;
+    const float PanelScale = FMath::Min(Canvas->ClipX / 1280.0f, Canvas->ClipY / 720.0f);
+    const float ScoreTop = Canvas->ClipY - 215.0f * PanelScale - 125.0f;
+    float Row = ScoreTop;
     for (const auto& Entry : State->MissionShips)
     {
         if (Entry.Region != Fighter->Region) continue;
@@ -1178,8 +1673,6 @@ void ASSWSessionFlightHUD::DrawHUD()
     }
 
     if (Fighter->bDestroyed || Fighter->bRetired) return;
-    DrawText(FString::Printf(TEXT("RESPAWNS %d"), Fighter->RespawnsRemaining),
-        TextColor, 24.0f, Canvas->ClipY - 145.0f);
     const float X = Canvas->ClipX * 0.5f;
     const float Y = Canvas->ClipY * 0.5f;
     DrawLine(X - 12.0f, Y, X + 12.0f, Y, TextColor);
@@ -1213,14 +1706,16 @@ void ASSWSessionFlightHUD::DrawHUD()
         }
 
         const FLinearColor Marker = Contact.ObjectId == Fighter->TargetId ? HitColor : TextColor;
-        constexpr float Radius = 8.0f;
+        const bool bLocked = Contact.ObjectId == Fighter->TargetId;
+        const float Radius = bLocked ? 13.0f : 8.0f;
         DrawLine(Point.X, Point.Y - Radius, Point.X + Radius, Point.Y, Marker);
         DrawLine(Point.X + Radius, Point.Y, Point.X, Point.Y + Radius, Marker);
         DrawLine(Point.X, Point.Y + Radius, Point.X - Radius, Point.Y, Marker);
         DrawLine(Point.X - Radius, Point.Y, Point.X, Point.Y - Radius, Marker);
         const double RangeKm = FVector::Dist(Contact.Position, Fighter->Position) / 1000.0;
         const float CaptionX = Point.X > X ? Point.X - 68.0f : Point.X + 13.0f;
-        DrawText(FString::Printf(TEXT("%s  %.3f km"), *Contact.Name, RangeKm),
+        const TCHAR* Tracking = bLocked ? (Fighter->bAutoTracking ? TEXT("  AUTO TRACK") : TEXT("  LOCKED")) : TEXT("");
+        DrawText(FString::Printf(TEXT("%s  %.3f km%s"), *Contact.Name, RangeKm, Tracking),
             Marker, CaptionX, Point.Y + 12.0f);
     }
 
@@ -1255,6 +1750,28 @@ void ASSWSessionLobbyGameMode::PostLogin(APlayerController* NewPlayer)
                 Pilot->AssignMissionShip(Fighter->GetObjID())) return;
         }
     }
+}
+
+void ASSWSessionLobbyGameMode::Logout(AController* Exiting)
+{
+    const auto* Pilot = Cast<ASSWSessionLobbyController>(Exiting);
+    const auto* PilotState = Pilot ? Pilot->GetPlayerState<APlayerState>() : nullptr;
+    if (PilotState && !GetWorld()->bIsTearingDown)
+    {
+        if (auto* State = GetGameState<ASSWSessionGameState>())
+        {
+            const FString Message = FString::Printf(TEXT("%s left the game."), *PilotState->GetPlayerName());
+            if (State->bMissionStartReady)
+            {
+                for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+                    if (auto* Remaining = Cast<ASSWSessionLobbyController>(It->Get()); Remaining && Remaining != Exiting)
+                        Remaining->ReceivePilotDeparture(Message);
+            }
+            else
+                State->AddChatMessage(TEXT("System"), Message);
+        }
+    }
+    Super::Logout(Exiting);
 }
 
 void ASSWSessionLobbyController::ServerSetPlatformPilotName_Implementation(const FString& DisplayName)
@@ -1312,7 +1829,23 @@ void ASSWSessionLobbyController::SetLobbySpaceView(const ASystemSceneBuilder& Bu
     const AActor* Illuminator = Body->ParentActor;
     const FVector TowardLight = Illuminator
         ? (Illuminator->GetActorLocation() - Target).GetSafeNormal() : FVector::BackwardVector;
-    const FVector Offset = (TowardLight * 4.0 + FVector::UpVector * 0.85) *
+    FVector ViewDirection = TowardLight;
+    if (Anchor.Equals(TEXT("Borova"), ESearchCase::IgnoreCase))
+    {
+        const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
+        const auto* Pilot = GetPlayerState<ASSWSessionPlayerState>();
+        int32 ViewIndex = 0;
+        if (State && Pilot)
+            for (const APlayerState* Entry : State->PlayerArray)
+                if (Entry && Entry->GetPlayerId() < Pilot->GetPlayerId()) ++ViewIndex;
+
+        // Fan the four lobby cameras across the sunlit side in stable pilot-ID order.
+        constexpr double ViewAngles[] = {-55.0, 55.0, -20.0, 20.0};
+        const FVector Axis = FVector::CrossProduct(TowardLight, FVector::RightVector).GetSafeNormal();
+        ViewDirection = TowardLight.RotateAngleAxis(ViewAngles[ViewIndex % UE_ARRAY_COUNT(ViewAngles)],
+            Axis.IsNearlyZero() ? FVector::UpVector : Axis);
+    }
+    const FVector Offset = (ViewDirection * 4.0 + FVector::UpVector * 0.85) *
         FMath::Max(100.0f, Body->VisualRadiusUnits);
     if (LobbyCamera)
     {
@@ -1336,4 +1869,10 @@ const FSSWReplicatedShipState* ASSWSessionLobbyController::GetAssignedShipState(
     {
         return Entry.ObjectId == MissionShipId;
     }) : nullptr;
+}
+
+const TArray<FSSWReplicatedShipState>* ASSWSessionLobbyController::GetFlightContacts() const
+{
+    const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
+    return State ? &State->MissionShips : nullptr;
 }

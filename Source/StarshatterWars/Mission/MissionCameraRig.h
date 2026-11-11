@@ -514,7 +514,7 @@ struct FMissionCameraRig
             CameraActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
         }
         CameraActor->SetActorLocationAndRotation(Eye, Rotation, false, nullptr, ETeleportType::TeleportPhysics);
-        const double Fov = (bWide ? 90.0 : 60.0) * (bInternal ? Zoom : 1.0);
+        const double Fov = bInternal ? (bWide ? 90.0 : 60.0) * Zoom : (bWide ? 95.0 : 65.0);
         CameraActor->GetCameraComponent()->SetFieldOfView(float(FMath::Clamp(Fov, 25.0, 110.0)));
         UpdateTacticalGrid(CameraActor, Player, Region, Center);
         if (PC->GetViewTarget() != CameraActor) PC->SetViewTarget(CameraActor);

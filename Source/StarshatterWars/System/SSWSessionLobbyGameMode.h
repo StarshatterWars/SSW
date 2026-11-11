@@ -14,7 +14,14 @@ class ULevelStreamingDynamic;
 class ACameraActor;
 class AShipActor;
 class ASystemSceneBuilder;
+class UEnhancedInputComponent;
+class UInputAction;
+class UInputMappingContext;
+struct FInputActionValue;
 class SFighterHUDDetails;
+class SEditableTextBox;
+class SScrollBox;
+class SWidget;
 class UMultiplayerDlg;
 class Orbital;
 class SimShot;
@@ -83,10 +90,17 @@ struct FSSWReplicatedShipState
     UPROPERTY(BlueprintReadOnly) float Throttle = 0;
     UPROPERTY() float DrivePower = 0;
     UPROPERTY() TArray<uint8> ThrusterBurns;
+    UPROPERTY() uint32 EnabledNavLights = 0;
+    UPROPERTY() uint64 CarriedStoreMask = 0;
+    UPROPERTY() float SensorRange = 1.0f;
     UPROPERTY() int32 RespawnsRemaining = 0;
     UPROPERTY(BlueprintReadOnly) int32 PrimaryAmmo = 0;
     UPROPERTY(BlueprintReadOnly) int32 SecondaryAmmo = 0;
+    UPROPERTY() float PrimaryRange = 0;
+    UPROPERTY() float PrimaryShotSpeed = 0;
+    UPROPERTY() bool bMissileLocked = false;
     UPROPERTY(BlueprintReadOnly) int64 TargetId = 0;
+    UPROPERTY(BlueprintReadOnly) bool bAutoTracking = false;
     UPROPERTY(BlueprintReadOnly) int32 Emcon = 0;
     UPROPERTY(BlueprintReadOnly) int32 ShotsFired = 0;
     UPROPERTY(BlueprintReadOnly) int32 DamageEvents = 0;
@@ -96,6 +110,7 @@ struct FSSWReplicatedShipState
     UPROPERTY(BlueprintReadOnly) TArray<FSSWReplicatedSystemState> Systems;
     UPROPERTY(BlueprintReadOnly) TArray<FSSWReplicatedNavPoint> FlightPlan;
     UPROPERTY(BlueprintReadOnly) int32 FlightPhase = 0;
+    UPROPERTY() bool bAirborne = false;
     UPROPERTY(BlueprintReadOnly) int64 CarrierId = 0;
     UPROPERTY(BlueprintReadOnly) bool bLandingAssigned = false;
 };
@@ -222,7 +237,9 @@ public:
     bool AssignMissionShip(int64 ObjectId);
     int64 GetMissionShipId() const { return MissionShipId; }
     double GetRespawnDeadline() const { return RespawnDeadline; }
+    const TArray<TPair<double, FString>>& GetDepartureNotices() const { return DepartureNotices; }
     const FSSWReplicatedShipState* GetAssignedShipState() const;
+    const TArray<FSSWReplicatedShipState>* GetFlightContacts() const;
 
     UFUNCTION(Server, Reliable, BlueprintCallable, Category="Multiplayer")
     void SetLobbyReady(bool bReady);
@@ -232,6 +249,7 @@ public:
 
 protected:
     virtual void BeginPlay() override;
+    virtual bool InputKey(const FInputKeyEventArgs& Params) override;
 
 private:
     UFUNCTION(Server, Reliable)
@@ -245,6 +263,11 @@ private:
 
     UFUNCTION(Client, Reliable)
     void ReceiveMissionChat(ESSWChatChannel Channel, const FSSWSessionChatMessage& Message);
+
+    UFUNCTION(Client, Reliable)
+    void ReceivePilotDeparture(const FString& Message);
+
+    TArray<TPair<double, FString>> DepartureNotices;
 
     bool AcceptChat(const FString& Message);
 
@@ -260,16 +283,42 @@ private:
     double LastFlightInput = 0.0;
     double NextFlightInput = 0.0;
     double FlightThrottle = 0.0;
+    FVector PendingTranslation = FVector::ZeroVector;
+    UPROPERTY(Transient) TObjectPtr<UEnhancedInputComponent> FlightInputComponent;
+    UPROPERTY(Transient) TArray<TObjectPtr<UInputMappingContext>> FlightInputContexts;
+    UPROPERTY(Transient) TMap<FName, TObjectPtr<UInputAction>> FlightActions;
+    void BindFlightInputs();
+    void OnFlightButton(const FInputActionValue& Value, FName Action);
+    void ReleaseSensorRange(const FInputActionValue& Value, FName Action);
+    TSet<FName> HeldSensorRange;
+    double ChaseZoom = 1.0;
+    void OpenMissionChat();
+    void CloseMissionChat();
+    void RefreshMissionChat();
+    void SubmitMissionChat(const FString& Message);
+    void OpenResignDialog();
+    void CloseResignDialog();
+    TSharedPtr<SWidget> ResignDialog;
+    TSharedPtr<SWidget> MissionChatPanel;
+    TSharedPtr<SEditableTextBox> MissionChatEntry;
+    TSharedPtr<SScrollBox> MissionChatLog;
+    ESSWChatChannel MissionChatChannel = ESSWChatChannel::Broadcast;
     int64 LastControlledShipId = 0;
 
     UFUNCTION(Server, Unreliable)
-    void ServerFlightInput(FVector Rotation, FVector Translation, float Throttle, bool bFirePrimary, bool bFireSecondary);
+    void ServerFlightInput(FVector Rotation, FVector Translation, float Throttle,
+        bool bAugmenter, bool bFirePrimary);
 
     UFUNCTION(Server, Reliable)
-    void ServerCycleCombatTarget();
+    void ServerFireSecondary();
+
+    UFUNCTION(Server, Reliable)
+    void ServerTargetCommand(FName Action);
+
+    UFUNCTION(Server, Reliable)
+    void ServerSensorCommand(FName Action);
 
     bool bPrimaryPressed = false;
-    bool bSecondaryPressed = false;
 
     UPROPERTY(Transient) TObjectPtr<UMultiplayerDlg> LobbyDialog;
     UPROPERTY(Transient) TObjectPtr<ACameraActor> FlightCamera;
@@ -297,6 +346,7 @@ class STARSHATTERWARS_API ASSWSessionLobbyGameMode:public AGameMode {
 public:
     ASSWSessionLobbyGameMode();
     virtual void PostLogin(APlayerController* NewPlayer) override;
+    virtual void Logout(AController* Exiting) override;
     int32 CountPendingArenaRespawns(Sim& Simulation, int32 Iff) const;
 
 protected:

@@ -20,6 +20,21 @@ namespace
     };
     TArray<FRuntimeBindings> RuntimeBindings;
 
+    void AddFlightTranslationMappings(UInputMappingContext* Context)
+    {
+        const auto AddAxis = [Context](const TCHAR* Name, const TCHAR* Label, FKey Positive, FKey Negative)
+        {
+            auto* Action = NewObject<UInputAction>(Context, Name, RF_Transient);
+            Action->ActionDescription = FText::FromString(Label);
+            Action->ValueType = EInputActionValueType::Axis1D;
+            Context->MapKey(Action, Positive);
+            Context->MapKey(Action, Negative).Modifiers.Add(NewObject<UInputModifierNegate>(Context));
+        };
+        AddAxis(TEXT("SSW_Strafe"), TEXT("Strafe"), EKeys::Period, EKeys::Comma);
+        AddAxis(TEXT("SSW_ForwardThrust"), TEXT("Forward / Reverse Thrusters"), EKeys::Home, EKeys::End);
+        AddAxis(TEXT("SSW_VerticalThrust"), TEXT("Vertical Thrusters"), EKeys::PageUp, EKeys::PageDown);
+    }
+
     FString Signature(const UObject* Object)
     {
         if (!Object) return TEXT("None");
@@ -67,6 +82,7 @@ UInputMappingContext* StarshatterInputBindings::SupplementalContext(UObject* Own
         Context->MapKey(Action,Key);
     };
     MapTargetTracking(Context);
+    AddFlightTranslationMappings(Context);
     MapTravelSpeed(Context, false);
     MapTravelSpeed(Context, true);
     Add(TEXT("SSW_TargetZoom"),TEXT("Target View Zoom"),EKeys::MouseWheelAxis,EInputActionValueType::Axis1D);
@@ -118,11 +134,21 @@ UInputMappingContext* StarshatterInputBindings::RuntimeContext(UInputMappingCont
         if (Item.Source==Source && Item.Context->GetOuter()==Owner) return Item.Context.Get();
     auto* Copy=DuplicateObject<UInputMappingContext>(Source,Owner,NAME_None);
     Copy->SetFlags(RF_Transient); Copy->ClearFlags(RF_Public|RF_Standalone);
+    if (Source->GetFName() == TEXT("IMC_Game")) AddFlightTranslationMappings(Copy);
     FRuntimeBindings Item; Item.Context=Copy; Item.Source=Source;
-    for (const auto& Mapping:Source->GetMappings()) {Item.Ids.Add(Id(Mapping));Item.Defaults.Add(Mapping.Key);}
+    for (const auto& Mapping:Copy->GetMappings()) {Item.Ids.Add(Id(Mapping));Item.Defaults.Add(Mapping.Key);}
     RuntimeBindings.Add(MoveTemp(Item));
     Refresh();
     return Copy;
+}
+
+UInputAction* StarshatterInputBindings::FindAction(const UInputMappingContext* Context, FName Name)
+{
+    if (Context)
+        for (const auto& Mapping : Context->GetMappings())
+            if (Mapping.Action && Mapping.Action->GetFName() == Name)
+                return const_cast<UInputAction*>(Mapping.Action.Get());
+    return nullptr;
 }
 
 void StarshatterInputBindings::RegisterContext(UInputMappingContext* Context)
@@ -187,7 +213,7 @@ FString StarshatterInputBindings::Category(const FString& Name)
     if (Name.Contains(TEXT("Target")) || Name.Contains(TEXT("Subtarget"))) return TEXT("TARGETING");
     if (Name.Contains(TEXT("Fire")) || Name.Contains(TEXT("CyclePrimary")) || Name.Contains(TEXT("CycleSecondary")) || Name.Contains(TEXT("Decoy")) || (Name.Contains(TEXT("Weapon")) && !Name.Contains(TEXT("Panel")) && !Name.Contains(TEXT("Dialog")))) return TEXT("WEAPONS");
     if (Name == TEXT("SSW_MouseSteering")) return TEXT("MOVEMENT & FLIGHT");
-    if (Name.Contains(TEXT("Pitch")) || Name.Contains(TEXT("Yaw")) || Name.Contains(TEXT("Roll")) || Name.Contains(TEXT("Throttle")) || Name.Contains(TEXT("Augmenter")) || Name.Contains(TEXT("Plus")) || Name.Contains(TEXT("Minus")) || Name.Contains(TEXT("FLCS")) || Name.Contains(TEXT("Flcs"))) return TEXT("MOVEMENT & FLIGHT");
+    if (Name.Contains(TEXT("Pitch")) || Name.Contains(TEXT("Yaw")) || Name.Contains(TEXT("Roll")) || Name.Contains(TEXT("Throttle")) || Name.Contains(TEXT("Thrust")) || Name.Contains(TEXT("Strafe")) || Name.Contains(TEXT("Augmenter")) || Name.Contains(TEXT("Plus")) || Name.Contains(TEXT("Minus")) || Name.Contains(TEXT("FLCS")) || Name.Contains(TEXT("Flcs"))) return TEXT("MOVEMENT & FLIGHT");
     if (Name.Contains(TEXT("HUD")) || Name.Contains(TEXT("Hud")) || Name.Contains(TEXT("MFD")) || Name.Contains(TEXT("Panel")) || Name.Contains(TEXT("Dialog"))) return TEXT("HUD & PANELS");
     if (Name.Contains(TEXT("Gear")) || Name.Contains(TEXT("Nav")) || Name.Contains(TEXT("Shield")) || Name.Contains(TEXT("Orbit")) || Name.Contains(TEXT("Quantum"))) return TEXT("NAVIGATION & SHIP SYSTEMS");
     return TEXT("GENERAL");

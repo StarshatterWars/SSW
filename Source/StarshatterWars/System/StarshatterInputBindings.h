@@ -18,6 +18,7 @@ namespace StarshatterInputBindings
     STARSHATTERWARS_API FKey ResolvedKey(const FString& Name,FKey Default);
     STARSHATTERWARS_API FString Id(const FEnhancedActionKeyMapping& Mapping);
     STARSHATTERWARS_API UInputMappingContext* RuntimeContext(UInputMappingContext* Source, UObject* Owner);
+    STARSHATTERWARS_API UInputAction* FindAction(const UInputMappingContext* Context, FName Name);
     STARSHATTERWARS_API void RegisterContext(UInputMappingContext* Context);
     STARSHATTERWARS_API void Refresh();
     STARSHATTERWARS_API void ConfigureAugmenterHold(FEnhancedActionKeyMapping& Mapping, UObject* Owner);

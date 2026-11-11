@@ -72,9 +72,8 @@ void UFirstRun::OnApplyClicked()
     if (!PlayerSS)
         return;
 
-    // Reset to struct defaults, then initialize
+    PlayerSS->ResetToDefaults();
     FS_PlayerGameInfo& Info = PlayerSS->GetMutablePlayerInfo();
-    Info = FS_PlayerGameInfo();
 
     Info.Name = PlayerName;
     Info.Campaign = -1;

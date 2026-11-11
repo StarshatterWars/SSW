@@ -101,5 +101,5 @@ private:
     bool bDirty = false;
     bool bHadExistingSave = false;
 
-    static constexpr int32 CURRENT_SAVE_VERSION = 1;
+    static constexpr int32 CURRENT_SAVE_VERSION = 2;
 };

@@ -4,6 +4,7 @@
 #include "Engine/Texture2D.h"
 #include "UObject/StrongObjectPtr.h"
 class Ship;class SimObject;class APlayerController;
+struct FSSWReplicatedShipState;
 // Shared by fighter and capital-ship native HUDs. Values remain in legacy units.
 class FNativeHUDSymbology {
 public:
@@ -14,6 +15,8 @@ public:
  static bool HelmCueVisible(double Heading,double OrderedHeading,double Pitch,double OrderedPitch);
  static constexpr double TargetSize=64,LeadSize=32;
  void Refresh(Ship* Player);
+ void RefreshNetwork(APlayerController* PlayerController, const FSSWReplicatedShipState* Player,
+     const FSSWReplicatedShipState* Target);
  void Paint(const FGeometry& G,FSlateWindowElementList& E,int32 Layer,bool Mini,AActor* Selected,bool DrawWeapons)const;
  void PaintCompass(const FGeometry& G,FSlateWindowElementList& E,int32 Layer,double Heading,double OrderedHeading,double Pitch,double OrderedPitch,bool Helm,bool Mini,double RollDegrees=0)const;
 private:

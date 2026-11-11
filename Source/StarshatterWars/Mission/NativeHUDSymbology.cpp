@@ -11,6 +11,7 @@
 #include "HUDView.h"
 #include "SimContact.h"
 #include "FighterHUDDetails.h"
+#include "SSWSessionLobbyGameMode.h"
 #include "Engine/World.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/GameViewportClient.h"
@@ -35,6 +36,31 @@ void FNativeHUDSymbology::Refresh(Ship* P){
  if(!P->IsStarship())Add(P->GetTarget(),P->GetSubTarget(),1);
  else {int Other=3;for(int I=0;I<P->GetWeapons().size();++I){auto* Group=P->GetWeapons()[I];if(!Group)continue;int Role=Group->Contains(P->GetPrimary())?1:Group->Contains(P->GetSecondary())?2:Other;auto* T=Group->GetTarget();if(Role==1&&!T)T=P->GetTarget();if(Role>3)continue;const int Before=Used.Num();Add(T,Group->GetSubTarget(),Role);if(Role==3&&Used.Num()>Before)++Other;}}
 }
+void FNativeHUDSymbology::RefreshNetwork(APlayerController* PlayerController,
+    const FSSWReplicatedShipState* Player, const FSSWReplicatedShipState* Target)
+{
+    Controller = PlayerController;
+    Markers.Reset();
+    if (!Player || !Target) return;
+
+    const double Range = FVector::Dist(Player->Position, Target->Position);
+    const bool bHasPrimary = Player->PrimaryShotSpeed > 0;
+    FMarker& Reticle = Markers.AddDefaulted_GetRef();
+    Reticle.Position = Target->VisualPosition;
+    Reticle.Cross = CrosshairIndex(Player->bMissileLocked ? 2 : 1, Range, Player->PrimaryRange, bHasPrimary);
+    Reticle.Color = SFighterHUDDetails::IdentificationColor(Target->IFF, Player->IFF);
+    if (!bHasPrimary || Range > Player->PrimaryRange) return;
+
+    const bool bLCOS = HUDView::GetGunsight() == 0;
+    const FVector Aim = LeadPoint(Player->Position, Player->Velocity, Player->Heading,
+        Target->Position, Target->Velocity, Player->PrimaryShotSpeed, bLCOS);
+    const FVector Offset = Aim - Target->Position;
+    FMarker& Lead = Markers.AddDefaulted_GetRef();
+    Lead.Position = Target->VisualPosition + FVector(Offset.Z, Offset.X, Offset.Y);
+    Lead.Cross = bLCOS ? 0 : 5;
+    Lead.Color = FLinearColor(.3f, .85f, 1.f);
+}
+
 void FNativeHUDSymbology::Art(const FGeometry& G,FSlateWindowElementList& E,int32 L,int32 I,const FVector2D& Center,double Size,const FLinearColor& Color,double Angle)const{if(!Textures[I].IsValid())return;const FVector2D Extent(Size,Size);FSlateDrawElement::MakeRotatedBox(E,L,G.ToPaintGeometry(FVector2f(Extent),FSlateLayoutTransform(FVector2f(Center-Extent*.5))),&Brushes[I],ESlateDrawEffect::None,float(Angle),TOptional<FVector2D>(),FSlateDrawElement::RelativeToElement,Color);}
 void FNativeHUDSymbology::Paint(const FGeometry& G,FSlateWindowElementList& E,int32 L,bool Mini,AActor* Selected,bool DrawWeapons)const{
  if(!DrawWeapons)return;auto* PC=Controller.Get();if(!PC)return;auto* LP=PC->GetLocalPlayer();FSceneViewProjectionData Projection;if(!LP||!LP->ViewportClient||!LP->ViewportClient->Viewport||!LP->GetProjectionData(LP->ViewportClient->Viewport,Projection))return;int W,H;PC->GetViewportSize(W,H);if(W<=0||H<=0)return;const FVector2D Size=G.GetLocalSize();const FIntRect R=Projection.GetConstrainedViewRect();

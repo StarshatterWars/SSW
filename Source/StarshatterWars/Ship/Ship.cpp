@@ -3085,7 +3085,7 @@ Ship::SetAutoNav(bool engage)
 
 Ship* Ship::GetAutoTrackTarget() const
 {
-    if (!sim || sim->GetPlayerShip() != this || !IsDropship() || IsDead() || IsDying() ||
+    if (!CanUseManualFlight() || !IsDropship() || IsDead() || IsDying() ||
         InTransition() || net_control || inbound || bAutoLand || flight_phase != EOPSMode::ACTIVE ||
         !navsys || !navsys->IsPowerOn() || !sensor || !GetRegion() || !target ||
         target->GetType() != ESimObject::SHIP)

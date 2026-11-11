@@ -279,6 +279,47 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
         }
 
         const FString ShipKey(Entry.Definition);
+        if (ShipKey == TEXT("Stormhawk") && RCS)
+        {
+            auto* Proxy = World->SpawnActor<AShipActor>(Class);
+            if (TestNotNull(TEXT("Stormhawk client visual"), Proxy))
+            {
+                Proxy->InitializeSnapshotPropulsion(Design);
+                TArray<uint8> Burns;
+                Burns.Init(0, RCS->GetNumThrusters());
+                const int32 LateralPort = Burns.Num() - 1;
+                Runtime.GetThruster()->ExecTrans(-Design->trans_x, 0.0, 0.0);
+                for (int32 Port = 0; Port < Burns.Num(); ++Port)
+                    Burns[Port] = static_cast<uint8>(FMath::RoundToInt(255.0f * RCS->GetThrusterBurn(Port)));
+                TestTrue(TEXT("Authoritative strafe lights the right-facing jet"), Burns[LateralPort] > 0);
+                TestTrue(TEXT("Authoritative strafe applies lateral force"), Runtime.GetTransX() < 0.0);
+                Runtime.Physical::ExecFrame(0.05);
+                TestTrue(TEXT("Lateral force changes flight velocity"), !Runtime.GetVelocity().IsNearlyZero());
+                Proxy->UpdateSnapshotPropulsion(0.1f, 0.017f, 1.7f, Burns);
+                const auto& Effects = Proxy->RuntimeThrusterFX;
+                if (TestTrue(TEXT("Client builds every authoritative Stormhawk RCS port"), Effects.Num() == Burns.Num()))
+                {
+                    const auto* Trail = Effects[LateralPort].Trail;
+                    if (TestNotNull(TEXT("Client lateral jet has a trail"), Trail))
+                    {
+                        TestTrue(TEXT("Replicated burn displays the lateral exhaust"), Trail->IsVisible());
+                        TestTrue(TEXT("Lateral exhaust retains width after port scaling"),
+                            Trail->GetRelativeScale3D().Y >= 0.3 * Effects[LateralPort].PortScale);
+                    }
+                    TestEqual(TEXT("An unfired fore jet stays idle"), Effects[0].PresentedBurn, 0.0f);
+                }
+                TestTrue(TEXT("Client displays exhaust at low main throttle"),
+                    Proxy->RuntimeMainEngineEmitters.ContainsByPredicate([](const UNiagaraComponent* Engine)
+                    {
+                        return Engine && Engine->IsVisible();
+                    }));
+                Burns[LateralPort] = 0;
+                Proxy->UpdateSnapshotPropulsion(0.1f, 0.0f, 0.0f, Burns);
+                if (Effects.IsValidIndex(LateralPort) && Effects[LateralPort].Trail)
+                    TestFalse(TEXT("Client stops exhaust when the burn ends"), Effects[LateralPort].Trail->IsVisible());
+                Proxy->Destroy();
+            }
+        }
         if (ShipKey == TEXT("Orion") || ShipKey == TEXT("Falcon") || ShipKey == TEXT("Dragon"))
         {
             auto* Viewer = World->SpawnActor<ATacticalReferenceActor>();

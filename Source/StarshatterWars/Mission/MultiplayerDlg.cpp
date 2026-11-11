@@ -25,6 +25,15 @@
 #include "MissionUIStyle.h"
 #include "StarshatterUIStyleSubsystem.h"
 #include "MenuScreen.h"
+
+namespace
+{
+    FString MultiplayerMissionLabel(const FString& Name)
+    {
+        return Name.Equals(TEXT("Hawk Match"), ESearchCase::IgnoreCase) ? FString(TEXT("Battle Royale")) : Name;
+    }
+}
+
 void USSWSessionRowButton::Configure(UMultiplayerDlg* Screen,int32 Row,bool bMissionRow)
 {
     Dialog=Screen;
@@ -81,7 +90,9 @@ void UMultiplayerDlg::BuildSessionScreen()
     }
 
     auto* Header=WidgetTree->ConstructWidget<UVerticalBox>();Main->AddChildToVerticalBox(Header)->SetPadding(FMargin(0,0,0,18));
-    auto* ScreenTitle=Label(TEXT("MULTIPLAYER"),30);ScreenTitle->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 22));Header->AddChildToVerticalBox(ScreenTitle);
+    auto* ScreenTitle = Label(TEXT("MULTIPLAYER"), 30);
+    ScreenTitle->SetFont(MissionUIStyle::GetHeaderFont(38));
+    Header->AddChildToVerticalBox(ScreenTitle);
     Header->AddChildToVerticalBox(Label(TEXT("Create a game or find a session."),16))->SetPadding(FMargin(0,8,0,0));
     auto* Modes=WidgetTree->ConstructWidget<UHorizontalBox>();Main->AddChildToVerticalBox(Modes)->SetPadding(FMargin(0,0,0,12));
     auto* Left=WidgetTree->ConstructWidget<UVerticalBox>();auto* Right=WidgetTree->ConstructWidget<UVerticalBox>();
@@ -132,7 +143,7 @@ void UMultiplayerDlg::BuildSessionScreen()
             Row->Configure(this, Index, true);
             const auto& Mission = Missions[Index];
             auto* Card = WidgetTree->ConstructWidget<UVerticalBox>();
-            Card->AddChildToVerticalBox(Label(Mission.MissionName, 18));
+            Card->AddChildToVerticalBox(Label(MultiplayerMissionLabel(Mission.MissionName), 18));
             const FString Location = FString::Printf(TEXT("System: %s  ·  Sector: %s"),
                 *Mission.MissionSystem, *Mission.MissionRegion);
             Card->AddChildToVerticalBox(Label(Location, 13))->SetPadding(FMargin(0, 3, 0, 0));
@@ -185,7 +196,7 @@ void UMultiplayerDlg::RefreshState(){
  if(!S||S->Results.IsEmpty())Rows->AddChildToVerticalBox(Label(TEXT("No games listed. Select Find games to refresh."),16))->SetPadding(FMargin(12,20));
  if(S)for(int I=0;I<S->Results.Num();++I){
   const auto& R=S->Results[I];auto* B=WidgetTree->ConstructWidget<USSWSessionRowButton>();B->Configure(this,I);
-  auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();B->AddChild(Row);auto* Name=Label(R.Mission.IsEmpty()?R.Name:FString::Printf(TEXT("%s  ·  %s"),*R.Name,*R.Mission),16);Name->SetAutoWrapText(false);Name->SetClipping(EWidgetClipping::ClipToBounds);
+  auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();B->AddChild(Row);auto* Name=Label(R.Mission.IsEmpty()?R.Name:FString::Printf(TEXT("%s  ·  %s"),*R.Name,*MultiplayerMissionLabel(R.Mission)),16);Name->SetAutoWrapText(false);Name->SetClipping(EWidgetClipping::ClipToBounds);
   auto* NameSlot=Row->AddChildToHorizontalBox(Name);NameSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));NameSlot->SetPadding(FMargin(16,10));
   for(const FString& Text:{FString::Printf(TEXT("%d / %d"),R.Players,R.Capacity),FString::Printf(TEXT("%d ms"),R.Ping)}){auto* Cell=WidgetTree->ConstructWidget<USizeBox>();Cell->SetWidthOverride(120);Cell->SetContent(Label(Text,16));Row->AddChildToHorizontalBox(Cell)->SetVerticalAlignment(VAlign_Center);}
   MissionUIStyle::ApplyActionButtonStyle(B,TEXT("Cyan"));if(I==Selected){FButtonStyle Style=B->GetStyle();Style.Normal=Style.Pressed;B->SetStyle(Style);}
@@ -330,7 +341,7 @@ void UMultiplayerDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 void UMultiplayerDlg::BuildLobbyScreen(UVerticalBox* Main, UOverlay* PlayField)
 {
     auto* LobbyTitle = Label(TEXT("MISSION LOBBY"), 30);
-    LobbyTitle->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 22));
+    LobbyTitle->SetFont(MissionUIStyle::GetHeaderFont(38));
     Main->AddChildToVerticalBox(LobbyTitle)->SetPadding(FMargin(0, 0, 0, 8));
     MissionCountdownLabel = Label(TEXT("WAITING FOR PILOTS TO READY UP"), 28);
     MissionCountdownLabel->SetFont(FCoreStyle::GetDefaultFontStyle(TEXT("Bold"), 26));

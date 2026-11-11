@@ -199,6 +199,8 @@ void AFighterActor::UseNetworkChaseView()
     bNetworkChaseView = true;
     FighterCockpitRoot->SetHiddenInGame(true, true);
     CockpitComponent->SetChildActorClass(nullptr);
+    if (HullMesh)
+        HullMesh->SetLightingChannels(true, true, false);
 }
 
 void AFighterActor::Tick(float DeltaTime)

@@ -1148,6 +1148,11 @@ void AShipActor::UpdateNavLights(float DeltaTime)
             const class NavLight* System = SystemIndex < RuntimeShip->navlights.size() ? RuntimeShip->navlights[SystemIndex] : nullptr;
             bVisible &= System && System->IsEnabled();
         }
+        else if (SnapshotVisualDesign && RuntimeNavLightSystemIndices.IsValidIndex(Index))
+        {
+            const int32 SystemIndex = RuntimeNavLightSystemIndices[Index];
+            bVisible &= SystemIndex < 32 && (SnapshotNavLights & (1u << SystemIndex)) != 0;
+        }
 
         NavLight->SetVisibility(bVisible);
         NavLight->SetHiddenInGame(!bVisible);
@@ -2048,6 +2053,29 @@ AShipActor::UpdateFromRuntimeShip(float DeltaTime)
 }
 
 
+uint64 AShipActor::GetCarriedStoreMask() const
+{
+    uint64 Mask = 0;
+    int32 Station = 0;
+    for (const auto& Base : NativeWeaponHardpoints)
+    {
+        const auto* Mount = Cast<UShipWeaponMountComponent>(Base.Get());
+        if (!Mount || !Mount->bLoadoutHardpoint) continue;
+        if (Station >= 64) break;
+        if (Mount->HasCarriedStore() && Mount->IsStoreAvailable())
+            Mask |= uint64(1) << Station;
+        ++Station;
+    }
+    return Mask;
+}
+
+void AShipActor::UpdateSnapshotStores(uint64 CarriedStores)
+{
+    if (SnapshotCarriedStores.IsSet() && SnapshotCarriedStores.GetValue() == CarriedStores) return;
+    SnapshotCarriedStores = CarriedStores;
+    SyncCarriedMissiles();
+}
+
 void AShipActor::SyncCarriedMissiles()
 {
     TRACE_CPUPROFILER_EVENT_SCOPE(SSW_CarriedMissiles);
@@ -2055,10 +2083,21 @@ void AShipActor::SyncCarriedMissiles()
     // not incidental array order.
     TArray<UShipWeaponMountComponent*, TInlineAllocator<8>> MissileMounts;
 
+    const bool bSnapshot = !RuntimeShip && SnapshotCarriedStores.IsSet();
+    int32 Station = 0;
     for (TObjectPtr<USceneComponent>& Base : NativeWeaponHardpoints)
     {
         UShipWeaponMountComponent* Mount = Cast<UShipWeaponMountComponent>(Base.Get());
         if (!Mount || !Mount->bLoadoutHardpoint) continue;
+        if (bSnapshot)
+        {
+            const bool bCarried = Station < 64 && (SnapshotCarriedStores.GetValue() & (uint64(1) << Station)) != 0;
+            ++Station;
+            if (bCarried && Mount->GetChildActorClass() && !Mount->GetChildActor()) Mount->CreateChildActor();
+            if (auto* Store = Mount->GetChildActor()) Store->SetActorHiddenInGame(!bCarried);
+            else if (bCarried) MissileMounts.Add(Mount);
+            continue;
+        }
         Mount->UpdateRuntimeStore();
         if (!Mount->RuntimeWeapon) continue;
 
@@ -2102,7 +2141,7 @@ void AShipActor::SyncCarriedMissiles()
     {
         UStaticMeshComponent* Mesh = CarriedMissileMeshes[Index];
         UShipWeaponMountComponent* Mount = MissileMounts.IsValidIndex(Index) ? MissileMounts[Index] : nullptr;
-        if (!Mesh || !Mount || !Mount->RuntimeWeapon)
+        if (!Mesh || !Mount || (!bSnapshot && !Mount->RuntimeWeapon))
         {
             if (Mesh) Mesh->SetVisibility(false);
             continue;
@@ -2116,8 +2155,8 @@ void AShipActor::SyncCarriedMissiles()
             Mesh->SetRelativeRotation(FRotator::ZeroRotator);
         }
 
-        const bool bVisible = (!HullWeaponRoot || !Mount->GetChildActorClass()) &&
-            Mount->HasCarriedStore() && Mount->IsStoreAvailable();
+        const bool bVisible = bSnapshot || ((!HullWeaponRoot || !Mount->GetChildActorClass()) &&
+            Mount->HasCarriedStore() && Mount->IsStoreAvailable());
         if (Mesh->IsVisible() != bVisible) Mesh->SetVisibility(bVisible);
     }
 }
@@ -2147,7 +2186,7 @@ void AShipActor::BuildNavLightsFromRuntime()
     if (!bEnableNavLights)
         return;
 
-    if (!RuntimeShip)
+    if (!RuntimeShip && !SnapshotVisualDesign)
     {
         UE_LOG(LogTemp, Warning,
             TEXT("[ShipActor] BuildNavLightsFromRuntime: RuntimeShip is null Actor='%s'"),
@@ -2155,7 +2194,8 @@ void AShipActor::BuildNavLightsFromRuntime()
         return;
     }
 
-    if (RuntimeShip->navlights.size() <= 0)
+    const auto& LightSystems = RuntimeShip ? RuntimeShip->navlights : SnapshotVisualDesign->navlights;
+    if (LightSystems.size() <= 0)
     {
         UE_LOG(LogTemp, Warning,
             TEXT("[ShipActor] BuildNavLightsFromRuntime: no runtime navlights Actor='%s'"),
@@ -2166,11 +2206,11 @@ void AShipActor::BuildNavLightsFromRuntime()
     int32 BuiltCount = 0;
 
     for (int32 LightSystemIndex = 0;
-        LightSystemIndex < RuntimeShip->navlights.size();
+        LightSystemIndex < LightSystems.size();
         ++LightSystemIndex)
     {
         NavLight* RuntimeNavLight =
-            RuntimeShip->navlights[LightSystemIndex];
+            LightSystems[LightSystemIndex];
 
         if (!RuntimeNavLight)
         {
@@ -2256,6 +2296,7 @@ void AShipActor::InitializeSnapshotPropulsion(const ShipDesign* Design)
 {
     if (!Design) return;
     SnapshotVisualDesign = Design;
+    ConfigureWeaponHardpointsFromShipDef(UTF8_TO_TCHAR(Design->name));
     const int32 MainIndex = Design->main_drive;
     const Drive* MainDrive = Design->drives.size() > 0
         ? Design->drives[MainIndex >= 0 && MainIndex < Design->drives.size() ? MainIndex : 0] : nullptr;
@@ -2267,13 +2308,15 @@ void AShipActor::InitializeSnapshotPropulsion(const ShipDesign* Design)
     ClearComponentArray(ThrusterEmitters);
     ClearComponentArray(ThrusterPoints);
     ConfigurePropulsionAssets(MainDrive);
+    BuildNavLightsFromRuntime();
     BuildMainEngineEffects(MainDrive);
     BuildThrusterEffects(Design->thruster);
 }
 
 void AShipActor::UpdateSnapshotPropulsion(float DeltaTime, float DrivePower, float Throttle,
-    TConstArrayView<uint8> PortBurns)
+    TConstArrayView<uint8> PortBurns, uint32 EnabledNavLights)
 {
+    SnapshotNavLights = EnabledNavLights;
     PresentMainEngineEffects(DeltaTime, DrivePower, Throttle, Throttle, true);
     PresentThrusterEffects(FMath::Clamp(DrivePower, 0.0f, 1.0f), nullptr, PortBurns, false);
 }
@@ -2485,8 +2528,8 @@ void AShipActor::PresentMainEngineEffects(float DeltaTime, float RawPower, float
 {
     const float RequestAlpha = Cast<AFighterActor>(this) ? FighterExhaustTuning::VisualPower(RawPower) : RawPower;
 
-    const bool bRequested =
-        RequestAlpha > 0.01f;
+    constexpr float IdleThreshold = 0.005f;
+    const bool bRequested = RequestAlpha > IdleThreshold;
 
     const float TargetPower =
         bRequested
@@ -2511,7 +2554,7 @@ void AShipActor::PresentMainEngineEffects(float DeltaTime, float RawPower, float
                 DeltaTime,
                 40.0f);
 
-        if (MainEngineVisualPower < 0.03f)
+        if (MainEngineVisualPower < IdleThreshold)
         {
             MainEngineVisualPower =
                 0.0f;
@@ -2525,8 +2568,7 @@ void AShipActor::PresentMainEngineEffects(float DeltaTime, float RawPower, float
             Glow->SetIntensity(.5f+2.f*FMath::Clamp(MainEngineVisualPower,0.f,1.f));
         }
 
-    const bool bActive =
-        MainEngineVisualPower > 0.03f;
+    const bool bActive = MainEngineVisualPower > IdleThreshold;
 
     const bool bCacheParameters = CVarCacheEngineParameters.GetValueOnGameThread() != 0;
     const bool bPowerChanged = !bCacheParameters || PresentedEnginePower != MainEngineVisualPower;
@@ -3020,48 +3062,12 @@ void AShipActor::PresentThrusterEffects(float DriveBurn, const Thruster* Runtime
         FX->PresentedBurn = VisualBurnFiltered;
         FX->PresentedPortScale = FinalPortScale;
 
-        FVector RuntimeScale = FVector::ZeroVector;
-
-        if (bActive)
-        {
-            float Length = 0.0f;
-            float Width = 0.0f;
-
-            if (bMainEngine)
-            {
-                Length =
-                    FMath::Lerp(
-                        0.10f,
-                        2.00f,
-                        VisualBurnFiltered);
-
-                Width =
-                    FMath::Lerp(
-                        0.35f,
-                        0.65f,
-                        VisualBurnFiltered);
-            }
-            else
-            {
-                Length =
-                    FMath::Lerp(
-                        0.05f,
-                        0.35f,
-                        VisualBurnFiltered);
-
-                Width =
-                    FMath::Lerp(
-                        0.010f,
-                        0.030f,
-                        VisualBurnFiltered);
-            }
-
-            RuntimeScale =
-                FVector(
-                    Length,
-                    Width,
-                    Width) * FinalPortScale;
-        }
+        // The port scale already makes these plumes smaller than the main drive.
+        // Keep the exhaust proportions readable after the hull's import scale.
+        const float Length = FMath::Lerp(0.35f, bMainEngine ? 2.0f : 1.5f, VisualBurnFiltered);
+        const float Width = FMath::Lerp(0.30f, bMainEngine ? 0.65f : 0.50f, VisualBurnFiltered);
+        const FVector RuntimeScale = bActive
+            ? FVector(Length, Width, Width) * FinalPortScale : FVector::ZeroVector;
 
         if (FX->Flare)
         {
@@ -3072,6 +3078,7 @@ void AShipActor::PresentThrusterEffects(float DriveBurn, const Thruster* Runtime
             FX->Flare->SetFloatParameter(
                 TEXT("Burn"),
                 VisualBurnFiltered);
+            FX->Flare->SetFloatParameter(TEXT("EnginePower"), VisualBurnFiltered);
 
             FX->Flare->SetFloatParameter(
                 TEXT("Length"),
@@ -3103,6 +3110,7 @@ void AShipActor::PresentThrusterEffects(float DriveBurn, const Thruster* Runtime
             FX->Trail->SetFloatParameter(
                 TEXT("Burn"),
                 VisualBurnFiltered);
+            FX->Trail->SetFloatParameter(TEXT("EnginePower"), VisualBurnFiltered);
 
             FX->Trail->SetFloatParameter(
                 TEXT("Length"),

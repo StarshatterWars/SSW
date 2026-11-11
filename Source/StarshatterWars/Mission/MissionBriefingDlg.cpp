@@ -1790,7 +1790,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     MissionMenuInput->RegisterComponent();
     MissionMenuInput->Priority = 1000;
 
-    MissionStrafeAction=LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_Strafe.IA_Strafe"));
+    MissionStrafeAction=StarshatterInputBindings::FindAction(MissionMenuContext.Get(), TEXT("SSW_Strafe"));
     if (MissionStrafeAction && MissionStrafeAction->ValueType==EInputActionValueType::Axis1D)
     {
         MissionMenuInput->BindAction(MissionStrafeAction.Get(),ETriggerEvent::Triggered,this,&UMissionBriefingDlg::OnMissionStrafe);
@@ -1798,7 +1798,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         MissionMenuInput->BindAction(MissionStrafeAction.Get(),ETriggerEvent::Canceled,this,&UMissionBriefingDlg::ReleaseMissionStrafe);
     }
 
-    MissionForwardThrustAction=LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_ForwardThrust.IA_ForwardThrust"));
+    MissionForwardThrustAction=StarshatterInputBindings::FindAction(MissionMenuContext.Get(), TEXT("SSW_ForwardThrust"));
     if (MissionForwardThrustAction && MissionForwardThrustAction->ValueType==EInputActionValueType::Axis1D)
     {
         MissionMenuInput->BindAction(MissionForwardThrustAction.Get(),ETriggerEvent::Triggered,this,&UMissionBriefingDlg::OnMissionForwardThrust);
@@ -1806,7 +1806,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
         MissionMenuInput->BindAction(MissionForwardThrustAction.Get(),ETriggerEvent::Canceled,this,&UMissionBriefingDlg::ReleaseMissionForwardThrust);
     }
 
-    MissionVerticalThrustAction=LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_VerticalThrust.IA_VerticalThrust"));
+    MissionVerticalThrustAction=StarshatterInputBindings::FindAction(MissionMenuContext.Get(), TEXT("SSW_VerticalThrust"));
     if (MissionVerticalThrustAction && MissionVerticalThrustAction->ValueType==EInputActionValueType::Axis1D)
     {
         MissionMenuInput->BindAction(MissionVerticalThrustAction.Get(),ETriggerEvent::Triggered,this,&UMissionBriefingDlg::OnMissionVerticalThrust);

@@ -73,7 +73,26 @@ bool FKeyboardRemappingTest::RunTest(const FString& Parameters)
     for(const auto& Mapping:Supplemental->GetMappings())
     {
         Config.EnhancedBindings.Add(StarshatterInputBindings::Id(Mapping),EKeys::F10);Settings->SetKeyboardConfig(Config);
-        TestEqual(TEXT("C++ controls honor saved overrides"),StarshatterInputBindings::ResolvedKey(Mapping.Action->GetName(),Mapping.Key),EKeys::F10);
+        if (Mapping.Modifiers.IsEmpty() && Mapping.Triggers.IsEmpty())
+            TestEqual(TEXT("C++ controls honor saved overrides"),StarshatterInputBindings::ResolvedKey(Mapping.Action->GetName(),Mapping.Key),EKeys::F10);
+    }
+    auto* GameContext = LoadObject<UInputMappingContext>(nullptr, TEXT("/Game/Input/IMC_Game.IMC_Game"));
+    auto* Flight = StarshatterInputBindings::RuntimeContext(GameContext, Owner.Get());
+    StarshatterInputBindings::Refresh();
+    for (const FName Name : {FName(TEXT("SSW_Strafe")), FName(TEXT("SSW_ForwardThrust")), FName(TEXT("SSW_VerticalThrust"))})
+    {
+        auto* Axis = StarshatterInputBindings::FindAction(Flight, Name);
+        if (TestNotNull(TEXT("Shared flight context provides the translation axis"), Axis))
+        {
+            int32 Directions = 0;
+            for (const auto& Mapping : Flight->GetMappings())
+                if (Mapping.Action == Axis)
+                {
+                    TestEqual(TEXT("Both translation directions honor the Options remap"), Mapping.Key, EKeys::F10);
+                    ++Directions;
+                }
+            TestEqual(TEXT("Translation axis has a positive and negative binding"), Directions, 2);
+        }
     }
     auto* Save=NewObject<UStarshatterSettingsSaveGame>();Save->KeyboardConfig=Config;Save->KeyboardConfig.EnhancedBindings.Add(NegativeId,EKeys::F10);
     const FString Slot=TEXT("Automation/KeyboardRemapping/")+FGuid::NewGuid().ToString(EGuidFormats::Digits)+TEXT("/options");

@@ -317,19 +317,63 @@ void SFighterHUDDetails::Refresh()
     FlightSpeed = HeadingDegrees = ClosingSpeed = JumpSeconds = 0;
     ThreatLevel = 0;
     bHelmMode=false;CompactNavLabel=TEXT("FREE FLIGHT");
-    if (const auto* Controller = NetworkController.Get())
+    if (auto* Controller = NetworkController.Get())
     {
         const auto* Snapshot = Controller->GetAssignedShipState();
         bHasPlayer = Snapshot != nullptr;
-        if (!Snapshot) return;
+        bHasTarget = false;
+        if (!Snapshot)
+        {
+            if (Symbology) Symbology->RefreshNetwork(Controller, nullptr, nullptr);
+            return;
+        }
 
+        const FSSWReplicatedShipState* Target = nullptr;
         FlightSpeed = Snapshot->Velocity.Size();
         const FVector Heading = Snapshot->Heading;
+        const FVector Right = FVector::CrossProduct(Snapshot->Up, Heading).GetSafeNormal();
+        BankRadians = FMath::Atan2(Right.Y, Snapshot->Up.Y);
         HeadingDegrees = FMath::RadiansToDegrees(FMath::Atan2(Heading.X, Heading.Z));
         PitchDegrees = FMath::RadiansToDegrees(FMath::Asin(FMath::Clamp(Heading.Y, -1.0, 1.0)));
         PlayerHull = Snapshot->HullPercent;
         PlayerName = Snapshot->Name;
         PlayerClass = Snapshot->Design;
+        if (!PlayerMFDPreview) PlayerMFDPreview = MakeUnique<FShipMFDPreview>(true);
+        PlayerMFDPreview->SetDesign(ShipDesignRegistry::Find(Snapshot->Design));
+        SensorRange = FMath::Max(1.0, double(Snapshot->SensorRange));
+        if (const auto* Ships = Controller->GetFlightContacts())
+            for (const auto& Contact : *Ships)
+            {
+                if (Contact.ObjectId == Snapshot->ObjectId || Contact.Region != Snapshot->Region ||
+                    Contact.bDestroyed || Contact.bRetired) continue;
+                const FVector Delta = Contact.Position - Snapshot->Position;
+                const double Range = Delta.Size();
+                if (Contact.ObjectId == Snapshot->TargetId)
+                {
+                    Target = &Contact;
+                    bHasTarget = bTargetLocked = true;
+                    bTargetTracking = Snapshot->bAutoTracking;
+                    TargetName = Contact.Name;
+                    TargetClass = Contact.Design;
+                    TargetHull = Contact.HullPercent;
+                    TargetShield = Contact.ShieldStrength;
+                    TargetRange = Range / 1000.0;
+                    TargetDisplayColor = Contact.IFF == Snapshot->IFF ? HUDBlue : FLinearColor::Red;
+                    if (!TargetMFDPreview) TargetMFDPreview = MakeUnique<FShipMFDPreview>(true);
+                    TargetMFDPreview->SetDesign(ShipDesignRegistry::Find(Contact.Design));
+                    const auto ToUE = [](const FVector& V) { return FVector(V.Z, V.X, V.Y); };
+                    const FQuat TargetRotation = FRotationMatrix::MakeFromXZ(
+                        ToUE(Contact.Heading), ToUE(Contact.Up)).ToQuat();
+                    TargetMFDPreview->SetView(TargetRotation,
+                        Snapshot->VisualPosition - Contact.VisualPosition, ToUE(Snapshot->Up));
+                }
+                if (Range > SensorRange || Range <= UE_SMALL_NUMBER) continue;
+                const double Az = FMath::Atan2(FVector::DotProduct(Delta, Right), FVector::DotProduct(Delta, Heading));
+                const double El = FMath::Asin(FMath::Clamp(FVector::DotProduct(Delta, Snapshot->Up) / Range, -1.0, 1.0));
+                Contacts.Add({Az, El, Range, Contact.IFF == Snapshot->IFF ? HUDBlue : FLinearColor::Red});
+            }
+        if (Symbology) Symbology->RefreshNetwork(Controller, Snapshot, Target);
+        bShoot = Target && Snapshot->bMissileLocked;
         Primary = Snapshot->PrimaryReadout;
         Secondary = Snapshot->SecondaryReadout;
         NetworkEmcon = Snapshot->Emcon;
@@ -783,7 +827,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         const FVector2D UnitsExtent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(TEXT("m/s"),UnitsFont);
         const FVector2D UnitsPosition=P+FVector2D(120*Scale+SpeedExtent.X+7*Scale,37*Scale+SpeedExtent.Y-UnitsExtent.Y);
         FSlateDrawElement::MakeText(E,L+2,G.ToPaintGeometry(FVector2f(UnitsExtent),FSlateLayoutTransform(FVector2f(UnitsPosition))),TEXT("m/s"),UnitsFont,ESlateDrawEffect::None,bAugmenterActive ? Green : Muted);
-        const bool bAtmospheric = HUDPlayer && HUDPlayer->IsAirborne();
+        const auto* Controller = NetworkController.Get();
+        const auto* Snapshot = Controller ? Controller->GetAssignedShipState() : nullptr;
+        const bool bAtmospheric = Snapshot ? Snapshot->bAirborne : HUDPlayer && HUDPlayer->IsAirborne();
         if (bAtmospheric)
         {
             const FVector2D DialCenter = P + FVector2D(56,48)*Scale;
@@ -861,6 +907,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             bAutoAvailable ? TEXT("AUTO PILOT") : TEXT("FLIGHT CONTROL"),
             10,(bAutoland || bAutoAvailable) ? Green : Muted);
         MiniText(366,43,CompactNavLabel,13,White,138);
+        if (Snapshot)
+            MiniText(366,62,FString::Printf(TEXT("RESPAWNS %d"),Snapshot->RespawnsRemaining),10,Muted,138);
         if (NavReadouts.Num() > 0)
             MiniText(366,62,NavReadouts[0],10,Muted,138);
         if (const Instruction* Waypoint = HUDPlayer && !HUDPlayer->GetInbound() ? HUDPlayer->GetNextNavPoint() : nullptr)
@@ -892,9 +940,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
 
     }
-    if (NetworkController.IsValid()) return L + 5;
     // LAUNCH remains visible while staging but is disabled until the
     // fighter is actually spotted and the flight-deck slot becomes READY.
+    if (!NetworkController.IsValid())
     {
         Hangar* PlayerHangar = nullptr;
         int Squadron = -1, Slot = -1;
@@ -1095,6 +1143,19 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?UFormattingUtils::FormatDistance(TargetRange * 1000.0):TEXT("RANGE --"),TargetDisplayColor);
     }
     } // External instruments; radio and information remain available in cockpit.
+    if (const auto* Controller = NetworkController.Get())
+    {
+        const auto* Snapshot = Controller->GetAssignedShipState();
+        if (Snapshot && Symbology && !bPreTakeoff)
+        {
+            Symbology->Paint(G,E,L+3,ThirdPerson.Get(),nullptr,bShowWeapons);
+            if (!Snapshot->bAirborne)
+                Symbology->PaintCompass(G,E,L+3,HeadingDegrees,OrderedHeading,PitchDegrees,OrderedPitch,
+                    bHelmMode,ThirdPerson.Get(),FMath::RadiansToDegrees(BankRadians));
+            if (bShoot && bShowWeapons) Popup(152,TEXT("SHOOT"));
+        }
+        return L + 6;
+    }
     if (bCapitalWeapons && bShowWeapons && !bShowCaution &&
         (!bShowInformation || InformationCaptions.IsEmpty()))
     {

@@ -506,7 +506,7 @@ public:
     List<NavLight>&         GetNavLights() { return navlights; }
     Shield*                 GetShield() { return shield; }
     Solid*                  GetShieldRep() { return (Solid*)shieldRep; }
-    Sensor*                 GetSensor() { return sensor; }
+    Sensor*                 GetSensor() const { return sensor; }
     NavSystem*              GetNavSystem() { return navsys; }
     Thruster*               GetThruster() const { return thruster; }
     Hangar*                 GetHangar() { return hangar; }

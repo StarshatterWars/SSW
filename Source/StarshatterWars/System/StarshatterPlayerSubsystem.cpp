@@ -6,6 +6,30 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogStarshatterPlayerSubsystem, Log, All);
 
+namespace
+{
+    void FillDefaultChatMacros(FS_PlayerGameInfo& Pilot)
+    {
+        const TCHAR* const Defaults[] = {
+            TEXT("Check six."),
+            TEXT("Break now, if you can."),
+            TEXT("You're in my sights."),
+            TEXT("Good lock. Let's see you hold it."),
+            TEXT("Nice pass. Come around again."),
+            TEXT("Where's your wingman?"),
+            TEXT("Tell control you're coming home early."),
+            TEXT("I've got the next pass."),
+            TEXT("Last chance to punch out."),
+            TEXT("Good fight, pilot.")
+        };
+        Pilot.ChatMacros.SetNum(UE_ARRAY_COUNT(Defaults));
+        for (int32 Index = 0; Index < Pilot.ChatMacros.Num(); ++Index)
+        {
+            if (Pilot.ChatMacros[Index].IsEmpty()) Pilot.ChatMacros[Index] = Defaults[Index];
+        }
+    }
+}
+
 void UStarshatterPlayerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
     Super::Initialize(Collection);
@@ -15,6 +39,7 @@ void UStarshatterPlayerSubsystem::Initialize(FSubsystemCollectionBase& Collectio
     bHadExistingSave = false;
 
     PlayerInfo = FS_PlayerGameInfo();
+    FillDefaultChatMacros(PlayerInfo);
 
     UE_LOG(LogStarshatterPlayerSubsystem, Log, TEXT("[PlayerSubsystem] Initialize. Slot=%s UserIndex=%d"),
         *SlotName, UserIndex);
@@ -50,6 +75,7 @@ bool UStarshatterPlayerSubsystem::DoesSaveExistNow() const
 void UStarshatterPlayerSubsystem::ResetToDefaults()
 {
     PlayerInfo = FS_PlayerGameInfo();
+    FillDefaultChatMacros(PlayerInfo);
     PlayerInfo.CreateTime = FDateTime::UtcNow().ToUnixTimestamp();
     bDirty = true;
 
@@ -134,6 +160,7 @@ bool UStarshatterPlayerSubsystem::LoadPlayer()
     }
 
     // No save exists: keep defaults; FirstRun expected to write
+    FillDefaultChatMacros(PlayerInfo);
     bLoaded = true;
     bDirty = true;
 
@@ -238,6 +265,7 @@ bool UStarshatterPlayerSubsystem::MigratePlayerSave(
         switch (FromVersion)
         {
         case 1:
+            FillDefaultChatMacros(InOutPlayerInfo);
             FromVersion = 2;
             break;
 
