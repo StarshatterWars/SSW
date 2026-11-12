@@ -213,6 +213,11 @@ The Dantari take control of Trellis during the opening crisis. Its farcaster and
 
 Jalah is one of the outer worlds held by Separatists at the start of Highland. Fort Talas appears in Alliance intelligence as a possible staging and replenishment point for newly arrived Hegemony units.
 
+@@ World — Vesta (Silessia)
+<HUD_Muted>SILESSIA SYSTEM  /  GAS GIANT</>
+
+Vesta orbits Siltana and has three moons, Vesta I, II, and III. The Nero–Vesta farcaster links Nero transfer orbit to the Vesta sector. The distribution station in Vesta orbit is the freighters' destination in Send Lawyers, Guns, and Money.
+
 @@ Major Figures
 <HUD_Muted>FORCE:INTEL  /  PERSONNEL AND DIPLOMATIC FILES</>
 

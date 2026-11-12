@@ -24,6 +24,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Materials/Material.h"
 #include "Materials/MaterialInterface.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/UnrealType.h"
 #include "EngineUtils.h"
 
@@ -1066,6 +1067,25 @@ constexpr TCHAR JanekPlanetClassPath[] = TEXT("/Game/Models/Universe/BP_Janek.BP
 const FName JanekWorldScapeTag(TEXT("JanekWorldScape"));
 constexpr TCHAR JanekCloudMaterial[] = TEXT("/WorldScape/Ressources/Materials/WorldScapeMaterials/Cloud/MI_Cloud_WorldScape.MI_Cloud_WorldScape");
 
+void ScaleJanekOceanWaves(AWorldScapeRoot& Globe)
+{
+    constexpr double DemoPlanetRadius = 637817792.0;
+    const UMaterialInterface* Ocean = Globe.OceanMaterial.DefaultMaterial;
+    if (!Ocean || Globe.MaterialOceanInstances.IsEmpty()) return;
+
+    const double Scale = Globe.PlanetScale / DemoPlanetRadius;
+    for (const FName Parameter : {FName(TEXT("B")), FName(TEXT("B_2")), FName(TEXT("BWaveheight2"))})
+    {
+        float DemoAmplitude = 0.0f;
+        if (!Ocean->GetScalarParameterValue(FMaterialParameterInfo(Parameter), DemoAmplitude))
+            continue;
+
+        for (UMaterialInstanceDynamic* Material : Globe.MaterialOceanInstances)
+            if (IsValid(Material))
+                Material->SetScalarParameterValue(Parameter, static_cast<float>(DemoAmplitude * Scale));
+    }
+}
+
 void SetJanekPresentationRadius(AActor& Planet, double Radius)
 {
     // WorldScape authors dimensions in centimetres. SSW mission space uses
@@ -1085,9 +1105,13 @@ void SetJanekPresentationRadius(AActor& Planet, double Radius)
     }
     if (auto* Globe = Cast<AWorldScapeRoot>(&Planet))
     {
-        // The Earth-like WorldScape demo uses a 150 m sea level.
-        Globe->OceanHeight = static_cast<float>(15000.0 * Radius / AuthoredRadius);
+        // The stock Earth-like demo uses a zero sea datum. The runway lake
+        // has its own water elevation through the local height-map volume.
+        Globe->OceanHeight = 0.0f;
+        Globe->Ocean_UpdatePlanetLocation = true;
+        Globe->Terrain_UpdatePlanetLocation = true;
         Globe->bGenerateWorldScape = true;
+        ScaleJanekOceanWaves(*Globe);
     }
 
     // The renderer uses kilometres (100000 Unreal units), even in mission space.
@@ -2878,6 +2902,7 @@ AWorldScapeRoot* ASystemSceneBuilder::ConfigureJanekSurface(const FVector& Obser
     Globe->bGenerateCollision = true;
     Globe->bGenerateFoliages = true;
     Globe->SetActorHiddenInGame(false);
+    ScaleJanekOceanWaves(*Globe);
 
     if (!JanekRunwayGrade.IsValid())
     {
@@ -3071,6 +3096,7 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
             {
                 Globe->bOverridePlayerPosition = true;
                 Globe->OverridedPlayerPosition = Eye;
+                ScaleJanekOceanWaves(*Globe);
             }
             BodyActor->SetActorLocationAndRotation(GetActorLocation() + MissionOrbitalToUE(Body->Location() - SectorOrigin),
                 FRotator::ZeroRotator);

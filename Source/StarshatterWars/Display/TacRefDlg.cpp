@@ -761,6 +761,8 @@ void UTacRefDlg::BuildModernShell()
         auto* LabelCell=Selectors->AddChildToHorizontalBox(Label);LabelCell->SetVerticalAlignment(VAlign_Center);LabelCell->SetPadding(FMargin(12,0));
         Selector->RemoveFromParent();auto* Cell=Selectors->AddChildToHorizontalBox(Selector);Cell->SetSize(FSlateChildSize(ESlateSizeRule::Fill));Cell->SetPadding(FMargin(0,6,12,6));
     };
+    if (EmpireCombo) StyleReferenceCombo(*EmpireCombo);
+    StyleReferenceCombo(*ShipCombo);
     AddSelector(TEXT("FACTION"),EmpireCombo);AddSelector(TEXT("DESIGN"),ShipCombo);
     auto* SelectorBand=WidgetTree->ConstructWidget<UBorder>();SelectorBand->SetBrushColor(FLinearColor(0.015f,0.025f,0.038f,1));SelectorBand->SetPadding(FMargin(8));SelectorBand->SetContent(Selectors);
     Shell.Body->AddChildToVerticalBox(SelectorBand)->SetPadding(FMargin(0,0,0,12));
@@ -864,6 +866,7 @@ void UTacRefDlg::BuildGazetteer(UVerticalBox& Body)
     Frame->SetVisibility(ESlateVisibility::Collapsed);
 
     auto* Entries = WidgetTree->ConstructWidget<UComboBoxString>();
+    StyleReferenceCombo(*Entries);
     Column->AddChildToVerticalBox(Entries)->SetPadding(FMargin(0,0,0,14));
     GazetteerScroll = WidgetTree->ConstructWidget<UScrollBox>();
     Column->AddChildToVerticalBox(GazetteerScroll)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
@@ -903,6 +906,23 @@ void UTacRefDlg::BuildGazetteer(UVerticalBox& Body)
         HandleGazetteerEntry(Entries->GetSelectedOption(), ESelectInfo::Direct);
     }
     else GazetteerText->SetText(FText::FromString(TEXT("Gazetteer data unavailable.")));
+}
+
+void UTacRefDlg::StyleReferenceCombo(UComboBoxString& Combo)
+{
+    Combo.SetWidgetStyle(ShipCombo->GetWidgetStyle());
+    Combo.SetItemStyle(ShipCombo->GetItemStyle());
+    Combo.SetContentPadding(ShipCombo->GetContentPadding());
+    Combo.OnGenerateWidgetEvent.BindDynamic(this, &UTacRefDlg::MakeReferenceComboItem);
+}
+
+UWidget* UTacRefDlg::MakeReferenceComboItem(FString Item)
+{
+    auto* Label = NewObject<UTextBlock>(this);
+    Label->SetFont(ShipCombo->GetFont());
+    Label->SetColorAndOpacity(FLinearColor::White);
+    Label->SetText(FText::FromString(Item));
+    return Label;
 }
 
 void UTacRefDlg::SetGazetteerVisible(bool bVisible)

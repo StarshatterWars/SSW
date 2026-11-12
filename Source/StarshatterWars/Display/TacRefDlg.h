@@ -72,6 +72,8 @@ public:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     void BuildModernShell();
     void BuildGazetteer(class UVerticalBox& Body);
+    void StyleReferenceCombo(UComboBoxString& Combo);
+    UFUNCTION() UWidget* MakeReferenceComboItem(FString Item);
     void SetGazetteerVisible(bool bVisible);
     UFUNCTION() void HandleGazetteerClicked();
     UFUNCTION() void HandleGazetteerEntry(FString Entry, ESelectInfo::Type Selection);
@@ -180,6 +182,7 @@ protected:
     // Internals
     // ---------------------------------------------------------------------
     friend class FWeaponReferenceTest;
+    friend class FFreightManifestTest;
     TArray<FName> WeaponNames;
     bool bPopulatingReference = false;
     void PopulateWeaponDropdown();

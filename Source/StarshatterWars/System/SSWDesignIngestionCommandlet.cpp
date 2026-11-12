@@ -1,6 +1,7 @@
 #include "SSWDesignIngestionCommandlet.h"
 
 #if WITH_EDITOR
+#include "Algo/Find.h"
 #include "Engine/DataTable.h"
 #include "Engine/GameInstance.h"
 #include "Misc/PackageName.h"
@@ -186,6 +187,47 @@ bool ImportShipCargo()
     return UpdatedRows > 0 && SaveOutputTable(*Updated, TEXT("DT_ShipDesign"), false);
 }
 }
+
+bool USSWDesignIngestionCommandlet::ImportSingleShipDefinition(const FString& Definition)
+{
+    const auto Entries = ShipVisualCatalog::Entries();
+    const auto* Entry = Algo::FindByPredicate(Entries, [&Definition](const auto& Candidate)
+    {
+        return Definition.Equals(Candidate.Definition, ESearchCase::IgnoreCase);
+    });
+    if (!Entry)
+    {
+        UE_LOG(LogTemp, Error, TEXT("Unknown ship definition: %s"), *Definition);
+        return false;
+    }
+
+    constexpr TCHAR TablePath[] = TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign");
+    const UDataTable* Active = LoadObject<UDataTable>(nullptr, TablePath);
+    if (!Active || Active->GetRowStruct() != FShipDesign::StaticStruct())
+        return false;
+
+    auto* Context = NewObject<USSWGameInstance>();
+    auto* Ships = NewObject<UStarshatterShipDesignSubsystem>(Context);
+    auto* Imported = NewObject<UDataTable>(Ships);
+    Imported->RowStruct = FShipDesign::StaticStruct();
+    Ships->ShipDesignDataTable = Imported;
+
+    const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Ships") /
+        (FString(Entry->Definition) + TEXT(".def"));
+    Ships->LoadShipDesign(TCHAR_TO_ANSI(*Path));
+
+    const FName RowName(Entry->Design);
+    const FShipDesign* Row = Imported->FindRow<FShipDesign>(RowName, TEXT("Import single ship"));
+    if (!Row)
+        return false;
+
+    UDataTable* Updated = DuplicateObject<UDataTable>(Active, GetTransientPackage());
+    Updated->AddRow(RowName, *Row);
+    UE_LOG(LogTemp, Display, TEXT("Imported %s with %.2f tonnes of cargo capacity."),
+        *RowName.ToString(), Row->CargoCapacity.Tonnes);
+    return SaveOutputTable(*Updated, TEXT("DT_ShipDesign"), false);
+}
+
 #endif
 
 USSWDesignIngestionCommandlet::USSWDesignIngestionCommandlet()
@@ -199,6 +241,10 @@ USSWDesignIngestionCommandlet::USSWDesignIngestionCommandlet()
 int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
 {
 #if WITH_EDITOR
+    FString ShipDefinition;
+    if (FParse::Value(*Params, TEXT("ShipDefinition="), ShipDefinition))
+        return ImportSingleShipDefinition(ShipDefinition) ? 0 : 1;
+
     if (FParse::Param(*Params, TEXT("ShipCargoOnly")))
         return ImportShipCargo() ? 0 : 1;
 

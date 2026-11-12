@@ -2,6 +2,7 @@
 
 #include "Misc/AutomationTest.h"
 #include "Engine/DataTable.h"
+#include "TacRefDlg.h"
 #include "FreightManifest.h"
 #include "GameStructs.h"
 #include "GameStructs_System.h"
@@ -56,6 +57,16 @@ bool FFreightManifestTest::RunTest(const FString&)
         const FShipDesign* Row = Table->FindRow<FShipDesign>(Name, TEXT("Cargo coverage"));
         if (Row && (static_cast<uint32>(Row->ShipType) & ShipClasses))
             TestTrue(*FString::Printf(TEXT("%s has cargo capacity"), *Name.ToString()), Row->CargoCapacity.Tonnes > 0.0);
+    }
+
+    const auto* Station = Table->FindRow<FShipDesign>(FName(TEXT("Station4")), TEXT("Tactical Reference capacity"));
+    if (TestNotNull(TEXT("Station4 is registered in the ship table"), Station))
+    {
+        TestEqual(TEXT("Station4 uses its authored cargo capacity"), Station->CargoCapacity.Tonnes, 40000.0);
+        FString Caption, Stats, Description;
+        NewObject<UTacRefDlg>()->BuildShipTexts(*Station, Caption, Stats, Description);
+        TestTrue(TEXT("Tactical Reference shows Station4 cargo capacity"),
+            Stats.Contains(TEXT("CARGO CAPACITY")) && Stats.Contains(FText::AsNumber(40000).ToString() + TEXT(" t")));
     }
 
     SimRegion Departure(nullptr, "Nero", SimRegion::REAL_SPACE);

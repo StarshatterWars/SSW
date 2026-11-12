@@ -15,7 +15,7 @@ namespace
     const TCHAR* const Fields[] = { TEXT("GunShots"), TEXT("GunHits"), TEXT("MissileShots"),
         TEXT("MissileHits"), TEXT("GunKills"), TEXT("MissileKills"), TEXT("Deaths"),
         TEXT("Collisions"), TEXT("Points"), TEXT("CommandPoints") };
-    constexpr const TCHAR* Section = TEXT("Pilot");
+    constexpr const TCHAR* PilotDataSection = TEXT("Pilot");
 
     TArray<int64> Snapshot(const FString& Name)
     {
@@ -44,8 +44,8 @@ namespace
     void Increment(FConfigFile& File, const TCHAR* Key, int64 Delta)
     {
         FString Previous;
-        File.GetString(Section, Key, Previous);
-        File.SetString(Section, Key, *LexToString(FCString::Atoi64(*Previous) + Delta));
+        File.GetString(PilotDataSection, Key, Previous);
+        File.SetString(PilotDataSection, Key, *LexToString(FCString::Atoi64(*Previous) + Delta));
     }
 }
 
@@ -88,8 +88,8 @@ void ASSWSessionLobbyGameMode::SaveServerPilot(ASSWSessionLobbyController& Pilot
             return;
         }
     }
-    File.SetString(Section, TEXT("DisplayName"), *Player->GetPlayerName().Left(64));
-    File.SetString(Section, TEXT("LastSeenUtc"), *FDateTime::UtcNow().ToIso8601());
+    File.SetString(PilotDataSection, TEXT("DisplayName"), *Player->GetPlayerName().Left(64));
+    File.SetString(PilotDataSection, TEXT("LastSeenUtc"), *FDateTime::UtcNow().ToIso8601());
     if (!bFinish)
     {
         ServerPilots.FindOrAdd(&Pilot);

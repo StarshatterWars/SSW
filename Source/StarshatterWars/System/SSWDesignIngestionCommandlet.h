@@ -11,4 +11,9 @@ class STARSHATTERWARS_API USSWDesignIngestionCommandlet : public UCommandlet
 public:
     USSWDesignIngestionCommandlet();
     int32 Main(const FString& Params) override;
+
+private:
+#if WITH_EDITOR
+    bool ImportSingleShipDefinition(const FString& Definition);
+#endif
 };

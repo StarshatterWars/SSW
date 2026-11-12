@@ -107,8 +107,10 @@ public:
                 Text(20,350,H->TargetClass + Status,H->TargetDisplayColor,22);
                 if (!H->TargetMineral.IsEmpty())
                 {
-                    Text(20,390,H->TargetMineral,Blue,22);
-                    Text(20,420,H->TargetDepositAmount,Blue,22);
+                    Text(20,376,H->TargetRarity,Blue,22);
+                    Text(20,402,H->TargetMineral,Blue,22);
+                    Text(20,428,H->TargetDepositAmount,Blue,22);
+                    Text(20,454,H->TargetDepositValue,Blue,22);
                 }
                 else if (H->TargetHull >= 0)
                 {
@@ -116,7 +118,7 @@ public:
                     if (!H->TargetCargo.IsEmpty())
                         Text(20,420,H->TargetCargo,Blue,22);
                 }
-                Text(20,450,FString::Printf(TEXT("RANGE %.1f KM"),H->TargetRange),Blue,24);
+                Text(20,H->TargetMineral.IsEmpty() ? 450 : 480,FString::Printf(TEXT("RANGE %.1f KM"),H->TargetRange),Blue,24);
             }
         }
         else
