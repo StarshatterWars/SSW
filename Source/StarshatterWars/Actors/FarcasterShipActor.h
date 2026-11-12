@@ -11,6 +11,7 @@ class STARSHATTERWARS_API AFarcasterShipActor : public AShipActor
 
 public:
     AFarcasterShipActor();
+    virtual void BeginPlay() override;
 
     virtual void OnConstruction(const FTransform& Transform) override;
 

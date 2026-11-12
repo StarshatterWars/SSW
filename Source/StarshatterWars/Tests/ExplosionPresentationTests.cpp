@@ -3,6 +3,8 @@
 #include "Misc/ScopeExit.h"
 #include "Engine/World.h"
 #include "ExplosionActor.h"
+#include "QuantumEffectsActor.h"
+#include "Components/MaterialBillboardComponent.h"
 #include "MuzzleFlashExplosionActor.h"
 #include "WeaponDesignRegistry.h"
 #include "WeaponDesign.h"
@@ -74,11 +76,17 @@ bool FExplosionPresentationTest::RunTest(const FString&)
  for(int I=1;I<=15;++I){
   const auto Type=static_cast<EExplosionType>(I);UClass* Native=AExplosionActor::NativeClass(Type).Get();UClass* Class=AExplosionActor::VisualClass(Type).Get();
   if(!TestNotNull(TEXT("Native subtype"),Native)||!TestNotNull(TEXT("Blueprint subtype"),Class))continue;
-  TestTrue(TEXT("Dedicated Blueprint resolves"),Class!=Native && Class->IsChildOf(Native));
+  const bool bQuantum = Type == EExplosionType::QUANTUM_FLASH;
+  if(bQuantum) TestTrue(TEXT("Legacy quantum flash resolves to the native pack effect"),Class==AQuantumEffectsActor::StaticClass());
+  else TestTrue(TEXT("Dedicated Blueprint resolves"),Class!=Native && Class->IsChildOf(Native));
   auto* A=World->SpawnActor<AExplosionActor>(Class);if(!TestNotNull(TEXT("Spawn visual"),A))continue;
   TestEqual(TEXT("Legacy enum unchanged"),A->ExplosionType,Type);
   TestFalse(TEXT("Explosion is cosmetic, no collision"),A->GetActorEnableCollision());
-  TestTrue(TEXT("Pack effect assigned"),A->NiagaraSystem!=nullptr || A->ParticleSystem!=nullptr);
+  if(bQuantum){
+   const auto* Flash=A->FindComponentByClass<UMaterialBillboardComponent>();
+   if(TestNotNull(TEXT("Quantum has a camera-facing flash"),Flash))
+    TestNotNull(TEXT("Quantum flash has the pack material"),Flash->GetMaterial(0));
+  } else TestTrue(TEXT("Pack effect assigned"),A->NiagaraSystem!=nullptr || A->ParticleSystem!=nullptr);
   A->PlayExplosion(2,3,.2f);TestTrue(TEXT("Cosmetic scale applied once"),A->NiagaraEffect->GetRelativeScale3D().Equals(FVector(2*A->VisualScale)));
   A->SetPresentationClock(true,2);TestTrue(TEXT("Niagara follows runtime pause"),A->NiagaraEffect->IsPaused());A->SetPresentationClock(false,2);
   A->AdvancePresentation(.3);TestTrue(TEXT("Transient visual expires"),A->IsActorBeingDestroyed());

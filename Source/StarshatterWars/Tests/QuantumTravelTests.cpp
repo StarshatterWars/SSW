@@ -10,6 +10,13 @@
 #include "ShipDesign.h"
 #include "ShipDesignRegistry.h"
 #include "Misc/ScopeExit.h"
+#include "Components/ChildActorComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "Engine/World.h"
+#include "Farcaster.h"
+#include "FarcasterEffectActor.h"
+#include "ShipActor.h"
 
 namespace
 {
@@ -124,6 +131,91 @@ bool FQuantumTravelSafetyTest::RunTest(const FString& Parameters)
     Popup->SlatePrepass();
     auto Transition=SNew(STravelTransition);
     Transition->Update(0.016f,5000,false,TEXT("Solus")); Transition->SlatePrepass();
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFarcasterEffectsTest,
+    "Starshatter.Travel.FarcasterEffects", EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FFarcasterEffectsTest::RunTest(const FString& Parameters)
+{
+    struct FGateFixture : Farcaster
+    {
+        FGateFixture() : Farcaster(100, 10) {}
+        using Farcaster::Arrive;
+    };
+
+    UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
+    ON_SCOPE_EXIT { World->DestroyWorld(false); };
+    FShipDesign Row;
+    Row.ShipName = TEXT("FarcasterEffectFixture");
+    Row.ShipClass = TEXT("Fighter");
+    Row.Mass = 20;
+    Row.Integrity = 100;
+    const FName DesignName(TEXT("FarcasterEffectFixture"));
+    const auto OriginalDesigns = ShipDesignRegistry::GetAll();
+    ON_SCOPE_EXIT {
+        ShipDesignRegistry::Clear();
+        for (const auto& Entry : OriginalDesigns)
+            ShipDesignRegistry::RegisterDesign(Entry.Key, Entry.Value);
+    };
+    ShipDesignRegistry::RegisterDesign(DesignName, Row);
+    ShipDesign* Design = ShipDesignRegistry::FindLegacy(DesignName);
+    if (!TestNotNull(TEXT("Simulation test design registered"), Design))
+        return false;
+
+    const TCHAR* GateClasses[] = {
+        TEXT("/Game/Models/Farcaster/BP_Farcaster.BP_Farcaster_C"),
+        TEXT("/Game/Models/Farcaster2/BP_Farcaster2.BP_Farcaster2_C")
+    };
+    for (const TCHAR* Path : GateClasses)
+    {
+        UClass* GateClass = LoadClass<AShipActor>(nullptr, Path);
+        if (!TestNotNull(Path, GateClass))
+            continue;
+
+        AShipActor* GateActor = World->SpawnActor<AShipActor>(GateClass);
+        if (!TestNotNull(TEXT("Gameplay gate spawns"), GateActor))
+            continue;
+
+        Ship Gate("Test gate", "", Design, 0, 0, nullptr, false);
+        Gate.BindNativePresentation(GateActor);
+        GateActor->DispatchBeginPlay();
+        auto* Effect = AFarcasterEffectActor::FindFor(&Gate);
+        if (!TestNotNull(TEXT("Legacy gate resolves its native effect actor"), Effect))
+            continue;
+
+        TArray<UStaticMeshComponent*> Layers;
+        for (const UChildActorComponent* Child : TInlineComponentArray<UChildActorComponent*>(GateActor))
+        {
+            const AActor* Visual = Child->GetChildActor();
+            if (!Visual || Child->GetFName() != TEXT("WarpGateVisual"))
+                continue;
+
+            TestEqual(TEXT("WarpGate Blueprint only owns the frame mesh"),
+                TInlineComponentArray<UStaticMeshComponent*>(Visual).Num(), 1);
+        }
+        for (auto* Layer : TInlineComponentArray<UStaticMeshComponent*>(Effect))
+        {
+            TestNotNull(TEXT("Native effect layer has a mesh"), Layer->GetStaticMesh().Get());
+            TestNotNull(TEXT("Native effect layer has a material"), Layer->GetMaterial(0));
+            Layers.Add(Layer);
+        }
+        TestEqual(TEXT("Native effect actor owns three portal layers"), Layers.Num(), 3);
+
+        Effect->ClosePortal();
+        for (const auto* Layer : Layers)
+            TestTrue(TEXT("Idle portal layer is hidden"), Layer->bHiddenInGame);
+
+        FGateFixture Legacy;
+        Legacy.SetShip(&Gate);
+        Legacy.Arrive(nullptr);
+        for (const auto* Layer : Layers)
+            TestFalse(TEXT("Legacy arrival opens the portal layer"), Layer->bHiddenInGame);
+
+        for (int32 Frame = 0; Frame < 40; ++Frame)
+            Legacy.ExecFrame(1.0 / 60.0);
+        for (const auto* Layer : Layers)
+            TestTrue(TEXT("Legacy postwarp closes the portal layer"), Layer->bHiddenInGame);
+    }
     return true;
 }
 #endif

@@ -1,4 +1,5 @@
 #include "FarcasterShipActor.h"
+#include "FarcasterEffectActor.h"
 
 AFarcasterShipActor::AFarcasterShipActor()
 {
@@ -117,4 +118,10 @@ void AFarcasterShipActor::ApplyAuthoredAttachmentDefaults()
     WeaponMountPointDefs.Reset();
     TurretBasePointDefs.Reset();
     SyncShipAttachmentCounts();
+}
+
+void AFarcasterShipActor::BeginPlay()
+{
+    Super::BeginPlay();
+    AFarcasterEffectActor::InstallOn(*this, false);
 }

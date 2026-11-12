@@ -9,5 +9,6 @@ class STARSHATTERWARS_API AFarcaster2ShipActor : public AShipActor
     GENERATED_BODY()
 public:
     AFarcaster2ShipActor();
+    virtual void BeginPlay() override;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Farcaster") TObjectPtr<UStaticMeshComponent> CenterMesh;
 };

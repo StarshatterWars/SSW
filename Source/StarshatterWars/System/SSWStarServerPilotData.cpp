@@ -6,6 +6,7 @@
 #include "Misc/ConfigCacheIni.h"
 #include "Misc/Paths.h"
 #include "Misc/SecureHash.h"
+#include "Online/CoreOnline.h"
 #include "Ship.h"
 #include "SimEvent.h"
 
@@ -70,7 +71,8 @@ void ASSWSessionLobbyGameMode::SaveServerPilot(ASSWSessionLobbyController& Pilot
     const auto* Player = Pilot.GetPlayerState<APlayerState>();
     if (!Player || !Player->GetUniqueId().IsValid()) return;
     const auto& Id = Player->GetUniqueId();
-    const FString NetworkKey = Id.GetType().ToString() + TEXT(":") + Id.ToString();
+    const FString AccountKey = Id.IsV1() ? Id.GetV1()->ToString() : UE::Online::ToString(Id.GetV2());
+    const FString NetworkKey = Id.GetType().ToString() + TEXT(":") + AccountKey;
     const FString Directory = FPaths::ProjectSavedDir() / TEXT("StarServer/Pilots");
     auto& Files = IFileManager::Get();
     if (!Files.MakeDirectory(*Directory, true)) return;

@@ -14,6 +14,7 @@
 */
 
 #include "Farcaster.h"
+#include "FarcasterEffectActor.h"
 
 #include "QuantumDrive.h"
 #include "QuantumTravel.h"
@@ -162,6 +163,8 @@ Farcaster::ExecFrame(double seconds)
             }
         active_state = QuantumDrive::ACTIVE_READY;
         warp_fov = 1;
+        if (auto* Effect = AFarcasterEffectActor::FindFor(ship))
+            Effect->ClosePortal();
         return;
     }
 
@@ -197,6 +200,8 @@ Farcaster::ExecFrame(double seconds)
 		if (active_state == QuantumDrive::ACTIVE_PREWARP) {
 			if (warp_fov < 5000) {
 				warp_fov *= 1.5;
+                if (auto* Effect = AFarcasterEffectActor::FindFor(ship))
+                    Effect->SetOpening(FMath::Loge(warp_fov) / FMath::Loge(5000.0));
 			}
 			else {
 				Jump();
@@ -208,10 +213,14 @@ Farcaster::ExecFrame(double seconds)
 		else if (active_state == QuantumDrive::ACTIVE_POSTWARP) {
 			if (warp_fov > 1) {
 				warp_fov *= 0.75;
+                if (auto* Effect = AFarcasterEffectActor::FindFor(ship))
+                    Effect->SetOpening(FMath::Loge(warp_fov) / FMath::Loge(5000.0));
 			}
 			else {
 				warp_fov = 1;
 				active_state = QuantumDrive::ACTIVE_READY;
+                if (auto* Effect = AFarcasterEffectActor::FindFor(ship))
+                    Effect->ClosePortal();
 			}
 
 			warping = true;
@@ -250,6 +259,9 @@ Farcaster::Jump()
 	if (!sim || !ship || !dest || !jumpship || !ship->GetRegion() || !dest->GetRegion())
 		return;
 
+    if (auto* Effect = AFarcasterEffectActor::FindFor(ship))
+        Effect->FlashDeparture();
+
 	SimRegion* rgn = ship->GetRegion();
 	SimRegion* dst = dest->GetRegion();
 
@@ -278,6 +290,8 @@ Farcaster::Arrive(Ship* s)
 	active_state = QuantumDrive::ACTIVE_POSTWARP;
 	warp_fov = 5000;
 	jumpship = s;
+    if (auto* Effect = AFarcasterEffectActor::FindFor(ship))
+        Effect->SetOpening(1.f);
 
 	if (jumpship && jumpship->GetVelocity().Length() < 500.0f) {
 		jumpship->SetVelocity(jumpship->GetHeading() * 500.0f);
@@ -356,6 +370,10 @@ Farcaster::Update(SimObject* obj)
 {
 	if (obj == dest) { dest = nullptr; no_dest = true; }
 	if (obj == jumpship) {
+        if (auto* Effect = AFarcasterEffectActor::FindFor(ship))
+            Effect->ClosePortal();
+        active_state = QuantumDrive::ACTIVE_READY;
+        warp_fov = 1;
 		jumpship->SetWarp(1);
 
 		SimRegion* r = ship ? ship->GetRegion() : nullptr;

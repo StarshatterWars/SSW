@@ -2678,6 +2678,21 @@ Sim::ResolveHyperList()
 	if (jumplist.size()) {
 		Ship* pship = GetPlayerShip();
 
+        EExplosionType PlayerArrivalFlash = EExplosionType::NONE;
+        auto QueueArrivalFlash = [&](Ship* Traveler, SimRegion* Destination, EExplosionType Type)
+        {
+            // CreateExplosion filters by active region. A player crossing into another
+            // region needs the arrival flash after the region switch below.
+            if (Traveler == pship && Destination != active_region)
+            {
+                PlayerArrivalFlash = Type;
+                return;
+            }
+
+            CreateExplosion(Traveler->GetLocation(), FVector::ZeroVector, Type, 1.f,
+                Type == EExplosionType::HYPER_FLASH ? 1.f : 0.f, Destination);
+        };
+
 		ListIter<SimHyper> j_iter = jumplist;
 
 		while (++j_iter) {
@@ -2795,13 +2810,7 @@ Sim::ResolveHyperList()
 							ANSI_TO_TCHAR(jumpship->GetName()),
 							ANSI_TO_TCHAR(dest->GetName()));
 
-						CreateExplosion(
-							jumpship->GetLocation(),
-							FVector::ZeroVector,
-							EExplosionType::QUANTUM_FLASH,
-							1.0f,
-							0.0f,
-							dest);
+						QueueArrivalFlash(jumpship, dest, EExplosionType::QUANTUM_FLASH);
 
 						if (jump->fc_dst) {
 							const double r = jump->fc_dst->GetRoll();
@@ -2879,22 +2888,10 @@ Sim::ResolveHyperList()
 							ANSI_TO_TCHAR(dest->GetName()));
 
 						if (jump->hyperdrive) {
-							CreateExplosion(
-								jumpship->GetLocation(),
-								FVector::ZeroVector,
-								EExplosionType::HYPER_FLASH,
-								1.0f,
-								1.0f,
-								dest);
+							QueueArrivalFlash(jumpship, dest, EExplosionType::HYPER_FLASH);
 						}
 						else {
-							CreateExplosion(
-								jumpship->GetLocation(),
-								FVector::ZeroVector,
-								EExplosionType::QUANTUM_FLASH,
-								1.0f,
-								0.0f,
-								dest);
+							QueueArrivalFlash(jumpship, dest, EExplosionType::QUANTUM_FLASH);
 						}
 
 						jumpship->LookAt(FVector::ZeroVector);
@@ -2931,6 +2928,8 @@ Sim::ResolveHyperList()
                 ActivateRegion(ArrivalRegion);
                 UE_LOG(LogTemp, Display, TEXT("[Travel] Player arrived in '%hs'"), ArrivalRegion->GetName());
 			}
+            if (PlayerArrivalFlash != EExplosionType::NONE)
+                QueueArrivalFlash(pship, pship->GetRegion(), PlayerArrivalFlash);
 		}
 	}
 }

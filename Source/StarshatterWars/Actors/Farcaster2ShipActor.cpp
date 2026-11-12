@@ -1,4 +1,5 @@
 #include "Farcaster2ShipActor.h"
+#include "FarcasterEffectActor.h"
 #include "Components/StaticMeshComponent.h"
 
 AFarcaster2ShipActor::AFarcaster2ShipActor()
@@ -13,4 +14,10 @@ AFarcaster2ShipActor::AFarcaster2ShipActor()
     bEnableThrusterEmitters=false;
     // Bound ships build their lights, engines and mounts from the parsed design.
     NavLightDefs.Reset();
+}
+
+void AFarcaster2ShipActor::BeginPlay()
+{
+    Super::BeginPlay();
+    AFarcasterEffectActor::InstallOn(*this, true);
 }

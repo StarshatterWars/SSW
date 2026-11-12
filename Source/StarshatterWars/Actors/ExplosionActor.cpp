@@ -18,7 +18,7 @@
 #include "LargeExplosionActor.h"
 #include "LargeBurstExplosionActor.h"
 #include "NukeExplosionActor.h"
-#include "QuantumFlashExplosionActor.h"
+#include "QuantumEffectsActor.h"
 #include "HyperFlashExplosionActor.h"
 
 AExplosionActor::AExplosionActor()
@@ -78,7 +78,7 @@ TSubclassOf<AExplosionActor> AExplosionActor::NativeClass(EExplosionType Type)
  case EExplosionType::LARGE_EXPLOSION:return ALargeExplosionActor::StaticClass();
  case EExplosionType::LARGE_BURST:return ALargeBurstExplosionActor::StaticClass();
  case EExplosionType::NUKE_EXPLOSION:return ANukeExplosionActor::StaticClass();
- case EExplosionType::QUANTUM_FLASH:return AQuantumFlashExplosionActor::StaticClass();
+ case EExplosionType::QUANTUM_FLASH:return AQuantumEffectsActor::StaticClass();
  case EExplosionType::HYPER_FLASH:return AHyperFlashExplosionActor::StaticClass();
  case EExplosionType::LARGE_EXP:return ALargeExplosionActor::StaticClass();
  default:return nullptr;
