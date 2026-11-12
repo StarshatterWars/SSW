@@ -9,6 +9,8 @@
 #include "Engine/SceneCapture2D.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 #include "RHI.h"
@@ -58,6 +60,33 @@ bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
     UWorld* World=Scene->GetWorld();
     Visual=BriefingShipPreview::CreateVisual(World,Parts);
     if(!Visual.IsValid()){Clear();return false;}
+    return BeginCapture(NextKey, BriefingShipPreview::CalculateBounds(Parts));
+}
+
+bool FShipMFDPreview::SetAsteroid(const UStaticMeshComponent* Source)
+{
+    UStaticMesh* Mesh = Source ? Source->GetStaticMesh() : nullptr;
+    if (!Mesh) { Clear(); return false; }
+
+    const FString NextKey = TEXT("Asteroid:") + Mesh->GetPathName();
+    if (Key == NextKey && IsReady()) return true;
+
+    Clear();
+    const FBoxSphereBounds Bounds = Mesh->GetBounds();
+    if (Bounds.SphereRadius <= UE_DOUBLE_SMALL_NUMBER) return false;
+
+    TArray<FBriefingShipPreviewPart> Parts;
+    auto& Part = Parts.AddDefaulted_GetRef();
+    Part.Mesh = Mesh;
+    for (int32 Slot = 0; Slot < Source->GetNumMaterials(); ++Slot)
+        Part.Materials.Add(Source->GetMaterial(Slot));
+    const double Scale = 75.0 / Bounds.SphereRadius;
+    Part.Transform = FTransform(FQuat::Identity, -Bounds.Origin * Scale, FVector(Scale));
+
+    Scene = MakeUnique<FPreviewScene>(FPreviewScene::ConstructionValues().SetEditor(false)
+        .SetCreatePhysicsScene(false).SetLightBrightness(4.f).SetSkyBrightness(0.f));
+    Visual = BriefingShipPreview::CreateVisual(Scene->GetWorld(), Parts);
+    if (!Visual.IsValid()) { Clear(); return false; }
     return BeginCapture(NextKey, BriefingShipPreview::CalculateBounds(Parts));
 }
 

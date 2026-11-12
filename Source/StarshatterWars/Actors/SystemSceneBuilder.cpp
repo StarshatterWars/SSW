@@ -16,6 +16,7 @@
 
 #include "SystemSceneBuilder.h"
 #include "WorldScapeRoot.h"
+#include "WorldScapeMeshComponent.h"
 #include "HeightMapVolume.h"
 #include "FoliageMaskVolume.h"
 #include "TerrainRegion.h"
@@ -1084,6 +1085,43 @@ void ScaleJanekOceanWaves(AWorldScapeRoot& Globe)
             if (IsValid(Material))
                 Material->SetScalarParameterValue(Parameter, static_cast<float>(DemoAmplitude * Scale));
     }
+}
+
+void UpdateJanekOrbitRendering(AWorldScapeRoot& Globe, const FVector* Observer)
+{
+    const auto* Defaults = Globe.GetClass()->GetDefaultObject<AWorldScapeRoot>();
+    const bool bOrbit = Observer != nullptr;
+
+    // Align the coastal geometry grids in orbit and restore the demo water grid on approach.
+    Globe.OceanMaxLod = bOrbit ? Globe.MaxLod : Defaults->OceanMaxLod;
+    Globe.OceanLodResolution = bOrbit ? Globe.LodResolution : Defaults->OceanLodResolution;
+    Globe.OceanTriangleSize = bOrbit ? Globe.TriangleSize :
+        Defaults->OceanTriangleSize * Globe.PlanetScale / Defaults->PlanetScale;
+
+    const FName FillName(TEXT("SSWJanekOrbitFill"));
+    auto* Fill = FindObject<UDirectionalLightComponent>(&Globe, *FillName.ToString());
+    if (!bOrbit)
+    {
+        if (Fill) Fill->SetVisibility(false);
+        return;
+    }
+
+    if (!Fill)
+    {
+        Fill = NewObject<UDirectionalLightComponent>(&Globe, FillName, RF_Transient);
+        Fill->SetMobility(EComponentMobility::Movable);
+        Fill->SetIntensity(1.5f);
+        Fill->SetCastShadows(false);
+        Fill->SetLightingChannels(false, false, true);
+        Globe.AddInstanceComponent(Fill);
+        Fill->RegisterComponent();
+    }
+    Fill->SetVisibility(true);
+    Fill->SetWorldRotation((Globe.GetActorLocation() - *Observer).Rotation());
+
+    for (const UWorldScapeLod* Lod : Globe.WorldScapeLod)
+        if (IsValid(Lod) && IsValid(Lod->Mesh) && !Lod->Mesh->LightingChannels.bChannel2)
+            Lod->Mesh->SetLightingChannels(true, false, true);
 }
 
 void SetJanekPresentationRadius(AActor& Planet, double Radius)
@@ -2902,6 +2940,7 @@ AWorldScapeRoot* ASystemSceneBuilder::ConfigureJanekSurface(const FVector& Obser
     Globe->bGenerateCollision = true;
     Globe->bGenerateFoliages = true;
     Globe->SetActorHiddenInGame(false);
+    UpdateJanekOrbitRendering(*Globe, nullptr);
     ScaleJanekOceanWaves(*Globe);
 
     if (!JanekRunwayGrade.IsValid())
@@ -3096,6 +3135,7 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
             {
                 Globe->bOverridePlayerPosition = true;
                 Globe->OverridedPlayerPosition = Eye;
+                UpdateJanekOrbitRendering(*Globe, &Eye);
                 ScaleJanekOceanWaves(*Globe);
             }
             BodyActor->SetActorLocationAndRotation(GetActorLocation() + MissionOrbitalToUE(Body->Location() - SectorOrigin),
@@ -3235,7 +3275,11 @@ void ASystemSceneBuilder::EndMissionSpace()
     MissionBodyTransforms.Empty(); MissionBodyParents.Empty();
     for (const FSpawnedSystemBody& Entry : SpawnedBodies)
         if (AActor* BodyActor = Entry.Actor.Get(); BodyActor && BodyActor->ActorHasTag(JanekWorldScapeTag))
+        {
+            if (auto* Globe = Cast<AWorldScapeRoot>(BodyActor))
+                UpdateJanekOrbitRendering(*Globe, nullptr);
             SetJanekPresentationRadius(*BodyActor, Entry.VisualRadiusUnits);
+        }
     MissionBodyRadii.Empty(); MissionHiddenActors.Empty();
 }
 

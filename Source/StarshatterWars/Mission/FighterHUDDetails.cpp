@@ -580,7 +580,20 @@ void SFighterHUDDetails::Refresh()
         const bool bWaypoint = IsValid(SelectedObject) && SelectedObject->IsA<AWaypointActor>();
         FMissionObjectData ObjectData;
         const bool bObjectAvailable = ReadMissionObject(SelectedObject, P, R, ObjectData);
-        if (bWaypoint && bObjectAvailable)
+        const auto* Asteroid = bObjectAvailable ? Cast<ANativeAsteroidActor>(SelectedObject) : nullptr;
+        if (Asteroid)
+        {
+            if (!TargetMFDPreview) TargetMFDPreview = MakeUnique<FShipMFDPreview>(true);
+            if (TargetMFDPreview->SetAsteroid(Asteroid->AsteroidMesh.Get()))
+            {
+                const AShipActor* PlayerActor = P->GetNativePresentation();
+                if (IsValid(PlayerActor))
+                    TargetMFDPreview->SetView(Asteroid->GetActorQuat(),
+                        PlayerActor->GetActorLocation() - Asteroid->GetActorLocation(), PlayerActor->GetActorUpVector());
+            }
+            ObjectData.ImagePath.Reset();
+        }
+        else if (bWaypoint && bObjectAvailable)
         {
             if (!TargetMFDPreview) TargetMFDPreview = MakeUnique<FShipMFDPreview>(true);
             TargetMFDPreview->SetWaypoint();

@@ -7,6 +7,7 @@ class AActor;
 class ASceneCapture2D;
 class UTextureRenderTarget2D;
 class UMaterialInstanceDynamic;
+class UStaticMeshComponent;
 struct FShipDesign;
 // Asset-only, isolated rendering. Never retains a simulation Ship or game actor.
 class FShipMFDPreview
@@ -16,6 +17,7 @@ public:
     ~FShipMFDPreview();
     bool SetDesign(const FShipDesign* Design);
     bool SetWaypoint();
+    bool SetAsteroid(const UStaticMeshComponent* Source);
     void SetView(const FQuat& TargetRotation,const FVector& ToObserver,const FVector& ObserverUp);
     bool IsReady() const { return Visual.IsValid() && Target.IsValid(); }
     const FSlateBrush& GetBrush() const { return Brush; }
