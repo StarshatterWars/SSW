@@ -3,6 +3,9 @@ SHIP
 name:       Courier
 display_name: "Blockade Runner"
 class:      Courier
+cargo_capacity: { tonnes: 180, passengers: 0 }
+cargo_manifest: { item: "sealed documents", finished_item: "SealedDocuments", unit: "cases", min: 2, max: 12 }
+cargo_manifest: { item: "avionics", finished_item: "Avionics", unit: "crates", min: 4, max: 18 }
 abrv:       TRANS
 hud_icon:   "BRHud"
 empire:      All

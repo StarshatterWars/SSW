@@ -1,6 +1,7 @@
 MISSION
 
 id:     3
+max_players: 2
 name:   "Destroyer Duel"
 desc:   "Small fleet engagement between opposing destroyer squadrons."
 type:   "Patrol"

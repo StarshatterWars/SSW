@@ -315,6 +315,7 @@ void SFighterHUDDetails::Refresh()
     TargetDisplayColor = FLinearColor::Yellow;
     TargetMineral.Reset();
     TargetDepositAmount.Reset();
+    TargetCargo.Reset();
     JumpRoute.Reset();
     HomeCarrierReadout.Reset();
     NavReadouts.Reset(); MissileReadouts.Reset(); DefenseReadout.Reset();
@@ -540,6 +541,21 @@ void SFighterHUDDetails::Refresh()
             const FVector Separation = T->GetLocation()-P->GetLocation();
             bClosingValid = !Separation.IsNearlyZero();
             ClosingSpeed = FVector::DotProduct(P->GetVelocity()-T->GetVelocity(), Separation.GetSafeNormal());
+            if (const auto* Load = T->GetCargoManifest().GetPtrOrNull())
+            {
+                TargetCargo = NSLOCTEXT("Freight", "UnresolvedCargo", "CARGO UNRESOLVED").ToString();
+                if (PlayerSensor &&
+                    SSWFreightManifest::CanResolve(Separation.Size(), PlayerSensor->GetBeamRange()) &&
+                    PlayerSensor->IsTracking(T))
+                {
+                    const FText Quantity = FText::AsNumber(Load->Quantity);
+                    const FText Item = FText::FromString(Load->Item);
+                    TargetCargo = Load->Unit.IsEmpty()
+                        ? FText::Format(NSLOCTEXT("Freight", "CargoCount", "{0} {1}"), Quantity, Item).ToString()
+                        : FText::Format(NSLOCTEXT("Freight", "CargoReadout", "{0} {1} · {2}"),
+                            Quantity, FText::FromString(Load->Unit), Item).ToString();
+                }
+            }
         }
         TargetName = IsValid(A) ? SelectedName.Get().ToString() : FString(ANSI_TO_TCHAR(T->GetName()));
         TargetClass = ANSI_TO_TCHAR(T->GetShipClassName());
@@ -576,12 +592,13 @@ void SFighterHUDDetails::Refresh()
             TargetRange = ObjectData.RangeKm; TargetHull = -1; TargetShield = -1;
             if (const auto* Deposit = ObjectData.AsteroidResource.GetPtrOrNull())
             {
-                TargetClass = Deposit->GetTypeName().ToString();
+                TargetClass = FText::Format(NSLOCTEXT("Asteroid", "TypeAndRarity", "{0} · {1}"),
+                    Deposit->GetTypeName(), Deposit->GetRarityName()).ToString();
                 TargetMineral = Deposit->GetMineralName().ToString();
                 FNumberFormattingOptions Number;
                 Number.MaximumFractionalDigits = 2;
-                TargetDepositAmount = FText::Format(NSLOCTEXT("Asteroid", "DepositTonnes", "{0} t"),
-                    FText::AsNumber(Deposit->AmountTonnes, &Number)).ToString();
+                TargetDepositAmount = FText::Format(NSLOCTEXT("Asteroid", "DepositTonnesAndValue", "{0} t · {1} cr/t"),
+                    FText::AsNumber(Deposit->AmountTonnes, &Number), FText::AsNumber(Deposit->GetValuePerTonne())).ToString();
             }
             if (TargetIconPath != ObjectData.ImagePath)
             {
@@ -1293,7 +1310,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     if (bHasTarget)
     {
         // Target has one additional range row. Keep its final row bottom-aligned too.
-        const FVector2D P(Size.X-408*Scale,Size.Y-192*Scale);
+        const double CargoRowHeight = TargetCargo.IsEmpty() ? 0.0 : 20.0;
+        const FVector2D P(Size.X-408*Scale,Size.Y-(192+CargoRowHeight)*Scale);
         FString WaypointFirst, WaypointSecond;
         const FSlateFontInfo NameFont = FCoreStyle::GetDefaultFontStyle("Bold", FMath::Max(8, int32(11*Scale)));
         const auto NameMeasure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
@@ -1321,7 +1339,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             ShipText(P+FVector2D(0,132)*Scale, TargetMineral, TargetDisplayColor);
             ShipText(P+FVector2D(0,152)*Scale, TargetDepositAmount, TargetDisplayColor);
         }
-        ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?UFormattingUtils::FormatDistance(TargetRange * 1000.0):TEXT("RANGE --"),TargetDisplayColor);
+        if (!TargetCargo.IsEmpty())
+            ShipText(P+FVector2D(0,172)*Scale,TargetCargo,TargetDisplayColor);
+        ShipText(P+FVector2D(0,172+CargoRowHeight)*Scale,TargetRange>=0?UFormattingUtils::FormatDistance(TargetRange * 1000.0):TEXT("RANGE --"),TargetDisplayColor);
     }
     } // External instruments; radio and information remain available in cockpit.
     if (const auto* Controller = NetworkController.Get())

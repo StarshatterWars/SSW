@@ -3,6 +3,7 @@ SHIP
 name:          Eagle
 display_name:  Eagle
 class:         Fighter
+cargo_capacity: { tonnes: 0.35, passengers: 0 }
 abrv:          "F-34D"
 empire:        Terellian
 hud_icon:      "EagleHud"

@@ -23,6 +23,7 @@
 
 #include "Types.h"
 #include "SimObject.h"
+#include "FreightManifest.h"
 #include "List.h"
 #include "DetailSet.h"
 
@@ -380,6 +381,8 @@ public:
     const char*       Registry() const { return regnum; }
     void              SetName(const char* ident) { strcpy_s(name, ident); }
     const ShipDesign* Design() const { return design; }
+    void AssignMilitaryCargo();
+    const TOptional<SSWFreightManifest::FLoad>& GetCargoManifest() const { return CargoManifest; }
     const char*       Abbreviation() const;
     const char*        DesignName() const;
     const char*        DesignFileName() const;
@@ -536,6 +539,7 @@ protected:
 
     char              regnum[16];
     ShipDesign*       design;
+    TOptional<SSWFreightManifest::FLoad> CargoManifest;
     ShipKiller*       killer;
     DetailSet         detail;
     int               detail_level;

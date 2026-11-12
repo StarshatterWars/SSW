@@ -3,6 +3,7 @@ SHIP
 name:          Station5
 display_name:  "Orbital Station"
 class:         STATION
+cargo_capacity: { tonnes: 40000, passengers: 0 }
 abrv:          STN
 empire:        Marakan
 description:   "The Marakan Orbital Station functions as a regional logistics and command hub, coordinating fleet traffic and resource distribution throughout nearby sectors. While less fortified than a fortress installation, it maintains sufficient defenses to deter opportunistic strikes."

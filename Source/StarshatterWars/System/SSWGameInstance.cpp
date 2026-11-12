@@ -684,14 +684,15 @@ void USSWGameInstance::Shutdown()
     PlatformSignInView = nullptr;
     PlatformSignInStatus.Reset();
 
-    // Release the standalone EOS instance before engine module teardown.
-    // Editor play sessions may share the process-wide instance.
-    if (IsRunningGame() && IOnlineSubsystem::DoesInstanceExist(TEXT("EOS")))
-        IOnlineSubsystem::Destroy(TEXT("EOS"));
 	USound::SetWorldContext(nullptr);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 
 	Super::Shutdown();
+
+    // Game instance subsystems release their EOS interfaces during Super::Shutdown.
+    // Editor play sessions may share the process-wide EOS instance.
+    if (IsRunningGame() && IOnlineSubsystem::DoesInstanceExist(TEXT("EOS")))
+        IOnlineSubsystem::Destroy(TEXT("EOS"));
 
 	if (FAudioDevice* AudioDevice = GEngine->GetMainAudioDeviceRaw())
 	{

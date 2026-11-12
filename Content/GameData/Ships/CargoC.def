@@ -3,6 +3,9 @@ SHIP
 name:       IM2800
 display_name: "IM2800 Cargo"
 class:      Cargo
+cargo_capacity: { tonnes: 2500, passengers: 0 }
+cargo_manifest: { item: "graphite", unit: "t", min: 900, max: 1700 }
+cargo_manifest: { item: "copper concentrate", unit: "t", min: 1100, max: 1900 }
 abrv:		CARGO
 hud_icon:   "CCHud"
 description: "The IM2800 Cargo Hauler is a compact commercial transport built for short-range freight delivery and orbital resupply operations. Designed for efficiency and low operating cost, it is a common sight along established trade lanes and developing colony routes."

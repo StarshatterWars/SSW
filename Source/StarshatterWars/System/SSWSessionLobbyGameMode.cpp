@@ -1,4 +1,6 @@
 #include "SSWSessionLobbyGameMode.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "MultiplayerDlg.h"
 #include "MissionUIStyle.h"
 #include "GameFramework/SpectatorPawn.h"
@@ -791,22 +793,36 @@ void ASSWSessionLobbyGameMode::BeginPlay()
         }
         Runtime->StartRuntime();
         Runtime->SetGameMode(EGameMode::MENU);
+    }
+
+    LobbyMissionIndex = UGameplayStatics::GetIntOption(OptionsString, TEXT("SSWMission"), INDEX_NONE);
+    const auto* Data = GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>();
+    const auto* Scenario = Data && Data->GetMultiplayerMissionScenarios().IsValidIndex(LobbyMissionIndex)
+        ? &Data->GetMultiplayerMissionScenarios()[LobbyMissionIndex] : nullptr;
+    if (!Scenario && Data && LobbyMissionIndex == INDEX_NONE)
+        Scenario = Data->GetMultiplayerMissionScenarios().FindByPredicate([](const FS_CampaignMission& Row)
+        {
+            return Row.MissionName.Equals(TEXT("Hawk Match"), ESearchCase::IgnoreCase);
+        });
+    const int32 MissionCapacity = Scenario ? Scenario->GetMultiplayerCapacity() : FS_CampaignMission::MultiplayerConnectionLimit;
+    PlayerCapacity = FMath::Clamp(UGameplayStatics::GetIntOption(OptionsString, TEXT("SSWPlayers"), MissionCapacity), 1, MissionCapacity);
+
+    const FString Map = Scenario
+        ? FString::Printf(TEXT("/Game/Maps/%s"), *Scenario->MissionSystem) : TEXT("/Game/Maps/Borova");
+    if (auto* State = GetGameState<ASSWSessionGameState>())
+    {
+        State->MissionMap = Map;
+        State->ArenaSector = Scenario ? Scenario->MissionRegion : TEXT("Borova");
+    }
+
+    if (GetNetMode() == NM_DedicatedServer)
+    {
         if (auto* Sessions = GetGameInstance()->GetSubsystem<USSWSessionSubsystem>())
-            Sessions->AdvertiseDedicatedLAN();
+            Sessions->AdvertiseDedicated(!FParse::Param(FCommandLine::Get(), TEXT("SSWEOS")), PlayerCapacity,
+                Scenario ? Scenario->MissionName : FString(TEXT("Hawk Match")));
     }
     else
     {
-        LobbyMissionIndex = UGameplayStatics::GetIntOption(OptionsString, TEXT("SSWMission"), INDEX_NONE);
-        const auto* Data = GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>();
-        const auto* Scenario = Data && Data->GetMultiplayerMissionScenarios().IsValidIndex(LobbyMissionIndex)
-            ? &Data->GetMultiplayerMissionScenarios()[LobbyMissionIndex] : nullptr;
-        const FString Map = Scenario
-            ? FString::Printf(TEXT("/Game/Maps/%s"), *Scenario->MissionSystem) : TEXT("/Game/Maps/Borova");
-        if (auto* State = GetGameState<ASSWSessionGameState>())
-        {
-            State->MissionMap = Map;
-            State->ArenaSector = Scenario ? Scenario->MissionRegion : TEXT("Borova");
-        }
         bool bStreamingStarted = false;
         LobbySystemLevel = ULevelStreamingDynamic::LoadLevelInstance(
             GetWorld(), Map, FVector::ZeroVector, FRotator::ZeroRotator, bStreamingStarted);
@@ -823,6 +839,8 @@ void ASSWSessionLobbyGameMode::UpdateMissionCountdown()
 
     if (State->bMissionStartReady && GetNetMode() == NM_DedicatedServer)
     {
+        if (LobbyMission && LobbyMission->IsComplete() && !HasMatchEnded())
+            EndMatch();
         if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
             Runtime->SetPaused(GetNumPlayers() == 0);
         return;
@@ -1145,6 +1163,7 @@ void ASSWSessionLobbyGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     GetWorldTimerManager().ClearTimer(MissionCountdownTimer);
     GetWorldTimerManager().ClearTimer(ArenaTimer);
+    GetWorldTimerManager().ClearTimer(DedicatedShutdownTimer);
     for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
         if (auto* Pilot = Cast<ASSWSessionLobbyController>(It->Get())) SaveServerPilot(*Pilot, true);
     if (Sim* Simulation = Sim::GetSim(); LobbyMission && Simulation && Simulation->GetMission() == LobbyMission.Get())
@@ -1843,11 +1862,24 @@ void ASSWSessionFlightHUD::DrawHUD()
     }
 }
 
+void ASSWSessionLobbyGameMode::PreLogin(const FString& Options, const FString& Address,
+    const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage)
+{
+    Super::PreLogin(Options, Address, UniqueId, ErrorMessage);
+    if (!ErrorMessage.IsEmpty()) return;
+    if (GetNetMode() == NM_DedicatedServer && (bDedicatedShutdownStarted || HasMatchEnded()))
+        ErrorMessage = TEXT("This match has ended.");
+    else if (GetNumPlayers() + GetNumSpectators() >= PlayerCapacity)
+        ErrorMessage = TEXT("This mission is full.");
+}
+
 void ASSWSessionLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
     Super::PostLogin(NewPlayer);
     if (GetNetMode() != NM_DedicatedServer) return;
 
+    if (!HasMatchEnded())
+        GetWorldTimerManager().ClearTimer(DedicatedShutdownTimer);
     auto* Pilot = Cast<ASSWSessionLobbyController>(NewPlayer);
     if (Pilot) SaveServerPilot(*Pilot, false);
     const auto* State = GetGameState<ASSWSessionGameState>();
@@ -1905,6 +1937,41 @@ void ASSWSessionLobbyGameMode::Logout(AController* Exiting)
         }
     }
     Super::Logout(Exiting);
+    if (GetNetMode() == NM_DedicatedServer && !GetWorld()->bIsTearingDown &&
+        GetNumPlayers() + GetNumSpectators() == 0)
+        ScheduleDedicatedShutdown();
+}
+
+void ASSWSessionLobbyGameMode::HandleMatchHasEnded()
+{
+    Super::HandleMatchHasEnded();
+    if (GetNetMode() == NM_DedicatedServer)
+    {
+        // A concluded match gets its own full grace period.
+        GetWorldTimerManager().ClearTimer(DedicatedShutdownTimer);
+        ScheduleDedicatedShutdown();
+    }
+}
+
+void ASSWSessionLobbyGameMode::ScheduleDedicatedShutdown()
+{
+    if (bDedicatedShutdownStarted || GetWorldTimerManager().IsTimerActive(DedicatedShutdownTimer))
+        return;
+
+    UE_LOG(LogTemp, Display, TEXT("[StarServer] Shutdown scheduled in 60 seconds."));
+    GetWorldTimerManager().SetTimer(DedicatedShutdownTimer, this, &ThisClass::ShutdownDedicatedServer, 60.f);
+}
+
+void ASSWSessionLobbyGameMode::ShutdownDedicatedServer()
+{
+    if (!HasMatchEnded() && GetNumPlayers() + GetNumSpectators() > 0)
+        return;
+
+    bDedicatedShutdownStarted = true;
+    if (auto* Sessions = GetGameInstance()->GetSubsystem<USSWSessionSubsystem>())
+        Sessions->CloseDedicatedSessionAndExit();
+    else
+        FPlatformMisc::RequestExit(false);
 }
 
 void ASSWSessionLobbyController::ServerSetPlatformPilotName_Implementation(const FString& DisplayName)

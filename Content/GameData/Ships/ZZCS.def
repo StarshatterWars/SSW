@@ -3,6 +3,7 @@ SHIP
 name:          ZZCS
 display_name:  "Zolon Consul"
 class:         Cruiser
+cargo_capacity: { tonnes: 6540, passengers: 0 }
 abrv:          ZCS
 hud_icon:      "zmap"
 empire:        Zolon     

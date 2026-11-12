@@ -4,6 +4,7 @@ name:          Station2
 display_name:  Harmony Station
 abrv:          STN
 class:         STATION
+cargo_capacity: { tonnes: 60000, passengers: 0 }
 description:   "Harmony Station is a Terellian Alliance diplomatic and logistics outpost positioned along key commercial corridors. Designed as both a civilian sanctuary and fleet support node, it combines modular docking rings with defensive shielding to safeguard Alliance trade and regional stability."
 empire:        Terellian
 hud_icon:      "s5hud"

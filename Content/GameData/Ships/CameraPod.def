@@ -3,6 +3,7 @@ SHIP
 name:          CameraPod
 display_name:  CameraPod
 class:         Drone
+cargo_capacity: { tonnes: 0.07, passengers: 0 }
 abrv:		   DRN
 description:   "The CameraPod Drone is a compact autonomous observation unit deployed for perimeter surveillance and battlefield monitoring. Lightly armored and unarmed, it relays real-time visual and sensor telemetry to command elements, extending tactical awareness without risking crewed assets."
 empire:        All

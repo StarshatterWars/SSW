@@ -3,6 +3,7 @@ SHIP
 name:          Adventure
 display_name:  Adventure
 class:         Carrier
+cargo_capacity: { tonnes: 7500, passengers: 0 }
 abrv:		   CV
 empire:        Pirate
 description:   "The Adventure-class Carrier serves as a mobile stronghold for pirate flotillas operating beyond recognized territorial space. Refitted from a civilian hull and reinforced with improvised flight decks and hangar bays, it acts as both raider command ship and strike carrier, projecting irregular power across vulnerable trade routes."

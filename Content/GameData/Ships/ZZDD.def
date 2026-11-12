@@ -3,6 +3,7 @@ SHIP
 name:          ZZDD
 display_name:  Zolon
 class:         Destroyer
+cargo_capacity: { tonnes: 1450, passengers: 0 }
 abrv:          ZDA
 hud_icon:      "zmap"
 empire:        Zolon

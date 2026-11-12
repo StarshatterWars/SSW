@@ -3,6 +3,7 @@ SHIP
 name:          Viper
 display_name:  Viper
 class:         Fighter
+cargo_capacity: { tonnes: 0.28, passengers: 0 }
 abrv:          "F-MK1"
 description:   "The F-MK1 VIPER is a light Alliance fighter designed for rapid interception. Twin Alpha Cannon and six hardpoints keep it fast and simple. The Viper is used for patrol, escort, and light strike where speed and response time matter more than payload."
 empire:        Terellian

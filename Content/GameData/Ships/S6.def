@@ -3,6 +3,7 @@ SHIP
 name:          Station6
 display_name:  "Freight Xfer"
 class:         STATION
+cargo_capacity: { tonnes: 90000, passengers: 0 }
 abrv:          STN
 empire:        Marakan
 description:   "The Marakan Freight Transfer Station is a high-throughput cargo interchange positioned along major trade routes. Massive docking gantries and automated handling arrays allow it to rapidly offload, inspect, and redistribute materials to support sustained fleet operations."

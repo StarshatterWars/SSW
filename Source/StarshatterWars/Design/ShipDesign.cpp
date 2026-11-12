@@ -16,6 +16,7 @@
 */
 
 #include "ShipDesign.h"
+#include "FreightManifest.h"
 #include "CoreMinimal.h"
 #include "Math/Vector.h"
 #include "Engine/Texture2D.h"
@@ -1352,6 +1353,8 @@ ShipDesign::ParseShip(TermDef* def)
 	else GET_DEF_TEXT(name);
 	else GET_DEF_TEXT(description);
 	else GET_DEF_TEXT(display_name);
+	else if (defname == "cargo_capacity") SSWFreightManifest::ReadCapacity(CargoCapacity, *def, filename);
+	else if (defname == "cargo_manifest") SSWFreightManifest::AddOption(CargoManifest, *def, filename);
 	else GET_DEF_TEXT(abrv);
 	else GET_DEF_NUM(pcs);
 	else GET_DEF_NUM(acs);

@@ -3,6 +3,7 @@ SHIP
 name:          Berents
 display_name:  Berents
 class:         Frigate
+cargo_capacity: { tonnes: 200, passengers: 0 }
 abrv:		   FF
 empire:        Terellian
 description:   "The FF-922 BERENTS class frigates fulfill a Protection of Shipping (POS) mission providing anti-fighter cover for amphibious expeditionary forces, underway replenishment groups and merchant convoys.  The Berents class anti-fighter weapons complement includes two forward plus one aft Phalanx PDB mounts, along with a pair of Mark VII interceptor launchers.  The Berents class was also recently upgraded to include a heavy plasma cannon battery for use against harder targets."

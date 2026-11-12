@@ -4,6 +4,7 @@ name:          Station1
 display_name:  "Freight Xfer"
 abrv:          TRX
 class:         STATION
+cargo_capacity: { tonnes: 90000, passengers: 0 }
 hud_icon:      "s1hud"
 description:   "The Freight Transfer Station is a Terellian-operated orbital logistics hub dedicated to cargo transfer and commercial redistribution. Though lightly armed, its docking arrays and storage rings make it a vital artery in maintaining steady trade flow across Alliance space."
 empire:        Terellian

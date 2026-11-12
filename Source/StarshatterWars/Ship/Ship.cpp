@@ -223,6 +223,7 @@ Ship::Ship(
 		return;
 	}
 
+	CargoManifest = SSWFreightManifest::Assign(design->CargoManifest, design->CargoCapacity, name, regnum);
 	obj_type = ESimObject::SHIP;
 
 	radius = design->radius;
@@ -356,6 +357,40 @@ Ship::Ship(
 	: Ship(ship_name, reg_num, (ShipDesign*)nullptr, IFF, cmd_ai, loadout, false)
 {
 	UnrealDesign = unreal_design;
+}
+
+void Ship::AssignMilitaryCargo()
+{
+    if (!design)
+        return;
+
+    const FSSWCargoCapacity& Capacity = design->CargoCapacity;
+    if (!FMath::IsFinite(Capacity.Tonnes) || Capacity.Tonnes < 1.0)
+        return;
+
+    const double WholeTonnes = FMath::Min(Capacity.Tonnes, static_cast<double>(MAX_int32));
+    const int32 Minimum = FMath::Max(1, FMath::FloorToInt32(WholeTonnes / 4.0));
+    const int32 Maximum = FMath::Max(Minimum, FMath::FloorToInt32(WholeTonnes * 0.75));
+    const TArray<FSSWCargoOption> Supplies = {
+        {TEXT("military rations"), ESSWFinishedItem::MilitaryRations, false, TEXT("t"), Minimum, Maximum},
+        {TEXT("military spare parts"), ESSWFinishedItem::MilitarySpares, false, TEXT("t"), Minimum, Maximum},
+        {TEXT("field medical supplies"), ESSWFinishedItem::FieldMedicalSupplies, false, TEXT("t"), Minimum, Maximum}
+    };
+    const bool IsTanker = FCStringAnsi::Stricmp(design->name, "IM1906") == 0 ||
+        FCStringAnsi::Stricmp(design->name, "IM1912") == 0;
+    const TArray<FSSWCargoOption> TankerSupplies = {
+        {TEXT("fleet propellant"), ESSWFinishedItem::None, false, TEXT("t"), Minimum, Maximum},
+        {TEXT("fleet reserve water"), ESSWFinishedItem::None, false, TEXT("t"), Minimum, Maximum}
+    };
+    auto Load = SSWFreightManifest::Assign(IsTanker ? TankerSupplies : Supplies, Capacity, name, regnum);
+    if (!Load.IsSet())
+        return;
+
+    if (CargoManifest.IsSet())
+        Load->Origin = MoveTemp(CargoManifest->Origin);
+    else if (SimRegion* Region = GetRegion())
+        Load->CaptureOrigin(*Region, GetLocation());
+    CargoManifest = MoveTemp(Load);
 }
 
 void Ship::InitializeRuntimeSystemsFromDesign()
@@ -1410,6 +1445,8 @@ void
 Ship::SetRegion(SimRegion* rgn)
 {
 	SimObject::SetRegion(rgn);
+	if (rgn && CargoManifest.IsSet())
+		CargoManifest->CaptureOrigin(*rgn, GetLocation());
 
 	if (IsGroundUnit()) {
 		// glue buildings to the terrain:
@@ -2910,6 +2947,10 @@ Ship::SetElement(SimElement* e)
 		}
 
 		orig_elem_index = element->FindIndex(this);
+		const List<Instruction>& Plan = element->GetFlightPlan();
+		if (CargoManifest.IsSet() && !CargoManifest->Destination.IsSet() && Plan.size() > 0)
+			if (Instruction* LastWaypoint = Plan.last())
+				CargoManifest->CaptureDestination(*LastWaypoint);
 	}
 }
 

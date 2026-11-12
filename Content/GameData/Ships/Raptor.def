@@ -3,6 +3,7 @@ SHIP
 name:           Raptor
 display_name:   Raptor
 class:          fighter
+cargo_capacity: { tonnes: 0.5, passengers: 0 }
 abrv:           "F5A"
 description:   "The F5A RAPTOR is a multirole Alliance fighter with twin Alpha Cannon and eight hardpoints. It balances agility and payload, supporting air combat, ground strike, and ship strike loadouts. The Raptor is a standard fleet fighter for mixed mission packages."
 empire:        Terellian

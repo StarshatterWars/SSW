@@ -3,6 +3,7 @@ SHIP
 name:          Cutlass
 display_name:  Cutlass
 class:         Fighter
+cargo_capacity: { tonnes: 0.28, passengers: 0 }
 abrv:          "F-19"
 empire:        Pirate
 description:   "Small, stealthy, and highly maneuverable, the CUTLASS pirate fighter is commonly used by the Brotherhood of Iron criminal organization as both a commerce raider and escort for their larger vessels.  The Cutlass features four widely spread Alpha cannon, and has even been known to mount stolen antiship missiles for some engagements."

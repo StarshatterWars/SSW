@@ -242,6 +242,8 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
 
     Legacy->valid = true;
     Legacy->secret = Row.Secret;
+    Legacy->CargoManifest = Row.CargoManifest;
+    Legacy->CargoCapacity = Row.CargoCapacity;
 
     //-------------------------------------------------------------
     // Classification

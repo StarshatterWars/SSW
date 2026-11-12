@@ -3,6 +3,7 @@ SHIP
 name:          Archaelith
 display_name:  Archaelith
 class:         Drone
+cargo_capacity: { tonnes: 0.07, passengers: 0 }
 abrv:		   DRN
 empire:        All
 description:   "The Archaelith-class Drone is an autonomous reconnaissance platform deployed for deep-space surveillance and perimeter control. Compact and lightly armed, it relies on advanced sensor suites and networked coordination to extend fleet awareness far beyond the main battle line."

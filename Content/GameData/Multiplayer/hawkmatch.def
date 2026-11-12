@@ -1,6 +1,7 @@
 MISSION
 
 id:     1
+max_players: 4
 name:   "Hawk Match"
 desc:   "Four-way deathmatch with Stormhawk fighters in Borova Sector."
 type:   Patrol

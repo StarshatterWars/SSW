@@ -252,6 +252,34 @@ bool FAsteroidTumbleTest::RunTest(const FString& Parameters)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAsteroidExoticDepositsTest, "Starshatter.Asteroid.ExoticDeposits",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FAsteroidExoticDepositsTest::RunTest(const FString&)
+{
+    FRandomStream Positions(12345);
+    bool FoundDilithium = false;
+    bool FoundQuantium = false;
+    for (int32 Index = 0; Index < 2048 && !(FoundDilithium && FoundQuantium); ++Index)
+    {
+        Asteroid Rock(Index, Positions.VRand() * 5e5, 5e7);
+        const auto& Resource = Rock.GetResource();
+        if (Resource.Mineral == ESSWMineral::Dilithium)
+        {
+            FoundDilithium = true;
+            TestTrue(TEXT("Generated dilithium is exotic and worth 150 credits per tonne"),
+                Resource.Rarity == ESSWAsteroidRarity::Exotic && Resource.GetValuePerTonne() == 150);
+        }
+        if (Resource.Mineral == ESSWMineral::Quantium40)
+        {
+            FoundQuantium = true;
+            TestTrue(TEXT("Generated Quantium-40 is exotic and worth 300 credits per tonne"),
+                Resource.Rarity == ESSWAsteroidRarity::Exotic && Resource.GetValuePerTonne() == 300);
+        }
+    }
+    TestTrue(TEXT("Both exotic minerals occur in generated deposits"), FoundDilithium && FoundQuantium);
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRemainingCollisionPassTest,"Starshatter.AIParity.Remaining.RegionCollisionDispatch",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FRemainingCollisionPassTest::RunTest(const FString& Parameters)
 {

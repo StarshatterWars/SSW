@@ -353,6 +353,8 @@ class STARSHATTERWARS_API ASSWSessionLobbyGameMode:public AGameMode {
  GENERATED_BODY()
 public:
     ASSWSessionLobbyGameMode();
+    virtual void PreLogin(const FString& Options, const FString& Address,
+        const FUniqueNetIdRepl& UniqueId, FString& ErrorMessage) override;
     virtual void PostLogin(APlayerController* NewPlayer) override;
     virtual void Logout(AController* Exiting) override;
     int32 CountPendingArenaRespawns(Sim& Simulation, int32 Iff) const;
@@ -360,6 +362,7 @@ public:
 protected:
     virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+    virtual void HandleMatchHasEnded() override;
 
     UPROPERTY(EditDefaultsOnly, Category="Multiplayer", meta=(ClampMin="2"))
     int32 MinimumMissionPilots = 2;
@@ -388,12 +391,17 @@ private:
     void UpdateArena();
     bool LaunchLobbyMission(ASSWSessionGameState& State);
     TSharedPtr<Mission> LobbyMission;
+    int32 PlayerCapacity = 8;
     int32 LobbyMissionIndex = INDEX_NONE;
     UPROPERTY(Transient) TObjectPtr<ULevelStreamingDynamic> LobbySystemLevel;
     TWeakObjectPtr<ASystemSceneBuilder> LobbySceneBuilder;
 
     FTimerHandle MissionCountdownTimer;
     FTimerHandle ArenaTimer;
+    FTimerHandle DedicatedShutdownTimer;
+    bool bDedicatedShutdownStarted = false;
+    void ScheduleDedicatedShutdown();
+    void ShutdownDedicatedServer();
 
     struct FPilotSpawn
     {

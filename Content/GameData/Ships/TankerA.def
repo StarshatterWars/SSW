@@ -3,6 +3,9 @@ SHIP
 name:       IM1906
 display_name: "IM1906 Tanker"
 class:      Freighter
+cargo_capacity: { tonnes: 9000, passengers: 0 }
+cargo_manifest: { item: "water", unit: "t", min: 4500, max: 7200 }
+cargo_manifest: { item: "water ice", unit: "t", min: 4000, max: 6800 }
 abrv:       FREIGHT
 empire:     All
 description: "The IM1906 Tanker is a heavy-capacity fuel transport vessel engineered for long-haul logistics operations. Though lightly armed, its reinforced storage cells and extended range make it indispensable to sustained fleet deployments."

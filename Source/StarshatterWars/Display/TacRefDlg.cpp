@@ -384,6 +384,17 @@ void UTacRefDlg::BuildShipTexts(const FShipDesign& Dsn, FString& OutCaption, FSt
     S += FString::Printf(TEXT("<HUD_Label>DETECT:</>     <HUD_Value>%s</>\n"), *Num0(Dsn.Detet));
     S += FString::Printf(TEXT("<HUD_Label>REPAIR:</>     <HUD_Value>%d TEAMS</>\n"), Dsn.RepairTeams);
 
+    if (Dsn.CargoCapacity.Tonnes > 0.0)
+    {
+        FNumberFormattingOptions CapacityFormat;
+        CapacityFormat.MaximumFractionalDigits = 2;
+        S += FString::Printf(TEXT("<HUD_Label>CARGO CAPACITY:</> <HUD_Value>%s t</>\n"),
+            *FText::AsNumber(Dsn.CargoCapacity.Tonnes, &CapacityFormat).ToString());
+    }
+    if (Dsn.CargoCapacity.PassengerBerths > 0)
+        S += FString::Printf(TEXT("<HUD_Label>PASSENGER BERTHS:</> <HUD_Value>%d</>\n"),
+            Dsn.CargoCapacity.PassengerBerths);
+
     // Weapons summary
     if (Dsn.Weapon.Num() > 0)
     {

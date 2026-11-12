@@ -2,6 +2,7 @@
 #include "Misc/AutomationTest.h"
 #include "Misc/ScopeExit.h"
 #include "SSWSessionSubsystem.h"
+#include "GameStructs.h"
 #include "MultiplayerDlg.h"
 #include "OnlineSubsystem.h"
 #include "Interfaces/OnlineIdentityInterface.h"
@@ -28,7 +29,17 @@
 #include "ContentStreaming.h"
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNativeSessionSettingsTest,"Starshatter.Sessions.SettingsAndValidation",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FNativeSessionSettingsTest::RunTest(const FString&){
- auto S=USSWSessionSubsystem::MakeSettings(TEXT(" Test game "),99,true);TestEqual(TEXT("Player cap bounded"),S.NumPublicConnections,16);TestTrue(TEXT("LAN advertises"),S.bIsLANMatch&&S.bShouldAdvertise);TestTrue(TEXT("Join in progress allowed"),S.bAllowJoinInProgress);FString Name,Project;S.Get(FName(TEXT("SSW_TITLE")),Name);S.Get(FName(TEXT("SSW_PROJECT")),Project);TestEqual(TEXT("Trimmed title"),Name,FString(TEXT("Test game")));TestEqual(TEXT("Cross-game search tag"),Project,FString(TEXT("StarshatterWars")));
+ auto S=USSWSessionSubsystem::MakeSettings(TEXT(" Test game "),99,true);TestEqual(TEXT("Player cap bounded"),S.NumPublicConnections,8);TestTrue(TEXT("LAN advertises"),S.bIsLANMatch&&S.bShouldAdvertise);TestTrue(TEXT("Join in progress allowed"),S.bAllowJoinInProgress);FString Name,Project;S.Get(FName(TEXT("SSW_TITLE")),Name);S.Get(FName(TEXT("SSW_PROJECT")),Project);TestEqual(TEXT("Trimmed title"),Name,FString(TEXT("Test game")));TestEqual(TEXT("Cross-game search tag"),Project,FString(TEXT("StarshatterWars")));
+ FS_CampaignMission Mission;
+ FS_MissionElement Flight;
+ Flight.Playable = true;
+ Flight.Count = 12;
+ Mission.Element.Add(Flight);
+ TestEqual(TEXT("Older missions default to their playable slots capped at eight"), Mission.GetMultiplayerCapacity(), 8);
+ Mission.MaxPlayers = 4;
+ TestEqual(TEXT("Authored mission capacity applies"), Mission.GetMultiplayerCapacity(), 4);
+ Mission.Element[0].Count = 2;
+ TestEqual(TEXT("Capacity cannot exceed the playable roster"), Mission.GetMultiplayerCapacity(), 2);
  auto* Service=NewObject<USSWSessionSubsystem>(NewObject<UGameInstance>());TestFalse(TEXT("No session by default"),Service->HasSession());TestFalse(TEXT("Invalid join does not travel"),Service->JoinSession(-1));TestEqual(TEXT("Error is surfaced"),Service->State,ESSWSessionState::Failed);TestFalse(TEXT("No stale busy state"),Service->IsBusy());return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNativeSessionUITest,"Starshatter.Sessions.NativeDialog",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
@@ -40,7 +51,7 @@ bool FNativeSessionUITest::RunTest(const FString&)
  TArray<UWidget*> Widgets;Screen->WidgetTree->GetAllWidgets(Widgets);TSet<FString> Labels;
  for(auto* W:Widgets){
   if(auto* T=Cast<UTextBlock>(W))Labels.Add(T->GetText().ToString());
-  if(auto* B=Cast<UButton>(W)){auto* Resource=B->GetStyle().Normal.GetResourceObject();TestTrue(TEXT("Session buttons use modern cyan textures"),Resource&&Resource->GetPathName().Contains(TEXT("T_Btn01Cyan_")));}
+  if(auto* B=Cast<UButton>(W)){auto* Resource=B->GetStyle().Normal.GetResourceObject();TestTrue(TEXT("Session controls use cyan actions or rounded list styling"),(Resource&&Resource->GetPathName().Contains(TEXT("T_Btn01Cyan_"))) || B->GetStyle().Normal.DrawAs == ESlateBrushDrawType::RoundedBox);}
  }
  TestTrue(TEXT("Host tab"),Labels.Contains(TEXT("CREATE SESSION")));TestTrue(TEXT("Join tab"),Labels.Contains(TEXT("JOIN SESSION")));
  TestTrue(TEXT("Host action"),Labels.Contains(TEXT("CHOOSE A MISSION")));TestTrue(TEXT("Search action"),Labels.Contains(TEXT("FIND GAMES / REFRESH")));

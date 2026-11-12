@@ -3,6 +3,7 @@ SHIP
 name:          Zodiac
 display_name:  Zodiac
 class:         LCA
+cargo_capacity: { tonnes: 12, passengers: 16 }
 abrv:          LCA
 empire:        Terellian
 description:   "The ZODIAC armored landing craft (LCA) is the standard Alliance millitary shuttle platform, and the only Force:Space craft capable of atmospheric VTOL.  The Zodiac is commonly used to ferry personnel and equipment between groundside bases and spaceborne platforms.  The Zodiac is armed with four (4) heavy Vulcan cannon, and an aft-mounted automated laser turret for self-defense."

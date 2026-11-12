@@ -12,7 +12,7 @@ enum class ESSWMineral : uint8
     Chromite, Ilmenite, Spinel, Apatite, Merrillite, Graphite, Diamond,
     Serpentine, Saponite, Calcite, Dolomite, Pyrite, Pentlandite, Schreibersite,
     Hematite, Quartz, Rutile, Cassiterite, Chalcopyrite, Sphalerite, Galena,
-    Cobaltite, Scheelite, Wolframite, Monazite, Zircon, Uraninite, WaterIce
+    Cobaltite, Scheelite, Wolframite, Monazite, Zircon, Uraninite, WaterIce, Dilithium, Quantium40
 };
 
 UENUM(BlueprintType)
@@ -21,6 +21,15 @@ enum class ESSWAsteroidType : uint8
     Carbonaceous,
     Stony,
     Metallic
+};
+
+UENUM(BlueprintType)
+enum class ESSWAsteroidRarity : uint8
+{
+    Common,
+    Uncommon,
+    Rare,
+    Exotic
 };
 
 USTRUCT(BlueprintType)
@@ -37,6 +46,11 @@ struct FSSWAsteroidResource
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Resources")
     ESSWAsteroidType Type = ESSWAsteroidType::Carbonaceous;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Resources")
+    ESSWAsteroidRarity Rarity = ESSWAsteroidRarity::Common;
+
     FText GetMineralName() const;
+    FText GetRarityName() const;
+    int32 GetValuePerTonne() const;
     FText GetTypeName() const;
 };

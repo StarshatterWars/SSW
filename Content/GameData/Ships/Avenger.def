@@ -3,6 +3,7 @@ SHIP
 name:           Avenger
 display_name:   Avenger
 class:          attack
+cargo_capacity: { tonnes: 0.69, passengers: 0 }
 abrv:           "F6F"
 description:   "The F6F AVENGER is a heavy Alliance attack fighter designed for strike operations against hardened targets. Armed with a four-barrel Alpha Cannon and eight underwing hardpoints, it can carry a full range of air-to-air and air-to-ground ordnance. The Avenger trades pure agility for payload and endurance, making it the workhorse of fleet strike packages."
 empire:        Terellian

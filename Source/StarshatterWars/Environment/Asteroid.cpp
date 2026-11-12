@@ -36,8 +36,27 @@ static double library_radii[6]{};
 
 FText FSSWAsteroidResource::GetMineralName() const
 {
+    if (Mineral == ESSWMineral::Quantium40)
+        return NSLOCTEXT("Asteroid", "Quantium40", "Quantium-40");
+
     const FString Name = StaticEnum<ESSWMineral>()->GetNameStringByValue(static_cast<int64>(Mineral));
     return FText::FromString(FName::NameToDisplayString(Name, false));
+}
+
+FText FSSWAsteroidResource::GetRarityName() const
+{
+    return StaticEnum<ESSWAsteroidRarity>()->GetDisplayNameTextByValue(static_cast<int64>(Rarity));
+}
+
+int32 FSSWAsteroidResource::GetValuePerTonne() const
+{
+    switch (Rarity)
+    {
+    case ESSWAsteroidRarity::Uncommon: return 75;
+    case ESSWAsteroidRarity::Rare: return 100;
+    case ESSWAsteroidRarity::Exotic: return Mineral == ESSWMineral::Quantium40 ? 300 : 150;
+    default: return 50;
+    }
 }
 
 FText FSSWAsteroidResource::GetTypeName() const
@@ -70,17 +89,26 @@ Asteroid::Asteroid(int t, const FVector& pos, double m)
     {
         constexpr Mineral Minerals[] = {Mineral::Olivine, Mineral::Pyroxene, Mineral::Plagioclase};
         Resource.Type = ESSWAsteroidType::Stony;
+        Resource.Rarity = ESSWAsteroidRarity::Uncommon;
         Resource.Mineral = Minerals[Deposit.RandHelper(UE_ARRAY_COUNT(Minerals))];
     }
     else
     {
         constexpr Mineral Minerals[] = {Mineral::Kamacite, Mineral::Taenite, Mineral::Schreibersite};
         Resource.Type = ESSWAsteroidType::Metallic;
+        Resource.Rarity = ESSWAsteroidRarity::Rare;
         Resource.Mineral = Minerals[Deposit.RandHelper(UE_ARRAY_COUNT(Minerals))];
     }
     // The surveyed deposit is a small fraction of the simulation mass in kg.
     if (FMath::IsFinite(m) && m > 0.0)
         Resource.AmountTonnes = m * 0.001 * Deposit.FRandRange(0.002f, 0.025f);
+    // Use the existing composition roll so other deposits retain their seeded yields.
+    if (TypeRoll >= 0.985)
+    {
+        Resource.Rarity = ESSWAsteroidRarity::Exotic;
+        Resource.Mineral = TypeRoll >= 0.995 ? Mineral::Quantium40 : Mineral::Dilithium;
+    }
+
     // Heavy debris spins at a barely visible 0.14 degrees per second.
     // Seed a sustained, distinct angular velocity for each rock in the field.
     FRandomStream Spin(t);

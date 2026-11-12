@@ -4,6 +4,8 @@
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSessionSettings.h"
 #include "Engine/EngineBaseTypes.h"
+#include "HAL/PlatformProcess.h"
+#include "TimerManager.h"
 #include "SSWSessionSubsystem.generated.h"
 UENUM(BlueprintType)
 enum class ESSWSessionState:uint8 {Idle,Creating,Searching,Joining,Hosting,Joined,Leaving,Failed};
@@ -37,7 +39,8 @@ public:
  UFUNCTION(BlueprintCallable) bool JoinSession(int32 Index);
  UFUNCTION(BlueprintCallable) bool LeaveSession();
  UFUNCTION(BlueprintCallable) void CancelSearch();
- void AdvertiseDedicatedLAN();
+ void AdvertiseDedicated(bool bLAN, int32 Players, const FString& Mission);
+ void CloseDedicatedSessionAndExit();
  bool CreateMissionSession(const FString& Name, int32 Players, bool bLAN, int32 MissionIndex);
  static FOnlineSessionSettings MakeSettings(const FString& Name,int32 Players,bool bLAN);
 private:
@@ -53,10 +56,22 @@ private:
  void Found(bool bOK);
  void Joined(FName Name,EOnJoinSessionCompleteResult::Type Result);
  void Left(FName Name,bool bOK);
+ void DedicatedSessionClosed(FName Name, bool bOK);
+ void ExitDedicatedServer();
+ FTimerHandle DedicatedExitTimeout;
  IOnlineSessionPtr Sessions;
  TSharedPtr<FOnlineSessionSearch> Search;
  TArray<FOnlineSessionSearchResult> SearchResults;
  FDelegateHandle CreateHandle,FindHandle,JoinHandle,DestroyHandle;
  bool bSearchCancelled=false;
+ bool bUsingEOS=false;
  int32 HostingMissionIndex = INDEX_NONE;
+ int32 HostingCapacity = 4;
+ bool StartStarServer(const FString& Name, int32 Players, int32 MissionIndex);
+ void PollStarServer();
+ void ReleaseStarServer(bool bTerminate);
+ FProcHandle StarServerProcess;
+ FTimerHandle StarServerPoll;
+ FString StarServerReadyFile;
+ double StarServerDeadline = 0;
 };

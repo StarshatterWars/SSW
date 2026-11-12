@@ -3,6 +3,7 @@ SHIP
 name:           Thunderbolt
 display_name:   Thunderbolt
 class:          Attack
+cargo_capacity: { tonnes: 0.74, passengers: 0 }
 abrv:           "F/A-38D"
 empire:        Terellian
 hud_icon:      "ThunderboltHud"

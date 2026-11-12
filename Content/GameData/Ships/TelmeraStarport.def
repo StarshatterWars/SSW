@@ -3,6 +3,7 @@ SHIP
 name:          Airbase1
 display_name:  "Telmera Starport"
 class:         STARBASE
+cargo_capacity: { tonnes: 20000, passengers: 0 }
 abrv:		   SB
 empire:        Independent
 description:   "Telmera Starport is a major Independent Solus orbital hub facilitating civilian trade, diplomatic traffic, and limited defensive patrol operations. While not as heavily fortified as military installations, its strategic position and traffic volume make it a vital crossroads within neutral space."

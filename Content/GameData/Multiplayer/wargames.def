@@ -1,6 +1,7 @@
 MISSION
 
 id:     4
+max_players: 8
 name:   "War Games"
 desc:   "Fleet war game scenario designed for the persistent multiplayer server mode."
 type:   "Patrol"

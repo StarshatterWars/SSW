@@ -24,6 +24,7 @@
 #include "Bitmap.h"
 #include "ShipExplosion.h"
 #include "ShipDebris.h"
+#include "FreightManifestTypes.h"
 
 // Minimal Unreal includes (kept tight):
 #include "Math/Vector.h"   // FVector
@@ -127,6 +128,8 @@ public:
 	char              path_name[64];
 	char              name[64];
 	char              display_name[64];
+	TArray<FSSWCargoOption> CargoManifest;
+	FSSWCargoCapacity CargoCapacity;
 	char              abrv[16];
 	int               type;
 	float             scale;

@@ -3,6 +3,9 @@ SHIP
 name:       IM4300
 display_name: "IM4300 Hauler"
 class:      Freighter
+cargo_capacity: { tonnes: 7500, passengers: 0 }
+cargo_manifest: { item: "hematite", unit: "t", min: 3500, max: 5200 }
+cargo_manifest: { item: "quartz", unit: "t", min: 3200, max: 4900 }
 abrv:		FREIGHT
 hud_icon:   "CBHud"
 description: "The IM4300 Hauler is a mid-capacity transport optimized for regional supply distribution and frontier logistics. More maneuverable than larger freight platforms, it balances cargo volume with operational flexibility across unstable trade corridors."

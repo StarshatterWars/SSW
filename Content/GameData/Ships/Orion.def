@@ -3,6 +3,7 @@ SHIP
 name:          Orion
 display_name:  Orion
 class:         Carrier
+cargo_capacity: { tonnes: 38280, passengers: 0 }
 abrv:          CV
 empire:        Terellian
 description:   "The CV-69 ORION class carriers are essentially spaceborne starports, capable of launching as many as four fighter craft every minute. The Orion's two launch rails and two arresting gear engines enable her to launch and recover ships both rapidly and simultaneously. The Orion class ship's embarked tactical fighter wing includes four different types of fighter and attack craft in addition to armored landing craft for a total complement of almost 80 ships."

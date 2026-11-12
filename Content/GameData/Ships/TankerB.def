@@ -3,6 +3,9 @@ SHIP
 name:       IM1912
 display_name: "IM1912 Tanker"
 class:      Freighter
+cargo_capacity: { tonnes: 12500, passengers: 0 }
+cargo_manifest: { item: "fusion propellant", unit: "t", min: 5800, max: 8400 }
+cargo_manifest: { item: "liquid hydrogen", unit: "t", min: 5000, max: 7600 }
 abrv:       FREIGHT
 empire:     All
 description: "The IM1912 Tanker is an upgraded deep-space refueling vessel optimized for rapid transfer operations under escort. Its modular containment systems allow it to transport refined propellants and volatile fuels safely across contested sectors."

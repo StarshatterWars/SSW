@@ -3554,7 +3554,12 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 			NewMission.MissionName = FString(Name);
 			UE_LOG(LogTemp, Log, TEXT("mission name '%s'"), *FString(Name));
 		}
-		else if (Key == "story_scene")
+		else if (Key == "max_players")
+        {
+            GetDefNumber(NewMission.MaxPlayers, def, fn);
+            NewMission.MaxPlayers = FMath::Clamp(NewMission.MaxPlayers, 0, FS_CampaignMission::MultiplayerConnectionLimit);
+        }
+        else if (Key == "story_scene")
         {
             Text SceneName;
             GetDefText(SceneName, def, fn);

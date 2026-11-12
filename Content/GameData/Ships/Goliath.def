@@ -3,6 +3,7 @@ SHIP
 name:          Goliath
 display_name:  Goliath
 class:         Carrier
+cargo_capacity: { tonnes: 31280, passengers: 0 }
 abrv:          CV
 empire:        Dantari 
 description:   "The GOLIATH class carrier vessels provide the Dantari Separatists with their main force projection capability in the Solus system.  Unlike the rest of the Dantari fleet, which consists largely of older Hegemony warships, the Goliath class carriers were designed and constructed specifically for their Dantari crew.  Due to budgetary constraints, the Goliath class is outfitted with only a single launch rail, but still has a full complement of point defense batteries for close-in protection."

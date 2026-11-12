@@ -2884,6 +2884,23 @@ struct FS_CampaignMission : public FTableRowBase {
 	int Id;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString MissionName;
+
+    static constexpr int32 MultiplayerConnectionLimit = 8;
+
+    /** Zero uses the number of playable ships, capped by the connection limit. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0", ClampMax="8"))
+    int32 MaxPlayers = 0;
+
+    int32 GetMultiplayerCapacity() const
+    {
+        int32 PlayableShips = 0;
+        for (const auto& Entry : Element)
+            if (Entry.Playable)
+                PlayableShips += FMath::Max(Entry.Count - Entry.MaintCount - Entry.DeadCount, 0);
+        const int32 Slots = PlayableShips > 0 ? PlayableShips : MultiplayerConnectionLimit;
+        const int32 Limit = MaxPlayers > 0 ? MaxPlayers : MultiplayerConnectionLimit;
+        return FMath::Clamp(FMath::Min(Slots, Limit), 1, MultiplayerConnectionLimit);
+    }
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString MissionRegion;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)

@@ -3,6 +3,7 @@ SHIP
 name:          ZZA
 display_name:  Zolon
 class:         Attack
+cargo_capacity: { tonnes: 0.53, passengers: 0 }
 abrv:          ZA
 hud_icon:      "zmap"
 empire:        Zolon

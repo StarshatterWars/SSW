@@ -3,6 +3,7 @@ SHIP
 name:          Jackal
 display_name:  Jackal
 class:         LCA
+cargo_capacity: { tonnes: 2, passengers: 0 }
 abrv:          LCA
 description:   "The JACKAL is a light combat airframe (LCA) used for close support and training. Twin forward cannon and a rugged airframe make it suitable for low-intensity strike and carrier qualification. It is slower and less agile than front-line fighters, but tough and easy to maintain."
 empire:        Terellian

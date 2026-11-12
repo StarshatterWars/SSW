@@ -3,6 +3,7 @@ SHIP
 name:          Courageous
 display_name:  Courageous
 class:         Cruiser
+cargo_capacity: { tonnes: 1360, passengers: 0 }
 abrv:          CR
 empire:        Terellian
 description:   "Modern Terrelian guided missile cruisers such as the CA-521 COURAGEOUS class perform primarily in a Battle Force role. These ships are multi-mission spaceborne combatants capable of supporting carrier battle groups, landing forces, or of operating independently and as flagships of space action groups. The Courageous class features four MARK VII interceptor launchers for close air support against fighters and inbound missiles.  Courageous class cruisers are also equipped with Nike high-speed antiship missiles giving them additional long range assault capability."

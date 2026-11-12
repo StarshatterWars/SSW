@@ -1379,9 +1379,6 @@ void UBaseScreen::SetDialogInputEnabled(bool bEnable)
         return;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("[%s] SetDialogInputEnabled(%d)"),
-        *GetName(), bEnable ? 1 : 0);
-
     // IMPORTANT:
     // Never SetIsEnabled(false) here. That disables the entire widget tree,
     // makes everything look grey, and overrides per-button SetIsEnabled(true).

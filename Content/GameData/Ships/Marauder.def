@@ -3,6 +3,7 @@ SHIP
 name:          Marauder
 display_name:  Marauder
 class:         Frigate
+cargo_capacity: { tonnes: 200, passengers: 0 }
 abrv:          FF
 empire:        Pirate
 description:   "The MARAUDER is a small frigate-class vessel commonly used by the Brotherhood of Iron criminal organization as a commerce raider.  The Marauder ships are no match for most military warships, but they make up for their limitations with enhanced stealth capabilities.  Starship captains usually find the Marauder to be a fiendishly difficult type of ship to lock onto."

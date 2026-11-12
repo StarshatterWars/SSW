@@ -3,6 +3,7 @@ SHIP
 name:          Spectre
 display_name:  Spectre
 class:         Destroyer
+cargo_capacity: { tonnes: 560, passengers: 0 }
 abrv:          DD
 empire:        Terellian
 description:   "The DD-350 SPECTRE class of destroyers represent the largest and most successful of all Alliance Space Force destroyer acquisitions: fast, roomy, capable of absorbing enormous punishment, and yet fighting on.  The Spectre class ships are forty percent heavier than their Asher class cousins, and they use the extra mass to great effect.  The Spectre class features four nose-mounted XRay Laser batteries, and a pair of wing-mounted fusion torpedo launchers in addition to four Phalanx point defense guns."

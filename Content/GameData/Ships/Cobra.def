@@ -3,6 +3,7 @@ SHIP
 name:          Cobra
 display_name:  Cobra
 class:         Attack
+cargo_capacity: { tonnes: 0.48, passengers: 0 }
 abrv:          "F-MK3"
 description:   "The F-MK3 COBRA is a medium Alliance attack fighter optimized for flexible strike and escort work. Twin Alpha Cannon and eight hardpoints give it a broad loadout range, while its lighter airframe keeps it competitive against interceptors. The Cobra is commonly tasked with ground strike, ship strike, and medium-range air combat."
 empire:        Terellian

@@ -3,6 +3,7 @@ SHIP
 name:          Airbase3
 display_name:  "Tanis Base"
 class:         STARBASE
+cargo_capacity: { tonnes: 20000, passengers: 0 }
 abrv:		   SB
 empire:        Dantari
 description:   "Tanis Base is a Dantari deep-space stronghold serving as a coordination hub for fleet patrols and supply convoys. Its reinforced superstructure and dispersed command sectors allow it to remain operational even under sustained assault."

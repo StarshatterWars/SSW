@@ -3,6 +3,7 @@ SHIP
 name:          Razor
 display_name:  Razor
 class:         Fighter
+cargo_capacity: { tonnes: 0.3, passengers: 0 }
 abrv:          "F-MK2"
 description:   "The F-MK2 RAZOR is a high-agility Alliance fighter built for air superiority. Twin Alpha Cannon and eight hardpoints give it a full ordnance range, while its light airframe and high roll rate make it a strong dogfighter. It is commonly used for intercept, escort, and short-range air combat."
 empire:        Terellian

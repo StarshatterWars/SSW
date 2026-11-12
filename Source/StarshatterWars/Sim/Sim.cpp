@@ -1014,6 +1014,37 @@ Sim::SpawnMissionElement(const char* Name)
         CreateElements(Name);
 }
 
+static bool IsMilitaryCargoObjective(Mission& MissionDef, MissionElement& CargoElement, const char* ShipName)
+{
+    const auto Type = static_cast<EMissionType>(MissionDef.GetMissionType());
+    if (Type == EMissionType::ESCORT_FREIGHT || Type == EMissionType::ESCORT_SHUTTLE)
+        if (const MissionElement* Player = MissionDef.GetPlayer(); Player && Player->GetIFF() == CargoElement.GetIFF())
+            return true;
+
+    for (ListIter<MissionElement> Element = MissionDef.GetElements(); ++Element;)
+    {
+        for (ListIter<Instruction> Objective = Element->GetObjectives(); ++Objective;)
+        {
+            switch (Objective->GetAction())
+            {
+            case EInstruction::Escort:
+            case EInstruction::Defend:
+            case EInstruction::Intercept:
+            case EInstruction::Strike:
+            case EInstruction::Assault:
+                if (const char* Target = Objective->GetTargetName(); Target && *Target &&
+                    (FCStringAnsi::Stricmp(Target, ShipName) == 0 ||
+                     FCStringAnsi::Stricmp(Target, CargoElement.GetName().data()) == 0))
+                    return true;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    return false;
+}
+
 void
 Sim::CreateElements(const char* SpawnName)
 {
@@ -1585,6 +1616,11 @@ Sim::CreateElements(const char* SpawnName)
 						Loadout);
 
 					if (NewShip) {
+						const bool CanCarrySupplies = !LegacyDesign->CargoManifest.IsEmpty() ||
+							FCStringAnsi::Stricmp(LegacyDesign->name, "Zodiac") == 0;
+						if (CanCarrySupplies && IsMilitaryCargoObjective(*mission, *MissionElem, ShipName))
+							NewShip->AssignMilitaryCargo();
+
 						double Heading = MissionElem->GetHeading();
 						const Skin* SkinPtr = MissionElem->GetSkin();
 

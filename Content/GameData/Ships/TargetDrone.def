@@ -3,6 +3,7 @@ SHIP
 name:       TargetDrone
 display_name:       TargetDrone
 class:      Drone
+cargo_capacity: { tonnes: 0.03, passengers: 0 }
 abrv:       DRN
 hud_icon:   "/Game/Models/TargetDrone/droneHUD.droneHUD"
 model:      "TargetDrone"

@@ -54,6 +54,7 @@
 =============================================================================*/
 
 #include "StarshatterShipDesignSubsystem.h"
+#include "FreightManifest.h"
 #include "Farcaster.h"
 #include "FlightDeck.h"
 #include "LandingGear.h"
@@ -501,6 +502,14 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		{
 			GetDefText(LocalDisplayName, Def, fn);
 			NewShipDesign.DisplayName = FString(LocalDisplayName);
+		}
+		else if (Key == "cargo_capacity")
+		{
+			SSWFreightManifest::ReadCapacity(NewShipDesign.CargoCapacity, *Def, fn);
+		}
+		else if (Key == "cargo_manifest")
+		{
+			SSWFreightManifest::AddOption(NewShipDesign.CargoManifest, *Def, fn);
 		}
 		else if (Key == "class")
 		{

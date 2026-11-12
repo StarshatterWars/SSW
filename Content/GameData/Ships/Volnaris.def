@@ -3,6 +3,7 @@ SHIP
 name:          Volnaris
 display_name:  Volnaris
 class:         Destroyer
+cargo_capacity: { tonnes: 530, passengers: 0 }
 abrv:          DD
 empire:        Marakan
 description:   "The DD/E-4D01 VOLNARIS class of destroyer/escorts are the predecessors of the heavier Broadsword destroyer class.  Originally intended as mainline destroyers, the Volnaris ships have now been relegated primarily to escort duty for the Hegemony battle groups.  The Volnaris features a pair of internally-mounted heavy x-ray laser batteries and three fusion torpedo launchers for offensive capability, along with a full complement of Orca point defense batteries for protection from inbound threats.  Due to design limitations, the Orca PDBs tend to provide better coverage for the dorsal hemisphere, leaving the Volnaris class with a vulnerable underbelly."

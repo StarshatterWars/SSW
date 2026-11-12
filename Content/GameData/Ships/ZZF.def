@@ -3,6 +3,7 @@ SHIP
 name:          ZZF
 display_name:  Zolon
 class:         Fighter
+cargo_capacity: { tonnes: 0.36, passengers: 0 }
 abrv:          ZF
 hud_icon:      "zmap"
 description:   "The ZZF Zolon Fighter is a nimble interceptor craft deployed in large numbers to overwhelm opposing squadrons. Compact and ruthlessly efficient, it relies on speed and coordinated attack patterns to secure local space superiority."

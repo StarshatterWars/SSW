@@ -3,6 +3,7 @@ SHIP
 name:          Imperial
 display_name:  Imperial
 class:         Cruiser
+cargo_capacity: { tonnes: 10440, passengers: 0 }
 abrv:          CA
 empire:        Marakan
 description:   "Marakan Hegemony guided missile cruisers such as the CA-5C44 IMPERIAL class are most often found leading small cruiser battle groups. These ships are devastating attack platforms, equally at home either support or leading space action groups. The Imperial class features a pair of Rostov high-speed missile turrets, which combined with a full battery of magnetic rail launchers, gives them excellent long range assault capability."

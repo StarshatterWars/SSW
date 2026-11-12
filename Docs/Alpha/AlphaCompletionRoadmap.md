@@ -1,6 +1,6 @@
 # Starshatter Wars — Alpha completion roadmap
 
-Updated 2026-11-11. Branch abc. This records the requested scope; unchecked work is not declared complete. Preserve legacy simulation coordinates, AI, damage, energy, mission progression and dialogue unless an explicit requirement changes them. Do not modify Starshatter.cpp/.h. Deliver complete replacement files and assets in stage ZIPs.
+Updated 2026-11-12. Branch abc. This records the requested scope; unchecked work is not declared complete. Preserve legacy simulation coordinates, AI, damage, energy, mission progression and dialogue unless an explicit requirement changes them. Do not modify Starshatter.cpp/.h. Deliver complete replacement files and assets in stage ZIPs.
 
 ## Alpha Phase 1 — completion stages
 
@@ -49,18 +49,42 @@ Keep the current 1/100 presentation scale and legacy simulation coordinates for 
 
 ## Alpha 4 — optimization, cleanup, bug fixes and multiplayer
 
-**Current phase. Opened 2026-11-09.** Profile representative missions, prioritize measured bottlenecks and gameplay defects, and rerun affected workflows. Keep the current presentation scale throughout this phase.
+**Partial — deferred on 2026-11-12.** Phase 4 opened on 2026-11-09. Completed work remains available. Resume the remaining profiling, gameplay regression checks, and multiplayer validation when the phase reopens.
 
 Integrate Unreal Engine multiplayer across gameplay, building on the native session and lobby work. Use the legacy simulation on the authoritative host or server, with UE handling player ownership, input, and replication. Cover the galaxy and orbital state, flight controls, ships, weapons, damage, AI, objectives, mission flow, HUD, debrief, chat, and results. Verify standalone play as each system moves to the multiplayer architecture.
 
 Hawk Match has launched in the Borova sector with two local LAN processes. Both players received fighters, steered, applied throttle, and saw live speed on their mini-HUDs. Matching hit counts and hull damage after a landed shot are still unverified. The propulsion and cockpit presentation fixes passed build and attachment checks and await a live rerun.
 
-Complete a supported mission with matching combat state and results on both screens. Verify EOS and Steam create/join separately, including readiness, mission travel, disconnects, reconnects, join failures, and latency. Track lightweight StarServer deployment as a later multiplayer follow-up.
+StarServer built as a Windows dedicated server on the UE 5.7.4 source engine. SSW launched it, registered a four-slot Hawk Match session in EOS Dev, and connected one pilot to the Borova lobby. The dedicated two-pilot run is deferred until a second Epic account is available.
 
-## Alpha 5 — full-scale conversion
+Remaining Phase 4 verification includes a supported match with matching combat state and results on both clients, EOS and Steam create/join, reconnects, mission travel, and match-end server and EOS session cleanup.
 
-**Queued after Alpha 4.** Start the asset and presentation conversion with Falcon and Orion. Preserve legacy simulation distances and timing. Verify camera framing, launch and recovery, terrain contact, attachment points, and collision alignment before extending full scale to the fleet and mission environments.
+## Alpha 5 — additions
 
+Add presentation at the current scale. This pass covers freight and resource readouts, transfer station and jump route displays, and Tactical Reference lore. Mining, trading, cargo objectives, and component effects are outside this pass. Freighters, cargo ships, couriers, and transports show their assigned load on the single-player target HUD within sensor scan range. Cargo options and capacity are authored in ship DEFs and imported into the ship design DataTable. Each ship stores its spawn sector and authored destination for the life of its manifest. Campaign freight serves as background activity. Free play belongs to a later alpha.
+
+### Background mineral deliveries
+
+Survey each system using the same deterministic asteroid deposits the player can scan. A system requests a mineral when its usable local supply falls below the amount it needs. Match the request to a reachable system with the mineral in its asteroid fields and enough available supply to ship. Track each outstanding request and reserve the shipment once so repeated updates cannot dispatch duplicate freighters.
+
+Spawn the freighter at the source system transfer station with the requested mineral, a quantity within the hull capacity, and a route through the actual linked farcaster pairs. Record the destination transfer station in its manifest. Credit the delivery only after the freighter docks, then remove the ship. The same station can originate a new outbound shipment from minerals supplied by its own fields. Campaign traffic runs in the background. Free play can expose the same supply and delivery records in a later alpha.
+
+Verify a full trip with at least two farcaster hops, docking, a single delivery credit, and despawn. Include an unreachable supplier case to confirm the request remains pending.
+
+### Next addition — standalone Windows launcher
+
+The launcher signs the player in through Epic Account Portal, checks the installed game version, applies required patches, and launches SSW automatically when sign-in and patching are complete. The game restores the authenticated session and selects the existing account’s pilot save without prompting for a second login.
+
+Distribute patches from a signed release manifest over HTTPS. Download only changed files, verify them before replacing the installed build, and preserve the prior working build and pilot saves if an update is interrupted or fails. The release host and signing key still need to be selected. Use Epic’s supported authentication handoff and keep player credentials out of command-line arguments and logs. [Epic launcher integration](https://dev.epicgames.com/docs/epic-online-services/accounts-and-social/eos-epic-account-services/auth-interface/integrate-a-third-party-launcher-with-egs)
+
+## Alpha 6 — full-scale conversion
+
+Start the asset and presentation conversion with Falcon and Orion. Preserve legacy simulation distances and timing. Verify camera framing, launch and recovery, terrain contact, attachment points, and collision alignment before extending full scale to the fleet and mission environments.
+
+
+## Alpha 7 - faction missions
+
+Author a full mission list for the Marakan Hegemony and a full Dantari mission list for Campaign 2.
 
 ## Current evidence and limitations
 

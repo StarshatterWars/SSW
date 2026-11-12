@@ -3,6 +3,7 @@ SHIP
 name:          Station7
 display_name:  "Military Lab"
 class:         STATION
+cargo_capacity: { tonnes: 56000, passengers: 0 }
 abrv:          STN
 empire:        Marakan
 description:   "The Marakan Military Research Station is a secured orbital laboratory dedicated to advanced weapons testing and prototype systems development. Shielded compartments and restricted access decks conceal experimental technologies intended to give the Hegemony a decisive battlefield advantage."

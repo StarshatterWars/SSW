@@ -3,6 +3,7 @@ SHIP
 name:          Asher
 display_name:  Asher
 class:         Destroyer
+cargo_capacity: { tonnes: 390, passengers: 0 }
 abrv:		   DD
 empire:        Terellian
 description:   "The DD/E-708 ASHER class of destroyer/escorts represents a lighter, more maneuverable alternative to the heavy Spectre class destroyers that make up the majority of Alliance destroyer squadrons.  The Asher class is armed with a trio of nose-mounted XRay Laser batteries, and a pair of wing-mounted fusion torpedo launchers, as well as the usual complement of point defense turrets.  This combination of power and agility makes the Asher class well suited to the fleet carrier escort role they are asked to fulfill"

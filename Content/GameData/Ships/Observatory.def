@@ -3,6 +3,7 @@ SHIP
 name:          Observatory
 display_name:  "Tal Vesta Stellar Observatory"
 class:         STATION
+cargo_capacity: { tonnes: 5000, passengers: 0 }
 abrv:          STN
 empire:        Terellian
 description:   "The Tal Vesta Stellar Observatory is a premier Terellian astrophysics station positioned in high orbit to monitor stellar activity and deep-space anomalies. Its expansive sensor lattice and quantum analysis suites make it a cornerstone of Alliance scientific research and early-warning defense networks."

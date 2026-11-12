@@ -3,6 +3,7 @@ SHIP
 name:          Falcon
 display_name:  Falcon
 class:         Fighter
+cargo_capacity: { tonnes: 0.29, passengers: 0 }
 abrv:          "F-32"
 empire:        Terellian
 hud_icon:      "FalconHud"

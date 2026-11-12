@@ -4,6 +4,7 @@ name:          Baikal
 display_name:  Baikal
 abrv:		   FF
 class:         Frigate
+cargo_capacity: { tonnes: 240, passengers: 0 }
 empire:        Marakan
 description:   "The BAIKAL class frigates are commonly used by the independent systems as anti-fighter platforms.  Designed by the Marakan Hegemony as cost efficient space combatants, they lack the multi-mission capability necessary for modern warships faced with multiple, high-technology threats. They also offer limited capacity for growth. Despite this, the FF-101 Baikal class is a robust platform, capable of withstanding considerable damage while staying 'in the fight.'"
 

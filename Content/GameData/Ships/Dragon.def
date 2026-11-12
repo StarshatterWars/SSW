@@ -3,6 +3,7 @@ SHIP
 name:          Dragon
 display_name:  Dragon
 class:         Carrier
+cargo_capacity: { tonnes: 37500, passengers: 0 }
 abrv:		   CV
 empire:        Marakan
 description:   "The CV-7A1 DRAGON class carriers represent the pinnacle of Hegemony military starship design. Though somewhat slow and unweildy, the Dragons are nevertheless enormously powerful.  Their huge complement of embarked fighter craft give them unparalleled force projection capability; a single Dragon-class carrier battle group could easily conquer a colonial world."

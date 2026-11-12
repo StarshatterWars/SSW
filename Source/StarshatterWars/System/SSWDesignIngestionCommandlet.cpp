@@ -15,6 +15,7 @@
 #include "StarshatterEnvironmentSubsystem.h"
 #include "SSWCombatGroupSubsystem.h"
 #include "ShipVisualCatalog.h"
+#include "FreightManifest.h"
 #include "Farcaster.h"
 #include "FlightDeck.h"
 #include "LandingGear.h"
@@ -144,6 +145,46 @@ bool SaveOutputTable(UDataTable& Imported, const TCHAR* Name, bool bStaged = tru
     Args.TopLevelFlags = RF_Public | RF_Standalone;
     return UPackage::SavePackage(Package, Staged, *Filename, Args);
 }
+
+bool ImportShipCargo()
+{
+    constexpr TCHAR TablePath[] = TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign");
+    const UDataTable* Active = LoadObject<UDataTable>(nullptr, TablePath);
+    if (!Active || Active->GetRowStruct() != FShipDesign::StaticStruct()) return false;
+
+    UDataTable* Updated = DuplicateObject<UDataTable>(Active, GetTransientPackage());
+    int32 UpdatedRows = 0;
+    for (const FName RowName : Updated->GetRowNames())
+    {
+        FShipDesign* Row = Updated->FindRow<FShipDesign>(RowName, TEXT("Import ship cargo"));
+        if (!Row) return false;
+
+        const FString Definition = ShipVisualCatalog::DefinitionName(Row->ShipName, Row->Model);
+        auto Profile = SSWFreightManifest::LoadProfile(Definition);
+        if (Profile.Capacity.Tonnes <= 0.0 && Definition != RowName.ToString())
+            Profile = SSWFreightManifest::LoadProfile(RowName.ToString());
+
+        if (Profile.Capacity.Tonnes <= 0.0)
+        {
+            const uint32 ShipClasses = static_cast<uint32>(CLASSIFICATION::DROPSHIPS) |
+                (static_cast<uint32>(CLASSIFICATION::STARSHIPS) & ~static_cast<uint32>(CLASSIFICATION::FARCASTER));
+            if (static_cast<uint32>(Row->ShipType) & ShipClasses)
+            {
+                UE_LOG(LogTemp, Error, TEXT("Missing cargo capacity for ship row %s (DEF %s)."),
+                    *RowName.ToString(), *Definition);
+                return false;
+            }
+            continue;
+        }
+
+        if (!Profile.Options.IsEmpty())
+            Row->CargoManifest = MoveTemp(Profile.Options);
+        Row->CargoCapacity = Profile.Capacity;
+        ++UpdatedRows;
+    }
+    UE_LOG(LogTemp, Display, TEXT("Imported cargo capacities for %d design rows."), UpdatedRows);
+    return UpdatedRows > 0 && SaveOutputTable(*Updated, TEXT("DT_ShipDesign"), false);
+}
 }
 #endif
 
@@ -158,6 +199,9 @@ USSWDesignIngestionCommandlet::USSWDesignIngestionCommandlet()
 int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
 {
 #if WITH_EDITOR
+    if (FParse::Param(*Params, TEXT("ShipCargoOnly")))
+        return ImportShipCargo() ? 0 : 1;
+
     auto* Context = NewObject<USSWGameInstance>();
     auto* Systems = NewObject<UStarshatterSystemDesignSubsystem>(Context);
     auto* Weapons = NewObject<UStarshatterWeaponDesignSubsystem>(Context);

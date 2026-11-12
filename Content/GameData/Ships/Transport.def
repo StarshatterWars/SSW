@@ -3,6 +3,12 @@ SHIP
 name:       Transport
 display_name: Transport
 class:      Courier
+cargo_capacity: { tonnes: 600, passengers: 160 }
+cargo_manifest: { item: "passengers", passengers: true, min: 24, max: 120 }
+cargo_manifest: { item: "sealed documents", finished_item: "SealedDocuments", unit: "cases", min: 6, max: 24 }
+cargo_manifest: { item: "finished electronics", finished_item: "FinishedElectronics", unit: "crates", min: 12, max: 70 }
+cargo_manifest: { item: "medical supplies", finished_item: "MedicalSupplies", unit: "pallets", min: 8, max: 30 }
+cargo_manifest: { item: "machine parts", finished_item: "MachineParts", unit: "crates", min: 18, max: 65 }
 abrv:       TRANS
 empire:     All
 description: "The Transport Courier is a compact multi-role vessel used for personnel transfer, priority cargo delivery, and diplomatic movement between systems. Lightly armed but highly reliable, it serves as a dependable utility craft for both military and civilian operations."

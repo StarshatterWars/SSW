@@ -3,6 +3,7 @@ SHIP
 name:          Tiger
 display_name:  Tiger
 class:         Frigate
+cargo_capacity: { tonnes: 110, passengers: 0 }
 abrv:          FF
 empire:        Marakan
 description:   "The FF-2E01 TIGER BAY class frigate was the result of war department opposition to mounting costs and limited capabilities of the older Baikal class frigate.  Only fourteen Baikal class ships were built, and all were decommissioned and sold to neighboring independent systems.  The Tiger Bay class was designed to extend the anti-ship capabilities of the older frigates by adding a pair of light x-ray laser batteries mounted on the wings.  As with many Hegemony designs, these weapons are externally mounted and vulnerable to attack from the flanks."

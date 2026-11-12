@@ -3,6 +3,7 @@ SHIP
 name:          ZZCA
 display_name:  Zolon
 class:         Cruiser
+cargo_capacity: { tonnes: 6540, passengers: 0 }
 abrv:          ZCA
 hud_icon:      "zmap"
 empire:        Zolon

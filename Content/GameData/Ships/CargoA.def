@@ -3,6 +3,9 @@ SHIP
 name:       IM3500
 display_name: "IM3500 Freighter"
 class:      Freighter
+cargo_capacity: { tonnes: 12000, passengers: 0 }
+cargo_manifest: { item: "magnetite", unit: "t", min: 6000, max: 9000 }
+cargo_manifest: { item: "ilmenite", unit: "t", min: 5500, max: 8500 }
 abrv:		FREIGHT
 hud_icon:   "CAHud"
 description: "The IM3500 Freighter is a heavy cargo hauler designed for sustained interstellar trade routes and bulk resource transport. Slow but resilient, it prioritizes capacity and range over combat capability, often operating under escort in volatile sectors."

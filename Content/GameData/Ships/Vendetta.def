@@ -3,6 +3,7 @@ SHIP
 name:          Vendetta
 display_name:  Vendetta
 class:         Cruiser
+cargo_capacity: { tonnes: 15000, passengers: 0 }
 abrv:          CA
 empire:        Marakan
 description:   "The CA-5D15 VENDETTA class of heavy cruisers are the core Hegemony heavy gun platforms.  Big, slow, and very tough, each of these enormous vessels features a pair of heavy gamma ray laser batteries and twin Rostov antiship missile turrets.  Together these weapons can bring down the largest starships and orbital stations.  The Vendetta's complement of magnetic rail guns make her more suitable to offense than defense; these ships rely on their tough hide to withstand enemy bombardment while they move in for the kill."

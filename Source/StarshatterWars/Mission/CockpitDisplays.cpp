@@ -111,7 +111,11 @@ public:
                     Text(20,420,H->TargetDepositAmount,Blue,22);
                 }
                 else if (H->TargetHull >= 0)
-                    Text(20,400,TEXT("HULL ")+SFighterHUDDetails::FormatStatusReadout(TEXT("HULL"),H->TargetHull),Blue,24);
+                {
+                    Text(20,390,TEXT("HULL ")+SFighterHUDDetails::FormatStatusReadout(TEXT("HULL"),H->TargetHull),Blue,24);
+                    if (!H->TargetCargo.IsEmpty())
+                        Text(20,420,H->TargetCargo,Blue,22);
+                }
                 Text(20,450,FString::Printf(TEXT("RANGE %.1f KM"),H->TargetRange),Blue,24);
             }
         }

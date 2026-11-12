@@ -3,6 +3,7 @@ SHIP
 name:          Airbase2
 display_name:  "Foothill Base"
 class:         STARBASE
+cargo_capacity: { tonnes: 20000, passengers: 0 }
 abrv:		   SB
 empire:        Dantari
 description:   "Foothill Base is a Dantari forward-operating starbase constructed to support insurgent fleet movements and rapid strike operations. Built into a defensible orbital position, it combines concealed approach vectors with hardened hangars to sustain prolonged resistance campaigns."

@@ -3,6 +3,7 @@ SHIP
 name:          Saber
 display_name:  Saber
 class:         Fighter
+cargo_capacity: { tonnes: 0.3, passengers: 0 }
 abrv:          "F-22"
 empire:        Marakan
 description:   "The Saber F-22 is a high-performance Marakan space superiority fighter built for rapid interception and precision strikes. Agile and heavily armed for its size, it forms the backbone of frontline carrier wings throughout the Hegemony."

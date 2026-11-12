@@ -3,6 +3,8 @@ SHIP
 name:          QShip
 display_name:  Freighter
 class:         Freighter
+cargo_capacity: { tonnes: 900, passengers: 0 }
+cargo_manifest: { item: "sealed freight", unit: "containers", min: 24, max: 60 }
 abrv:          FREIGHT
 description:   "The Q-Ship masquerades as a standard civilian freighter, concealing reinforced hull plating and hidden weapon emplacements beneath its commercial facade. Favored by pirate raiders and covert operators alike, it lures hostile forces into close range before revealing its true, heavily armed nature."
 empire:        Pirate

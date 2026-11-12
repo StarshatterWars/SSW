@@ -19,6 +19,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataTable.h"
+#include "FreightManifestTypes.h"
 #include "GameStructs_System.generated.h"
 
 #ifndef SSW_MAX_STORES
@@ -1652,6 +1653,12 @@ struct FShipDesign : public FTableRowBase {
 	FString	BeautyName;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString HudIconName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<FSSWCargoOption> CargoManifest;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FSSWCargoCapacity CargoCapacity;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TSoftObjectPtr<UStaticMesh> Mesh;

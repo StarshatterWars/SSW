@@ -3,6 +3,7 @@ SHIP
 name:          Devastator
 display_name:  Devastator
 class:         Cruiser
+cargo_capacity: { tonnes: 2940, passengers: 0 }
 abrv:          CA
 empire:        Terellian
 description:   "The CA-400 DEVASTATOR class of heavy cruisers forms the backbone of the Alliance heavy gun capability.  Big, slow, and very tough, each of these enormous vessels features a pair of heavy gamma ray laser batteries and four Athena missile launchers.  Together these weapons can bring down the largest starships and orbital stations.  For defense against strike ships and inbound missile weapons, the Devastator has full coverage from a set of Vanguard point defense batteries."

@@ -3,6 +3,7 @@ SHIP
 name:           Intruder
 display_name:   Intruder
 class:          fighter
+cargo_capacity: { tonnes: 0.5, passengers: 0 }
 abrv:           "F4F"
 description:   "The F4F INTRUDER is a compact Alliance fighter built for interception and light strike. Twin Alpha Cannon and four hardpoints keep the loadout simple and the turn rate high. It is routinely used for patrol, escort, and quick-reaction intercepts."
 empire:        Terellian

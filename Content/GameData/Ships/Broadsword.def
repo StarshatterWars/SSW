@@ -3,6 +3,7 @@ SHIP
 name:          Broadsword
 display_name:  Broadsword
 class:         Destroyer
+cargo_capacity: { tonnes: 690, passengers: 0 }
 abrv:		   DD
 empire:        Marakan
 description:   "The DD-3C21 BROADSWORD class of destroyers represents the pinnacle of Hegemony warship technology; big, fast, and ready to deliver punishing amounts of damage to all who stand in their way.  The Broadsword class ships extend the basic armament of the older Volnaris class by doubling the number of heavy x-ray laser batteries to four.  As with many Hegemony designs, these weapons are externally mounted and vulnerable to attack from the flanks."

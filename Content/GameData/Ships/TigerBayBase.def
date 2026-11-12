@@ -3,6 +3,7 @@ SHIP
 name:          Airbase2
 display_name:  "Tiger Bay Base"
 class:         STARBASE
+cargo_capacity: { tonnes: 20000, passengers: 0 }
 abrv:		   SB
 empire:        Marakan
 description:   "Tiger Bay Base is a Marakan strategic starbase positioned to support rapid fleet mobilization and sustained regional control. Featuring fortified docking arrays and layered defense systems, it serves as both a logistical nexus and a hardened military bastion for the Hegemony."

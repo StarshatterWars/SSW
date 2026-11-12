@@ -1,6 +1,7 @@
 MISSION
 
 id:     2
+max_players: 4
 name:   "Fighter Thrash Pit"
 type:   "Patrol"
 desc:   "Multiple spaceborne fighters locked in team-vs-team action."

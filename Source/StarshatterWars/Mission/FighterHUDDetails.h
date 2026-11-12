@@ -127,6 +127,7 @@ private:
     TArray<FBlip> Contacts;
     FString PlayerName, PlayerClass, TargetName, TargetClass, Primary, Secondary;
     FString TargetMineral, TargetDepositAmount;
+    FString TargetCargo;
     TArray<FString> JumpRoute;
     double PlayerShield = -1, PlayerHull = -1, TargetHull = -1, TargetShield = -1, TargetRange = -1, SensorRange = 1;
     bool bHasPlayer = false, bHasTarget = false;
