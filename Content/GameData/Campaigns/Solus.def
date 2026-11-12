@@ -956,3 +956,31 @@ group: {
     },
 }
 
+// Additional cargo operators
+
+group: {
+  type: freight,
+  id: 8724,
+  name: "Solus Civilian Freight",
+  intel: known,
+  iff: 0,
+  empire_id: 10,
+  region: "Trellis",
+  loc: (-100e3, 0e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Solus Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8724-1"
+  }
+
+  unit: {
+    name: "Solus Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8724-2"
+  }
+}
