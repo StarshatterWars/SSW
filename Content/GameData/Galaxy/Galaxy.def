@@ -27,6 +27,16 @@ system:
 		color:	(255, 250, 230), // - standard yellow
 		back:	( 11,  18,  15), // - nebula10
 		
+		region: {
+			name: "Jarnell Outer Belt",
+			parent: "Valtala",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 6.09e+11,
+			asteroids: 32,
+		},
+
 		planet: {
 			name:    Adonis,
 			icon:    "GasGiant7_map",
@@ -515,6 +525,16 @@ system: {
 	   color:   (255, 250, 230),// - standard yellow
 	   back:    ( 50,  50,  90), // - nebula6
 
+		region: {
+			name: "Athenar Outer Belt",
+			parent: "Talvesta",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 6.16e+11,
+			asteroids: 32,
+		},
+
 	   planet:     {
 			name:    Athenar,
 			icon:    "athenar_map",
@@ -604,6 +624,16 @@ system:
 	   light:   1.6e11,
 	   color:   (255, 250, 230),// - standard yellow
 	   back:    ( 50,  70, 100), // - nebula24
+
+		region: {
+			name: "Paragon Outer Belt",
+			parent: "Talpara",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 1.008e+12,
+			asteroids: 32,
+		},
 
 	   planet: {
 			name:    Dorrath
@@ -972,6 +1002,16 @@ system:
 	   color:   (255, 250, 230), // - standard yellow
 	   back:    ( 70,  75, 120), // - nebula12
 
+		region: {
+			name: "Janus Outer Belt",
+			parent: "Janset",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 3.98e+11,
+			asteroids: 32,
+		},
+
 	   planet: {
 			name:    Ilon,
 			icon:    "ilon_map",
@@ -1159,6 +1199,16 @@ system:
 	   light:   1.6e11,
 	   color:   (255, 250, 225), // standard yellow
 	   back:    ( 20,  50,  90), // nebula15 blue
+
+		region: {
+			name: "Solus Outer Belt",
+			parent: "Luxor",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 5.43e+11,
+			asteroids: 32,
+		},
 
 	   planet: {
 			name:    Meridian
@@ -1349,6 +1399,16 @@ system:
 	   light:   7e10,
 	   color:   (255, 232, 220),
 	   back:    (45, 65, 75),
+
+		region: {
+			name: "Silessia Outer Belt",
+			parent: "Siltana",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 7.06e+11,
+			asteroids: 32,
+		},
 
 	   planet:       {
 			name:    Silessia,
@@ -1550,6 +1610,16 @@ system:
 	   light:   7.8e10,
 	   color:   (255, 232, 224),
 	   back:    ( 44,  66,  88),
+
+		region: {
+			name: "Haiche Outer Belt",
+			parent: "Heron",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 4.59e+11,
+			asteroids: 32,
+		},
 
 	   planet:       {
 			name:    Haiche,
@@ -1921,6 +1991,16 @@ system:
 	   color:   (255, 250, 240), // - G Yellow
 	   back:    (100,  60,  30), // - nebula16
 
+		region: {
+			name: "Loris Outer Belt",
+			parent: "Lorset",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 4.42e+11,
+			asteroids: 32,
+		},
+
 	   planet:     {
 			name:    Duna,
 			type:    Terran,
@@ -2101,6 +2181,16 @@ system:
 	   color:   (255, 170, 160),// - deep red
 	   back:    (130,  90,  50), // - nebula2
 
+		region: {
+			name: "Ostara Outer Belt",
+			parent: "Ostram",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 1.42e+11,
+			asteroids: 32,
+		},
+
 	   planet: {
 			name:    Aram,
 			type:    Terran,
@@ -2169,6 +2259,16 @@ system:
 	   light:   1.6e11,
 	   color:   (255, 252, 250),// - G White
 	   back:    ( 50,  45,  35), // - nebula3
+
+		region: {
+			name: "Kolchev Outer Belt",
+			parent: "Kurset",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 5.34e+11,
+			asteroids: 32,
+		},
 
 	   planet:     {
 			name:    Ilya,
@@ -2580,6 +2680,16 @@ system:
 		color:   (245, 245, 255),// - A Blue-White
 		back:    ( 43,  40,  46), // - nebula18 (dark gray)
 
+		region: {
+			name: "Nephrys Outer Belt",
+			parent: "Nephaas",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 6.8e+11,
+			asteroids: 32,
+		},
+
 		planet:     {
 			name:    Nergal,
 			type:    Volcanic,
@@ -2634,6 +2744,16 @@ system:
 	   light:   1.6e11,
 	   color:   (255, 250, 245),// - G Yellow
 	   back:    ( 40,  22,  14), // - nebula19
+
+		region: {
+			name: "Radix Outer Belt",
+			parent: "Radset",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 3.39e+11,
+			asteroids: 32,
+		},
 
 	   planet:     {
 			name:    Senna,
@@ -2788,6 +2908,16 @@ system:
 	   light:   1.6e11,
 	   color:   (255, 250, 230),// - K
 	   back:    ( 30,  18,  12), // - nebula25
+
+		region: {
+			name: "Isham Outer Belt",
+			parent: "Ishtar",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 5.64e+11,
+			asteroids: 32,
+		},
 
 	   planet:     {
 			name:    Garden
@@ -3053,6 +3183,16 @@ system:
 	   color:   (255, 250, 238),// - standard yellow
 	   back:    ( 60,  30,  10),// - nebula8
 
+		region: {
+			name: "Garrison Outer Belt",
+			parent: "Khaniset",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 6.1e+11,
+			asteroids: 32,
+		},
+
 	   planet: {
 			name:    Rhofar,
 			type:    Terran,
@@ -3187,6 +3327,16 @@ system:
 	   light:   1.6e11,
 	   color:   (255, 240, 220),// - K Orange
 	   back:    ( 90,  50,  30), // - nebula20
+
+		region: {
+			name: "Trocanther Outer Belt",
+			parent: "Trocantex",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 6.18e+11,
+			asteroids: 32,
+		},
 
 	   planet: {
 			name:    Volante,

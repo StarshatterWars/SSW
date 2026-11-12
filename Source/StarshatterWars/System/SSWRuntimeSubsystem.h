@@ -131,6 +131,8 @@ public:
     bool GetCarrierVisualPoint(Ship* Carrier, const FVector& SimPoint, FVector& OutPoint) const;
     void BeginMissionPresentation(ASystemSceneBuilder* Builder);
     void EndMissionPresentation();
+    void SetSelectedJumpRoute(const TArray<FString>& Route) { SelectedJumpRoute = Route; }
+    const TArray<FString>& GetSelectedJumpRoute() const { return SelectedJumpRoute; }
     void RefreshTravelPresentation(ASystemSceneBuilder* Builder = nullptr, bool bSnapShipPose = false);
     // Publish a prepared cinematic camera without advancing simulation time.
     void PrepareCutsceneView() { SyncLegacyCameraView(); }
@@ -138,6 +140,7 @@ private:
     void SyncLegacyCameraView();
     void UpdateMissionWaypoints();
     void ClearMissionWaypoints();
+    TArray<FString> SelectedJumpRoute;
     double WaypointRefreshSeconds = 0;
     bool bWaypointClassResolved = false;
     UPROPERTY(Transient) TSubclassOf<AWaypointActor> WaypointClass;
@@ -201,4 +204,4 @@ private:
     int32 KeyAltArray[256] = {};
 
     FTSTicker::FDelegateHandle RuntimeTickerHandle;
-}; 
+};

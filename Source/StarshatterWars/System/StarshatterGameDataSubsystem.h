@@ -224,6 +224,7 @@ public:
 
     // Mission parsing
     void ParseMission(const char* filename);
+    bool ReadLooseMission(const FString& Filename, FS_CampaignMission& Out);
     bool ParseMissionInstructionCommon(TermStruct* Val, const char* Fn, FS_MissionInstruction& OutInstr);
     void ParseNavpoint(TermStruct* val, const char* fn);
     void ParseObjective(TermStruct* val, const char* fn);

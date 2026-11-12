@@ -88,6 +88,7 @@
 #include "MissionShip.h"
 
 #include "ShipDesignRegistry.h"
+#include "CombatGroupRegistry.h"
 #include "GameStructs_System.h"
 
 #include "SSWRuntimeSubsystem.h"
@@ -791,6 +792,35 @@ Sim::ExecMission()
 	// Create runtime entities
 	//-------------------------------------------------------------
 	CreateElements();
+
+    // Campaign missions may already include the roster station. Scripted
+    // missions use the same placement when they load its orbital region.
+    for (ListIter<SimRegion> Regions = regions; ++Regions;)
+    {
+        SimRegion* Region = Regions.value();
+        if (!Region || !Region->IsOrbital()) continue;
+        for (const FS_CombatGroup* Group : CombatGroupRegistry::FindByRegion(UTF8_TO_TCHAR(Region->GetName())))
+        {
+            if (!Group || !Ship::IsTransferStationName(Group->Name)) continue;
+            const FString& Name = Group->Name;
+            const auto* Unit = Group->Unit.FindByPredicate([](const FS_CombatGroupUnit& Entry)
+            {
+                return Entry.UnitDesign.Equals(TEXT("Station1"), ESearchCase::IgnoreCase);
+            });
+            if (!Unit) continue;
+            const auto StationName = StringCast<ANSICHAR>(*Name);
+            Ship* Station = FindShip(StationName.Get(), Region->GetName());
+            if (!Station)
+            {
+                ShipDesign* Design = ShipDesignRegistry::FindLegacy(Unit->UnitDesign);
+                if (!Design) continue;
+                Station = CreateShip(StationName.Get(), "", Design, Region->GetName(), Group->Location, Group->Iff, 0);
+            }
+            if (Hangar* GuestHangar = Station ? Station->GetHangar() : nullptr)
+                if (const ShipDesign* Fighter = ShipDesignRegistry::FindLegacy("Falcon"))
+                    GuestHangar->CreateSquadron("Transient Flights", nullptr, Fighter, 4, Group->Iff, nullptr, 0, 4);
+        }
+    }
 
     // T1 patrols on the other side of Archon. Keep this practice field
     // mission-local so the shared Janek region and T2 route stay intact.

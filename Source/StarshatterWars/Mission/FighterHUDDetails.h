@@ -71,6 +71,7 @@ private:
     bool bHelmMode=false;
     FString CompactNavLabel=TEXT("FREE FLIGHT");
     void DrawILS(const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
+    Ship* GetSelectedTransferStation(Ship& Player) const;
     void DrawFlightNavigation(Ship& Player, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
     static TArray<FString> MissionStatusRows(const Ship* Player);
     void DrawSensorTracks(Ship& Player, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
@@ -125,6 +126,8 @@ private:
     TArray<SSWDamagePanel::FCell> DamageRows;
     TArray<FBlip> Contacts;
     FString PlayerName, PlayerClass, TargetName, TargetClass, Primary, Secondary;
+    FString TargetMineral, TargetDepositAmount;
+    TArray<FString> JumpRoute;
     double PlayerShield = -1, PlayerHull = -1, TargetHull = -1, TargetShield = -1, TargetRange = -1, SensorRange = 1;
     bool bHasPlayer = false, bHasTarget = false;
     bool bAugmenterActive = false;

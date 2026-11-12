@@ -3600,4 +3600,363 @@ group: {
     },
 }
 
+// Cargo transfer stations
 
+group: {
+  type: station,
+  id: 8501,
+  name: "Jarnell Transfer Station",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Jarnell",
+  loc: (150e3, -50e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Jarnell Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8502,
+  name: "Borova Transfer Station",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Borova",
+  loc: (100e3, -50e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Borova Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8503,
+  name: "Athenar Transfer Station",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Athenar",
+  loc: (72e3, -46e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Athenar Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8504,
+  name: "Paragon Transfer Station",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Paragon",
+  loc: (72e3, -46e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Paragon Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8505,
+  name: "Thralis Transfer Station",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Thrale",
+  loc: (72e3, -46e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Thralis Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8506,
+  name: "Janus Transfer Station",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Janek",
+  loc: (125e3, 0e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Janus Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+// Additional cargo operators
+
+group: {
+  type: freight,
+  id: 8701,
+  name: "Athenar Civilian Freight",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Athenar",
+  loc: (125e3, -50e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Athenar Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8701-1"
+  }
+
+  unit: {
+    name: "Athenar Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8701-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8702,
+  name: "Borova Civilian Freight",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Borova",
+  loc: (100e3, -100e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Borova Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8702-1"
+  }
+
+  unit: {
+    name: "Borova Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8702-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8703,
+  name: "Borova Military Sealift",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Borova",
+  loc: (100e3, 0e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Borova Fleet 1",
+    type: "Freighter",
+    design: "IM4300",
+    regnum: "8703-1"
+  }
+
+  unit: {
+    name: "Borova Fleet 2",
+    type: "Freighter",
+    design: "IM1912",
+    regnum: "8703-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8708,
+  name: "Janus Civilian Freight",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Janek",
+  loc: (125e3, 50e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Janus Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8708-1"
+  }
+
+  unit: {
+    name: "Janus Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8708-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8709,
+  name: "Janus Military Sealift",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Janek",
+  loc: (175e3, 0e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Janus Fleet 1",
+    type: "Freighter",
+    design: "IM4300",
+    regnum: "8709-1"
+  }
+
+  unit: {
+    name: "Janus Fleet 2",
+    type: "Freighter",
+    design: "IM1912",
+    regnum: "8709-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8710,
+  name: "Jarnell Civilian Freight",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Jarnell",
+  loc: (150e3, -100e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Jarnell Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8710-1"
+  }
+
+  unit: {
+    name: "Jarnell Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8710-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8711,
+  name: "Jarnell Military Sealift",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Jarnell",
+  loc: (150e3, 0e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Jarnell Fleet 1",
+    type: "Freighter",
+    design: "IM4300",
+    regnum: "8711-1"
+  }
+
+  unit: {
+    name: "Jarnell Fleet 2",
+    type: "Freighter",
+    design: "IM1912",
+    regnum: "8711-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8719,
+  name: "Paragon Civilian Freight",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Paragon",
+  loc: (125e3, -50e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Paragon Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8719-1"
+  }
+
+  unit: {
+    name: "Paragon Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8719-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8726,
+  name: "Thralis Civilian Freight",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Thrale",
+  loc: (125e3, -50e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Thralis Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8726-1"
+  }
+
+  unit: {
+    name: "Thralis Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8726-2"
+  }
+}

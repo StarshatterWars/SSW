@@ -105,7 +105,13 @@ public:
                 const FString Status = H->bTargetTracking ? TEXT("   TRACKING") :
                     H->bTargetLocked ? TEXT("   LOCKED") : TEXT("");
                 Text(20,350,H->TargetClass + Status,H->TargetDisplayColor,22);
-                Text(20,400,TEXT("HULL ")+SFighterHUDDetails::FormatStatusReadout(TEXT("HULL"),H->TargetHull),Blue,24);
+                if (!H->TargetMineral.IsEmpty())
+                {
+                    Text(20,390,H->TargetMineral,Blue,22);
+                    Text(20,420,H->TargetDepositAmount,Blue,22);
+                }
+                else if (H->TargetHull >= 0)
+                    Text(20,400,TEXT("HULL ")+SFighterHUDDetails::FormatStatusReadout(TEXT("HULL"),H->TargetHull),Blue,24);
                 Text(20,450,FString::Printf(TEXT("RANGE %.1f KM"),H->TargetRange),Blue,24);
             }
         }

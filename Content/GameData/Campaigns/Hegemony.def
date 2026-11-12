@@ -5363,3 +5363,639 @@ group: {
     },
 }
 
+// Cargo transfer stations
+
+group: {
+  type: station,
+  id: 8507,
+  name: "Renser Transfer Station",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Renser",
+  loc: (72e3, -46e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Renser Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8508,
+  name: "Loris Transfer Station",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Loris",
+  loc: (125e3, -50e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Loris Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8509,
+  name: "Ostara Transfer Station",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Aram",
+  loc: (100e3, -75e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Ostara Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8510,
+  name: "Kolchev Transfer Station",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Kolchev",
+  loc: (100e3, -50e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Kolchev Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8511,
+  name: "Korius Transfer Station",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Adantar",
+  loc: (125e3, -50e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Korius Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8512,
+  name: "Tarsus Transfer Station",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Tarsus",
+  loc: (125e3, -100e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Tarsus Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8513,
+  name: "Nephrys Transfer Station",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Nergal",
+  loc: (72e3, -46e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Nephrys Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8514,
+  name: "Radix Transfer Station",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Radix",
+  loc: (100e3, -50e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Radix Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8515,
+  name: "Isham Transfer Station",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Ramek",
+  loc: (72e3, -46e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Isham Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8516,
+  name: "Marak Transfer Station",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Marak",
+  loc: (100e3, -50e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Marak Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8517,
+  name: "Garrison Transfer Station",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Garrison",
+  loc: (150e3, -50e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Garrison Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+group: {
+  type: station,
+  id: 8518,
+  name: "Trocanther Transfer Station",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Volante",
+  loc: (100e3, -75e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Trocanther Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+// Additional cargo operators
+
+group: {
+  type: freight,
+  id: 8704,
+  name: "Garrison Civilian Freight",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Garrison",
+  loc: (150e3, -100e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Garrison Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8704-1"
+  }
+
+  unit: {
+    name: "Garrison Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8704-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8705,
+  name: "Garrison Military Sealift",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Garrison",
+  loc: (150e3, 0e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Garrison Fleet 1",
+    type: "Freighter",
+    design: "IM4300",
+    regnum: "8705-1"
+  }
+
+  unit: {
+    name: "Garrison Fleet 2",
+    type: "Freighter",
+    design: "IM1912",
+    regnum: "8705-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8707,
+  name: "Isham Civilian Freight",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Ramek",
+  loc: (125e3, -50e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Isham Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8707-1"
+  }
+
+  unit: {
+    name: "Isham Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8707-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8712,
+  name: "Kolchev Civilian Freight",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Kolchev",
+  loc: (100e3, 0e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Kolchev Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8712-1"
+  }
+
+  unit: {
+    name: "Kolchev Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8712-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8713,
+  name: "Korius Civilian Freight",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Adantar",
+  loc: (175e3, -50e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Korius Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8713-1"
+  }
+
+  unit: {
+    name: "Korius Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8713-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8714,
+  name: "Loris Civilian Freight",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Loris",
+  loc: (125e3, -100e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Loris Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8714-1"
+  }
+
+  unit: {
+    name: "Loris Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8714-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8715,
+  name: "Marak Civilian Freight",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Marak",
+  loc: (100e3, -100e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Marak Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8715-1"
+  }
+
+  unit: {
+    name: "Marak Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8715-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8716,
+  name: "Marak Military Sealift",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Marak",
+  loc: (150e3, -50e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Marak Fleet 1",
+    type: "Freighter",
+    design: "IM4300",
+    regnum: "8716-1"
+  }
+
+  unit: {
+    name: "Marak Fleet 2",
+    type: "Freighter",
+    design: "IM1912",
+    regnum: "8716-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8717,
+  name: "Nephrys Civilian Freight",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Nergal",
+  loc: (125e3, -50e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Nephrys Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8717-1"
+  }
+
+  unit: {
+    name: "Nephrys Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8717-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8718,
+  name: "Ostara Civilian Freight",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Aram",
+  loc: (100e3, -125e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Ostara Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8718-1"
+  }
+
+  unit: {
+    name: "Ostara Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8718-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8720,
+  name: "Radix Civilian Freight",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Radix",
+  loc: (100e3, -100e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Radix Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8720-1"
+  }
+
+  unit: {
+    name: "Radix Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8720-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8721,
+  name: "Renser Civilian Freight",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Renser",
+  loc: (125e3, -50e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Renser Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8721-1"
+  }
+
+  unit: {
+    name: "Renser Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8721-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8722,
+  name: "Renser Military Sealift",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Renser",
+  loc: (100e3, 0e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Renser Fleet 1",
+    type: "Freighter",
+    design: "IM4300",
+    regnum: "8722-1"
+  }
+
+  unit: {
+    name: "Renser Fleet 2",
+    type: "Freighter",
+    design: "IM1912",
+    regnum: "8722-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8725,
+  name: "Tarsus Civilian Freight",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Tarsus",
+  loc: (125e3, -150e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Tarsus Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8725-1"
+  }
+
+  unit: {
+    name: "Tarsus Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8725-2"
+  }
+}
+
+group: {
+  type: freight,
+  id: 8727,
+  name: "Trocanther Civilian Freight",
+  intel: known,
+  iff: 2,
+  empire_id: 1,
+  region: "Volante",
+  loc: (100e3, -125e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Trocanther Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8727-1"
+  }
+
+  unit: {
+    name: "Trocanther Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8727-2"
+  }
+}

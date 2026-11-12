@@ -34,6 +34,7 @@
 
 #include "GalaxyMapPanel.h"
 #include "SectorMapPanel.h"
+#include "SSWRuntimeSubsystem.h"
 #include "SystemMapPanel.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "StarSystemRegistry.h"
@@ -494,6 +495,9 @@ void UMissionNavDlg::SyncGalaxyMissionAndSelectionState()
     }
 
     GalaxyMapPanel->SetRoutePath(Route);
+    if (bInMissionNavigation && GetGameInstance())
+        if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
+            Runtime->SetSelectedJumpRoute(Route);
 }
 
 void UMissionNavDlg::SyncSubPanels()
@@ -2850,6 +2854,10 @@ void UMissionNavDlg::RefreshLiveNavigation()
     {
         LastPlayerSector = PlayerKey;
         SelectedSystemName = PlayerSystem;
+        if (const auto* Instance = GetGameInstance())
+            if (const auto* Runtime = Instance->GetSubsystem<USSWRuntimeSubsystem>())
+                if (const auto& Route = Runtime->GetSelectedJumpRoute(); !Route.IsEmpty())
+                    SelectedSystemName = Route.Last();
         CurrentMissionSystemName = PlayerSystem;
         LiveViewedSector = PlayerSector;
         SyncGalaxyMissionAndSelectionState();

@@ -1658,6 +1658,7 @@ void USSWRuntimeSubsystem::HandleMissionUnloading()
 
 void USSWRuntimeSubsystem::EndMissionPresentation()
 {
+    SelectedJumpRoute.Reset();
     if(auto* Surface=NativeTerrain.Get())Surface->Destroy();NativeTerrain.Reset();
     ClearMissionWaypoints();
     ClearProjectileVisuals();

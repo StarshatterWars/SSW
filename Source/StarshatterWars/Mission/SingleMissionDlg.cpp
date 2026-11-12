@@ -2,6 +2,8 @@
    Uses legacy Single Missions campaign and original PREP-mode handoff.
    The existing MissionSelectDlg is intentionally not modified. */
 #include "SingleMissionDlg.h"
+#include "SSWMissionMods.h"
+#include "Misc/Crc.h"
 #include "MissionRankRules.h"
 #include "MissionCompletionStatus.h"
 #include "SSWGameInstance.h"
@@ -433,6 +435,8 @@ void USingleMissionDlg::RefreshMissionRoster()
     RowProxies.Reset();
     MissionIds.Reset();
     ScenarioRows.Reset();
+    ModMissionRows.Reset();
+    if (StandaloneBriefingMissionId >= 1000000000) StandaloneBriefingMissionId = INDEX_NONE;
     CustomMissionInfos.Reset();
     CustomCampaign = nullptr;
     ChosenIndex = INDEX_NONE;
@@ -550,6 +554,30 @@ void USingleMissionDlg::RefreshMissionRoster()
     // cooked DT_SingleMissions asset. Never allow editing of DataTable entries.
     if (IsCustomMissionView())
     {
+    if (auto* Data = GetGameInstance() ? GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>() : nullptr)
+    {
+        for (const auto& Pack : SSWMissionMods::Discover())
+        {
+            if (!Pack.bEnabled) continue;
+            for (const FString& Filename : Pack.Missions)
+            {
+                TSharedPtr<FS_CampaignMission> Scenario = MakeShared<FS_CampaignMission>();
+                if (!Data->ReadLooseMission(Filename, *Scenario)) continue;
+                const FString Key = (Pack.Name / FPaths::GetCleanFilename(Filename)).ToLower();
+                Scenario->Id = 1000000000 + int32(FCrc::StrCrc32(*Key) % 1000000000u);
+                if (MissionIds.Contains(Scenario->Id)) continue;
+                UButton* Button = MakeActionButton(
+                    FString::Printf(TEXT("%s: %s"), *Pack.Name, *Scenario->MissionName), true, true);
+                Button->OnClicked.AddDynamic(this, &USingleMissionDlg::OnCustomMissionChosen);
+                MissionRoster->AddChildToVerticalBox(Button)->SetPadding(FMargin(0.f, 0.f, 0.f, 7.f));
+                MissionButtons.Add(Button);
+                MissionIds.Add(Scenario->Id);
+                ScenarioRows.Add(Scenario.Get());
+                CustomMissionInfos.Add(nullptr);
+                ModMissionRows.Add(MoveTemp(Scenario));
+            }
+        }
+    }
     ListIter<Campaign> CustomCampaignIter = Campaign::GetAllCampaigns();
     while (++CustomCampaignIter)
     {
@@ -790,7 +818,8 @@ void USingleMissionDlg::LaunchSelected()
     Mission* Model = nullptr;
     const FS_CampaignMission* SelectedRow = ScenarioRows.IsValidIndex(ChosenIndex)
         ? ScenarioRows[ChosenIndex] : nullptr;
-    if (!bCustom && (!SelectedRow || !MissionRankRules::Unlocked(MissionRankRules::Required(*SelectedRow)))) return;
+    if (!bCustom && (!SelectedRow || (!IsCustomMissionView() &&
+        !MissionRankRules::Unlocked(MissionRankRules::Required(*SelectedRow))))) return;
     if (IsStoryMissionView() && SelectedRow && !StoryUnavailableReason(*SelectedRow, GetGameInstance()).IsEmpty()) return;
     if (SelectedRow && !bCustom)
     {
@@ -894,7 +923,7 @@ void USingleMissionDlg::OnCustomMissionChosen()
     for (int32 Index = 0; Index < MissionButtons.Num(); ++Index)
     {
         UButton* EntryButton = MissionButtons[Index];
-        if (EntryButton && CustomMissionInfos.IsValidIndex(Index) && CustomMissionInfos[Index]
+        if (EntryButton && IsCustomMissionView()
             && (EntryButton->IsHovered() || EntryButton->HasKeyboardFocus()))
         {
             SelectMissionAt(Index);

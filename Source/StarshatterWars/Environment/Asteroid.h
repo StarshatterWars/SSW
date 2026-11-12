@@ -20,6 +20,7 @@
 #include "Debris.h"
 
 #include "Math/Vector.h"
+#include "AsteroidResource.h"
 
 // +--------------------------------------------------------------------+
 
@@ -29,9 +30,11 @@ public:
 	Asteroid(int type, const FVector& pos, double mass);
 
     int GetMeshVariant() const {return MeshVariant;}
+    const FSSWAsteroidResource& GetResource() const { return Resource; }
 	static void Initialize();
 	static void Close();
 private:
     int MeshVariant=0;
+    FSSWAsteroidResource Resource;
 };
 

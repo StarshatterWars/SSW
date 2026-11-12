@@ -1,0 +1,211 @@
+ClipId,Station,System,Sector,Text
+transfer_athenar_callsign,Athenar Transfer Station,Athenar,Athenar,Athenar Transfer Station Control.
+transfer_athenar_approach,Athenar Transfer Station,Athenar,Athenar,Athenar Transfer Station Control. Roger your approach.
+transfer_athenar_hold,Athenar Transfer Station,Athenar,Athenar,"Athenar Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_athenar_land_1,Athenar Transfer Station,Athenar,Athenar,Athenar Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_athenar_land_2,Athenar Transfer Station,Athenar,Athenar,Athenar Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_athenar_launch_1,Athenar Transfer Station,Athenar,Athenar,Athenar Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_athenar_launch_2,Athenar Transfer Station,Athenar,Athenar,Athenar Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_athenar_freighter_hold,Athenar Transfer Station,Athenar,Athenar,Athenar Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_athenar_freighter_berth_1,Athenar Transfer Station,Athenar,Athenar,Athenar Transfer Station Control. Proceed to exterior berth one.
+transfer_athenar_freighter_berth_2,Athenar Transfer Station,Athenar,Athenar,Athenar Transfer Station Control. Proceed to exterior berth two.
+transfer_borova_callsign,Borova Transfer Station,Borova,Borova,Borova Transfer Station Control.
+transfer_borova_approach,Borova Transfer Station,Borova,Borova,Borova Transfer Station Control. Roger your approach.
+transfer_borova_hold,Borova Transfer Station,Borova,Borova,"Borova Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_borova_land_1,Borova Transfer Station,Borova,Borova,Borova Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_borova_land_2,Borova Transfer Station,Borova,Borova,Borova Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_borova_launch_1,Borova Transfer Station,Borova,Borova,Borova Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_borova_launch_2,Borova Transfer Station,Borova,Borova,Borova Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_borova_freighter_hold,Borova Transfer Station,Borova,Borova,Borova Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_borova_freighter_berth_1,Borova Transfer Station,Borova,Borova,Borova Transfer Station Control. Proceed to exterior berth one.
+transfer_borova_freighter_berth_2,Borova Transfer Station,Borova,Borova,Borova Transfer Station Control. Proceed to exterior berth two.
+transfer_garrison_callsign,Garrison Transfer Station,Garrison,Garrison,Garrison Transfer Station Control.
+transfer_garrison_approach,Garrison Transfer Station,Garrison,Garrison,Garrison Transfer Station Control. Roger your approach.
+transfer_garrison_hold,Garrison Transfer Station,Garrison,Garrison,"Garrison Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_garrison_land_1,Garrison Transfer Station,Garrison,Garrison,Garrison Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_garrison_land_2,Garrison Transfer Station,Garrison,Garrison,Garrison Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_garrison_launch_1,Garrison Transfer Station,Garrison,Garrison,Garrison Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_garrison_launch_2,Garrison Transfer Station,Garrison,Garrison,Garrison Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_garrison_freighter_hold,Garrison Transfer Station,Garrison,Garrison,Garrison Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_garrison_freighter_berth_1,Garrison Transfer Station,Garrison,Garrison,Garrison Transfer Station Control. Proceed to exterior berth one.
+transfer_garrison_freighter_berth_2,Garrison Transfer Station,Garrison,Garrison,Garrison Transfer Station Control. Proceed to exterior berth two.
+transfer_haiche_callsign,Haiche Transfer Station,Haiche,Haiche,Haiche Transfer Station Control.
+transfer_haiche_approach,Haiche Transfer Station,Haiche,Haiche,Haiche Transfer Station Control. Roger your approach.
+transfer_haiche_hold,Haiche Transfer Station,Haiche,Haiche,"Haiche Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_haiche_land_1,Haiche Transfer Station,Haiche,Haiche,Haiche Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_haiche_land_2,Haiche Transfer Station,Haiche,Haiche,Haiche Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_haiche_launch_1,Haiche Transfer Station,Haiche,Haiche,Haiche Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_haiche_launch_2,Haiche Transfer Station,Haiche,Haiche,Haiche Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_haiche_freighter_hold,Haiche Transfer Station,Haiche,Haiche,Haiche Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_haiche_freighter_berth_1,Haiche Transfer Station,Haiche,Haiche,Haiche Transfer Station Control. Proceed to exterior berth one.
+transfer_haiche_freighter_berth_2,Haiche Transfer Station,Haiche,Haiche,Haiche Transfer Station Control. Proceed to exterior berth two.
+transfer_isham_callsign,Isham Transfer Station,Isham,Ramek,Isham Transfer Station Control.
+transfer_isham_approach,Isham Transfer Station,Isham,Ramek,Isham Transfer Station Control. Roger your approach.
+transfer_isham_hold,Isham Transfer Station,Isham,Ramek,"Isham Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_isham_land_1,Isham Transfer Station,Isham,Ramek,Isham Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_isham_land_2,Isham Transfer Station,Isham,Ramek,Isham Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_isham_launch_1,Isham Transfer Station,Isham,Ramek,Isham Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_isham_launch_2,Isham Transfer Station,Isham,Ramek,Isham Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_isham_freighter_hold,Isham Transfer Station,Isham,Ramek,Isham Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_isham_freighter_berth_1,Isham Transfer Station,Isham,Ramek,Isham Transfer Station Control. Proceed to exterior berth one.
+transfer_isham_freighter_berth_2,Isham Transfer Station,Isham,Ramek,Isham Transfer Station Control. Proceed to exterior berth two.
+transfer_janus_callsign,Janus Transfer Station,Janus,Janek,Janus Transfer Station Control.
+transfer_janus_approach,Janus Transfer Station,Janus,Janek,Janus Transfer Station Control. Roger your approach.
+transfer_janus_hold,Janus Transfer Station,Janus,Janek,"Janus Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_janus_land_1,Janus Transfer Station,Janus,Janek,Janus Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_janus_land_2,Janus Transfer Station,Janus,Janek,Janus Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_janus_launch_1,Janus Transfer Station,Janus,Janek,Janus Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_janus_launch_2,Janus Transfer Station,Janus,Janek,Janus Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_janus_freighter_hold,Janus Transfer Station,Janus,Janek,Janus Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_janus_freighter_berth_1,Janus Transfer Station,Janus,Janek,Janus Transfer Station Control. Proceed to exterior berth one.
+transfer_janus_freighter_berth_2,Janus Transfer Station,Janus,Janek,Janus Transfer Station Control. Proceed to exterior berth two.
+transfer_jarnell_callsign,Jarnell Transfer Station,Jarnell,Jarnell,Jarnell Transfer Station Control.
+transfer_jarnell_approach,Jarnell Transfer Station,Jarnell,Jarnell,Jarnell Transfer Station Control. Roger your approach.
+transfer_jarnell_hold,Jarnell Transfer Station,Jarnell,Jarnell,"Jarnell Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_jarnell_land_1,Jarnell Transfer Station,Jarnell,Jarnell,Jarnell Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_jarnell_land_2,Jarnell Transfer Station,Jarnell,Jarnell,Jarnell Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_jarnell_launch_1,Jarnell Transfer Station,Jarnell,Jarnell,Jarnell Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_jarnell_launch_2,Jarnell Transfer Station,Jarnell,Jarnell,Jarnell Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_jarnell_freighter_hold,Jarnell Transfer Station,Jarnell,Jarnell,Jarnell Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_jarnell_freighter_berth_1,Jarnell Transfer Station,Jarnell,Jarnell,Jarnell Transfer Station Control. Proceed to exterior berth one.
+transfer_jarnell_freighter_berth_2,Jarnell Transfer Station,Jarnell,Jarnell,Jarnell Transfer Station Control. Proceed to exterior berth two.
+transfer_kolchev_callsign,Kolchev Transfer Station,Kolchev,Kolchev,Kolchev Transfer Station Control.
+transfer_kolchev_approach,Kolchev Transfer Station,Kolchev,Kolchev,Kolchev Transfer Station Control. Roger your approach.
+transfer_kolchev_hold,Kolchev Transfer Station,Kolchev,Kolchev,"Kolchev Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_kolchev_land_1,Kolchev Transfer Station,Kolchev,Kolchev,Kolchev Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_kolchev_land_2,Kolchev Transfer Station,Kolchev,Kolchev,Kolchev Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_kolchev_launch_1,Kolchev Transfer Station,Kolchev,Kolchev,Kolchev Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_kolchev_launch_2,Kolchev Transfer Station,Kolchev,Kolchev,Kolchev Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_kolchev_freighter_hold,Kolchev Transfer Station,Kolchev,Kolchev,Kolchev Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_kolchev_freighter_berth_1,Kolchev Transfer Station,Kolchev,Kolchev,Kolchev Transfer Station Control. Proceed to exterior berth one.
+transfer_kolchev_freighter_berth_2,Kolchev Transfer Station,Kolchev,Kolchev,Kolchev Transfer Station Control. Proceed to exterior berth two.
+transfer_korius_callsign,Korius Transfer Station,Korius,Adantar,Korius Transfer Station Control.
+transfer_korius_approach,Korius Transfer Station,Korius,Adantar,Korius Transfer Station Control. Roger your approach.
+transfer_korius_hold,Korius Transfer Station,Korius,Adantar,"Korius Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_korius_land_1,Korius Transfer Station,Korius,Adantar,Korius Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_korius_land_2,Korius Transfer Station,Korius,Adantar,Korius Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_korius_launch_1,Korius Transfer Station,Korius,Adantar,Korius Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_korius_launch_2,Korius Transfer Station,Korius,Adantar,Korius Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_korius_freighter_hold,Korius Transfer Station,Korius,Adantar,Korius Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_korius_freighter_berth_1,Korius Transfer Station,Korius,Adantar,Korius Transfer Station Control. Proceed to exterior berth one.
+transfer_korius_freighter_berth_2,Korius Transfer Station,Korius,Adantar,Korius Transfer Station Control. Proceed to exterior berth two.
+transfer_loris_callsign,Loris Transfer Station,Loris,Loris,Loris Transfer Station Control.
+transfer_loris_approach,Loris Transfer Station,Loris,Loris,Loris Transfer Station Control. Roger your approach.
+transfer_loris_hold,Loris Transfer Station,Loris,Loris,"Loris Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_loris_land_1,Loris Transfer Station,Loris,Loris,Loris Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_loris_land_2,Loris Transfer Station,Loris,Loris,Loris Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_loris_launch_1,Loris Transfer Station,Loris,Loris,Loris Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_loris_launch_2,Loris Transfer Station,Loris,Loris,Loris Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_loris_freighter_hold,Loris Transfer Station,Loris,Loris,Loris Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_loris_freighter_berth_1,Loris Transfer Station,Loris,Loris,Loris Transfer Station Control. Proceed to exterior berth one.
+transfer_loris_freighter_berth_2,Loris Transfer Station,Loris,Loris,Loris Transfer Station Control. Proceed to exterior berth two.
+transfer_marak_callsign,Marak Transfer Station,Marak,Marak,Marak Transfer Station Control.
+transfer_marak_approach,Marak Transfer Station,Marak,Marak,Marak Transfer Station Control. Roger your approach.
+transfer_marak_hold,Marak Transfer Station,Marak,Marak,"Marak Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_marak_land_1,Marak Transfer Station,Marak,Marak,Marak Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_marak_land_2,Marak Transfer Station,Marak,Marak,Marak Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_marak_launch_1,Marak Transfer Station,Marak,Marak,Marak Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_marak_launch_2,Marak Transfer Station,Marak,Marak,Marak Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_marak_freighter_hold,Marak Transfer Station,Marak,Marak,Marak Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_marak_freighter_berth_1,Marak Transfer Station,Marak,Marak,Marak Transfer Station Control. Proceed to exterior berth one.
+transfer_marak_freighter_berth_2,Marak Transfer Station,Marak,Marak,Marak Transfer Station Control. Proceed to exterior berth two.
+transfer_nephrys_callsign,Nephrys Transfer Station,Nephrys,Nergal,Nephrys Transfer Station Control.
+transfer_nephrys_approach,Nephrys Transfer Station,Nephrys,Nergal,Nephrys Transfer Station Control. Roger your approach.
+transfer_nephrys_hold,Nephrys Transfer Station,Nephrys,Nergal,"Nephrys Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_nephrys_land_1,Nephrys Transfer Station,Nephrys,Nergal,Nephrys Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_nephrys_land_2,Nephrys Transfer Station,Nephrys,Nergal,Nephrys Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_nephrys_launch_1,Nephrys Transfer Station,Nephrys,Nergal,Nephrys Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_nephrys_launch_2,Nephrys Transfer Station,Nephrys,Nergal,Nephrys Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_nephrys_freighter_hold,Nephrys Transfer Station,Nephrys,Nergal,Nephrys Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_nephrys_freighter_berth_1,Nephrys Transfer Station,Nephrys,Nergal,Nephrys Transfer Station Control. Proceed to exterior berth one.
+transfer_nephrys_freighter_berth_2,Nephrys Transfer Station,Nephrys,Nergal,Nephrys Transfer Station Control. Proceed to exterior berth two.
+transfer_ostara_callsign,Ostara Transfer Station,Ostara,Aram,Ostara Transfer Station Control.
+transfer_ostara_approach,Ostara Transfer Station,Ostara,Aram,Ostara Transfer Station Control. Roger your approach.
+transfer_ostara_hold,Ostara Transfer Station,Ostara,Aram,"Ostara Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_ostara_land_1,Ostara Transfer Station,Ostara,Aram,Ostara Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_ostara_land_2,Ostara Transfer Station,Ostara,Aram,Ostara Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_ostara_launch_1,Ostara Transfer Station,Ostara,Aram,Ostara Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_ostara_launch_2,Ostara Transfer Station,Ostara,Aram,Ostara Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_ostara_freighter_hold,Ostara Transfer Station,Ostara,Aram,Ostara Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_ostara_freighter_berth_1,Ostara Transfer Station,Ostara,Aram,Ostara Transfer Station Control. Proceed to exterior berth one.
+transfer_ostara_freighter_berth_2,Ostara Transfer Station,Ostara,Aram,Ostara Transfer Station Control. Proceed to exterior berth two.
+transfer_paragon_callsign,Paragon Transfer Station,Paragon,Paragon,Paragon Transfer Station Control.
+transfer_paragon_approach,Paragon Transfer Station,Paragon,Paragon,Paragon Transfer Station Control. Roger your approach.
+transfer_paragon_hold,Paragon Transfer Station,Paragon,Paragon,"Paragon Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_paragon_land_1,Paragon Transfer Station,Paragon,Paragon,Paragon Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_paragon_land_2,Paragon Transfer Station,Paragon,Paragon,Paragon Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_paragon_launch_1,Paragon Transfer Station,Paragon,Paragon,Paragon Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_paragon_launch_2,Paragon Transfer Station,Paragon,Paragon,Paragon Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_paragon_freighter_hold,Paragon Transfer Station,Paragon,Paragon,Paragon Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_paragon_freighter_berth_1,Paragon Transfer Station,Paragon,Paragon,Paragon Transfer Station Control. Proceed to exterior berth one.
+transfer_paragon_freighter_berth_2,Paragon Transfer Station,Paragon,Paragon,Paragon Transfer Station Control. Proceed to exterior berth two.
+transfer_radix_callsign,Radix Transfer Station,Radix,Radix,Radix Transfer Station Control.
+transfer_radix_approach,Radix Transfer Station,Radix,Radix,Radix Transfer Station Control. Roger your approach.
+transfer_radix_hold,Radix Transfer Station,Radix,Radix,"Radix Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_radix_land_1,Radix Transfer Station,Radix,Radix,Radix Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_radix_land_2,Radix Transfer Station,Radix,Radix,Radix Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_radix_launch_1,Radix Transfer Station,Radix,Radix,Radix Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_radix_launch_2,Radix Transfer Station,Radix,Radix,Radix Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_radix_freighter_hold,Radix Transfer Station,Radix,Radix,Radix Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_radix_freighter_berth_1,Radix Transfer Station,Radix,Radix,Radix Transfer Station Control. Proceed to exterior berth one.
+transfer_radix_freighter_berth_2,Radix Transfer Station,Radix,Radix,Radix Transfer Station Control. Proceed to exterior berth two.
+transfer_renser_callsign,Renser Transfer Station,Renser,Renser,Renser Transfer Station Control.
+transfer_renser_approach,Renser Transfer Station,Renser,Renser,Renser Transfer Station Control. Roger your approach.
+transfer_renser_hold,Renser Transfer Station,Renser,Renser,"Renser Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_renser_land_1,Renser Transfer Station,Renser,Renser,Renser Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_renser_land_2,Renser Transfer Station,Renser,Renser,Renser Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_renser_launch_1,Renser Transfer Station,Renser,Renser,Renser Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_renser_launch_2,Renser Transfer Station,Renser,Renser,Renser Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_renser_freighter_hold,Renser Transfer Station,Renser,Renser,Renser Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_renser_freighter_berth_1,Renser Transfer Station,Renser,Renser,Renser Transfer Station Control. Proceed to exterior berth one.
+transfer_renser_freighter_berth_2,Renser Transfer Station,Renser,Renser,Renser Transfer Station Control. Proceed to exterior berth two.
+transfer_silessia_callsign,Silessia Transfer Station,Silessia,Silessia,Silessia Transfer Station Control.
+transfer_silessia_approach,Silessia Transfer Station,Silessia,Silessia,Silessia Transfer Station Control. Roger your approach.
+transfer_silessia_hold,Silessia Transfer Station,Silessia,Silessia,"Silessia Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_silessia_land_1,Silessia Transfer Station,Silessia,Silessia,Silessia Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_silessia_land_2,Silessia Transfer Station,Silessia,Silessia,Silessia Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_silessia_launch_1,Silessia Transfer Station,Silessia,Silessia,Silessia Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_silessia_launch_2,Silessia Transfer Station,Silessia,Silessia,Silessia Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_silessia_freighter_hold,Silessia Transfer Station,Silessia,Silessia,Silessia Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_silessia_freighter_berth_1,Silessia Transfer Station,Silessia,Silessia,Silessia Transfer Station Control. Proceed to exterior berth one.
+transfer_silessia_freighter_berth_2,Silessia Transfer Station,Silessia,Silessia,Silessia Transfer Station Control. Proceed to exterior berth two.
+transfer_solus_callsign,Trellis Docks,Solus,Trellis,Trellis Docks Control.
+transfer_solus_approach,Trellis Docks,Solus,Trellis,Trellis Docks Control. Roger your approach.
+transfer_solus_hold,Trellis Docks,Solus,Trellis,"Trellis Docks Control. Hold position, awaiting recovery clearance."
+transfer_solus_land_1,Trellis Docks,Solus,Trellis,Trellis Docks Control. Cleared to land on Docking Bay One.
+transfer_solus_land_2,Trellis Docks,Solus,Trellis,Trellis Docks Control. Cleared to land on Docking Bay Two.
+transfer_solus_launch_1,Trellis Docks,Solus,Trellis,Trellis Docks Control. Cleared for launch from Launch Bay One.
+transfer_solus_launch_2,Trellis Docks,Solus,Trellis,Trellis Docks Control. Cleared for launch from Launch Bay Two.
+transfer_solus_freighter_hold,Trellis Docks,Solus,Trellis,Trellis Docks Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_solus_freighter_berth_1,Trellis Docks,Solus,Trellis,Trellis Docks Control. Proceed to exterior berth one.
+transfer_solus_freighter_berth_2,Trellis Docks,Solus,Trellis,Trellis Docks Control. Proceed to exterior berth two.
+transfer_tarsus_callsign,Tarsus Transfer Station,Tarsus,Tarsus,Tarsus Transfer Station Control.
+transfer_tarsus_approach,Tarsus Transfer Station,Tarsus,Tarsus,Tarsus Transfer Station Control. Roger your approach.
+transfer_tarsus_hold,Tarsus Transfer Station,Tarsus,Tarsus,"Tarsus Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_tarsus_land_1,Tarsus Transfer Station,Tarsus,Tarsus,Tarsus Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_tarsus_land_2,Tarsus Transfer Station,Tarsus,Tarsus,Tarsus Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_tarsus_launch_1,Tarsus Transfer Station,Tarsus,Tarsus,Tarsus Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_tarsus_launch_2,Tarsus Transfer Station,Tarsus,Tarsus,Tarsus Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_tarsus_freighter_hold,Tarsus Transfer Station,Tarsus,Tarsus,Tarsus Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_tarsus_freighter_berth_1,Tarsus Transfer Station,Tarsus,Tarsus,Tarsus Transfer Station Control. Proceed to exterior berth one.
+transfer_tarsus_freighter_berth_2,Tarsus Transfer Station,Tarsus,Tarsus,Tarsus Transfer Station Control. Proceed to exterior berth two.
+transfer_thralis_callsign,Thralis Transfer Station,Thralis,Thrale,Thralis Transfer Station Control.
+transfer_thralis_approach,Thralis Transfer Station,Thralis,Thrale,Thralis Transfer Station Control. Roger your approach.
+transfer_thralis_hold,Thralis Transfer Station,Thralis,Thrale,"Thralis Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_thralis_land_1,Thralis Transfer Station,Thralis,Thrale,Thralis Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_thralis_land_2,Thralis Transfer Station,Thralis,Thrale,Thralis Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_thralis_launch_1,Thralis Transfer Station,Thralis,Thrale,Thralis Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_thralis_launch_2,Thralis Transfer Station,Thralis,Thrale,Thralis Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_thralis_freighter_hold,Thralis Transfer Station,Thralis,Thrale,Thralis Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_thralis_freighter_berth_1,Thralis Transfer Station,Thralis,Thrale,Thralis Transfer Station Control. Proceed to exterior berth one.
+transfer_thralis_freighter_berth_2,Thralis Transfer Station,Thralis,Thrale,Thralis Transfer Station Control. Proceed to exterior berth two.
+transfer_trocanther_callsign,Trocanther Transfer Station,Trocanther,Volante,Trocanther Transfer Station Control.
+transfer_trocanther_approach,Trocanther Transfer Station,Trocanther,Volante,Trocanther Transfer Station Control. Roger your approach.
+transfer_trocanther_hold,Trocanther Transfer Station,Trocanther,Volante,"Trocanther Transfer Station Control. Hold position, awaiting recovery clearance."
+transfer_trocanther_land_1,Trocanther Transfer Station,Trocanther,Volante,Trocanther Transfer Station Control. Cleared to land on Docking Bay One.
+transfer_trocanther_land_2,Trocanther Transfer Station,Trocanther,Volante,Trocanther Transfer Station Control. Cleared to land on Docking Bay Two.
+transfer_trocanther_launch_1,Trocanther Transfer Station,Trocanther,Volante,Trocanther Transfer Station Control. Cleared for launch from Launch Bay One.
+transfer_trocanther_launch_2,Trocanther Transfer Station,Trocanther,Volante,Trocanther Transfer Station Control. Cleared for launch from Launch Bay Two.
+transfer_trocanther_freighter_hold,Trocanther Transfer Station,Trocanther,Volante,Trocanther Transfer Station Control. Hold outside the flight deck approaches. Stand by for exterior berth assignment.
+transfer_trocanther_freighter_berth_1,Trocanther Transfer Station,Trocanther,Volante,Trocanther Transfer Station Control. Proceed to exterior berth one.
+transfer_trocanther_freighter_berth_2,Trocanther Transfer Station,Trocanther,Volante,Trocanther Transfer Station Control. Proceed to exterior berth two.

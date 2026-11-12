@@ -589,3 +589,52 @@ group: {
     },
 }
 
+// Cargo transfer stations
+
+group: {
+  type: station,
+  id: 8519,
+  name: "Silessia Transfer Station",
+  intel: known,
+  iff: 0,
+  empire_id: 9,
+  region: "Silessia",
+  loc: (150e3, -25e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Silessia Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+// Additional cargo operators
+
+group: {
+  type: freight,
+  id: 8723,
+  name: "Silessia Civilian Freight",
+  intel: known,
+  iff: 0,
+  empire_id: 9,
+  region: "Silessia",
+  loc: (150e3, -75e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Silessia Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8723-1"
+  }
+
+  unit: {
+    name: "Silessia Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8723-2"
+  }
+}

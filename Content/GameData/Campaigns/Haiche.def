@@ -423,3 +423,52 @@ group: {
     },
 }
 
+// Cargo transfer stations
+
+group: {
+  type: station,
+  id: 8520,
+  name: "Haiche Transfer Station",
+  intel: known,
+  iff: 0,
+  empire_id: 11,
+  region: "Haiche",
+  loc: (72e3, -46e3, 12e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Haiche Transfer Station",
+    type: "Station",
+    design: "Station1",
+  }
+}
+
+// Additional cargo operators
+
+group: {
+  type: freight,
+  id: 8706,
+  name: "Haiche Civilian Freight",
+  intel: known,
+  iff: 0,
+  empire_id: 11,
+  region: "Haiche",
+  loc: (125e3, -50e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Haiche Merchant 1",
+    type: "Freighter",
+    design: "IM3500",
+    regnum: "8706-1"
+  }
+
+  unit: {
+    name: "Haiche Merchant 2",
+    type: "Freighter",
+    design: "IM2800",
+    regnum: "8706-2"
+  }
+}

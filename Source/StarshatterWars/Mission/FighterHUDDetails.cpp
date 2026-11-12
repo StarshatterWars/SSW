@@ -32,6 +32,7 @@
 #include "Instruction.h"
 #include "Game.h"
 #include "SSWRuntimeSubsystem.h"
+#include "StarSystem.h"
 #include "StarshatterInputBindings.h"
 #include "Weapon.h"
 #include "WeaponDesign.h"
@@ -312,6 +313,9 @@ void SFighterHUDDetails::Refresh()
     StatusRows.Reset(); DamageRows.Reset(); Contacts.Reset();
     bAugmenterActive = false;
     TargetDisplayColor = FLinearColor::Yellow;
+    TargetMineral.Reset();
+    TargetDepositAmount.Reset();
+    JumpRoute.Reset();
     HomeCarrierReadout.Reset();
     NavReadouts.Reset(); MissileReadouts.Reset(); DefenseReadout.Reset();
     bAutoAvailable = bGearDown = bShoot = bClosingValid = bTargetLocked = bTargetTracking = false;
@@ -389,6 +393,34 @@ void SFighterHUDDetails::Refresh()
         return;
     }
     Ship* P = PlayerShip(); bHasPlayer = P != nullptr;
+    if (P && P->GetRegion() && P->GetRegion()->GetSystem())
+    {
+        const FString CurrentSystem = UTF8_TO_TCHAR(P->GetRegion()->GetSystem()->GetName());
+        if (const auto* Actor = P->GetNativePresentation())
+        {
+            const auto* Instance = Actor->GetGameInstance();
+            const auto* Runtime = Instance ? Instance->GetSubsystem<USSWRuntimeSubsystem>() : nullptr;
+            if (Runtime)
+            {
+                const auto& Selected = Runtime->GetSelectedJumpRoute();
+                const int32 Index = Selected.IndexOfByKey(CurrentSystem);
+                if (Index != INDEX_NONE && Index + 1 < Selected.Num())
+                    JumpRoute.Append(Selected.GetData() + Index, Selected.Num() - Index);
+            }
+        }
+        if (JumpRoute.IsEmpty())
+        {
+            JumpRoute.Add(CurrentSystem);
+            for (ListIter<Instruction> Route = P->GetFlightPlan(); ++Route;)
+            {
+                const Instruction* Point = Route.value();
+                if (!Point || Point->GetStatus() > INSTRUCTION_STATUS::ACTIVE || !Point->GetRegion()) continue;
+                const StarSystem* System = Point->GetRegion()->GetSystem();
+                if (System && !JumpRoute.Last().Equals(UTF8_TO_TCHAR(System->GetName()), ESearchCase::IgnoreCase))
+                    JumpRoute.Add(UTF8_TO_TCHAR(System->GetName()));
+            }
+        }
+    }
     PlayerHull = Hull(P); Primary = Secondary = TEXT("NONE");
     if (P)
     {
@@ -542,6 +574,15 @@ void SFighterHUDDetails::Refresh()
             bHasTarget = true;
             TargetName = ObjectData.Name; TargetClass = ObjectData.Type;
             TargetRange = ObjectData.RangeKm; TargetHull = -1; TargetShield = -1;
+            if (const auto* Deposit = ObjectData.AsteroidResource.GetPtrOrNull())
+            {
+                TargetClass = Deposit->GetTypeName().ToString();
+                TargetMineral = Deposit->GetMineralName().ToString();
+                FNumberFormattingOptions Number;
+                Number.MaximumFractionalDigits = 2;
+                TargetDepositAmount = FText::Format(NSLOCTEXT("Asteroid", "DepositTonnes", "{0} t"),
+                    FText::AsNumber(Deposit->AmountTonnes, &Number)).ToString();
+            }
             if (TargetIconPath != ObjectData.ImagePath)
             {
                 TargetIconPath = ObjectData.ImagePath;
@@ -1275,6 +1316,11 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             bTargetLocked ? TargetClass + TEXT("   LOCKED") : TargetClass, TargetDisplayColor);
         if (TargetHull >= 0) ShipText(P+FVector2D(0,132)*Scale,FString(TEXT("HULL  "))+FormatStatusReadout(TEXT("HULL"),TargetHull),TargetDisplayColor);
         if (TargetHull >= 0) ShipText(P+FVector2D(0,152)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),TargetShield),TargetDisplayColor);
+        if (!TargetMineral.IsEmpty())
+        {
+            ShipText(P+FVector2D(0,132)*Scale, TargetMineral, TargetDisplayColor);
+            ShipText(P+FVector2D(0,152)*Scale, TargetDepositAmount, TargetDisplayColor);
+        }
         ShipText(P+FVector2D(0,172)*Scale,TargetRange>=0?UFormattingUtils::FormatDistance(TargetRange * 1000.0):TEXT("RANGE --"),TargetDisplayColor);
     }
     } // External instruments; radio and information remain available in cockpit.
@@ -1344,6 +1390,30 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     }
     if (HUDPlayer && !bPreTakeoff)
     {
+        if (JumpRoute.Num() > 1)
+        {
+            const int32 VisibleSystems = FMath::Min(JumpRoute.Num(), 5);
+            const int32 HiddenSystems = JumpRoute.Num() - VisibleSystems;
+            const FVector2D Origin = FVector2D(20, bMiniHUD ? 146 : 52) * Scale;
+            const FVector2D Extent = FVector2D(196, 34 + (VisibleSystems + (HiddenSystems > 0 ? 1 : 0)) * 18) * Scale;
+            const auto& Glass = FlightPanelStyle::Glass();
+            FSlateDrawElement::MakeBox(E,L+1,
+                G.ToPaintGeometry(FVector2f(Extent), FSlateLayoutTransform(FVector2f(Origin))),
+                &Glass, ESlateDrawEffect::None, Glass.TintColor.GetSpecifiedColor());
+            Text(Origin+FVector2D(10,8)*Scale,
+                FString::Printf(TEXT("JUMP ROUTE  ·  %d"), JumpRoute.Num()-1), HUDBlue, 10);
+            Box(Origin+FVector2D(15,34)*Scale, FVector2D(1,18*(VisibleSystems-1))*Scale, FlightPanelStyle::DividerColor());
+            for (int32 Index = 0; Index < VisibleSystems; ++Index)
+            {
+                const float Y = 30.f + Index * 18.f;
+                const FLinearColor Tint = Index == 1 ? FLinearColor(.36f,1.f,.68f) : HUDBlue;
+                Box(Origin+FVector2D(13,Y+4)*Scale, FVector2D(5,5)*Scale, Tint);
+                Text(Origin+FVector2D(25,Y)*Scale, JumpRoute[Index], Tint, 10);
+            }
+            if (HiddenSystems > 0)
+                Text(Origin+FVector2D(25,30+VisibleSystems*18)*Scale,
+                    FString::Printf(TEXT("+%d MORE"), HiddenSystems), HUDBlue, 10);
+        }
         if (FlightHUDMode == EFlightHUDMode::Tactical) DrawSensorTracks(*HUDPlayer, G, E, L);
         DrawFlightNavigation(*HUDPlayer, G, E, L+3);
     }
@@ -1457,6 +1527,16 @@ TOptional<int32> SFighterHUDDetails::SelectCameraPanel(int32 Number)
     return {};
 }
 
+Ship* SFighterHUDDetails::GetSelectedTransferStation(Ship& Player) const
+{
+    const auto* Visual = Cast<AShipActor>(SelectedTarget.Get().Get());
+    Ship* Station = IsValid(Visual) ? Visual->GetRuntimeShip() : nullptr;
+    SimRegion* Region = Player.GetRegion();
+    return Station && Region && Region->GetShips().contains(Station) &&
+        Station->IsTransferStation() && !Station->IsDead() && !Station->IsDying() &&
+        !Player.IsHostileTo(Station) ? Station : nullptr;
+}
+
 void SFighterHUDDetails::BuildRadioRows(TArray<FString>& Labels, TArray<int32>& Commands, TArray<bool>& Enabled, FString& Title) const
 {
     if (IsCameraPanelOpen())
@@ -1515,7 +1595,8 @@ void SFighterHUDDetails::BuildRadioRows(TArray<FString>& Labels, TArray<int32>& 
     {
         Page(TEXT("Wingman"),1,Wing && !Wing->IsDead());
         Page(TEXT("Element"),2,Element != nullptr);
-        Page(TEXT("Control / Landing"),3,P->GetController()!=nullptr || P->GetInbound()!=nullptr);
+        Page(TEXT("Control / Landing"),3,P->GetController()!=nullptr || P->GetInbound()!=nullptr ||
+            GetSelectedTransferStation(*P)!=nullptr);
     }
     else if (RadioPage == 1)
     {
@@ -1625,6 +1706,9 @@ void SFighterHUDDetails::RadioSelect(int32 Number)
                 Action==RadioMessageAction::REQUEST_LANDING_CLEARANCE || Action==RadioMessageAction::CALL_FINALS;
             Destination = RecoveryCall && Arrival && Arrival->GetDeck()
                 ? const_cast<Ship*>(Arrival->GetDeck()->GetCarrier()) : P->GetController();
+            if (Action == RadioMessageAction::CALL_INBOUND && !Arrival)
+                if (Ship* Station = GetSelectedTransferStation(*P))
+                    Destination = Station;
         }
         else if (Element)
         {

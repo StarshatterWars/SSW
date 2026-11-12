@@ -9,6 +9,30 @@
 #include "Instruction.h"
 #include "Mission.h"
 
+bool Ship::IsTransferStationName(const FString& Name)
+{
+    return Name.EndsWith(TEXT(" Transfer Station")) || Name.Equals(TEXT("Trellis Docks"), ESearchCase::IgnoreCase);
+}
+
+bool Ship::IsTransferStation() const
+{
+    return IsStatic() && IsTransferStationName(UTF8_TO_TCHAR(GetName()));
+}
+
+bool Ship::GetTransferBerth(int32 Index, double FreighterRadius, FVector& OutPosition) const
+{
+    if (!IsTransferStation() || IsDead() || IsDying() || Index < 0 || Index >= 2 ||
+        !FMath::IsFinite(FreighterRadius) || FreighterRadius < 0.0)
+        return false;
+
+    // Exterior berths sit above and below the flight-deck plane.
+    const FVector Up = FVector::CrossProduct(GetHeading(), GetCam().vrt()).GetSafeNormal();
+    if (Up.IsNearlyZero()) return false;
+    const double Clearance = FMath::Max(2000.0, GetNavigationHullRadius() + FreighterRadius + 500.0);
+    OutPosition = GetLocation() + Up * (Index == 0 ? Clearance : -Clearance);
+    return true;
+}
+
 bool Ship::CanBeginRecovery() const
 {
     const Mission* MissionDef = sim ? sim->GetMission() : nullptr;

@@ -420,6 +420,8 @@ bool ASSWSessionLobbyController::AssignMissionShip(int64 ObjectId)
     MissionShipId = ObjectId;
     Ship* Fighter = State->FindMissionShip(ObjectId);
     Fighter->SetNetworkPilot(true);
+    if (auto* Mode = GetWorld()->GetAuthGameMode<ASSWSessionLobbyGameMode>())
+        Mode->TrackServerPilot(*this, *Fighter);
     if (auto* Visual = Cast<AFighterActor>(Fighter->GetNativePresentation()))
         Visual->UseNetworkChaseView();
     ForceNetUpdate();
@@ -1143,6 +1145,8 @@ void ASSWSessionLobbyGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     GetWorldTimerManager().ClearTimer(MissionCountdownTimer);
     GetWorldTimerManager().ClearTimer(ArenaTimer);
+    for (auto It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+        if (auto* Pilot = Cast<ASSWSessionLobbyController>(It->Get())) SaveServerPilot(*Pilot, true);
     if (Sim* Simulation = Sim::GetSim(); LobbyMission && Simulation && Simulation->GetMission() == LobbyMission.Get())
     {
         if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
@@ -1160,12 +1164,31 @@ void ASSWSessionLobbyController::GetLifetimeReplicatedProps(TArray<FLifetimeProp
     DOREPLIFETIME_CONDITION(ASSWSessionLobbyController, RespawnDeadline, COND_OwnerOnly);
 }
 
-void ASSWSessionLobbyController::ServerFlightInput_Implementation(FVector Rotation, FVector Translation,
-    float Throttle, bool bAugmenter, bool bFirePrimary)
+namespace
+{
+    constexpr int32 FlightAxisBits = 10;
+    constexpr int32 FlightAxisMax = 511;
+    constexpr uint64 FlightAxisMask = (1ull << FlightAxisBits) - 1;
+    constexpr uint64 AugmenterBit = 1ull << 60;
+    constexpr uint64 PrimaryFireBit = 1ull << 61;
+
+    uint64 EncodeFlightAxis(double Axis)
+    {
+        const double Value = FMath::IsFinite(Axis) ? FMath::Clamp(Axis, -1.0, 1.0) : 0.0;
+        return uint64(FMath::RoundToInt(Value * FlightAxisMax) + FlightAxisMax);
+    }
+
+    double DecodeFlightAxis(uint64 Packed, int32 Index)
+    {
+        const int32 Value = int32((Packed >> (Index * FlightAxisBits)) & FlightAxisMask);
+        return FMath::Clamp(double(Value - FlightAxisMax) / FlightAxisMax, -1.0, 1.0);
+    }
+}
+
+void ASSWSessionLobbyController::ServerFlightInput_Implementation(uint64 PackedControls, uint8 Throttle)
 {
     const double Now = FPlatformTime::Seconds();
-    if (Rotation.ContainsNaN() || Translation.ContainsNaN() ||
-        !FMath::IsFinite(Throttle) || Now - LastFlightInput < 0.035) return;
+    if (Now - LastFlightInput < 0.035) return;
 
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     Ship* Fighter = State && State->bMissionStartReady ? State->FindMissionShip(MissionShipId) : nullptr;
@@ -1174,15 +1197,15 @@ void ASSWSessionLobbyController::ServerFlightInput_Implementation(FVector Rotati
     LastFlightInput = Now;
     if (!Fighter->IsAutoTrackEngaged())
     {
-        Fighter->SetManualThrottle(FMath::Clamp(Throttle, 0.0f, 100.0f));
-        Fighter->SetManualAugmenter(bAugmenter);
+        Fighter->SetManualThrottle(Throttle * (100.0f / 255.0f));
+        Fighter->SetManualAugmenter((PackedControls & AugmenterBit) != 0);
         for (int32 Axis = 0; Axis < 3; ++Axis)
         {
-            Fighter->SetManualRotationAxis(Axis, FMath::Clamp(Rotation[Axis], -1.0, 1.0));
-            Fighter->SetManualTranslationAxis(Axis, Translation[Axis]);
+            Fighter->SetManualRotationAxis(Axis, DecodeFlightAxis(PackedControls, Axis));
+            Fighter->SetManualTranslationAxis(Axis, DecodeFlightAxis(PackedControls, Axis + 3));
         }
     }
-    if (bFirePrimary) Fighter->FirePrimary();
+    if (PackedControls & PrimaryFireBit) Fighter->FirePrimary();
 }
 
 void ASSWSessionLobbyController::ServerFireSecondary_Implementation()
@@ -1431,8 +1454,14 @@ void ASSWSessionLobbyController::PlayerTick(float DeltaTime)
         Read(TEXT("IA_Pitch")).Get<float>(), Read(TEXT("IA_Yaw")).Get<float>(), Read(TEXT("IA_Roll")).Get<float>());
     const bool bAugmenter = Read(TEXT("IA_Augmenter")).Get<bool>();
     if (bAugmenter) FlightThrottle = 100.0;
-    ServerFlightInput(Rotation, PendingTranslation, FlightThrottle, bAugmenter,
-        bPrimaryPressed);
+    uint64 PackedControls = (bAugmenter ? AugmenterBit : 0) | (bPrimaryPressed ? PrimaryFireBit : 0);
+    for (int32 Axis = 0; Axis < 3; ++Axis)
+    {
+        PackedControls |= EncodeFlightAxis(Rotation[Axis]) << (Axis * FlightAxisBits);
+        PackedControls |= EncodeFlightAxis(PendingTranslation[Axis]) << ((Axis + 3) * FlightAxisBits);
+    }
+    const float SafeThrottle = FMath::IsFinite(FlightThrottle) ? FMath::Clamp(FlightThrottle, 0.0f, 100.0f) : 0.0f;
+    ServerFlightInput(PackedControls, uint8(FMath::RoundToInt(SafeThrottle * (255.0f / 100.0f))));
     PendingTranslation = FVector::ZeroVector;
     bPrimaryPressed = false;
 }
@@ -1820,6 +1849,7 @@ void ASSWSessionLobbyGameMode::PostLogin(APlayerController* NewPlayer)
     if (GetNetMode() != NM_DedicatedServer) return;
 
     auto* Pilot = Cast<ASSWSessionLobbyController>(NewPlayer);
+    if (Pilot) SaveServerPilot(*Pilot, false);
     const auto* State = GetGameState<ASSWSessionGameState>();
     Sim* Simulation = Sim::GetSim();
     if (!Pilot || !State || !State->bMissionStartReady || !Simulation) return;
@@ -1840,6 +1870,7 @@ void ASSWSessionLobbyGameMode::PostLogin(APlayerController* NewPlayer)
 void ASSWSessionLobbyGameMode::Logout(AController* Exiting)
 {
     auto* Pilot = Cast<ASSWSessionLobbyController>(Exiting);
+    if (Pilot) SaveServerPilot(*Pilot, true);
     const auto* PilotState = Pilot ? Pilot->GetPlayerState<APlayerState>() : nullptr;
     if (PilotState && !GetWorld()->bIsTearingDown)
     {

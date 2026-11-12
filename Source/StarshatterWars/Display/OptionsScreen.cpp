@@ -36,6 +36,12 @@
 #include "JoyDlg.h"
 #include "KeyDlg.h"
 #include "OptionsPage.h"
+#include "SSWMissionMods.h"
+#include "Components/NativeWidgetHost.h"
+#include "Widgets/Input/SCheckBox.h"
+#include "Widgets/Text/STextBlock.h"
+#include "Widgets/Layout/SScrollBox.h"
+#include "HAL/FileManager.h"
 #include "StarshatterSettingsSaveSubsystem.h"
 #include "Components/ScaleBox.h"
 #include "Components/HorizontalBoxSlot.h"
@@ -416,6 +422,11 @@ void UOptionsScreen::ShowKeyDlg()
 void UOptionsScreen::ShowModDlg()
 {
     SetActiveTab(BtnMods);
+    if (OptionsSwitcher && ModsPage)
+    {
+        OptionsSwitcher->RemoveChild(ModsPage);
+        ModsPage = nullptr;
+    }
     BuildModsPage();
     SwitchToWidget(ModsPage.Get());
 
@@ -680,7 +691,7 @@ void UOptionsScreen::StylePage(UUserWidget* Page)
 void UOptionsScreen::BuildModsPage()
 {
     if (!OptionsSwitcher || !WidgetTree || ModsPage) return;
-    UBorder* Page = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("Options_ModsPage"));
+    UBorder* Page = WidgetTree->ConstructWidget<UBorder>();
     ModsPage = Page;
     if (ModsDlg && ModsDlg->GetParent() == OptionsSwitcher) OptionsSwitcher->RemoveChild(ModsDlg);
     Page->SetPadding(FMargin(32.f));
@@ -692,10 +703,38 @@ void UOptionsScreen::BuildModsPage()
     Heading->SetFont(MissionUIStyle::GetInfoLabelFont(24));
     Heading->SetColorAndOpacity(FSlateColor(FLinearColor(0.35f, 0.85f, 1.f)));
     Content->AddChildToVerticalBox(Heading)->SetPadding(FMargin(0.f, 0.f, 0.f, 24.f));
-    UTextBlock* EmptyState = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(), TEXT("Options_ModsEmptyState"));
-    EmptyState->SetText(FText::FromString(TEXT("No mods available.")));
-    EmptyState->SetFont(MissionUIStyle::GetRowFont(18));
-    EmptyState->SetColorAndOpacity(FSlateColor(FLinearColor(0.65f, 0.75f, 0.8f)));
-    Content->AddChildToVerticalBox(EmptyState);
+    const FString Directory = SSWMissionMods::Directory();
+    IFileManager::Get().MakeDirectory(*Directory, true);
+    auto* Host = WidgetTree->ConstructWidget<UNativeWidgetHost>();
+    auto List = SNew(SScrollBox);
+    List->AddSlot().Padding(0,0,0,18)
+    [
+        SNew(STextBlock)
+        .Text(FText::FromString(FString::Printf(
+            TEXT("%s\nInstall mission packs as <Pack>/Missions/*.def. Enabled packs appear in Custom Missions."),
+            *Directory)))
+        .Font(MissionUIStyle::GetRowFont(18))
+        .AutoWrapText(true)
+    ];
+    const auto Packs = SSWMissionMods::Discover();
+    for (const auto& Pack : Packs)
+    {
+        List->AddSlot().Padding(0,0,0,10)
+        [
+            SNew(SCheckBox)
+            .IsChecked(Pack.bEnabled ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
+            .OnCheckStateChanged_Lambda([Name = Pack.Name](ECheckBoxState State)
+            {
+                SSWMissionMods::SetEnabled(Name, State == ECheckBoxState::Checked);
+            })
+            [
+                SNew(STextBlock)
+                .Text(FText::FromString(FString::Printf(TEXT("%s  (%d)"), *Pack.Name, Pack.Missions.Num())))
+                .Font(MissionUIStyle::GetRowFont(18))
+            ]
+        ];
+    }
+    Host->SetContent(List);
+    Content->AddChildToVerticalBox(Host)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     OptionsSwitcher->AddChild(Page);
 }

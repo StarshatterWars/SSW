@@ -205,6 +205,9 @@ public:
     void              BeginCarrierLaunchClearance() { bClearingLaunchCarrier = true; }
     bool              IsClearingLaunchCarrier(const Ship* Other);
     FlightDeck*       GetDock() const { return dock; }
+    static bool       IsTransferStationName(const FString& Name);
+    bool              IsTransferStation() const;
+    bool              GetTransferBerth(int32 Index, double FreighterRadius, FVector& OutPosition) const;
     void              SetCarrier(Ship* c, FlightDeck* d);
     void              Stow();
     InboundSlot*      GetInbound() const { return inbound; }

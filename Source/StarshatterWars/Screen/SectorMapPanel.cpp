@@ -25,6 +25,10 @@
 #include "StarshatterEnvironmentSubsystem.h"
 #include "StarSystem.h"
 #include "OrbitalRegion.h"
+#include "Asteroid.h"
+#include "AsteroidFieldLayout.h"
+#include "Sim.h"
+#include "SimRegion.h"
 #include "Mission.h"
 #include "MissionElement.h"
 #include "Instruction.h"
@@ -260,6 +264,44 @@ int32 USectorMapPanel::NativePaint(
         Scale,
         RegionRadius,
         GridStep);
+
+    const FLinearColor AsteroidTint(0.79f, 0.68f, 0.47f, 0.85f);
+    const auto ProjectAsteroid = [&](const FVector& Position)
+    {
+        return Center + ProjectMapOffset(FVector2D(Position.X, Position.Y)) * Scale;
+    };
+    const auto DrawAsteroid = [&](const FVector& Position)
+    {
+        const FVector2D Point = ProjectAsteroid(Position);
+        if (Point.X < 0 || Point.Y < 0 || Point.X >= PanelSize.X || Point.Y >= PanelSize.Y) return;
+        FSlateDrawElement::MakeBox(OutDrawElements, LayerId + 89,
+            AllottedGeometry.ToPaintGeometry(Point - FVector2D(1.5,1.5), FVector2D(3,3)),
+            FCoreStyle::Get().GetBrush("WhiteBrush"), ESlateDrawEffect::None, AsteroidTint);
+    };
+    const auto DrawAsteroidLabel = [&](const FVector& Position, const FString& Name)
+    {
+        const FVector2D Point = ProjectAsteroid(Position);
+        FSlateDrawElement::MakeText(OutDrawElements, LayerId + 92,
+            AllottedGeometry.ToPaintGeometry(Point + FVector2D(8,-22), FVector2D(225,20)),
+            Name, FCoreStyle::GetDefaultFontStyle("Bold", 11), ESlateDrawEffect::None, AsteroidTint);
+    };
+    Sim* Simulation = Sim::GetSim();
+    SimRegion* LiveRegion = bLiveNavigation && Simulation ? Simulation->FindRegion(CachedRegion) : nullptr;
+    const int32 BeltCount = CachedRegion->GetAsteroids();
+    if (LiveRegion)
+    {
+        for (ListIter<Asteroid> Rocks = LiveRegion->GetRoids(); ++Rocks;)
+            if (const Asteroid* Rock = Rocks.value()) DrawAsteroid(Rock->GetLocation());
+        if (const auto& Field = LiveRegion->GetTrainingAsteroidField(); Field.IsSet())
+            DrawAsteroidLabel(Field.GetValue(), TEXT("JANEK ASTEROID FIELD"));
+    }
+    else if (BeltCount > 0)
+    {
+        VisitAsteroidField(UTF8_TO_TCHAR(CachedRegion->GetName()), BeltCount,
+            [&](const FVector& Position, int32, double) { DrawAsteroid(Position); });
+    }
+    if (BeltCount > 0)
+        DrawAsteroidLabel(FVector::ZeroVector, TEXT("ASTEROID BELT"));
 
     if (bOperationsView)
     {

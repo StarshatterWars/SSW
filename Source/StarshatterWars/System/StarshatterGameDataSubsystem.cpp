@@ -3440,6 +3440,20 @@ void UStarshatterGameDataSubsystem::LoadScriptedMission(FString Name)
 
 // +--------------------------------------------------------------------+
 
+bool UStarshatterGameDataSubsystem::ReadLooseMission(const FString& Filename, FS_CampaignMission& Out)
+{
+    const int64 Size = IFileManager::Get().FileSize(*Filename);
+    if (Size <= 0 || Size > 4 * 1024 * 1024) return false;
+
+    TGuardValue<bool> Standalone(bParsingStandaloneMission, true);
+    TGuardValue<TArray<FS_CampaignMission>> Missions(MissionArray, {});
+    const auto Ansi = StringCast<ANSICHAR>(*Filename);
+    ParseMission(Ansi.Get());
+    if (MissionArray.Num() != 1 || MissionArray[0].Element.IsEmpty()) return false;
+    Out = MoveTemp(MissionArray[0]);
+    return true;
+}
+
 void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 {
     if (bParsingStandaloneMission)

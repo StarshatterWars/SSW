@@ -34,12 +34,53 @@
 static FVector asteroid_velocity = FVector::ZeroVector;
 static double library_radii[6]{};
 
+FText FSSWAsteroidResource::GetMineralName() const
+{
+    const FString Name = StaticEnum<ESSWMineral>()->GetNameStringByValue(static_cast<int64>(Mineral));
+    return FText::FromString(FName::NameToDisplayString(Name, false));
+}
+
+FText FSSWAsteroidResource::GetTypeName() const
+{
+    switch (Type)
+    {
+    case ESSWAsteroidType::Stony: return NSLOCTEXT("Asteroid", "SType", "S-type stony");
+    case ESSWAsteroidType::Metallic: return NSLOCTEXT("Asteroid", "MType", "M-type metallic");
+    default: return NSLOCTEXT("Asteroid", "CType", "C-type carbonaceous");
+    }
+}
+
 // +--------------------------------------------------------------------+
 
 Asteroid::Asteroid(int t, const FVector& pos, double m)
 	: Debris(nullptr, pos, asteroid_velocity, m)
 {
     MeshVariant=((t%6)+6)%6;
+    // Seed from the authored spawn, independently of visual rotation and mesh choice.
+    FRandomStream Deposit(HashCombine(GetTypeHash(pos), GetTypeHash(t)));
+    const double TypeRoll = Deposit.GetFraction();
+    using Mineral = ESSWMineral;
+    if (TypeRoll < 0.70)
+    {
+        constexpr Mineral Minerals[] = {Mineral::Serpentine, Mineral::Saponite, Mineral::Magnetite, Mineral::Troilite};
+        Resource.Type = ESSWAsteroidType::Carbonaceous;
+        Resource.Mineral = Minerals[Deposit.RandHelper(UE_ARRAY_COUNT(Minerals))];
+    }
+    else if (TypeRoll < 0.93)
+    {
+        constexpr Mineral Minerals[] = {Mineral::Olivine, Mineral::Pyroxene, Mineral::Plagioclase};
+        Resource.Type = ESSWAsteroidType::Stony;
+        Resource.Mineral = Minerals[Deposit.RandHelper(UE_ARRAY_COUNT(Minerals))];
+    }
+    else
+    {
+        constexpr Mineral Minerals[] = {Mineral::Kamacite, Mineral::Taenite, Mineral::Schreibersite};
+        Resource.Type = ESSWAsteroidType::Metallic;
+        Resource.Mineral = Minerals[Deposit.RandHelper(UE_ARRAY_COUNT(Minerals))];
+    }
+    // The surveyed deposit is a small fraction of the simulation mass in kg.
+    if (FMath::IsFinite(m) && m > 0.0)
+        Resource.AmountTonnes = m * 0.001 * Deposit.FRandRange(0.002f, 0.025f);
     // Heavy debris spins at a barely visible 0.14 degrees per second.
     // Seed a sustained, distinct angular velocity for each rock in the field.
     FRandomStream Spin(t);

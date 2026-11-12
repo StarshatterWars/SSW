@@ -1,0 +1,282 @@
+@@ Field Guide — The Blue Drift
+<HUD_Muted>FORCE:INTEL  /  PILOT REFERENCE</>
+
+The Blue Drift is a network of inhabited systems linked by farcasters. A system's value lies in what can pass through it: civilian traffic, a carrier group, a shipment of industrial material, or a refugee convoy with nowhere else to go. A border incident can become a regional crisis when the only usable passage closes.
+
+The Terellian Alliance and the Marakan Hegemony are the principal human powers in the campaign. The Zolon Empire is an external power whose role becomes clear late in the war. The Brotherhood of Iron is a fourth armed faction, a criminal organization operating across political borders. Solus, Silessia, and Haiche have their own interests and governments.
+
+The system entries use the galaxy's baseline political map. Campaign briefings carry current control, mission restrictions, and traffic conditions. Historical entries below can reveal later campaign events.
+
+@@ Faction — Terellian Alliance
+The Alliance of Terellian Republics fields Force:Space. Its political leadership includes an Alliance president and the Combined Senators. Its commercial connections reach far beyond its member systems, particularly into independent Solus. A blockade there puts Terellian nationals, businesses, and civilian researchers in immediate danger.
+
+Its charted systems are Jarnell, Borova, Athenar, Paragon, Thralis, and Janus. New pilots meet the Third Fleet through the training program, including carrier work around Borova and the Janek Station flight-school exercise. Force:Space can run carrier aviation, escort and fleet actions in the same theater.
+
+Highland begins with an intervention in the Solus civil war. Shining Fortress shifts the burden to defending Alliance civilians and territory. Firestorm takes the war into Hegemony space, and Nightfall sends the First and Second Fleets toward Garrison. The campaign supports different outcomes. Survival of the Alliance and the independent systems depends on the operation, not on a fixed historical result.
+
+@@ Faction — Marakan Hegemony
+The Hegemony is a human power descended from the empire of Marak I. Its home system is Marak. Prefectures such as Renser place regional authorities and armed forces directly on the frontier with independent systems. The Hegemony's presence in Renser gives the Dantari campaign for political alignment a powerful neighbor.
+
+Its baseline territory runs from Renser and Loris through Ostara, Kolchev, Korius, Tarsus, Nephrys, and Radix to Isham, Marak, Garrison, and Trocanther. During Shining Fortress, Hegemony forces threaten Janus and Borova. Firestorm targets forward positions and the approaches to Tarsus. In Nightfall, Alliance intelligence follows sensitive material toward Garrison, a stronghold close to the home system.
+
+The late war exposes the Hegemony to two fronts. The Alliance advances from the human frontier while the Zolons put pressure on the Hegemony from the opposite direction. Nightfall's victory and defeat reports describe different outcomes for the operation.
+
+@@ Faction — Zolon Empire
+The Zolons are an imperial power beyond the charted human frontier. The early campaign already contains reports of Hegemony concern about Zolon activity. Nephrys provides a point of reference for that frontier. Reports from traders and intercepted traffic are evidence of activity, with limited information about objectives or internal government.
+
+The Zolons become a direct theater actor in Nightfall. Their intervention changes the meaning of an Alliance advance toward Marak: territory gained against the Hegemony can expose the fleet to a second adversary. The prewar navigation chart provides no surveyed Zolon home system in this game region.
+
+@@ Faction — Brotherhood of Iron
+The Brotherhood is a criminal and raiding organization with its own armed spacecraft. Its Cutlass fighter supports commerce raids and escorts larger vessels. Its Marauder frigates rely on stealth and are difficult to acquire on sensors. It has a recognizable order of battle and can threaten civilian traffic across more than one system.
+
+The Marauder mission places Brotherhood raiders in Silessia. Loris Collapse records attacks on trade traffic after the local government breaks down. Focus links the Brotherhood to a narcotics operation. Its influence is best tracked through shipping incidents, hideouts, and compromised ports.
+
+@@ Faction — Dantari Separatists
+The Dantari Separatists are a political and military faction inside independent Solus. Senator Masil Gannet presses for alignment with the Hegemony's Renser Prefecture. The Separatists seize fleet units and take positions around Trellis and Jalah while Loyalist authorities retain the inner worlds.
+
+The Trellis Farcaster blockade traps civilians and turns the struggle over Solus's future into an Alliance security issue. Highland missions and reports record mine clearance, threats to protected assets, reconnaissance, and the intervention of Hegemony forces. Dantari forces appear alongside the Hegemony again in the later fighting.
+
+@@ System — Athenar
+<HUD_Muted>TERELLIAN ALLIANCE</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Athenar Transfer Station / Athenar sector</>
+
+Athenar is part of the Alliance home network and has a charted link to Jarnell. In a regional emergency that link connects the home network to Jarnell's operational staging area. The baseline chart establishes allegiance and access. Local political and settlement history remain sparsely documented in available briefings.
+
+@@ System — Borova
+<HUD_Muted>TERELLIAN ALLIANCE</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Borova Transfer Station / Borova sector</>
+
+The training shuttle Proteus brings the player to Task Force 3.7 in Borova orbit. The carrier Archon and its escorts make this a pilot's first look at the fleet. Borova later becomes a home-system defense objective during Shining Fortress, when protecting civilians and evacuating government personnel take priority.
+
+@@ System — Haiche
+<HUD_Muted>INDEPENDENT</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Haiche Transfer Station / Haiche sector</>
+
+Haiche is one of the independent systems caught in the wider war. Shining Fortress treats the survival of independent neighbors as a distinct objective from saving Alliance territory. Campaign outcomes can therefore leave Haiche exposed even after an Alliance defense succeeds at home.
+
+@@ System — Janus
+<HUD_Muted>TERELLIAN ALLIANCE</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Janus Transfer Station / Janek sector</>
+
+Janus contains Janek and its flight-school station. The Third Fleet training exercise at Janek gives pilots experience with the surface as well as orbital operations. Janus later appears alongside Borova in the Shining Fortress orders for civilian protection and evacuation.
+
+@@ System — Jarnell
+<HUD_Muted>TERELLIAN ALLIANCE</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Jarnell Transfer Station / Jarnell sector</>
+
+Jarnell sits at a charted junction with Athenar, Borova, Thralis, and Paragon. Valtala is its named star. Adonis is the opening sector for Operation Firestorm, making Jarnell an Alliance staging point for the move against Hegemony outposts.
+
+@@ System — Paragon
+<HUD_Muted>TERELLIAN ALLIANCE</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Paragon Transfer Station / Paragon sector</>
+
+Paragon is linked directly to Jarnell on the Alliance chart. The link gives the home network a route through one of its principal junctions. Detailed civil administration and population data are absent from the campaign briefings available to pilots.
+
+@@ System — Thralis
+<HUD_Muted>TERELLIAN ALLIANCE</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Thralis Transfer Station / Thrale sector</>
+
+Thralis is an Alliance system with direct charted access to Jarnell. The original campaign planning notes identify it as a possible theater in a later Zolon counteroffensive. That planned operation sits outside the published Nightfall outcomes.
+
+@@ System — Solus
+<HUD_Muted>INDEPENDENT</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Trellis Docks / Trellis sector</>
+
+Highland begins here. Loyalist authority remains concentrated around Solus and Meridian while Dantari forces control outer positions at Trellis and Jalah. The Trellis Farcaster blockade isolates civilians and threatens commerce. Alliance firms on Solus and the Tal Vesta University observatory near Meridian give the crisis an immediate civilian dimension.
+
+@@ System — Silessia
+<HUD_Muted>INDEPENDENT</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Silessia Transfer Station / Silessia sector</>
+
+Silessia's shipping is vulnerable to commerce raiders. The Marauder mission documents a Brotherhood fighter screen advancing on a civilian transport. Shining Fortress also identifies Silessia as an independent system whose defense can fail separately from the defense of Alliance home territory.
+
+@@ System — Renser
+<HUD_Muted>MARAKAN HEGEMONY</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Renser Transfer Station / Renser sector</>
+
+Renser is the Hegemony prefecture at the center of the Solus crisis. Gannet's push for official alignment with Renser is the political issue behind the Highland fighting. The Solus–Renser theater tests whether the Alliance can reopen access and contain Hegemony intervention.
+
+@@ System — Loris
+<HUD_Muted>MARAKAN HEGEMONY</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Loris Transfer Station / Loris sector</>
+
+Loris becomes a shipping crisis when its government collapses. Brotherhood raiders attack trade traffic and a freighter in Loris orbit needs protection. The campaign episode illustrates how the loss of civil authority can interrupt shipping even away from a major fleet battle.
+
+@@ System — Ostara
+<HUD_Muted>MARAKAN HEGEMONY</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Ostara Transfer Station / Aram sector</>
+
+The discovery of a Hegemony outpost in Ostara opens Firestorm. The Sixth Fleet targets its fighter and naval forces before a planned move on Tarsus. The value of the outpost is its role in the approach to a larger theater.
+
+@@ System — Kolchev
+<HUD_Muted>MARAKAN HEGEMONY</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Kolchev Transfer Station / Kolchev sector</>
+
+Kolchev is an objective of Firestorm and a source of concern to Alliance intelligence investigating illicit technite. By Nightfall, the campaign briefing reports that technite has already left Kolchev for Garrison. Its political status and the success of the Alliance advance vary with campaign outcomes.
+
+@@ System — Korius
+<HUD_Muted>MARAKAN HEGEMONY</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Korius Transfer Station / Adantar sector</>
+
+Korius is part of the Firestorm advance. Reports also use the adjective Korian. Alliance intelligence associates the area with the search for technite and the Borovan Archaelith. Firestorm's unfavorable outcomes describe Hegemony and Dantari forces checking the Seventh Fleet here.
+
+@@ System — Tarsus
+<HUD_Muted>MARAKAN HEGEMONY</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Tarsus Transfer Station / Tarsus sector</>
+
+Tarsus is the intended follow-on objective in the Firestorm opening orders. Neutralizing the Ostara position is part of preparing the approach. The orders distinguish control of the approach from the later invasion of the target system.
+
+@@ System — Nephrys
+<HUD_Muted>MARAKAN HEGEMONY</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Nephrys Transfer Station / Nergal sector</>
+
+Highland correspondence identifies Nephrys as close to Zolon space. The same correspondence treats commercial crews as possible sources of sightings from the northern Hegemony systems. Nephrys is a useful reference point for the transition from documented human territory to incomplete intelligence on the Zolons.
+
+@@ System — Radix
+<HUD_Muted>MARAKAN HEGEMONY</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Radix Transfer Station / Radix sector</>
+
+Nightfall assigns the Second Fleet to secure Radix. Its advance is coordinated with the First Fleet's operation in Isham, with both forces ordered to converge on Garrison. Radix is one of the operation's two axes of advance.
+
+@@ System — Isham
+<HUD_Muted>MARAKAN HEGEMONY</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Isham Transfer Station / Ramek sector</>
+
+Nightfall directs the First Fleet against military targets in Isham. The campaign frames the advance as movement through major population centers toward the Marakan home system. Isham is the First Fleet's opening theater before the planned convergence at Garrison.
+
+@@ System — Marak
+<HUD_Muted>MARAKAN HEGEMONY</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Marak Transfer Station / Marak sector</>
+
+Marak is the Hegemony home system and the political center at stake in Nightfall. The campaign ties Marakan rule to the dynasty of Emperor Marak I. Accounts of the Hegemony's fall describe an outcome of the war rather than a condition on the starting chart.
+
+@@ System — Garrison
+<HUD_Muted>MARAKAN HEGEMONY</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Garrison Transfer Station / Garrison sector</>
+
+Garrison is a major Hegemony military stronghold near Marak. Alliance intelligence traces technite shipments here from Kolchev and suspects that the Borovan Archaelith is also headed this way. The First and Second Fleets are ordered to converge on the system during Nightfall.
+
+@@ System — Trocanther
+<HUD_Muted>MARAKAN HEGEMONY</>
+
+<HUD_Label>CARGO TRANSFER:</> <HUD_Value>Trocanther Transfer Station / Volante sector</>
+
+Trocanther appears in the original Nightfall planning theater and in the current Hegemony navigation chart. Volante and Path appear in its world data, and Hell is a charted surface region. The available briefings establish the theater and geography more firmly than its civil history.
+
+@@ World — Janek (Janus)
+<HUD_Muted>TERELLIAN ALLIANCE  /  SURFACE OPERATIONS</>
+
+Janek Station is a Third Fleet training location on Janek. Flight School uses its runway for takeoff and recovery during a wargame. Pilots may encounter orbital and surface references under similar names. Follow the assigned sector and landing instructions for the active mission.
+
+@@ World — Adonis (Jarnell)
+<HUD_Muted>TERELLIAN ALLIANCE  /  GAS GIANT</>
+
+Adonis is a ringed gas giant in the Valtala system chart for Jarnell. It is the starting sector for Firestorm. Its operational role is orbital staging in Alliance space before the offensive against Ostara.
+
+@@ World — Solus (Solus)
+<HUD_Muted>INDEPENDENT  /  LOYALIST ADMINISTRATION</>
+
+The capital world remains under Loyalist authority at Highland's opening. Terellian companies operate there and civilians face travel restrictions after the Trellis blockade. Telmera City appears in reports from the provisional authorities.
+
+@@ World — Meridian (Solus)
+<HUD_Muted>INDEPENDENT  /  INNER SYSTEM</>
+
+Meridian remains on the Loyalist side of the civil war at Highland's opening. Tal Vesta University operates a stellar observatory nearby. Researchers of several backgrounds there call for renewed negotiations in one campaign report.
+
+@@ World — Trellis (Solus)
+<HUD_Muted>INDEPENDENT  /  CONTESTED APPROACH</>
+
+The Dantari take control of Trellis during the opening crisis. Its farcaster and the surrounding minefields affect civilian passage and Alliance access. Clearing routes through this sector is a recurring Highland objective.
+
+@@ World — Jalah (Solus)
+<HUD_Muted>INDEPENDENT  /  OUTER SYSTEM</>
+
+Jalah is one of the outer worlds held by Separatists at the start of Highland. Fort Talas appears in Alliance intelligence as a possible staging and replenishment point for newly arrived Hegemony units.
+
+@@ Major Figures
+<HUD_Muted>FORCE:INTEL  /  PERSONNEL AND DIPLOMATIC FILES</>
+
+These profiles cover the people who shape the war, from heads of government to commanders and diplomats. The files describe their roles in campaign briefings and correspondence. Reports can reflect incomplete intelligence or outcomes that depend on the campaign.
+
+@@ Figure — President Valmar
+<HUD_Muted>TERELLIAN ALLIANCE  /  PRESIDENT</>
+
+Valmar directs Alliance policy as the Solus civil war becomes a confrontation with the Hegemony. During Highland he orders the next phase against Renser following the Solusan cease-fire. Later presidential addresses set out the political case for Shining Fortress and the expansion of the war in Firestorm.
+
+<HUD_Label>CAMPAIGN RECORD:</> <HUD_Value>Highland, Shining Fortress, Firestorm</>
+
+@@ Figure — President Marish
+<HUD_Muted>INDEPENDENT SYSTEM OF SOLUS  /  PRESIDENT</>
+
+Marish leads the Solusan government during the civil war. Security personnel evacuate him after an attack on the presidential palace in Telmera City. In Highland's cease-fire account, he signs the agreement with Separatist leader Ayn Toran while Alliance Fleet Admiral Evars observes.
+
+<HUD_Label>CAMPAIGN RECORD:</> <HUD_Value>Highland, Telmera City reports</>
+
+@@ Figure — Masil Gannet
+<HUD_Muted>DANTARI SEPARATISTS  /  SENATOR AND SEPARATIST LEADER</>
+
+Gannet presses for alignment between Solus and the Hegemony's Renser Prefecture. The Separatists under his leadership seize fleet units and hold Trellis and Jalah. Reports place his origins on Adantar in the Korius system. His reported return in Firestorm makes him the subject of an Alliance apprehension order.
+
+<HUD_Label>CAMPAIGN RECORD:</> <HUD_Value>Highland, The Return of Masil Gannet</>
+
+@@ Figure — Ayn Toran
+<HUD_Muted>DANTARI SEPARATISTS  /  NEGOTIATOR AND LEADER</>
+
+Toran succeeds Gannet as leader of the Separatist movement in Highland's cease-fire account. Toran signs alongside President Marish at the repaired presidential palace in Telmera City, ending that phase of the conflict.
+
+<HUD_Label>CAMPAIGN RECORD:</> <HUD_Value>Highland, Solus cease-fire</>
+
+@@ Figure — Fleet Admiral A. Evars
+<HUD_Muted>TERELLIAN ALLIANCE  /  FORCE:SPACE THEATER COMMAND</>
+
+Evars authorizes humanitarian traffic to the inner Solus worlds after the Trellis minefields are cleared. Theater command also prioritizes relief for researchers in the Meridian sector. Evars witnesses the Solusan cease-fire signing in Telmera City.
+
+<HUD_Label>CAMPAIGN RECORD:</> <HUD_Value>Highland, Trellis Corridor</>
+
+@@ Figure — Councilor Auris
+<HUD_Muted>ELE'AAN FUSION  /  AMBASSADOR</>
+
+Auris represents the Ele'aan Fusion in Alliance diplomacy. Highland correspondence records his concern about an invasion of Renser. Later messages connect his delegation to assessments of Zolon involvement and to the dispute over the Borovan Archaelith. Those accounts are personal correspondence and should be read alongside official briefings.
+
+<HUD_Label>CAMPAIGN RECORD:</> <HUD_Value>Highland, Need to Know, Final Message</>
+
+@@ Figure — Sara
+<HUD_Muted>ELE'AAN CONSULATE  /  DIPLOMATIC SUPPORT</>
+
+Sara accompanies the consulate's fact-finding mission to Borova and writes privately to the player pilot. Her letters offer a civilian view of the war and raise questions about the consulate's role. By Nightfall her correspondence has become a source of direct claims about the missing Archaelith.
+
+<HUD_Label>CAMPAIGN RECORD:</> <HUD_Value>Back to Borova, Need to Know, Final Message</>
+
+@@ Figure — Zolon Ambassador to Tarsus
+<HUD_Muted>ZOLON EMPIRE  /  DIPLOMATIC REPRESENTATIVE</>
+
+Alliance intelligence reports that the Zolon representative at Tarsus offered assistance during Firestorm. The campaign record identifies the ambassador by office. The episode gives pilots one of their few direct glimpses of Zolon diplomacy before the Nightfall confrontation.
+
+<HUD_Label>CAMPAIGN RECORD:</> <HUD_Value>Firestorm, Zolon Ambassador</>
+
+@@ Figure — Emperor Marak I
+<HUD_Muted>MARAKAN HEGEMONY  /  HISTORICAL FIGURE</>
+
+The Nightfall record traces the Hegemony's imperial lineage to Marak I. His place in the setting is historical. The campaign presents the fate of his descendants and their political order through its possible Nightfall outcomes.
+
+<HUD_Label>CAMPAIGN RECORD:</> <HUD_Value>Nightfall, endgame briefings</>

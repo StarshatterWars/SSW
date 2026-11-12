@@ -91,6 +91,7 @@ protected:
     UPROPERTY(Transient) TArray<TObjectPtr<USingleMissionRowProxy>> RowProxies;
     TArray<int32> MissionIds;
     TArray<const FS_CampaignMission*> ScenarioRows;
+    TArray<TSharedPtr<FS_CampaignMission>> ModMissionRows;
     TArray<MissionInfo*> CustomMissionInfos;
     TArray<Mission*> StandaloneBriefingModels; // Owned, released with selector widget.
     Mission* StandaloneBriefingMission = nullptr;

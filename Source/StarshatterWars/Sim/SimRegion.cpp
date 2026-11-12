@@ -17,6 +17,7 @@
 */
 
 #include "SimRegion.h"
+#include "AsteroidFieldLayout.h"
 #include "Sim.h"
 #include "MissionEvent.h"
 
@@ -201,14 +202,11 @@ SimRegion::SimRegion(Sim* SimPtr, OrbitalRegion* OrbitalRegionPtr)
         }
         else if (sim && orbital_region->GetAsteroids() > 0) {
             // Match the legacy belt dimensions while keeping placement stable across reloads.
-            FRandomStream BeltRandom(FCrc::StrCrc32(UTF8_TO_TCHAR(name.data())));
-            for (int Index = 0; Index < orbital_region->GetAsteroids(); ++Index) {
-                const double X = BeltRandom.FRandRange(-491520.0, 491520.0);
-                const double Y = BeltRandom.FRandRange(-49152.0, 49152.0);
-                const double Z = BeltRandom.FRandRange(-491520.0, 491520.0);
-                const double Mass = BeltRandom.FRandRange(1e7, 1e8);
-                sim->CreateAsteroid(FVector(X, Y, Z), Index, Mass, this);
-            }
+            VisitAsteroidField(UTF8_TO_TCHAR(name.data()), orbital_region->GetAsteroids(),
+                [this](const FVector& Position, int32 Index, double Mass)
+                {
+                    sim->CreateAsteroid(Position, Index, Mass, this);
+                });
         }
     }
     else {

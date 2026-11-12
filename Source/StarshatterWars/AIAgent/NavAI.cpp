@@ -316,31 +316,9 @@ void NavAI::FindObjective()
             }
 
             if (farcaster) {
-                const FVector apt = farcaster->ApproachPoint(0);
-                const FVector fp0 = farcaster->StartPoint();
-
-                const double r1 = (ship->GetLocation() - fp0).Length();
-
-                if (r1 > 50e3) {
-                    obj_w = apt;
-                    distance = r1;
-                    objective = Transform(obj_w);
-                }
-                else {
-                    const double r2 = (ship->GetLocation() - apt).Length();
-                    const double r3 = (fp0 - apt).Length();
-
-                    if (r1 + r2 < 1.2 * r3) {
-                        obj_w = fp0;
-                        distance = r1;
-                        objective = Transform(obj_w);
-                    }
-                    else {
-                        obj_w = apt;
-                        distance = r2;
-                        objective = Transform(obj_w);
-                    }
-                }
+                obj_w = farcaster->GetApproachTarget(ship->GetLocation());
+                distance = FVector::Distance(obj_w, ship->GetLocation());
+                objective = Transform(obj_w);
             }
         }
     }

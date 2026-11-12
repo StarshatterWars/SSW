@@ -15,6 +15,7 @@ struct FMissionObjectData
 {
     FString Name, Type, ImagePath;
     double RangeKm = -1;
+    TOptional<FSSWAsteroidResource> AsteroidResource;
 };
 inline bool ReadMissionObject(AActor* Actor, Ship* Player, SimRegion* Region, FMissionObjectData& Out)
 {
@@ -25,6 +26,7 @@ inline bool ReadMissionObject(AActor* Actor, Ship* Player, SimRegion* Region, FM
         if (!Rock) return false;
         Out.Name = FString::Printf(TEXT("Asteroid %02d"), Visual->GetContactIndex() + 1);
         Out.Type = TEXT("Asteroid");
+        Out.AsteroidResource = Rock->GetResource();
         Out.ImagePath = AWaypointActor::AsteroidContactIcon;
         Out.RangeKm = FVector::Distance(Player->GetLocation(), Rock->GetLocation()) / 1000.0;
         return true;

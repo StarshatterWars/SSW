@@ -312,8 +312,7 @@ private:
     int64 LastControlledShipId = 0;
 
     UFUNCTION(Server, Unreliable)
-    void ServerFlightInput(FVector Rotation, FVector Translation, float Throttle,
-        bool bAugmenter, bool bFirePrimary);
+    void ServerFlightInput(uint64 PackedControls, uint8 Throttle);
 
     UFUNCTION(Server, Reliable)
     void ServerFireSecondary();
@@ -372,6 +371,19 @@ protected:
     void OnMissionCountdownCompleted();
 
 private:
+    friend class ASSWSessionLobbyController;
+    void TrackServerPilot(ASSWSessionLobbyController& Pilot, const Ship& Fighter);
+    void SaveServerPilot(ASSWSessionLobbyController& Pilot, bool bFinish);
+    struct FServerPilotRecord
+    {
+        FString ShipName;
+        TArray<int64> Baseline;
+        TArray<int64> Totals;
+        uint32 FlightStartMs = 0;
+        bool bFlew = false;
+    };
+    TMap<TWeakObjectPtr<ASSWSessionLobbyController>, FServerPilotRecord> ServerPilots;
+
     void UpdateMissionCountdown();
     void UpdateArena();
     bool LaunchLobbyMission(ASSWSessionGameState& State);

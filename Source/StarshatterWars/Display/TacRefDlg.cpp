@@ -49,6 +49,14 @@
 #include "Ship.h"
 #include "Components/Image.h"
 #include "TacticalReferenceActor.h"
+#include "SystemMapPanel.h"
+#include "StarshatterEnvironmentSubsystem.h"
+#include "StarSystem.h"
+#include "OrbitalRegion.h"
+#include "Engine/GameInstance.h"
+#include "Engine/DataTable.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 #include "EngineUtils.h"
 
 #include "MenuScreen.h"
@@ -405,6 +413,7 @@ void UTacRefDlg::BuildShipTexts(const FShipDesign& Dsn, FString& OutCaption, FSt
 // -----------------------------------------------------------------------------
 void UTacRefDlg::HandleStationModeClicked()
 {
+    SetGazetteerVisible(false);
     Mode = 0;
     ActiveCategory = EShipCategory::Station;
     PopulateEmpireDropdown_AutoDetect(true, true);
@@ -414,6 +423,7 @@ void UTacRefDlg::HandleStationModeClicked()
 
 void UTacRefDlg::HandleShipModeClicked()
 {
+    SetGazetteerVisible(false);
     Mode = 0;
     ActiveCategory = EShipCategory::CapitalShip;
     PopulateShipDropdown();
@@ -423,6 +433,7 @@ void UTacRefDlg::HandleShipModeClicked()
 
 void UTacRefDlg::HandleFighterModeClicked()
 {
+    SetGazetteerVisible(false);
     Mode = 0;
     ActiveCategory = EShipCategory::Fighter;
     PopulateShipDropdown();
@@ -432,6 +443,7 @@ void UTacRefDlg::HandleFighterModeClicked()
 
 void UTacRefDlg::HandleTransportModeClicked()
 {
+    SetGazetteerVisible(false);
     Mode = 0;
     ActiveCategory = EShipCategory::Transport;
     PopulateShipDropdown();
@@ -441,6 +453,7 @@ void UTacRefDlg::HandleTransportModeClicked()
 
 void UTacRefDlg::HandleBuildingModeClicked()
 {
+    SetGazetteerVisible(false);
     Mode = 0;
     ActiveCategory = EShipCategory::Building;
     PopulateShipDropdown();
@@ -450,6 +463,7 @@ void UTacRefDlg::HandleBuildingModeClicked()
 
 void UTacRefDlg::HandleWeaponModeClicked()
 {
+    SetGazetteerVisible(false);
     Mode = 1;
 
     PopulateWeaponDropdown();
@@ -719,6 +733,8 @@ void UTacRefDlg::BuildModernShell()
     TransportButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,TransportButton,TEXT("TRANSPORTS"));
     BuildingButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,BuildingButton,TEXT("FACILITIES"));
     WeaponButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,WeaponButton,TEXT("WEAPONS"));
+    GazetteerButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,nullptr,TEXT("GAZETTEER"));
+    GazetteerButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleGazetteerClicked);
     StationButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleStationModeClicked);
     ShipButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleShipModeClicked);
     FighterButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleFighterModeClicked);
@@ -738,6 +754,8 @@ void UTacRefDlg::BuildModernShell()
     auto* SelectorBand=WidgetTree->ConstructWidget<UBorder>();SelectorBand->SetBrushColor(FLinearColor(0.015f,0.025f,0.038f,1));SelectorBand->SetPadding(FMargin(8));SelectorBand->SetContent(Selectors);
     Shell.Body->AddChildToVerticalBox(SelectorBand)->SetPadding(FMargin(0,0,0,12));
     auto* Main=WidgetTree->ConstructWidget<UHorizontalBox>();Shell.Body->AddChildToVerticalBox(Main)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    EquipmentSelectors=SelectorBand;
+    EquipmentPanel=Main;
     // The transparent center preserves the existing world-rendered ship and orbit/zoom controls.
     auto* PreviewFrame=WidgetTree->ConstructWidget<UBorder>();PreviewFrame->SetBrushColor(FLinearColor(0.01f,0.015f,0.02f,1));PreviewFrame->SetPadding(FMargin(5));
     auto* Preview=WidgetTree->ConstructWidget<UVerticalBox>();
@@ -769,21 +787,180 @@ void UTacRefDlg::BuildModernShell()
     TxtCaption->SetFont(MissionUIStyle::GetHeaderFont(24));TxtCaption->SetColorAndOpacity(FLinearColor(0.16f,0.77f,0.91f,1));TxtCaption->SetAutoWrapText(true);TextColumn->AddChildToVerticalBox(TxtCaption)->SetPadding(FMargin(0,0,0,18));
     if(!TxtStats) TxtStats=WidgetTree->ConstructWidget<URichTextBlock>();else TxtStats->RemoveFromParent();
     if(!TxtDescription) TxtDescription=WidgetTree->ConstructWidget<URichTextBlock>();else TxtDescription->RemoveFromParent();
+    UDataTable* ReferenceStyles = TxtStats->GetTextStyleSet();
+    if (!ReferenceStyles) ReferenceStyles = TxtDescription->GetTextStyleSet();
+    if (!ReferenceStyles)
+    {
+        ReferenceStyles = NewObject<UDataTable>(this);
+        ReferenceStyles->RowStruct = FRichTextStyleRow::StaticStruct();
+        const auto AddStyle = [&](FName Name, FLinearColor Color)
+        {
+            FRichTextStyleRow Row;
+            Row.TextStyle.SetFont(MissionUIStyle::GetRowFont(18));
+            Row.TextStyle.SetColorAndOpacity(Color);
+            ReferenceStyles->AddRow(Name, Row);
+        };
+        AddStyle(TEXT("HUD_Label"), FLinearColor(.16f,.77f,.91f));
+        AddStyle(TEXT("HUD_Value"), FLinearColor::White);
+        AddStyle(TEXT("HUD_Muted"), FLinearColor(.53f,.67f,.76f));
+    }
     for(auto* Text:{TxtStats,TxtDescription})
     {
+        if (!Text->GetTextStyleSet()) Text->SetTextStyleSet(ReferenceStyles);
         FTextBlockStyle TextStyle;TextStyle.SetFont(MissionUIStyle::GetRowFont(18));TextStyle.SetColorAndOpacity(FLinearColor::White);Text->SetDefaultTextStyle(TextStyle);Text->SetAutoWrapText(true);
         TextColumn->AddChildToVerticalBox(Text)->SetPadding(FMargin(0,0,0,22));
     }
+    BuildGazetteer(*Shell.Body);
     WidgetTree->RootWidget=Shell.Root;ModernShell=Shell.Root;RefreshCategoryStyles();
 }
 void UTacRefDlg::RefreshCategoryStyles()
 {
+    if (GazetteerPanel && GazetteerPanel->GetVisibility() == ESlateVisibility::Visible) return;
     ModernMenuLayout::SetSelected(StationButton,Mode==0 && ActiveCategory==EShipCategory::Station);
     ModernMenuLayout::SetSelected(ShipButton,Mode==0 && ActiveCategory==EShipCategory::CapitalShip);
     ModernMenuLayout::SetSelected(FighterButton,Mode==0 && ActiveCategory==EShipCategory::Fighter);
     ModernMenuLayout::SetSelected(TransportButton,Mode==0 && ActiveCategory==EShipCategory::Transport);
     ModernMenuLayout::SetSelected(BuildingButton,Mode==0 && ActiveCategory==EShipCategory::Building);
     ModernMenuLayout::SetSelected(WeaponButton,Mode==1);
+}
+
+void UTacRefDlg::BuildGazetteer(UVerticalBox& Body)
+{
+    auto* Frame = WidgetTree->ConstructWidget<UBorder>();
+    Frame->SetBrushColor(FLinearColor(.015f,.025f,.038f,1.f));
+    Frame->SetPadding(FMargin(22));
+    auto* Split = WidgetTree->ConstructWidget<UHorizontalBox>();
+    Frame->SetContent(Split);
+    auto* MapColumn = WidgetTree->ConstructWidget<UVerticalBox>();
+    auto* MapSlot = Split->AddChildToHorizontalBox(MapColumn);
+    FSlateChildSize MapWidth(ESlateSizeRule::Fill);
+    MapWidth.Value = 1.55f;
+    MapSlot->SetSize(MapWidth);
+    MapSlot->SetPadding(FMargin(0,0,22,0));
+    GazetteerMapTitle = WidgetTree->ConstructWidget<UTextBlock>();
+    GazetteerMapTitle->SetFont(MissionUIStyle::GetHeaderFont(22));
+    MapColumn->AddChildToVerticalBox(GazetteerMapTitle)->SetPadding(FMargin(0,0,0,10));
+    GazetteerMap = WidgetTree->ConstructWidget<USystemMapPanel>();
+    if (GazetteerMap)
+    {
+        GazetteerMap->SetClipping(EWidgetClipping::ClipToBounds);
+        MapColumn->AddChildToVerticalBox(GazetteerMap)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    }
+    auto* Column = WidgetTree->ConstructWidget<UVerticalBox>();
+    Split->AddChildToHorizontalBox(Column)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    GazetteerPanel = Frame;
+    Body.AddChildToVerticalBox(Frame)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    Frame->SetVisibility(ESlateVisibility::Collapsed);
+
+    auto* Entries = WidgetTree->ConstructWidget<UComboBoxString>();
+    Column->AddChildToVerticalBox(Entries)->SetPadding(FMargin(0,0,0,14));
+    GazetteerScroll = WidgetTree->ConstructWidget<UScrollBox>();
+    Column->AddChildToVerticalBox(GazetteerScroll)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    GazetteerText = WidgetTree->ConstructWidget<URichTextBlock>();
+    GazetteerText->SetAutoWrapText(true);
+    GazetteerText->SetTextStyleSet(TxtStats->GetTextStyleSet());
+    FTextBlockStyle BodyStyle;
+    BodyStyle.SetFont(MissionUIStyle::GetRowFont(18));
+    BodyStyle.SetColorAndOpacity(FLinearColor::White);
+    GazetteerText->SetDefaultTextStyle(BodyStyle);
+    GazetteerScroll->AddChild(GazetteerText);
+
+    FString Source;
+    FFileHelper::LoadFileToString(Source, *(FPaths::ProjectContentDir() / TEXT("GameData/Lore/BlueDrift.txt")));
+    TArray<FString> Lines;
+    Source.ParseIntoArrayLines(Lines, false);
+    FString Entry;
+    for (const FString& Line : Lines)
+    {
+        if (Line.StartsWith(TEXT("@@ ")))
+        {
+            Entry = Line.RightChop(3).TrimStartAndEnd();
+            if (Entry.IsEmpty() || GazetteerEntries.Contains(Entry)) { Entry.Reset(); continue; }
+            Entries->AddOption(Entry);
+            GazetteerEntries.Add(Entry);
+        }
+        else if (!Entry.IsEmpty())
+        {
+            GazetteerEntries.FindChecked(Entry) += Line + TEXT("\n");
+        }
+    }
+    Entries->OnSelectionChanged.AddUniqueDynamic(this, &UTacRefDlg::HandleGazetteerEntry);
+    if (Entries->GetOptionCount() > 0)
+    {
+        const int32 Janus = Entries->FindOptionIndex(TEXT("System — Janus"));
+        Entries->SetSelectedIndex(Janus != INDEX_NONE ? Janus : 0);
+        HandleGazetteerEntry(Entries->GetSelectedOption(), ESelectInfo::Direct);
+    }
+    else GazetteerText->SetText(FText::FromString(TEXT("Gazetteer data unavailable.")));
+}
+
+void UTacRefDlg::SetGazetteerVisible(bool bVisible)
+{
+    if (!GazetteerPanel) return;
+    GazetteerPanel->SetVisibility(bVisible ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+    EquipmentPanel->SetVisibility(bVisible ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+    EquipmentSelectors->SetVisibility(bVisible ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
+    ModernMenuLayout::SetSelected(GazetteerButton, bVisible);
+    if (bVisible)
+        for (auto* Button : {StationButton, ShipButton, FighterButton,
+            TransportButton, BuildingButton, WeaponButton})
+            ModernMenuLayout::SetSelected(Button, false);
+}
+
+void UTacRefDlg::HandleGazetteerClicked()
+{
+    SetGazetteerVisible(true);
+}
+
+void UTacRefDlg::HandleGazetteerEntry(FString Entry, ESelectInfo::Type)
+{
+    const FString* Lore = GazetteerEntries.Find(Entry);
+    if (!Lore) return;
+    FString SystemName;
+    if (Entry.StartsWith(TEXT("System — ")))
+        SystemName = Entry.RightChop(9);
+    else if (Entry.StartsWith(TEXT("World — ")) && Entry.EndsWith(TEXT(")")))
+    {
+        int32 OpenParen = INDEX_NONE;
+        if (Entry.FindLastChar(TEXT('('), OpenParen))
+            SystemName = Entry.Mid(OpenParen + 1, Entry.Len() - OpenParen - 2);
+    }
+    FString Details = FString::Printf(TEXT("<HUD_Label>%s</>\n\n"), *Entry.ToUpper());
+    const auto AddFact = [&](const TCHAR* Label, const FString& Value)
+    {
+        if (!Value.IsEmpty())
+            Details += FString::Printf(TEXT("<HUD_Label>%s:</>   <HUD_Value>%s</>\n"), Label, *Value);
+    };
+    if (!SystemName.IsEmpty())
+    {
+        GazetteerMapTitle->SetText(FText::FromString(SystemName.ToUpper()));
+        if (GazetteerMap) GazetteerMap->SetViewedSystemName(SystemName);
+        const auto* Instance = GetGameInstance();
+        const auto* Env = Instance ? Instance->GetSubsystem<UStarshatterEnvironmentSubsystem>() : nullptr;
+        if (const FS_Galaxy* System = Env ? Env->FindGalaxyByName(SystemName) : nullptr)
+        {
+            TArray<FString> Planets;
+            for (const FStarSystem& Star : System->Stellar)
+                for (const FPlanet& Planet : Star.Planet) Planets.AddUnique(Planet.Name);
+            AddFact(TEXT("PRIMARY STAR"), System->Star);
+            AddFact(TEXT("PLANETS"), FString::Join(Planets, TEXT(", ")));
+            AddFact(TEXT("SYSTEM LINKS"), FString::Join(System->Link, TEXT(", ")));
+            for (StarSystem* RuntimeSystem : Env->GetRuntimeStarSystems())
+            {
+                if (!RuntimeSystem || !SystemName.Equals(UTF8_TO_TCHAR(RuntimeSystem->GetName()), ESearchCase::IgnoreCase))
+                    continue;
+                TArray<FString> Belts;
+                for (ListIter<OrbitalRegion> Regions = RuntimeSystem->GetAllRegions(); ++Regions;)
+                    if (const OrbitalRegion* Region = Regions.value(); Region && Region->GetAsteroids() > 0)
+                        Belts.AddUnique(UTF8_TO_TCHAR(Region->GetName()));
+                AddFact(TEXT("ASTEROID SECTORS"), FString::Join(Belts, TEXT(", ")));
+                break;
+            }
+            Details += TEXT("\n");
+        }
+    }
+    GazetteerText->SetText(FText::FromString(Details + Lore->TrimStartAndEnd()));
+    GazetteerScroll->ScrollToStart();
 }
 
 void UTacRefDlg::NativeConstruct()

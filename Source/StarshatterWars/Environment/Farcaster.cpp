@@ -78,6 +78,43 @@ Farcaster::~Farcaster()
 {
 }
 
+namespace
+{
+    constexpr double EntryRange = 1000.0;
+    constexpr double LaneRadius = 350.0;
+    constexpr double AlignmentCosine = 0.9659258263; // 15 degrees
+}
+
+FVector Farcaster::GetApproachTarget(const FVector& Position) const
+{
+    const FVector Axis = (StartPoint() - ApproachPoint(0)).GetSafeNormal();
+    if (Axis.IsNearlyZero()) return StartPoint();
+
+    const FVector Offset = Position - StartPoint();
+    const double Along = FVector::DotProduct(Offset, Axis);
+    const double ApproachLength = FVector::Distance(StartPoint(), ApproachPoint(0));
+    const bool bInLane = Along >= -ApproachLength - LaneRadius && Along <= EntryRange &&
+        (Offset - Along * Axis).SizeSquared() <= FMath::Square(LaneRadius * 0.5);
+    return bInLane ? StartPoint() + Axis * EntryRange * 2.0 : ApproachPoint(0);
+}
+
+bool Farcaster::CanEnter(const Ship& Traveler) const
+{
+    const FVector Offset = Traveler.GetLocation() - StartPoint();
+    if (Offset.SizeSquared() >= FMath::Square(EntryRange)) return false;
+
+    const FVector Axis = (StartPoint() - ApproachPoint(0)).GetSafeNormal();
+    if (Axis.IsNearlyZero()) return true;
+    const double Along = FVector::DotProduct(Offset, Axis);
+    if (Along > LaneRadius || (Offset - Along * Axis).SizeSquared() > FMath::Square(LaneRadius))
+        return false;
+
+    const FVector Velocity = Traveler.GetVelocity();
+    return FVector::DotProduct(Traveler.GetHeading().GetSafeNormal(), Axis) >= AlignmentCosine &&
+        FVector::DotProduct(Velocity, Axis) > 1.0 &&
+        FVector::DotProduct(Velocity.GetSafeNormal(), Axis) >= AlignmentCosine;
+}
+
 // +--------------------------------------------------------------------+
 
 void
@@ -142,10 +179,7 @@ Farcaster::ExecFrame(double seconds)
 			if (s == ship || s->IsStatic() || s->GetWarpFactor() > 1)
 				continue;
 
-			FVector delta = s->GetLocation() - ship->GetLocation();
-
-			// activate:
-			if (delta.Length() < 1000.0f) {
+			if (!s->IsDead() && !s->IsDying() && CanEnter(*s)) {
 				active_state = QuantumDrive::ACTIVE_PREWARP;
 				jumpship = s;
 				Observe(jumpship);

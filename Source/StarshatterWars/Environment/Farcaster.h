@@ -47,6 +47,8 @@ public:
 	FVector        ApproachPoint(int i) const { return approach_point[i]; }
 	FVector        StartPoint()         const { return start_point; }
 	FVector        EndPoint()           const { return end_point; }
+	FVector        GetApproachTarget(const FVector& Position) const;
+	bool           CanEnter(const Ship& Traveler) const;
 
 	virtual void   SetApproachPoint(int i, FVector loc);
 	virtual void   SetStartPoint(FVector loc);
