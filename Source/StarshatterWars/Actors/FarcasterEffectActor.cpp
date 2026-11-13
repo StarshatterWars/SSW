@@ -37,22 +37,24 @@ void AFarcasterEffectActor::InstallOn(AShipActor& Gate, bool bMarakan)
     if (Gate.GetNetMode() == NM_DedicatedServer)
         return;
 
+    USceneComponent* Anchor = Gate.GetRootComponent();
     const TInlineComponentArray<UChildActorComponent*> ChildComponents(&Gate);
     for (UChildActorComponent* Visual : ChildComponents)
     {
-        if (Visual->GetFName() != TEXT("WarpGateVisual"))
-            continue;
-
-        auto* EffectComponent = NewObject<UChildActorComponent>(&Gate, TEXT("FarcasterEffect"));
-        // The frame component carries the scale needed to match the original Farcaster.
-        EffectComponent->SetupAttachment(Visual);
-        EffectComponent->SetChildActorClass(StaticClass());
-        Gate.AddInstanceComponent(EffectComponent);
-        EffectComponent->RegisterComponent();
-        if (auto* Effect = Cast<AFarcasterEffectActor>(EffectComponent->GetChildActor()))
-            Effect->ConfigureAppearance(bMarakan);
-        return;
+        if (Visual->GetChildActorClass() == StaticClass())
+            return;
+        if (Visual->GetFName() == TEXT("WarpGateVisual"))
+            Anchor = Visual;
     }
+
+    auto* EffectComponent = NewObject<UChildActorComponent>(&Gate, TEXT("FarcasterEffect"));
+    // Keep the frame's authored scale when the gate has a separate frame component.
+    EffectComponent->SetupAttachment(Anchor);
+    EffectComponent->SetChildActorClass(StaticClass());
+    Gate.AddInstanceComponent(EffectComponent);
+    EffectComponent->RegisterComponent();
+    if (auto* Effect = Cast<AFarcasterEffectActor>(EffectComponent->GetChildActor()))
+        Effect->ConfigureAppearance(bMarakan);
 }
 
 AFarcasterEffectActor* AFarcasterEffectActor::FindFor(const Ship* Gate)

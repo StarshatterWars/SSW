@@ -289,6 +289,8 @@ void UFirstTimeDlg::OnAcceptClicked()
     PlayerCharacter::Initialize();
     PlayerCharacter::SetWorldContext(GetGameInstance());
     PlayerCharacter::GetCurrentPlayer()->FromPlayerInfo(Info);
+    if (GI)
+        GI->LoadOrCreateUniverse(true);
     if (GI && GI->RestoreSavedActiveCampaign())
         GI->LoadOrCreateSelectedCampaignSave();
 

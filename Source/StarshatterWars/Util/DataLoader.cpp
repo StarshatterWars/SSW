@@ -10,6 +10,7 @@
 */
 
 #include "DataLoader.h"
+#include "SSWModFiles.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Modules/ModuleManager.h"
@@ -95,6 +96,8 @@ DataLoader::SetDataPath(const char* path)
 bool
 DataLoader::FindFile(const char* name)
 {
+	TArray<uint8> Override;
+	if (SSWModFiles::Read(FString(ANSI_TO_TCHAR(GetDataPath())) / ANSI_TO_TCHAR(name), Override)) return true;
 	// assemble file name:
 	char filename[1024];
 	strcpy_s(filename, datapath);
@@ -151,6 +154,15 @@ int
 DataLoader::LoadBuffer(const char* name, BYTE*& buf, bool null_terminate, bool optional)
 {
 	buf = 0;
+    TArray<uint8> Override;
+    if (SSWModFiles::Read(FString(ANSI_TO_TCHAR(GetDataPath())) / ANSI_TO_TCHAR(name), Override))
+    {
+        const int32 Size = Override.Num();
+        buf = new BYTE[Size + int32(null_terminate)];
+        if (Size) FMemory::Memcpy(buf, Override.GetData(), Size);
+        if (null_terminate) buf[Size] = 0;
+        return Size;
+    }
 
 	// assemble file name:
 	char filename[1024];
@@ -230,7 +242,9 @@ DataLoader::LoadGameBitmap(const char* name, Bitmap& bitmap, int type, bool opti
     for(const FString& Path : Paths)
     {
         int32 W=0,H=0;TArray<FColor> Pixels;
-        if(LegacyBitmapLoader::Load(Path,W,H,Pixels))
+        TArray<uint8> Override;
+        const bool bModded = SSWModFiles::Read(Path, Override);
+        if (bModded ? LegacyBitmapLoader::DecodePCX(Override, W, H, Pixels) : LegacyBitmapLoader::Load(Path,W,H,Pixels))
         {
             bitmap.SetCPUImage(W,H,Pixels.GetData(),type);
             bitmap.SetFilename(TCHAR_TO_UTF8(*Relative));return 1;

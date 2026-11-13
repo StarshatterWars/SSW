@@ -26,7 +26,7 @@ FVector FNativeHUDSymbology::LeadPoint(const FVector& P,const FVector& V,const F
 void FNativeHUDSymbology::Refresh(Ship* P){
  Markers.Reset();Controller.Reset();if(!P)return;auto* Actor=P->GetNativePresentation();if(!IsValid(Actor)||!Actor->GetWorld())return;Controller=Actor->GetWorld()->GetFirstPlayerController();auto* S=Sim::GetSim();auto* R=S?S->GetActiveRegion():nullptr;if(!R)return;
  const auto Convert=[](const FVector& V){return FVector(V.Z,V.X,V.Y);};const FVector Offset=Actor->GetActorLocation()-Convert(P->GetLocation());TSet<SimObject*> Used;
- auto Valid=[&](SimObject* T){if(!T)return false;for(int I=0;I<R->GetShips().size();++I)if(R->GetShips()[I]==T)return true;for(auto* Shot:R->GetProjectiles())if(Shot==T)return true;return false;};
+ auto Valid=[&](SimObject* T){if(!T)return false;for(int I=0;I<R->GetShips().size();++I)if(R->GetShips()[I]==T)return true;return R->ContainsProjectile(T);};
  auto Add=[&](SimObject* T,SimSystem* Sub,int Role){if(!Valid(T)||Used.Contains(T)||T->GetLife()==0)return;Used.Add(T);FVector Position=T->GetLocation();AShipActor* TargetActor=nullptr;
  if(auto* TargetShip=dynamic_cast<Ship*>(T)){TargetActor=TargetShip->GetNativePresentation();if(Sub&&TargetShip->GetSystems().contains(Sub))Position=Sub->GetMountLocation();}
  FVector TargetOffset=Offset;if(IsValid(TargetActor))TargetOffset=TargetActor->GetActorLocation()-Convert(T->GetLocation());

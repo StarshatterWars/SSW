@@ -22,6 +22,8 @@
 */
 
 #include "ShipActor.h"
+#include "CollisionQueryParams.h"
+#include "Engine/HitResult.h"
 
 #include "ProfilingDebugging/CpuProfilerTrace.h"
 #include "HAL/IConsoleManager.h"
@@ -2224,8 +2226,13 @@ void AShipActor::BuildNavLightsFromRuntime()
         {
             FShipNavLightDef Def;
 
-            Def.LocalOffset =
+            const FVector AuthoredOffset =
                 RuntimeEmitterLocalPosition(RuntimeNavLight->GetBeaconLocalLocation(BeaconIndex));
+            // Nav-light rotations control the lamp, not the surface it sits on.
+            const FVector HullCenter = HullMesh && VFXRoot
+                ? VFXRoot->GetComponentTransform().InverseTransformPosition(HullMesh->Bounds.Origin)
+                : FVector::ZeroVector;
+            Def.LocalOffset = FitEmitterToHull(AuthoredOffset, AuthoredOffset - HullCenter);
 
             Def.LocalRotation =
                 bLegacyEmitterCoordinates ? ConvertLegacyPortRotation(RuntimeNavLight->GetBeaconLocalRotation(BeaconIndex))
@@ -2255,6 +2262,37 @@ void AShipActor::BuildNavLightsFromRuntime()
         }
     }
 
+}
+
+FVector AShipActor::FitEmitterToHull(const FVector& LocalPosition, const FVector& LocalOutward) const
+{
+    if (!HullMesh || !HullMesh->GetStaticMesh() || !VFXRoot || LocalOutward.IsNearlyZero())
+        return LocalPosition;
+
+    const FTransform& Frame = VFXRoot->GetComponentTransform();
+    const FVector Position = Frame.TransformPosition(LocalPosition);
+    const FVector Outward = Frame.TransformVector(LocalOutward).GetSafeNormal();
+    const double Radius = HullMesh->Bounds.SphereRadius;
+    if (Outward.IsNearlyZero() || Radius <= UE_SMALL_NUMBER)
+        return LocalPosition;
+
+    // Search only around the authored mount and along the exhaust axis.
+    // Keep authored placements when the hull has no usable complex collision,
+    // or when the nearest hit belongs to a distant part of the ship.
+    const double SearchDistance = Radius * 0.12;
+    FHitResult Hit;
+    const FCollisionQueryParams Params(SCENE_QUERY_STAT(ShipEmitterMount), true);
+    const ECollisionEnabled::Type Collision = HullMesh->GetCollisionEnabled();
+    if (Collision == ECollisionEnabled::NoCollision)
+        HullMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+    const bool bHit = HullMesh->LineTraceComponent(Hit, Position + Outward * SearchDistance,
+        Position - Outward * SearchDistance, Params);
+    if (Collision == ECollisionEnabled::NoCollision)
+        HullMesh->SetCollisionEnabled(Collision);
+    if (!bHit || FVector::DotProduct(Hit.ImpactNormal, Outward) <= 0.05)
+        return LocalPosition;
+
+    return Frame.InverseTransformPosition(Hit.ImpactPoint + Outward * FMath::Max(0.01, Radius * 0.0001));
 }
 
 FVector AShipActor::RuntimeEmitterLocalPosition(const FVector& ImportedPosition, bool bInModelUnits) const
@@ -2367,10 +2405,10 @@ void AShipActor::BuildMainEngineEffects(const Drive* MainDrive)
         Point->SetupAttachment(VFXRoot);
         Point->RegisterComponent();
 
-        Point->SetRelativeLocation(RuntimeEmitterLocalPosition(MainDrive->GetPortLocation(i), bPropulsionPortsInModelUnits));
-        Point->SetRelativeRotation(
-            ConvertLegacyPortRotation(
-                FRotator(0.0f, 180.0f, 0.0f)));
+        const FRotator ExhaustRotation = ConvertLegacyPortRotation(FRotator(0.0f, 180.0f, 0.0f));
+        const FVector AuthoredPort = RuntimeEmitterLocalPosition(MainDrive->GetPortLocation(i), bPropulsionPortsInModelUnits);
+        Point->SetRelativeLocation(FitEmitterToHull(AuthoredPort, ExhaustRotation.Vector()));
+        Point->SetRelativeRotation(ExhaustRotation);
 
         RuntimeMainEnginePoints.Add(Point);
 
@@ -2864,7 +2902,7 @@ void AShipActor::BuildThrusterEffects(const Thruster* RuntimeThruster)
 
         FRuntimeThrusterFX FX;
 
-        const FVector PortLocation = bUseHullPorts
+        const FVector AuthoredPort = bUseHullPorts
             ? RuntimeEmitterLocalPosition(HullThrusterPortPositions[PortIndex], true)
             : RuntimeEmitterLocalPosition(Port->Location, bPropulsionPortsInModelUnits);
         FX.PointName = Port->PointName;
@@ -2889,6 +2927,9 @@ void AShipActor::BuildThrusterEffects(const Thruster* RuntimeThruster)
         FX.PortScale = Port->PortScale;
         FX.AudioMultiplier = Port->AudioMultiplier;
         FX.RuntimePortIndex = PortIndex;
+
+        const FVector PortLocation = bUseHullPorts ? AuthoredPort :
+            FitEmitterToHull(AuthoredPort, ConvertLegacyPortRotation(FX.Rotation).Vector());
 
         if (NozzleMesh)
         {

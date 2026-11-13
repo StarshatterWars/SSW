@@ -21,6 +21,7 @@ namespace SSWFreightManifest
         FString Item;
         FString Unit;
         int32 Quantity = 0;
+        bool bPassengers = false;
         ESSWFinishedItem FinishedItem = ESSWFinishedItem::None;
         TOptional<FEndpoint> Origin;
         TOptional<FEndpoint> Destination;

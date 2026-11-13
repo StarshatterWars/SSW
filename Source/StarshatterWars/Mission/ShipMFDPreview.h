@@ -17,6 +17,7 @@ public:
     ~FShipMFDPreview();
     bool SetDesign(const FShipDesign* Design);
     bool SetWaypoint();
+    bool SetStation(const AActor& Station);
     bool SetAsteroid(const UStaticMeshComponent* Source);
     void SetView(const FQuat& TargetRotation,const FVector& ToObserver,const FVector& ObserverUp);
     bool IsReady() const { return Visual.IsValid() && Target.IsValid(); }

@@ -264,10 +264,10 @@ thruster: {
    port_bottom: {loc:(-72, 68, -40), fire: 0x0620, rotation:(0, -90, 0)},
    port_bottom: {loc:(-96, 68, -40), fire: 0x0620, rotation:(0, -90, 0)},
    // Outboard lateral RCS pairs; exhaust points away from the hull.
-   port_left: {loc:(-6, -102, 0), fire: 0x0002, rotation:(0, 0, -90)}
-   port_left: {loc:(6, -102, 0), fire: 0x0002, rotation:(0, 0, -90)}
-   port_right: {loc:(-6, 102, 0), fire: 0x0001, rotation:(0, 0, 90)}
-   port_right: {loc:(6, 102, 0), fire: 0x0001, rotation:(0, 0, 90)}
+   port_left: {loc:(-6, -102, 0), fire: 0x0001, rotation:(0, 0, -90)}
+   port_left: {loc:(6, -102, 0), fire: 0x0001, rotation:(0, 0, -90)}
+   port_right: {loc:(-6, 102, 0), fire: 0x0002, rotation:(0, 0, 90)}
+   port_right: {loc:(6, 102, 0), fire: 0x0002, rotation:(0, 0, 90)}
 
 }
 

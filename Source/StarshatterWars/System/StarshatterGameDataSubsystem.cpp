@@ -18,6 +18,7 @@
 */
 
 #include "StarshatterGameDataSubsystem.h"
+#include "SSWModFiles.h"
 #include "AwardInfoRegistry.h"
 
 #include "SSWGameInstance.h"
@@ -1992,7 +1993,7 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 	const FString CampaignDPath = ANSI_TO_TCHAR(fs);
 
 	TArray<uint8> Bytes;
-	if (!FFileHelper::LoadFileToArray(Bytes, *CampaignDPath))
+	if (!SSWModFiles::Read(CampaignDPath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *CampaignDPath))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to load: %s"), *CampaignDPath);
 		return;
@@ -2853,7 +2854,7 @@ void UStarshatterGameDataSubsystem::LoadZones(
 	const char* fn = TCHAR_TO_ANSI(*FileName);
 
 	TArray<uint8> Bytes;
-	if (!FFileHelper::LoadFileToArray(Bytes, *FileName))
+	if (!SSWModFiles::Read(FileName, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *FileName))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to read zones file: %s"), *FileName);
 		return;
@@ -2975,7 +2976,7 @@ UStarshatterGameDataSubsystem::LoadMissionList(FString Path)
 	// REPLACEMENT FOR DataLoader::LoadBuffer
 	// ------------------------------------------------------------
 	TArray<uint8> Bytes;
-	if (!FFileHelper::LoadFileToArray(Bytes, *FileName))
+	if (!SSWModFiles::Read(FileName, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *FileName))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to read mission list file: %s"), *FileName);
 		return;
@@ -3166,7 +3167,7 @@ UStarshatterGameDataSubsystem::LoadTemplateList(FString Path)
 	// REPLACEMENT FOR DataLoader::LoadBuffer
 	// ------------------------------------------------------------
 	TArray<uint8> Bytes;
-	if (!FFileHelper::LoadFileToArray(Bytes, *FileName))
+	if (!SSWModFiles::Read(FileName, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *FileName))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to read template list file: %s"), *FileName);
 		return;
@@ -3482,7 +3483,7 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 
 	// Read raw bytes (preserves legacy parser expectations)
 	TArray<uint8> Bytes;
-	if (!FFileHelper::LoadFileToArray(Bytes, *MissionPath))
+	if (!SSWModFiles::Read(MissionPath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *MissionPath))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to read MISSION file: %s"), *MissionPath);
 		return;
@@ -4799,7 +4800,7 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 
 	// ---- UE-native raw bytes load (preserves legacy parser expectations) ----
 	TArray<uint8> Bytes;
-	if (!FFileHelper::LoadFileToArray(Bytes, *ScriptPath))
+	if (!SSWModFiles::Read(ScriptPath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *ScriptPath))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to read scripted template file: %s"), *ScriptPath);
 		return;
@@ -5042,7 +5043,7 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 	// UE-native raw bytes load (preserves legacy parser behavior)
 	// ---------------------------------------------------------
 	TArray<uint8> Bytes;
-	if (!FFileHelper::LoadFileToArray(Bytes, *TemplatePath))
+	if (!SSWModFiles::Read(TemplatePath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *TemplatePath))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to read mission template file: %s"), *TemplatePath);
 		return;
@@ -5715,7 +5716,7 @@ void UStarshatterGameDataSubsystem::LoadContentBundle()
 	}
 
 	TArray<uint8> Bytes;
-	if (!FFileHelper::LoadFileToArray(Bytes, *ContentFilePath))
+	if (!SSWModFiles::Read(ContentFilePath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *ContentFilePath))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to read content bundle: %s"), *ContentFilePath);
 		return;
@@ -5900,7 +5901,7 @@ void UStarshatterGameDataSubsystem::LoadAwardTables()
 	// Load file bytes (UE-native)
 	// ------------------------------------------------------------
 	TArray<uint8> Bytes;
-	if (!FFileHelper::LoadFileToArray(Bytes, *AwardsPath))
+	if (!SSWModFiles::Read(AwardsPath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *AwardsPath))
 	{
 		UE_LOG(LogTemp, Error, TEXT("LoadAwardTables: failed to read: %s"), *AwardsPath);
 		return;

@@ -1787,21 +1787,6 @@ void ASSWSessionFlightHUD::DrawHUD()
         NoticeY += Height + 4.0f;
     }
     if (!Fighter) return;
-    const float PanelScale = FMath::Min(Canvas->ClipX / 1280.0f, Canvas->ClipY / 720.0f);
-    const float ScoreTop = Canvas->ClipY - 215.0f * PanelScale - 125.0f;
-    float Row = ScoreTop;
-    for (const auto& Entry : State->MissionShips)
-    {
-        if (Entry.Region != Fighter->Region) continue;
-        const TCHAR* Status = Entry.bDestroyed ? TEXT(" DESTROYED") : Entry.bRetired ? TEXT(" RETIRED") : TEXT("");
-        const bool bTarget = Entry.ObjectId == Fighter->TargetId;
-        DrawText(FString::Printf(TEXT("%s%s   HULL %.1f   SHIELDS %d   HITS TAKEN %d   SHOTS %d%s"),
-            bTarget ? TEXT("> ") : TEXT(""), *Entry.Name, Entry.Integrity,
-            Entry.ShieldStrength, Entry.DamageEvents, Entry.ShotsFired, Status),
-            bTarget || Entry.bDestroyed ? HitColor : TextColor, 24.0f, Row);
-        Row += 18.0f;
-    }
-
     if (Fighter->bDestroyed || Fighter->bRetired) return;
     const float X = Canvas->ClipX * 0.5f;
     const float Y = Canvas->ClipY * 0.5f;

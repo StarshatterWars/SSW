@@ -76,6 +76,7 @@ public:
 
     void CommitMission();
     void DamageShips(); // Legacy projectile/ship/drone collision dispatch.
+    bool ContainsProjectile(const SimObject* Object) const;
     TArray<SimShot*> GetProjectiles(); // Non-owning view of both owning lists.
 
     void DockShips();

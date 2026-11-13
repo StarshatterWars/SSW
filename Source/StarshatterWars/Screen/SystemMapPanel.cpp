@@ -74,7 +74,7 @@ public:
         return View && View->Target.IsValid() ? &View->Brush : nullptr;
     }
 
-    bool Update(const TArray<OrbitalBody*>& Bodies, double Time)
+    bool Update(const TArray<OrbitalBody*>& Bodies, const OrbitalBody* Focus, double Time)
     {
         if (GUsingNullRHI || Bodies.IsEmpty()) return false;
         if (!Scene && !Initialize()) return false;
@@ -91,11 +91,19 @@ public:
         if (Time < NextCaptureTime) return false;
         for (OrbitalBody* Body : Bodies)
         {
+            const int32 Resolution = Body == Focus ? 2048 : 512;
             FBodyView* View = Views.Find(Body);
+            if (View && View->Target.IsValid() && View->Target->SizeX != Resolution)
+            {
+                View->Target->ResizeTarget(Resolution, Resolution);
+                Render(*View, Time);
+                NextCaptureTime = Time + 0.06;
+                return true;
+            }
             if (!View)
             {
                 View = &Views.Add(Body);
-                if (InitializeBody(*View, *Body))
+                if (InitializeBody(*View, *Body, Resolution))
                 {
                     Render(*View, Time);
                     NextCaptureTime = Time + 0.06;
@@ -201,7 +209,7 @@ private:
         return nullptr;
     }
 
-    bool InitializeBody(FBodyView& View, const OrbitalBody& Body)
+    bool InitializeBody(FBodyView& View, const OrbitalBody& Body, int32 Resolution)
     {
         const bool bMoon = Body.GetType() == Orbital::MOON;
         const bool bGas = !bMoon && TextureStem(Body.GetTexture()).StartsWith(TEXT("GasGiant"));
@@ -215,9 +223,13 @@ private:
             Prefab ? Prefab : APlanetActor::StaticClass());
         if (!Planet) return false;
 
-        UTexture2D* Surface = LoadSurface(Body.GetHighResTexture(), true);
+        UTexture2D* Surface = nullptr;
+        if (FCStringAnsi::Stricmp(Body.GetName(), "Janek") == 0)
+            Surface = LoadTexture(TEXT("/Game/Models/Universe/Planets/Janek"), TEXT("T_JanekWorldScapeOrbit"));
+        if (!Surface) Surface = LoadSurface(Body.GetHighResTexture(), true);
         if (!Surface) Surface = LoadSurface(Body.GetTexture(), true);
         Planet->SetPlanetRadius(50.f);
+        if (Surface) Surface->SetForceMipLevelsToBeResident(2.f);
         if (Surface)
         {
             auto* MapMaterial = LoadObject<UMaterialInterface>(nullptr,
@@ -256,7 +268,7 @@ private:
         View.Target->MipsSamplerFilter = TF_Bilinear;
         View.Target->Filter = TF_Trilinear;
         View.Target->ClearColor = FLinearColor(0, 0, 0, 1);
-        View.Target->InitAutoFormat(256, 256);
+        View.Target->InitAutoFormat(Resolution, Resolution);
         View.Target->UpdateResourceImmediate(true);
         View.Material.Reset(UMaterialInstanceDynamic::Create(BaseMaterial.Get(), GetTransientPackage()));
         View.Material->SetTextureParameterValue(TEXT("ShipTexture"), View.Target.Get());
@@ -581,7 +593,7 @@ void USystemMapPanel::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
             while (++Satellites)
                 if (OrbitalBody* Moon = Satellites.value()) Bodies.Add(Moon);
         }
-        if (MissionBodyPreview->Update(Bodies, FPlatformTime::Seconds()))
+        if (MissionBodyPreview->Update(Bodies, FocusedMoon ? FocusedMoon : FocusedPlanet, FPlatformTime::Seconds()))
             Invalidate(EInvalidateWidget::Paint);
     }
 
@@ -1924,10 +1936,27 @@ int32 USystemMapPanel::NativePaint(
         TArray<FString> RegionLines;
         TSet<int32> RegionHeadingRows;
         TMap<int32, FLinearColor> RegionObjectColors;
+        TMap<int32, FString> RegionObjectIcons;
+        const auto* Env = UStarshatterEnvironmentSubsystem::Get();
+        const FString BodyName = DisplayBody ? UTF8_TO_TCHAR(DisplayBody->GetName()) : TEXT("");
+        const FPlanet* PlanetData = Env && FocusedPlanet && !FocusedMoon ? Env->PlanetMapByName.Find(BodyName) : nullptr;
+        const FMoon* MoonData = Env && FocusedMoon ? Env->MoonMapByName.Find(BodyName) : nullptr;
+        if (PlanetData || MoonData)
+        {
+            const auto& Locations = PlanetData ? PlanetData->Locations : MoonData->Locations;
+            for (const FNamedBodyLocation& Site : Locations)
+            {
+                if (Site.Type == ELocationType::Airbase)
+                    RegionObjectIcons.Add(RegionLines.Num(), TEXT("AirbaseHud"));
+                RegionLines.Add(Site.Name);
+            }
+        }
         for (const FString& RegionName : RegionNames)
         {
             RegionHeadingRows.Add(RegionLines.Num());
-            RegionLines.Add(RegionName);
+            const OrbitalRegion* Region = CachedRuntimeSystem->FindRegion(TCHAR_TO_UTF8(*RegionName));
+            RegionLines.Add(Region && Region->GetAsteroids() > 0
+                ? RegionName + TEXT("  ·  ASTEROIDS") : RegionName);
             int32 ObjectCount = 0;
             for (const FS_CombatGroup* Group : CombatGroupRegistry::FindByRegion(RegionName))
             {
@@ -1946,6 +1975,8 @@ int32 USystemMapPanel::NativePaint(
                     : Group->Iff <= 0
                         ? FLinearColor(0.65f, 0.65f, 0.65f, 1.0f)
                         : FLinearColor(1.0f, 0.25f, 0.25f, 1.0f);
+                if (Group->Type == ECOMBATGROUP_TYPE::STATION)
+                    RegionObjectIcons.Add(RegionLines.Num(), TEXT("StationHud"));
                 RegionObjectColors.Add(RegionLines.Num(), GroupColor);
                 RegionLines.Add(TEXT("- ") + (DisplayName.IsEmpty() ? Group->Name : DisplayName));
                 ++ObjectCount;
@@ -1956,7 +1987,7 @@ int32 USystemMapPanel::NativePaint(
             static_cast<float>(PanelSize.X) * 0.5f - 24.0f));
         const float BodyHeight = FocusedMoon ? 80.0f
             : 104.0f + FMath::Max(1, BodyNames.Num()) * 20.0f;
-        const float RegionHeight = RegionNames.IsEmpty() ? 0.0f
+        const float RegionHeight = RegionLines.IsEmpty() ? 0.0f
             : 54.0f + RegionLines.Num() * 24.0f;
         const float Height = FMath::Max(BodyHeight, RegionHeight);
         const FVector2D BoxOrigin(
@@ -1990,7 +2021,7 @@ int32 USystemMapPanel::NativePaint(
             DrawInfoLine(TEXT("- ") + BodyNames[Index], 94.0f + Index * 20.0f, 11,
                 FLinearColor::White);
     }
-        if (!RegionNames.IsEmpty())
+        if (!RegionLines.IsEmpty())
         {
             const FVector2D RegionOrigin(48.0f, BoxOrigin.Y);
             FSlateDrawElement::MakeBox(
@@ -2004,15 +2035,30 @@ int32 USystemMapPanel::NativePaint(
                 FSlateDrawElement::MakeText(
                     OutDrawElements, ++PaintLayer,
                     AllottedGeometry.ToPaintGeometry(
-                        RegionOrigin + FVector2D(14.0f, Y), FVector2D(Width - 28.0f, 22.0f)),
+                        RegionOrigin + FVector2D(34.0f, Y), FVector2D(Width - 48.0f, 22.0f)),
                     Text, FCoreStyle::GetDefaultFontStyle("Regular", FontSize),
                     ESlateDrawEffect::None, Color);
             };
-            DrawRegionLine(TEXT("Region"), 12.0f, 16, EmpireColor);
+            DrawRegionLine(DisplayBody ? TEXT("LOCAL STRUCTURES AND SECTORS") : TEXT("SECTORS"), 12.0f, 11, EmpireColor);
             for (int32 Index = 0; Index < RegionLines.Num(); ++Index)
-                DrawRegionLine(RegionLines[Index], 38.0f + Index * 24.0f, 11,
-                    RegionHeadingRows.Contains(Index) ? EmpireColor :
-                        (RegionObjectColors.Contains(Index) ? RegionObjectColors[Index] : FLinearColor::White));
+            {
+                const float RowY = 38.0f + Index * 24.0f;
+                if (const FString* Icon = RegionObjectIcons.Find(Index))
+                {
+                    const FString Path = FString::Printf(TEXT("/Game/UI/HUD/%s.%s"), **Icon, **Icon);
+                    if (auto* Texture = LoadObject<UTexture2D>(nullptr, *Path))
+                    {
+                        FSlateBrush Brush;
+                        Brush.SetResourceObject(Texture);
+                        Brush.DrawAs = ESlateBrushDrawType::Image;
+                        FSlateDrawElement::MakeBox(OutDrawElements, ++PaintLayer,
+                            AllottedGeometry.ToPaintGeometry(RegionOrigin + FVector2D(12.0f, RowY), FVector2D(16.0f)),
+                            &Brush, ESlateDrawEffect::None);
+                    }
+                }
+                DrawRegionLine(RegionLines[Index], RowY, 11,
+                    RegionHeadingRows.Contains(Index) ? EmpireColor : RegionObjectColors.FindRef(Index, FLinearColor::White));
+            }
         }
         return PaintLayer;
     };

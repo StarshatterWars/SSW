@@ -262,7 +262,7 @@ void UKeyDlg::AppendFighterHUDBindings()
     };
     AddFixedShortcut(TEXT("COMMUNICATIONS"), NSLOCTEXT("SSW.InputActions", "EOSOverlay", "EOS SOCIAL OVERLAY"),
         FText::FromString(TEXT("Shift+F3")));
-    AddFixedShortcut(TEXT("GENERAL"), NSLOCTEXT("SSW.InputActions", "FixedMissionExit", "OPEN MISSION PAUSE / EXIT MENU"),
+    AddFixedShortcut(TEXT("GENERAL"), NSLOCTEXT("SSW.InputActions", "FixedMissionExit", "OPEN MISSION PAUSE / EXIT MENU FROM FLIGHT OR PANELS"),
         EKeys::Escape.GetDisplayName());
 
     for (auto* Context:Contexts)

@@ -382,6 +382,11 @@ public:
     void              SetName(const char* ident) { strcpy_s(name, ident); }
     const ShipDesign* Design() const { return design; }
     void AssignMilitaryCargo();
+    void SetSimulatedCargo(SSWFreightManifest::FLoad Load);
+    double LoadMinedOre(const FString& Mineral, double Tonnes);
+    double UnloadMinedOre(double Tonnes);
+    double GetMinedOreTonnes() const;
+    EFreighterLoadStatus GetFreighterLoadStatus() const;
     const TOptional<SSWFreightManifest::FLoad>& GetCargoManifest() const { return CargoManifest; }
     const char*       Abbreviation() const;
     const char*        DesignName() const;
@@ -395,6 +400,8 @@ public:
     CLASSIFICATION    GetClassification() const;
     bool              IsGroundUnit() const;
     bool              IsStarship() const;
+    FVector GetCombatAllocation() const;
+    void SetCombatAllocation(FVector Shares);
     bool              IsDropship() const;
     bool              IsStatic() const;
     bool              IsPlayer() const { return player_ship; }
@@ -474,7 +481,8 @@ public:
     bool                    SetAutoTrack(bool engage);
     Ship*                   GetAutoTrackTarget() const;
     const FVector*          GetFixedAutoTrackPoint() const;
-    bool                    SetFixedAutoTrackPoint(const FVector& Point);
+    bool                    SetFixedAutoTrackPoint(const FVector& Point, const FString& ContactName);
+    const FString&          GetFixedAutoTrackName() const { return FixedTrackName; }
     void                    SetAutoNav(bool engage = true);
     bool                    CanAutoLand() const;
     bool                    CanRequestAutoLand() const;
@@ -540,6 +548,8 @@ protected:
     char              regnum[16];
     ShipDesign*       design;
     TOptional<SSWFreightManifest::FLoad> CargoManifest;
+    double FractionalMinedOre = 0.0;
+    FVector CombatAllocation = FVector::ZeroVector;
     ShipKiller*       killer;
     DetailSet         detail;
     int               detail_level;
@@ -639,6 +649,7 @@ protected:
     bool bAutoTrack = false;
     SimRegion* FixedTrackRegion = nullptr;
     FVector FixedTrackPoint = FVector::ZeroVector;
+    FString FixedTrackName;
 
     SimDirector* net_control;
 

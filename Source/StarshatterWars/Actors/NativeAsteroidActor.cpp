@@ -21,10 +21,13 @@ void ANativeAsteroidActor::SetContactIdentity(const SimRegion* Region, int32 Ind
 
 const Asteroid* ANativeAsteroidActor::ResolveContact(SimRegion* Region) const
 {
-    if (!Region || Region != ContactRegion || ContactIndex < 0 ||
-        ContactIndex >= Region->GetRoids().size() || IsHidden())
+    if (!Region || Region != ContactRegion || ContactIndex < 0 || IsHidden())
         return nullptr;
-    return Region->GetRoids()[ContactIndex];
+    const auto& Rocks = Region->GetRoids();
+    for (int Index = 0; Index < Rocks.size(); ++Index)
+        if (const Asteroid* Rock = Rocks[Index]; Rock && Rock->GetContactId() == ContactIndex)
+            return Rock;
+    return nullptr;
 }
 
 double ANativeAsteroidActor::RawRadius(double Radius){return FMath::IsFinite(Radius)&&Radius>0?Radius:0;}

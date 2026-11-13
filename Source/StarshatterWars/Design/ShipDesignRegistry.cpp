@@ -321,7 +321,19 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
     const auto ApplyComponentDesign = [](SimSystem& System, const FString& Name)
     {
         if (Name.IsEmpty()) return;
-        if (const auto* Design = SystemDesign::Find(TCHAR_TO_UTF8(*Name)))
+        const SystemDesign* Design = SystemDesign::Find(TCHAR_TO_UTF8(*Name));
+        if (!Design)
+        {
+            // Legacy ship DEFs use short labels for the shared component templates.
+            if (Name == TEXT("Grav") || Name == TEXT("Hyper") ||
+                Name == TEXT("Deflector") || Name == TEXT("Deflector Shield"))
+                Design = SystemDesign::Find("Grav Shield");
+            else if (Name == TEXT("Avionics") || Name == TEXT("Flight"))
+                Design = SystemDesign::Find("Computer");
+            else if (Name == TEXT("Fusion Drive"))
+                Design = SystemDesign::Find("Plasma Drive");
+        }
+        if (Design)
             System.SetDesign(Design);
     };
 
@@ -424,8 +436,18 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         NewThruster->SetThrusterScale(Src.ThrusterScale);
         NewThruster->SetThrust(Src.Thrust);
 
-        for (const FThrusterPort& Port : Src.Ports)
+        for (FThrusterPort Port : Src.Ports)
         {
+            // Existing Stormhawk DataTable rows can still contain the swapped lateral masks.
+            if (RowName == FName(TEXT("Stormhawk")))
+            {
+                constexpr int32 LeftMask = 1 << static_cast<int32>(EThrusterPortDir::LEFT);
+                constexpr int32 RightMask = 1 << static_cast<int32>(EThrusterPortDir::RIGHT);
+                if (Port.Direction == EThrusterPortDir::LEFT && Port.Fire == RightMask)
+                    Port.Fire = LeftMask;
+                if (Port.Direction == EThrusterPortDir::RIGHT && Port.Fire == LeftMask)
+                    Port.Fire = RightMask;
+            }
             NewThruster->AddPort(
                 Port.Direction,
                 Port.Location,

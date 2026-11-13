@@ -94,6 +94,7 @@ protected:
 
 	virtual Steer     AvoidCloseObject(SimObject* obj);
 	virtual Steer     AvoidCollision();
+    Steer AvoidCollision(bool bTightAsteroidClearance);
 	virtual Steer     AvoidTerrain();
 	virtual Steer     SeekTarget();
 	virtual Steer     EvadeThreat();

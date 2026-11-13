@@ -809,6 +809,12 @@ void UStarshatterEnvironmentSubsystem::LoadGalaxyMap()
 					}
 					NewGalaxyData.Class = StarClass;
 				}
+                else if (Key == "asteroid_type")
+                {
+                    Text Value;
+                    GetDefText(Value, pdef, Fn);
+                    NewGalaxyData.AsteroidType = FString(Value);
+                }
 				else if (Key == "stellar")
 				{
 					if (!pdef->term() || !pdef->term()->isStruct())
@@ -957,6 +963,12 @@ void UStarshatterEnvironmentSubsystem::ParseRegion(TermStruct* Val, const char* 
 			GetDefNumber(Inclination, PDef, Fn);
 			NewRegionData.Inclination = Inclination;
 		}
+        else if (Key == "asteroid_type")
+        {
+            Text Value;
+            GetDefText(Value, PDef, Fn);
+            NewRegionData.AsteroidType = FString(Value);
+        }
 		else if (Key == "asteroids")
 		{
 			// If you only have GetDefNumber, keep this:
@@ -1016,6 +1028,18 @@ static void ParseNamedBodyLocation(TermStruct* Struct, const char* Filename, TAr
         {
             GetDefVec(Location.Position, Field, Filename);
         }
+        else if (Key == "population")
+        {
+            double Population = 0;
+            if (GetDefNumber(Population, Field, Filename) && Population >= 0 && Population <= 1e15)
+                Location.Population = static_cast<int64>(Population);
+        }
+        else if (Key == "production")
+        {
+            Text Value;
+            GetDefText(Value, Field, Filename);
+            Location.Production = FString(Value);
+        }
         else if (Key == "type")
         {
             Text Type;
@@ -1066,6 +1090,18 @@ void UStarshatterEnvironmentSubsystem::ParseMoonMap(TermStruct* val, const char*
 		{
 			ParseNamedBodyLocation(pdef->term()->isStruct(), fn, NewMoonMap.Locations);
 		}
+        else if (Key == "population")
+        {
+            double Population = 0;
+            if (GetDefNumber(Population, pdef, fn) && Population >= 0 && Population <= 1e15)
+                NewMoonMap.Population = static_cast<int64>(Population);
+        }
+        else if (Key == "production" || Key == "worldscape")
+        {
+            Text Value;
+            GetDefText(Value, pdef, fn);
+            (Key == "production" ? NewMoonMap.Production : NewMoonMap.WorldScapeProfile) = FString(Value);
+        }
 		else if (Key == "type")
 		{
 			Text PType = "";
@@ -1360,6 +1396,18 @@ void UStarshatterEnvironmentSubsystem::ParsePlanetMap(TermStruct* val, const cha
 		{
 			ParseNamedBodyLocation(pdef->term()->isStruct(), fn, NewPlanetMap.Locations);
 		}
+        else if (Key == "population")
+        {
+            double Population = 0;
+            if (GetDefNumber(Population, pdef, fn) && Population >= 0 && Population <= 1e15)
+                NewPlanetMap.Population = static_cast<int64>(Population);
+        }
+        else if (Key == "production" || Key == "worldscape")
+        {
+            Text Value;
+            GetDefText(Value, pdef, fn);
+            (Key == "production" ? NewPlanetMap.Production : NewPlanetMap.WorldScapeProfile) = FString(Value);
+        }
 		else if (Key == "type")
 		{
 			Text PType = "";

@@ -5,6 +5,7 @@
 #include "ShipActor.h"
 #include "WaypointActor.h"
 #include "NativeAsteroidActor.h"
+#include "Asteroid.h"
 #include "Sim.h"
 #include "SimRegion.h"
 #include "Ship.h"
@@ -221,6 +222,20 @@ public:
         FSlateDrawElement::MakeText(Elements, Layer + 2,
             Geometry.ToPaintGeometry(FVector2f(TextSize), FSlateLayoutTransform(FVector2f(TextPosition))),
             Label, Font, ESlateDrawEffect::None, Color);
+        const auto* AsteroidActor = Cast<ANativeAsteroidActor>(Actor);
+        Sim* Simulation = Sim::GetSim();
+        if (const Asteroid* Rock = AsteroidActor && Simulation
+            ? AsteroidActor->ResolveContact(Simulation->GetActiveRegion()) : nullptr)
+        {
+            const FVector2f Position(Center.X - 19.0, FMath::Max(0.0, TextPosition.Y - 6.0));
+            const auto* Brush = FCoreStyle::Get().GetBrush(TEXT("WhiteBrush"));
+            FSlateDrawElement::MakeBox(Elements, Layer + 2,
+                Geometry.ToPaintGeometry(FVector2f(38, 4), FSlateLayoutTransform(Position)),
+                Brush, ESlateDrawEffect::None, FLinearColor(0.02f, 0.03f, 0.04f, 0.85f));
+            FSlateDrawElement::MakeBox(Elements, Layer + 3,
+                Geometry.ToPaintGeometry(FVector2f(38 * FMath::Clamp(Rock->GetIntegrityFraction(), 0.0f, 1.0f), 4),
+                    FSlateLayoutTransform(Position)), Brush, ESlateDrawEffect::None, Color);
+        }
         DrawRange(Center,ReticleSize.Y*0.5+6.0,Layer+3);
         return Layer + 3;
     }

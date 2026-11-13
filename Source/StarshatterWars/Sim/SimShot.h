@@ -62,6 +62,7 @@ public:
     void BeginRackRelease(const FVector& CarrierVelocity, const FVector& CarrierUp);
     bool IsReleasingFromRack() const { return RackReleaseRemaining > 0.0; }
 	const Ship* Owner()        const { return owner; }
+    double MiningStepSeconds() const { return BeamDamageSeconds; }
 	double             Damage()       const;
 	int                ShotType()     const { return type; }
 	virtual SimObject* GetTarget()    const;

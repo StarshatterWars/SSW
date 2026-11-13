@@ -332,6 +332,7 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
                 // Carry / damage
                 else if (Key == "carry_mass") { GetDefNumber(W.CarryMass, PDef, fn); }
                 else if (Key == "carry_resist") { GetDefNumber(W.CarryResist, PDef, fn); }
+                else if (Key == "mining_tonnes_per_second") { GetDefNumber(W.MiningTonnesPerSecond, PDef, fn); }
                 else if (Key == "damage") { GetDefNumber(W.Damage, PDef, fn); }
                 else if (Key == "penetration") { GetDefNumber(W.Penetration, PDef, fn); }
                 else if (Key == "lethal_radius") { GetDefNumber(W.LethalRadius, PDef, fn); }

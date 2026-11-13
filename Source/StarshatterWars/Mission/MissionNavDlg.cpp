@@ -16,6 +16,7 @@
 */
 
 #include "MissionNavDlg.h"
+#include "FighterHUDDetails.h"
 #include "Game.h"
 #include "Sim.h"
 #include "Ship.h"
@@ -2769,14 +2770,15 @@ bool UMissionNavDlg::ShouldShowMissionElementInBriefing(const MissionElement* El
     }
 
     const int32 ElemIFF = Elem->GetIFF();
-    const int32 MissionTeam = MissionPtr->GetTeam();
+    const MissionElement* Pilot = MissionPtr->GetPlayer();
+    const int32 ObserverIFF = Pilot ? Pilot->GetIFF() : MissionPtr->GetTeam();
 
     if (ElemIFF == 0)
     {
         return true;
     }
 
-    if (ElemIFF == MissionTeam)
+    if (ElemIFF == ObserverIFF)
     {
         return true;
     }
@@ -2897,8 +2899,7 @@ void UMissionNavDlg::RefreshLiveNavigation()
             Contact.Type = Vessel->IsStatic() ? EMissionNavObjectType::Station
                 : Vessel->IsStarship() ? EMissionNavObjectType::Starship
                 : Vessel->IsDropship() ? EMissionNavObjectType::Fighter : EMissionNavObjectType::None;
-            Contact.Color = Vessel->GetIFF() == 0 ? FLinearColor::Yellow
-                : Vessel->GetIFF() == Player->GetIFF() ? FLinearColor(0.2f,0.65f,1) : FLinearColor::Red;
+            Contact.Color = SFighterHUDDetails::IdentificationColor(Vessel->GetIFF(), Player->GetIFF());
         }
     }
     // Stable order keeps rows and scroll position steady while ships move.

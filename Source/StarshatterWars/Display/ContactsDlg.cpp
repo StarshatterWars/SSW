@@ -135,7 +135,11 @@ private:
                         const FString ShipName = Row->Type;
                         Path = FString::Printf(TEXT("/Game/UI/Ships/%s/%s.%s"), *ShipName, *ShipName, *ShipName);
                     }
-                    if (Data->GetClassification() == CLASSIFICATION::STARBASE)
+                    const TCHAR* StationIcon = Data->Design()
+                        ? ShipVisualCatalog::DedicatedStationIcon(ANSI_TO_TCHAR(Data->Design()->name)) : nullptr;
+                    if (StationIcon)
+                        Path = StationIcon;
+                    else if (Data->GetClassification() == CLASSIFICATION::STARBASE)
                         Path = AirbaseContactIcon;
                     else if (Data->GetClassification() == CLASSIFICATION::STATION)
                         Path = StationContactIcon;
@@ -183,6 +187,11 @@ private:
 }
 
 void UContactsDlg::SetMissionHost(UMissionBriefingDlg* Host){MissionHost=Host;}
+FReply UContactsDlg::NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& Event)
+{
+    if (!Event.IsRepeat()) RequestPanelClose();
+    return FReply::Handled();
+}
 TSharedRef<SWidget> UContactsDlg::RebuildWidget() {
     // Preserve the authored frame; supply a missing content host in a new Blueprint.
     if(WidgetTree && WidgetTree->RootWidget && !WidgetTree->FindWidget(TEXT("RuntimeHost"))) {

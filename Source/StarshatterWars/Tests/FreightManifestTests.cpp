@@ -9,12 +9,28 @@
 #include "Game.h"
 #include "Instruction.h"
 #include "SimRegion.h"
+#include "Ship.h"
+#include "ShipDesign.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFreightManifestTest, "Starshatter.Freight.ManifestAndSensorRange",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 
 bool FFreightManifestTest::RunTest(const FString&)
 {
+    ShipDesign MiningDesign;
+    MiningDesign.CargoCapacity.Tonnes = 2.0;
+    Ship Miner("Ore test", "MS-TEST", &MiningDesign, 0, 0, nullptr, false);
+    TestEqual(TEXT("Partial tonnes accumulate"), Miner.LoadMinedOre(TEXT("Troilite"), 0.5), 0.5);
+    TestEqual(TEXT("A different mineral waits for unloading"), Miner.LoadMinedOre(TEXT("Magnetite"), 1.0), 0.0);
+    TestEqual(TEXT("Only available capacity is filled"), Miner.LoadMinedOre(TEXT("Troilite"), 4.0), 1.5);
+    TestEqual(TEXT("Unloading transfers only the allowed amount"), Miner.UnloadMinedOre(0.25), 0.25);
+    TestEqual(TEXT("Fractional cargo remains in the hold"), Miner.GetMinedOreTonnes(), 1.75);
+    TestEqual(TEXT("Unloading returns the remaining tonnes"), Miner.UnloadMinedOre(10.0), 1.75);
+    TestEqual(TEXT("Second unload cannot deliver cargo twice"), Miner.UnloadMinedOre(10.0), 0.0);
+    const auto Prospector = SSWFreightManifest::LoadProfile(TEXT("Prospector"));
+    TestEqual(TEXT("Prospector intake rate comes from its definition"), Prospector.Capacity.LoadTonnesPerSecond, 0.25);
+    TestEqual(TEXT("Prospector unload rate comes from its definition"), Prospector.Capacity.UnloadTonnesPerSecond, 1.0);
+
     const UDataTable* Table = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign"));
     if (!TestNotNull(TEXT("Ship data table"), Table)) return false;
 

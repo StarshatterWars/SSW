@@ -552,6 +552,7 @@ public:
     bool bPropulsionPortsInModelUnits = false;
     FName ThrusterPortHullName;
     TArray<FVector> HullThrusterPortPositions;
+    FVector FitEmitterToHull(const FVector& LocalPosition, const FVector& LocalOutward) const;
     FVector RuntimeEmitterLocalPosition(const FVector& ImportedPosition, bool bInModelUnits = false) const;
     void BuildMainEnginesFromRuntime();
     void BuildMainEngineEffects(const Drive* MainDrive);

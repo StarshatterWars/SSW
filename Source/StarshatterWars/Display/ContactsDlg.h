@@ -12,6 +12,7 @@ public:
 protected:
     TWeakObjectPtr<class UMissionBriefingDlg> MissionHost;
     virtual TSharedRef<SWidget> RebuildWidget() override;
+    virtual FReply NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& Event) override;
     virtual TSharedRef<SWidget> CreatePanelContent() override;
     virtual FText GetPanelCaption() const override;
     virtual bool UsesFlightPanelStyle() const override { return true; }

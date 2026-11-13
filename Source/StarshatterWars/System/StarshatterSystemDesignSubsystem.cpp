@@ -213,6 +213,28 @@ void UStarshatterSystemDesignSubsystem::LoadSystemDesign(const char* Filename)
             continue;
 
         const Text& DefName = Def->name()->value();
+        if (DefName == "component_grade")
+        {
+            TermStruct* Grade = Def->term() ? Def->term()->isStruct() : nullptr;
+            int Level = 0;
+            double Repair = 1.0, Replacement = 1.0;
+            if (Grade)
+            {
+                for (int Index = 0; Index < Grade->elements()->size(); ++Index)
+                {
+                    TermDef* Field = Grade->elements()->at(Index)->isDef();
+                    if (!Field) continue;
+                    const Text& Key = Field->name()->value();
+                    if (Key == "level") GetDefNumber(Level, Field, fn);
+                    else if (Key == "repair_scale") GetDefNumber(Repair, Field, fn);
+                    else if (Key == "replacement_scale") GetDefNumber(Replacement, Field, fn);
+                }
+            }
+            if (Level >= 1 && Level <= 5 && FMath::IsFinite(Repair) && Repair > 0.0 &&
+                FMath::IsFinite(Replacement) && Replacement > 0.0)
+                ComponentGrades.Add(Level, FVector2D(Repair, Replacement));
+            continue;
+        }
         if (DefName != "system")
             continue;
 
@@ -345,4 +367,22 @@ void UStarshatterSystemDesignSubsystem::LoadSystemDesign(const char* Filename)
 
     UE_LOG(LogTemp, Log, TEXT("[SYSTEM] Loaded %d system designs (cache=%d) from '%s'"),
         ParsedSystems, DesignsByName.Num(), *FilePath);
+}
+
+TOptional<FComponentDesign> UStarshatterSystemDesignSubsystem::FindComponentGrade(FName System, FName Component, int32 Grade) const
+{
+    const FSystemDesign* Design = FindDesign(System);
+    const FVector2D* Multipliers = ComponentGrades.Find(Grade);
+    if (!Design || !Multipliers) return {};
+    const auto* Base = Design->Components.FindByPredicate([Component](const FComponentDesign& Entry)
+    {
+        return FName(*Entry.Name) == Component;
+    });
+    if (!Base) return {};
+    static const TCHAR* Labels[] = {TEXT("I"), TEXT("II"), TEXT("III"), TEXT("IV"), TEXT("V")};
+    FComponentDesign Variant = *Base;
+    Variant.Name += FString(TEXT(" ")) + Labels[Grade - 1];
+    Variant.RepairTime *= Multipliers->X;
+    Variant.ReplaceTime *= Multipliers->Y;
+    return Variant;
 }

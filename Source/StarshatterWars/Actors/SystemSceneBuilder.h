@@ -486,6 +486,9 @@ private:
     TMap<TWeakObjectPtr<AActor>, bool> MissionHiddenActors;
     TMap<TWeakObjectPtr<AActor>, bool> SurfaceHiddenActors;
     void RestoreOrbitalBackdrop();
+    void UpdateFocusedWorldScape(const Orbital* FocusBody, const FVector& Eye, const FVector* SectorOrigin);
+    TWeakObjectPtr<class AWorldScapeRoot> FocusedWorldScape;
+    TWeakObjectPtr<AActor> FocusedWorldProxy;
 protected:
     TMap<FString, OrbitalBody*> RuntimeBodyMap;
     TMap<FString, TObjectPtr<AActor>> BodyActorMap;

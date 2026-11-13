@@ -63,6 +63,44 @@ bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
     return BeginCapture(NextKey, BriefingShipPreview::CalculateBounds(Parts));
 }
 
+bool FShipMFDPreview::SetStation(const AActor& Station)
+{
+    const FString NextKey = TEXT("Station:") + Station.GetClass()->GetPathName();
+    if (Key == NextKey && IsReady())
+    {
+        RefreshStaticCapture();
+        return true;
+    }
+
+    TInlineComponentArray<UStaticMeshComponent*> Components(&Station);
+    TArray<FBriefingShipPreviewPart> Parts;
+    for (const UStaticMeshComponent* Source : Components)
+    {
+        if (!Source || !Source->IsVisible() || Source->bHiddenInGame || !Source->GetStaticMesh()) continue;
+        auto& Part = Parts.AddDefaulted_GetRef();
+        Part.Mesh = Source->GetStaticMesh();
+        Part.Transform = Source->GetComponentTransform().GetRelativeTransform(Station.GetActorTransform());
+        Part.Materials = Source->GetMaterials();
+    }
+
+    const FBox Bounds = BriefingShipPreview::CalculateBounds(Parts);
+    const double Radius = Bounds.IsValid ? Bounds.GetExtent().Size() : 0.0;
+    if (!FMath::IsFinite(Radius) || Radius <= UE_SMALL_NUMBER) return false;
+    const double Scale = 100.0 / Radius;
+    for (FBriefingShipPreviewPart& Part : Parts)
+    {
+        Part.Transform.SetTranslation((Part.Transform.GetTranslation() - Bounds.GetCenter()) * Scale);
+        Part.Transform.MultiplyScale3D(FVector(Scale));
+    }
+
+    Clear();
+    Scene = MakeUnique<FPreviewScene>(FPreviewScene::ConstructionValues().SetEditor(false)
+        .SetCreatePhysicsScene(false).SetLightBrightness(4.f).SetSkyBrightness(0.f));
+    Visual = BriefingShipPreview::CreateVisual(Scene->GetWorld(), Parts);
+    if (!Visual.IsValid()) { Clear(); return false; }
+    return BeginCapture(NextKey, BriefingShipPreview::CalculateBounds(Parts));
+}
+
 bool FShipMFDPreview::SetAsteroid(const UStaticMeshComponent* Source)
 {
     UStaticMesh* Mesh = Source ? Source->GetStaticMesh() : nullptr;

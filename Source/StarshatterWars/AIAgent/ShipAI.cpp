@@ -1315,6 +1315,12 @@ ShipAI::AvoidTerrain()
 Steer
 ShipAI::AvoidCollision()
 {
+    return AvoidCollision(false);
+}
+
+Steer
+ShipAI::AvoidCollision(bool bTightAsteroidClearance)
+{
 	Steer avoid;
 
 	if (!ship || !ship->GetRegion() || !ship->GetRegion()->IsActive())
@@ -1369,11 +1375,38 @@ ShipAI::AvoidCollision()
 		bearing.Normalize();
 	}
 
+    const auto TestAsteroid = [&](Asteroid* Rock)
+    {
+        // Legacy asteroid padding is wide enough to cover most of a dense field.
+        const double Padding = FMath::Clamp(ship->GetRadius(), 40.0, 200.0);
+        const FVector Offset = Rock->GetLocation() - ship->GetLocation();
+        const FVector RelativeVelocity = ship->GetVelocity() - Rock->GetVelocity();
+        const double Time = FVector::DotProduct(Offset, RelativeVelocity) /
+            FMath::Max(RelativeVelocity.SizeSquared(), 1.0);
+        const double Clearance = ship->GetRadius() + Rock->GetRadius() + Padding;
+        if (Time <= 0.0 || Time > 8.0 ||
+            (Offset - RelativeVelocity * Time).SizeSquared() >= FMath::Square(Clearance))
+        {
+            if (other == Rock) other = nullptr;
+            return false;
+        }
+
+        const FVector Local = AimTransform(Rock->GetLocation() + Rock->GetVelocity() * Time);
+        if (other != Rock) { other = Rock; Observe(other); }
+        avoid = Avoid(Local, static_cast<float>(Clearance));
+        avoid.brake = 0.5;
+        return true;
+    };
+
 	bool found = false;
 
 	ListIter<SimContact> contact = ship->GetContactList();
 
-	if (other)
+    if (bTightAsteroidClearance && dynamic_cast<Asteroid*>(other))
+    {
+        found = TestAsteroid(static_cast<Asteroid*>(other));
+    }
+	else if (other)
 	{
 		found =
 			AvoidTestSingleObject(
@@ -1435,7 +1468,7 @@ ShipAI::AvoidCollision()
 			{
 				Asteroid* roid = iter.value();
 
-				found =
+				found = bTightAsteroidClearance ? TestAsteroid(roid) :
 					AvoidTestSingleObject(
 						roid,
 						bearing,

@@ -1,0 +1,16 @@
+{
+  "entries": [
+    {
+      "category": "News",
+      "title": "Starshatter Wars launcher prototype",
+      "date": "2026-11-13",
+      "body": "Launch the installed Windows build or use Play Offline for a local mission."
+    },
+    {
+      "category": "Patch notes",
+      "title": "T1 asteroid field flight test",
+      "date": "2026-11-13",
+      "body": "Auto Track toward the Janek Mining Station now checks individual asteroids for potential collisions."
+    }
+  ]
+}

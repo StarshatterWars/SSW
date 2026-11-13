@@ -336,6 +336,9 @@ struct FWeaponDesign : public FTableRowBase
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float Damage = 1.0f;
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MiningTonnesPerSecond = 0.0f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 DamageType = 0;           // legacy DMG_NORMAL/EMP/POWER
 

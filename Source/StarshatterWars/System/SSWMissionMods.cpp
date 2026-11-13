@@ -26,13 +26,23 @@ TArray<SSWMissionMods::FPack> SSWMissionMods::Discover()
         const FString Folder = Directory() / Name / TEXT("Missions");
         FPack Pack;
         IFileManager::Get().FindFiles(Pack.Missions, *(Folder / TEXT("*.def")), true, false);
-        if (Pack.Missions.IsEmpty()) continue;
+        if (Pack.Missions.IsEmpty() &&
+            !IFileManager::Get().DirectoryExists(*(Directory() / Name / TEXT("Campaigns")))) continue;
         Pack.Name = Name;
         Pack.Missions.Sort();
         for (FString& File : Pack.Missions) File = Folder / File;
         if (GConfig) GConfig->GetBool(Section, *Name, Pack.bEnabled, GGameUserSettingsIni);
         Packs.Add(MoveTemp(Pack));
     }
+    TArray<FString> Archives;
+    IFileManager::Get().FindFiles(Archives, *(Directory() / TEXT("*.dat")), true, false);
+    for (const FString& Name : Archives)
+    {
+        FPack& Pack = Packs.AddDefaulted_GetRef();
+        Pack.Name = Name;
+        if (GConfig) GConfig->GetBool(Section, *Name, Pack.bEnabled, GGameUserSettingsIni);
+    }
+    Packs.Sort([](const FPack& A, const FPack& B) { return A.Name < B.Name; });
     return Packs;
 }
 

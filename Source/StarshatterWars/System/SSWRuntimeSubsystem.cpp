@@ -1472,6 +1472,9 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
     MissionPresentationShips.AddUnique(ShipActor);
     ShipActor->BindRuntimeShip(
         RuntimeShip);
+    if (DesignName.Equals(TEXT("Asteroid Base"), ESearchCase::IgnoreCase) ||
+        DesignName.Equals(TEXT("Mining Station"), ESearchCase::IgnoreCase))
+        ShipActor->SetActorScale3D(FVector(Row->Scale));
     if (bJanekAirbase && ShipActor->HullMesh)
     {
         if (UStaticMesh* Runway = LoadObject<UStaticMesh>(nullptr,
@@ -1709,6 +1712,7 @@ void USSWRuntimeSubsystem::ClearProjectileVisuals()
 {
     for(auto& Entry:AsteroidVisuals)if(auto* Actor=Entry.Value.Get())Actor->Destroy();
     AsteroidVisuals.Reset();
+    AsteroidVariantMeshes.Reset();
     if (auto* Marker = AsteroidFieldContact.Get()) Marker->Destroy();
     AsteroidFieldContact.Reset();
     for (auto& Entry : DebrisVisuals)
@@ -1789,7 +1793,6 @@ void USSWRuntimeSubsystem::UpdateAsteroidVisuals()
     }
 
     TSet<Asteroid*> Alive;
-    TMap<int32, UStaticMesh*> VariantMeshes;
     const auto* Library=GetDefault<UAsteroidLibrarySettings>();
     if(World && Region && Library->Meshes.Num()>0)for(int I=0;I<Region->GetRoids().size();++I){
         Asteroid* Rock=Region->GetRoids()[I];if(!Rock)continue;Alive.Add(Rock);
@@ -1799,10 +1802,10 @@ void USSWRuntimeSubsystem::UpdateAsteroidVisuals()
             if(Actor)AsteroidVisuals.Add(Rock,Actor);}
         if (Actor) {
             const int32 Variant = Rock->GetMeshVariant() % Library->Meshes.Num();
-            UStaticMesh** Cached = VariantMeshes.Find(Variant);
-            UStaticMesh* Mesh = Cached ? *Cached : Library->Meshes[Variant].LoadSynchronous();
-            if (!Cached) VariantMeshes.Add(Variant, Mesh);
-            Actor->SetContactIdentity(Region, I);
+            TObjectPtr<UStaticMesh>* Cached = AsteroidVariantMeshes.Find(Variant);
+            UStaticMesh* Mesh = Cached ? Cached->Get() : Library->Meshes[Variant].LoadSynchronous();
+            if (!Cached) AsteroidVariantMeshes.Add(Variant, Mesh);
+            Actor->SetContactIdentity(Region, Rock->GetContactId());
             Actor->UpdateFromSimulation(*Rock, GetVisualLocationForRegion(Region, Rock->GetLocation()), Mesh);
         }
     }
@@ -1841,9 +1844,9 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
             return Result;
         };
         const FVector Position=VisualPoint(Shot->GetLocation());
-        auto MountProjectileClass = [this, Owner, Shot]() -> UClass*
+        auto MountProjectileClass = [Owner, Shot]() -> UClass*
         {
-            if (auto* Shooter = Cast<AShipActor>(FindRegionActorForRuntimeShip(Owner)))
+            if (AShipActor* Shooter = Owner ? Owner->GetNativePresentation() : nullptr; IsValid(Shooter))
                 return Shooter->GetRuntimeWeaponProjectileClass(Shot->GetSourceWeapon());
             return nullptr;
         };

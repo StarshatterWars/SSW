@@ -27,13 +27,16 @@
 #include "SimRegion.h"
 #include "Starshatter.h"
 #include "StarSystem.h"
+#include "StarshatterEnvironmentSubsystem.h"
+#include "Engine/DataTable.h"
 #include "SimContact.h"
 #include "Ship.h"
-//#include "ShipDesign.h"
+#include "ShipDesign.h"
 #include "SimElement.h"
 #include "Instruction.h"
 #include "RadioTraffic.h"
 #include "SimShot.h"
+#include "WeaponDesignRegistry.h"
 #include "Drone.h"
 #include "Explosion.h"
 #include "Debris.h"
@@ -494,6 +497,8 @@ void Sim::UnloadMission()
     const int SplashCount = splashlist.size();
     bPlayerDocked = false;
     DeferredPlayerWingmen.Reset();
+    JanekMiningRuns.Reset();
+    JanekOreDelivered = 0;
     DeferredLaunchPlayer = nullptr;
     PendingLaunchPlayer = nullptr;
     bPlayerLaunchRequested = false;
@@ -829,14 +834,22 @@ Sim::ExecMission()
          FCStringAnsi::Stricmp(mission->GetSystem(), "Janus System") == 0) &&
         FCStringAnsi::Stricmp(active_region->GetName(), "Janek") == 0)
     {
-        active_region->SetTrainingAsteroidField(OtherHand(FVector(-30000, 0, 0)));
+        const FVector Center(-30000, 0, 0);
+        const FVector AsteroidBase(-42000, 0, 0);
+        active_region->SetTrainingAsteroidField(OtherHand(Center));
         FRandomStream Field(101);
-        for (int Index = 0; Index < 12; ++Index)
+        for (int Index = 0; Index < 48;)
         {
-            const double X = Field.FRandRange(-33000.0, -27000.0);
-            const double Y = Field.FRandRange(-3000.0, 3000.0);
-            const double Z = Field.FRandRange(-1000.0, 1000.0);
-            CreateAsteroid(OtherHand(FVector(X, Y, Z)), Index, 5e7, active_region);
+            const double Angle = Field.FRandRange(0.0, 2.0 * PI);
+            const double Radius = FMath::Sqrt(Field.FRand());
+            const double Height = Field.FRandRange(-2000.0, 2000.0);
+            const FVector Position = Center + FVector(12000.0 * Radius * FMath::Cos(Angle),
+                6500.0 * Radius * FMath::Sin(Angle), Height);
+            // Keep the central station and the base's approach corridor clear.
+            if (FVector::DistSquared(Position, Center) < FMath::Square(2500.0) ||
+                (FMath::Abs(Position.X - AsteroidBase.X) < 3000.0 && FMath::Abs(Position.Z) < 1500.0))
+                continue;
+            CreateAsteroid(OtherHand(Position), Index++, 5e7, active_region);
         }
     }
 
@@ -2102,7 +2115,19 @@ Sim::CreateDebris(const FVector& pos, const FVector& vel, SimModel* model, doubl
 Asteroid*
 Sim::CreateAsteroid(const FVector& pos, int t, double mass, SimRegion* rgn)
 {
-	Asteroid* asteroid = new Asteroid(t, pos, mass);
+    TOptional<ESSWAsteroidType> DominantType;
+    if (const auto* Env = UStarshatterEnvironmentSubsystem::Get(); Env && rgn && rgn->GetSystem())
+    {
+        const auto* System = Env->FindGalaxyByName(UTF8_TO_TCHAR(rgn->GetSystem()->GetName()));
+        FString Profile = System ? System->AsteroidType : FString();
+        if (const auto* Regions = Env->GetRegionsTable())
+            if (const auto* Region = Regions->FindRow<FRegion>(FName(UTF8_TO_TCHAR(rgn->GetName())), TEXT("Asteroid composition"), false);
+                Region && !Region->AsteroidType.IsEmpty())
+                Profile = Region->AsteroidType;
+        const int64 Value = StaticEnum<ESSWAsteroidType>()->GetValueByNameString(Profile);
+        if (Value != INDEX_NONE) DominantType = static_cast<ESSWAsteroidType>(Value);
+    }
+    Asteroid* asteroid = new Asteroid(t, pos, mass, DominantType);
 
 	if (rgn)
 		rgn->InsertObject(asteroid);
@@ -2135,7 +2160,7 @@ Sim::CreateSplashDamage(Ship* ship)
 void
 Sim::CreateSplashDamage(SimShot* shot)
 {
-	if (shot && shot->GetRegion()) {
+	if (shot && shot->GetRegion() && !shot->GetDesign()->IsMiningLaser()) {
 		double damage = shot->Damage();
 		if (damage < shot->GetDesign()->damage)
 			damage = shot->GetDesign()->damage;
@@ -2458,9 +2483,8 @@ bool Sim::IsTrainingLaunchLeaderPending()
         Leader->GetFlightPhase() < EOPSMode::LAUNCH;
 }
 
-bool Sim::RequestPlayerCarrierLaunch()
+bool Sim::FindReadyPlayerLaunchSlot(Ship* Player, Hangar*& CarrierHangar, int& Squadron, int& Slot)
 {
-    Ship* Player = GetPlayerShip();
     if (!Player || Player->IsDead() || bPlayerLaunchRequested || IsTrainingLaunchLeaderPending() ||
         (PendingLaunchPlayer && PendingLaunchPlayer != Player))
         return false;
@@ -2468,8 +2492,7 @@ bool Sim::RequestPlayerCarrierLaunch()
     Ship* Carrier = Player->GetCarrier();
     if (!Carrier && Player->GetElement())
         Carrier = Player->GetElement()->GetCarrier();
-    Hangar* CarrierHangar = Carrier ? Carrier->GetHangar() : nullptr;
-    int Squadron = -1, Slot = -1;
+    CarrierHangar = Carrier ? Carrier->GetHangar() : nullptr;
     if (!CarrierHangar || !CarrierHangar->FindSquadronAndSlot(Player, Squadron, Slot))
         return false;
     const HangarSlot* PlayerSlot = CarrierHangar->GetSlot(Squadron, Slot);
@@ -2488,6 +2511,27 @@ bool Sim::RequestPlayerCarrierLaunch()
         ReadyDeck->GetShip(ReadySlot) != Player ||
         ReadyDeck->State(ReadySlot) != FlightDeck::READY)
         return false;
+
+    return true;
+}
+
+bool Sim::CanRequestPlayerCarrierLaunch()
+{
+    Hangar* CarrierHangar = nullptr;
+    int Squadron = -1, Slot = -1;
+    return FindReadyPlayerLaunchSlot(GetPlayerShip(), CarrierHangar, Squadron, Slot);
+}
+
+bool Sim::RequestPlayerCarrierLaunch()
+{
+    Ship* Player = GetPlayerShip();
+    Hangar* CarrierHangar = nullptr;
+    int Squadron = -1, Slot = -1;
+    if (!FindReadyPlayerLaunchSlot(Player, CarrierHangar, Squadron, Slot))
+        return false;
+
+    Ship* Carrier = Player->GetCarrier();
+    if (!Carrier && Player->GetElement()) Carrier = Player->GetElement()->GetCarrier();
 
     // Only this command starts the player's launch/deck timer.
     if (!CarrierHangar->Launch(Squadron, Slot))
@@ -2594,6 +2638,74 @@ Sim::ExecFrame(double DeltaSeconds)
 
 	if (active_region)
 		active_region->ExecFrame(DeltaSeconds);
+
+    if (mission && mission->GetIdentity() == 101 && active_region &&
+        FCStringAnsi::Stricmp(active_region->GetName(), "Janek") == 0 &&
+        active_region->GetSystem() &&
+        FCStringAnsi::Stricmp(active_region->GetSystem()->GetName(), "Janus") == 0)
+    {
+        Ship* Transfer = active_region->FindShip("Janus Transfer Station");
+        auto* Laser = WeaponDesignRegistry::FindLegacy("Mining Laser");
+        if (Transfer && Transfer->Design() && !Transfer->IsDead() && !Transfer->IsDying() && Laser)
+        {
+            const char* Names[] = {"Janek Ore Shuttle", "Janek Mining Freighter 1", "Janek Mining Freighter 2"};
+            for (int32 Index = 0; Index < UE_ARRAY_COUNT(Names); ++Index)
+            {
+                Ship* Miner = active_region->FindShip(Names[Index]);
+                if (!Miner || !Miner->Design() || Miner->IsDead() || Miner->IsDying()) continue;
+                FVector Berth;
+                if (!Transfer->GetTransferBerth(Index % 2, Miner->GetNavigationHullRadius(), Berth)) continue;
+                if (Index == 2) Berth += Transfer->GetCam().vup() * 3000.0;
+                auto& Run = JanekMiningRuns.FindOrAdd(Index);
+                const double Seconds = FMath::Max(0.0, static_cast<double>(DeltaSeconds));
+                Run.Time += Seconds;
+                const auto* Cargo = Miner->GetCargoManifest().GetPtrOrNull();
+                if (Run.Time >= 30.0 && !Run.bDelivering && Cargo && Cargo->Quantity > 0)
+                    Run.bDelivering = true;
+
+                Asteroid* Deposit = nullptr;
+                double Best = TNumericLimits<double>::Max();
+                for (ListIter<Asteroid> Rocks = active_region->GetRoids(); !Run.bDelivering && ++Rocks;)
+                {
+                    Asteroid* Rock = Rocks.value();
+                    if (!Rock || Rock->GetResource().AmountTonnes <= 0.0) continue;
+                    if (Cargo && Cargo->Quantity > 0 && Cargo->Item != Rock->GetResource().GetMineralName().ToString()) continue;
+                    const double DistanceSquared = FVector::DistSquared(Miner->GetLocation(), Rock->GetLocation());
+                    if (DistanceSquared < Best) { Best = DistanceSquared; Deposit = Rock; }
+                }
+                if (!Run.bDelivering && !Deposit) continue;
+                const FVector Destination = Run.bDelivering ? Berth : Deposit->GetLocation();
+                const FVector Offset = Destination - Miner->GetLocation();
+                const double Distance = Offset.Size();
+                const double StopDistance = Run.bDelivering ? 0.0 : Deposit->GetRadius() + 600.0;
+                const FVector Direction = Offset.GetSafeNormal();
+                const double Step = FMath::Min(Seconds * 750.0, FMath::Max(0.0, Distance - StopDistance));
+                if (Step > 0.0) Miner->MoveTo(Miner->GetLocation() + Direction * Step);
+                Miner->SetVelocity(FVector::ZeroVector);
+                if (Distance > UE_SMALL_NUMBER) Miner->LookAt(Destination);
+                if (Distance - Step > StopDistance + 1.0) continue;
+                if (Run.bDelivering)
+                {
+                    const double Rate = FMath::Min(Miner->Design()->CargoCapacity.UnloadTonnesPerSecond,
+                        Transfer->Design()->CargoCapacity.LoadTonnesPerSecond);
+                    JanekOreDelivered += Miner->UnloadMinedOre(Rate * Seconds);
+                    if (Miner->GetMinedOreTonnes() > 0.0) continue;
+                    Run = {};
+                }
+                else if (Run.Time >= Run.NextPulse)
+                {
+                    Run.NextPulse = Run.Time + 1.5;
+                    for (int32 Beam = 0; Beam < (Index == 0 ? 1 : 3); ++Beam)
+                    {
+                        const FVector Start = Miner->GetLocation() + Miner->GetCam().vrt() * ((Beam - 1) * 25.0);
+                        const FVector End = Destination;
+                        if (auto* Shot = CreateShot(End, Miner->GetCam(), Laser, Miner, active_region))
+                            Shot->SetBeamPoints(Start, End);
+                    }
+                }
+            }
+        }
+    }
 
     // The wingmen must not begin a launch countdown until the player's
     // fighter has physically departed. QUEUED/LOCKED is not enough.

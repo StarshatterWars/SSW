@@ -213,6 +213,7 @@ WeaponDesign* WeaponDesignRegistry::ConvertToLegacyDesign(
     Legacy->carry_mass = Row.CarryMass;
     Legacy->carry_resist = Row.CarryResist;
     Legacy->damage = Row.Damage;
+    Legacy->MiningTonnesPerSecond = Row.MiningTonnesPerSecond;
     Legacy->damage_type = Row.DamageType;
     Legacy->penetration = Row.Penetration;
     Legacy->lethal_radius = Row.LethalRadius;

@@ -14,6 +14,7 @@
 #include "HAL/FileManager.h"
 #include "ImageUtils.h"
 #include "RenderingThread.h"
+#include "RHI.h"
 #include "AssetCompilingManager.h"
 #include "ShaderCompiler.h"
 #include "ContentStreaming.h"
@@ -45,14 +46,17 @@ bool FHUDInformationPanelTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Legacy message lifetime retained"),Lines.Num()==1 && Lines[0].ExpiresAt-FPlatformTime::Seconds()>9.0);
     HUD->ToggleInformationPanel();HUD->UpdateInformationMessages();
     TestEqual(TEXT("Live updates populate the bounded scroll content"),HUD->InformationRows->GetChildren()->Num(),1);
-    FAssetCompilingManager::Get().FinishAllCompilation();if(GShaderCompilingManager)GShaderCompilingManager->FinishAllCompilation();IStreamingManager::Get().StreamAllResources(0);FlushRenderingCommands();
-    FWidgetRenderer Renderer(true,false);HUD->SlatePrepass();Renderer.DrawWidget(HUD,FVector2D(1280,720));FlushRenderingCommands();
-    auto* Target=Renderer.DrawWidget(HUD,FVector2D(1280,720));FlushRenderingCommands();
-    const FVector2D ScrollSize=HUD->InformationScroll->GetCachedGeometry().GetLocalSize();
-    TestTrue(TEXT("Scroll area fits inside native caution extents"),ScrollSize.X>200 && ScrollSize.X<=512 && ScrollSize.Y>40 && ScrollSize.Y<=256);
-    TArray<FColor> Pixels;FReadSurfaceDataFlags Flags(RCM_UNorm);Flags.SetLinearToGamma(false);Target->GameThread_GetRenderTargetResource()->ReadPixels(Pixels,Flags);
-    TArray64<uint8> PNG;FImageUtils::PNGCompressImageArray(1280,720,Pixels,PNG);const FString Folder=FPaths::ProjectSavedDir()/TEXT("Automation/FirstRunAndLogo");IFileManager::Get().MakeDirectory(*Folder,true);
-    TestTrue(TEXT("Instruction HUD capture saved"),FFileHelper::SaveArrayToFile(PNG,*(Folder/TEXT("HUDInformation.png"))));
+    if (!GUsingNullRHI)
+    {
+        FAssetCompilingManager::Get().FinishAllCompilation();if(GShaderCompilingManager)GShaderCompilingManager->FinishAllCompilation();IStreamingManager::Get().StreamAllResources(0);FlushRenderingCommands();
+        FWidgetRenderer Renderer(true,false);HUD->SlatePrepass();Renderer.DrawWidget(HUD,FVector2D(1280,720));FlushRenderingCommands();
+        auto* Target=Renderer.DrawWidget(HUD,FVector2D(1280,720));FlushRenderingCommands();
+        const FVector2D ScrollSize=HUD->InformationScroll->GetCachedGeometry().GetLocalSize();
+        TestTrue(TEXT("Scroll area fits inside native caution extents"),ScrollSize.X>200 && ScrollSize.X<=512 && ScrollSize.Y>40 && ScrollSize.Y<=256);
+        TArray<FColor> Pixels;FReadSurfaceDataFlags Flags(RCM_UNorm);Flags.SetLinearToGamma(false);Target->GameThread_GetRenderTargetResource()->ReadPixels(Pixels,Flags);
+        TArray64<uint8> PNG;FImageUtils::PNGCompressImageArray(1280,720,Pixels,PNG);const FString Folder=FPaths::ProjectSavedDir()/TEXT("Automation/FirstRunAndLogo");IFileManager::Get().MakeDirectory(*Folder,true);
+        TestTrue(TEXT("Instruction HUD capture saved"),FFileHelper::SaveArrayToFile(PNG,*(Folder/TEXT("HUDInformation.png"))));
+    }
     RadioView::ClearMessages();HUD->UpdateInformationMessages();TestEqual(TEXT("Expired/cleared messages leave no stale rows"),HUD->InformationRows->GetChildren()->Num(),0);
     return true;
 }

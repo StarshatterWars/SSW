@@ -63,7 +63,9 @@ bool FKeyboardRemappingTest::RunTest(const FString& Parameters)
         {
             const auto& Original=Authored->GetMappings()[Index];const auto& Copied=Copy->GetMappings()[Index];
             TestTrue(TEXT("Runtime copy shares authored action asset"),Copied.Action==Original.Action);
-            TestEqual(TEXT("Authored modifier count retained"),Copied.Modifiers.Num(),Original.Modifiers.Num());
+            const int32 AddedMouseModifiers = Copied.Modifiers.FilterByPredicate([](const auto& Modifier)
+                { return Modifier && Modifier->GetClass()->GetName() == TEXT("SSWMouseFlightModifier"); }).Num();
+            TestEqual(TEXT("Authored modifier count retained"),Copied.Modifiers.Num() - AddedMouseModifiers,Original.Modifiers.Num());
             for(int32 Trigger=0;Trigger<Original.Triggers.Num();++Trigger)
                 if(auto* OriginalChord=Cast<UInputTriggerChordAction>(Original.Triggers[Trigger]))
                     TestTrue(TEXT("Authored chord action retained"),CastChecked<UInputTriggerChordAction>(Copied.Triggers[Trigger])->ChordAction==OriginalChord->ChordAction);
@@ -118,7 +120,7 @@ bool FKeyboardRemappingTest::RunTest(const FString& Parameters)
         TestTrue(TEXT("Every enhanced control accepts a replacement"),Page->CaptureKey(EKeys::F11));
     }
     int32 DisplayedRows=0;for(const auto& Pair:Page->CategoryBoxes) if(Pair.Value.IsValid()) DisplayedRows+=Pair.Value->GetChildrenCount();
-    TestEqual(TEXT("Only actual bindings are displayed, without legacy rows"),DisplayedRows,Page->EnhancedRows.Num());
+    TestEqual(TEXT("Remappable bindings plus two fixed shortcuts are displayed"),DisplayedRows,Page->EnhancedRows.Num() + 2);
     for (const auto& Pair:Page->EnhancedRows)
     {
         const FString Name=Pair.Value.Mapping.Action->GetName();

@@ -282,16 +282,11 @@ void UStarshatterVideoSubsystem::ApplySettingsToRuntime()
     {
         Settings->SetScreenResolution(FIntPoint(CurrentConfig.Width,CurrentConfig.Height));
         Settings->SetFullscreenMode(CurrentConfig.bFullscreen?EWindowMode::Fullscreen:EWindowMode::Windowed);
-        Settings->SetShadowQuality(CurrentConfig.bShadows?3:0);
-        Settings->SetTextureQuality(FMath::Clamp(FMath::FloorLog2(CurrentConfig.MaxTextureSize)-8,0,3));
         if(FApp::CanEverRender()) Settings->ApplySettings(false);
     }
     if(GEngine) GEngine->DisplayGamma=FMath::Clamp(2.2f*CurrentConfig.GammaLevel/128.f,0.5f,4.f);
     auto SetCVar=[](const TCHAR* Name,int32 Value){if(auto* C=IConsoleManager::Get().FindConsoleVariable(Name))C->Set(Value,ECVF_SetByGameSetting);};
     SetCVar(TEXT("r.LensFlareQuality"),CurrentConfig.bLensFlare?2:0);
-    SetCVar(TEXT("ShowFlag.Specular"), CurrentConfig.bSpecularMaps ? 2 : 0);
-    SetCVar(TEXT("r.DetailMode"),CurrentConfig.TerrainDetailIndex);
-    SetCVar(TEXT("r.MaterialQualityLevel"),(CurrentConfig.bBumpMaps||CurrentConfig.bSpecularMaps)?1:0);
 
     if (UWorld* World = GetGameInstance()->GetWorld())
     {

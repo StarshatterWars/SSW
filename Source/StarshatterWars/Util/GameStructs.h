@@ -453,6 +453,16 @@ enum class ECOMBATGROUP_TYPE : uint8
 };
 
 UENUM(BlueprintType)
+enum class EFreighterLoadStatus : uint8
+{
+    Unknown,
+    Empty,
+    Loaded, // Manifest is present, but its units cannot be compared with capacity.
+    PartiallyLoaded,
+    Full
+};
+
+UENUM(BlueprintType)
 enum class ECOMBATUNIT_TYPE : uint8 
 {
 	NONE				UMETA(DisplayName = "None"),
@@ -1733,6 +1743,9 @@ struct FRegion : public FTableRowBase {
 	double Inclination;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	int Asteroids;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString AsteroidType;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	FString Parent;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
@@ -1774,6 +1787,12 @@ struct FNamedBodyLocation
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     ELocationType Type = ELocationType::Landmark;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int64 Population = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString Production;
 };
 
 USTRUCT(BlueprintType)
@@ -1819,6 +1838,15 @@ struct FMoon : public FTableRowBase {
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FNamedBodyLocation> Locations;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int64 Population = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString Production;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString WorldScapeProfile;
 
 	FMoon() {
 		Name = "";
@@ -1896,6 +1924,15 @@ struct FPlanet : public FTableRowBase {
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FNamedBodyLocation> Locations;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    int64 Population = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString Production;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString WorldScapeProfile;
 
 	FPlanet() {
 		Name = "";
@@ -2002,6 +2039,9 @@ struct FS_Galaxy : public FTableRowBase {
 	TArray<FString> Link;
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	TArray <FStarSystem> Stellar;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString AsteroidType;
 
 	FS_Galaxy() {
 		Name = "";

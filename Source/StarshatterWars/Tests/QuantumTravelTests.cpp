@@ -16,6 +16,8 @@
 #include "Engine/World.h"
 #include "Farcaster.h"
 #include "FarcasterEffectActor.h"
+#include "FarcasterShipActor.h"
+#include "Farcaster2ShipActor.h"
 #include "ShipActor.h"
 
 namespace
@@ -162,14 +164,15 @@ bool FFarcasterEffectsTest::RunTest(const FString& Parameters)
     if (!TestNotNull(TEXT("Simulation test design registered"), Design))
         return false;
 
-    const TCHAR* GateClasses[] = {
-        TEXT("/Game/Models/Farcaster/BP_Farcaster.BP_Farcaster_C"),
-        TEXT("/Game/Models/Farcaster2/BP_Farcaster2.BP_Farcaster2_C")
+    UClass* GateClasses[] = {
+        LoadClass<AShipActor>(nullptr, TEXT("/Game/Models/Farcaster/BP_Farcaster.BP_Farcaster_C")),
+        LoadClass<AShipActor>(nullptr, TEXT("/Game/Models/Farcaster2/BP_Farcaster2.BP_Farcaster2_C")),
+        AFarcasterShipActor::StaticClass(),
+        AFarcaster2ShipActor::StaticClass()
     };
-    for (const TCHAR* Path : GateClasses)
+    for (UClass* GateClass : GateClasses)
     {
-        UClass* GateClass = LoadClass<AShipActor>(nullptr, Path);
-        if (!TestNotNull(Path, GateClass))
+        if (!TestNotNull(TEXT("Gate class resolves"), GateClass))
             continue;
 
         AShipActor* GateActor = World->SpawnActor<AShipActor>(GateClass);

@@ -68,6 +68,8 @@ public:
 
 	UFUNCTION()
 	void SetUniverseTimeSeconds(uint64 InSeconds) { UniverseTimeSeconds = InSeconds; }
+    static uint64 GetGmtUniverseSeconds(int64 BaseUnixSeconds);
+    bool bTrackUniverseGmt = false;
 
 	UFUNCTION()
 	void SetUniverseBaseUnixSeconds(int64 InBaseUnixSeconds) { UniverseBaseUnixSeconds = InBaseUnixSeconds; }

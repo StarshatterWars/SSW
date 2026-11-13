@@ -22,10 +22,13 @@ bool FVideoRuntimeApplyTest::RunTest(const FString& Parameters)
         if(Existed)FFileHelper::SaveArrayToFile(OldFile,*Path);else IFileManager::Get().Delete(*Path);
     };
     auto* Subsystem=NewObject<UStarshatterVideoSubsystem>(NewObject<UGameInstance>());
+    Settings->SetShadowQuality(2);
+    Settings->SetTextureQuality(1);
     FStarshatterVideoConfig C;C.Width=1600;C.Height=900;C.bFullscreen=false;C.bShadows=false;C.GammaLevel=160;Subsystem->SetConfig(C);Subsystem->ApplySettingsToRuntime();
     TestTrue(TEXT("Applying config updates actual Unreal resolution"),Settings->GetScreenResolution()==FIntPoint(1600,900));
     TestTrue(TEXT("Applying config updates actual Unreal window mode"),Settings->GetFullscreenMode()==EWindowMode::Windowed);
-    TestEqual(TEXT("Applying config updates actual shadow quality"),Settings->GetShadowQuality(),0);
+    TestEqual(TEXT("Legacy config preserves Unreal shadow quality"),Settings->GetShadowQuality(),2);
+    TestEqual(TEXT("Legacy config preserves Unreal texture quality"),Settings->GetTextureQuality(),1);
     TestTrue(TEXT("Gamma reaches the engine"),FMath::IsNearlyEqual(GEngine->DisplayGamma,2.75f));
     FString Saved;FFileHelper::LoadFileToString(Saved,*Path);TestTrue(TEXT("Fullscreen survives config serialization"),Saved.Contains(TEXT("fullscreen: false")));
     return true;

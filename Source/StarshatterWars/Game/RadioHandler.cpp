@@ -444,6 +444,13 @@ RadioHandler::Inbound(RadioMessage* msg, Ship* ship)
 	// otherwise, find space for sender:
 	else {
 		if (hangar && same_rgn) {
+            const ShipDesign* Design = ship->Design();
+            const bool bAsteroidBase = ship->IsStatic() && Design &&
+                FCStringAnsi::Stricmp(Design->name, "Asteroid Base") == 0;
+            // The asteroid base has a guest berth but no resident fighter squadron.
+            if (bAsteroidBase && hangar->NumSquadrons() == 0 && !inbound->GetInbound())
+                hangar->CreateSquadron("Visiting Aircraft", nullptr, inbound->Design(), 1,
+                    ship->GetIFF(), nullptr, 0, 1);
 			if (hangar->FindSlot(inbound, squadron, slot)) {
 				int shortest_queue = 1000;
 
@@ -535,6 +542,8 @@ RadioHandler::LandingClearance(RadioMessage* msg, Ship* ship)
     }
     const bool WasCleared = Slot->Cleared() != 0;
     Deck->GrantClearance();
+    if (Slot->Cleared() && msg->GetRadioAction() == RadioMessageAction::CALL_FINALS)
+        Slot->SetFinal(true);
     // GrantClearance already transmitted a newly issued clearance.
     if (!WasCleared && Slot->Cleared()) return false;
     RadioMessage* Reply = new RadioMessage(Sender, ship,

@@ -25,10 +25,11 @@
 
 #include "CoreMinimal.h"
 #include "ShipActor.h"
+#include "StationActor.h"
 #include "Station1Actor.generated.h"
 
 UCLASS()
-class STARSHATTERWARS_API AStation1Actor : public AShipActor
+class STARSHATTERWARS_API AStation1Actor : public AStationActor
 {
     GENERATED_BODY()
 

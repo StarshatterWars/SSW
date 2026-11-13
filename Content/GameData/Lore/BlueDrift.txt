@@ -5,7 +5,7 @@ The Blue Drift is a network of inhabited systems linked by farcasters. A system'
 
 The Terellian Alliance and the Marakan Hegemony are the principal human powers in the campaign. The Zolon Empire is an external power whose role becomes clear late in the war. The Brotherhood of Iron is a fourth armed faction, a criminal organization operating across political borders. Solus, Silessia, and Haiche have their own interests and governments.
 
-The system entries use the galaxy's baseline political map. Campaign briefings carry current control, mission restrictions, and traffic conditions. Historical entries below can reveal later campaign events.
+The system entries use the galaxy's baseline political map. Population figures describe prewar residents, and settlement and production records describe the civilian economy. Campaign briefings carry current control, mission restrictions, and traffic conditions. Historical entries below can reveal later campaign events.
 
 @@ Faction — Terellian Alliance
 The Alliance of Terellian Republics fields Force:Space. Its political leadership includes an Alliance president and the Combined Senators. Its commercial connections reach far beyond its member systems, particularly into independent Solus. A blockade there puts Terellian nationals, businesses, and civilian researchers in immediate danger.
@@ -41,7 +41,7 @@ The Trellis Farcaster blockade traps civilians and turns the struggle over Solus
 
 <HUD_Label>CARGO TRANSFER:</> <HUD_Value>Athenar Transfer Station / Athenar sector</>
 
-Athenar is part of the Alliance home network and has a charted link to Jarnell. In a regional emergency that link connects the home network to Jarnell's operational staging area. The baseline chart establishes allegiance and access. Local political and settlement history remain sparsely documented in available briefings.
+Athenar is part of the Alliance home network and has a charted link to Jarnell. In a regional emergency that link connects the home network to Jarnell's operational staging area. The baseline chart establishes allegiance and access. Meridian Quay is a center for precision manufacturing.
 
 @@ System — Borova
 <HUD_Muted>TERELLIAN ALLIANCE</>
@@ -76,7 +76,7 @@ Jarnell sits at a charted junction with Athenar, Borova, Thralis, and Paragon. V
 
 <HUD_Label>CARGO TRANSFER:</> <HUD_Value>Paragon Transfer Station / Paragon sector</>
 
-Paragon is linked directly to Jarnell on the Alliance chart. The link gives the home network a route through one of its principal junctions. Detailed civil administration and population data are absent from the campaign briefings available to pilots.
+Paragon is linked directly to Jarnell on the Alliance chart. The link gives the home network a route through one of its principal junctions. Crown Harbor is the system’s principal agricultural export port.
 
 @@ System — Thralis
 <HUD_Muted>TERELLIAN ALLIANCE</>

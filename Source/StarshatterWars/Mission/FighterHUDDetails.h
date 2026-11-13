@@ -71,7 +71,7 @@ private:
     bool bHelmMode=false;
     FString CompactNavLabel=TEXT("FREE FLIGHT");
     void DrawILS(const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
-    Ship* GetSelectedTransferStation(Ship& Player) const;
+    Ship* GetSelectedRecoveryController(Ship& Player) const;
     void DrawFlightNavigation(Ship& Player, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;
     static TArray<FString> MissionStatusRows(const Ship* Player);
     void DrawSensorTracks(Ship& Player, const FGeometry& Geometry, FSlateWindowElementList& Elements, int32 Layer) const;

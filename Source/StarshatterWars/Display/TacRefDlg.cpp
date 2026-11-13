@@ -28,6 +28,7 @@
 =============================================================================*/
 
 #include "TacRefDlg.h"
+#include "Brushes/SlateColorBrush.h"
 #include "FactionInsignia.h"
 #include "ModernMenuLayout.h"
 #include "MissionUIStyle.h"
@@ -867,6 +868,16 @@ void UTacRefDlg::BuildGazetteer(UVerticalBox& Body)
 
     auto* Entries = WidgetTree->ConstructWidget<UComboBoxString>();
     StyleReferenceCombo(*Entries);
+    FComboBoxStyle EntriesStyle = Entries->GetWidgetStyle();
+    FButtonStyle& SelectionStyle = EntriesStyle.ComboButtonStyle.ButtonStyle;
+    const FSlateColorBrush BlackBackground(FLinearColor::Black);
+    SelectionStyle.SetNormal(BlackBackground)
+        .SetHovered(BlackBackground)
+        .SetPressed(BlackBackground)
+        .SetNormalForeground(FLinearColor::White)
+        .SetHoveredForeground(FLinearColor::White)
+        .SetPressedForeground(FLinearColor::White);
+    Entries->SetWidgetStyle(EntriesStyle);
     Column->AddChildToVerticalBox(Entries)->SetPadding(FMargin(0,0,0,14));
     GazetteerScroll = WidgetTree->ConstructWidget<UScrollBox>();
     Column->AddChildToVerticalBox(GazetteerScroll)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
@@ -971,8 +982,29 @@ void UTacRefDlg::HandleGazetteerEntry(FString Entry, ESelectInfo::Type)
         if (const FS_Galaxy* System = Env ? Env->FindGalaxyByName(SystemName) : nullptr)
         {
             TArray<FString> Planets;
+            TArray<FString> Cities;
+            TArray<FString> Production;
+            int64 Population = 0;
+            const auto AddBody = [&](const auto& Body)
+            {
+                Population += Body.Population;
+                if (!Body.Production.IsEmpty()) Production.AddUnique(Body.Production);
+                for (const auto& Site : Body.Locations)
+                    if (Site.Type == ELocationType::City)
+                        Cities.Add(FString::Printf(TEXT("%s (%s, %s residents)"), *Site.Name, *Body.Name,
+                            *FText::AsNumber(Site.Population).ToString()));
+            };
             for (const FStarSystem& Star : System->Stellar)
-                for (const FPlanet& Planet : Star.Planet) Planets.AddUnique(Planet.Name);
+                for (const FPlanet& Planet : Star.Planet)
+                {
+                    Planets.AddUnique(Planet.Name);
+                    AddBody(Planet);
+                    for (const FMoon& Moon : Planet.Moon) AddBody(Moon);
+                }
+            AddFact(TEXT("POPULATION"), FText::AsNumber(Population).ToString());
+            AddFact(TEXT("CITIES AND SETTLEMENTS"), FString::Join(Cities, TEXT(" · ")));
+            AddFact(TEXT("PRODUCTION"), FString::Join(Production, TEXT(" · ")));
+            AddFact(TEXT("TYPICAL ASTEROIDS"), System->AsteroidType);
             AddFact(TEXT("PRIMARY STAR"), System->Star);
             AddFact(TEXT("PLANETS"), FString::Join(Planets, TEXT(", ")));
             AddFact(TEXT("SYSTEM LINKS"), FString::Join(System->Link, TEXT(", ")));

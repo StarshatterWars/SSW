@@ -41,6 +41,7 @@
 #include "Explosion.h"
 #include "Debris.h"
 #include "Asteroid.h"
+#include "ShipDesign.h"
 #include "SimContact.h"
 #include "FlightDeck.h"
 #include "Hangar.h"
@@ -763,6 +764,16 @@ void SimRegion::TranslateObject(SimObject* obj)
 
 // +--------------------------------------------------------------------+
 
+bool SimRegion::ContainsProjectile(const SimObject* Object) const
+{
+    if (!Object) return false;
+    for (int Index = 0; Index < shots.size(); ++Index)
+        if (shots[Index] == Object) return true;
+    for (int Index = 0; Index < drones.size(); ++Index)
+        if (drones[Index] == Object) return true;
+    return false;
+}
+
 TArray<SimShot*> SimRegion::GetProjectiles()
 {
     TRACE_CPUPROFILER_EVENT_SCOPE(SSW_CollectProjectiles);
@@ -782,8 +793,53 @@ void SimRegion::DamageShips()
     if (shots.size() == 0 && drones.size() == 0) return;
     // Restore legacy shot/ship damage dispatch after projectile movement.
     // HitBy owns shields, subsystem damage, arming and friendly-fire rules.
+    TMap<Ship*, double> OreLoadedThisFrame;
     for (SimShot* Shot : GetProjectiles()) {
         if (!Shot || IsDeadShot(Shot)) continue;
+        if (Shot->GetDesign()->IsMiningLaser())
+        {
+            if (!Shot->IsArmed() || !Shot->IsBeam()) continue;
+            const FVector Start = Shot->GetOrigin();
+            const FVector Segment = Shot->GetLocation() - Start;
+            const double Length = Segment.Size();
+            if (Length <= UE_SMALL_NUMBER) continue;
+            const FVector Direction = Segment / Length;
+            double Nearest = Length;
+            Asteroid* Deposit = nullptr;
+            for (int Index = 0; Index < asteroids.size(); ++Index)
+            {
+                Asteroid* Rock = asteroids[Index];
+                if (!Rock) continue;
+                const FVector Offset = Rock->GetLocation() - Start;
+                const double Along = FVector::DotProduct(Offset, Direction);
+                const double RadiusSquared = FMath::Square(Rock->GetRadius());
+                const double LateralSquared = FMath::Max(0.0, Offset.SizeSquared() - Along * Along);
+                if (Along < 0.0 || LateralSquared >= RadiusSquared) continue;
+                const double Entry = FMath::Max(0.0, Along - FMath::Sqrt(RadiusSquared - LateralSquared));
+                if (Entry < Nearest)
+                {
+                    Nearest = Entry;
+                    Deposit = Rock;
+                }
+            }
+            if (Deposit)
+            {
+                Shot->SetBeamPoints(Start, Start + Direction * Nearest);
+                if (Ship* Miner = const_cast<Ship*>(Shot->Owner()); Miner && ships.contains(Miner) && !Miner->IsDead() && Miner->Design())
+                {
+                    const auto& Resource = Deposit->GetResource();
+                    const double Rate = Shot->GetDesign()->MiningTonnesPerSecond;
+                    const double Seconds = Shot->MiningStepSeconds();
+                    double& Loaded = OreLoadedThisFrame.FindOrAdd(Miner);
+                    const double Intake = FMath::Max(0.0, Miner->Design()->CargoCapacity.LoadTonnesPerSecond * Seconds - Loaded);
+                    const double Accepted = Miner->LoadMinedOre(Resource.GetMineralName().ToString(),
+                        FMath::Min3(Resource.AmountTonnes, Rate * Seconds, Intake));
+                    Deposit->ExtractOre(Accepted);
+                    Loaded += Accepted;
+                }
+            }
+            continue;
+        }
         for (int ShipIndex=0;ShipIndex<ships.size();++ShipIndex) {
             Ship* Victim=ships[ShipIndex];
             if (!Victim || Victim==Shot->Owner() || Victim->IsDead() || Victim->IsDying()) continue;
@@ -869,7 +925,15 @@ void SimRegion::DamageShips()
         if (IsDeadShot(Shot)) continue;
         for (int I=0; I<asteroids.size(); ++I) {
             Asteroid* Rock=asteroids[I];FVector Impact;
-            if (Rock && Rock->HitBy(Shot,Impact) && !Shot->IsBeam()) {Shot->SetLife(0);break;}
+            if (!Rock || !Rock->HitBy(Shot, Impact)) continue;
+            if (Rock->GetIntegrity() < 1.0f)
+            {
+                if (sim) sim->CreateExplosion(Rock->GetLocation(), Rock->GetVelocity(),
+                    EExplosionType::LARGE_EXPLOSION, 1.0f, 1.0f, this);
+                asteroids.removeIndex(I--);
+                delete Rock;
+            }
+            if (!Shot->IsBeam()) {Shot->SetLife(0);break;}
         }
     }
 }

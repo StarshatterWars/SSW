@@ -70,6 +70,8 @@ public:
     const TMap<FName, FSystemDesign>& GetDesignsByName() const { return DesignsByName; }
     const FSystemDesign* FindDesign(const FName Name) const { return DesignsByName.Find(Name); }
 
+    TOptional<FComponentDesign> FindComponentGrade(FName System, FName Component, int32 Grade) const;
+
 public:
     // Target DT (optional; can be null if you only want in-memory cache)
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starshatter|SystemDesign")
@@ -81,6 +83,7 @@ public:
 private:
     UPROPERTY()
     TMap<FName, FSystemDesign> DesignsByName;
+    TMap<int32, FVector2D> ComponentGrades;
 
   
 };

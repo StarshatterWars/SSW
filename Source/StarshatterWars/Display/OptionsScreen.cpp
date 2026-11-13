@@ -717,6 +717,14 @@ void UOptionsScreen::BuildModsPage()
         .AutoWrapText(true)
     ];
     const auto Packs = SSWMissionMods::Discover();
+    if (Packs.IsEmpty())
+    {
+        auto* EmptyState = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
+            MakeUniqueObjectName(WidgetTree, UTextBlock::StaticClass(), TEXT("Options_ModsEmptyState")));
+        EmptyState->SetText(NSLOCTEXT("Options", "NoMods", "No mods available."));
+        EmptyState->SetFont(MissionUIStyle::GetRowFont(18));
+        Content->AddChildToVerticalBox(EmptyState);
+    }
     for (const auto& Pack : Packs)
     {
         List->AddSlot().Padding(0,0,0,10)
@@ -729,7 +737,7 @@ void UOptionsScreen::BuildModsPage()
             })
             [
                 SNew(STextBlock)
-                .Text(FText::FromString(FString::Printf(TEXT("%s  (%d)"), *Pack.Name, Pack.Missions.Num())))
+                .Text(FText::FromString(Pack.Name))
                 .Font(MissionUIStyle::GetRowFont(18))
             ]
         ];

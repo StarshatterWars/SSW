@@ -53,7 +53,7 @@ namespace
 UInputAction* StarshatterInputBindings::MapTargetTracking(UInputMappingContext* Context)
 {
     auto* Action = NewObject<UInputAction>(Context, TEXT("SSW_TargetTracking"), RF_Transient);
-    Action->ActionDescription = NSLOCTEXT("SSW.InputActions", "SSW_TargetTracking", "Target Tracking");
+    Action->ActionDescription = NSLOCTEXT("SSW.InputActions", "SSW_TargetTracking", "Toggle Auto Track");
     Action->ValueType = EInputActionValueType::Boolean;
     Context->MapKey(Action, EKeys::Slash);
     return Action;

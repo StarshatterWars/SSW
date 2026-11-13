@@ -17,6 +17,7 @@
 #include "Power.h"
 #include "SimSystem.h"
 #include "SimComponent.h"
+#include "CombatPowerTriangle.h"
 
 // Self-contained panel body following EngDlg.frm; the host owns registration,
 // visibility and input. ResolveShip/OnClose also support a future registered host.
@@ -35,6 +36,7 @@ public:
     {
         Embedded=Args._Embedded;
         ResolveShip = Args._ResolveShip;
+        if (Ship* Player = GetShip()) Player->SetCombatAllocation(Player->GetCombatAllocation());
         Close = Args._OnClose;
         if (Embedded)
         {
@@ -142,6 +144,21 @@ private:
             return;
         }
         TSharedPtr<SVerticalBox> SourceColumns;
+        if (P->GetShield())
+            Root->AddSlot().AutoHeight().HAlign(HAlign_Center)
+            [SNew(SCombatPowerTriangle).ResolveShip(ResolveShip)];
+        else
+            Root->AddSlot().AutoHeight().Padding(0, 0, 0, 12)
+            [SNew(SVerticalBox)
+                + SVerticalBox::Slot().AutoHeight()
+                [SNew(STextBlock).Text_Lambda([this]() {
+                    const Ship* Player = GetShip();
+                    const int32 Engines = Player ? FMath::RoundToInt(Player->GetCombatAllocation().X * 100) : 50;
+                    return Text(FString::Printf(TEXT("ENGINES %d%%     WEAPONS %d%%"), Engines, 100 - Engines));
+                })]
+                + SVerticalBox::Slot().AutoHeight()
+                [SNew(SSlider).Value_Lambda([this]() { const Ship* Player = GetShip(); return Player ? float(Player->GetCombatAllocation().Y) : 0.5f; })
+                    .OnValueChanged_Lambda([this](float Weapons) { if (Ship* Player = GetShip()) Player->SetCombatAllocation(FVector(1.0 - Weapons, Weapons, 0)); })]];
         TSharedPtr<SVerticalBox> Details, Components, Repairs;
         Root->AddSlot().FillHeight(1)
         [SNew(SHorizontalBox)
@@ -176,15 +193,26 @@ private:
             Sources->AddSlot().AutoHeight()[SNew(SProgressBar)
                 .Percent_Lambda([this,SourceIndex](){auto* S=SystemAt(SourceIndex);
                     return TOptional<float>(S ? float(FMath::Clamp(S->GetPowerLevel()/100.0,0.0,1.0)) : 0.0f);})];
-            Sources->AddSlot().AutoHeight().Padding(0,10,0,3)[Button(Name(Source),[this,SourceIndex](){Select(SourceIndex);})];
+            Sources->AddSlot().AutoHeight().Padding(0,10,0,3)
+                [SNew(SButton).ButtonStyle(&ModernButtons.Cyan).ToolTipText(Text(Name(Source)))
+                    .OnClicked_Lambda([this,SourceIndex](){Select(SourceIndex);return FReply::Handled();})
+                    [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Reactor)]];
             Sources->AddSlot().AutoHeight()[SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this,SourceIndex](){
                 SimSystem* S=SystemAt(SourceIndex); return Text(S ? FString::Printf(TEXT("Output %.0f%%   Charge %d%%"),S->GetPowerLevel(),S->GetCapacity()>0 ? S->Charge():0):TEXT("Unavailable"));})];
             Sources->AddSlot().AutoHeight().Padding(0,6)[Label(TEXT("SYSTEM / POWER"))];
             for (int c=0;c<Source->Clients().size();++c) {
                 const int Index=SystemIndex(Source->Clients()[c]); if (Index<0) continue;
                 Sources->AddSlot().AutoHeight().Padding(12,2)
-                [SNew(SButton).ButtonStyle(&ModernButtons.Cyan).OnClicked_Lambda([this,Index](){Select(Index);return FReply::Handled();})
-                 [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor::White).Text_Lambda([this,Index](){SimSystem* S=SystemAt(Index);return ButtonText(S ? FString::Printf(TEXT("%hs   %.0f%%   %s"),S->GetName(),S->GetPowerLevel(),S->IsPowerOn()?TEXT("ON"):TEXT("OFF")):TEXT("Unavailable"));})]];
+                [SNew(SButton).ButtonStyle(&ModernButtons.Cyan).ToolTipText(Text(Name(Source->Clients()[c])))
+                    .OnClicked_Lambda([this,Index](){Select(Index);return FReply::Handled();})
+                    [SNew(SHorizontalBox)
+                        + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0,0,8,0)
+                        [SNew(SShipSystemIcon).Icon(SShipSystemIcon::ForSystem(*Source->Clients()[c]))]
+                        + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
+                        [SNew(STextBlock).Text_Lambda([this,Index](){
+                            SimSystem* S=SystemAt(Index);
+                            return Text(S ? FString::Printf(TEXT("%.0f%%   %s"),S->GetPowerLevel(),S->IsPowerOn()?TEXT("ON"):TEXT("OFF")):TEXT("Unavailable"));
+                        })]]];
             }
         }
         Details->AddSlot().AutoHeight().Padding(0,0,0,8)[Label(Name(CurrentSystem()),16)];

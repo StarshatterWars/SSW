@@ -16,6 +16,7 @@ class STARSHATTERWARS_API UInMissionPanelBase : public UBaseScreen
     GENERATED_BODY()
 public:
     FSimpleDelegate OnPanelClosed;
+    FSimpleDelegate OnExitMenuRequested;
     UFUNCTION(BlueprintCallable, Category="Mission Panel") void RequestPanelClose();
 protected:
     UPROPERTY(meta=(BindWidgetOptional)) USizeBox* RuntimeHost=nullptr;
@@ -29,6 +30,7 @@ protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
     virtual void NativeDestruct() override;
+    virtual FReply NativeOnPreviewKeyDown(const FGeometry&,const FKeyEvent&) override;
     virtual FReply NativeOnKeyDown(const FGeometry&,const FKeyEvent&) override;
     virtual TSharedRef<SWidget> CreatePanelContent();
     virtual FText GetPanelCaption() const;

@@ -176,12 +176,23 @@ FText UTimerSubsystem::GetMissionTimerTextMMSS() const
 		FString::Printf(TEXT("%02d:%02d"), Minutes, Seconds));
 }
 
+uint64 UTimerSubsystem::GetGmtUniverseSeconds(int64 BaseUnixSeconds)
+{
+    const FDateTime Now = FDateTime::UtcNow();
+    const int32 Year = Now.GetYear() + 200;
+    const int32 Day = FMath::Min(Now.GetDay(), FDateTime::DaysInMonth(Year, Now.GetMonth()));
+    const FDateTime Shifted(Year, Now.GetMonth(), Day, Now.GetHour(), Now.GetMinute(), Now.GetSecond());
+    return static_cast<uint64>(FMath::Max<int64>(0, Shifted.ToUnixTimestamp() - BaseUnixSeconds));
+}
+
 void UTimerSubsystem::OnClockTick()
 {
 	const double DeltaUniverse = TimeStepSeconds * TimeScale;
 	const uint64 AddSeconds = (uint64)FMath::Max(1.0, FMath::RoundToDouble(DeltaUniverse));
 
-	UniverseTimeSeconds += AddSeconds;
+    UniverseTimeSeconds += AddSeconds;
+    if (bTrackUniverseGmt)
+        UniverseTimeSeconds = FMath::Max(UniverseTimeSeconds, GetGmtUniverseSeconds(UniverseBaseUnixSeconds));
 
 	OnUniverseSecond.Broadcast(UniverseTimeSeconds);
 

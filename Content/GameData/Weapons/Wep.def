@@ -2179,3 +2179,26 @@ drone: {
    sound_max_dist:   10e3
 }
 
+
+beam: {
+   mining_tonnes_per_second: 0.25
+   name:             "Mining Laser"
+   projectile:       "MiningBeam"
+   group:            MINING
+   description:      "Industrial beam for asteroid extraction. Ship and station damage is disabled."
+   target_type:      0
+   recharge_rate:    100
+   refire_delay:     0.2
+   capacity:         1000
+   charge:           1000
+   min_charge:       100
+   damage:           0
+   speed:            3e8
+   life:             1.5
+   min_range:        0
+   max_range:        2.5e3
+   max_track:        2.5e3
+   graphic_type:     3
+   length:           2.5e3
+   width:            5
+}

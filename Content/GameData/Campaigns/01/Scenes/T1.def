@@ -28,6 +28,69 @@ ship: {
     region: "Janek"
 }
 
+// Orbital cargo hub at its authored Alliance sector coordinates.
+element: {
+    name: "Janus Transfer Station"
+    design: Station1
+    count: 1
+    iff: 1
+    region: "Janek"
+    loc: (125e3, 0, 12e3)
+}
+
+element: {
+    name: "Janek Mining Station"
+    design: "Mining Station"
+    count: 1
+    iff: 1
+    command_ai: 0
+    region: "Janek"
+    loc: (-30e3, 0, 0)
+}
+
+element: {
+    name: "Janek Asteroid Base"
+    design: "Asteroid Base"
+    count: 1
+    iff: 1
+    command_ai: 0
+    region: "Janek"
+    loc: (-42e3, 0, 0)
+}
+
+element: {
+    name: "Janek Mining Freighter 1"
+    design: Rockhopper
+    regnum: "MF-7102"
+    count: 1
+    iff: 1
+    command_ai: 0
+    region: "Janek"
+    loc: (-36e3, 0, 5.5e3)
+}
+
+element: {
+    name: "Janek Mining Freighter 2"
+    design: Rockhopper
+    regnum: "MF-7103"
+    count: 1
+    iff: 1
+    command_ai: 0
+    region: "Janek"
+    loc: (-36e3, 0, -0.5e3)
+}
+
+element: {
+    name: "Janek Ore Shuttle"
+    design: Prospector
+    regnum: "MS-7101"
+    count: 1
+    iff: 1
+    command_ai: 0
+    region: "Janek"
+    loc: (-36e3, 2e3, 2.5e3)
+}
+
 element: {
     name: Stallions,
     design: Falcon,

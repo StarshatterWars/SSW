@@ -9,7 +9,7 @@ class UTextBlock;
 UENUM(BlueprintType)
 enum class EMissionQuitAction : uint8
 {
-    None = 0, Accept = 1, Abort = 2, Resume = 3, Controls = 4, ExitWindows = 5
+    None = 0, Accept = 1, Abort = 2, Resume = 3, Controls = 4, ExitWindows = 5, MainMenu = 6
 };
 
 DECLARE_DELEGATE_OneParam(FMissionQuitActionRequested, EMissionQuitAction);
@@ -45,6 +45,8 @@ protected:
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UButton> ResumeBtn;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UButton> ControlsBtn;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UButton> ExitWindowsBtn;
+    UPROPERTY(Transient) TObjectPtr<UButton> MainMenuBtn;
+    UFUNCTION() void ExitToMainMenu();
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> TitleText;
     UPROPERTY(meta=(BindWidgetOptional)) TObjectPtr<UTextBlock> StatusText;
 };

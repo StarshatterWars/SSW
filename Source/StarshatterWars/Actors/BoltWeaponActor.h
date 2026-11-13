@@ -81,6 +81,9 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bolt|Visibility")
     TObjectPtr<UMaterialBillboardComponent> PhotonGlow;
 
+    UPROPERTY()
+    TObjectPtr<UMaterialBillboardComponent> BoltWake;
+
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Bolt|Visibility")
     TObjectPtr<UMaterialInterface> PhotonGlowMaterial;
 

@@ -60,6 +60,8 @@ const ShipVisualCatalog::FEntry Definitions[] = {
     { TEXT("Farcaster2"), TEXT("Marakan"), TEXT("Farcaster2"), TEXT("Farcaster2ShipActor"), TEXT("farcaster") },
     { TEXT("FoothillBase"), TEXT("Airbase2"), TEXT("Base2"), TEXT("FoothillBaseShipActor"), TEXT("starbase") },
     { TEXT("Fortress"), TEXT("Station3"), TEXT("Fortress"), TEXT("FortressShipActor"), TEXT("station") },
+    { TEXT("MiningStation"), TEXT("Mining Station"), TEXT("Xfer"), TEXT("MiningStationActor"), TEXT("station") },
+    { TEXT("AsteroidBase"), TEXT("Asteroid Base"), TEXT("Xfer"), TEXT("AsteroidBaseActor"), TEXT("station") },
     { TEXT("FreightXfer"), TEXT("Station1"), TEXT("Xfer"), TEXT("FreightXferShipActor"), TEXT("station") },
     { TEXT("Goliath"), TEXT("Goliath"), TEXT("Goliath"), TEXT("GoliathShipActor"), TEXT("carrier") },
     { TEXT("Harmony"), TEXT("Station2"), TEXT("Harmony"), TEXT("HarmonyShipActor"), TEXT("station") },
@@ -81,7 +83,7 @@ const ShipVisualCatalog::FEntry Definitions[] = {
     { TEXT("Raptor"), TEXT("Raptor"), TEXT("Raptor"), TEXT("RaptorShipActor"), TEXT("fighter") },
     { TEXT("Razor"), TEXT("Razor"), TEXT("Razor"), TEXT("RazorShipActor"), TEXT("fighter") },
     { TEXT("Relay1"), TEXT("Relay1"), TEXT("Relay"), TEXT("Relay1ShipActor"), TEXT("comsat") },
-    { TEXT("S4"), TEXT("Station4"), TEXT("S4"), TEXT("ShipActor"), TEXT("station") },
+    { TEXT("S4"), TEXT("Station4"), TEXT("S4"), TEXT("StationActor"), TEXT("station") },
     { TEXT("S5"), TEXT("Station5"), TEXT("S5"), TEXT("S5ShipActor"), TEXT("station") },
     { TEXT("S6"), TEXT("Station6"), TEXT("MarakanXfer"), TEXT("S6ShipActor"), TEXT("station") },
     { TEXT("S7"), TEXT("Station7"), TEXT("MarakanLab"), TEXT("S7ShipActor"), TEXT("station") },
@@ -103,6 +105,8 @@ const ShipVisualCatalog::FEntry Definitions[] = {
     { TEXT("Wolf"), TEXT("Wolf"), TEXT("Wolf"), TEXT("WolfShipActor"), TEXT("destroyer") },
     { TEXT("Jackal"), TEXT("Jackal"), TEXT("Jackal"), TEXT("JackalShipActor"), TEXT("attack") },
     { TEXT("Zodiac"), TEXT("Zodiac"), TEXT("Zodiac"), TEXT("ZodiacShipActor"), TEXT("fighter") },
+    { TEXT("Prospector"), TEXT("Prospector"), TEXT("Zodiac"), TEXT("ZodiacShipActor"), TEXT("fighter") },
+    { TEXT("Rockhopper"), TEXT("Rockhopper"), TEXT("IM3500"), TEXT("CargoAShipActor"), TEXT("freighter") },
     { TEXT("ZZA"), TEXT("ZZA"), TEXT("ZAttack"), TEXT("ZZAShipActor"), TEXT("attack") },
     { TEXT("ZZCA"), TEXT("ZZCA"), TEXT("ZolonCA"), TEXT("ZZCAShipActor"), TEXT("cruiser") },
     { TEXT("ZZCS"), TEXT("ZZCS"), TEXT("ZolonCS"), TEXT("ZZCSShipActor"), TEXT("cruiser") },
@@ -135,12 +139,21 @@ FString ShipVisualCatalog::DefinitionName(const FString& DesignName, const FStri
     // Shared legacy identifiers such as Airbase2 need their model to disambiguate.
     return Matches == 1 ? FString(Match->Definition) : DesignName;
 }
-FString ShipVisualCatalog::CanonicalClassPath(const FString& DesignName, const FString& ModelName) { return ClassPath(DefinitionName(DesignName, ModelName)); }
+FString ShipVisualCatalog::CanonicalClassPath(const FString& DesignName, const FString& ModelName)
+{
+    const FString Definition = DefinitionName(DesignName, ModelName);
+    if (Definition == TEXT("Prospector")) return ClassPath(TEXT("Zodiac"));
+    if (Definition == TEXT("Rockhopper")) return ClassPath(TEXT("CargoA"));
+    return ClassPath(Definition);
+}
 UClass* ShipVisualCatalog::Resolve(const FString& DesignName, const FString& ModelName)
 {
     TArray<FString> Names;
     Names.AddUnique(DefinitionName(DesignName, ModelName));
     Names.AddUnique(DesignName);
+    if (DesignName.Equals(TEXT("Rockhopper"))) Names.AddUnique(TEXT("CargoA"));
+    if (DesignName.Equals(TEXT("Prospector"))) Names.AddUnique(TEXT("Zodiac"));
+    if (Names[0] == TEXT("AsteroidBase") || Names[0] == TEXT("MiningStation")) Names.AddUnique(TEXT("FreightXfer"));
     if (!ModelName.IsEmpty()) Names.AddUnique(ModelName);
     for (const FString& Name : Names)
     {
@@ -154,6 +167,10 @@ UClass* ShipVisualCatalog::Resolve(const FString& DesignName, const FString& Mod
 
 FString ShipVisualCatalog::IconFolder(const FString& DesignName)
 {
+    if (DesignName.Equals(TEXT("Prospector"))) return TEXT("Zodiac");
+    if (DesignName.Equals(TEXT("Rockhopper"))) return TEXT("CargoA");
+    if (DesignName.Equals(TEXT("Asteroid Base"), ESearchCase::IgnoreCase) ||
+        DesignName.Equals(TEXT("Mining Station"), ESearchCase::IgnoreCase)) return TEXT("Station1");
     for (const FEntry& Entry : Entries())
     {
         if (FCString::Stricmp(Entry.Kind, TEXT("sam")) == 0 &&
@@ -165,4 +182,13 @@ FString ShipVisualCatalog::IconFolder(const FString& DesignName)
     }
 
     return DesignName;
+}
+
+const TCHAR* ShipVisualCatalog::DedicatedStationIcon(const FString& DesignName)
+{
+    if (DesignName.Equals(TEXT("Asteroid Base")) || DesignName.Equals(TEXT("AsteroidBase")))
+        return TEXT("/Game/UI/Ships/AsteroidBase/AsteroidBaseHud.AsteroidBaseHud");
+    if (DesignName.Equals(TEXT("Mining Station")) || DesignName.Equals(TEXT("MiningStation")))
+        return TEXT("/Game/UI/Ships/MiningStation/MiningStationHud.MiningStationHud");
+    return nullptr;
 }

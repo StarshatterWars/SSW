@@ -3960,3 +3960,20 @@ group: {
     regnum: "8726-2"
   }
 }
+
+// Civilian mining operators in the Janek field.
+group: {
+  type: civilian,
+  id: 8796,
+  name: "Janek Civilian Mining",
+  intel: known,
+  iff: 0,
+  empire_id: 0,
+  region: "Janek",
+  loc: (-36e3, 0, 0),
+  parent_type: force,
+  parent_id: 1,
+  unit: { name: "Janek Ore Shuttle", type: "LCA", design: "Prospector", regnum: "MS-7101" },
+  unit: { name: "Janek Mining Freighter 1", type: "Freighter", design: "Rockhopper", regnum: "MF-7102" },
+  unit: { name: "Janek Mining Freighter 2", type: "Freighter", design: "Rockhopper", regnum: "MF-7103" },
+}

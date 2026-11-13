@@ -9,9 +9,11 @@
 #include "Rendering/DrawElements.h"
 #include "SceneView.h"
 #include "Ship.h"
+#include "ShipDesign.h"
 #include "ShipActor.h"
 #include "SimContact.h"
 #include "SSWRuntimeSubsystem.h"
+#include "Styling/CoreStyle.h"
 
 #include <array>
 
@@ -109,14 +111,30 @@ void SFighterHUDDetails::DrawSensorTracks(Ship& Player, const FGeometry& Geometr
     {
         const SimContact* Contact = ContactIterator.value();
         const Ship* ContactShip = Contact ? Contact->GetShip() : nullptr;
-        if (!ContactShip || ContactShip == &Player || ContactShip->GetRegion() != Region ||
-            Contact->TrackLength() == 0)
+        if (!ContactShip || ContactShip == &Player || ContactShip->GetRegion() != Region || ContactShip->IsDead())
             continue;
 
         FLinearColor Color(Ship::IFFColor(Contact->GetIFF(&Player)));
         Color.A *= FMath::Clamp(Contact->Age(), 0.0, 1.0);
-        if (Color.A > 0.0f)
-            DrawTrack(*Contact, Contact->Location(), Color);
+        if (Color.A <= 0.0f) continue;
+        DrawTrack(*Contact, Contact->Location(), Color);
+
+        const ShipDesign* Design = ContactShip->Design();
+        const FVector4 Clip = ToClip(Contact->Location());
+        if (!Design || Design->integrity <= 0.0 || Clip.W <= 1.0 ||
+            FMath::Abs(Clip.X) > Clip.W || FMath::Abs(Clip.Y) > Clip.W) continue;
+        const FVector2D Center = ToWidget(Clip);
+        if (Center.ContainsNaN()) continue;
+        const FVector2f Position(Center.X - 19.0, Center.Y - 23.0);
+        const auto* Brush = FCoreStyle::Get().GetBrush(TEXT("WhiteBrush"));
+        const auto Box = [&](int32 DrawLayer, float BarWidth, FLinearColor Tint)
+        {
+            FSlateDrawElement::MakeBox(Elements, DrawLayer,
+                Geometry.ToPaintGeometry(FVector2f(BarWidth, 4.0f), FSlateLayoutTransform(Position)),
+                Brush, ESlateDrawEffect::None, Tint);
+        };
+        Box(Layer + 1, 38.0f, FLinearColor(0.02f, 0.03f, 0.04f, Color.A * 0.85f));
+        Box(Layer + 2, 38.0f * FMath::Clamp(ContactShip->GetIntegrity() / Design->integrity, 0.0, 1.0), Color);
     }
 
     if (CameraManager::GetCameraMode() == CameraManager::MODE_ORBIT && Player.TrackLength() > 0)

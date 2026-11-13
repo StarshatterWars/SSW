@@ -610,6 +610,7 @@ SimShot::Close()
 double
 SimShot::Damage() const
 {
+	if (design && design->IsMiningLaser()) return 0.0;
 	double damage = 0;
 
 	// beam damage based on length:

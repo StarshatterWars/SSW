@@ -11,6 +11,7 @@
 #include "ShipVisualCatalog.h"
 #include "ShipDesignRegistry.h"
 #include "WeaponDesignRegistry.h"
+#include "StarshatterWeaponDesignSubsystem.h"
 #include "ShipActor.h"
 #include "Ship.h"
 #include "Drive.h"
@@ -46,6 +47,11 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
     if(!TestNotNull(TEXT("Weapon design table"),Weapons))return false;
     for(const auto& E:Weapons->GetRowMap())WeaponDesignRegistry::RegisterDesign(E.Key,*reinterpret_cast<const FWeaponDesign*>(E.Value));
     auto* GameInstance = NewObject<UGameInstance>();
+    auto* WeaponImporter = NewObject<UStarshatterWeaponDesignSubsystem>(GameInstance);
+    WeaponImporter->LoadWeaponDesigns();
+    const auto* MiningLaser = WeaponDesignRegistry::Find(FName(TEXT("Mining Laser")));
+    if (TestNotNull(TEXT("Mining Laser definition is loaded"), MiningLaser))
+        TestEqual(TEXT("Mining Laser rate survives DEF ingestion"), MiningLaser->MiningTonnesPerSecond, 0.25f);
     auto* SystemImporter = NewObject<UStarshatterSystemDesignSubsystem>(GameInstance);
     SystemImporter->LoadSystemDesigns();
     auto* Importer=NewObject<UStarshatterShipDesignSubsystem>(GameInstance);
@@ -59,15 +65,24 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
     int32 Checked=0;
     int32 MountShips=0;
     int32 MountedTurrets=0;
+    TArray<FString> UnverifiedHulls;
     for(const auto& Entry:ShipVisualCatalog::Entries())
     {
         const FString Kind(Entry.Kind);
         if (Kind == TEXT("building")) continue;
         auto* Class=ShipVisualCatalog::Resolve(Entry.Definition,Entry.Model);
         auto* Defaults=Class?Cast<AShipActor>(Class->GetDefaultObject()):nullptr;
-        if(!Defaults || !Defaults->HullMesh || !Defaults->HullMesh->GetStaticMesh())continue;
+        if(!Defaults || !Defaults->HullMesh || !Defaults->HullMesh->GetStaticMesh())
+        {
+            UnverifiedHulls.Add(FString(Entry.Definition) + TEXT(" (native hull mesh unavailable)"));
+            continue;
+        }
         const FString Filename=FPaths::ProjectContentDir()/TEXT("GameData/Ships")/(FString(Entry.Definition)+TEXT(".def"));
-        if(!FPaths::FileExists(Filename))continue;
+        if(!FPaths::FileExists(Filename))
+        {
+            UnverifiedHulls.Add(FString(Entry.Definition) + TEXT(" (definition missing)"));
+            continue;
+        }
         const auto Ansi=StringCast<ANSICHAR>(*Filename);Importer->LoadShipDesign(Ansi.Get());
         const bool bZolonFleet = FString(Entry.Definition).StartsWith(TEXT("ZZ"));
         const FName DesignKey(Entry.Design);
@@ -76,7 +91,11 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
             : Table->FindRow<FShipDesign>(DesignKey, TEXT("Fleet effects"), false);
         if (bZolonFleet)
             TestNotNull(FString(Entry.Definition) + TEXT(" design available for runtime validation"), Row);
-        if (!Row) continue;
+        if (!Row)
+        {
+            UnverifiedHulls.Add(FString(Entry.Definition) + TEXT(" (design row unavailable)"));
+            continue;
+        }
         if (FString(Entry.Definition) == TEXT("Falcon") && TestTrue(TEXT("Falcon death spiral exists"), !Row->DeathSpiral.IsEmpty()))
         {
             const auto& Debris = Row->DeathSpiral[0].Debris;
@@ -287,7 +306,15 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
                 Proxy->InitializeSnapshotPropulsion(Design);
                 TArray<uint8> Burns;
                 Burns.Init(0, RCS->GetNumThrusters());
-                const int32 LateralPort = Burns.Num() - 1;
+                int32 LateralPort = INDEX_NONE;
+                for (int32 Port = 0; Port < Burns.Num(); ++Port)
+                    if (const auto* Definition = RCS->GetPort(Port); Definition && Definition->Direction == EThrusterPortDir::RIGHT)
+                    {
+                        LateralPort = Port;
+                        break;
+                    }
+                if (!TestTrue(TEXT("Stormhawk has a right-facing thruster"), LateralPort != INDEX_NONE))
+                    return false;
                 Runtime.GetThruster()->ExecTrans(-Design->trans_x, 0.0, 0.0);
                 for (int32 Port = 0; Port < Burns.Num(); ++Port)
                     Burns[Port] = static_cast<uint8>(FMath::RoundToInt(255.0f * RCS->GetThrusterBurn(Port)));
@@ -349,6 +376,8 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
     }
     AddInfo(FString::Printf(TEXT("Fleet mounts checked on %d hulls, %d mounted turrets"), MountShips, MountedTurrets));
     AddInfo(FString::Printf(TEXT("Fleet effects verified on %d imported hulls"),Checked));
+    if (!UnverifiedHulls.IsEmpty())
+        AddInfo(TEXT("Fleet entries outside fixture coverage: ") + FString::Join(UnverifiedHulls, TEXT(", ")));
     TestTrue(TEXT("All three fleet groups represented with imported hulls"),Checked>=25);
     return true;
 }

@@ -21,11 +21,14 @@
 =============================================================================*/
 
 #include "VideoDlg.h"
+#include "Engine/Engine.h"
+#include "GameFramework/GameUserSettings.h"
 
 // UMG
 #include "Components/Button.h"
 #include "Components/ComboBoxString.h"
 #include "Components/Slider.h"
+#include "Components/TextBlock.h"
 
 // UMG layout helpers
 #include "Components/CanvasPanel.h"
@@ -45,6 +48,31 @@
 #include "OptionsScreen.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogVideoDlg, Log, All);
+
+namespace
+{
+    struct FQualityControl
+    {
+        const TCHAR* Label;
+        int32 (UGameUserSettings::*Read)() const;
+        void (UGameUserSettings::*Write)(int32);
+        int32 LightQuality;
+    };
+
+    const FQualityControl QualityControls[] = {
+        {TEXT("VIEW DISTANCE"), &UGameUserSettings::GetViewDistanceQuality, &UGameUserSettings::SetViewDistanceQuality, 1},
+        {TEXT("ANTI-ALIASING QUALITY"), &UGameUserSettings::GetAntiAliasingQuality, &UGameUserSettings::SetAntiAliasingQuality, 2},
+        {TEXT("SHADOW QUALITY"), &UGameUserSettings::GetShadowQuality, &UGameUserSettings::SetShadowQuality, 1},
+        {TEXT("TEXTURE QUALITY"), &UGameUserSettings::GetTextureQuality, &UGameUserSettings::SetTextureQuality, 2},
+        {TEXT("EFFECTS QUALITY"), &UGameUserSettings::GetVisualEffectQuality, &UGameUserSettings::SetVisualEffectQuality, 1},
+        {TEXT("POST-PROCESSING"), &UGameUserSettings::GetPostProcessingQuality, &UGameUserSettings::SetPostProcessingQuality, 1},
+        {TEXT("GLOBAL ILLUMINATION"), &UGameUserSettings::GetGlobalIlluminationQuality, &UGameUserSettings::SetGlobalIlluminationQuality, 0},
+        {TEXT("REFLECTION QUALITY"), &UGameUserSettings::GetReflectionQuality, &UGameUserSettings::SetReflectionQuality, 0},
+        {TEXT("FOLIAGE QUALITY"), &UGameUserSettings::GetFoliageQuality, &UGameUserSettings::SetFoliageQuality, 0},
+    };
+
+    constexpr float FrameLimits[] = {0.0f, 30.0f, 60.0f, 120.0f, 144.0f, 240.0f};
+}
 
 static void EnsureSelected(UComboBoxString* Combo, int32 DefaultIndex = 0)
 {
@@ -268,6 +296,27 @@ void UVideoDlg::RefreshFromModel()
 
     if (ModeCombo)
         ModeCombo->SetSelectedOption(FString::Printf(TEXT("%dx%d"), Width, Height));
+
+    if (const UGameUserSettings* Settings = GEngine ? GEngine->GetGameUserSettings() : nullptr)
+    {
+        for (int32 Index = 0; Index < QualityCombos.Num(); ++Index)
+            QualityCombos[Index]->SetSelectedIndex(FMath::Clamp((Settings->*QualityControls[Index].Read)(), 0, 4));
+        if (VSyncCombo) VSyncCombo->SetSelectedIndex(Settings->IsVSyncEnabled() ? 1 : 0);
+        if (FrameLimitCombo)
+        {
+            int32 Index = 0;
+            while (Index < UE_ARRAY_COUNT(FrameLimits) &&
+                !FMath::IsNearlyEqual(FrameLimits[Index], Settings->GetFrameRateLimit()))
+                ++Index;
+            FrameLimitCombo->SetSelectedIndex(Index);
+        }
+        if (RenderScaleSlider)
+        {
+            float Normalized, Current, Minimum, Maximum;
+            Settings->GetResolutionScaleInformationEx(Normalized, Current, Minimum, Maximum);
+            RenderScaleSlider->SetValue(Normalized);
+        }
+    }
 }
 
 void UVideoDlg::PushToModel(bool bApplyRuntimeToo)
@@ -302,6 +351,21 @@ void UVideoDlg::PushToModel(bool bApplyRuntimeToo)
 
     if (bApplyRuntimeToo)
     {
+        if (UGameUserSettings* Settings = GEngine ? GEngine->GetGameUserSettings() : nullptr)
+        {
+            for (int32 Index = 0; Index < QualityCombos.Num(); ++Index)
+                if (const int32 Level = QualityCombos[Index]->GetSelectedIndex(); Level >= 0)
+                    (Settings->*QualityControls[Index].Write)(Level);
+            if (VSyncCombo) Settings->SetVSyncEnabled(ComboOn(VSyncCombo));
+            if (FrameLimitCombo)
+            {
+                const int32 Index = FrameLimitCombo->GetSelectedIndex();
+                if (Index >= 0 && Index < UE_ARRAY_COUNT(FrameLimits))
+                    Settings->SetFrameRateLimit(FrameLimits[Index]);
+            }
+            if (RenderScaleSlider) Settings->SetResolutionScaleNormalized(RenderScaleSlider->GetValue());
+        }
+
         if (UStarshatterVideoSubsystem* VideoSS = GetVideoSubsystem())
         {
             VideoSS->SetConfig(C);
@@ -488,52 +552,71 @@ void UVideoDlg::BuildVideoRows()
 
     VBox->ClearChildren();
 
-    auto Require = [&](UWidget* W, const TCHAR* Name) -> bool
-        {
-            if (!W)
-            {
-                UE_LOG(LogVideoDlg, Error, TEXT("[VideoDlg] Widget '%s' is NULL (BP name mismatch or not IsVariable)."), Name);
-                return false;
-            }
-            return true;
-        };
+    auto* LightButton = WidgetTree->ConstructWidget<UButton>();
+    auto* LightLabel = WidgetTree->ConstructWidget<UTextBlock>();
+    LightLabel->SetText(NSLOCTEXT("VideoOptions", "LightPreset", "LIGHT"));
+    LightButton->AddChild(LightLabel);
+    LightButton->SetToolTipText(NSLOCTEXT("VideoOptions", "LightPresetTip",
+        "Integrated GPU preset. Keeps medium textures and high anti-aliasing. Select Apply to save."));
+    LightButton->OnClicked.AddUniqueDynamic(this, &UVideoDlg::OnLightPresetClicked);
+    AddLabeledRow(TEXT("INTEGRATED GPU PRESET"), LightButton, 520.f);
 
-    // These are the core controls we expect for the page to look correct:
-    const bool bOK =
-        Require(ModeCombo, TEXT("ModeCombo")) &
-        Require(TexSizeCombo, TEXT("TexSizeCombo")) &
-        Require(DetailCombo, TEXT("DetailCombo")) &
-        Require(TextureCombo, TEXT("TextureCombo")) &
-        Require(GammaSlider, TEXT("GammaSlider")) &
-        Require(LensFlareCombo, TEXT("LensFlareCombo")) &
-        Require(CoronaCombo, TEXT("CoronaCombo")) &
-        Require(NebulaCombo, TEXT("NebulaCombo")) &
-        Require(DustCombo, TEXT("DustCombo")) &
-        Require(ShadowsCombo, TEXT("ShadowsCombo")) &
-        Require(SpecMapsCombo, TEXT("SpecMapsCombo")) &
-        Require(BumpMapsCombo, TEXT("BumpMapsCombo"));
-
-    if (!bOK)
-    {
-        UE_LOG(LogVideoDlg, Error, TEXT("[VideoDlg] BuildVideoRows aborted due to NULL controls."));
-        return;
-    }
-
-    // Match AudioDlg label pattern:
-    AddLabeledRow(TEXT("DISPLAY MODE"), ModeCombo, 520.f);
-    AddLabeledRow(TEXT("MAX TEXTURE SIZE"), TexSizeCombo, 520.f);
-    AddLabeledRow(TEXT("TERRAIN DETAIL"), DetailCombo, 520.f);
-    AddLabeledRow(TEXT("TERRAIN TEXTURES"), TextureCombo, 520.f);
+    AddLabeledRow(TEXT("RESOLUTION"), ModeCombo, 520.f);
     AddLabeledRow(TEXT("GAMMA"), GammaSlider, 520.f);
+
+    QualityCombos.Reset();
+    auto AddCombo = [&](const TCHAR* Label)
+    {
+        auto* Combo = WidgetTree->ConstructWidget<UComboBoxString>();
+        AddLabeledRow(Label, Combo, 520.f);
+        return Combo;
+    };
+
+    RenderScaleSlider = WidgetTree->ConstructWidget<USlider>();
+    AddLabeledRow(TEXT("RENDER SCALE"), RenderScaleSlider, 520.f);
+    VSyncCombo = AddCombo(TEXT("VERTICAL SYNC"));
+    VSyncCombo->AddOption(TEXT("OFF"));
+    VSyncCombo->AddOption(TEXT("ON"));
+    FrameLimitCombo = AddCombo(TEXT("FRAME RATE LIMIT"));
+    for (float Limit : FrameLimits)
+        FrameLimitCombo->AddOption(Limit == 0.0f ? TEXT("UNLIMITED") : FString::Printf(TEXT("%.0f FPS"), Limit));
+    FrameLimitCombo->AddOption(TEXT("CUSTOM"));
+
+    for (const auto& Quality : QualityControls)
+    {
+        auto* Combo = AddCombo(Quality.Label);
+        for (const TCHAR* Level : {TEXT("LOW"), TEXT("MEDIUM"), TEXT("HIGH"), TEXT("EPIC"), TEXT("CINEMATIC")})
+            Combo->AddOption(Level);
+        QualityCombos.Add(Combo);
+    }
 
     AddLabeledRow(TEXT("LENS FLARE"), LensFlareCombo, 520.f);
     AddLabeledRow(TEXT("CORONA"), CoronaCombo, 520.f);
     AddLabeledRow(TEXT("NEBULA"), NebulaCombo, 520.f);
-    AddLabeledRow(TEXT("DUST"), DustCombo, 520.f);
+    AddLabeledRow(TEXT("SPACE DUST"), DustCombo, 520.f);
+}
 
-    AddLabeledRow(TEXT("SHADOWS"), ShadowsCombo, 520.f);
-    AddLabeledRow(TEXT("SPECULAR MAPS"), SpecMapsCombo, 520.f);
-    AddLabeledRow(TEXT("BUMP MAPS"), BumpMapsCombo, 520.f);
+void UVideoDlg::OnLightPresetClicked()
+{
+    for (int32 Index = 0; Index < QualityCombos.Num(); ++Index)
+        QualityCombos[Index]->SetSelectedIndex(QualityControls[Index].LightQuality);
+
+    if (const UGameUserSettings* Settings = GEngine ? GEngine->GetGameUserSettings() : nullptr;
+        Settings && RenderScaleSlider)
+    {
+        float Normalized, Current, Minimum, Maximum;
+        Settings->GetResolutionScaleInformationEx(Normalized, Current, Minimum, Maximum);
+        if (Maximum > Minimum)
+            RenderScaleSlider->SetValue(FMath::Clamp((85.0f - Minimum) / (Maximum - Minimum), 0.0f, 1.0f));
+    }
+    if (FrameLimitCombo)
+        FrameLimitCombo->SetSelectedOption(TEXT("30 FPS"));
+    if (LensFlareCombo)
+        LensFlareCombo->SetSelectedIndex(0);
+    if (DustCombo)
+        DustCombo->SetSelectedIndex(1);
+    bDirty = true;
+    bClosed = false;
 }
 
 // ---------------- Handlers ----------------

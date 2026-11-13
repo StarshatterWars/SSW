@@ -77,7 +77,7 @@ void SFighterHUDDetails::DrawFlightNavigation(Ship& Player, const FGeometry& Geo
     }
 
     if (!bNavigation) return;
-    const Instruction* Next = Player.GetNextNavPoint();
+    const Instruction* Next = Player.IsAutoTrackEngaged() ? nullptr : Player.GetNextNavPoint();
     ListIter<Instruction> Route = Player.GetFlightPlan();
     for (int32 Index = 1; ++Route; ++Index)
     {

@@ -359,6 +359,86 @@ Ship::Ship(
 	UnrealDesign = unreal_design;
 }
 
+EFreighterLoadStatus Ship::GetFreighterLoadStatus() const
+{
+    if (!design || (!CargoManifest.IsSet() && design->CargoManifest.IsEmpty() &&
+        GetClassification() != CLASSIFICATION::FREIGHTER &&
+        FCStringAnsi::Stricmp(design->name, "Prospector") != 0))
+        return EFreighterLoadStatus::Unknown;
+
+    if (!CargoManifest.IsSet() || CargoManifest->Quantity <= 0)
+        return EFreighterLoadStatus::Empty;
+
+    const auto& Load = CargoManifest.GetValue();
+    const double Capacity = Load.bPassengers ? design->CargoCapacity.PassengerBerths :
+        Load.Unit == TEXT("t") ? design->CargoCapacity.Tonnes : 0.0;
+    if (!FMath::IsFinite(Capacity) || Capacity <= 0.0)
+        return EFreighterLoadStatus::Loaded;
+
+    // Manifests are assigned in whole tonnes or whole passenger berths.
+    return Load.Quantity >= FMath::FloorToDouble(Capacity)
+        ? EFreighterLoadStatus::Full : EFreighterLoadStatus::PartiallyLoaded;
+}
+
+void Ship::SetSimulatedCargo(SSWFreightManifest::FLoad Load)
+{
+    CargoManifest = MoveTemp(Load);
+    FractionalMinedOre = 0.0;
+}
+
+double Ship::LoadMinedOre(const FString& Mineral, double Tonnes)
+{
+    if (!design || !FMath::IsFinite(Tonnes) || Tonnes <= 0.0) return 0.0;
+    auto* Load = CargoManifest.GetPtrOrNull();
+    if (Load && (Load->Quantity > 0 || FractionalMinedOre > 0.0) &&
+        (Load->Item != Mineral || Load->Unit != TEXT("t"))) return 0.0;
+
+    const double Current = (Load ? Load->Quantity : 0) + FractionalMinedOre;
+    const double Added = FMath::Min(Tonnes, FMath::Max(0.0, FMath::Min<double>(design->CargoCapacity.Tonnes, MAX_int32) - Current));
+    if (Added <= 0.0) return 0.0;
+    if (!Load) Load = &CargoManifest.Emplace();
+    Load->Item = Mineral;
+    Load->Unit = TEXT("t");
+    if (!Load->Origin && GetRegion()) Load->CaptureOrigin(*GetRegion(), GetLocation());
+    Load->Quantity = FMath::FloorToInt32(Current + Added);
+    FractionalMinedOre = Current + Added - Load->Quantity;
+    return Added;
+}
+
+FVector Ship::GetCombatAllocation() const
+{
+    if (!CombatAllocation.IsNearlyZero()) return CombatAllocation;
+    return shield ? FVector(1.0 / 3.0) : FVector(0.5, 0.5, 0.0);
+}
+
+void Ship::SetCombatAllocation(FVector Shares)
+{
+    if (Shares.ContainsNaN()) return;
+    Shares = Shares.ComponentMax(FVector::ZeroVector);
+    if (!shield) Shares.Z = 0.0;
+    const double Total = Shares.X + Shares.Y + Shares.Z;
+    if (Total <= UE_SMALL_NUMBER) return;
+    CombatAllocation = Shares / Total;
+    for (int Index = 0; Index < reactors.size(); ++Index)
+        reactors[Index]->SetCombatAllocation(CombatAllocation);
+}
+
+double Ship::GetMinedOreTonnes() const
+{
+    return CargoManifest ? CargoManifest->Quantity + FractionalMinedOre : 0.0;
+}
+
+double Ship::UnloadMinedOre(double Tonnes)
+{
+    if (!CargoManifest || !FMath::IsFinite(Tonnes) || Tonnes <= 0.0) return 0.0;
+    const double Current = GetMinedOreTonnes();
+    const double Delivered = FMath::Min(Current, Tonnes);
+    const double Remaining = Current - Delivered;
+    CargoManifest->Quantity = FMath::FloorToInt32(Remaining);
+    FractionalMinedOre = Remaining - CargoManifest->Quantity;
+    return Delivered;
+}
+
 void Ship::AssignMilitaryCargo()
 {
     if (!design)
@@ -3144,7 +3224,7 @@ const FVector* Ship::GetFixedAutoTrackPoint() const
         flight_phase == EOPSMode::ACTIVE && navsys && navsys->IsPowerOn() ? &FixedTrackPoint : nullptr;
 }
 
-bool Ship::SetFixedAutoTrackPoint(const FVector& Point)
+bool Ship::SetFixedAutoTrackPoint(const FVector& Point, const FString& ContactName)
 {
     if (!sim || sim->GetPlayerShip() != this || !GetRegion() || IsDead() || IsDying() ||
         InTransition() || net_control || inbound || bAutoLand || flight_phase != EOPSMode::ACTIVE ||
@@ -3154,6 +3234,7 @@ bool Ship::SetFixedAutoTrackPoint(const FVector& Point)
     if (IsAutoNavEngaged()) SetAutoNav(false);
     FixedTrackRegion = GetRegion();
     FixedTrackPoint = Point;
+    FixedTrackName = ContactName;
     bAutoTrack = true;
     bManualThrottle = false;
     SetControls(sim->GetControls());

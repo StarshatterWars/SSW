@@ -18,6 +18,7 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Text/STextBlock.h"
+#include "Widgets/Images/SImage.h"
 #include "Widgets/SBoxPanel.h"
 #include "InputCoreTypes.h"
 #include "Styling/CoreStyle.h"
@@ -126,16 +127,17 @@ void QuitView::ShowMenu()
         .ColorAndOpacity(FLinearColor(0.53f, 0.84f, 0.96f))
         .Font(FCoreStyle::GetDefaultFontStyle("Bold", 24))];
     const TCHAR* Labels[] = {
-        TEXT("1.   END MISSION  /  ACCEPT RESULTS"),
-        TEXT("2.   ABORT MISSION  /  DISCARD RESULTS"),
+        TEXT("1.   ACCEPT MISSION RESULTS"),
+        TEXT("2.   ABORT MISSION"),
         TEXT("3.   RESUME MISSION"),
         TEXT("4.   CONTROL SETUP"),
-        TEXT("5.   QUIT AND EXIT TO WINDOWS")
+        TEXT(""),
+        TEXT("")
     };
-    PauseButtonStyles.SetNum(5);
+    PauseButtonStyles.SetNum(UE_ARRAY_COUNT(Labels));
     PauseButtonTextures.Reset();
-    const TCHAR* Colors[] = {TEXT("Green"), TEXT("Red"), TEXT("Green"), TEXT("Blue"), TEXT("Red")};
-    for (int32 Index = 0; Index < 5; ++Index)
+    const TCHAR* Colors[] = {TEXT("Green"), TEXT("Red"), TEXT("Green"), TEXT("Blue"), TEXT("Red"), TEXT("Red")};
+    for (int32 Index = 0; Index < UE_ARRAY_COUNT(Labels); ++Index)
     {
         auto Brush = [&](const TCHAR* State)
         {
@@ -153,25 +155,50 @@ void QuitView::ShowMenu()
         PauseButtonStyles[Index].Hovered = Brush(TEXT("p"));
         PauseButtonStyles[Index].Pressed = PauseButtonStyles[Index].Hovered;
     }
-    for (int32 Index = 0; Index < 5; ++Index)
+    const TSharedRef<SHorizontalBox> Footer = SNew(SHorizontalBox);
+    const uintptr_t Actions[] = {Accept, Abort, Resume, Controls, MainMenu, ExitWindows};
+    for (int32 Index = 0; Index < UE_ARRAY_COUNT(Labels); ++Index)
     {
-        Items->AddSlot().AutoHeight().Padding(12, 5)
-        [SNew(SButton)
-            .ButtonStyle(&PauseButtonStyles[Index])
-            .ButtonColorAndOpacity(FLinearColor::White)
-            .ContentPadding(FMargin(12, 11))
-            .HAlign(HAlign_Left)
-            .OnClicked_Lambda([this, Index]() { ExecuteAction(Index + 1); return FReply::Handled(); })
-            [SNew(STextBlock)
+        const uintptr_t Action = Actions[Index];
+        const bool bIcon = Action == MainMenu || Action == ExitWindows;
+        auto Brush = MakeShared<FSlateBrush>();
+        if (bIcon)
+        {
+            const TCHAR* Path = Action == MainMenu
+                ? TEXT("/Game/SciFiUIComponents/Textures/Icons4/T_ICON_Menu.T_ICON_Menu")
+                : TEXT("/Game/SciFiUIComponents/Textures/Icons4/T_Icon_Exit1.T_Icon_Exit1");
+            if (auto* Texture = LoadObject<UTexture2D>(nullptr, Path))
+            {
+                PauseButtonTextures.Emplace(Texture);
+                Brush->SetResourceObject(Texture);
+                Brush->ImageSize = FVector2D(22.0f);
+            }
+        }
+        TSharedRef<SWidget> Label = bIcon
+            ? StaticCastSharedRef<SWidget>(SNew(SImage).Image(TAttribute<const FSlateBrush*>::CreateLambda([Brush]() { return &Brush.Get(); })))
+            : StaticCastSharedRef<SWidget>(SNew(STextBlock)
                 .Justification(ETextJustify::Left)
                 .ColorAndOpacity(XTextColor)
                 .Text(FText::FromString(Labels[Index]))
-                .Font(MissionUIStyle::GetHeaderFont(17))]];
+                .Font(MissionUIStyle::GetHeaderFont(15)));
+        const TSharedRef<SButton> Button = SNew(SButton)
+            .ButtonStyle(&PauseButtonStyles[Index])
+            .ButtonColorAndOpacity(FLinearColor::White)
+            .ContentPadding(FMargin(4, 8))
+            .ToolTipText(Action == MainMenu ? NSLOCTEXT("QuitMissionMenu", "MainMenuTooltip", "Return to Main Menu and discard mission results") : Action == ExitWindows ? NSLOCTEXT("QuitMissionMenu", "ExitTooltip", "Exit to Windows") : FText::GetEmpty())
+            .HAlign(bIcon ? HAlign_Center : HAlign_Left)
+            .OnClicked_Lambda([this, Action]() { ExecuteAction(Action); return FReply::Handled(); })
+            [Label];
+        if (bIcon)
+            Footer->AddSlot().FillWidth(1.0f).Padding(2, 0)[Button];
+        else
+            Items->AddSlot().HAlign(HAlign_Fill).AutoHeight().Padding(12, 5)[Button];
     }
     Items->AddSlot().AutoHeight().Padding(12, 9)
     [SNew(STextBlock).AutoWrapText(true)
         .ColorAndOpacity(FLinearColor(1.0f, 0.7f, 0.35f))
         .Text_Lambda([this]() { return FText::FromString(Rejection); })];
+    Items->AddSlot().AutoHeight().Padding(10, 5)[Footer];
     TSharedRef<SWidget> Content = SNew(SOverlay)
         + SOverlay::Slot()
         [SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
@@ -229,7 +256,7 @@ bool QuitView::OnKeyDown(int32 Key, bool bRepeat)
 }
 void QuitView::ExecuteAction(uintptr_t Action)
 {
-    if (!bMenuShown || Action < Accept || Action > ExitWindows) return;
+    if (!bMenuShown || Action < Accept || Action > MainMenu) return;
     if (Action == Accept && !CanAccept())
     {
         if (UQuitMissionMenu* Widget = MenuWidget.Get()) Widget->SetStatusMessage(FText::FromString(Rejection));

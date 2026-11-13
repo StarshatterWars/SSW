@@ -249,6 +249,47 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
         return ImportShipCargo() ? 0 : 1;
 
     auto* Context = NewObject<USSWGameInstance>();
+
+    if (FParse::Param(*Params, TEXT("WriteWorldTables")))
+    {
+        auto* Environment = NewObject<UStarshatterEnvironmentSubsystem>(Context);
+        Environment->SSWInstance = Context;
+        Environment->GalaxyDataTable = NewObject<UDataTable>(Context);
+        Environment->GalaxyDataTable->RowStruct = FS_Galaxy::StaticStruct();
+        Environment->RegionsDataTable = NewObject<UDataTable>(Context);
+        Environment->RegionsDataTable->RowStruct = FRegion::StaticStruct();
+        Environment->LoadGalaxyMap();
+        const auto SaveWorlds = [](const auto& Authored, const TCHAR* Name, const auto& RowType)
+        {
+            using FBody = typename TDecay<decltype(RowType)>::Type;
+            const FString Path = FString::Printf(TEXT("/Game/Game/%s.%s"), Name, Name);
+            auto* Active = LoadObject<UDataTable>(nullptr, *Path);
+            if (!Active || Active->GetRowStruct() != FBody::StaticStruct() || Authored.IsEmpty()) return false;
+            auto* Updated = DuplicateObject<UDataTable>(Active, GetTransientPackage());
+            TSet<FString> Applied;
+            for (const auto& Pair : Updated->GetRowMap())
+            {
+                auto& Row = *reinterpret_cast<FBody*>(Pair.Value);
+                const FString Key = Row.Name.TrimStartAndEnd();
+                if (const FBody* Source = Authored.Find(Key))
+                {
+                    Row.Population = Source->Population;
+                    Row.Production = Source->Production;
+                    Row.WorldScapeProfile = Source->WorldScapeProfile;
+                    Row.Locations.RemoveAll([](const FNamedBodyLocation& Site) { return Site.Type == ELocationType::City; });
+                    for (const auto& Site : Source->Locations)
+                        if (Site.Type == ELocationType::City) Row.Locations.Add(Site);
+                    Applied.Add(Key);
+                }
+            }
+            for (const auto& Pair : Authored)
+                if (!Applied.Contains(Pair.Key)) Updated->AddRow(FName(*Pair.Key), Pair.Value);
+            return SaveOutputTable(*Updated, Name, false);
+        };
+        return SaveWorlds(Environment->PlanetMapByName, TEXT("DT_Planets"), FPlanet{})
+            && SaveWorlds(Environment->MoonMapByName, TEXT("DT_Moons"), FMoon{}) ? 0 : 2;
+    }
+
     auto* Systems = NewObject<UStarshatterSystemDesignSubsystem>(Context);
     auto* Weapons = NewObject<UStarshatterWeaponDesignSubsystem>(Context);
     auto* Ships = NewObject<UStarshatterShipDesignSubsystem>(Context);

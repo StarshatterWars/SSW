@@ -4,10 +4,13 @@
 #include "SSWGameInstance.h"
 #include "SSWSessionLobbyGameMode.h"
 #include "SSWBootSubsystem.h"
+#include "StarshatterEnvironmentSubsystem.h"
 #include "OnlineSubsystem.h"
 #include "Interfaces/OnlineIdentityInterface.h"
 #include "PlayerCharacter.h"
 #include "Misc/SecureHash.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "MissionUIStyle.h"
 #include "PlatformSignInDlg.h"
 #include "Widgets/SBoxPanel.h"
@@ -377,17 +380,21 @@ TSharedRef<SWidget> USSWGameInstance::BuildPlatformSignInContent()
 
 void USSWGameInstance::BeginPlatformSignIn(FName Provider)
 {
-    if (PendingPlatformIdentity || !PlatformSignInStatus) return;
+    if (PendingPlatformIdentity) return;
+    FString LauncherProvider;
+    FParse::Value(FCommandLine::Get(), TEXT("SSWLauncherProvider="), LauncherProvider);
+    const bool bLauncherAttempt = !PlatformSignInView && LauncherProvider == Provider.ToString();
+    if (!PlatformSignInStatus && !bLauncherAttempt) return;
     IOnlineSubsystem* Online = IOnlineSubsystem::Get(Provider);
     PendingPlatformIdentity = Online ? Online->GetIdentityInterface() : nullptr;
     if (!PendingPlatformIdentity)
     {
-        PlatformSignInStatus->SetText(NSLOCTEXT("SSWSignIn", "Unavailable",
-            "This provider is unavailable. Check the platform setup or try the other provider."));
+        FinishPlatformSignIn(Provider, false, FString());
         return;
     }
 
-    PlatformSignInStatus->SetText(NSLOCTEXT("SSWSignIn", "Connecting", "Signing in..."));
+    if (PlatformSignInStatus)
+        PlatformSignInStatus->SetText(NSLOCTEXT("SSWSignIn", "Connecting", "Signing in..."));
     // Steam may complete synchronously. Retain the interface through the call.
     const IOnlineIdentityPtr Identity = PendingPlatformIdentity;
     if (Identity->GetLoginStatus(0) == ELoginStatus::LoggedIn)
@@ -403,7 +410,7 @@ void USSWGameInstance::BeginPlatformSignIn(FName Provider)
                 FinishPlatformSignIn(Provider, bSuccess && Id.IsValid(), bSuccess ? Id.ToString() : FString());
             }));
     const FOnlineAccountCredentials Credentials(
-        Provider == TEXT("EOS") ? TEXT("accountportal") : TEXT(""), TEXT(""), TEXT(""));
+        Provider == TEXT("EOS") ? (bLauncherAttempt ? TEXT("persistentauth") : TEXT("accountportal")) : TEXT(""), TEXT(""), TEXT(""));
     if (!Identity->Login(0, Credentials) && PendingPlatformIdentity)
         FinishPlatformSignIn(Provider, false, FString());
 }
@@ -423,8 +430,15 @@ void USSWGameInstance::FinishPlatformSignIn(FName Provider, bool bSuccess, const
     ClearPlatformSignInRequest();
 
     auto* Players = GetSubsystem<UStarshatterPlayerSubsystem>();
-    if (AccountId.IsEmpty() || DisplayName.IsEmpty() || !Players)
+    FString ExpectedSteamAccount;
+    if (!PlatformSignInView && Provider == TEXT("STEAM"))
+        FParse::Value(FCommandLine::Get(), TEXT("SSWLauncherSteamAccount="), ExpectedSteamAccount);
+    if (AccountId.IsEmpty() || DisplayName.IsEmpty() || !Players ||
+        (!ExpectedSteamAccount.IsEmpty() && AccountId != ExpectedSteamAccount))
     {
+        if (!PlatformSignInView)
+            if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+                ShowPlatformSignIn(PC);
         if (PlatformSignInStatus)
             PlatformSignInStatus->SetText(Provider == TEXT("STEAM")
                 ? NSLOCTEXT("SSWSignIn", "SteamFailed", "Sign into the Steam client and try again.")
@@ -444,6 +458,9 @@ void USSWGameInstance::FinishPlatformSignIn(FName Provider, bool bSuccess, const
     Players->ResetToDefaults();
     if (!Players->LoadFromBoot())
     {
+        if (!PlatformSignInView)
+            if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+                ShowPlatformSignIn(PC);
         if (PlatformSignInStatus)
             PlatformSignInStatus->SetText(NSLOCTEXT("SSWSignIn", "ProfileFailed", "Could not load this account's pilot save."));
         return;
@@ -458,16 +475,29 @@ void USSWGameInstance::FinishPlatformSignIn(FName Provider, bool bSuccess, const
         PlatformSignInView->RemoveFromParent();
     PlatformSignInView = nullptr;
     PlatformSignInStatus.Reset();
+    LoadOrCreateUniverse();
     ShowMainMenuScreen();
 }
 
 void USSWGameInstance::ShowMainMenuScreen()
 {
     if (GetWorld() && GetWorld()->GetFirstPlayerController<ASSWSessionLobbyController>()) return;
-    if (GetDefault<USSWDiagnosticsSettings>()->bRequirePlatformSignIn && PlatformPilotName.IsEmpty())
+    FString LauncherProvider;
+    FParse::Value(FCommandLine::Get(), TEXT("SSWLauncherProvider="), LauncherProvider);
+    const bool bLauncherSignIn = LauncherProvider == TEXT("EOS") || LauncherProvider == TEXT("STEAM");
+    if ((bLauncherSignIn || GetDefault<USSWDiagnosticsSettings>()->bRequirePlatformSignIn) &&
+        PlatformPilotName.IsEmpty())
     {
-        if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
-            ShowPlatformSignIn(PC);
+        if (bLauncherSignIn && !bLauncherPlatformSignInStarted)
+        {
+            bLauncherPlatformSignInStarted = true;
+            BeginPlatformSignIn(FName(*LauncherProvider));
+        }
+        else if (!PendingPlatformIdentity)
+        {
+            if (APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0))
+                ShowPlatformSignIn(PC);
+        }
         return;
     }
 
@@ -1346,6 +1376,7 @@ bool USSWGameInstance::SaveUniverse()
 	SaveObj->UniverseSeed = UniverseSeed;
 	SaveObj->UniverseBaseUnixSeconds = Timer->UniverseBaseUnixSeconds;
 	SaveObj->UniverseTimeSeconds = Timer->UniverseTimeSeconds;
+    SaveObj->bTrackGmt = Timer->bTrackUniverseGmt;
 
 	// Use slot saving first (simplest + safest)
 	const FString Slot = GetUniverseSlotName();   // MUST return a valid slot
@@ -1733,10 +1764,19 @@ void USSWGameInstance::HandleUniverseMinuteAutosave(uint64 UniverseSecondsNow)
 	SaveCampaign();
 }
 
-void USSWGameInstance::LoadOrCreateUniverse()
+FString USSWGameInstance::GetUniverseSlotName() const
 {
-	const FString Slot = GetUniverseSlotName();
+    return UniverseSaveSlotName.IsEmpty() ? TEXT("Universe_Main") : UniverseSaveSlotName;
+}
+
+void USSWGameInstance::LoadOrCreateUniverse(bool bNewPilot)
+{
 	constexpr int32 UserIndex = 0;
+    const auto* Players = GetSubsystem<UStarshatterPlayerSubsystem>();
+    const FString PilotSlot = Players ? TEXT("Universe_") + Players->GetSlotName() : FString();
+    const FString Slot = !PilotSlot.IsEmpty() &&
+        (bNewPilot || UGameplayStatics::DoesSaveGameExist(PilotSlot, UserIndex))
+        ? PilotSlot : TEXT("Universe_Main");
 
 	UUniverseSaveGame* LoadedSave = nullptr;
 
@@ -1767,7 +1807,9 @@ void USSWGameInstance::LoadOrCreateUniverse()
 
 		const FDateTime BaseDate(2228, 1, 1);
 		CachedUniverseSave->UniverseBaseUnixSeconds = BaseDate.ToUnixTimestamp();
-		CachedUniverseSave->UniverseTimeSeconds = 0;
+        CachedUniverseSave->bTrackGmt = bNewPilot;
+        CachedUniverseSave->UniverseTimeSeconds = bNewPilot
+            ? UTimerSubsystem::GetGmtUniverseSeconds(BaseDate.ToUnixTimestamp()) : 0;
 
 		UGameplayStatics::SaveGameToSlot(CachedUniverseSave, Slot, UserIndex);
 	}
@@ -1795,9 +1837,15 @@ void USSWGameInstance::LoadOrCreateUniverse()
 	UniverseSeed = CachedUniverseSave->UniverseSeed;
 
 	Timer->UniverseBaseUnixSeconds = CachedUniverseSave->UniverseBaseUnixSeconds;
-	Timer->UniverseTimeSeconds = CachedUniverseSave->UniverseTimeSeconds;
+    Timer->bTrackUniverseGmt = CachedUniverseSave->bTrackGmt;
+    Timer->UniverseTimeSeconds = static_cast<uint64>(CachedUniverseSave->UniverseTimeSeconds);
+    if (Timer->bTrackUniverseGmt)
+        Timer->UniverseTimeSeconds = FMath::Max(Timer->UniverseTimeSeconds,
+            UTimerSubsystem::GetGmtUniverseSeconds(Timer->UniverseBaseUnixSeconds));
 
 	SetUniverseSaveContext(Slot, UserIndex, CachedUniverseSave);
+    if (auto* Environment = GetSubsystem<UStarshatterEnvironmentSubsystem>())
+        Environment->SetSimulationClockMs(static_cast<int64>(Timer->GetUniverseTimeSeconds()) * 1000LL);
 }
 
 

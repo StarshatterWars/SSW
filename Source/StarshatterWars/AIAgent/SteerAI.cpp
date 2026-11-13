@@ -367,19 +367,6 @@ SteerAI::Transform(const FVector& Pt)
         FVector::DotProduct(ObjT, Cam.vup()),
         FVector::DotProduct(ObjT, Cam.vpn()));
 
-    if (!_stricmp(self->GetName(), "Blockade Runner"))
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[SteerAI::Transform BR] Pt=%s SelfLoc=%s ObjT=%s VRT=%s VUP=%s VPN=%s Result=%s"),
-            *Pt.ToString(),
-            *self->GetLocation().ToString(),
-            *ObjT.ToString(),
-            *Cam.vrt().ToString(),
-            *Cam.vup().ToString(),
-            *Cam.vpn().ToString(),
-            *Result.ToString());
-    }
-
     return Result;
 }
 
@@ -530,20 +517,6 @@ SteerAI::Seek(const FVector& InPoint)
     }
 
     seeking = 1;
-
-    if (self && !_stricmp(self->GetName(), "Blockade Runner"))
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[SteerAI::Seek BR LEGACY] ")
-            TEXT("RawPoint=%s NormPoint=%s ")
-            TEXT("Yaw=%.4f Pitch=%.4f ")
-            TEXT("ForwardZ=%.4f"),
-            *InPoint.ToString(),
-            *Point.ToString(),
-            s.yaw,
-            s.pitch,
-            Point.Z);
-    }
 
     return s;
 }

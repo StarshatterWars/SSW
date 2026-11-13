@@ -1,12 +1,16 @@
 #include "QuitMissionMenu.h"
 #include "MissionUIStyle.h"
 #include "Components/Button.h"
+#include "Components/Image.h"
+#include "Engine/Texture2D.h"
 #include "Components/ButtonSlot.h"
 #include "Components/TextBlock.h"
 #include "InputCoreTypes.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "Components/HorizontalBox.h"
+#include "Components/HorizontalBoxSlot.h"
 #include "Components/SizeBox.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Styling/CoreStyle.h"
@@ -31,7 +35,12 @@ void UQuitMissionMenu::BuildGeneratedContent()
     {
         Frame->SetHeightOverride(408.0f);
         if (UCanvasPanelSlot* FrameCanvasSlot = Cast<UCanvasPanelSlot>(Frame->Slot))
+        {
+            FrameCanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));
+            FrameCanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
+            FrameCanvasSlot->SetPosition(FVector2D::ZeroVector);
             FrameCanvasSlot->SetSize(FVector2D(580.0f, 408.0f));
+        }
     }
     if (USizeBox* Content = Cast<USizeBox>(WidgetTree->FindWidget(TEXT("SizeBox_5"))))
         Content->ClearWidthOverride();
@@ -44,7 +53,7 @@ void UQuitMissionMenu::BuildGeneratedContent()
     }
 
     FSlateFontInfo RowFont = TitleText ? TitleText->GetFont() : FCoreStyle::GetDefaultFontStyle("Regular", 16);
-    RowFont.Size = 16;
+    RowFont.Size = 15;
     auto MakeButton = [&](TObjectPtr<UButton>& Button, const TCHAR* Name, const TCHAR* Label)
     {
         if (!Button) Button = Cast<UButton>(WidgetTree->FindWidget(FName(Name)));
@@ -70,7 +79,7 @@ void UQuitMissionMenu::BuildGeneratedContent()
         LabelWidget->SetFont(RowFont);
         LabelWidget->SetJustification(ETextJustify::Left);
         LabelWidget->SetColorAndOpacity(FSlateColor(FLinearColor(0.79f, 0.93f, 1.0f, 1.0f)));
-        LabelWidget->SetMargin(FMargin(10.0f, 7.0f));
+        LabelWidget->SetMargin(FMargin(4.0f, 7.0f));
         LabelWidget->SetVisibility(ESlateVisibility::HitTestInvisible);
         if (UButtonSlot* ButtonContentSlot = Cast<UButtonSlot>(LabelWidget->Slot))
         {
@@ -82,11 +91,39 @@ void UQuitMissionMenu::BuildGeneratedContent()
         const bool bControls = FCString::Strcmp(Name, TEXT("ControlsBtn")) == 0;
         MissionUIStyle::ApplyActionButtonStyle(Button, bDestructive ? TEXT("Red") : (bControls ? TEXT("Blue") : TEXT("Green")));
     };
-    MakeButton(AcceptBtn, TEXT("AcceptBtn"), TEXT("1.   END MISSION  /  ACCEPT RESULTS"));
-    MakeButton(AbortBtn, TEXT("AbortBtn"), TEXT("2.   ABORT MISSION  /  DISCARD RESULTS"));
+    MakeButton(AcceptBtn, TEXT("AcceptBtn"), TEXT("1.   ACCEPT MISSION RESULTS"));
+    MakeButton(AbortBtn, TEXT("AbortBtn"), TEXT("2.   ABORT MISSION"));
     MakeButton(ResumeBtn, TEXT("ResumeBtn"), TEXT("3.   RESUME MISSION"));
     MakeButton(ControlsBtn, TEXT("ControlsBtn"), TEXT("4.   CONTROL SETUP"));
-    MakeButton(ExitWindowsBtn, TEXT("ExitWindowsBtn"), TEXT("5.   QUIT AND EXIT TO WINDOWS"));
+    UHorizontalBox* Footer = Cast<UHorizontalBox>(WidgetTree->FindWidget(TEXT("QuitFooter")));
+    if (!Footer) Footer = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("QuitFooter"));
+
+    const auto MakeIconButton = [&](TObjectPtr<UButton>& Button, const TCHAR* Name, const TCHAR* TexturePath, const FText& Tooltip)
+    {
+        if (!Button) Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), FName(Name));
+        Button->RemoveFromParent();
+        auto* IconSlot = Footer->AddChildToHorizontalBox(Button);
+        IconSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        IconSlot->SetPadding(FMargin(2.0f, 0.0f));
+        Button->ClearChildren();
+        auto* Icon = WidgetTree->ConstructWidget<UImage>();
+        Icon->SetBrushFromTexture(LoadObject<UTexture2D>(nullptr, TexturePath));
+        auto* IconFrame = WidgetTree->ConstructWidget<USizeBox>();
+        IconFrame->SetWidthOverride(22.0f);
+        IconFrame->SetHeightOverride(22.0f);
+        IconFrame->AddChild(Icon);
+        auto* ContentSlot = CastChecked<UButtonSlot>(Button->AddChild(IconFrame));
+        ContentSlot->SetHorizontalAlignment(HAlign_Center);
+        ContentSlot->SetVerticalAlignment(VAlign_Center);
+        Button->SetToolTipText(Tooltip);
+        MissionUIStyle::ApplyActionButtonStyle(Button, TEXT("Red"));
+    };
+    MakeIconButton(MainMenuBtn, TEXT("MainMenuBtn"),
+        TEXT("/Game/SciFiUIComponents/Textures/Icons4/T_ICON_Menu.T_ICON_Menu"),
+        NSLOCTEXT("QuitMissionMenu", "MainMenuTooltip", "Return to Main Menu and discard mission results"));
+    MakeIconButton(ExitWindowsBtn, TEXT("ExitWindowsBtn"),
+        TEXT("/Game/SciFiUIComponents/Textures/Icons4/T_Icon_Exit1.T_Icon_Exit1"),
+        NSLOCTEXT("QuitMissionMenu", "ExitTooltip", "Exit to Windows"));
     if (!StatusText) StatusText = Cast<UTextBlock>(WidgetTree->FindWidget(TEXT("StatusText")));
     if (!StatusText)
     {
@@ -98,6 +135,12 @@ void UQuitMissionMenu::BuildGeneratedContent()
         StatusText->SetAutoWrapText(true);
         Container->AddChildToVerticalBox(StatusText)->SetPadding(FMargin(12.0f, 6.0f));
     }
+    Footer->RemoveFromParent();
+    auto* FooterSlot = Container->AddChildToVerticalBox(Footer);
+    FooterSlot->SetPadding(FMargin(10.0f, 5.0f));
+    FooterSlot->SetHorizontalAlignment(HAlign_Fill);
+    FooterSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    FooterSlot->SetVerticalAlignment(VAlign_Bottom);
 }
 
 void UQuitMissionMenu::NativeConstruct()
@@ -109,6 +152,7 @@ void UQuitMissionMenu::NativeConstruct()
     if (ResumeBtn) { ResumeBtn->OnClicked.RemoveAll(this); ResumeBtn->OnClicked.AddDynamic(this, &UQuitMissionMenu::ResumeMission); }
     if (ControlsBtn) { ControlsBtn->OnClicked.RemoveAll(this); ControlsBtn->OnClicked.AddDynamic(this, &UQuitMissionMenu::OpenControls); }
     if (ExitWindowsBtn) { ExitWindowsBtn->OnClicked.RemoveAll(this); ExitWindowsBtn->OnClicked.AddDynamic(this, &UQuitMissionMenu::ExitToWindows); }
+    if (MainMenuBtn) MainMenuBtn->OnClicked.AddUniqueDynamic(this, &UQuitMissionMenu::ExitToMainMenu);
     SetStatusMessage(StatusMessage);
     SetDialogInputEnabled(true);
 }
@@ -127,6 +171,7 @@ void UQuitMissionMenu::AbortMission() { OnActionRequested.ExecuteIfBound(EMissio
 void UQuitMissionMenu::ResumeMission() { OnActionRequested.ExecuteIfBound(EMissionQuitAction::Resume); }
 void UQuitMissionMenu::OpenControls() { OnActionRequested.ExecuteIfBound(EMissionQuitAction::Controls); }
 void UQuitMissionMenu::ExitToWindows() { OnActionRequested.ExecuteIfBound(EMissionQuitAction::ExitWindows); }
+void UQuitMissionMenu::ExitToMainMenu() { OnActionRequested.ExecuteIfBound(EMissionQuitAction::MainMenu); }
 void UQuitMissionMenu::HandleAccept() { ResumeMission(); }
 void UQuitMissionMenu::HandleCancel() { ResumeMission(); }
 void UQuitMissionMenu::SetStatusMessage(const FText& Message)

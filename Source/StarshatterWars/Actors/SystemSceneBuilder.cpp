@@ -16,7 +16,6 @@
 
 #include "SystemSceneBuilder.h"
 #include "WorldScapeRoot.h"
-#include "WorldScapeMeshComponent.h"
 #include "HeightMapVolume.h"
 #include "FoliageMaskVolume.h"
 #include "TerrainRegion.h"
@@ -1087,41 +1086,31 @@ void ScaleJanekOceanWaves(AWorldScapeRoot& Globe)
     }
 }
 
-void UpdateJanekOrbitRendering(AWorldScapeRoot& Globe, const FVector* Observer)
+void UpdateJanekOrbitRendering(AWorldScapeRoot& Globe, bool bOrbit)
 {
     const auto* Defaults = Globe.GetClass()->GetDefaultObject<AWorldScapeRoot>();
-    const bool bOrbit = Observer != nullptr;
-
-    // Align the coastal geometry grids in orbit and restore the demo water grid on approach.
-    Globe.OceanMaxLod = bOrbit ? Globe.MaxLod : Defaults->OceanMaxLod;
-    Globe.OceanLodResolution = bOrbit ? Globe.LodResolution : Defaults->OceanLodResolution;
-    Globe.OceanTriangleSize = bOrbit ? Globe.TriangleSize :
-        Defaults->OceanTriangleSize * Globe.PlanetScale / Defaults->PlanetScale;
-
-    const FName FillName(TEXT("SSWJanekOrbitFill"));
-    auto* Fill = FindObject<UDirectionalLightComponent>(&Globe, *FillName.ToString());
-    if (!bOrbit)
+    if (bOrbit)
     {
-        if (Fill) Fill->SetVisibility(false);
-        return;
-    }
+        // The baked WorldScape colors include both land and sea. Use them on
+        // the live terrain so the separate water mesh cannot occlude the coast.
+        constexpr TCHAR SurfacePath[] = TEXT("/Game/Models/Universe/Planets/Janek/M_JanekWorldScapeOrbitalSurface.M_JanekWorldScapeOrbitalSurface");
+        const TSoftObjectPtr<UMaterialInterface> Surface{FSoftObjectPath(SurfacePath)};
+        auto* Material = Surface.LoadSynchronous();
+        if (!Material) return;
 
-    if (!Fill)
+        if (Globe.TerrainMaterial.DefaultMaterial != Material)
+        {
+            Globe.TerrainMaterial.MaterialsLod.Reset();
+            Globe.TerrainMaterial.DefaultMaterial = Material;
+        }
+        Globe.bOcean = false;
+    }
+    else
     {
-        Fill = NewObject<UDirectionalLightComponent>(&Globe, FillName, RF_Transient);
-        Fill->SetMobility(EComponentMobility::Movable);
-        Fill->SetIntensity(1.5f);
-        Fill->SetCastShadows(false);
-        Fill->SetLightingChannels(false, false, true);
-        Globe.AddInstanceComponent(Fill);
-        Fill->RegisterComponent();
+        if (Globe.TerrainMaterial != Defaults->TerrainMaterial)
+            Globe.TerrainMaterial = Defaults->TerrainMaterial;
+        Globe.bOcean = Defaults->bOcean;
     }
-    Fill->SetVisibility(true);
-    Fill->SetWorldRotation((Globe.GetActorLocation() - *Observer).Rotation());
-
-    for (const UWorldScapeLod* Lod : Globe.WorldScapeLod)
-        if (IsValid(Lod) && IsValid(Lod->Mesh) && !Lod->Mesh->LightingChannels.bChannel2)
-            Lod->Mesh->SetLightingChannels(true, false, true);
 }
 
 void SetJanekPresentationRadius(AActor& Planet, double Radius)
@@ -2940,7 +2929,7 @@ AWorldScapeRoot* ASystemSceneBuilder::ConfigureJanekSurface(const FVector& Obser
     Globe->bGenerateCollision = true;
     Globe->bGenerateFoliages = true;
     Globe->SetActorHiddenInGame(false);
-    UpdateJanekOrbitRendering(*Globe, nullptr);
+    UpdateJanekOrbitRendering(*Globe, false);
     ScaleJanekOceanWaves(*Globe);
 
     if (!JanekRunwayGrade.IsValid())
@@ -3069,6 +3058,7 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
     }
     if (bSurfaceView)
     {
+        UpdateFocusedWorldScape(nullptr, FVector::ZeroVector, nullptr);
         ConfigureJanekSurface(Observer);
         if (SurfaceHiddenActors.IsEmpty())
         {
@@ -3135,7 +3125,7 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
             {
                 Globe->bOverridePlayerPosition = true;
                 Globe->OverridedPlayerPosition = Eye;
-                UpdateJanekOrbitRendering(*Globe, &Eye);
+                UpdateJanekOrbitRendering(*Globe, true);
                 ScaleJanekOceanWaves(*Globe);
             }
             BodyActor->SetActorLocationAndRotation(GetActorLocation() + MissionOrbitalToUE(Body->Location() - SectorOrigin),
@@ -3218,6 +3208,7 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
             }
         }
     }
+    UpdateFocusedWorldScape(FocusBody, Eye, &SectorOrigin);
 }
 
 bool ASystemSceneBuilder::GetFocusedMissionBodyWorldLocation(const Orbital* FocusBody, FVector& OutLocation, FString& OutName, AActor** OutActor) const
@@ -3240,6 +3231,100 @@ bool ASystemSceneBuilder::GetFocusedMissionBodyWorldLocation(const Orbital* Focu
     return false;
 }
 
+void ASystemSceneBuilder::UpdateFocusedWorldScape(const Orbital* FocusBody, const FVector& Eye, const FVector* SectorOrigin)
+{
+    AActor* Proxy = nullptr;
+    FVector Center = FVector::ZeroVector;
+    FString Name;
+    if (FocusBody)
+        GetFocusedMissionBodyWorldLocation(FocusBody, Center, Name, &Proxy);
+    if (SectorOrigin && !Proxy)
+    {
+        double NearestAltitude = TNumericLimits<double>::Max();
+        for (const auto& Pair : RuntimeBodyMap)
+        {
+            const auto* Body = Pair.Value;
+            auto* Candidate = BodyActorMap.FindRef(Pair.Key).Get();
+            if (!Body || !IsValid(Candidate) || !Candidate->IsA<APlanetActor>()) continue;
+            const FVector CandidateCenter = GetActorLocation() + MissionOrbitalToUE(Body->Location() - *SectorOrigin);
+            const double Altitude = FVector::Distance(Eye, CandidateCenter) - Body->Radius();
+            if (Altitude <= 0 || Altitude >= Body->Radius() * 0.08 || Altitude >= NearestAltitude) continue;
+            NearestAltitude = Altitude;
+            Proxy = Candidate;
+            Center = CandidateCenter;
+            Name = Pair.Key;
+        }
+    }
+    const auto* Env = UStarshatterEnvironmentSubsystem::Get();
+    const auto* Planet = Env && IsValid(Proxy) ? Env->FindPlanetMapByName(Name) : nullptr;
+    const auto* Moon = Env && IsValid(Proxy) && !Planet ? Env->FindMoonMapByName(Name) : nullptr;
+    const FString Profile = Planet ? Planet->WorldScapeProfile : Moon ? Moon->WorldScapeProfile : FString();
+    const auto* Body = RuntimeBodyMap.FindRef(Name);
+    const double Radius = Body ? Body->Radius() : 0.0;
+    const double Altitude = FVector::Distance(Eye, Center) - Radius;
+    const bool bNearSurface = Radius > 0 && Altitude > 0 && Altitude < Radius * 0.08;
+    if (!bNearSurface || Profile.IsEmpty() || Profile == TEXT("Janek") || Profile == TEXT("GasGiant"))
+        Proxy = nullptr;
+
+    if (FocusedWorldProxy.Get() != Proxy)
+    {
+        if (auto* Previous = FocusedWorldProxy.Get()) Previous->SetActorHiddenInGame(false);
+        if (auto* Previous = FocusedWorldScape.Get()) Previous->Destroy();
+        FocusedWorldProxy.Reset();
+        FocusedWorldScape.Reset();
+    }
+    if (!Proxy) return;
+    if (!FocusedWorldScape.IsValid())
+    {
+        const TCHAR* NoiseName = Profile == TEXT("Ice") ? TEXT("IceWorld") :
+            Profile == TEXT("Volcanic") ? TEXT("LavaWorld") :
+            Profile == TEXT("Barren") ? TEXT("Mars") : TEXT("Tectonics1");
+        auto* Noise = LoadObject<UWorldScapeNoiseClass>(nullptr, *FString::Printf(
+            TEXT("/WorldScape/Ressources/Noise/%s.%s"), NoiseName, NoiseName));
+        auto* Template = LoadClass<AWorldScapeRoot>(nullptr, JanekPlanetClassPath);
+        if (!Noise || !Template) return;
+        const FTransform Pose(Proxy->GetActorQuat(), Center);
+        auto* Globe = GetWorld()->SpawnActorDeferred<AWorldScapeRoot>(Template, Pose, this);
+        if (!Globe) return;
+        SetJanekPresentationRadius(*Globe, Radius);
+        Globe->WorldScapeNoise = Noise;
+        Globe->Seed = static_cast<int32>(FCrc::StrCrc32(*Name) & MAX_int32);
+        Globe->bOcean = Profile == TEXT("Temperate");
+        Globe->bGenerateCollision = false;
+        Globe->bGenerateFoliages = false;
+        Globe->bOverridePlayerPosition = true;
+        Globe->OverridedPlayerPosition = Eye;
+        Globe->FinishSpawning(Pose);
+        FocusedWorldScape = Globe;
+        FocusedWorldProxy = Proxy;
+        Proxy->SetActorHiddenInGame(true);
+
+        const auto& Locations = Planet ? Planet->Locations : Moon->Locations;
+        for (const auto& Site : Locations)
+        {
+            if (Site.Type != ELocationType::City || Site.Position.IsNearlyZero()) continue;
+            auto* Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Game/Models/Buildings/City01/SM_City01.SM_City01"));
+            if (!Mesh) continue;
+            const FVector Radial = MissionOrbitalToUE(Site.Position).GetSafeNormal();
+            const FVector Up = Globe->GetActorQuat().RotateVector(Radial);
+            const double Height = Globe->GetGroundHeight(Center + Up * Radius);
+            const double Ocean = Globe->bOcean ? Globe->GetGroundHeight(Center + Up * Radius, true) : Height;
+            auto* City = NewObject<UStaticMeshComponent>(Globe);
+            City->SetStaticMesh(Mesh);
+            City->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+            City->SetupAttachment(Globe->GetRootComponent());
+            City->SetRelativeLocationAndRotation(Radial * (Radius + FMath::Max(Height, Ocean)), FRotationMatrix::MakeFromZ(Radial).Rotator());
+            Globe->AddInstanceComponent(City);
+            City->RegisterComponent();
+        }
+    }
+    if (auto* Globe = FocusedWorldScape.Get())
+    {
+        Globe->SetActorLocationAndRotation(Center, Proxy->GetActorQuat());
+        Globe->OverridedPlayerPosition = Eye;
+    }
+}
+
 void ASystemSceneBuilder::RestoreOrbitalBackdrop()
 {
     for (const auto& Pair : SurfaceHiddenActors)
@@ -3251,6 +3336,7 @@ void ASystemSceneBuilder::EndMissionSpace()
 {
     RestoreOrbitalBackdrop();
     if (!bMissionSpace) return;
+    UpdateFocusedWorldScape(nullptr, FVector::ZeroVector, nullptr);
     bMissionSpace = false;
     if (auto* Globe = Cast<AWorldScapeRoot>(BodyActorMap.FindRef(TEXT("Janek"))))
     {
@@ -3277,7 +3363,7 @@ void ASystemSceneBuilder::EndMissionSpace()
         if (AActor* BodyActor = Entry.Actor.Get(); BodyActor && BodyActor->ActorHasTag(JanekWorldScapeTag))
         {
             if (auto* Globe = Cast<AWorldScapeRoot>(BodyActor))
-                UpdateJanekOrbitRendering(*Globe, nullptr);
+                UpdateJanekOrbitRendering(*Globe, false);
             SetJanekPresentationRadius(*BodyActor, Entry.VisualRadiusUnits);
         }
     MissionBodyRadii.Empty(); MissionHiddenActors.Empty();

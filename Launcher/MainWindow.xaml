@@ -1,0 +1,66 @@
+<Window x:Class="StarshatterWarsLauncher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="Starshatter Wars Launcher" Width="1000" Height="720" MinWidth="850" MinHeight="550"
+        Background="#0B1420" Foreground="#EAF4FF" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <Style TargetType="Button">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Padding" Value="18,9"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+        </Style>
+    </Window.Resources>
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="180"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Border ClipToBounds="True">
+            <Border.Background>
+                <ImageBrush ImageSource="Orion.png" Stretch="UniformToFill" AlignmentY="Center"/>
+            </Border.Background>
+            <Border Padding="22" Background="#9809111D">
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="STARSHATTER WARS" FontSize="38" FontWeight="Bold"/>
+                    <TextBlock Text="Fractal Dev Games" FontSize="18" Foreground="#A9DCEE" Margin="1,5,0,0"/>
+                </StackPanel>
+            </Border>
+        </Border>
+        <DockPanel Grid.Row="1" Margin="0,18,0,10">
+            <Button x:Name="InstallButton" DockPanel.Dock="Right" Content="Install Game…" Click="Install_Click"/>
+            <Button DockPanel.Dock="Right" Content="Locate Game…" Click="LocateGame_Click"/>
+            <Button x:Name="UpdateButton" DockPanel.Dock="Right" Content="Check for Updates" Click="Update_Click"/>
+            <Button x:Name="MusicButton" DockPanel.Dock="Right" Content="Music On" Click="Music_Click"/>
+            <TextBlock Text="News and patch notes" FontSize="23" FontWeight="SemiBold" VerticalAlignment="Center"/>
+        </DockPanel>
+        <Grid Grid.Row="2" Background="#122131">
+            <TextBlock x:Name="FeedStatus" Margin="20" TextWrapping="Wrap" Text="Loading news and patch notes…"/>
+            <wv:WebView2 x:Name="NewsView" Visibility="Hidden" DefaultBackgroundColor="#122131"/>
+        </Grid>
+        <DockPanel Grid.Row="3" Margin="0,18,0,0">
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="OfflineButton" Content="Play Offline" Click="PlayOffline_Click"/>
+                <Button x:Name="SteamButton" Click="Steam_Click" AutomationProperties.Name="Play with Steam">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="Assets/Steam.png" Width="20" Height="20" Margin="0,0,8,0"/>
+                        <TextBlock Text="Play with Steam" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+                <Button x:Name="PlayButton" Click="Play_Click" FontWeight="Bold" Background="#80D9F6" IsDefault="True" AutomationProperties.Name="Play with Epic">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="Assets/EpicGames.png" Width="20" Height="20" Margin="0,0,8,0"/>
+                        <TextBlock Text="Play with Epic" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock x:Name="InstalledVersion" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                <TextBlock x:Name="LaunchStatus" Foreground="#ACC4D5" TextWrapping="Wrap"/>
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</Window>
+

@@ -20,6 +20,7 @@
 
 
 #include "SectorMapPanel.h"
+#include "FighterHUDDetails.h"
 #include "ShipVisualCatalog.h"
 #include "MissionNavDlg.h"
 #include "StarshatterEnvironmentSubsystem.h"
@@ -92,28 +93,7 @@ namespace
             InColor.A / 255.0f);
     }
 
-    static FLinearColor GetMapIFFColor(const MissionElement* Element)
-    {
-        if (!Element)
-        {
-            return FLinearColor::White;
-        }
 
-        const int32 IFF = Element->GetIFF();
-
-        // Adjust these to your actual alliance/player IFF rules if needed
-        if (IFF == 1)
-        {
-            return FLinearColor(0.25f, 0.65f, 1.0f, 1.0f); // allied blue
-        }
-
-        if (IFF <= 0)
-        {
-            return FLinearColor(0.65f, 0.65f, 0.65f, 1.0f); // neutral gray
-        }
-
-        return FLinearColor(1.0f, 0.25f, 0.25f, 1.0f); // enemy red
-    }
 }
 
 void USectorMapPanel::NativeConstruct()
@@ -2373,14 +2353,15 @@ bool USectorMapPanel::ShouldShowMissionElementInBriefing(const MissionElement* E
     }
 
     const int32 ElemIFF = Element->GetIFF();
-    const int32 MissionTeam = CachedMission->GetTeam();
+    const MissionElement* Pilot = CachedMission->GetPlayer();
+    const int32 ObserverIFF = Pilot ? Pilot->GetIFF() : CachedMission->GetTeam();
 
     if (ElemIFF == 0)
     {
         return true;
     }
 
-    if (ElemIFF == MissionTeam)
+    if (ElemIFF == ObserverIFF)
     {
         return true;
     }
@@ -2470,19 +2451,9 @@ FLinearColor USectorMapPanel::GetMapIFFColor(const MissionElement* Element) cons
         return FLinearColor::White;
     }
 
-    const int32 IFF = Element->GetIFF();
-
-    if (CachedMission && IFF == CachedMission->GetTeam())
-    {
-        return FLinearColor(0.25f, 0.65f, 1.0f, 1.0f); // allied blue
-    }
-
-    if (IFF <= 0)
-    {
-        return FLinearColor(0.65f, 0.65f, 0.65f, 1.0f); // neutral gray
-    }
-
-    return FLinearColor(1.0f, 0.25f, 0.25f, 1.0f); // enemy red
+    const MissionElement* Pilot = CachedMission ? CachedMission->GetPlayer() : nullptr;
+    const int32 ObserverIFF = Pilot ? Pilot->GetIFF() : CachedMission ? CachedMission->GetTeam() : -1;
+    return SFighterHUDDetails::IdentificationColor(Element->GetIFF(), ObserverIFF);
 }
 void USectorMapPanel::SetLiveNavigation(bool Enabled)
 {

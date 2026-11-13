@@ -8,6 +8,7 @@ system:
 	iff: 1,
 	empire: 0,
 	name: Jarnell,
+	asteroid_type: Stony,
 	
 	link: Athenar,
 	link: Borova,
@@ -39,6 +40,8 @@ system:
 
 		planet: {
 			name:    Adonis,
+			worldscape: GasGiant,
+			population: 0,
 			icon:    "GasGiant7_map",
 			texture:  "GasGiant7",
 			radius:  18e6,
@@ -66,6 +69,8 @@ system:
 			},
 			moon: {
 			   name:    Synad,
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "rock_map",
 			   type:	 Barren,
 			   texture:  "synad",
@@ -77,6 +82,8 @@ system:
 			},
 			moon: {
 			   name:    Olan,
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "lunar_map",
 			   type:	 Barren,
 			   texture:  "olan",
@@ -89,6 +96,8 @@ system:
 			},
 			moon: {
 			   name:    Amnia,
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "lunar_map",
 			   type:	 Barren,
 			   texture:  "amnia",
@@ -102,6 +111,10 @@ system:
 		},
 		planet: {
 			name:    Jarnell,
+			worldscape: Temperate,
+			population: 840000000,
+			production: "avionics, navigation systems and ship parts",
+			location: { name: "Valtala Port", type: City, position: (-489526.30, 5473173.49, 1856000.00), population: 120000000, production: "avionics, navigation systems and ship parts" },
 			icon:    "jarnell_map",
 			texture: "jarnell",
 			type:	Terran,
@@ -125,6 +138,8 @@ system:
 			},
 			moon: {
 			   name:    Lanora,
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "lanos_map",
 			   type:	Barren,
 			   texture:  "lanos",
@@ -136,6 +151,8 @@ system:
 		},
 		planet: {
 			name:    Caladan,
+			worldscape: Barren,
+			population: 0,
 			icon:    "caladan_map",
 			type:	Terran,
 			texture: "caladan",
@@ -159,6 +176,8 @@ system:
 			},
 			moon: {
 			   name:    Malta,
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "lanos_map",
 			   type:	Barren,
 			   texture:  "lanos",
@@ -170,6 +189,8 @@ system:
 		},
 		planet:     {
 			name:    Dawn,
+			worldscape: GasGiant,
+			population: 0,
 			icon:    "GasGiant6_map",
 			type:    GasGiant,
 			texture: "GasGiant6",
@@ -199,6 +220,8 @@ system:
 			},
 			moon: {
 			   name:    Kash,
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "rock_map",
 			   type:	Barren,
 			   texture:  "kash",
@@ -210,6 +233,8 @@ system:
 			},
 			moon: {
 			   name:    Kara
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "lunar_map",
 			   type:	Barren,
 			   texture:  "lunar",
@@ -222,6 +247,8 @@ system:
 			},
 			moon: {
 			   name:    Soma,
+			   worldscape: Ice,
+			   population: 0,
 			   icon:    "ice_map",
 			   type:	ice,
 			   texture:  "ice",
@@ -234,6 +261,8 @@ system:
 			},
 			moon: {
 			   name:    Tarina,
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "ice_map",
 			   texture:  "ice",
 			   radius:  4e6,
@@ -254,6 +283,7 @@ system:
 	iff: 1,
 	empire: 0,
 	name: Borova,
+	asteroid_type: Metallic,
 	
 	link: Janus,
 	link: Silessia,
@@ -288,6 +318,8 @@ system:
 		},
 		planet: {
 			name:    Talistar
+			worldscape: Barren,
+			population: 0,
 			icon:   "lanos_map",
 			type:    Terran,
 			texture: "lanos",
@@ -311,6 +343,8 @@ system:
 		},
 		planet:       {
 			name:     Maraner,
+			worldscape: Temperate,
+			population: 0,
 			icon:     "maraner_map",
 			type:     Terran,
 			texture:  "maraner",
@@ -334,6 +368,10 @@ system:
 		},
 		planet:     {
 			name:    Borova
+			worldscape: Temperate,
+			population: 620000000,
+			production: "shipyard tooling, marine food and flight equipment",
+			location: { name: "Archon Bay", type: City, position: (-5501040.41, -991972.99, 1888000.00), population: 88571428, production: "shipyard tooling, marine food and flight equipment" },
 			icon:    "borova_map"
 			type:    Terran,
 			texture: "borova",
@@ -359,6 +397,8 @@ system:
 
 			moon:       {
 			   name:    Bolus
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "garana_map",
 			   type:    Barren,
 			   texture:  "garana",
@@ -369,6 +409,8 @@ system:
 			},
 			moon:       {
 			   name:    Kalan
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "lanos_map",
 			   type:    Barren,
 			   texture:  "lanos",
@@ -380,6 +422,8 @@ system:
 		},
 		planet: {
 			name:    Danova
+			worldscape: GasGiant,
+			population: 0,
 			icon:    "GasGiant2_map",
 			type:    GasGiant,
 			texture: "GasGiant2",
@@ -405,6 +449,8 @@ system:
 
 			moon: {
 			   name:    "Dana I"
+			   worldscape: Ice,
+			   population: 0,
 			   icon:    "ice_map",
 			   type:    ice,
 			   texture:  "ice",
@@ -416,6 +462,8 @@ system:
 			},
 			moon: {
 			   name:    "Dana II"
+			   worldscape: Ice,
+			   population: 0,
 			   icon:    "ice_map",
 			   type:    ice,
 			   texture:  "ice",
@@ -428,6 +476,8 @@ system:
 		},
 		planet: {
 			name:    Zhalisal
+			worldscape: GasGiant,
+			population: 0,
 			icon:    "GasGiant3_map",
 			type:    GasGiant,
 			texture: "GasGiant3",
@@ -454,6 +504,8 @@ system:
 			
 			moon: {
 			   name:    Vanna
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "rock_map",
 			   type:    Barren,
 			   texture:  "vanna",
@@ -465,6 +517,8 @@ system:
 			},
 			moon: {
 				name:    Mara
+				worldscape: Barren,
+				population: 0,
 				icon:    "lunar_map",
 				type:    Barren,
 			    texture:  "lunar",
@@ -477,6 +531,8 @@ system:
 			},
 			moon: {
 			   name:    Folla,
+			   worldscape: Ice,
+			   population: 0,
 			   icon:    "ice_map",
 			   type:    ice,
 			   texture:  "ice",
@@ -488,6 +544,8 @@ system:
 			},
 			moon: {
 			   name:    Amina,
+			   worldscape: Ice,
+			   population: 0,
 			   icon:    "ice_map",
 			   type:    ice,
 			   texture:  "ice",
@@ -507,6 +565,7 @@ system: {
 	iff: 1,
 	empire: 0,
 	name: Athenar,
+	asteroid_type: Stony,
 	
 	link: Janus,
 	link: Jarnell,
@@ -537,6 +596,10 @@ system: {
 
 	   planet:     {
 			name:    Athenar,
+			worldscape: Temperate,
+			population: 370000000,
+			production: "precision optics and medical instruments",
+			location: { name: "Meridian Quay", type: City, position: (1432997.06, -5226332.87, 1830400.00), population: 52857142, production: "precision optics and medical instruments" },
 			icon:    "athenar_map",
 			type:    Terran,
 			texture: "athenar",
@@ -562,6 +625,8 @@ system: {
 			
 			moon:       {
 			   name:    Nike
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "lanos_map",
 			   type:    Barren,
 			   texture:  "lanos",
@@ -573,6 +638,8 @@ system: {
 		},
 		planet:     {
 			name:    Pallas
+			worldscape: Barren,
+			population: 0,
 			icon:    "nero_map",
 			type:    Terran,
 			texture: "pallas",
@@ -607,6 +674,7 @@ system:
 	iff: 1,
 	empire: 0,
 	name: Paragon,
+	asteroid_type: Carbonaceous,
 	
 	link: Borova,
 	link: Jarnell,
@@ -637,6 +705,8 @@ system:
 
 	   planet: {
 			name:    Dorrath
+			worldscape: Barren,
+			population: 0,
 			icon:    "dorrath_map",
 			type:    Terran,
 			texture: "dorrath",
@@ -660,6 +730,8 @@ system:
 			},
 			moon:       {
 			   name:    Altos
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "maraner_map",
 			   type:    Barren,
 			   texture:  "maraner",
@@ -672,6 +744,10 @@ system:
 		},
 		planet:     {
 			name:    Paragon
+			worldscape: Temperate,
+			population: 510000000,
+			production: "agricultural machinery and bulk food",
+			location: { name: "Crown Harbor", type: City, position: (5148913.27, 1919363.47, 1856000.00), population: 72857142, production: "agricultural machinery and bulk food" },
 			icon:    "paragon_map",
 			type:    Terran,
 			texture: "paragon",
@@ -695,6 +771,8 @@ system:
 			},
 			moon:       {
 			   name:    Porthos
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "lanos_map",
 			   type:    Barren,
 			   texture:  "lanos",
@@ -705,6 +783,8 @@ system:
 			},
 			moon:       {
 			   name:    Aramis,
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "lanos_map",
 			   type:    Barren,
 			   texture:  "lanos",
@@ -716,6 +796,8 @@ system:
 		},
 	   planet: {
 			name:     "Bryn Mawr",
+			worldscape: Temperate,
+			population: 0,
 			icon:     "bryn_map",
 			type:     Terran,
 			texture:  "bryn",
@@ -739,6 +821,8 @@ system:
 		},
 		planet:	{
 			name:    Atlan,
+			worldscape: GasGiant,
+			population: 0,
 			map:     "GasGiant4_map",
 			type:    GasGiant,
 			texture:  "GasGiant4",
@@ -768,6 +852,8 @@ system:
 			},
 			moon: {
 			   name:    Aklan,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   map:     "rock_map"
 			   texture:  "rock",
@@ -779,6 +865,8 @@ system:
 			},
 			moon: {
 			   name:    Azlan,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   map:     "lunar_map"
 			   texture:  "lunar",
@@ -800,6 +888,7 @@ system:
 	iff: 1,
 	empire: 0,
 	name: Thralis,
+	asteroid_type: Carbonaceous,
 	
 	link: Jarnell,
 
@@ -828,6 +917,8 @@ system:
 		},
 		planet: {
 			name:    Pollux
+			worldscape: Temperate,
+			population: 0,
 			icon:    "benares_map",
 			type:    Terran,
 			texture: "benares",
@@ -851,6 +942,8 @@ system:
 			},
 			moon:       {
 			   name:    Galad
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "rock_map",
 			   texture:  "galad",
@@ -862,6 +955,10 @@ system:
 		},
 		planet:     {
 			name:    Thrale
+			worldscape: Temperate,
+			population: 230000000,
+			production: "cryogenic pumps and industrial ceramics",
+			location: { name: "Hera Reach", type: City, position: (-2443990.06, 5111305.86, 1913600.00), population: 32857142, production: "cryogenic pumps and industrial ceramics" },
 			icon:    "thralis_map",
 			type:    Terran,
 			texture: "thrale",
@@ -886,6 +983,8 @@ system:
 		}
 		planet: {
 			name:    Hera
+			worldscape: GasGiant,
+			population: 0,
 			icon:    "GasGiant5_map",
 			type:    GasGiant,
 			texture: "GasGiant5",
@@ -911,6 +1010,8 @@ system:
 		},
 		planet: {
 			name:    Zeus,
+			worldscape: GasGiant,
+			population: 0,
 			icon:    "GasGiant10_map",
 			type:    GasGiant,
 			texture: "GasGiant10",
@@ -937,6 +1038,8 @@ system:
 			},
 			moon: {
 			   name:    Penelope
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "rock_map",
 			   texture:  "penelope",
@@ -948,6 +1051,8 @@ system:
 			},
 			moon: {
 			   name:    Persephone,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lunar_map",
 			   texture:  "lunar",
@@ -960,6 +1065,8 @@ system:
 			},
 			moon: {
 			   name:    Aenia,
+			   worldscape: Ice,
+			   population: 0,
 			   type:    ice,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -981,6 +1088,7 @@ system:
 	iff: 1,
 	empire: 0,
 	name: Janus,
+	asteroid_type: Stony,
 	
 	link: Solus,
 	link: Athenar,
@@ -1009,11 +1117,24 @@ system:
 			radius: 480e3,
 			grid: 20e3,
 			orbit: 3.98e+11,
+			asteroid_type: Carbonaceous,
 			asteroids: 32,
+		},
+		region: {
+			name: "Janus Survey Field",
+			parent: "Janset",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 4.30e11,
+			asteroid_type: Metallic,
+			asteroids: 24,
 		},
 
 	   planet: {
 			name:    Ilon,
+			worldscape: Barren,
+			population: 0,
 			icon:    "ilon_map",
 			type:    Terran,
 			texture: "ilon",
@@ -1037,6 +1158,8 @@ system:
 		},
 		planet: {
 			name:    Dante,
+			worldscape: Barren,
+			population: 0,
 			icon:    "dante_map",
 			type:    Terran,
 			texture: "dante",
@@ -1060,6 +1183,8 @@ system:
 			},
 			moon: {
 			   name:    Hermes,
+			   worldscape: Barren,
+			   population: 0,
 			   icon:    "rock_map",
 			   type:    Barren,
 			   texture:  "hermes",
@@ -1072,6 +1197,10 @@ system:
 		},
 		planet: {
 			name:    Janek,
+			worldscape: Janek,
+			population: 92000000,
+			production: "flight simulators, training aircraft parts and grain",
+			location: { name: "Janek Port", type: City, position: (-4400602.12, -2609351.83, 1728000.00), population: 13142857, production: "flight simulators, training aircraft parts and grain" },
 			icon:    "janek_map",
 			type:    Terran,
 			texture: "janek",
@@ -1096,6 +1225,10 @@ system:
 			},
 			moon:       {
 			   name:    Lanos,
+			   worldscape: Barren,
+			   population: 26000,
+			   production: "basalt aggregate and propellant storage",
+			   location: { name: "Lanos Depot", type: City, position: (-814926.32, -483213.30, 320000.00), population: 3714, production: "basalt aggregate and propellant storage" },
 			   type:    Barren,
 			   icon:    "lunar_map",
 			   texture:  "lunar",
@@ -1107,6 +1240,8 @@ system:
 		},
 		planet:     {
 			name:    Alystra
+			worldscape: GasGiant,
+			population: 0,
 			icon:    "GasGiant12_map",
 			type:    GasGiant,
 			texture: "GasGiant12",
@@ -1134,6 +1269,8 @@ system:
 			},
 			moon: {
 			   name:    Fenris,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "rock_map",
 			   texture:  "fenris",
@@ -1145,6 +1282,8 @@ system:
 			},
 			moon: {
 			   name:    Navara,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lunar_map",
 			   texture:  "lunar",
@@ -1181,6 +1320,7 @@ system:
 	iff: 0,
 	empire: 10,
 	name: Solus,
+	asteroid_type: Carbonaceous,
 	
 	link: Janus,
 	link: Renser,
@@ -1207,11 +1347,24 @@ system:
 			radius: 480e3,
 			grid: 20e3,
 			orbit: 5.43e+11,
+			asteroid_type: Metallic,
 			asteroids: 32,
+		},
+		region: {
+			name: "Solus Prospecting Field",
+			parent: "Luxor",
+			type: Star,
+			radius: 480e3,
+			grid: 20e3,
+			orbit: 3.65e11,
+			asteroid_type: Stony,
+			asteroids: 24,
 		},
 
 	   planet: {
 			name:    Meridian
+			worldscape: Temperate,
+			population: 0,
 			type:    Terran,
 			icon:    "meridian_map",
 			texture: "meridian",
@@ -1236,6 +1389,10 @@ system:
 		},
 		planet: {
 			name:    Solus,
+			worldscape: Temperate,
+			population: 780000000,
+			production: "biotech, pharmaceuticals and refined food",
+			location: { name: "Concord Port", type: City, position: (2991006.50, -4150650.09, 1728000.00), population: 111428571, production: "biotech, pharmaceuticals and refined food" },
 			type:    Terran,
 			icon:    "solus_map",
 			texture: "solus",
@@ -1259,6 +1416,8 @@ system:
 			},
 			moon: {
 			   name:    Kalon,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "omane_map",
 			   texture:  "omane",
@@ -1270,6 +1429,8 @@ system:
 			},
 			moon: {
 			   name:    Alar,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lunar_map",
 			   texture:  "lunar",
@@ -1281,6 +1442,8 @@ system:
 		},
 		planet: {
 			name:    Jalah,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "jalah_map",
 			texture: "GasGiant4",
@@ -1306,6 +1469,8 @@ system:
 		},
 		planet: {
 			name:    Trellis,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant9_map",
 			texture: "GasGiant9",
@@ -1336,6 +1501,8 @@ system:
 			},
 			moon: {
 			   name:    Ovid,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "rock_map",
 			   texture:  "ovid",
@@ -1347,6 +1514,8 @@ system:
 			},
 			moon: {
 			   name:    Archimedes
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lunar_map",
 			   texture:  "lunar",
@@ -1359,6 +1528,8 @@ system:
 			},
 			moon: {
 			   name:    Flor,
+			   worldscape: Ice,
+			   population: 0,
 			   type:    ice,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -1380,6 +1551,7 @@ system:
 	iff: 0,
 	empire: 9,
 	name: Silessia,
+	asteroid_type: Carbonaceous,
 	
 	link: Borova,
 	link: Janus,
@@ -1412,6 +1584,10 @@ system:
 
 	   planet:       {
 			name:    Silessia,
+			worldscape: Temperate,
+			population: 280000000,
+			production: "freight handling equipment and marine exports",
+			location: { name: "Freeport", type: City, position: (3867692.00, 3348876.62, 1728000.00), population: 40000000, production: "freight handling equipment and marine exports" },
 			type:    Terran,
 			icon:    "silessia_map",
 			texture: "silessia",
@@ -1435,6 +1611,8 @@ system:
 			},
 			moon:       {
 			   name:    Tannis,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lanos_map",
 			   texture:  "lanos",
@@ -1446,6 +1624,8 @@ system:
 		},
 		planet: {
 			name:    Prosenar,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant8_map",
 			texture: "GasGiant8",
@@ -1472,6 +1652,8 @@ system:
 			},
 			moon: {
 			   name:    "Proson I",
+			   worldscape: Ice,
+			   population: 0,
 			   type:    ice,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -1484,6 +1666,8 @@ system:
 			},
 			moon: {
 			   name:    "Proson II",
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lanos_map",
 			   texture:  "lanos",
@@ -1497,6 +1681,8 @@ system:
 		},
 		planet: {
 			name:    Vesta,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant2_map",
 			texture: "GasGiant2",
@@ -1520,6 +1706,10 @@ system:
 			},
 			moon: {
 			   name:    "Vesta I",
+			   worldscape: Ice,
+			   population: 80000,
+			   production: "water ice and oxygen",
+			   location: { name: "Frost Quay", type: City, position: (3796068.07, 3286860.39, 1696000.00), population: 11428, production: "water ice and oxygen" },
 			   type:    ice,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -1532,6 +1722,8 @@ system:
 			},
 			moon: {
 			   name:    "Vesta II",
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lanos_map",
 			   texture:  "lanos",
@@ -1544,6 +1736,8 @@ system:
 			},
 			moon: {
 			   name:    "Vesta III",
+			   worldscape: Ice,
+			   population: 0,
 			   type:    ice,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -1556,6 +1750,8 @@ system:
 		},
 		planet: {
 			name:    Nero,
+			worldscape: Barren,
+			population: 0,
 			type:    Terran,
 			icon:    "nero_map",
 			texture: "nero",
@@ -1591,6 +1787,7 @@ system:
 	iff: 0,
 	empire: 11,
 	name: Haiche,
+	asteroid_type: Carbonaceous,
 	
 	link: Janus,
 	link: Renser,
@@ -1623,6 +1820,10 @@ system:
 
 	   planet:       {
 			name:    Haiche,
+			worldscape: Temperate,
+			population: 160000000,
+			production: "textiles, crops and weather instruments",
+			location: { name: "Windward Port", type: City, position: (-3271214.58, 3159091.51, 1536000.00), population: 22857142, production: "textiles, crops and weather instruments" },
 			type:    Terran,
 			icon:    "haiche_map"
 			texture: "haiche",
@@ -1648,6 +1849,8 @@ system:
 			
 			moon:       {
 			   name:    Eiller,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lunar_map",
 			   texture:  "lunar",
@@ -1659,6 +1862,8 @@ system:
 		},
 		planet: {
 			name:    Cygnus,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant5_map",
 			texture: "GasGiant5",
@@ -1683,6 +1888,8 @@ system:
 			},
 			moon: {
 			   name:    Corvus,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "rock_map",
 			   texture:  "corvus",
@@ -1694,6 +1901,8 @@ system:
 			},
 			moon: {
 			   name:    Aquilae,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -1706,6 +1915,8 @@ system:
 		},
 		planet: {
 			name:    "Tal Amin",
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant11_map",
 			texture: "GasGiant11",
@@ -1730,6 +1941,8 @@ system:
 			},
 			moon: {
 			   name:    Benares,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "rock_map",
 			   texture:  "benares",
@@ -1741,6 +1954,8 @@ system:
 			},
 			moon: {
 			   name:    Kala,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "kala_map",
 			   texture:  "kala",
@@ -1773,6 +1988,7 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Renser,
+	asteroid_type: Metallic,
 	
 	link: Haiche,
 	link: Loris,
@@ -1809,6 +2025,8 @@ system:
 		},
 		planet: {
 			name:    Garana,
+			worldscape: Temperate,
+			population: 0,
 			type:    Terran,
 			icon:    "garana_map",
 			texture: "garana",
@@ -1832,6 +2050,8 @@ system:
 		},
 		planet: {
 			name:    Rhomindal,
+			worldscape: Temperate,
+			population: 0,
 			type:    Terran,
 			icon:    "rhomindal_map",
 			texture: "rhomindal",
@@ -1855,6 +2075,10 @@ system:
 		},
 		planet: {
 			name:    Renser,
+			worldscape: Temperate,
+			population: 640000000,
+			production: "hull plate, mining equipment and military supplies",
+			location: { name: "Prefecture City", type: City, position: (-3828826.05, -4746800.95, 2059840.00), population: 91428571, production: "hull plate, mining equipment and military supplies" },
 			type:    Terran,
 			icon:    "renser_map",
 			texture: "renser",
@@ -1879,6 +2103,8 @@ system:
 		},
 		planet: {
 			name:    Marisol,
+			worldscape: Temperate,
+			population: 0,
 			type:    Terran,
 			icon:    "marisol_map",
 			texture: "marisol",
@@ -1902,6 +2128,8 @@ system:
 			},
 			moon: {
 			   name:    Asur,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "rock_map",
 			   texture:  "asur",
@@ -1913,6 +2141,8 @@ system:
 			},
 			moon: {
 			   name:    Malinus,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lunar_map",
 			   texture:  "lunar",
@@ -1925,6 +2155,8 @@ system:
 			},
 			moon: {
 			   name:    Florina,
+			   worldscape: Ice,
+			   population: 0,
 			   type:    ice,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -1938,6 +2170,8 @@ system:
 		},
 		planet: {
 			name:    Khaital,
+			worldscape: Temperate,
+			population: 0,
 			type:    Terran,
 			icon:    "khaital_map",
 			texture: "khaital",
@@ -1971,6 +2205,7 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Loris,
+	asteroid_type: Metallic,
 	
 	link: Silessia,
 	link: Renser,
@@ -2003,6 +2238,8 @@ system:
 
 	   planet:     {
 			name:    Duna,
+			worldscape: Temperate,
+			population: 0,
 			type:    Terran,
 			icon:    "duna_map",
 			texture: "duna",
@@ -2027,6 +2264,8 @@ system:
 			},
 			moon: {
 			   name:    Ansel,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "bryn_map",
 			   texture:  "bryn",
@@ -2038,6 +2277,8 @@ system:
 			},
 			moon: {
 			   name:    Kaius,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "benares_map",
 			   texture:  "benares",
@@ -2051,6 +2292,10 @@ system:
 		},
 		planet:     {
 			name:    Loris,
+			worldscape: Temperate,
+			population: 195000000,
+			production: "ore concentrates and replacement machinery",
+			location: { name: "Duna Gate", type: City, position: (4016157.05, -2686458.36, 1632000.00), population: 27857142, production: "ore concentrates and replacement machinery" },
 			type:    Terran,
 			icon:    "loris_map",
 			texture: "loris",
@@ -2075,6 +2320,8 @@ system:
 			},			
 			moon: {
 			   name:    "Loris I",
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "rock_map",
 			   texture:  "loris1",
@@ -2086,6 +2333,8 @@ system:
 			},
 			moon: {
 			   name:    "Loris II",
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "rock_map",
 			   texture:  "loris2",
@@ -2099,6 +2348,8 @@ system:
 		},
 		planet:     {
 			name:    Casalle,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant5_map",
 			texture: "GasGiant5",
@@ -2130,6 +2381,8 @@ system:
 			},
 			moon: {
 			   name:    Demeter,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "kala_map",
 			   texture:  "kala",
@@ -2141,6 +2394,8 @@ system:
 			},
 			moon: {
 			   name:    Thoraine,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lunar_map",
 			   texture:  "lunar",
@@ -2162,6 +2417,7 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Ostara,
+	asteroid_type: Stony,
 	
 	link: Kolchev,
 	link: Haiche,
@@ -2193,6 +2449,10 @@ system:
 
 	   planet: {
 			name:    Aram,
+			worldscape: Temperate,
+			population: 106000000,
+			production: "water filters, solar glass and ceramics",
+			location: { name: "Aram Crossing", type: City, position: (2908857.66, 5320173.22, 2048000.00), population: 15142857, production: "water filters, solar glass and ceramics" },
 			type:    Terran,
 			icon:   "ostara_map",
 			texture: "aram",
@@ -2219,6 +2479,8 @@ system:
 			},
 			moon: {
 			   name:    Ur,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lunar_map",
 			   texture:  "lunar",
@@ -2238,6 +2500,7 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Kolchev,
+	asteroid_type: Metallic,
 	
 	link: Haiche,
 	link: Ostara,
@@ -2272,6 +2535,8 @@ system:
 
 	   planet:     {
 			name:    Ilya,
+			worldscape: Barren,
+			population: 0,
 			type:    Terran,
 			icon:    "ilya_map",
 			texture: "ilya",
@@ -2296,6 +2561,10 @@ system:
 		},
 		planet:     {
 			name:    Kolchev,
+			worldscape: Temperate,
+			population: 450000000,
+			production: "alloy stock, bearings and heavy engines",
+			location: { name: "Ironwater", type: City, position: (-4168617.72, 1817506.62, 1536000.00), population: 64285714, production: "alloy stock, bearings and heavy engines" },
 			type:    Terran,
 			icon:    "kolchev_map",
 			texture: "kolchev",
@@ -2319,6 +2588,8 @@ system:
 			},
 			moon: {
 			   name:    "Odin",
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "maraner_map",
 			   texture:  "maraner",
@@ -2330,6 +2601,8 @@ system:
 			},
 			moon: {
 			   name:    "Dva",
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "Moon2_map",
 			   texture:  "Moon2",
@@ -2343,6 +2616,8 @@ system:
 		},
 		planet: {
 			name:    Anatoly,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant6_map",
 			texture: "GasGiant6",
@@ -2368,6 +2643,8 @@ system:
 		},
 		planet: {
 			name:    Volova,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant9_map",
 			texture: "GasGiant9",
@@ -2400,6 +2677,8 @@ system:
 			},
 			moon: {
 			   name:    Anya,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "nero_map",
 			   texture:  "nero",
@@ -2411,6 +2690,8 @@ system:
 			},
 			moon: {
 			   name:    Vlad,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "Moon1_map",
 			   texture:  "Moon1",
@@ -2423,6 +2704,8 @@ system:
 			},
 			moon: {
 			   name:    Dmitri,
+			   worldscape: Ice,
+			   population: 0,
 			   type:    ice,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -2444,6 +2727,7 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Korius,
+	asteroid_type: Stony,
 	
 	link: Nephrys,
 	link: Renser,
@@ -2481,6 +2765,10 @@ system:
 		},
 		planet: {
 			name:    Moneta,
+			worldscape: Temperate,
+			population: 310000000,
+			production: "industrial controls and packaged provisions",
+			location: { name: "Moneta Exchange", type: City, position: (-1079187.86, -3235467.44, 1152000.00), population: 44285714, production: "industrial controls and packaged provisions" },
 			type:    Terran,
 			icon:    "bryn_map",
 			texture: "moneta",
@@ -2503,6 +2791,8 @@ system:
 			},
 			moon: {
 			   name:    Covana,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "benares_map",
 			   texture:  "benares",
@@ -2516,6 +2806,8 @@ system:
 		},
 		planet: {
 			name:    Rhomin,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant11_map",
 			texture: "GasGiant11",
@@ -2532,6 +2824,8 @@ system:
 			
 			moon:     {
 			   name:    Korius,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "korius_map",
 			   texture:  "korius",
@@ -2544,6 +2838,8 @@ system:
 			},
 			moon:     {
 			   name:    Adantar,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "adantar_map",
 			   texture:  "adantar",
@@ -2574,6 +2870,7 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Tarsus,
+	asteroid_type: Metallic,
 	
 	link: Kolchev,
 	link: Ostara, 
@@ -2604,6 +2901,10 @@ system:
 		},
 		planet: {
 			name:    "Tarsus",
+			worldscape: Temperate,
+			population: 212000000,
+			production: "reactor housings and refractory metals",
+			location: { name: "Foundry Port", type: City, position: (3457024.05, -819441.70, 1200000.00), population: 30285714, production: "reactor housings and refractory metals" },
 			type:    Terran,
 			icon:    "tarsus_map",
 			texture: "tarsus",
@@ -2628,6 +2929,8 @@ system:
 		},
 		planet: {
 			name:    "Theramin",
+			worldscape: Barren,
+			population: 0,
 			type:    Barren,
 			icon:    "oman_map",
 			texture: "oman",
@@ -2662,6 +2965,7 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Nephrys,
+	asteroid_type: Stony,
 	
 	link: Loris, 
 	link: Korius,
@@ -2687,11 +2991,16 @@ system:
 			radius: 480e3,
 			grid: 20e3,
 			orbit: 6.8e+11,
+			asteroid_type: Metallic,
 			asteroids: 32,
 		},
 
 		planet:     {
 			name:    Nergal,
+			worldscape: Volcanic,
+			population: 4500000,
+			production: "refractories, sulfur compounds and thermal sensors",
+			location: { name: "Basalt Station", type: City, position: (1219711.60, 8439070.07, 2880000.00), population: 642857, production: "refractories, sulfur compounds and thermal sensors" },
 			type:    Volcanic,
 			icon:    "nergal_map",
 			texture: "nergal",
@@ -2725,6 +3034,7 @@ system:
 	iff: 2, 
 	empire: 1,
 	name: Radix,
+	asteroid_type: Stony,
 	
 	link: Kolchev,
 	link: Isham,
@@ -2757,6 +3067,8 @@ system:
 
 	   planet:     {
 			name:    Senna,
+			worldscape: Barren,
+			population: 0,
 			type:    Terran,
 			icon:    "senna_map",
 			texture: "senna",
@@ -2780,6 +3092,8 @@ system:
 			},
 			moon: {
 			   name:    Trump,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "rock_map",
 			   texture:  "trump",
@@ -2792,6 +3106,10 @@ system:
 		},
 		planet:     {
 			name:    Radix,
+			worldscape: Temperate,
+			population: 174000000,
+			production: "mineral concentrates and excavation equipment",
+			location: { name: "Canyon Exchange", type: City, position: (-4824699.03, 262402.90, 1632000.00), population: 24857142, production: "mineral concentrates and excavation equipment" },
 			type:    Terran,
 			icon:    "radix_map",
 			texture: "radix",
@@ -2815,6 +3133,8 @@ system:
 			},
 			moon: {
 			   name:    Ariadne,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lunar_map",
 			   texture:  "lunar",
@@ -2827,6 +3147,8 @@ system:
 		},
 		planet: {
 			name:    Cavenda,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant5_map",
 			texture: "GasGiant5",
@@ -2854,6 +3176,8 @@ system:
 			},	
 			moon: {
 			   name:    Oberon,
+			   worldscape: Ice,
+			   population: 0,
 			   type:    Ice,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -2866,6 +3190,8 @@ system:
 			},
 			moon: {
 			   name:    Titania,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lanos_map",
 			   texture:  "lanos",
@@ -2887,6 +3213,7 @@ system:
 	iff: 2, 
 	empire: 1, 
 	name: Isham, 
+	asteroid_type: Carbonaceous,
 	
 	link: Korius,
 	link: Kolchev,
@@ -2920,7 +3247,11 @@ system:
 		},
 
 	   planet:     {
-			name:    Garden
+			name:    Garden,
+			worldscape: Temperate,
+			population: 395000000,
+			production: "seed stock, fresh food and life support equipment",
+			location: { name: "Orchard Port", type: City, position: (123860.84, -3550656.07, 1200000.00), population: 56428571, production: "seed stock, fresh food and life support equipment" },
 			icon:    "garden_map",
 			texture: "garden",
 			radius:  3.75e6,
@@ -2944,6 +3275,8 @@ system:
 		},
 		planet: {
 			name:    Senesca,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant10_map",
 			texture: "GasGiant10",
@@ -2970,6 +3303,8 @@ system:
 			},	
 			moon: {
 			   name:    Tarawa,
+			   worldscape: Ice,
+			   population: 0,
 			   type:    Ice,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -2982,6 +3317,8 @@ system:
 			},
 			moon: {
 			   name:    Maia,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lanos_map",
 			   texture:  "lanos",
@@ -2995,6 +3332,8 @@ system:
 		},
 		planet: {
 			name:    Ramek,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant9_map",
 			texture: "GasGiant9",
@@ -3019,6 +3358,8 @@ system:
 			},	
 			moon: {
 			   name:    Alin,
+			   worldscape: Ice,
+			   population: 0,
 			   type:    Ice,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -3031,6 +3372,8 @@ system:
 			},
 			moon: {
 			   name:    Orpheus,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lanos_map",
 			   texture:  "lanos",
@@ -3043,6 +3386,8 @@ system:
 			},
 			moon: {
 			   name:    Tenebrus,
+			   worldscape: Ice,
+			   population: 0,
 			   type:    Ice,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -3055,6 +3400,8 @@ system:
 		},
 		planet:     {
 			name:    Relay,
+			worldscape: Temperate,
+			population: 0,
 			type:    Terran,
 			icon:    "relay_map",
 			texture: "relay",
@@ -3092,6 +3439,7 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Marak,
+	asteroid_type: Metallic,
 	
 	link: Trocanther,
 	star: Marakanis,
@@ -3122,6 +3470,10 @@ system:
 
 		planet:     {
 			name:    Marak,
+			worldscape: Temperate,
+			population: 1460000000,
+			production: "capital ship machinery and precision electronics",
+			location: { name: "Imperial Harbor", type: City, position: (5734820.53, 715212.87, 1952000.00), population: 208571428, production: "capital ship machinery and precision electronics" },
 			type:    Terran,
 			icon:    "marak_map",
 			texture: "marak",
@@ -3146,6 +3498,8 @@ system:
 			},
 			moon:       {
 			   name:    Manarkan,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "Moon3_map",
 			   texture:  "Moon3",
@@ -3165,6 +3519,7 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Garrison,
+	asteroid_type: Metallic,
 	
 	link: Isham,
 	link: Radix,
@@ -3195,6 +3550,8 @@ system:
 
 	   planet: {
 			name:    Rhofar,
+			worldscape: Barren,
+			population: 0,
 			type:    Terran,
 			icon:    "oman_map",
 			texture: "rhofar",
@@ -3220,6 +3577,10 @@ system:
 		}
 		planet: {
 			name:    Garrison,
+			worldscape: Temperate,
+			population: 570000000,
+			production: "armored hull sections and military stores",
+			location: { name: "Bastion City", type: City, position: (-1203204.64, 5555708.65, 1920000.00), population: 81428571, production: "armored hull sections and military stores" },
 			type:    Terran,
 			icon:    "garrison_map",
 			texture: "garrison",
@@ -3248,6 +3609,8 @@ system:
 		},
 		planet: {
 			name:    Korul,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant10_map",
 			texture: "GasGiant10",
@@ -3276,6 +3639,8 @@ system:
 		},
 		planet: {
 			name:    Nerasil,
+			worldscape: Barren,
+			population: 0,
 			type:    Terran,
 			icon:    "kala_map"
 			texture: "nerasil",
@@ -3310,6 +3675,7 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Trocanther,
+	asteroid_type: Stony,
 	
 	link: Marak,
 	link: Isham,
@@ -3340,6 +3706,10 @@ system:
 
 	   planet: {
 			name:    Volante,
+			worldscape: Temperate,
+			population: 88000000,
+			production: "survey instruments, tug components and salvage",
+			location: { name: "Volante Anchorage", type: City, position: (-5426431.11, -1693353.31, 1920000.00), population: 12571428, production: "survey instruments, tug components and salvage" },
 			type:    Terran,
 			icon:    "volante_map",
 			texture: "volante",
@@ -3363,6 +3733,8 @@ system:
 		}
 		planet: {
 			name:    Narcissus,
+			worldscape: GasGiant,
+			population: 0,
 			type:    GasGiant,
 			icon:    "GasGiant1_map",
 			texture: "GasGiant1",
@@ -3385,6 +3757,8 @@ system:
 			},
 			moon: {
 			   name:    Liriope,
+			   worldscape: Ice,
+			   population: 0,
 			   type:    Ice,
 			   icon:    "ice_map",
 			   texture:  "ice",
@@ -3397,6 +3771,8 @@ system:
 			},
 			moon: {
 			   name:    Echo,
+			   worldscape: Barren,
+			   population: 0,
 			   type:    Barren,
 			   icon:    "lanos_map",
 			   texture:  "lanos",
@@ -3410,6 +3786,8 @@ system:
 		}
 		planet: {
 			name:    Path,
+			worldscape: Barren,
+			population: 0,
 			type:    Terran,
 			icon:    "path_map",
 			texture: "path",

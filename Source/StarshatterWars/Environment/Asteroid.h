@@ -27,14 +27,19 @@
 class Asteroid : public Debris
 {
 public:
-	Asteroid(int type, const FVector& pos, double mass);
+	Asteroid(int type, const FVector& pos, double mass, TOptional<ESSWAsteroidType> DominantType = {});
 
     int GetMeshVariant() const {return MeshVariant;}
+    int GetContactId() const { return ContactId; }
+    float GetIntegrityFraction() const { return GetIntegrity() / InitialIntegrity; }
+    double ExtractOre(double Tonnes);
     const FSSWAsteroidResource& GetResource() const { return Resource; }
 	static void Initialize();
 	static void Close();
 private:
     int MeshVariant=0;
+    int ContactId=0;
+    float InitialIntegrity=1.0f;
     FSSWAsteroidResource Resource;
 };
 

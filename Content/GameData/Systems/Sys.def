@@ -1,5 +1,12 @@
 SYSTEM
 
+// Free Verse grades I through V. Grade III uses the authored baseline.
+component_grade: { level: 1, repair_scale: 1.30, replacement_scale: 0.80 }
+component_grade: { level: 2, repair_scale: 1.15, replacement_scale: 0.90 }
+component_grade: { level: 3, repair_scale: 1.00, replacement_scale: 1.00 }
+component_grade: { level: 4, repair_scale: 0.90, replacement_scale: 1.15 }
+component_grade: { level: 5, repair_scale: 0.80, replacement_scale: 1.30 }
+
 system: {
    name:             "Fusion Reactor",
 

@@ -28,10 +28,11 @@ public:
         SLATE_ARGUMENT(TFunction<Ship*()>, ResolveShip)
         SLATE_ARGUMENT(TFunction<bool()>, CanOperate)
         SLATE_EVENT(FSimpleDelegate, OnClose)
+        SLATE_EVENT(FSimpleDelegate, OnExitMenuRequested)
     SLATE_END_ARGS()
     void Construct(const FArguments& Args)
     {
-        ResolveShip = Args._ResolveShip; CanOperate = Args._CanOperate; Close = Args._OnClose;
+        ResolveShip = Args._ResolveShip; CanOperate = Args._CanOperate; Close = Args._OnClose; ExitMenuRequested = Args._OnExitMenuRequested;
         Blue = LoadStyle(TEXT("Blue")); Green = LoadStyle(TEXT("Green")); Red = LoadStyle(TEXT("Red"));
         SAssignNew(Rows, SVerticalBox);
         Rebuild();
@@ -53,6 +54,11 @@ public:
     virtual FReply OnKeyDown(const FGeometry&, const FKeyEvent& Event) override
     {
         if (Event.IsRepeat()) return FReply::Handled();
+        if (Event.GetKey() == EKeys::Escape && ExitMenuRequested.IsBound())
+        {
+            ExitMenuRequested.Execute();
+            return FReply::Handled();
+        }
         if (Event.GetKey()==EKeys::Escape || Event.GetKey()==EKeys::Q) { Close.ExecuteIfBound(); return FReply::Handled(); }
         const FKey Keys[]={EKeys::One,EKeys::Two,EKeys::Three,EKeys::Four,EKeys::Five,EKeys::Six,EKeys::Seven,EKeys::Eight,EKeys::Nine};
         for(int Index=0;Index<9;++Index)if(Event.GetKey()==Keys[Index] && Destinations.IsValidIndex(Index)){Engage(Destinations[Index]);break;}
@@ -63,6 +69,7 @@ private:
     TFunction<Ship*()> ResolveShip;
     TFunction<bool()> CanOperate;
     FSimpleDelegate Close;
+    FSimpleDelegate ExitMenuRequested;
     TSharedPtr<SVerticalBox> Rows;
     TArray<QuantumTravel::FDestination> Destinations;
     TArray<TStrongObjectPtr<UTexture2D>> Textures;

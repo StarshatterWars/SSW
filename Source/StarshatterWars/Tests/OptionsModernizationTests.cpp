@@ -94,7 +94,12 @@ bool FOptionsModernizationTest::RunTest(const FString& Parameters)
     Screen->ShowCreditsDlg();TestTrue(TEXT("Credits retained"),Switcher->GetActiveWidget()==Screen->CreditsPage);
     Screen->ShowModDlg();
     TestTrue(TEXT("Mods tab opens native empty page"), Switcher->GetActiveWidget()==Screen->ModsPage);
-    auto* EmptyMods=Cast<UTextBlock>(Screen->WidgetTree->FindWidget(TEXT("Options_ModsEmptyState")));
+    TArray<UWidget*> ModWidgets;
+    UWidgetTree::GetChildWidgets(Screen->ModsPage, ModWidgets);
+    UTextBlock* EmptyMods = nullptr;
+    for (UWidget* ModWidget : ModWidgets)
+        if (ModWidget->GetName().StartsWith(TEXT("Options_ModsEmptyState")))
+            EmptyMods = Cast<UTextBlock>(ModWidget);
     TestNotNull(TEXT("Mods empty-state label exists"),EmptyMods);
     if(EmptyMods) TestEqual(TEXT("Mods page has no fabricated entries"),EmptyMods->GetText().ToString(),FString(TEXT("No mods available.")));
     Screen->ShowGameDlg();TestTrue(TEXT("Leaving mods preserves authored game page"),Switcher->GetActiveWidget()==Pages[2]);

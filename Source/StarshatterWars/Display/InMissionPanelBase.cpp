@@ -139,9 +139,20 @@ void UInMissionPanelBase::NativeDestruct()
     FooterContent.Reset();
     if(GeneratedContent)GeneratedContent->SetContent(SNullWidget::NullWidget);
     OnPanelClosed.Unbind();
+    OnExitMenuRequested.Unbind();
     Super::NativeDestruct();
 }
 void UInMissionPanelBase::RequestPanelClose(){if(OnPanelClosed.IsBound())OnPanelClosed.Execute();else RemoveFromParent();}
+FReply UInMissionPanelBase::NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& Event)
+{
+    if (Event.GetKey() == EKeys::Escape && OnExitMenuRequested.IsBound())
+    {
+        if (!Event.IsRepeat()) OnExitMenuRequested.Execute();
+        return FReply::Handled();
+    }
+    return Super::NativeOnPreviewKeyDown(Geometry, Event);
+}
+
 FReply UInMissionPanelBase::NativeOnKeyDown(const FGeometry& G,const FKeyEvent& E){
     if(E.GetKey()==EKeys::Escape || E.GetKey()==EKeys::Delete){RequestPanelClose();return FReply::Handled();}
     return Super::NativeOnKeyDown(G,E);

@@ -180,9 +180,12 @@ void NavAI::FindObjective()
     if (bTrackingTarget) {
         if (const FVector* Point = ship->GetFixedAutoTrackPoint()) {
             obj_w = *Point;
-            objective = Transform(obj_w);
-            distance = FVector::Distance(obj_w, ship->GetLocation());
-            TrackSpeed = FMath::Clamp((distance - 3000.0) * 0.08, 0.0, 700.0);
+            // Use the hull attitude so lateral drift does not move the aim point.
+            objective = AimTransform(obj_w);
+            distance = objective.Size();
+            const double Alignment = FVector::DotProduct(objective.GetSafeNormal(), FVector(0, 0, 1));
+            const double TurnSpeedFactor = FMath::Clamp((Alignment - 0.5) * 2.0, 0.0, 1.0);
+            TrackSpeed = FMath::Clamp((distance - 5000.0) * 0.05, 0.0, 350.0) * TurnSpeedFactor;
         }
         else if (const Ship* Contact = ship->GetAutoTrackTarget()) {
             obj_w = Contact->GetLocation();
@@ -371,12 +374,29 @@ NavAI::Navigator()
         accumulator = TerrainRecovery;
     }
     else {
-        Accumulate(AvoidCollision());
-
-        if (bTrackingTarget)
+        const bool bFixedTrack = bTrackingTarget && ship->GetFixedAutoTrackPoint();
+        const Steer Avoidance = AvoidCollision(bFixedTrack);
+        if (bFixedTrack) {
+            // Yield to collision avoidance instead of steering back toward the
+            // contact while a rock is still in the flight path.
+            if (Avoidance.Magnitude() > UE_SMALL_NUMBER || Avoidance.brake > 0.0) {
+                accumulator = Avoidance;
+                TrackSpeed = 0.0;
+            }
+            else {
+                accumulator = SeekTarget();
+            }
+        }
+        else if (bTrackingTarget) {
+            Accumulate(Avoidance);
             Accumulate(SeekTarget());
-        else if (!hold)
+        }
+        else if (!hold) {
             accumulator = SeekTarget();
+        }
+        else {
+            Accumulate(Avoidance);
+        }
     }
 
     HelmControl();
@@ -414,19 +434,24 @@ NavAI::HelmControl()
         ship->SetFLCSMode(EFLCSMode::AUTO);
 
         // are we being asked to flee?
-        if (fabs(accumulator.yaw) == 1.0 && accumulator.pitch == 0.0) {
+        const bool bFixedTrack = bTrackingTarget && ship->GetFixedAutoTrackPoint();
+        if (!bFixedTrack && fabs(accumulator.yaw) == 1.0 && accumulator.pitch == 0.0) {
             accumulator.pitch = -0.7f;
             accumulator.yaw *= 0.25f;
         }
 
         self->ApplyRoll((float)(accumulator.yaw * -0.4));
-        self->ApplyYaw((float)(accumulator.yaw * 0.2));
+        const FVector AngularVelocity = self->GetAngularVelocity();
+        const double Yaw = accumulator.yaw * 0.2;
+        self->ApplyYaw(bFixedTrack ? FMath::Clamp(Yaw - AngularVelocity.Z * 0.4, -0.25, 0.25) : Yaw);
 
-        if (fabs(accumulator.yaw) > 0.5 && fabs(accumulator.pitch) < 0.1)
+        if (!bFixedTrack && fabs(accumulator.yaw) > 0.5 && fabs(accumulator.pitch) < 0.1)
             accumulator.pitch -= 0.1f;
 
         // Clear the last leg's pitch demand even when the new command is zero.
-        self->ApplyPitch((float)accumulator.pitch);
+        self->ApplyPitch(bFixedTrack && !terrain_warning
+            ? FMath::Clamp(accumulator.pitch - AngularVelocity.X * 0.5, -0.25, 0.25)
+            : accumulator.pitch);
 
         // if not turning, roll to orient with world coords:
         if (fabs(accumulator.yaw) < 0.1) {
@@ -482,7 +507,14 @@ void NavAI::ThrottleControl()
         if (!bTrackingTarget && DesiredSpeed < 10.0)
             DesiredSpeed = 250.0;
 
-        if (bFighterRoute) {
+        if (bTrackingTarget && ship->GetFixedAutoTrackPoint() && !ship->IsAirborne()) {
+            const double Error = DesiredSpeed - ship->GetVelocity().Size();
+            const double Demand = FMath::Clamp(Error * 0.4, 0.0, 60.0);
+            throttle = FMath::FInterpConstantTo(old_throttle, Demand, seconds, 80.0);
+            brakes = FMath::Clamp((-Error - 5.0) / 100.0, 0.0, 1.0);
+            if (brakes > 0.0) throttle = 0.0;
+        }
+        else if (bFighterRoute) {
             const Drive* MainDrive = ship->GetMainDrive();
             const bool bCanBoost = MainDrive && MainDrive->MaxAugmenter() > 0.0f;
             const double Limit = ship->GetVLimit();
@@ -570,7 +602,20 @@ void NavAI::ThrottleControl()
 Steer
 NavAI::SeekTarget()
 {
-    if (bTrackingTarget) return Seek(objective);
+    if (bTrackingTarget) {
+        if (!ship->GetFixedAutoTrackPoint()) return Seek(objective);
+
+        // Fixed contacts use continuous elevation through the side-on turn.
+        // Legacy Seek switches pitch formulas as the target crosses the beam.
+        Steer Result;
+        if (objective.IsNearlyZero()) return Result;
+        const double Horizontal = FMath::Sqrt(FMath::Square(objective.X) + FMath::Square(objective.Z));
+        const double Azimuth = FMath::Atan2(objective.X, objective.Z);
+        const double Elevation = FMath::Atan2(objective.Y, Horizontal);
+        Result.yaw = FMath::Clamp(Azimuth * 0.6, -0.85, 0.85);
+        Result.pitch = FMath::Clamp(-Elevation * 0.5, -0.25, 0.25);
+        return Result;
+    }
 
     if (!ship) return Steer();
     if (takeoff) return Seek(objective);

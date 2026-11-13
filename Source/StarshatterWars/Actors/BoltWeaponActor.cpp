@@ -59,6 +59,10 @@ ABoltWeaponActor::ABoltWeaponActor()
     PhotonGlow->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     PhotonGlow->SetGenerateOverlapEvents(false);
     PhotonGlow->SetCastShadow(false);
+    BoltWake = CreateDefaultSubobject<UMaterialBillboardComponent>(TEXT("BoltWake"));
+    BoltWake->SetupAttachment(Root);
+    BoltWake->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    BoltWake->SetCastShadow(false);
     static ConstructorHelpers::FObjectFinder<UMaterialInterface> GlowAsset(
         TEXT("/Game/Models/Weapons/Bolt/Shared/M_BoltGlow.M_BoltGlow"));
     if (GlowAsset.Succeeded()) PhotonGlowMaterial = GlowAsset.Object;
@@ -127,18 +131,35 @@ void ABoltWeaponActor::ApplyPresentationDefaults()
     {
         if (!PhotonGlowMID || PhotonGlowMID->Parent != PhotonGlowMaterial)
             PhotonGlowMID = UMaterialInstanceDynamic::Create(PhotonGlowMaterial, this);
-        PhotonGlowMID->SetVectorParameterValue(TEXT("BoltColor"), BoltColor);
-        PhotonGlowMID->SetScalarParameterValue(TEXT("GlowIntensity"), GlowIntensity);
+        PhotonGlowMID->SetVectorParameterValue(TEXT("BoltColor"), FMath::Lerp(BoltColor, FLinearColor::White, 0.35f));
+        PhotonGlowMID->SetScalarParameterValue(TEXT("GlowIntensity"), FMath::Max(8.0f, GlowIntensity * 0.7f));
         TArray<FMaterialSpriteElement> Elements;
         FMaterialSpriteElement WorldHalo;
         WorldHalo.Material = PhotonGlowMID;
-        WorldHalo.BaseSizeX = WorldHalo.BaseSizeY = GlowWorldRadius;
+        WorldHalo.BaseSizeX = GlowWorldRadius * 0.42f;
+        WorldHalo.BaseSizeY = GlowWorldRadius * 0.42f;
         Elements.Add(WorldHalo);
         FMaterialSpriteElement ScreenHalo = WorldHalo;
         ScreenHalo.bSizeIsInScreenSpace = true;
-        ScreenHalo.BaseSizeX = ScreenHalo.BaseSizeY = GlowScreenRadius;
+        ScreenHalo.BaseSizeX = ScreenHalo.BaseSizeY = FMath::Max(0.006f, GlowScreenRadius * 0.75f);
         Elements.Add(ScreenHalo);
         PhotonGlow->SetElements(Elements);
+        if (BoltWake->GetNumMaterials() == 0 || !BoltWake->GetMaterial(0) ||
+            !BoltWake->GetMaterial(0)->IsA<UMaterialInstanceDynamic>())
+        {
+            auto* WakeMaterial = UMaterialInstanceDynamic::Create(PhotonGlowMaterial, BoltWake);
+            FMaterialSpriteElement Wake;
+            Wake.Material = WakeMaterial;
+            Wake.BaseSizeX = GlowWorldRadius * 0.3f;
+            Wake.BaseSizeY = GlowWorldRadius * 0.3f;
+            BoltWake->SetElements({Wake});
+        }
+        if (auto* WakeMaterial = Cast<UMaterialInstanceDynamic>(BoltWake->GetMaterial(0)))
+        {
+            WakeMaterial->SetVectorParameterValue(TEXT("BoltColor"), BoltColor);
+            WakeMaterial->SetScalarParameterValue(TEXT("GlowIntensity"), GlowIntensity * 0.24f);
+        }
+        BoltWake->SetRelativeLocation(FVector(-GlowWorldRadius * 0.9f, 0, 0));
     }
 
     if (CoreFX) CoreFX->SetAsset(CoreSystem);
@@ -209,7 +230,7 @@ void ABoltWeaponActor::ActivateVisuals()
         ProjectileMesh->SetHiddenInGame(true);
     bFlightVisualsActive = true;
     SetActorHiddenInGame(false);
-    if (CoreFX && CoreSystem)
+    if (CoreFX && CoreSystem && !PhotonGlowMID)
     {
         CoreFX->SetAsset(CoreSystem);
         CoreFX->SetVariableLinearColor(TEXT("User.Color"), BoltColor);
@@ -217,7 +238,7 @@ void ABoltWeaponActor::ActivateVisuals()
         CoreFX->SetVariableFloat(TEXT("Throttle"), 100.f);
         CoreFX->Activate(true);
     }
-    if (TrailFX)
+    if (TrailFX && !PhotonGlowMID)
     {
         if (BoltSystem) TrailFX->SetAsset(BoltSystem);
         TrailFX->SetVariableFloat(TEXT("EnginePower"), 1.f);

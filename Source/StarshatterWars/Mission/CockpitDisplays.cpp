@@ -22,11 +22,12 @@ class SCockpitInstrument : public SLeafWidget
 {
 public:
     SLATE_BEGIN_ARGS(SCockpitInstrument) {} SLATE_END_ARGS()
-    void Construct(const FArguments&, TWeakPtr<SFighterHUDDetails> InHUD, int32 InPanel, TWeakObjectPtr<AFighterActor> InFighter = {})
+    void Construct(const FArguments&, TWeakPtr<SFighterHUDDetails> InHUD, int32 InPanel, TWeakObjectPtr<AFighterActor> InFighter = {}, UWidgetComponent* InSurface = nullptr)
     {
         HUD = InHUD;
         Panel = InPanel;
         Fighter = InFighter;
+        Surface = InSurface;
     }
     FVector2D ComputeDesiredSize(float) const override { return Panel==2?FVector2D(1024,512):FVector2D(512,512); }
     int32 OnPaint(const FPaintArgs&,const FGeometry& G,const FSlateRect&,FSlateWindowElementList& E,int32 L,const FWidgetStyle&,bool) const override
@@ -88,8 +89,25 @@ public:
             int32 Y=65;
             for(const auto& Row:H->StatusRows){Text(20,Y,Row.Label,Blue,24);Text(220,Y,SFighterHUDDetails::FormatStatusReadout(Row.Label,Row.Percent,H->bAugmenterActive),Blue,24);Y+=38;}
             if(H->bShowCaution){
-                Text(20,260,TEXT("CAUTION"),Blue,20);
-                for(int32 I=0;I<FMath::Min(12,H->DamageRows.Num());++I){const auto& Cell=H->DamageRows[I];if(Cell.Status>=0)Text(20+(I%3)*160,300+(I/3)*28,Cell.Label,SSWDamagePanel::Color(Cell.Status,FPlatformTime::Seconds(),Blue),16);}
+                TOptional<FVector2D> Cursor;
+                if (const UWidgetComponent* Screen = Surface.Get())
+                {
+                    const APlayerController* PC = Screen->GetWorld()->GetFirstPlayerController();
+                    FVector RayStart, RayDirection;
+                    if (PC && PC->bShowMouseCursor && PC->DeprojectMousePositionToWorld(RayStart, RayDirection))
+                    {
+                        const auto& Transform = Screen->GetComponentTransform();
+                        const FVector Start = Transform.InverseTransformPosition(RayStart);
+                        const FVector Direction = Transform.InverseTransformVector(RayDirection);
+                        if (FMath::Abs(Direction.X) > UE_SMALL_NUMBER)
+                        {
+                            const double Distance = -Start.X / Direction.X;
+                            const FVector Hit = Start + Direction * Distance;
+                            if (Distance > 0) Cursor = FVector2D(-Hit.Y, -Hit.Z);
+                        }
+                    }
+                }
+                SSWDamagePanel::Paint(H->DamageRows, E, L + 1, G, {(512 - FlightPanelStyle::CenterPanelWidth) / 2, 220}, 1.0f, Blue, Cursor);
             }
             else if(H->PlayerMFDPreview && H->PlayerMFDPreview->IsReady())Image({120,270},{270,135},H->PlayerMFDPreview->GetBrush());
             Text(20,440,H->HomeCarrierReadout,Blue,20);
@@ -99,26 +117,28 @@ public:
         }
         else if(Mode==SFighterHUDDetails::EMode::Ship)
         {
-            Text(20,16,H->bHasTarget ? H->TargetName : TEXT("NO TARGET"), H->bHasTarget ? H->TargetDisplayColor : Blue, 24);
+            auto TargetText = [&](float X, float Y, const FString& Label, FLinearColor Color, int32 Size)
+            { Text(X, Y, Label.ToUpper(), Color, Size); };
+            TargetText(20,16,H->bHasTarget ? H->TargetName : TEXT("NO TARGET"), H->bHasTarget ? H->TargetDisplayColor : Blue, 20);
             if(H->bHasTarget){
                 if(H->TargetMFDPreview && H->TargetMFDPreview->IsReady())Image({30,100},{450,225},H->TargetMFDPreview->GetBrush());
                 const FString Status = H->bTargetTracking ? TEXT("   TRACKING") :
                     H->bTargetLocked ? TEXT("   LOCKED") : TEXT("");
-                Text(20,350,H->TargetClass + Status,H->TargetDisplayColor,22);
+                TargetText(20,350,H->TargetClass + Status,H->TargetDisplayColor,18);
                 if (!H->TargetMineral.IsEmpty())
                 {
-                    Text(20,376,H->TargetRarity,Blue,22);
-                    Text(20,402,H->TargetMineral,Blue,22);
-                    Text(20,428,H->TargetDepositAmount,Blue,22);
-                    Text(20,454,H->TargetDepositValue,Blue,22);
+                    TargetText(20,376,H->TargetRarity,Blue,18);
+                    TargetText(20,402,H->TargetMineral,Blue,18);
+                    TargetText(20,428,H->TargetDepositAmount,Blue,18);
+                    TargetText(20,454,H->TargetDepositValue,Blue,18);
                 }
                 else if (H->TargetHull >= 0)
                 {
-                    Text(20,390,TEXT("HULL ")+SFighterHUDDetails::FormatStatusReadout(TEXT("HULL"),H->TargetHull),Blue,24);
+                    TargetText(20,390,TEXT("HULL ")+SFighterHUDDetails::FormatStatusReadout(TEXT("HULL"),H->TargetHull),Blue,20);
                     if (!H->TargetCargo.IsEmpty())
-                        Text(20,420,H->TargetCargo,Blue,22);
+                        TargetText(20,420,H->TargetCargo,Blue,18);
                 }
-                Text(20,H->TargetMineral.IsEmpty() ? 450 : 480,FString::Printf(TEXT("RANGE %.1f KM"),H->TargetRange),Blue,24);
+                TargetText(20,H->TargetMineral.IsEmpty() ? 450 : 480,FString::Printf(TEXT("RANGE %.1f KM"),H->TargetRange),Blue,20);
             }
         }
         else
@@ -135,11 +155,12 @@ public:
             }
             Text(20,470,FString::Printf(TEXT("%.0f KM   %d TRACKS"),H->SensorRange/1000,H->Contacts.Num()),Blue,22);
         }
-        return Panel==0?L+4:L+1;
+        return Panel==0?L+5:L+1;
     }
 private:
     TWeakPtr<SFighterHUDDetails> HUD;
     TWeakObjectPtr<AFighterActor> Fighter;
+    TWeakObjectPtr<UWidgetComponent> Surface;
     int32 Panel=0;
 };
 
@@ -245,7 +266,7 @@ void FCockpitDisplays::Update(AFighterActor* Fighter,TSharedRef<SFighterHUDDetai
             const double SurfaceClearance = I == 2 ? 0.03 : 1.0;
             W->SetRelativeLocation(Surface.TopLeft+Normal*SurfaceClearance);W->SetRelativeRotation(FRotationMatrix::MakeFromYZ(-Right,-Down).Rotator());
             W->SetRelativeScale3D(FVector(1,Right.Size()/(I==2?1024:512),Down.Size()/512));
-            W->SetSlateWidget(SNew(SCockpitInstrument,HUD,I,TWeakObjectPtr<AFighterActor>(Fighter)));W->RegisterComponent();Panels.Add(W);
+            W->SetSlateWidget(SNew(SCockpitInstrument,HUD,I,TWeakObjectPtr<AFighterActor>(Fighter),W));W->RegisterComponent();Panels.Add(W);
         }
     }
     // Blank the imported HUD artwork only once the replacement is rendered.
@@ -361,7 +382,7 @@ bool FCockpitDisplaysTest::RunTest(const FString&)
         AActor* Cockpit = Other->CockpitComponent->GetChildActor();
         TArray<UWidgetComponent*> Instruments;
         if (Cockpit) Cockpit->GetComponents(Instruments);
-        const bool bHasSuppliedCockpit = FCString::Stricmp(Name, TEXT("Zodiac")) != 0 && FCString::Stricmp(Name, TEXT("Jackal")) != 0;
+        const bool bHasSuppliedCockpit = FCString::Stricmp(Name, TEXT("Zodiac")) != 0;
         TestEqual(FString(Name) + TEXT(" physical instruments"), Instruments.Num(), bHasSuppliedCockpit ? 5 : 0);
         for (auto* Instrument : Instruments)
         {

@@ -1503,8 +1503,8 @@ bool FlightDeck::GetILSHoopCorners(int hoopIndex, FVector (&corners)[4]) const
     if (!IsRecoveryDeck() || !carrier || !hoops || hoopIndex < 0 || hoopIndex >= num_hoops ||
         (start_point - end_point).IsNearlyZero()) return false;
     const Hoop& Ring = hoops[hoopIndex];
-    const double HalfWidth = Ring.GetWidth() * 0.5;
-    const double HalfHeight = Ring.GetHeight() * 0.5;
+    const double HalfWidth = (box.X > 0.0 ? FMath::Min(box.X, double(Ring.GetWidth())) : Ring.GetWidth()) * 0.5;
+    const double HalfHeight = (box.Y > 0.0 ? FMath::Min(box.Y, double(Ring.GetHeight())) : Ring.GetHeight()) * 0.5;
     // Same winding and texture coordinates as Hoop::CreatePolys().
     const FVector Local[4] = {
         FVector(-HalfWidth, -HalfHeight, 0), FVector(HalfWidth, -HalfHeight, 0),

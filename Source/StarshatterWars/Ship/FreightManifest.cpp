@@ -24,9 +24,13 @@ void SSWFreightManifest::ReadCapacity(FSSWCargoCapacity& Capacity, TermDef& Defi
 
         const Text& Key = Field->name()->value();
         if (Key == "tonnes") GetDefNumber(Capacity.Tonnes, Field, Filename);
+        else if (Key == "load_tonnes_per_second") GetDefNumber(Capacity.LoadTonnesPerSecond, Field, Filename);
+        else if (Key == "unload_tonnes_per_second") GetDefNumber(Capacity.UnloadTonnesPerSecond, Field, Filename);
         else if (Key == "passengers") GetDefNumber(Capacity.PassengerBerths, Field, Filename);
     }
     Capacity.Tonnes = FMath::IsFinite(Capacity.Tonnes) ? FMath::Max(0.0, Capacity.Tonnes) : 0.0;
+    Capacity.LoadTonnesPerSecond = FMath::IsFinite(Capacity.LoadTonnesPerSecond) ? FMath::Max(0.0, Capacity.LoadTonnesPerSecond) : 0.0;
+    Capacity.UnloadTonnesPerSecond = FMath::IsFinite(Capacity.UnloadTonnesPerSecond) ? FMath::Max(0.0, Capacity.UnloadTonnesPerSecond) : 0.0;
     Capacity.PassengerBerths = FMath::Max(0, Capacity.PassengerBerths);
 }
 
@@ -130,6 +134,7 @@ TOptional<SSWFreightManifest::FLoad> SSWFreightManifest::Assign(
     Load.Unit = Option.Unit;
     Load.Quantity = Random.RandRange(Option.Minimum, Selected.Maximum);
     Load.FinishedItem = Option.FinishedItem;
+    Load.bPassengers = Option.bPassengers;
     return Load;
 }
 

@@ -22,10 +22,14 @@ void SFighterHUDDetails::DrawILS(const FGeometry& Geometry, FSlateWindowElementL
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
     // ILS is available for ALL player spacecraft (fighters, shuttles, etc.),
     // not only vessels classified as dropships.
-    if (!bILSMode || !Player || !Region || !Region->GetShips().contains(Player) ||
-        Player->IsDead() || Player->InTransition() || !Player->CanBeginRecovery() ||
-        (Player->GetFlightPhase() != EOPSMode::ACTIVE &&
-         Player->GetFlightPhase() != EOPSMode::APPROACH && Player->GetFlightPhase() != EOPSMode::RECOVERY) ||
+    const FlightDeck* DepartureDeck = Player ? Player->GetDock() : nullptr;
+    const bool bDeparture = DepartureDeck && DepartureDeck->IsLaunchDeck() &&
+        Player->GetFlightPhase() < EOPSMode::ACTIVE;
+    if ((!bILSMode && !bDeparture) || !Player || !Region || !Region->GetShips().contains(Player) ||
+        Player->IsDead() || Player->InTransition() ||
+        (!bDeparture && (!Player->CanBeginRecovery() ||
+         (Player->GetFlightPhase() != EOPSMode::ACTIVE &&
+          Player->GetFlightPhase() != EOPSMode::APPROACH && Player->GetFlightPhase() != EOPSMode::RECOVERY))) ||
         !GEngine || !FSlateApplication::IsInitialized()) return;
 
     APlayerController* Controller = nullptr;
@@ -53,6 +57,29 @@ void SFighterHUDDetails::DrawILS(const FGeometry& Geometry, FSlateWindowElementL
     };
 
     const FLinearColor ILSColor(0.15f, 0.55f, 1.0f, 0.9f);
+    if (bDeparture)
+    {
+        Ship* Carrier = const_cast<Ship*>(DepartureDeck->GetCarrier());
+        if (!Carrier || Carrier->IsDead() || Carrier->GetRegion() != Region) return;
+
+        for (int32 Index = 1; Index <= 3; ++Index)
+        {
+            const FVector Position = FMath::Lerp(DepartureDeck->StartPoint(), DepartureDeck->EndPoint(), Index / 3.0);
+            FVector2D Point;
+            if (!Project(Carrier, Position, Point)) continue;
+            const TArray<FVector2D> Diamond = {Point + FVector2D(0,-6), Point + FVector2D(6,0),
+                Point + FVector2D(0,6), Point + FVector2D(-6,0), Point + FVector2D(0,-6)};
+            FSlateDrawElement::MakeLines(Elements, Layer+2, Geometry.ToPaintGeometry(), Diamond,
+                ESlateDrawEffect::None, ILSColor, true, 1.5f);
+            if (Index == 3)
+                FSlateDrawElement::MakeText(Elements, Layer+2,
+                    Geometry.ToPaintGeometry(FVector2D(240,20), FSlateLayoutTransform(Point + FVector2D(9,-8))),
+                    FString::Printf(TEXT("DEPART %hs"), DepartureDeck->GetName()),
+                    FCoreStyle::GetDefaultFontStyle("Regular",10), ESlateDrawEffect::None, ILSColor);
+        }
+        return;
+    }
+
     auto DrawDeck = [&](FlightDeck* Deck) -> bool
     {
         Ship* Carrier = Deck ? const_cast<Ship*>(Deck->GetCarrier()) : nullptr;

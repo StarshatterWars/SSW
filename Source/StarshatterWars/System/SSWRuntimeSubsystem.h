@@ -156,6 +156,7 @@ private:
     void UpdateAsteroidVisuals();
     TWeakObjectPtr<AWaypointActor> AsteroidFieldContact;
     TMap<class Asteroid*,TWeakObjectPtr<AActor>> AsteroidVisuals;
+    UPROPERTY(Transient) TMap<int32, TObjectPtr<UStaticMesh>> AsteroidVariantMeshes;
     void UpdateProjectileVisuals();
     void ClearProjectileVisuals();
     TMap<SimShot*, TWeakObjectPtr<AActor>> ProjectileVisuals;

@@ -88,6 +88,8 @@ public:
 	// identification:
 	int               type;             // unique id
 	Text              name;
+    double MiningTonnesPerSecond = 0.0;
+    bool IsMiningLaser() const { return FCStringAnsi::Stricmp(name.data(), "Mining Laser") == 0; }
 	Text              group;
 	Text              description;      // background info for tactical reference
 	bool              secret;           // don't display in the tactical reference

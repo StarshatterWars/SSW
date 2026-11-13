@@ -101,6 +101,7 @@ public:
     void LoadMission(Mission* msn, bool preload_textures = false);
     void ExecMission();
     // Player-controlled carrier launch; no launch queue advances until requested.
+    bool CanRequestPlayerCarrierLaunch();
     bool RequestPlayerCarrierLaunch();
     bool IsTrainingLaunchLeaderPending();
     void CommitMission();
@@ -256,6 +257,7 @@ public:
     uint32 StartTime() const { return start_time; }
 
 protected:
+    bool FindReadyPlayerLaunchSlot(Ship* Player, Hangar*& CarrierHangar, int& Squadron, int& Slot);
     TWeakObjectPtr<UWorld> NetworkWorld;
     uint32 NextNetworkObjectId = 1;
     void CreateRegions();
@@ -293,6 +295,14 @@ protected:
     // Non-owning pointers to staged AI wingmen of the current player flight.
     // Cleared before mission ships are destroyed.
     TArray<Ship*> DeferredPlayerWingmen;
+    struct FMiningRun
+    {
+        double Time = 0.0;
+        double NextPulse = 0.0;
+        bool bDelivering = false;
+    };
+    TMap<int32, FMiningRun> JanekMiningRuns;
+    double JanekOreDelivered = 0;
     Ship* DeferredLaunchPlayer = nullptr;
     Ship* PendingLaunchPlayer = nullptr; // staged player, awaiting click / timeout
     bool bPlayerLaunchRequested = false;

@@ -141,7 +141,19 @@ PowerSource::ExecFrame(double seconds)
 
 	SimSystem::ExecFrame(seconds);
 
-	double energy_requested = 0;
+	const auto CombatBucket = [](SYSTEM_CATEGORY Category) -> int32
+    {
+        switch (Category)
+        {
+        case SYSTEM_CATEGORY::DRIVE: return 0;
+        case SYSTEM_CATEGORY::WEAPON: return 1;
+        case SYSTEM_CATEGORY::SHIELD: return 2;
+        default: return INDEX_NONE;
+        }
+    };
+    FVector CombatDemand = FVector::ZeroVector;
+    const bool bRouteCombat = !CombatAllocation.IsNearlyZero();
+    double energy_requested = 0;
 	double energy_avail = 0;
 	double total_distrib = 0;
 
@@ -174,7 +186,7 @@ PowerSource::ExecFrame(double seconds)
 			double joules = sink->GetRequest(seconds);
 
 			if (joules > 0) {
-				if (sink->IsPowerCritical()) {
+				if (sink->IsPowerCritical() && (!bRouteCombat || CombatBucket(sink->GetType()) == INDEX_NONE)) {
 
 					if (joules > energy_avail)
 						joules = energy_avail;
@@ -184,7 +196,9 @@ PowerSource::ExecFrame(double seconds)
 					sink->Distribute(joules, seconds);
 				}
 				else {
-					energy_requested += joules;
+					const int32 Bucket = bRouteCombat ? CombatBucket(sink->GetType()) : INDEX_NONE;
+                    if (Bucket != INDEX_NONE) CombatDemand[Bucket] += joules;
+                    else energy_requested += joules;
 				}
 			}
 		}
@@ -193,7 +207,25 @@ PowerSource::ExecFrame(double seconds)
 		}
 	}
 
-	if (energy_avail > 0) {
+	if (bRouteCombat && energy_avail > 0.0)
+    {
+        const double CombatBudget = FMath::Max(0.0, energy_avail - energy_requested);
+        iter.reset();
+        while (++iter)
+        {
+            SimSystem* Sink = iter.value();
+            if (!Sink->IsPowerOn()) continue;
+            const int32 Bucket = CombatBucket(Sink->GetType());
+            if (Bucket == INDEX_NONE || CombatDemand[Bucket] <= 0.0) continue;
+            const double Request = Sink->GetRequest(seconds);
+            const double Delivery = Request * FMath::Min(1.0, CombatBudget * CombatAllocation[Bucket] / CombatDemand[Bucket]);
+            Sink->Distribute(Delivery, seconds);
+            total_distrib += Delivery;
+            energy_avail -= Delivery;
+        }
+    }
+
+    if (energy_avail > 0) {
 
 		// enough to go around:
 		if (energy_requested <= energy_avail) {
@@ -202,7 +234,8 @@ PowerSource::ExecFrame(double seconds)
 			while (++iter) {
 				SimSystem* sink = iter.value();
 
-				if (sink->IsPowerOn() && !sink->IsPowerCritical()) {
+				if (sink->IsPowerOn() && !sink->IsPowerCritical() &&
+                    (!bRouteCombat || CombatBucket(sink->GetType()) == INDEX_NONE)) {
 					double joules = sink->GetRequest(seconds);
 					total_distrib += joules;
 					sink->Distribute(joules, seconds);
@@ -216,7 +249,8 @@ PowerSource::ExecFrame(double seconds)
 			while (++iter) {
 				SimSystem* sink = iter.value();
 
-				if (sink->IsPowerOn() && !sink->IsPowerCritical()) {
+				if (sink->IsPowerOn() && !sink->IsPowerCritical() &&
+                    (!bRouteCombat || CombatBucket(sink->GetType()) == INDEX_NONE)) {
 					double request = sink->GetRequest(seconds);
 					double delivery = 0;
 

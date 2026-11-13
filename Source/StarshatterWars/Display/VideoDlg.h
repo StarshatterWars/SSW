@@ -92,6 +92,7 @@ private:
 
 private:
     // Buttons
+    UFUNCTION() void OnLightPresetClicked();
     UFUNCTION() void OnApplyClicked();
     UFUNCTION() void OnCancelClicked();
 
@@ -152,6 +153,11 @@ private:
     bool  bTerrainTextures = true;
 
 protected:
+    UPROPERTY(Transient) TArray<TObjectPtr<UComboBoxString>> QualityCombos;
+    UPROPERTY(Transient) TObjectPtr<UComboBoxString> VSyncCombo;
+    UPROPERTY(Transient) TObjectPtr<UComboBoxString> FrameLimitCombo;
+    UPROPERTY(Transient) TObjectPtr<USlider> RenderScaleSlider;
+
     // Main combos
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UComboBoxString> ModeCombo;
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UComboBoxString> TexSizeCombo;

@@ -9,6 +9,7 @@
 #include "GammaBeamActor.h"
 #include "GraserBeamActor.h"
 #include "ZolonBeamActor.h"
+#include "MiningBeamActor.h"
 
 #include "Engine/World.h"
 #include "Engine/Engine.h"
@@ -174,6 +175,7 @@ void ABeamWeaponActor::SetPresentationClock(bool bPaused,float Dilation)
 }
 TSubclassOf<ABeamWeaponActor> ABeamWeaponActor::ClassForWeapon(const FString& Name)
 {
+ if(Name==TEXT("Mining Laser"))return AMiningBeamActor::StaticClass();
  if(Name==TEXT("XRay Laser"))return AXRayBeamActor::StaticClass();
  if(Name==TEXT("Gamma Laser"))return AGammaBeamActor::StaticClass();
  if(Name==TEXT("Graser Turret"))return AGraserBeamActor::StaticClass();

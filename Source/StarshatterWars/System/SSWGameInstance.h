@@ -171,6 +171,7 @@ private:
     UPROPERTY(Transient)
     TObjectPtr<UPlatformSignInDlg> PlatformSignInView;
     TSharedPtr<STextBlock> PlatformSignInStatus;
+    bool bLauncherPlatformSignInStarted = false;
     FString PlatformPilotName;
 
 public:
@@ -285,9 +286,9 @@ public:
 	void RebuildSystemOverview(const FStarSystem& Star);
 	void EnsureSystemOverview(UObject* Context, const FStarSystem& StarMap, int32 Resolution);
 
-	void LoadOrCreateUniverse();
+	void LoadOrCreateUniverse(bool bNewPilot = false);
 
-	FString GetUniverseSlotName() const { return TEXT("Universe_Main"); }
+	FString GetUniverseSlotName() const;
 	// =====================================================================
 	// Universe Clock
 	// =====================================================================

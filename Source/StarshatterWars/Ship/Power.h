@@ -37,6 +37,7 @@ public:
 	void AddClient(SimSystem* client);
 	void RemoveClient(SimSystem* client);
 
+	void SetCombatAllocation(FVector Shares) { CombatAllocation = Shares; }
 	List<SimSystem>& Clients() { return clients; }
 
 	virtual int    GetCharge() const;
@@ -55,6 +56,7 @@ public:
 	virtual void   DrainPower(double to_level);
 
 protected:
+    FVector CombatAllocation = FVector::ZeroVector;
 	float				max_output;
 	float				fuel_ratio;
 	List<SimSystem>		clients;

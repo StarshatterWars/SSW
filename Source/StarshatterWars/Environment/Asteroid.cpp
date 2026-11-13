@@ -71,13 +71,22 @@ FText FSSWAsteroidResource::GetTypeName() const
 
 // +--------------------------------------------------------------------+
 
-Asteroid::Asteroid(int t, const FVector& pos, double m)
-	: Debris(nullptr, pos, asteroid_velocity, m)
+Asteroid::Asteroid(int t, const FVector& pos, double m, TOptional<ESSWAsteroidType> DominantType)
+	: Debris(nullptr, pos, asteroid_velocity, m), ContactId(t)
 {
     MeshVariant=((t%6)+6)%6;
     // Seed from the authored spawn, independently of visual rotation and mesh choice.
     FRandomStream Deposit(HashCombine(GetTypeHash(pos), GetTypeHash(t)));
-    const double TypeRoll = Deposit.GetFraction();
+    double TypeRoll = Deposit.GetFraction();
+    if (DominantType.IsSet() && TypeRoll < 0.985 && Deposit.GetFraction() < 0.65f)
+    {
+        switch (DominantType.GetValue())
+        {
+        case ESSWAsteroidType::Carbonaceous: TypeRoll = 0.35; break;
+        case ESSWAsteroidType::Stony: TypeRoll = 0.81; break;
+        case ESSWAsteroidType::Metallic: TypeRoll = 0.95; break;
+        }
+    }
     using Mineral = ESSWMineral;
     if (TypeRoll < 0.70)
     {
@@ -116,10 +125,19 @@ Asteroid::Asteroid(int t, const FVector& pos, double m)
     SetAngularVelocity(Spin.VRand() * Speed);
     // Only the imported library supplies asteroid geometry and raw bounds.
     radius=library_radii[MeshVariant];
+    // Scale breakup resistance with rock size, independently of collision mass.
+    InitialIntegrity = integrity = static_cast<float>(FMath::Clamp(radius * 8.0, 500.0, 20000.0));
 	life = -1;
 }
 
 // +--------------------------------------------------------------------+
+
+double Asteroid::ExtractOre(double Tonnes)
+{
+    const double Extracted = FMath::Clamp(Tonnes, 0.0, Resource.AmountTonnes);
+    Resource.AmountTonnes -= Extracted;
+    return Extracted;
+}
 
 void
 Asteroid::Initialize()

@@ -106,6 +106,7 @@
 #include "LandingGear.h"
 #include "Shield.h"
 #include "HUDSounds.h"
+#include "HUDView.h"
 #include "SimRegion.h"
 #include "MissionTargetOverlay.h"
 #include "FighterHUDPanels.h"
@@ -2445,7 +2446,12 @@ void UMissionBriefingDlg::NextMissionTarget()
 {
     // Do not also advance when the user invokes Shift+T for reverse targeting.
     APlayerController* PC = GetOwningPlayer();
-    if (PC && (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")))) return;
+    if (PC && StarshatterInputBindings::IsModifierDown(PC, TEXT("Shift")))
+    {
+        HUDView::SetDefaultColorSet((FMath::Clamp(HUDView::DefaultColorSet(), 0, 3) + 1) % 4);
+        if (HUDView* Hud = HUDView::GetInstance()) Hud->SetHUDColorSet(HUDView::DefaultColorSet());
+        return;
+    }
     if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen ||
         EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() ||
         FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
@@ -2710,6 +2716,7 @@ void UMissionBriefingDlg::ToggleFighterWeaponsPanel()
     WeaponsPanelWidget=CreateWidget<UWeaponsDlg>(PC,PanelClass?PanelClass:UWeaponsDlg::StaticClass());
     if(!WeaponsPanelWidget)return;
     WeaponsPanelWidget->OnPanelClosed=FSimpleDelegate::CreateWeakLambda(this,[this](){CloseWeaponsPopup();});
+    WeaponsPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     WeaponsPanelWidget->SetVisibility(ESlateVisibility::Visible);
     WeaponsPopup=WeaponsPanelWidget->TakeWidget();
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(WeaponsPopup.ToSharedRef(),1100);
@@ -2747,7 +2754,12 @@ void UMissionBriefingDlg::ToggleFighterHUD()
     if (!bLiveMissionStarted || MissionSceneCover.IsValid() || bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
     APlayerController* PC = GetOwningPlayer();
-    if (PC && (StarshatterInputBindings::IsModifierDown(PC,TEXT("Shift")))) return;
+    if (PC && StarshatterInputBindings::IsModifierDown(PC, TEXT("Shift")))
+    {
+        HUDView::SetDefaultColorSet((FMath::Clamp(HUDView::DefaultColorSet(), 0, 3) + 1) % 4);
+        if (HUDView* Hud = HUDView::GetInstance()) Hud->SetHUDColorSet(HUDView::DefaultColorSet());
+        return;
+    }
     bFighterHUDVisible = FighterHUDDetails.IsValid() && FighterHUDDetails->CycleFlightHUDMode(bFighterHUDVisible);
     if (!bFighterHUDVisible && FighterHUDDetails.IsValid())
     {
@@ -2771,12 +2783,12 @@ void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 
 void UMissionBriefingDlg::ToggleMissionMenu()
 {
-    if (QuantumPopup.IsValid()) { CloseQuantumTravel(); return; }
-    if(NavigationPopup.IsValid()){CloseNavigationPopup();return;}
-    if(FlightOpsPopup.IsValid()){CloseFlightOpsPopup();return;}
-    if(ObjectivesPopup.IsValid()){CloseObjectivesPopup();return;}
-    if (WeaponsPopup.IsValid()) { CloseWeaponsPopup(); return; }
-    if (EngineeringPopup.IsValid()) { CloseEngineering(); return; }
+    if (QuantumPopup.IsValid()) { CloseQuantumTravel(); }
+    if(NavigationPopup.IsValid()){CloseNavigationPopup();}
+    if(FlightOpsPopup.IsValid()){CloseFlightOpsPopup();}
+    if(ObjectivesPopup.IsValid()){CloseObjectivesPopup();}
+    if (WeaponsPopup.IsValid()) { CloseWeaponsPopup(); }
+    if (EngineeringPopup.IsValid()) { CloseEngineering(); }
     ClearMissionRotationInput();
     if (MissionCameraRig) MissionCameraRig->LookX = MissionCameraRig->LookY = MissionCameraRig->RangeInput = 0.0;
     if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
@@ -2872,11 +2884,16 @@ void UMissionBriefingDlg::HandleMissionMenuAction(uintptr_t Action)
         Self->MissionPtr = nullptr;
         Self->InfoPtr = nullptr;
         // A standalone mission leaves the active story campaign untouched.
-        if (Action == QuitView::Abort && !Self->bStandaloneMission)
+        if ((Action == QuitView::Abort || Action == QuitView::MainMenu) && !Self->bStandaloneMission)
             if (Campaign* Camp = Campaign::GetCampaign())
                 if (Camp->GetCampaignId() < Campaign::SINGLE_MISSIONS) Camp->RollbackMission();
         if (Runtime) Runtime->SetGameMode(EGameMode::CMPN);
-        if (Self->bStandaloneMission)
+        if (Action == QuitView::MainMenu)
+        {
+            Self->ClearStandaloneMission();
+            if (Self->manager) Self->manager->ShowMenuDlg();
+        }
+        else if (Self->bStandaloneMission)
         {
             Self->ClearStandaloneMission();
             if (Self->manager) Self->manager->ReturnFromMissionBriefing();
@@ -3668,6 +3685,7 @@ void UMissionBriefingDlg::ToggleEngineering()
     EngineeringPanelWidget=CreateWidget<UEngineeringDlg>(PC,PanelClass?PanelClass:UEngineeringDlg::StaticClass());
     if(!EngineeringPanelWidget)return;
     EngineeringPanelWidget->OnPanelClosed=FSimpleDelegate::CreateWeakLambda(this,[this](){CloseEngineering();});
+    EngineeringPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     EngineeringPanelWidget->SetVisibility(ESlateVisibility::Visible);
     EngineeringPopup=EngineeringPanelWidget->TakeWidget();
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(EngineeringPopup.ToSharedRef(),1100);
@@ -3714,6 +3732,7 @@ void UMissionBriefingDlg::ToggleObjectivesPopup()
     ObjectivesPanelWidget = CreateWidget<UObjectivesDlg>(PC, PanelClass ? PanelClass : UObjectivesDlg::StaticClass());
     if (!ObjectivesPanelWidget) return;
     ObjectivesPanelWidget->OnPanelClosed = FSimpleDelegate::CreateWeakLambda(this, [this]() { CloseObjectivesPopup(); });
+    ObjectivesPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     ObjectivesPanelWidget->SetVisibility(ESlateVisibility::Visible);
     ObjectivesPopup = ObjectivesPanelWidget->TakeWidget();
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(ObjectivesPopup.ToSharedRef(),1100);
@@ -3761,6 +3780,7 @@ void UMissionBriefingDlg::ToggleFlightOpsPopup()
     FlightOpsPanelWidget = CreateWidget<UFlightOpsDlg>(PC, PanelClass ? PanelClass : UFlightOpsDlg::StaticClass());
     if (!FlightOpsPanelWidget) return;
     FlightOpsPanelWidget->OnPanelClosed = FSimpleDelegate::CreateWeakLambda(this, [this]() { CloseFlightOpsPopup(); });
+    FlightOpsPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     FlightOpsPanelWidget->SetVisibility(ESlateVisibility::Visible);
     FlightOpsPopup = FlightOpsPanelWidget->TakeWidget();
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(FlightOpsPopup.ToSharedRef(),1100);
@@ -3815,6 +3835,7 @@ void UMissionBriefingDlg::ToggleNavigationPopup()
     if(!NavigationPanelWidget) { UE_LOG(LogTemp, Error, TEXT("[NavigationInput] Failed to create Navigation widget")); return; }
     UE_LOG(LogTemp, Display, TEXT("[NavigationInput] Created %s"), *NavigationPanelWidget->GetClass()->GetName());
     NavigationPanelWidget->OnPanelClosed=FSimpleDelegate::CreateWeakLambda(this,[this](){CloseNavigationPopup();});
+    NavigationPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     NavigationPanelWidget->SetVisibility(ESlateVisibility::Visible);
     NavigationPopup=NavigationPanelWidget->TakeWidget();
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(NavigationPopup.ToSharedRef(),1100);
@@ -3955,14 +3976,17 @@ void UMissionBriefingDlg::ToggleContactsPanel()
     bContactsOnlyPanel = true;
     CastChecked<UContactsDlg>(WeaponsPanelWidget)->SetMissionHost(this);
     WeaponsPanelWidget->OnPanelClosed = FSimpleDelegate::CreateWeakLambda(this,[this](){CloseWeaponsPopup();});
+    WeaponsPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     WeaponsPanelWidget->SetVisibility(ESlateVisibility::Visible);
     const TSharedRef<SWidget> Panel = WeaponsPanelWidget->TakeWidget();
-    WeaponsPopup = SNew(SOverlay)
-        + SOverlay::Slot().Padding(16)
+    WeaponsPopup = SNew(SVerticalBox)
+        + SVerticalBox::Slot().FillHeight(0.19f)[SNullWidget::NullWidget]
+        + SVerticalBox::Slot().FillHeight(0.49f).Padding(16, 0)
         [SNew(SScaleBox)
             .HAlign(HAlign_Right).VAlign(VAlign_Center)
             .Stretch(EStretch::ScaleToFit).StretchDirection(EStretchDirection::DownOnly)
-            [SNew(SBox).WidthOverride(480).HeightOverride(680).Clipping(EWidgetClipping::ClipToBounds)[Panel]]];
+            [SNew(SBox).WidthOverride(480).HeightOverride(560).Clipping(EWidgetClipping::ClipToBounds)[Panel]]]
+        + SVerticalBox::Slot().FillHeight(0.32f)[SNullWidget::NullWidget];
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(WeaponsPopup.ToSharedRef(),1100);
     FInputModeGameAndUI Mode;
     Mode.SetWidgetToFocus(Panel);
@@ -4093,15 +4117,16 @@ bool TrackFixedMissionContact(AActor* Actor, Ship* Player, SimRegion* Region)
         FMissionObjectData Data;
         if ((Waypoint->bAsteroidFieldContact || !Waypoint->NamedLocationType.IsEmpty()) &&
             ReadMissionObject(Actor, Player, Region, Data))
-            return Player->SetFixedAutoTrackPoint(OtherHand(Waypoint->LegacyLocation));
+            return Player->SetFixedAutoTrackPoint(OtherHand(Waypoint->LegacyLocation), Data.Name);
     }
     if (const auto* Visual = Cast<ANativeAsteroidActor>(Actor))
         if (const Asteroid* Rock = Visual->ResolveContact(Region))
-            return Player->SetFixedAutoTrackPoint(Rock->GetLocation());
+            return Player->SetFixedAutoTrackPoint(Rock->GetLocation(),
+                FString::Printf(TEXT("Asteroid %02d"), Visual->GetContactIndex() + 1));
     if (const auto* Visual = Cast<AShipActor>(Actor))
         if (Ship* Station = Visual->GetRuntimeShip(); Station && Region->GetShips().contains(Station) &&
             Station->IsStatic() && !Station->IsDead())
-            return Player->SetFixedAutoTrackPoint(Station->GetLocation());
+            return Player->SetFixedAutoTrackPoint(Station->GetLocation(), ANSI_TO_TCHAR(Station->GetName()));
     return false;
 }
 }
@@ -4112,9 +4137,14 @@ void UMissionBriefingDlg::ToggleMissionAutoTrack()
     Sim* Simulation = Sim::GetSim();
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
     if (!Player) return;
-    if (!Player->IsAutoTrackEngaged() &&
-        TrackFixedMissionContact(SelectedMissionTarget.Get(), Player, Simulation->GetActiveRegion())) return;
-    if (Player->SetAutoTrack(!Player->IsAutoTrackEngaged())) return;
+    if (Player->IsAutoTrackEngaged())
+    {
+        Player->SetAutoTrack(false);
+        ResetTravelSpeed();
+        return;
+    }
+    if (TrackFixedMissionContact(SelectedMissionTarget.Get(), Player, Simulation->GetActiveRegion()) ||
+        Player->SetAutoTrack(true)) return;
 
     const auto* Contact = dynamic_cast<const Ship*>(Player->GetTarget());
     if (Contact && Contact->GetRegion() != Player->GetRegion())
@@ -4243,7 +4273,8 @@ void UMissionBriefingDlg::ToggleQuantumTravel()
     QuantumPopup = SNew(SQuantumTravelPopup)
         .ResolveShip([Owner](){Sim* S=Sim::GetSim();return Owner.IsValid() && Owner->bLiveMissionStarted && S ? S->GetPlayerShip() : nullptr;})
         .CanOperate([Owner](){return Owner.IsValid() && Owner->bLiveMissionStarted && Owner->GetWorld() && !Owner->GetWorld()->IsPaused() && !Owner->PendingTravelLevel;})
-        .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){CloseQuantumTravel();}));
+        .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){CloseQuantumTravel();}))
+        .OnExitMenuRequested(FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu));
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(QuantumPopup.ToSharedRef(), 1150);
     FInputModeUIOnly Mode; Mode.SetWidgetToFocus(QuantumPopup); Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
     PC->SetInputMode(Mode); PC->bShowMouseCursor=true;

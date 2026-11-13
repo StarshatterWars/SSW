@@ -20,6 +20,7 @@ public:
 	UPROPERTY() FString UniverseId;
 	UPROPERTY() uint64 UniverseSeed = 0;
 	UPROPERTY() double UniverseTimeSeconds = 0.0;
+    UPROPERTY() bool bTrackGmt = false;
 
 	// Mutable layer:
 	UPROPERTY() TMap<FName, FSystemState> SystemStates;

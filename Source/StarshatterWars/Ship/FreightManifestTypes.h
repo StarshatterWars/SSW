@@ -26,6 +26,12 @@ struct FSSWCargoCapacity
     UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin="0"))
     double Tonnes = 0.0;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    double LoadTonnesPerSecond = 0.0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    double UnloadTonnesPerSecond = 0.0;
+
     UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin="0"))
     int32 PassengerBerths = 0;
 };
