@@ -96,6 +96,8 @@ protected:
     // UBaseScreen overrides
     // ----------------------------------------------------------------
     virtual TSharedRef<SWidget> CreatePanelContent() override;
+    virtual FReply NativeOnPreviewKeyDown(const FGeometry&, const FKeyEvent&) override;
+    TWeakPtr<class SEngineeringPopup> RuntimeEngineeringPanel;
     virtual FText GetPanelCaption() const override;
     virtual bool UsesFlightPanelStyle() const override { return true; }
     virtual void BindFormWidgets() override;

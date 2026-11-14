@@ -984,3 +984,12 @@ group: {
     regnum: "8724-2"
   }
 }
+
+
+group: { type: station, id: 8547, name: "Kalon Materials Works", intel: known, iff: 0, empire_id: 10, region: "Kalon", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Kalon Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8548, name: "Kalon Orbital Concentrator", intel: known, iff: 0, empire_id: 10, region: "Kalon", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Kalon Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8549, name: "Solus Transfer Station", intel: known, iff: 0, empire_id: 10, region: "Solus", loc: (125e3, 0, 12e3), parent_type: force, parent_id: 1, unit: { name: "Solus Transfer Station", type: "Station", design: "Station1" } }

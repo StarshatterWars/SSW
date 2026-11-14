@@ -37,7 +37,6 @@ public:
         SAssignNew(Rows, SVerticalBox);
         Rebuild();
         auto Content = SNew(SVerticalBox)
-            + SVerticalBox::Slot().AutoHeight().Padding(16)[Text(TEXT("QUANTUM / FARCASTER NAVIGATION"), 24)]
             + SVerticalBox::Slot().AutoHeight().Padding(16,4)[SNew(STextBlock).AutoWrapText(true).ColorAndOpacity(FLinearColor(0.3f,0.8f,1.f)).Font(MissionUIStyle::GetRowFont(16)).Text_Lambda([this](){Ship* P=Player();FString Status=QuantumTravel::Readiness(P);return FText::FromString(Status.IsEmpty()?TEXT("Quantum drive ready. Select a destination to begin its countdown."):Status);})]
             + SVerticalBox::Slot().FillHeight(1).Padding(16,8)[SNew(SScrollBox)+SScrollBox::Slot()[Rows.ToSharedRef()]]
             + SVerticalBox::Slot().AutoHeight().Padding(16,4)[SNew(STextBlock).AutoWrapText(true).ColorAndOpacity(FLinearColor(1.f,0.8f,0.4f)).Font(MissionUIStyle::GetRowFont(15)).Text_Lambda([this](){return FText::FromString(Message);})]
@@ -46,23 +45,24 @@ public:
               +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&Blue).OnClicked_Lambda([this](){Rebuild();return FReply::Handled();})[ModernButtons.Content(TEXT("REFRESH"))]]
               +SHorizontalBox::Slot().FillWidth(2).Padding(12,0)[SNew(SButton).ButtonStyle(&Red).IsEnabled_Lambda([this](){Ship* P=Player();auto* D=P?P->GetQuantumDrive():nullptr;return Operate() && D && (D->ActiveState()==QuantumDrive::ACTIVE_COUNTDOWN || D->ActiveState()==QuantumDrive::ACTIVE_PREWARP);}).OnClicked_Lambda([this](){Ship* P=Player();if(Operate() && P && P->GetQuantumDrive())P->GetQuantumDrive()->CancelJump();Message=TEXT("Quantum countdown aborted; drive discharged.");return FReply::Handled();})[ModernButtons.Content(TEXT("ABORT COUNTDOWN"))]]
               +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&Blue).ToolTipText(FText::FromString(TEXT("Close"))).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})[ModernButtons.Content(TEXT("CLOSE"))]]];
-        ChildSlot[SNew(SOverlay)
-            +SOverlay::Slot()[SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush")).BorderBackgroundColor(FLinearColor(0.005f,0.01f,0.025f,0.8f))]
-            +SOverlay::Slot().HAlign(HAlign_Center).VAlign(VAlign_Center)[SNew(SScaleBox).Stretch(EStretch::ScaleToFit)[SNew(SBox).WidthOverride(1040).HeightOverride(720)[SNew(SBorder).BorderImage(&FlightPanelStyle::Glass()).Padding(12)[Content]]]]];
+        ChildSlot[SNew(SBorder).BorderImage(&FlightPanelStyle::Glass()).Padding(12)[Content]];
     }
     virtual bool SupportsKeyboardFocus() const override { return true; }
     virtual FReply OnKeyDown(const FGeometry&, const FKeyEvent& Event) override
     {
-        if (Event.IsRepeat()) return FReply::Handled();
         if (Event.GetKey() == EKeys::Escape && ExitMenuRequested.IsBound())
         {
-            ExitMenuRequested.Execute();
+            if (!Event.IsRepeat()) ExitMenuRequested.Execute();
             return FReply::Handled();
         }
-        if (Event.GetKey()==EKeys::Escape || Event.GetKey()==EKeys::Q) { Close.ExecuteIfBound(); return FReply::Handled(); }
         const FKey Keys[]={EKeys::One,EKeys::Two,EKeys::Three,EKeys::Four,EKeys::Five,EKeys::Six,EKeys::Seven,EKeys::Eight,EKeys::Nine};
-        for(int Index=0;Index<9;++Index)if(Event.GetKey()==Keys[Index] && Destinations.IsValidIndex(Index)){Engage(Destinations[Index]);break;}
-        return FReply::Handled();
+        for (int32 Index = 0; Index < UE_ARRAY_COUNT(Keys); ++Index)
+        {
+            if (Event.GetKey() != Keys[Index] || !Destinations.IsValidIndex(Index)) continue;
+            if (!Event.IsRepeat()) Engage(Destinations[Index]);
+            return FReply::Handled();
+        }
+        return FReply::Unhandled();
     }
 private:
     FInMissionButtonStyle ModernButtons;

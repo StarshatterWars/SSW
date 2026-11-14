@@ -300,6 +300,7 @@ void SFighterHUDDetails::Refresh()
         const auto* Snapshot = Controller->GetAssignedShipState();
         bHasPlayer = Snapshot != nullptr;
         bHasTarget = false;
+        TargetSpeed = -1;
         if (!Snapshot)
         {
             if (Symbology) Symbology->RefreshNetwork(Controller, nullptr, nullptr);
@@ -331,11 +332,12 @@ void SFighterHUDDetails::Refresh()
                     Target = &Contact;
                     bHasTarget = bTargetLocked = true;
                     bTargetTracking = Snapshot->bAutoTracking;
-                    TargetName = Contact.GetPilotLabel();
+                    TargetName = Contact.GetTargetLabel();
                     TargetClass = Contact.Design;
                     TargetHull = Contact.HullPercent;
                     TargetShield = Contact.ShieldStrength;
                     TargetRange = Range / 1000.0;
+                    TargetSpeed = Contact.Velocity.Size();
                     TargetDisplayColor = Contact.IFF == Snapshot->IFF ? HUDBlue : FLinearColor::Red;
                     if (!TargetMFDPreview) TargetMFDPreview = MakeUnique<FShipMFDPreview>(true);
                     TargetMFDPreview->SetDesign(ShipDesignRegistry::Find(Contact.Design));
@@ -514,6 +516,7 @@ void SFighterHUDDetails::Refresh()
         while (++It) if (static_cast<SimObject*>(It.value()) == P->GetTarget()) { T = It.value(); break; }
     }
     bHasTarget = T && R && R->GetShips().contains(T);
+    TargetSpeed = -1;
     if (bHasTarget && T->IsDead()) bHasTarget = false;
     if (bHasTarget)
     {
@@ -551,8 +554,9 @@ void SFighterHUDDetails::Refresh()
                 }
             }
         }
-        TargetName = IsValid(A) ? SelectedName.Get().ToString() : FString(ANSI_TO_TCHAR(T->GetName()));
+        TargetName = T->GetContactLabel();
         TargetClass = ANSI_TO_TCHAR(T->GetShipClassName());
+        TargetSpeed = T->IsStatic() ? -1 : T->GetContactSpeed();
         // Identification is relative to the observing ship, not mission team 0.
         TargetDisplayColor=IdentificationColor(T->GetIFF(),P?P->GetIFF():-1);
         TargetHull = Hull(T); TargetShield = T->GetShield() ? T->GetShieldStrength() : -1;
@@ -1087,10 +1091,10 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             Attitude, AttitudeFont, ESlateDrawEffect::None, InstrumentColor);
 
         const bool bAutoland = HUDPlayer && HUDPlayer->IsAutoLandEngaged();
-        const bool bAutoTrack = HUDPlayer && HUDPlayer->IsAutoTrackEngaged();
+        const bool bAutoTrack = (HUDPlayer && HUDPlayer->IsAutoTrackEngaged()) || (Snapshot && Snapshot->bAutoTracking);
         MiniText(366,14,bAutoTrack ? TEXT("AUTO TRACK") : bAutoland ? TEXT("AUTOLAND") :
-            bAutoAvailable ? TEXT("AUTO PILOT") : TEXT("FLIGHT CONTROL"),
-            10,(bAutoland || bAutoAvailable) ? Green : Muted);
+            bAutoAvailable ? TEXT("AUTO NAV") : TEXT("MANUAL FLIGHT CONTROL"),
+            10,(bAutoTrack || bAutoland || bAutoAvailable) ? Green : Muted,138);
         MiniText(366,43,CompactNavLabel,13,White,138);
         if (Snapshot)
             MiniText(366,62,FString::Printf(TEXT("RESPAWNS %d"),Snapshot->RespawnsRemaining),10,Muted,138);
@@ -1280,6 +1284,17 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     {
         const double ExtraRowHeight = !TargetMineral.IsEmpty() ? 40.0 : (TargetCargo.IsEmpty() ? 0.0 : 20.0);
         const FVector2D P(Size.X-408*Scale,Size.Y-(192+ExtraRowHeight)*Scale);
+        const auto* PanelBrush = FCoreStyle::Get().GetBrush("WhiteBrush");
+        auto PanelFill = [&](FVector2D Offset, FVector2D Extent, FLinearColor Color)
+        {
+            FSlateDrawElement::MakeBox(E, L,
+                G.ToPaintGeometry(FVector2f(Extent * Scale), FSlateLayoutTransform(FVector2f(P + Offset * Scale))),
+                PanelBrush, ESlateDrawEffect::None, Color);
+        };
+        PanelFill(FVector2D(-8, -5), FVector2D(192, 197 + ExtraRowHeight), FLinearColor(.016f,.036f,.052f,.91f));
+        PanelFill(FVector2D(-8, -5), FVector2D(2, 22), TargetDisplayColor);
+        PanelFill(FVector2D(0, 19), FVector2D(176, 1), FLinearColor(.15f,.27f,.34f,.7f));
+        PanelFill(FVector2D(-8, 166 + ExtraRowHeight), FVector2D(192, 26), FLinearColor(.035f,.07f,.095f,.95f));
         FString WaypointFirst, WaypointSecond;
         auto TargetText = [&](FVector2D Position, const FString& Label, FLinearColor Color)
         { ShipText(Position, Label.ToUpper(), Color, 9); };
@@ -1313,7 +1328,16 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
         if (!TargetCargo.IsEmpty())
             TargetText(P+FVector2D(0,172)*Scale,TargetCargo,TargetDisplayColor);
-        TargetText(P+FVector2D(0,172+ExtraRowHeight)*Scale,TargetRange>=0?UFormattingUtils::FormatDistance(TargetRange * 1000.0):TEXT("RANGE --"),TargetDisplayColor);
+        const FVector2D ReadoutPosition = P + FVector2D(0, 172 + ExtraRowHeight) * Scale;
+        TargetText(ReadoutPosition, TargetRange >= 0 ? UFormattingUtils::FormatDistance(TargetRange * 1000.0)
+            : TEXT("RANGE --"), TargetDisplayColor);
+        if (TargetSpeed >= 0)
+        {
+            const FString Speed = FString::Printf(TEXT("%.0f M/S"), TargetSpeed);
+            const double SpeedWidth = NameMeasure->Measure(Speed, NameFont).X;
+            TargetText(ReadoutPosition + FVector2D(FMath::Max(0.0, 176 * Scale - SpeedWidth), 0),
+                Speed, TargetDisplayColor);
+        }
     }
     } // External instruments; radio and information remain available in cockpit.
     if (const auto* Controller = NetworkController.Get())
@@ -1366,7 +1390,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     {
         TArray<FString> Labels; TArray<int32> Commands; TArray<bool> Enabled; FString Title;
         BuildRadioRows(Labels,Commands,Enabled,Title);
-        const FVector2D P(Size.X-260*Scale,24*Scale);
+        const FVector2D P(Size.X - 244 * Scale - FlightPanelStyle::RightPanelInset,
+            FlightPanelStyle::RightPanelTop);
         const FVector2D D = FVector2D(244, 64 + Labels.Num() * 24) * Scale;
         const auto& Glass = FlightPanelStyle::Glass();
         FSlateDrawElement::MakeBox(E, L+1,

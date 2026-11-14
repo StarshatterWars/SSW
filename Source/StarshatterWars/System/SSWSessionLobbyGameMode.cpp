@@ -202,6 +202,7 @@ FSSWReplicatedShipState ASSWSessionGameState::MakeShipState(const Ship& PilotShi
     FSSWReplicatedShipState State;
     State.ObjectId = PilotShip.GetObjID();
     State.Name = UTF8_TO_TCHAR(PilotShip.GetName());
+    State.ContactLabel = PilotShip.GetContactLabel();
     if (const SimRegion* Region = PilotShip.GetRegion()) State.Region = UTF8_TO_TCHAR(Region->GetName());
     if (const SimElement* Element = PilotShip.GetElement()) State.Element = UTF8_TO_TCHAR(Element->GetName().data());
     State.IFF = PilotShip.GetIFF();
@@ -1829,7 +1830,24 @@ void ASSWSessionFlightHUD::DrawHUD()
         DrawLine(Point.X - Radius, Point.Y, Point.X, Point.Y - Radius, Marker);
         const double RangeKm = FVector::Dist(Contact.Position, Fighter->Position) / 1000.0;
         const TCHAR* Tracking = bLocked ? (Fighter->bAutoTracking ? TEXT("  AUTO TRACK") : TEXT("  LOCKED")) : TEXT("");
-        const FString Caption = FString::Printf(TEXT("%s  %.3f km%s"), *Contact.GetPilotLabel(), RangeKm, Tracking);
+        if (bLocked)
+        {
+            constexpr float TextScale = .85f;
+            const FString Name = Contact.GetTargetLabel() + Tracking;
+            const FString Readout = FString::Printf(TEXT("%.3f km   %.0f m/s"), RangeKm, Contact.Velocity.Size());
+            float NameWidth = 0, ReadoutWidth = 0, LineHeight = 0;
+            GetTextSize(Name, NameWidth, LineHeight, nullptr, TextScale);
+            GetTextSize(Readout, ReadoutWidth, LineHeight, nullptr, TextScale);
+            const float Width = FMath::Max(NameWidth, ReadoutWidth) + 10;
+            const float Height = LineHeight * 2 + 8;
+            const float TagX = FMath::Clamp(float(Point.X + 13), 0.f, FMath::Max(0.f, Canvas->ClipX - Width));
+            const float TagY = FMath::Clamp(float(Point.Y + 12), 0.f, FMath::Max(0.f, Canvas->ClipY - Height));
+            DrawRect(FLinearColor(.02f,.04f,.06f,.8f), TagX, TagY, Width, Height);
+            DrawText(Name, Marker, TagX + 5, TagY + 4, nullptr, TextScale);
+            DrawText(Readout, Marker, TagX + 5, TagY + 4 + LineHeight, nullptr, TextScale);
+            continue;
+        }
+        const FString Caption = FString::Printf(TEXT("%s  %.3f km"), *Contact.GetTargetLabel(), RangeKm);
         float Width = 0.0f, Height = 0.0f;
         GetTextSize(Caption, Width, Height);
         const float CaptionX = FMath::Clamp(static_cast<float>(Point.X + 13.0), 0.0f,

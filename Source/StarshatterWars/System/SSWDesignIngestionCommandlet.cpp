@@ -8,6 +8,7 @@
 #include "Misc/Parse.h"
 #include "Misc/FileHelper.h"
 #include "StarshatterShipDesignSubsystem.h"
+#include "GameStructs_products.h"
 #include "StarshatterSystemDesignSubsystem.h"
 #include "StarshatterWeaponDesignSubsystem.h"
 #include "UObject/SavePackage.h"
@@ -244,6 +245,52 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     FString ShipDefinition;
     if (FParse::Value(*Params, TEXT("ShipDefinition="), ShipDefinition))
         return ImportSingleShipDefinition(ShipDefinition) ? 0 : 1;
+
+    if (FParse::Param(*Params, TEXT("WriteJanusProduction")))
+    {
+        if (!ImportSingleShipDefinition(TEXT("ProcessingFacility")) ||
+            !ImportSingleShipDefinition(TEXT("AsteroidBase")) ||
+            !ImportSingleShipDefinition(TEXT("MiningStation")))
+            return 2;
+
+        auto* Table = NewObject<UDataTable>();
+        Table->RowStruct = FSSWProductionRecipe::StaticStruct();
+        FSSWProductionRecipe Recipe;
+        for (uint8 Value = uint8(ESSWMineral::Olivine); Value <= uint8(ESSWMineral::Quantium40); ++Value)
+            Recipe.Minerals.Add(static_cast<ESSWMineral>(Value));
+        Recipe.Product = ESSWFinishedItem::IndustrialConcentrate;
+        Recipe.InputTonnes = 2;
+        Recipe.OutputTonnes = 1;
+        Recipe.SecondsPerBatch = 10;
+        Table->AddRow(TEXT("JanusConcentrate"), Recipe);
+
+        auto* Context = NewObject<USSWGameInstance>();
+        auto* Environment = NewObject<UStarshatterEnvironmentSubsystem>(Context);
+        Environment->SSWInstance = Context;
+        Environment->GalaxyDataTable = NewObject<UDataTable>(Context);
+        Environment->GalaxyDataTable->RowStruct = FS_Galaxy::StaticStruct();
+        Environment->RegionsDataTable = NewObject<UDataTable>(Context);
+        Environment->RegionsDataTable->RowStruct = FRegion::StaticStruct();
+        Environment->LoadGalaxyMap();
+        auto* LiveGalaxy = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_GalaxyMap.DT_GalaxyMap"));
+        if (!LiveGalaxy || LiveGalaxy->GetRowStruct() != FS_Galaxy::StaticStruct()) return 2;
+        auto* Updated = DuplicateObject<UDataTable>(LiveGalaxy, GetTransientPackage());
+        for (const FName Name : Updated->GetRowNames())
+        {
+            auto* Row = Updated->FindRow<FS_Galaxy>(Name, TEXT("Production import"));
+            const auto* Authored = Environment->GalaxyDataTable->FindRow<FS_Galaxy>(Name, TEXT("Production import"), false);
+            if (Row && Authored) Row->ProductionSites = Authored->ProductionSites;
+        }
+        auto* LiveRegions = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_Region.DT_Region"));
+        if (!LiveRegions || LiveRegions->GetRowStruct() != FRegion::StaticStruct()) return 2;
+        auto* UpdatedRegions = DuplicateObject<UDataTable>(LiveRegions, GetTransientPackage());
+        const auto* Kalon = Environment->RegionsDataTable->FindRow<FRegion>(TEXT("Kalon"), TEXT("Production import"));
+        if (!Kalon) return 2;
+        UpdatedRegions->AddRow(TEXT("Kalon"), *Kalon);
+        return SaveOutputTable(*UpdatedRegions, TEXT("DT_Region"), false) &&
+            SaveOutputTable(*Table, TEXT("DT_ProductionRecipes"), false) &&
+            SaveOutputTable(*Updated, TEXT("DT_GalaxyMap"), false) ? 0 : 2;
+    }
 
     if (FParse::Param(*Params, TEXT("ShipCargoOnly")))
         return ImportShipCargo() ? 0 : 1;

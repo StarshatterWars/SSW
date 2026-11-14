@@ -273,7 +273,10 @@ bool USSWSessionSubsystem::StartStarServer(const FString& Name, int32 Players, i
     }
 
     const FString ConfigDirectory = Root / TEXT("StarshatterWars/Config/Custom/StarServer");
-    const FString PrivateConfig = Root / TEXT("../../../Saved/StarServer/Config/Custom/StarServer/DefaultEngine.ini");
+    const TCHAR* PrivateConfigPath = TEXT("Saved/StarServer/Config/Custom/StarServer/DefaultEngine.ini");
+    FString PrivateConfig = Root / TEXT("../../") / PrivateConfigPath;
+    if (!Files.FileExists(*PrivateConfig))
+        PrivateConfig = Root / TEXT("../../../") / PrivateConfigPath;
     const FString InstalledConfig = ConfigDirectory / TEXT("DefaultEngine.ini");
     if (Files.FileExists(*PrivateConfig))
     {

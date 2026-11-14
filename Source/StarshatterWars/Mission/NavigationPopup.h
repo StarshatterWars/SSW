@@ -14,15 +14,16 @@
 #include "Instruction.h"
 #include "Game.h"
 #include "InputCoreTypes.h"
+#include "InMissionButtonStyle.h"
+#include "ShipSystemIcon.h"
 
 // Hosts SSW's existing navigation map. No duplicate actors or scene capture.
 class SNavigationPopup : public SCompoundWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SNavigationPopup) : _Embedded(false), _FooterStyle(nullptr) {}
+    SLATE_BEGIN_ARGS(SNavigationPopup) : _Embedded(false) {}
         SLATE_ARGUMENT(bool, Embedded)
         SLATE_ARGUMENT(TSharedPtr<SBox>, FooterHost)
-        SLATE_ARGUMENT(const FButtonStyle*, FooterStyle)
         SLATE_ARGUMENT(TSharedPtr<SWidget>, MapWidget)
         SLATE_ARGUMENT(TFunction<Ship*()>, ResolveShip)
         SLATE_ARGUMENT(TFunction<bool()>, CanOperate)
@@ -38,16 +39,20 @@ public:
            .ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Font(FCoreStyle::GetDefaultFontStyle("Regular",16))]
 ;
         auto Footer = SNew(SHorizontalBox)
-           +SHorizontalBox::Slot().FillWidth(1)
-            [SNew(SButton).ButtonStyle(Args._FooterStyle ? Args._FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).IsEnabled_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;return (!CanOperate || CanOperate()) && N && (N->AutoNavEngaged() || (N->IsPowerOn() && P->GetNextNavPoint()));})
+           +SHorizontalBox::Slot().AutoWidth()
+            [SNew(SButton).ButtonStyle(&Buttons.Cyan).ContentPadding(FMargin(20,8)).IsEnabled_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;return (!CanOperate || CanOperate()) && N && (N->AutoNavEngaged() || (N->IsPowerOn() && P->GetNextNavPoint()));})
              .OnClicked_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;
                  if(N && (!CanOperate || CanOperate())){
                      P->SetAutoNav(!N->AutoNavEngaged());
                      if(N->AutoNavEngaged()) Close.ExecuteIfBound();
                  }return FReply::Handled();})
-             [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;return FText::FromString(N && N->AutoNavEngaged()?TEXT("CANCEL AUTONAV"):TEXT("ENGAGE AUTONAV"));})]]
-           +SHorizontalBox::Slot().AutoWidth().Padding(16,0)
-            [SNew(SButton).ButtonStyle(Args._FooterStyle ? Args._FooterStyle : &FCoreStyle::Get().GetWidgetStyle<FButtonStyle>("Button")).ContentPadding(FMargin(24,10)).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})[Label(TEXT("CLOSE"))]];
+             [SNew(SHorizontalBox)
+                + SHorizontalBox::Slot().AutoWidth().Padding(0,0,8,0)
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Navigation)]
+                + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
+                [SNew(STextBlock).ColorAndOpacity(FLinearColor::White)
+                    .Font(FCoreStyle::GetDefaultFontStyle("Bold", 15))
+                    .Text_Lambda([this](){auto* P=Player();auto* N=P?P->GetNavSystem():nullptr;return N && N->AutoNavEngaged()?INVTEXT("CANCEL AUTONAV"):INVTEXT("ENGAGE AUTONAV");})]]];
         if (Args._FooterHost.IsValid()) Args._FooterHost->SetContent(Footer);
         else Content->AddSlot().AutoHeight().Padding(8)[Footer];
         if (Args._Embedded) { ChildSlot[Content]; return; }
@@ -62,6 +67,7 @@ public:
         return FReply::Unhandled();
     }
 private:
+    FInMissionButtonStyle Buttons;
     TFunction<Ship*()> ResolveShip;
     TFunction<bool()> CanOperate;
     FSimpleDelegate Close;

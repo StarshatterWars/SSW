@@ -54,6 +54,7 @@
 #include "WeaponsDlg.h"
 #include "ContactsDlg.h"
 #include "Widgets/Layout/SScaleBox.h"
+#include "Widgets/Layout/SConstraintCanvas.h"
 #include "Widgets/SOverlay.h"
 #include "WeaponsPopup.h"
 #include "ObjectivesDlg.h"
@@ -111,6 +112,11 @@
 #include "MissionTargetOverlay.h"
 #include "FighterHUDPanels.h"
 #include "FighterHUDDetails.h"
+#include "FlightPanelStyle.h"
+#include "ShipSystemIcon.h"
+#include "InMissionButtonStyle.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/SViewport.h"
 #include "Widgets/SOverlay.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Layout/SBorder.h"
@@ -469,7 +475,7 @@ void UMissionBriefingDlg::UpdateLiveMission()
     }
 
     // Match the autonav fallback for a plain key consumed by another flight action.
-    if (CanUseFighterHUD() && RadioMenuAction && AutoNavInputContext && GetWorld() && !GetWorld()->IsPaused() &&
+    if (CanOpenFlightPanel() && RadioMenuAction && AutoNavInputContext && GetWorld() && !GetWorld()->IsPaused() &&
         RadioMenuAction->Triggers.IsEmpty() && RadioMenuAction->Modifiers.IsEmpty()) {
         if (APlayerController* PC = GetOwningPlayer()) {
             for (const FEnhancedActionKeyMapping& Mapping : AutoNavInputContext->GetMappings()) {
@@ -1306,7 +1312,7 @@ void UMissionBriefingDlg::SetMode(EMissionBriefingMode NewMode)
             this,
             GetMissionPtr(),
             MissionWepPanel);
-        
+
         if (MissionWepPanel)
         {
             MissionWepPanel->RefreshFromMission();
@@ -1757,6 +1763,187 @@ void UMissionBriefingDlg::RevealMissionSunWhenCameraReady()
         MissionSceneCover.Reset();
     }
     World->GetTimerManager().ClearTimer(MissionSunRevealTimer);
+}
+
+namespace
+{
+class SFlightPanelWindow : public SCompoundWidget
+{
+public:
+    SLATE_BEGIN_ARGS(SFlightPanelWindow) {}
+        SLATE_ARGUMENT(FText, Title)
+        SLATE_EVENT(FSimpleDelegate, OnClose)
+        SLATE_DEFAULT_SLOT(FArguments, Content)
+    SLATE_END_ARGS()
+
+    void Construct(const FArguments& Args)
+    {
+        ChildSlot
+        [
+            SNew(SBorder).BorderImage(&FlightPanelStyle::Window()).Padding(6)
+            [SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight()
+            [SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().FillWidth(1)
+            [
+                SAssignNew(TitleBar, SBorder).BorderImage(&FlightPanelStyle::TitleBar())
+                .Padding(FMargin(12, 6)).Cursor(EMouseCursor::CardinalCross)
+                .OnMouseButtonDown_Lambda([this](const FGeometry&, const FPointerEvent& Event)
+                {
+                    return Event.GetEffectingButton() == EKeys::LeftMouseButton
+                        ? FReply::Handled().CaptureMouse(TitleBar.ToSharedRef()) : FReply::Unhandled();
+                })
+                .OnMouseMove_Lambda([this](const FGeometry&, const FPointerEvent& Event)
+                {
+                    if (!TitleBar->HasMouseCapture() || !Move) return FReply::Unhandled();
+                    Move(Event);
+                    return FReply::Handled();
+                })
+                .OnMouseButtonUp_Lambda([this](const FGeometry&, const FPointerEvent& Event)
+                {
+                    return Event.GetEffectingButton() == EKeys::LeftMouseButton && TitleBar->HasMouseCapture()
+                        ? FReply::Handled().ReleaseMouseCapture() : FReply::Unhandled();
+                })
+                [SNew(STextBlock).Text(Args._Title).Font(MissionUIStyle::GetInfoLabelFont(15))]
+            ]
+            + SHorizontalBox::Slot().AutoWidth().Padding(4, 0, 0, 0)
+            [
+                SNew(SBox).WidthOverride(36)
+                [SNew(SButton).ButtonStyle(&Buttons.Red).ContentPadding(0)
+                    .HAlign(HAlign_Center).VAlign(VAlign_Center)
+                    .IsFocusable(false).ToolTipText(INVTEXT("Close panel"))
+                    .OnClicked_Lambda([Close = Args._OnClose]() { Close.ExecuteIfBound(); return FReply::Handled(); })
+                    [Buttons.Content(TEXT("×"), 21)]]
+            ]]
+            + SVerticalBox::Slot().FillHeight(1).Padding(0, 6, 0, 0)[Args._Content.Widget]]
+        ];
+    }
+
+    FReply OnPreviewMouseButtonDown(const FGeometry&, const FPointerEvent&) override
+    {
+        if (Raise) Raise();
+        return FReply::Unhandled();
+    }
+
+    TFunction<void()> Raise;
+    TFunction<void(const FPointerEvent&)> Move;
+
+private:
+    TSharedPtr<SBorder> TitleBar;
+    FInMissionButtonStyle Buttons;
+};
+}
+
+bool UMissionBriefingDlg::CanOpenFlightPanel() const
+{
+    return bLiveMissionStarted && !bMissionCompleteHandedOff && GetWorld() && !GetWorld()->IsPaused()
+        && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !TravelTransition && !MissionSceneCover
+        && !bMissionControlsOpen && !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
+}
+
+void UMissionBriefingDlg::InstallFlightPanelToolbar()
+{
+    if (FlightPanelToolbar || !GetWorld() || !GetWorld()->GetGameViewport()) return;
+    FlightPanelCanvas = SNew(SConstraintCanvas).Visibility(EVisibility::SelfHitTestInvisible)
+        .ForceVolatile(true);
+    FlightPanelZ = 0;
+    auto Toolbar = SNew(SVerticalBox);
+    using FToggle = void (UMissionBriefingDlg::*)();
+    auto AddButton = [this, &Toolbar](const TCHAR* Label, EShipSystemIcon Icon, FToggle Toggle,
+        const TSharedPtr<SWidget> UMissionBriefingDlg::* Panel)
+    {
+        Toolbar->AddSlot().AutoHeight().Padding(0, 0, 0, 5)
+        [
+            SNew(SBox).WidthOverride(38).HeightOverride(38)
+            [
+                SNew(SButton).IsFocusable(false).ContentPadding(0).HAlign(HAlign_Center).VAlign(VAlign_Center)
+                .ButtonColorAndOpacity_Lambda([this, Panel]()
+                {
+                    return (this->*Panel).IsValid() ? FLinearColor(.25f, .75f, .95f) : FLinearColor(.25f, .38f, .48f);
+                })
+                .ToolTipText(FText::FromString(Label))
+                .OnClicked_Lambda([this, Toggle]() { (this->*Toggle)(); return FReply::Handled(); })
+                [SNew(SShipSystemIcon).Icon(Icon)]
+            ]
+        ];
+    };
+    AddButton(TEXT("Engineering"), EShipSystemIcon::Reactor, &UMissionBriefingDlg::ToggleEngineering, &UMissionBriefingDlg::EngineeringPopup);
+    AddButton(TEXT("Weapons"), EShipSystemIcon::Weapon, &UMissionBriefingDlg::ToggleFighterWeaponsPanel, &UMissionBriefingDlg::WeaponsPopup);
+    AddButton(TEXT("Navigation"), EShipSystemIcon::Navigation, &UMissionBriefingDlg::ToggleNavigationPopup, &UMissionBriefingDlg::NavigationPopup);
+    AddButton(TEXT("Quantum"), EShipSystemIcon::Jump, &UMissionBriefingDlg::ToggleQuantumTravel, &UMissionBriefingDlg::QuantumPopup);
+    AddButton(TEXT("Flight Ops"), EShipSystemIcon::Deck, &UMissionBriefingDlg::ToggleFlightOpsPopup, &UMissionBriefingDlg::FlightOpsPopup);
+    AddButton(TEXT("Objectives"), EShipSystemIcon::Computer, &UMissionBriefingDlg::ToggleObjectivesPopup, &UMissionBriefingDlg::ObjectivesPopup);
+    FlightPanelToolbar = SNew(SOverlay).Visibility(EVisibility::SelfHitTestInvisible)
+        + SOverlay::Slot()[FlightPanelCanvas.ToSharedRef()]
+        + SOverlay::Slot().HAlign(HAlign_Left).VAlign(VAlign_Center).Padding(10, 0)
+        [
+            SNew(SBox).Visibility_Lambda([this]() { return CanOpenFlightPanel() ? EVisibility::Visible : EVisibility::Collapsed; })
+            [Toolbar]
+        ];
+    GetWorld()->GetGameViewport()->AddViewportWidgetContent(FlightPanelToolbar.ToSharedRef(), 1100);
+}
+
+void UMissionBriefingDlg::AddFloatingPanel(TSharedPtr<SWidget>& Panel, TSharedRef<SWidget> Content,
+    const TCHAR* Caption, int32 Index, FSimpleDelegate Close)
+{
+    constexpr double Width = 1140;
+    constexpr double Height = 850;
+    auto Window = SNew(SFlightPanelWindow).Title(FText::FromString(Caption)).OnClose(Close)[Content];
+    Panel = SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
+        [SNew(SBox).WidthOverride(Width).HeightOverride(Height).Clipping(EWidgetClipping::ClipToBounds)[Window]];
+    auto Position = MakeShared<FVector2D>(65 + 28 * Index, 90 + 24 * Index);
+    SConstraintCanvas::FSlot* WindowSlot = nullptr;
+    {
+        auto NewSlot = FlightPanelCanvas->AddSlot();
+        NewSlot.Expose(WindowSlot).Alignment(FVector2D::ZeroVector).ZOrder(++FlightPanelZ).Offset(
+            TAttribute<FMargin>::CreateLambda([this, Position]()
+            {
+                const FVector2D View = FlightPanelCanvas->GetCachedGeometry().GetLocalSize();
+                const double Scale = FMath::Clamp(FMath::Min((View.X - 70) / Width, View.Y * .70 / Height), 0.0, 1.0);
+                const FVector2D Size = FVector2D(Width, Height) * Scale;
+                return FMargin(FMath::Clamp(Position->X, 0.0, View.X - Size.X),
+                    FMath::Clamp(Position->Y, 0.0, View.Y - Size.Y), Size.X, Size.Y);
+            }))[Panel.ToSharedRef()];
+    }
+    Window->Raise = [this, WindowSlot]() { WindowSlot->SetZOrder(++FlightPanelZ); };
+    Window->Move = [this, WindowSlot, Position](const FPointerEvent& Event)
+    {
+        const FGeometry& Geometry = FlightPanelCanvas->GetCachedGeometry();
+        const FVector2D Delta = Geometry.AbsoluteToLocal(Event.GetScreenSpacePosition())
+            - Geometry.AbsoluteToLocal(Event.GetLastScreenSpacePosition());
+        const FMargin Bounds = WindowSlot->GetOffset();
+        *Position = FVector2D(Bounds.Left, Bounds.Top) + Delta;
+    };
+    UpdateFlightPanelInput(Content);
+}
+
+void UMissionBriefingDlg::RemoveFloatingPanel(TSharedPtr<SWidget>& Panel)
+{
+    if (!Panel) return;
+    if (FlightPanelCanvas) FlightPanelCanvas->RemoveSlot(Panel.ToSharedRef());
+    Panel.Reset();
+    UpdateFlightPanelInput();
+}
+
+void UMissionBriefingDlg::UpdateFlightPanelInput(TSharedPtr<SWidget> Focus)
+{
+    APlayerController* PC = GetOwningPlayer();
+    if (!PC) return;
+    const bool bHasPanels = EngineeringPopup || WeaponsPopup || NavigationPopup || QuantumPopup ||
+        ObjectivesPopup || FlightOpsPopup || ContactsPopup;
+    if (!bHasPanels && !bFlightPanelInput) return;
+
+    if (!bFlightPanelInput) bFlightPanelPreviousCursor = PC->bShowMouseCursor;
+    bFlightPanelInput = bHasPanels;
+    if (!Focus && GetWorld() && GetWorld()->GetGameViewport())
+        Focus = GetWorld()->GetGameViewport()->GetGameViewportWidget();
+
+    FInputModeGameAndUI Mode;
+    if (Focus) Mode.SetWidgetToFocus(Focus.ToSharedRef());
+    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    Mode.SetHideCursorDuringCapture(false);
+    PC->SetInputMode(Mode);
+    PC->bShowMouseCursor = bHasPanels || bFlightPanelPreviousCursor;
 }
 
 bool UMissionBriefingDlg::EnableMissionMenuInput()
@@ -2284,6 +2471,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
             .SelectedName_Lambda([Owner]() { return Owner.IsValid() ? Owner->SelectedMissionTargetName : FText::GetEmpty(); });
         GetWorld()->GetGameViewport()->AddViewportWidgetContent(FighterHUDDetails.ToSharedRef(), 810);
     }
+    InstallFlightPanelToolbar();
     QuantumMenuAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_QuantumMenu.IA_QuantumMenu"));
     bool bQuantumMapped = false;
     for (const UInputMappingContext* Context : {FighterInputContext.Get(), MissionMenuContext.Get()})
@@ -2338,6 +2526,9 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 }
 void UMissionBriefingDlg::DisableMissionMenuInput()
 {
+    if (FlightPanelToolbar && GetWorld() && GetWorld()->GetGameViewport())
+        GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(FlightPanelToolbar.ToSharedRef());
+    FlightPanelToolbar.Reset();
     if (IsValid(MissionPreviewCamera))
         MissionPreviewCamera->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
     // Stop the timer before resetting the rig; otherwise it recreates a chase
@@ -2353,8 +2544,10 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     CloseFlightOpsPopup();
     CloseObjectivesPopup();
     ObjectivesPanelAction=nullptr;
+    CloseContactsPopup();
     CloseWeaponsPopup();
     CloseEngineering();
+    FlightPanelCanvas.Reset();
     EngineeringAction = nullptr;
     if (MissionCameraRig) MissionCameraRig->Reset(GetOwningPlayer());
     ClearMissionRotationInput();
@@ -2583,24 +2776,7 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
     else Player->DropTarget(); // Navigation selection is not a weapons lock.
     FMissionObjectData ObjectData;
     ReadMissionObject(Selected, Player, Region, ObjectData);
-    FString FullName = SelectedShip ? FString(ANSI_TO_TCHAR(SelectedShip->GetName())) : ObjectData.Name;
-    if (CombatUnit* Unit = SelectedShip ? SelectedShip->GetCombatUnit() : nullptr)
-    {
-        const FString Abbreviation = UFormattingUtils::GetUnitDesignIndicator(Unit);
-        FString Registry = FString(ANSI_TO_TCHAR(Unit->GetRegistryNumber().data())).TrimStartAndEnd();
-        // Normalize CV6, CV-6, and a numeric registry to the same CV-6 prefix.
-        if (Registry.StartsWith(Abbreviation, ESearchCase::IgnoreCase))
-            Registry.RightChopInline(Abbreviation.Len());
-        Registry.TrimStartAndEndInline();
-        while (Registry.StartsWith(TEXT("-")))
-        {
-            Registry.RightChopInline(1);
-            Registry.TrimStartInline();
-        }
-        const FString Prefix = Registry.IsEmpty() ? Abbreviation : Abbreviation + TEXT("-") + Registry;
-        if (!FullName.StartsWith(Prefix + TEXT(" "), ESearchCase::IgnoreCase))
-            FullName = Prefix + TEXT(" ") + FullName;
-    }
+    const FString FullName = SelectedShip ? SelectedShip->GetContactLabel() : ObjectData.Name;
     SelectedMissionTargetName = FText::FromString(FullName);
     if (!MissionTargetOverlay.IsValid())
     {
@@ -2670,9 +2846,7 @@ bool UMissionBriefingDlg::CanUseFighterHUD() const
 
 bool UMissionBriefingDlg::CanShowFighterHUD() const
 {
-    return bLiveMissionStarted && !bMissionCompleteHandedOff
-        && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !bMissionControlsOpen && !EngineeringPopup.IsValid() && (!WeaponsPopup.IsValid() || bContactsOnlyPanel) && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() &&
-        !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
+    return CanOpenFlightPanel();
 }
 void UMissionBriefingDlg::CycleFighterMFDLeft()
 {
@@ -2693,54 +2867,28 @@ void UMissionBriefingDlg::CycleFighterWeapon()
 
 void UMissionBriefingDlg::ToggleFighterWeaponsPanel()
 {
+    if (WeaponsPopup) { CloseWeaponsPopup(); return; }
+    if (!CanOpenFlightPanel() || !FlightPanelCanvas) return;
     if (Game::IsTimeCompressed()) return;
-    CloseQuantumTravel();
-    CloseNavigationPopup();
-    CloseFlightOpsPopup();
-    CloseObjectivesPopup();
-    CloseEngineering();
-    if (WeaponsPopup.IsValid()) {
-        const bool WasContacts = bContactsOnlyPanel;
-        CloseWeaponsPopup();
-        if (!WasContacts) return;
-    }
-    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
     APlayerController* PC=GetOwningPlayer();
     if (!PC) return;
     ClearMissionRotationInput();
     if (MissionCameraRig) MissionCameraRig->LookX=MissionCameraRig->LookY=MissionCameraRig->RangeInput=0;
-    if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
-    UpdateFighterRadioInput();
-    bWeaponsPreviousCursor=PC->bShowMouseCursor;
     UClass* PanelClass=LoadClass<UWeaponsDlg>(nullptr,TEXT("/Game/Screens/inGame/WBP_Weapons.WBP_Weapons_C"));
     WeaponsPanelWidget=CreateWidget<UWeaponsDlg>(PC,PanelClass?PanelClass:UWeaponsDlg::StaticClass());
     if(!WeaponsPanelWidget)return;
     WeaponsPanelWidget->OnPanelClosed=FSimpleDelegate::CreateWeakLambda(this,[this](){CloseWeaponsPopup();});
     WeaponsPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     WeaponsPanelWidget->SetVisibility(ESlateVisibility::Visible);
-    WeaponsPopup=WeaponsPanelWidget->TakeWidget();
-    GetWorld()->GetGameViewport()->AddViewportWidgetContent(WeaponsPopup.ToSharedRef(),1100);
-    FInputModeGameAndUI Mode;
-    Mode.SetWidgetToFocus(WeaponsPopup);
-    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    Mode.SetHideCursorDuringCapture(false);
-    PC->SetInputMode(Mode);
-    PC->bShowMouseCursor=true;
+    AddFloatingPanel(WeaponsPopup, WeaponsPanelWidget->TakeWidget(), TEXT("Weapons"), 1, FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseWeaponsPopup));
 }
 
 void UMissionBriefingDlg::CloseWeaponsPopup()
 {
-    if (!WeaponsPopup.IsValid()) return;
-    if (GetWorld() && GetWorld()->GetGameViewport())
-        GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(WeaponsPopup.ToSharedRef());
-    WeaponsPopup.Reset();
-    bContactsOnlyPanel=false;
-    if(WeaponsPanelWidget)WeaponsPanelWidget->RemoveFromParent();
-    WeaponsPanelWidget=nullptr;
-    if (APlayerController* PC=GetOwningPlayer()) {
-        PC->SetInputMode(FInputModeGameOnly());
-        PC->bShowMouseCursor=bWeaponsPreviousCursor;
-    }
+    if (!WeaponsPopup) return;
+    RemoveFloatingPanel(WeaponsPopup);
+    if (WeaponsPanelWidget) WeaponsPanelWidget->RemoveFromParent();
+    WeaponsPanelWidget = nullptr;
 }
 
 
@@ -2783,6 +2931,7 @@ void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 
 void UMissionBriefingDlg::ToggleMissionMenu()
 {
+    CloseContactsPopup();
     if (QuantumPopup.IsValid()) { CloseQuantumTravel(); }
     if(NavigationPopup.IsValid()){CloseNavigationPopup();}
     if(FlightOpsPopup.IsValid()){CloseFlightOpsPopup();}
@@ -2794,7 +2943,11 @@ void UMissionBriefingDlg::ToggleMissionMenu()
     if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
     UpdateFighterRadioInput();
     if (!MissionQuitMenu || !MissionSystemLevel || MissionSceneCover.IsValid()) return;
-    if (MissionQuitMenu->IsMenuShown()) MissionQuitMenu->CloseMenu();
+    if (MissionQuitMenu->IsMenuShown())
+    {
+        MissionQuitMenu->CloseMenu();
+        HandleMissionMenuAction(QuitView::Resume);
+    }
     else
     {
         TArray<UUserWidget*> Screens;
@@ -2807,7 +2960,16 @@ void UMissionBriefingDlg::ToggleMissionMenu()
 }
 void UMissionBriefingDlg::HandleMissionMenuAction(uintptr_t Action)
 {
-    if (Action == QuitView::Resume) return;
+    if (Action == QuitView::Resume)
+    {
+        if (APlayerController* PC = GetOwningPlayer())
+        {
+            FInputModeGameAndUI Mode;
+            Mode.SetHideCursorDuringCapture(false);
+            PC->SetInputMode(Mode);
+        }
+        return;
+    }
     if (Action == QuitView::Controls)
     {
         if (!manager) return;
@@ -3070,7 +3232,8 @@ void UMissionBriefingDlg::OnCommit()
 
     if (APlayerController* PC = GetOwningPlayer())
     {
-        FInputModeGameOnly Input;
+        FInputModeGameAndUI Input;
+        Input.SetHideCursorDuringCapture(false);
         PC->SetInputMode(Input);
         PC->bShowMouseCursor = true;
     }
@@ -3166,12 +3329,30 @@ void UMissionBriefingDlg::UpdateFighterRadioInput()
 }
 void UMissionBriefingDlg::ToggleFighterRadio()
 {
-    if (!CanUseFighterHUD() || !FighterHUDDetails.IsValid() || !GetWorld() || GetWorld()->IsPaused()) return;
+    if (!CanOpenFlightPanel() || !FighterHUDDetails) return;
     if (LastRadioInputFrame == GFrameCounter) return;
     LastRadioInputFrame = GFrameCounter;
     bFighterHUDVisible=true;
     FighterHUDDetails->ToggleRadio();
+    if (FighterHUDDetails->IsRadioOpen()) CloseContactsPopup();
     UpdateFighterRadioInput();
+}
+
+bool UMissionBriefingDlg::HandleContactsRadioKey(const FKey& Key)
+{
+    if (!RadioMenuAction || !AutoNavInputContext || !RadioMenuAction->Triggers.IsEmpty() ||
+        !RadioMenuAction->Modifiers.IsEmpty()) return false;
+
+    for (const FEnhancedActionKeyMapping& Mapping : AutoNavInputContext->GetMappings())
+    {
+        if (Mapping.Action.Get() == RadioMenuAction.Get() && Mapping.Key == Key &&
+            Mapping.Triggers.IsEmpty() && Mapping.Modifiers.IsEmpty())
+        {
+            ToggleFighterRadio();
+            return FighterHUDDetails.IsValid() && FighterHUDDetails->IsRadioOpen();
+        }
+    }
+    return false;
 }
 void UMissionBriefingDlg::ToggleTravelSpeedMenu()
 {
@@ -3230,7 +3411,7 @@ void UMissionBriefingDlg::SelectFighterRadio(int32 Number)
         UpdateFighterRadioInput();
         return;
     }
-    if (CanUseFighterHUD() && bFighterHUDVisible && FighterHUDDetails.IsValid()) FighterHUDDetails->RadioSelect(Number);
+    if (CanOpenFlightPanel() && bFighterHUDVisible && FighterHUDDetails.IsValid()) FighterHUDDetails->RadioSelect(Number);
     UpdateFighterRadioInput();
 }
 void UMissionBriefingDlg::SelectFighterRadio0() { SelectFighterRadio(0); }
@@ -3433,7 +3614,7 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
     APlayerController* PC = GetOwningPlayer();
     if (!World || !PC || !bLiveMissionStarted || bMissionCompleteHandedOff
         || (Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) || !IsValid(MissionPreviewCamera)) return;
-    if (bMissionControlsOpen || EngineeringPopup.IsValid() || (WeaponsPopup.IsValid() && !bContactsOnlyPanel) || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
+    if (bMissionControlsOpen || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
@@ -3667,66 +3848,37 @@ void UMissionBriefingDlg::CycleMissionViewObject()
 
 void UMissionBriefingDlg::ToggleEngineering()
 {
-    CloseQuantumTravel();
-    CloseNavigationPopup();
-    CloseFlightOpsPopup();
-    CloseObjectivesPopup();
-    CloseWeaponsPopup();
-    if (EngineeringPopup.IsValid()) { CloseEngineering(); return; }
-    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
+    if (EngineeringPopup) { CloseEngineering(); return; }
+    if (!CanOpenFlightPanel() || !FlightPanelCanvas) return;
     APlayerController* PC=GetOwningPlayer();
     if (!PC) return;
     ClearMissionRotationInput();
     if (MissionCameraRig) MissionCameraRig->LookX=MissionCameraRig->LookY=MissionCameraRig->RangeInput=0;
-    if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
-    UpdateFighterRadioInput();
-    bEngineeringPreviousCursor=PC->bShowMouseCursor;
     UClass* PanelClass=LoadClass<UEngineeringDlg>(nullptr,TEXT("/Game/Screens/inGame/WBP_Engineering.WBP_Engineering_C"));
     EngineeringPanelWidget=CreateWidget<UEngineeringDlg>(PC,PanelClass?PanelClass:UEngineeringDlg::StaticClass());
     if(!EngineeringPanelWidget)return;
     EngineeringPanelWidget->OnPanelClosed=FSimpleDelegate::CreateWeakLambda(this,[this](){CloseEngineering();});
     EngineeringPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     EngineeringPanelWidget->SetVisibility(ESlateVisibility::Visible);
-    EngineeringPopup=EngineeringPanelWidget->TakeWidget();
-    GetWorld()->GetGameViewport()->AddViewportWidgetContent(EngineeringPopup.ToSharedRef(),1100);
-    FInputModeGameAndUI Mode;
-    Mode.SetWidgetToFocus(EngineeringPopup);
-    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    Mode.SetHideCursorDuringCapture(false);
-    PC->SetInputMode(Mode);
-    PC->bShowMouseCursor=true;
+    AddFloatingPanel(EngineeringPopup, EngineeringPanelWidget->TakeWidget(), TEXT("Engineering"), 0, FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseEngineering));
 }
 
 void UMissionBriefingDlg::CloseEngineering()
 {
-    if (!EngineeringPopup.IsValid()) return;
-    if (GetWorld() && GetWorld()->GetGameViewport())
-        GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(EngineeringPopup.ToSharedRef());
-    EngineeringPopup.Reset();
-    if(EngineeringPanelWidget)EngineeringPanelWidget->RemoveFromParent();
-    EngineeringPanelWidget=nullptr;
-    if (APlayerController* PC=GetOwningPlayer()) {
-        PC->SetInputMode(FInputModeGameOnly());
-        PC->bShowMouseCursor=bEngineeringPreviousCursor;
-    }
+    if (!EngineeringPopup) return;
+    RemoveFloatingPanel(EngineeringPopup);
+    if (EngineeringPanelWidget) EngineeringPanelWidget->RemoveFromParent();
+    EngineeringPanelWidget = nullptr;
 }
 
 void UMissionBriefingDlg::ToggleObjectivesPopup()
 {
-    CloseQuantumTravel();
-    CloseFlightOpsPopup();
-    CloseNavigationPopup();
-    CloseEngineering();
-    CloseWeaponsPopup();
-    if (ObjectivesPopup.IsValid()) { CloseObjectivesPopup(); return; }
-    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
+    if (ObjectivesPopup) { CloseObjectivesPopup(); return; }
+    if (!CanOpenFlightPanel() || !FlightPanelCanvas) return;
     APlayerController* PC=GetOwningPlayer();
     if (!PC) return;
     ClearMissionRotationInput();
     if (MissionCameraRig) MissionCameraRig->LookX=MissionCameraRig->LookY=MissionCameraRig->RangeInput=0;
-    if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
-    UpdateFighterRadioInput();
-    bObjectivesPreviousCursor=PC->bShowMouseCursor;
     UClass* PanelClass = LoadClass<UObjectivesDlg>(nullptr,
         TEXT("/Game/Screens/inGame/WBP_Objectives.WBP_Objectives_C"));
     ObjectivesPanelWidget = CreateWidget<UObjectivesDlg>(PC, PanelClass ? PanelClass : UObjectivesDlg::StaticClass());
@@ -3734,47 +3886,27 @@ void UMissionBriefingDlg::ToggleObjectivesPopup()
     ObjectivesPanelWidget->OnPanelClosed = FSimpleDelegate::CreateWeakLambda(this, [this]() { CloseObjectivesPopup(); });
     ObjectivesPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     ObjectivesPanelWidget->SetVisibility(ESlateVisibility::Visible);
-    ObjectivesPopup = ObjectivesPanelWidget->TakeWidget();
-    GetWorld()->GetGameViewport()->AddViewportWidgetContent(ObjectivesPopup.ToSharedRef(),1100);
-    FInputModeGameAndUI Mode;
-    Mode.SetWidgetToFocus(ObjectivesPopup);
-    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    Mode.SetHideCursorDuringCapture(false);
-    PC->SetInputMode(Mode);
-    PC->bShowMouseCursor=true;
+    AddFloatingPanel(ObjectivesPopup, ObjectivesPanelWidget->TakeWidget(), TEXT("Objectives"), 5, FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseObjectivesPopup));
 }
 
 void UMissionBriefingDlg::CloseObjectivesPopup()
 {
-    if (!ObjectivesPopup.IsValid()) return;
-    if (GetWorld() && GetWorld()->GetGameViewport())
-        GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(ObjectivesPopup.ToSharedRef());
-    ObjectivesPopup.Reset();
+    if (!ObjectivesPopup) return;
+    RemoveFloatingPanel(ObjectivesPopup);
     if (ObjectivesPanelWidget) ObjectivesPanelWidget->RemoveFromParent();
     ObjectivesPanelWidget = nullptr;
-    if (APlayerController* PC=GetOwningPlayer()) {
-        PC->SetInputMode(FInputModeGameOnly());
-        PC->bShowMouseCursor=bObjectivesPreviousCursor;
-    }
 }
 
 
 
 void UMissionBriefingDlg::ToggleFlightOpsPopup()
 {
-    CloseQuantumTravel();
-    CloseNavigationPopup();
-    CloseEngineering();
-    CloseWeaponsPopup();
-    if (FlightOpsPopup.IsValid()) { CloseFlightOpsPopup(); return; }
-    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
+    if (FlightOpsPopup) { CloseFlightOpsPopup(); return; }
+    if (!CanOpenFlightPanel() || !FlightPanelCanvas) return;
     APlayerController* PC=GetOwningPlayer();
     if (!PC) return;
     ClearMissionRotationInput();
     if (MissionCameraRig) MissionCameraRig->LookX=MissionCameraRig->LookY=MissionCameraRig->RangeInput=0;
-    if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
-    UpdateFighterRadioInput();
-    bFlightOpsPreviousCursor=PC->bShowMouseCursor;
     UClass* PanelClass = LoadClass<UFlightOpsDlg>(nullptr,
         TEXT("/Game/Screens/inGame/WBP_FlightOps.WBP_FlightOps_C"));
     FlightOpsPanelWidget = CreateWidget<UFlightOpsDlg>(PC, PanelClass ? PanelClass : UFlightOpsDlg::StaticClass());
@@ -3782,53 +3914,27 @@ void UMissionBriefingDlg::ToggleFlightOpsPopup()
     FlightOpsPanelWidget->OnPanelClosed = FSimpleDelegate::CreateWeakLambda(this, [this]() { CloseFlightOpsPopup(); });
     FlightOpsPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     FlightOpsPanelWidget->SetVisibility(ESlateVisibility::Visible);
-    FlightOpsPopup = FlightOpsPanelWidget->TakeWidget();
-    GetWorld()->GetGameViewport()->AddViewportWidgetContent(FlightOpsPopup.ToSharedRef(),1100);
-    FInputModeGameAndUI Mode;
-    Mode.SetWidgetToFocus(FlightOpsPopup);
-    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    Mode.SetHideCursorDuringCapture(false);
-    PC->SetInputMode(Mode);
-    PC->bShowMouseCursor=true;
+    AddFloatingPanel(FlightOpsPopup, FlightOpsPanelWidget->TakeWidget(), TEXT("Flight Ops"), 4, FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseFlightOpsPopup));
 }
 
 void UMissionBriefingDlg::CloseFlightOpsPopup()
 {
-    if (!FlightOpsPopup.IsValid()) return;
-    if (GetWorld() && GetWorld()->GetGameViewport())
-        GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(FlightOpsPopup.ToSharedRef());
-    FlightOpsPopup.Reset();
+    if (!FlightOpsPopup) return;
+    RemoveFloatingPanel(FlightOpsPopup);
     if (FlightOpsPanelWidget) FlightOpsPanelWidget->RemoveFromParent();
     FlightOpsPanelWidget = nullptr;
-    if (APlayerController* PC=GetOwningPlayer()) {
-        PC->SetInputMode(FInputModeGameOnly());
-        PC->bShowMouseCursor=bFlightOpsPreviousCursor;
-    }
 }
 
 
 
 void UMissionBriefingDlg::ToggleNavigationPopup()
 {
-    CloseQuantumTravel();
-    UE_LOG(LogTemp, Display, TEXT("[NavigationInput] Open/close requested"));
-    CloseFlightOpsPopup();
-    CloseObjectivesPopup();
-    CloseEngineering();
-    CloseWeaponsPopup();
-    if (NavigationPopup.IsValid()) { CloseNavigationPopup(); return; }
-    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[NavigationInput] Blocked: mission=%d cover=%d controls=%d"), bLiveMissionStarted, MissionSceneCover.IsValid(), bMissionControlsOpen);
-        return;
-    }
+    if (NavigationPopup) { CloseNavigationPopup(); return; }
+    if (!CanOpenFlightPanel() || !FlightPanelCanvas) return;
     APlayerController* PC=GetOwningPlayer();
     if (!PC) return;
     ClearMissionRotationInput();
     if (MissionCameraRig) MissionCameraRig->LookX=MissionCameraRig->LookY=MissionCameraRig->RangeInput=0;
-    if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
-    UpdateFighterRadioInput();
-    bNavigationPreviousCursor=PC->bShowMouseCursor;
     UClass* PanelClass=LoadClass<UNavigationDlg>(nullptr,
         TEXT("/Game/Screens/inGame/WBP_Navigation.WBP_Navigation_C"));
     NavigationPanelWidget=CreateWidget<UNavigationDlg>(PC,PanelClass?PanelClass:UNavigationDlg::StaticClass());
@@ -3837,28 +3943,15 @@ void UMissionBriefingDlg::ToggleNavigationPopup()
     NavigationPanelWidget->OnPanelClosed=FSimpleDelegate::CreateWeakLambda(this,[this](){CloseNavigationPopup();});
     NavigationPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     NavigationPanelWidget->SetVisibility(ESlateVisibility::Visible);
-    NavigationPopup=NavigationPanelWidget->TakeWidget();
-    GetWorld()->GetGameViewport()->AddViewportWidgetContent(NavigationPopup.ToSharedRef(),1100);
-    FInputModeGameAndUI Mode;
-    Mode.SetWidgetToFocus(NavigationPopup);
-    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    Mode.SetHideCursorDuringCapture(false);
-    PC->SetInputMode(Mode);
-    PC->bShowMouseCursor=true;
+    AddFloatingPanel(NavigationPopup, NavigationPanelWidget->TakeWidget(), TEXT("Navigation"), 2, FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseNavigationPopup));
 }
 
 void UMissionBriefingDlg::CloseNavigationPopup()
 {
-    if (!NavigationPopup.IsValid()) return;
-    if (GetWorld() && GetWorld()->GetGameViewport())
-        GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(NavigationPopup.ToSharedRef());
-    NavigationPopup.Reset();
-    if(NavigationPanelWidget)NavigationPanelWidget->RemoveFromParent();
-    NavigationPanelWidget=nullptr;
-    if (APlayerController* PC=GetOwningPlayer()) {
-        PC->SetInputMode(FInputModeGameOnly());
-        PC->bShowMouseCursor=bNavigationPreviousCursor;
-    }
+    if (!NavigationPopup) return;
+    RemoveFloatingPanel(NavigationPopup);
+    if (NavigationPanelWidget) NavigationPanelWidget->RemoveFromParent();
+    NavigationPanelWidget = nullptr;
 }
 
 
@@ -3949,19 +4042,47 @@ void UMissionBriefingDlg::DropMissionWeaponTarget()
     P->DropTarget();
 }
 
+namespace
+{
+    const FVector2D ContactsDesignSize(480, 560);
+
+    FVector2D ContactsPanelSize(const FVector2D Viewport)
+    {
+        const double Scale = FMath::Clamp(FMath::Min(
+            (Viewport.X - 2 * FlightPanelStyle::RightPanelInset) / ContactsDesignSize.X,
+            (Viewport.Y * FlightPanelStyle::RightPanelBottom - FlightPanelStyle::RightPanelTop) /
+                ContactsDesignSize.Y), 0.0, 1.0);
+        return ContactsDesignSize * Scale;
+    }
+
+    FVector2D ContactsDefaultPosition(FVector2D Viewport, FVector2D Size)
+    {
+        return FVector2D(FMath::Max(0.0, Viewport.X - Size.X - FlightPanelStyle::RightPanelInset),
+            FlightPanelStyle::RightPanelTop);
+    }
+}
+
+void UMissionBriefingDlg::MoveContactsPanel(FVector2D PreviousCursor, FVector2D CurrentCursor)
+{
+    if (!ContactsPopup) return;
+
+    const FGeometry& Geometry = ContactsPopup->GetCachedGeometry();
+    const FVector2D Viewport = Geometry.GetLocalSize();
+    const FVector2D Size = ContactsPanelSize(Viewport);
+    const FVector2D Room = Viewport - Size;
+    if (Room.X <= 0 || Room.Y <= 0) return;
+
+    const FVector2D Origin = ContactsPanelPosition.IsSet()
+        ? ContactsPanelPosition.GetValue() * Room : ContactsDefaultPosition(Viewport, Size);
+    const FVector2D Moved = Origin + Geometry.AbsoluteToLocal(CurrentCursor) - Geometry.AbsoluteToLocal(PreviousCursor);
+    ContactsPanelPosition = FVector2D(FMath::Clamp(Moved.X / Room.X, 0.0, 1.0),
+        FMath::Clamp(Moved.Y / Room.Y, 0.0, 1.0));
+}
+
 void UMissionBriefingDlg::ToggleContactsPanel()
 {
-    CloseQuantumTravel();
-    CloseNavigationPopup();
-    CloseFlightOpsPopup();
-    CloseObjectivesPopup();
-    CloseEngineering();
-    if (WeaponsPopup.IsValid()) {
-        const bool WasContacts = bContactsOnlyPanel;
-        CloseWeaponsPopup();
-        if (WasContacts) return;
-    }
-    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
+    if (ContactsPopup) { CloseContactsPopup(); return; }
+    if (!CanOpenFlightPanel() || !GetWorld() || !GetWorld()->GetGameViewport()) return;
     APlayerController* PC = GetOwningPlayer();
     if (!PC) return;
     ClearMissionRotationInput();
@@ -3970,30 +4091,48 @@ void UMissionBriefingDlg::ToggleContactsPanel()
     UpdateFighterRadioInput();
     UClass* PanelClass = LoadClass<UContactsDlg>(nullptr,
         TEXT("/Game/Screens/inGame/BP_ContactsList.BP_ContactsList_C"));
-    WeaponsPanelWidget = CreateWidget<UContactsDlg>(PC, PanelClass ? PanelClass : UContactsDlg::StaticClass());
-    if (!WeaponsPanelWidget) return;
-    bWeaponsPreviousCursor = PC->bShowMouseCursor;
-    bContactsOnlyPanel = true;
-    CastChecked<UContactsDlg>(WeaponsPanelWidget)->SetMissionHost(this);
-    WeaponsPanelWidget->OnPanelClosed = FSimpleDelegate::CreateWeakLambda(this,[this](){CloseWeaponsPopup();});
-    WeaponsPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
-    WeaponsPanelWidget->SetVisibility(ESlateVisibility::Visible);
-    const TSharedRef<SWidget> Panel = WeaponsPanelWidget->TakeWidget();
-    WeaponsPopup = SNew(SVerticalBox)
-        + SVerticalBox::Slot().FillHeight(0.19f)[SNullWidget::NullWidget]
-        + SVerticalBox::Slot().FillHeight(0.49f).Padding(16, 0)
-        [SNew(SScaleBox)
-            .HAlign(HAlign_Right).VAlign(VAlign_Center)
-            .Stretch(EStretch::ScaleToFit).StretchDirection(EStretchDirection::DownOnly)
-            [SNew(SBox).WidthOverride(480).HeightOverride(560).Clipping(EWidgetClipping::ClipToBounds)[Panel]]]
-        + SVerticalBox::Slot().FillHeight(0.32f)[SNullWidget::NullWidget];
-    GetWorld()->GetGameViewport()->AddViewportWidgetContent(WeaponsPopup.ToSharedRef(),1100);
-    FInputModeGameAndUI Mode;
-    Mode.SetWidgetToFocus(Panel);
-    Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    Mode.SetHideCursorDuringCapture(false);
-    PC->SetInputMode(Mode);
-    PC->bShowMouseCursor = true;
+    ContactsPanelWidget = CreateWidget<UContactsDlg>(PC, PanelClass ? PanelClass : UContactsDlg::StaticClass());
+    if (!ContactsPanelWidget) return;
+
+
+    ContactsPanelWidget->SetMissionHost(this);
+    ContactsPanelWidget->OnPanelClosed = FSimpleDelegate::CreateWeakLambda(this,[this](){CloseContactsPopup();});
+    ContactsPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
+    ContactsPanelWidget->SetVisibility(ESlateVisibility::Visible);
+    const TSharedRef<SWidget> Panel = ContactsPanelWidget->TakeWidget();
+    ContactsPopup = SNew(SConstraintCanvas)
+        .Visibility(EVisibility::SelfHitTestInvisible)
+        .ForceVolatile(true)
+        + SConstraintCanvas::Slot().Alignment(FVector2D::ZeroVector)
+        .Offset(TAttribute<FMargin>::Create(TAttribute<FMargin>::FGetter::CreateWeakLambda(this, [this]()
+        {
+            const FVector2D Viewport = ContactsPopup ? ContactsPopup->GetCachedGeometry().GetLocalSize() : FVector2D::ZeroVector;
+            const FVector2D Size = ContactsPanelSize(Viewport);
+            const FVector2D Origin = ContactsPanelPosition.IsSet()
+                ? ContactsPanelPosition.GetValue() * (Viewport - Size) : ContactsDefaultPosition(Viewport, Size);
+            return FMargin(Origin.X, Origin.Y, Size.X, Size.Y);
+        })))
+        [
+            SNew(SScaleBox)
+            .Stretch(EStretch::ScaleToFit)
+            .StretchDirection(EStretchDirection::DownOnly)
+            [SNew(SBox).WidthOverride(ContactsDesignSize.X).HeightOverride(ContactsDesignSize.Y)
+                .Clipping(EWidgetClipping::ClipToBounds)
+                [SNew(SBorder).BorderImage(&FlightPanelStyle::Window()).Padding(0)[Panel]]]
+        ];
+    GetWorld()->GetGameViewport()->AddViewportWidgetContent(ContactsPopup.ToSharedRef(),1100);
+    UpdateFlightPanelInput(Panel);
+}
+
+void UMissionBriefingDlg::CloseContactsPopup()
+{
+    if (!ContactsPopup) return;
+    if (GetWorld() && GetWorld()->GetGameViewport())
+        GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(ContactsPopup.ToSharedRef());
+    ContactsPopup.Reset();
+    if (ContactsPanelWidget) ContactsPanelWidget->RemoveFromParent();
+    ContactsPanelWidget = nullptr;
+    UpdateFlightPanelInput();
 }
 
 void UMissionBriefingDlg::CycleMissionSensor()
@@ -4257,35 +4396,27 @@ void UMissionBriefingDlg::SyncMissionNavigationTarget()
 
 void UMissionBriefingDlg::ToggleQuantumTravel()
 {
-    if (QuantumPopup.IsValid()) { CloseQuantumTravel(); return; }
-    Ship* QuantumPlayer=Sim::GetSim()?Sim::GetSim()->GetPlayerShip():nullptr;
-    if(!QuantumPlayer || !QuantumPlayer->GetQuantumDrive()) return;
-    CloseNavigationPopup(); CloseFlightOpsPopup(); CloseObjectivesPopup(); CloseWeaponsPopup(); CloseEngineering();
-    if (!CanUseFighterHUD() || !GetWorld() || !GetWorld()->GetGameViewport() || GetWorld()->IsPaused()) return;
+    if (QuantumPopup) { CloseQuantumTravel(); return; }
+    if (!CanOpenFlightPanel() || !FlightPanelCanvas) return;
+    Ship* QuantumPlayer = Sim::GetSim() ? Sim::GetSim()->GetPlayerShip() : nullptr;
+    if (!QuantumPlayer || !QuantumPlayer->GetQuantumDrive()) return;
     APlayerController* PC = GetOwningPlayer();
     if (!PC) return;
     ClearMissionRotationInput();
     if (MissionCameraRig) MissionCameraRig->LookX = MissionCameraRig->LookY = MissionCameraRig->RangeInput = 0;
-    if (FighterHUDDetails.IsValid()) FighterHUDDetails->CloseRadio();
-    UpdateFighterRadioInput();
-    bQuantumPreviousCursor = PC->bShowMouseCursor;
     TWeakObjectPtr<UMissionBriefingDlg> Owner(this);
-    QuantumPopup = SNew(SQuantumTravelPopup)
+    auto Content = SNew(SQuantumTravelPopup)
         .ResolveShip([Owner](){Sim* S=Sim::GetSim();return Owner.IsValid() && Owner->bLiveMissionStarted && S ? S->GetPlayerShip() : nullptr;})
         .CanOperate([Owner](){return Owner.IsValid() && Owner->bLiveMissionStarted && Owner->GetWorld() && !Owner->GetWorld()->IsPaused() && !Owner->PendingTravelLevel;})
         .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){CloseQuantumTravel();}))
         .OnExitMenuRequested(FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu));
-    GetWorld()->GetGameViewport()->AddViewportWidgetContent(QuantumPopup.ToSharedRef(), 1150);
-    FInputModeUIOnly Mode; Mode.SetWidgetToFocus(QuantumPopup); Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    PC->SetInputMode(Mode); PC->bShowMouseCursor=true;
+    AddFloatingPanel(QuantumPopup, Content, TEXT("Quantum / Farcaster Navigation"), 3, FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseQuantumTravel));
 }
 
 void UMissionBriefingDlg::CloseQuantumTravel()
 {
-    if (!QuantumPopup.IsValid()) return;
-    if (GetWorld() && GetWorld()->GetGameViewport()) GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(QuantumPopup.ToSharedRef());
-    QuantumPopup.Reset();
-    if (APlayerController* PC=GetOwningPlayer()) { PC->SetInputMode(FInputModeGameOnly()); PC->bShowMouseCursor=bQuantumPreviousCursor; }
+    if (!QuantumPopup) return;
+    RemoveFloatingPanel(QuantumPopup);
 }
 
 void UMissionBriefingDlg::ClearTravelPresentation(bool bStopUpdates)

@@ -55,7 +55,7 @@ TSharedRef<SWidget> UNavigationDlg::CreatePanelContent()
     NavigationMap->RefreshFromMission();
     const TWeakObjectPtr<UNavigationDlg> Owner(this);
     return SNew(SNavigationPopup).Embedded(true).MapWidget(MapBody)
-        .FooterHost(FooterContent).FooterStyle(&FooterButtonStyle)
+        .FooterHost(FooterContent)
         .ResolveShip([Owner]()->Ship*{return Owner.IsValid()?Owner->ResolvePanelShip():nullptr;})
         .CanOperate([Owner](){return Owner.IsValid() && Owner->GetWorld() && !Owner->GetWorld()->IsPaused();})
         .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){RequestPanelClose();}));

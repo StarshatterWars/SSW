@@ -113,6 +113,34 @@ public:
         const FVector4 Clip = ProjectionData.ComputeViewProjectionMatrix().TransformFVector4(FVector4(TargetPosition, 1.0));
         const FIntRect Rect = ProjectionData.GetConstrainedViewRect();
         const FVector2D Size=Geometry.GetLocalSize();
+        auto DrawContactTag = [&](FVector2D Position, double LeftEdge, int32 DrawLayer)
+        {
+            const auto* Visual = Cast<AShipActor>(Actor);
+            const Ship* Runtime = Visual ? Visual->GetRuntimeShip() : nullptr;
+            auto* Simulation = Sim::GetSim();
+            auto* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+            const double Km = RangeKm.Get();
+            if (Km < 0 || !FMath::IsFinite(Km)) return false;
+
+            FString Readout = UFormattingUtils::FormatDistance(Km * 1000.0);
+            if (const auto* Waypoint = Cast<AWaypointActor>(Actor); Waypoint && !Waypoint->NamedLocationType.IsEmpty())
+                Readout = Waypoint->NamedLocationType + TEXT("  |  ") + Readout;
+            if (Runtime && Region && Region->GetShips().contains(Runtime) && !Runtime->IsStatic())
+                Readout += FString::Printf(TEXT("   %.0f m/s"), Runtime->GetContactSpeed());
+            const FText Label = FText::FromString(TargetName.Get().ToString() + TEXT("\n") + Readout);
+            const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold", 11);
+            const FVector2D Extent = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Label, Font);
+            if (Position.X + Extent.X + 10 > Size.X) Position.X = LeftEdge - Extent.X - 10;
+            Position.X = FMath::Clamp(Position.X, 0.0, FMath::Max(0.0, Size.X - Extent.X - 10));
+            Position.Y = FMath::Clamp(Position.Y, 0.0, FMath::Max(0.0, Size.Y - Extent.Y - 8));
+            FSlateDrawElement::MakeBox(Elements, DrawLayer, Geometry.ToPaintGeometry(FVector2f(Extent + FVector2D(10, 8)),
+                FSlateLayoutTransform(FVector2f(Position))), FCoreStyle::Get().GetBrush(TEXT("WhiteBrush")),
+                ESlateDrawEffect::None, FLinearColor(.02f,.04f,.06f,.8f));
+            FSlateDrawElement::MakeText(Elements, DrawLayer + 1, Geometry.ToPaintGeometry(FVector2f(Extent),
+                FSlateLayoutTransform(FVector2f(Position + FVector2D(5, 4)))), Label, Font,
+                ESlateDrawEffect::None, TargetColor.Get());
+            return true;
+        };
         auto DrawRange = [&](const FVector2D& MarkerCenter, double Below, int32 DrawLayer) {
             const double Km = RangeKm.Get();
             if (Km < 0 || !FMath::IsFinite(Km)) return;
@@ -171,6 +199,7 @@ public:
                 FSlateDrawElement::MakeBox(Elements,Layer+1,Geometry.ToPaintGeometry(FVector2f(D),
                     FSlateLayoutTransform(FVector2f(Center-D*0.5))),&ChaseBrushes[Index],ESlateDrawEffect::None,Color);
             const FSlateFontInfo Font=FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(8,int32(12*HudScale)));
+            if (DrawContactTag(Center + FVector2D(D.X * .5 + 8, 12), Center.X - D.X * .5 - 8, Layer + 2)) return Layer + 3;
             const FText Label=TargetName.Get();
             const FVector2D Extent=FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Label,Font);
             const FVector2D Position(FMath::Clamp(Center.X-Extent.X*0.5,0.0,FMath::Max(0.0,Size.X-Extent.X)),
@@ -200,7 +229,8 @@ public:
         const FLinearColor Color = TargetColor.Get();
         const auto* SelectedShipActor = Cast<AShipActor>(Actor);
         const Ship* SelectedShip = SelectedShipActor ? SelectedShipActor->GetRuntimeShip() : nullptr;
-        const bool bJanekStation = SelectedShip && TargetName.Get().ToString() == TEXT("Janek Station");
+        const bool bJanekStation = SelectedShip &&
+            FCStringAnsi::Stricmp(SelectedShip->GetName(), "Janek Station") == 0;
         if (bJanekStation || (Waypoint && !Waypoint->NamedLocationType.IsEmpty() && !Waypoint->bAsteroidFieldContact))
         {
             const FVector2f P(Center);
@@ -214,12 +244,13 @@ public:
             FSlateDrawElement::MakeBox(Elements, Layer + 1,
                 Geometry.ToPaintGeometry(FVector2f(ReticleSize), FSlateLayoutTransform(FVector2f(TopLeft))),
                 MarkerBrush, ESlateDrawEffect::None, bAsteroidIcon ? FLinearColor::White : Color);
+        const bool bHasTag = DrawContactTag(Center + FVector2D(ReticleSize.X * .5 + 8, 0), TopLeft.X - 8, Layer + 2);
         const FText Label = TargetName.Get();
         const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold", 14);
         const FVector2D TextSize = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(Label, Font);
         const FVector2D TextPosition(Center.X - TextSize.X * 0.5,
             FMath::Max(0.0, TopLeft.Y - TextSize.Y - 6.0));
-        FSlateDrawElement::MakeText(Elements, Layer + 2,
+        if (!bHasTag) FSlateDrawElement::MakeText(Elements, Layer + 2,
             Geometry.ToPaintGeometry(FVector2f(TextSize), FSlateLayoutTransform(FVector2f(TextPosition))),
             Label, Font, ESlateDrawEffect::None, Color);
         const auto* AsteroidActor = Cast<ANativeAsteroidActor>(Actor);
@@ -227,7 +258,7 @@ public:
         if (const Asteroid* Rock = AsteroidActor && Simulation
             ? AsteroidActor->ResolveContact(Simulation->GetActiveRegion()) : nullptr)
         {
-            const FVector2f Position(Center.X - 19.0, FMath::Max(0.0, TextPosition.Y - 6.0));
+            const FVector2f Position(Center.X - 19.0, FMath::Max(0.0, (bHasTag ? TopLeft.Y : TextPosition.Y) - 6.0));
             const auto* Brush = FCoreStyle::Get().GetBrush(TEXT("WhiteBrush"));
             FSlateDrawElement::MakeBox(Elements, Layer + 2,
                 Geometry.ToPaintGeometry(FVector2f(38, 4), FSlateLayoutTransform(Position)),
@@ -236,7 +267,7 @@ public:
                 Geometry.ToPaintGeometry(FVector2f(38 * FMath::Clamp(Rock->GetIntegrityFraction(), 0.0f, 1.0f), 4),
                     FSlateLayoutTransform(Position)), Brush, ESlateDrawEffect::None, Color);
         }
-        DrawRange(Center,ReticleSize.Y*0.5+6.0,Layer+3);
+        if (!bHasTag) DrawRange(Center,ReticleSize.Y*0.5+6.0,Layer+3);
         return Layer + 3;
     }
 private:

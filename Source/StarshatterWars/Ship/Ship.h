@@ -389,6 +389,7 @@ public:
     EFreighterLoadStatus GetFreighterLoadStatus() const;
     const TOptional<SSWFreightManifest::FLoad>& GetCargoManifest() const { return CargoManifest; }
     const char*       Abbreviation() const;
+    FString GetContactLabel() const;
     const char*        DesignName() const;
     const char*        DesignFileName() const;
     static const char* GetShipClassName(int c);
@@ -466,6 +467,8 @@ public:
     // Navigation uses actual BP hull geometry when the data-table design has
     // only an import scale in its radius field. Simulation coordinates remain legacy.
     double GetNavigationHullRadius() const { return navigation_hull_radius > 0.0 ? navigation_hull_radius : GetRadius(); }
+    double GetContactSpeed() const { return ScriptedContactSpeed.Get(GetVelocity().Size()); }
+    void SetScriptedContactSpeed(double Speed) { ScriptedContactSpeed = Speed; }
     void SetNativeCockpitRequested(bool Requested) {bNativeCockpitRequested=Requested;}
     bool IsNativeCockpitRequested() const {return bNativeCockpitRequested;}
     void BindNativePresentation(AShipActor* Actor);
@@ -475,6 +478,7 @@ public:
     void SetNavigationHullRadius(double value) { if (FMath::IsFinite(value) && value > 0.0) navigation_hull_radius = value; }
 private:
     double navigation_hull_radius = 0.0;
+    TOptional<double> ScriptedContactSpeed;
 public:
     bool                    IsAutoNavEngaged();
     bool                    IsAutoTrackEngaged() const { return bAutoTrack; }

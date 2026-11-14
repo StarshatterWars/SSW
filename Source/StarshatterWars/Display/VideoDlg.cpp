@@ -157,15 +157,9 @@ void UVideoDlg::NativeConstruct()
     BuildListsIfNeeded();
     BuildVideoRows();
 
-    UE_LOG(LogVideoDlg, Warning, TEXT("[VideoDlg] AutoVBox children after BuildVideoRows: %d"),
-        VBox->GetChildrenCount());
-
-    if (bClosed)
-    {
-        RefreshFromModel();
-        bClosed = false;
-        bDirty = false;
-    }
+    RefreshFromModel();
+    bClosed = false;
+    bDirty = false;
 }
 
 void UVideoDlg::BindDelegates()
@@ -551,6 +545,14 @@ void UVideoDlg::BuildVideoRows()
         return;
 
     VBox->ClearChildren();
+
+    // Legacy config controls have no row in the current Video page.
+    for (UComboBoxString* LegacyCombo : {TexSizeCombo.Get(), DetailCombo.Get(), TextureCombo.Get(),
+        ShadowsCombo.Get(), SpecMapsCombo.Get(), BumpMapsCombo.Get()})
+    {
+        if (LegacyCombo)
+            LegacyCombo->SetVisibility(ESlateVisibility::Collapsed);
+    }
 
     auto* LightButton = WidgetTree->ConstructWidget<UButton>();
     auto* LightLabel = WidgetTree->ConstructWidget<UTextBlock>();

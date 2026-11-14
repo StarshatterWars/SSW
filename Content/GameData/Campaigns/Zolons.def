@@ -338,3 +338,6 @@ group: {
     },
 }
 
+
+
+group: { type: station, id: 8579, name: "Sintar Orbital Concentrator", intel: known, iff: 4, empire_id: 4, region: "Sintar", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Sintar Orbital Concentrator", type: "Station", design: "Processing Facility" } }

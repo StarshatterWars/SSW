@@ -472,3 +472,9 @@ group: {
     regnum: "8706-2"
   }
 }
+
+
+group: { type: station, id: 8552, name: "Tal Amin Materials Works", intel: known, iff: 0, empire_id: 11, region: "Tal Amin", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Tal Amin Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8553, name: "Tal Amin Orbital Concentrator", intel: known, iff: 0, empire_id: 11, region: "Tal Amin", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Tal Amin Orbital Concentrator", type: "Station", design: "Processing Facility" } }

@@ -20,7 +20,10 @@ internal static class PlatformSignIn
     public static async Task<string> EpicAsync(string game, string sourceGame, CancellationToken cancellation)
     {
         string install = Path.GetDirectoryName(game)!;
-        string config = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourceGame)!, "..", "..", "Config", "UserEngine.ini"));
+        string config = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "StarshatterWars", "LauncherEOS.ini");
+        if (!File.Exists(config))
+            config = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(sourceGame)!, "..", "..", "Config", "UserEngine.ini"));
         if (!File.Exists(config))
             throw new InvalidOperationException("Configure the Epic desktop client in Config/UserEngine.ini.");
         string ini = await File.ReadAllTextAsync(config, cancellation);

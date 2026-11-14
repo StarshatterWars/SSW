@@ -8,6 +8,8 @@ system:
 	iff: 1,
 	empire: 0,
 	name: Jarnell,
+	production_site: "Adonis Orbital Concentrator",
+	production_site: "Adonis Alloy Works",
 	asteroid_type: Stony,
 	
 	link: Athenar,
@@ -283,6 +285,8 @@ system:
 	iff: 1,
 	empire: 0,
 	name: Borova,
+	production_site: "Maraner Orbital Concentrator",
+	production_site: "Maraner Materials Refinery",
 	asteroid_type: Metallic,
 	
 	link: Janus,
@@ -565,6 +569,8 @@ system: {
 	iff: 1,
 	empire: 0,
 	name: Athenar,
+	production_site: "Pallas Orbital Concentrator",
+	production_site: "Pallas Industrial Works",
 	asteroid_type: Stony,
 	
 	link: Janus,
@@ -674,6 +680,8 @@ system:
 	iff: 1,
 	empire: 0,
 	name: Paragon,
+	production_site: "Dorrath Orbital Concentrator",
+	production_site: "Dorrath Metals Works",
 	asteroid_type: Carbonaceous,
 	
 	link: Borova,
@@ -888,6 +896,8 @@ system:
 	iff: 1,
 	empire: 0,
 	name: Thralis,
+	production_site: "Hera Orbital Concentrator",
+	production_site: "Hera Mineral Processing Works",
 	asteroid_type: Carbonaceous,
 	
 	link: Jarnell,
@@ -1088,6 +1098,8 @@ system:
 	iff: 1,
 	empire: 0,
 	name: Janus,
+	production_site: "Dante Orbital Concentrator",
+	production_site: "Janek Orbital Materials Works",
 	asteroid_type: Stony,
 	
 	link: Solus,
@@ -1320,6 +1332,9 @@ system:
 	iff: 0,
 	empire: 10,
 	name: Solus,
+	production_site: "Jalah Orbital Concentrator",
+	production_site: "Kalon Orbital Concentrator",
+	production_site: "Kalon Materials Works",
 	asteroid_type: Carbonaceous,
 	
 	link: Janus,
@@ -1426,6 +1441,14 @@ system:
 			   orbit:   45e6,
 			   eccentricity: 0.02,
 			   rotation: 8,
+               region: {
+                   name: Kalon,
+                   parent: Kalon,
+                   type: Moon,
+                   radius: 480e3,
+                   grid: 20e3,
+                   orbit: 6e6,
+               },
 			},
 			moon: {
 			   name:    Alar,
@@ -1551,6 +1574,9 @@ system:
 	iff: 0,
 	empire: 9,
 	name: Silessia,
+	production_site: "Prosenar Orbital Concentrator",
+	production_site: "Silessia Orbital Concentrator",
+	production_site: "Silessia Materials Works",
 	asteroid_type: Carbonaceous,
 	
 	link: Borova,
@@ -1787,6 +1813,8 @@ system:
 	iff: 0,
 	empire: 11,
 	name: Haiche,
+	production_site: "Tal Amin Orbital Concentrator",
+	production_site: "Tal Amin Materials Works",
 	asteroid_type: Carbonaceous,
 	
 	link: Janus,
@@ -1988,6 +2016,8 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Renser,
+	production_site: "Renser Orbital Concentrator",
+	production_site: "Renser Materials Works",
 	asteroid_type: Metallic,
 	
 	link: Haiche,
@@ -2205,6 +2235,8 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Loris,
+	production_site: "Loris Orbital Concentrator",
+	production_site: "Loris Materials Works",
 	asteroid_type: Metallic,
 	
 	link: Silessia,
@@ -2417,6 +2449,8 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Ostara,
+	production_site: "Aram Orbital Concentrator",
+	production_site: "Aram Materials Works",
 	asteroid_type: Stony,
 	
 	link: Kolchev,
@@ -2500,6 +2534,8 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Kolchev,
+	production_site: "Kolchev Orbital Concentrator",
+	production_site: "Kolchev Materials Works",
 	asteroid_type: Metallic,
 	
 	link: Haiche,
@@ -2727,6 +2763,8 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Korius,
+	production_site: "Adantar Orbital Concentrator",
+	production_site: "Adantar Materials Works",
 	asteroid_type: Stony,
 	
 	link: Nephrys,
@@ -2870,6 +2908,8 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Tarsus,
+	production_site: "Tarsus Orbital Concentrator",
+	production_site: "Tarsus Materials Works",
 	asteroid_type: Metallic,
 	
 	link: Kolchev,
@@ -2965,6 +3005,9 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Nephrys,
+	production_site: "Sintar Orbital Concentrator",
+	production_site: "Nergal Orbital Concentrator",
+	production_site: "Nergal Materials Works",
 	asteroid_type: Stony,
 	
 	link: Loris, 
@@ -3034,6 +3077,8 @@ system:
 	iff: 2, 
 	empire: 1,
 	name: Radix,
+	production_site: "Radix Orbital Concentrator",
+	production_site: "Radix Materials Works",
 	asteroid_type: Stony,
 	
 	link: Kolchev,
@@ -3212,7 +3257,9 @@ system:
 	class: K,
 	iff: 2, 
 	empire: 1, 
-	name: Isham, 
+	name: Isham,
+	production_site: "Ramek Orbital Concentrator",
+	production_site: "Ramek Materials Works",
 	asteroid_type: Carbonaceous,
 	
 	link: Korius,
@@ -3439,6 +3486,8 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Marak,
+	production_site: "Marak Orbital Concentrator",
+	production_site: "Marak Materials Works",
 	asteroid_type: Metallic,
 	
 	link: Trocanther,
@@ -3519,6 +3568,8 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Garrison,
+	production_site: "Garrison Orbital Concentrator",
+	production_site: "Garrison Materials Works",
 	asteroid_type: Metallic,
 	
 	link: Isham,
@@ -3675,6 +3726,8 @@ system:
 	iff: 2,
 	empire: 1,
 	name: Trocanther,
+	production_site: "Volante Orbital Concentrator",
+	production_site: "Volante Materials Works",
 	asteroid_type: Stony,
 	
 	link: Marak,

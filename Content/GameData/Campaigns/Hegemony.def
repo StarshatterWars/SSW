@@ -5999,3 +5999,75 @@ group: {
     regnum: "8727-2"
   }
 }
+
+
+group: { type: station, id: 8554, name: "Renser Materials Works", intel: known, iff: 2, empire_id: 1, region: "Renser", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Renser Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8555, name: "Renser Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Renser", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Renser Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8556, name: "Loris Materials Works", intel: known, iff: 2, empire_id: 1, region: "Loris", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Loris Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8557, name: "Loris Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Loris", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Loris Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8558, name: "Aram Materials Works", intel: known, iff: 2, empire_id: 1, region: "Aram", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Aram Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8559, name: "Aram Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Aram", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Aram Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8560, name: "Kolchev Materials Works", intel: known, iff: 2, empire_id: 1, region: "Kolchev", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Kolchev Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8561, name: "Kolchev Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Kolchev", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Kolchev Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8562, name: "Adantar Materials Works", intel: known, iff: 2, empire_id: 1, region: "Adantar", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Adantar Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8563, name: "Adantar Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Adantar", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Adantar Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8564, name: "Tarsus Materials Works", intel: known, iff: 2, empire_id: 1, region: "Tarsus", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Tarsus Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8565, name: "Tarsus Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Tarsus", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Tarsus Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8566, name: "Nergal Materials Works", intel: known, iff: 2, empire_id: 1, region: "Nergal", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Nergal Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8567, name: "Nergal Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Nergal", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Nergal Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8568, name: "Radix Materials Works", intel: known, iff: 2, empire_id: 1, region: "Radix", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Radix Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8569, name: "Radix Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Radix", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Radix Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8570, name: "Ramek Materials Works", intel: known, iff: 2, empire_id: 1, region: "Ramek", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Ramek Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8571, name: "Ramek Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Ramek", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Ramek Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8572, name: "Marak Materials Works", intel: known, iff: 2, empire_id: 1, region: "Marak", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Marak Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8573, name: "Marak Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Marak", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Marak Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8574, name: "Garrison Materials Works", intel: known, iff: 2, empire_id: 1, region: "Garrison", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Garrison Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8575, name: "Garrison Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Garrison", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Garrison Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8576, name: "Volante Materials Works", intel: known, iff: 2, empire_id: 1, region: "Volante", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Volante Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8577, name: "Volante Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Volante", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Volante Orbital Concentrator", type: "Station", design: "Processing Facility" } }

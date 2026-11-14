@@ -70,6 +70,12 @@ struct FSSWReplicatedShipState
 {
     GENERATED_BODY()
 
+    FString GetTargetLabel() const
+    {
+        const FString& Label = ContactLabel.IsEmpty() ? Name : ContactLabel;
+        return PilotName.IsEmpty() ? Label : FString::Printf(TEXT("%s (%s)"), *Label, *PilotName);
+    }
+
     FString GetPilotLabel() const
     {
         return PilotName.IsEmpty() ? Name : FString::Printf(TEXT("%s (%s)"), *Name, *PilotName);
@@ -78,6 +84,7 @@ struct FSSWReplicatedShipState
     UPROPERTY(BlueprintReadOnly) int64 ObjectId = 0;
     UPROPERTY(BlueprintReadOnly) FString Name;
     UPROPERTY(BlueprintReadOnly) FString PilotName;
+    UPROPERTY(BlueprintReadOnly) FString ContactLabel;
     UPROPERTY(BlueprintReadOnly) FString Region;
     UPROPERTY(BlueprintReadOnly) FString Element;
     UPROPERTY(BlueprintReadOnly) int32 IFF = 0;

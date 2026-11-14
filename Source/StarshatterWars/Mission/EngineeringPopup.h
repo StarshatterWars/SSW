@@ -64,8 +64,22 @@ public:
         Rebuild();
     }
     virtual bool SupportsKeyboardFocus() const override { return true; }
+    void MoveRepairPriority(int32 Direction)
+    {
+        if (!CanMoveRepairPriority(Direction)) return;
+        if (Direction < 0) GetShip()->IncreaseRepairPriority(Queue);
+        else GetShip()->DecreaseRepairPriority(Queue);
+        Queue += Direction;
+        Dirty = true;
+    }
+
     virtual FReply OnKeyDown(const FGeometry&, const FKeyEvent& Event) override
     {
+        if (Event.GetKey() == EKeys::Up || Event.GetKey() == EKeys::Down)
+        {
+            MoveRepairPriority(Event.GetKey() == EKeys::Up ? -1 : 1);
+            return FReply::Handled();
+        }
         if (Event.GetKey()==EKeys::Escape || Event.GetKey()==EKeys::Delete) {
             Close.ExecuteIfBound(); return FReply::Handled();
         }
@@ -118,9 +132,18 @@ private:
     }
     TSharedRef<SWidget> ButtonLabel(const FString& S, int32 Size=14) { return ModernButtons.Content(S,Size); }
     static FText ButtonText(const FString& S) { return Text(S.ToUpper()); }
-    TSharedRef<SWidget> Button(const FString& S, TFunction<void()> Action, TFunction<bool()> Enabled=[](){return true;}) {
+    bool CanMoveRepairPriority(int32 Direction)
+    {
+        Ship* Player = GetShip();
+        return Player && Player == LastShip && Queue >= 0 && Queue < Player->RepairQueue().size() &&
+            Queue + Direction >= 0 && Queue + Direction < Player->RepairQueue().size();
+    }
+
+    TSharedRef<SWidget> Button(const FString& S, TFunction<void()> Action,
+        TFunction<bool()> Enabled=[](){return true;}, TSharedPtr<SWidget> Icon = nullptr) {
         return SNew(SButton).ButtonStyle(&ModernButtons.Cyan).ContentPadding(FMargin(8,6)).IsEnabled_Lambda([Enabled](){return Enabled();})
-            .OnClicked_Lambda([Action](){Action();return FReply::Handled();})[ButtonLabel(S)];
+            .ToolTipText(Text(S)).HAlign(HAlign_Center).VAlign(VAlign_Center)
+            .OnClicked_Lambda([Action](){Action();return FReply::Handled();})[Icon ? Icon.ToSharedRef() : ButtonLabel(S)];
     }
     static FString RepairETR(Ship* P, SimSystem* S)
     {
@@ -164,20 +187,20 @@ private:
         [SNew(SHorizontalBox)
             // Full-height systems column: long client lists remain scrollable.
             +SHorizontalBox::Slot().FillWidth(0.34f).Padding(0,0,16,0)
-            [SNew(SScrollBox)
+            [SNew(SScrollBox).Clipping(EWidgetClipping::ClipToBounds)
                 +SScrollBox::Slot()[SAssignNew(SourceColumns,SVerticalBox)]]
             +SHorizontalBox::Slot().FillWidth(0.66f)
             [SNew(SVerticalBox)
                 +SVerticalBox::Slot().FillHeight(0.62f).Padding(0,0,0,16)
                 [SNew(SHorizontalBox)
                     +SHorizontalBox::Slot().FillWidth(0.48f).Padding(0,0,16,0)
-                    [SNew(SScrollBox)
+                    [SNew(SScrollBox).Clipping(EWidgetClipping::ClipToBounds)
                         +SScrollBox::Slot()[SAssignNew(Details,SVerticalBox)]]
                     +SHorizontalBox::Slot().FillWidth(0.52f)
-                    [SNew(SScrollBox)
+                    [SNew(SScrollBox).Clipping(EWidgetClipping::ClipToBounds)
                         +SScrollBox::Slot()[SAssignNew(Components,SVerticalBox)]]]
                 +SVerticalBox::Slot().FillHeight(0.38f)
-                [SNew(SScrollBox)
+                [SNew(SScrollBox).Clipping(EWidgetClipping::ClipToBounds)
                     +SScrollBox::Slot()[SAssignNew(Repairs,SVerticalBox)]]]];
         if (!Embedded) Root->AddSlot().AutoHeight().Padding(0,16,0,0).HAlign(HAlign_Right)
         [SNew(SBox).MinDesiredWidth(112).MinDesiredHeight(36)
@@ -219,9 +242,9 @@ private:
         Details->AddSlot().AutoHeight()[SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){SimSystem* S=CurrentSystem();return Text(S ? FString::Printf(TEXT("Availability %.0f%%\nSafety %.0f%%   Stability %.0f%%\nPower %.0f%%"),S->GetAvailability(),S->GetSafety(),S->GetStability(),S->GetPowerLevel()):TEXT(""));})];
         Details->AddSlot().AutoHeight().Padding(0,8)
         [SNew(SHorizontalBox)
-         +SHorizontalBox::Slot()[Button(TEXT("Off"),[this](){if(auto* S=CurrentSystem())S->SetPowerOff();},[this](){return CurrentSystem()!=nullptr;})]
-         +SHorizontalBox::Slot()[Button(TEXT("On"),[this](){if(auto* S=CurrentSystem())S->SetPowerOn();},[this](){return CurrentSystem()!=nullptr;})]
-         +SHorizontalBox::Slot()[Button(TEXT("Toggle override"),[this](){if(auto* S=CurrentSystem())S->SetOverride(!S->IsOverrideActive());},[this](){return CurrentSystem()!=nullptr;})]];
+         +SHorizontalBox::Slot()[Button(TEXT("Off"),[this](){if(auto* S=CurrentSystem())S->SetPowerOff();},[this](){return CurrentSystem()!=nullptr;}, SNew(SShipSystemIcon).Icon(EShipSystemIcon::PowerOff))]
+         +SHorizontalBox::Slot()[Button(TEXT("On"),[this](){if(auto* S=CurrentSystem())S->SetPowerOn();},[this](){return CurrentSystem()!=nullptr;}, SNew(SShipSystemIcon).Icon(EShipSystemIcon::PowerOn))]
+         +SHorizontalBox::Slot()[Button(TEXT("Toggle override"),[this](){if(auto* S=CurrentSystem())S->SetOverride(!S->IsOverrideActive());},[this](){return CurrentSystem()!=nullptr;}, SNew(SShipSystemIcon).Icon(EShipSystemIcon::Override))]];
         Details->AddSlot().AutoHeight()[Label(TEXT("POWER ALLOCATION"))];
         Details->AddSlot().AutoHeight().Padding(0,4)
         [SNew(SSlider).IsEnabled_Lambda([this](){return CurrentSystem() && CurrentSystem()->IsPowerOn();})
@@ -252,8 +275,9 @@ private:
         Components->AddSlot().AutoHeight().Padding(0,8)[SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){auto* C=CurrentComponent();auto* Now=GetShip();if(!C || !Now)return Text(TEXT("Select a component to repair."));
             double Speed=FMath::Max(0.001,Now->RepairSpeed());return Text(FString::Printf(TEXT("Repair %.0fs / Replace %.0fs\nRemaining %.0fs"),C->RepairTime()/Speed,C->ReplaceTime()/Speed,double(C->TimeRemaining())));})];
         Components->AddSlot().AutoHeight()[SNew(SHorizontalBox)
-         +SHorizontalBox::Slot()[Button(TEXT("Repair"),[this](){if(auto* C=CurrentComponent()){C->Repair();GetShip()->RepairSystem(C->GetSystem());Dirty=true;}},[this](){auto* C=CurrentComponent();return C && C->Availability()<100 && C->TimeRemaining()<=0;})]
-         +SHorizontalBox::Slot()[Button(TEXT("Replace"),[this](){if(auto* C=CurrentComponent()){C->Replace();GetShip()->RepairSystem(C->GetSystem());Dirty=true;}},[this](){auto* C=CurrentComponent();return C && C->SpareCount()>0 && C->TimeRemaining()<=0;})]];
+         +SHorizontalBox::Slot()[Button(TEXT("Repair"),[this](){if(auto* C=CurrentComponent()){C->Repair();GetShip()->RepairSystem(C->GetSystem());Dirty=true;}},[this](){auto* C=CurrentComponent();return C && C->Availability()<100 && C->TimeRemaining()<=0;},
+            SNew(SShipSystemIcon).Icon(EShipSystemIcon::Repair))]
+         +SHorizontalBox::Slot()[Button(TEXT("Replace"),[this](){if(auto* C=CurrentComponent()){C->Replace();GetShip()->RepairSystem(C->GetSystem());Dirty=true;}},[this](){auto* C=CurrentComponent();return C && C->SpareCount()>0 && C->TimeRemaining()<=0;}, SNew(SShipSystemIcon).Icon(EShipSystemIcon::Replace))]];
         Repairs->AddSlot().AutoHeight()[Label(TEXT("REPAIR QUEUE"),16)];
         Details->AddSlot().AutoHeight().Padding(0,8)[SNew(SButton).ButtonStyle(&ModernButtons.Cyan).OnClicked_Lambda([this](){if(auto* Now=GetShip())Now->EnableRepair(!Now->AutoRepair());return FReply::Handled();})
          [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor::White).Text_Lambda([this](){return ButtonText(GetShip() && GetShip()->AutoRepair()?TEXT("Automatic repair: ON"):TEXT("Automatic repair: OFF"));})]];
@@ -264,7 +288,9 @@ private:
              [SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor::White).Text_Lambda([this,i](){auto* Now=GetShip();return ButtonText(Now && i<Now->RepairQueue().size()?FString::Printf(TEXT("%s%d. %s   %s"),Queue==i?TEXT("> "):TEXT(""),i+1,*Name(Now->RepairQueue()[i]),*RepairETR(Now,Now->RepairQueue()[i])):TEXT(""));})]];
         }
         Repairs->AddSlot().AutoHeight().Padding(0,8)[SNew(SHorizontalBox)
-         +SHorizontalBox::Slot()[Button(TEXT("Move up"),[this](){GetShip()->IncreaseRepairPriority(Queue);--Queue;Dirty=true;},[this](){return GetShip() && Queue>0 && Queue<GetShip()->RepairQueue().size();})]
-         +SHorizontalBox::Slot()[Button(TEXT("Move down"),[this](){GetShip()->DecreaseRepairPriority(Queue);++Queue;Dirty=true;},[this](){return GetShip() && Queue>=0 && Queue+1<GetShip()->RepairQueue().size();})]];
+         +SHorizontalBox::Slot()[Button(TEXT("Move up (Up Arrow)"), [this](){ MoveRepairPriority(-1); },
+             [this](){ return CanMoveRepairPriority(-1); }, SNew(SShipSystemIcon).Icon(EShipSystemIcon::Up))]
+         +SHorizontalBox::Slot()[Button(TEXT("Move down (Down Arrow)"), [this](){ MoveRepairPriority(1); },
+             [this](){ return CanMoveRepairPriority(1); }, SNew(SShipSystemIcon).Icon(EShipSystemIcon::Down))]];
     }
 };

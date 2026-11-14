@@ -18,6 +18,24 @@ Select **Install Game…** and choose a new or empty folder. The launcher copies
 
 ## Publish updates
 
-Run `New-PatchRelease.ps1` with the packaged game directory, a new output directory, a release version, and an RSA private key PEM. Host the generated `manifest.json`, `manifest.json.sig`, and `files/` together over HTTPS. Set `patchManifestUrl` and `patchPublicKeyPem` in the launcher's `launcher.json`. The script prints the public key to use. Keep the private key with the release tooling.
+For a full ZIP install, ZIP the contents of the release's `files` directory so both the top-level executable and the game subdirectory are at the archive root. Configure `gameArchiveUrl` with a direct download URL that returns ZIP bytes. The launcher downloads and verifies the signed manifest first, then downloads the ZIP, extracts the listed files, and checks their signed sizes and SHA-256 hashes before installing. Keep `files/` online for incremental updates.
 
-**Check for Updates** verifies the signed manifest and each file. It downloads changed files, carries the existing Saved directory forward, and keeps the previous install beside the new one.
+For a localhost test MSI, pass a configured JSON file to `New-LauncherInstaller.ps1 -LauncherConfig`. Loopback HTTP is supported for testing. A Google Drive sharing page or confirmation page is not a direct ZIP download endpoint.
+
+## Easy Anti-Cheat bootstrapper
+
+For a protected release, use Epic's Windows `dist` files from the EOS SDK download under `SDK/Tools/EOS_AntiCheatTools`. Place `start_protected_game.exe` at the package root and the `EasyAntiCheat` directory beside it. Set its `Settings.json` to the product, sandbox, and deployment from the Epic Developer Portal and point its executable setting at `StarshatterWars/Binaries/Win64/StarshatterWars.exe`. Publish the protected files with the signed release. Set `useEasyAntiCheatBootstrapper` to `true` in that launcher's configuration to route Play with Epic through the bootstrapper. Play Offline uses the regular executable.
+
+The protected release also requires Easy Anti-Cheat service installation and EOS Anti-Cheat session enforcement in multiplayer.
+
+Run `New-PatchRelease.ps1` with the packaged game directory, a new output directory, an RSA private key PEM, and a short plain-English `-About` description for players. Host the generated `manifest.json`, `manifest.json.sig`, and `files/` together over HTTPS. Set `patchManifestUrl` and `patchPublicKeyPem` in the launcher's `launcher.json`. The script prints the public key to use. Keep the private key with the release tooling.
+
+The release script stages the local server under `StarServer/WindowsServer` alongside the game.
+By default, releases use a UTC build stamp in `yyyyMMdd-HHmmssZ` format. The launcher compares signed
+build stamps and skips older releases. Use the same stamp for the manifest and full ZIP of a release.
+The release also includes `SSW-Mods-Notice.txt` in the game's `Saved/Mods` directory.
+It uses `Build/StarServer/WindowsServer` by default. Pass `-StarServerPackage` to select another server build.
+Include that directory in the same signed ZIP. The launcher extracts it inside the selected SSW installation.
+For EOS hosting, provision `Saved/StarServer/Config/Custom/StarServer/DefaultEngine.ini` locally inside the SSW installation.
+
+**Check for Updates** verifies the signed manifest and each file. It downloads changed files, carries saves and the local StarServer configuration forward, and keeps the previous install beside the new one.

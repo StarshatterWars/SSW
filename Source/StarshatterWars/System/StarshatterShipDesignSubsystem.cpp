@@ -503,6 +503,12 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 			GetDefText(LocalDisplayName, Def, fn);
 			NewShipDesign.DisplayName = FString(LocalDisplayName);
 		}
+		else if (Key == "production")
+		{
+			Text Recipe;
+			GetDefText(Recipe, Def, fn);
+			NewShipDesign.ProductionRecipe = FName(UTF8_TO_TCHAR(Recipe.data()));
+		}
 		else if (Key == "cargo_capacity")
 		{
 			SSWFreightManifest::ReadCapacity(NewShipDesign.CargoCapacity, *Def, fn);

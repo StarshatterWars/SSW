@@ -1663,6 +1663,9 @@ struct FShipDesign : public FTableRowBase {
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FSSWCargoCapacity CargoCapacity;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FName ProductionRecipe;
+
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TSoftObjectPtr<UStaticMesh> Mesh;
 	

@@ -7,6 +7,9 @@
 namespace FlightPanelStyle
 {
     inline constexpr double CenterPanelWidth = 326;
+    inline constexpr float RightPanelTop = 16.f;
+    inline constexpr float RightPanelBottom = .67f;
+    inline constexpr float RightPanelInset = 16.f;
     inline FLinearColor DividerColor()
     {
         return FLinearColor(.18f, .45f, .63f, .65f);
@@ -15,6 +18,18 @@ namespace FlightPanelStyle
     inline const FSlateRoundedBoxBrush& Glass()
     {
         static const FSlateRoundedBoxBrush Brush(FLinearColor(.012f, .024f, .038f, .82f), 10.f);
+        return Brush;
+    }
+
+    inline const FSlateRoundedBoxBrush& Window()
+    {
+        static const FSlateRoundedBoxBrush Brush(FLinearColor(.017f, .032f, .049f, 1.f), 8.f);
+        return Brush;
+    }
+
+    inline const FSlateRoundedBoxBrush& TitleBar()
+    {
+        static const FSlateRoundedBoxBrush Brush(FLinearColor(.045f, .088f, .125f, 1.f), 6.f);
         return Brush;
     }
 

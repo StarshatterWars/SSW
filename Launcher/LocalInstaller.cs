@@ -4,7 +4,51 @@ namespace StarshatterWarsLauncher;
 
 internal static class LocalInstaller
 {
-    internal static string Install(string source, string destination, IProgress<string> progress, CancellationToken token)
+    internal const string LockName = ".ssw-install.lock";
+    internal static bool HasExistingFiles(string folder) =>
+        Directory.EnumerateFileSystemEntries(folder).Any(path => Path.GetFileName(path) != LockName);
+
+    internal static string StagePath(string folder) => Path.Combine(folder, ".ssw-stage-" + Guid.NewGuid().ToString("N"));
+
+    internal static void Publish(string folder, string stage, bool overwrite)
+    {
+        string[] existing = Directory.EnumerateFileSystemEntries(folder)
+            .Where(path => path != stage && Path.GetFileName(path) != LockName).ToArray();
+        if (!overwrite && existing.Length > 0)
+            throw new IOException("The installation folder now contains files. Confirm overwrite and try again.");
+        string backup = Path.Combine(folder, ".ssw-backup-" + Guid.NewGuid().ToString("N"));
+        var moved = new List<string>();
+        var installed = new List<string>();
+        if (existing.Length > 0) Directory.CreateDirectory(backup);
+        static void Move(string source, string target)
+        {
+            if (Directory.Exists(source)) Directory.Move(source, target);
+            else File.Move(source, target);
+        }
+        try
+        {
+            foreach (string path in existing)
+            {
+                Move(path, Path.Combine(backup, Path.GetFileName(path)));
+                moved.Add(path);
+            }
+            foreach (string path in Directory.EnumerateFileSystemEntries(stage).ToArray())
+            {
+                string target = Path.Combine(folder, Path.GetFileName(path));
+                Move(path, target);
+                installed.Add(target);
+            }
+        }
+        catch
+        {
+            foreach (string path in installed) Move(path, Path.Combine(stage, Path.GetFileName(path)));
+            foreach (string path in moved) Move(Path.Combine(backup, Path.GetFileName(path)), path);
+            if (Directory.Exists(backup)) Directory.Delete(backup);
+            throw;
+        }
+    }
+
+    internal static string Install(string source, string destination, IProgress<string> progress, CancellationToken token, bool overwrite = false)
     {
         source = Path.TrimEndingDirectorySeparator(Path.GetFullPath(source));
         destination = Path.TrimEndingDirectorySeparator(Path.GetFullPath(destination));
@@ -14,10 +58,8 @@ internal static class LocalInstaller
             source.StartsWith(destination + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
             throw new IOException("Choose a separate folder for the installation.");
 
-        if (Directory.Exists(destination) && Directory.EnumerateFileSystemEntries(destination).Any())
-            throw new IOException("Choose a new or empty installation folder.");
-
-        string stage = destination + "-Installing-" + Guid.NewGuid().ToString("N");
+        Directory.CreateDirectory(destination);
+        string stage = StagePath(destination);
         Directory.CreateDirectory(stage);
         try
         {
@@ -26,8 +68,7 @@ internal static class LocalInstaller
             if (!File.Exists(Path.Combine(stage, "StarshatterWars.exe")) || !File.Exists(Path.Combine(stage, binary)))
                 throw new IOException("The source package is missing a game executable.");
             token.ThrowIfCancellationRequested();
-            if (Directory.Exists(destination)) Directory.Delete(destination);
-            Directory.Move(stage, destination);
+            Publish(destination, stage, overwrite);
             return Path.Combine(destination, "StarshatterWars.exe");
         }
         finally

@@ -1353,6 +1353,7 @@ ShipDesign::ParseShip(TermDef* def)
 	else GET_DEF_TEXT(name);
 	else GET_DEF_TEXT(description);
 	else GET_DEF_TEXT(display_name);
+	else if (defname == "production") { Text Recipe; GetDefText(Recipe, def, filename); ProductionRecipe = FName(UTF8_TO_TCHAR(Recipe.data())); }
 	else if (defname == "cargo_capacity") SSWFreightManifest::ReadCapacity(CargoCapacity, *def, filename);
 	else if (defname == "cargo_manifest") SSWFreightManifest::AddOption(CargoManifest, *def, filename);
 	else GET_DEF_TEXT(abrv);

@@ -4,7 +4,7 @@ name:          Prospector
 display_name:  "Zodiac Prospector"
 class:         LCA
 cargo_capacity: { tonnes: 48, passengers: 0, load_tonnes_per_second: 0.25, unload_tonnes_per_second: 1 }
-abrv:          MS
+abrv:          MSC
 empire:        Terellian
 description:   "A civilian Zodiac conversion with a 48-tonne ore hold and a forward industrial mining laser. Built for short runs between a deposit and a transfer berth."
 
@@ -17,14 +17,14 @@ model:         "Zodiac"
 mass:       87
 integrity:  5250
 vlimit:     250
-agility:    25
-roll_rate:  350
+agility:    34
+roll_rate:  420
 scale:      0.45
 acs:        1
 
-trans_x:    2800
-trans_y:    2800
-trans_z:    2800
+trans_x:    3600
+trans_y:    3600
+trans_z:    3600
 
 arcade_drag: 0.2
 drag:       4e-5

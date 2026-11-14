@@ -13,6 +13,7 @@
 #include "GameStructs.h"
 #include "RadioMessage.h"
 #include "RadioTraffic.h"
+#include "Brushes/SlateRoundedBoxBrush.h"
 
 // FltDlg.frm layout, backed by live hangar slots. No retained simulation pointers.
 class SFlightOpsPopup : public SCompoundWidget
@@ -39,6 +40,15 @@ public:
     void StandDownSelected(){Execute(1);}
     void RecallSelected(){Execute(2);}
 private:
+    static const FButtonStyle& ControlStyle()
+    {
+        static const FButtonStyle Style = FButtonStyle()
+            .SetNormal(FSlateRoundedBoxBrush(FLinearColor(.07f, .13f, .19f), 4.f))
+            .SetHovered(FSlateRoundedBoxBrush(FLinearColor(.11f, .24f, .34f), 4.f))
+            .SetPressed(FSlateRoundedBoxBrush(FLinearColor(.14f, .32f, .45f), 4.f))
+            .SetDisabled(FSlateRoundedBoxBrush(FLinearColor(.045f, .065f, .085f), 4.f));
+        return Style;
+    }
     TFunction<Ship*()> Resolve;
     TFunction<bool()> Operate;
     TSharedPtr<SVerticalBox> Root,Rows;
@@ -56,8 +66,27 @@ private:
     const HangarSlot* Selected()const{auto* H=Bay();return H && SelectedSquad>=0 && SelectedSquad<H->NumSquadrons() && SelectedSlot>=0 && SelectedSlot<H->SquadronSize(SelectedSquad)?H->GetSlot(SelectedSquad,SelectedSlot):nullptr;}
     TSharedRef<SWidget> Label(const FString& S,bool Button=false) {
         return SNew(STextBlock).Text(FText::FromString(Button?S.ToUpper():S))
-            .ColorAndOpacity(Button?FLinearColor::Black:FLinearColor(0.25f,0.7f,1))
+            .ColorAndOpacity(Button?FLinearColor::White:FLinearColor(0.52f,0.79f,0.93f))
             .Font(FCoreStyle::GetDefaultFontStyle("Regular",16)).AutoWrapText(true);
+    }
+    TSharedRef<SWidget> SlotColumns(const FString& Squadron, const FString& Craft,
+        const FString& Status, const FString& Time, bool bHeader = false)
+    {
+        auto Columns = SNew(SHorizontalBox);
+        const FString* Values[] = { &Squadron, &Craft, &Status, &Time };
+        const float Widths[] = { 3.f, 2.f, 4.f, 2.f };
+        for (int32 Column = 0; Column < UE_ARRAY_COUNT(Values); ++Column)
+        {
+            Columns->AddSlot().FillWidth(Widths[Column]).Padding(8, 3)
+            [
+                SNew(STextBlock).Text(FText::FromString(*Values[Column]))
+                .Font(FCoreStyle::GetDefaultFontStyle(bHeader ? "Bold" : "Regular", bHeader ? 13 : 15))
+                .ColorAndOpacity(bHeader ? FLinearColor(.52f, .79f, .93f) : FLinearColor::White)
+                .Justification(Column == 3 ? ETextJustify::Right : ETextJustify::Left)
+                .Clipping(EWidgetClipping::ClipToBounds).OverflowPolicy(ETextOverflowPolicy::Ellipsis)
+            ];
+        }
+        return Columns;
     }
     bool Allowed(int32 Command)const {
         if(Operate && !Operate())return false;
@@ -126,21 +155,24 @@ private:
         Root->AddSlot().AutoHeight().Padding(0,0,0,12)[SAssignNew(Filters,SHorizontalBox)];
         for(int32 I=-1;I<H->NumSquadrons()+2;++I){
             const FString Caption=I<0?TEXT("ALL"):I==H->NumSquadrons()?TEXT("PENDING"):I==H->NumSquadrons()+1?TEXT("ACTIVE"):FString(UTF8_TO_TCHAR(H->SquadronName(I).data()));
-            Filters->AddSlot().FillWidth(1).Padding(2)[SNew(SButton).OnClicked_Lambda([this,I](){Filter=I;SelectedSquad=SelectedSlot=-1;SelectedSlots.Empty();Signature.Empty();Refresh();return FReply::Handled();})[Label(Caption,true)]];
+            Filters->AddSlot().FillWidth(1).Padding(2)[SNew(SButton).ButtonStyle(&ControlStyle()).OnClicked_Lambda([this,I](){Filter=I;SelectedSquad=SelectedSlot=-1;SelectedSlots.Empty();Signature.Empty();Refresh();return FReply::Handled();})[Label(Caption,true)]];
         }
-        Root->AddSlot().AutoHeight().Padding(0,0,0,8)[Label(TEXT("SQUADRON / SLOT       CRAFT       STATUS       TIME REMAINING"))];
-        Root->AddSlot().FillHeight(1)[SNew(SScrollBox)+SScrollBox::Slot()[SAssignNew(Rows,SVerticalBox)]];
+        Root->AddSlot().AutoHeight().Padding(0,0,12,4)
+            [SlotColumns(TEXT("SQUADRON / SLOT"), TEXT("CRAFT"), TEXT("STATUS"), TEXT("TIME REMAINING"), true)];
+        Root->AddSlot().FillHeight(1)
+            [SNew(SScrollBox).ScrollBarThickness(FVector2D(12, 12)).Clipping(EWidgetClipping::ClipToBounds)
+                +SScrollBox::Slot()[SAssignNew(Rows,SVerticalBox)]];
         TSharedPtr<SHorizontalBox> Actions;
         Root->AddSlot().AutoHeight().Padding(0,12)[SAssignNew(Actions,SHorizontalBox)];
         const TCHAR* Names[]={TEXT("LAUNCH"),TEXT("STAND DOWN"),TEXT("RECALL")};
         for(int32 I=0;I<3;++I)Actions->AddSlot().FillWidth(1).Padding(4)
-            [SNew(SButton).IsEnabled_Lambda([this,I](){return Allowed(I);}).OnClicked_Lambda([this,I](){return Execute(I);})[Label(Names[I],true)]];
+            [SNew(SButton).ButtonStyle(&ControlStyle()).IsEnabled_Lambda([this,I](){return Allowed(I);}).OnClicked_Lambda([this,I](){return Execute(I);})[Label(Names[I],true)]];
         Root->AddSlot().AutoHeight().Padding(0,8)[Label(TEXT("MISSION PLANNING"))];
         TSharedPtr<SHorizontalBox> Missions;
         Root->AddSlot().AutoHeight()[SAssignNew(Missions,SHorizontalBox)];
         const TCHAR* MissionNames[]={TEXT("PATROL"),TEXT("INTERCEPT"),TEXT("ASSAULT"),TEXT("STRIKE"),TEXT("ESCORT"),TEXT("SCOUT")};
         for(int I=0;I<6;++I)Missions->AddSlot().FillWidth(1).Padding(2)
-            [SNew(SButton).ButtonColorAndOpacity_Lambda([this,I](){return MissionType==I?FLinearColor(0.3f,0.7f,1):FLinearColor::White;})
+            [SNew(SButton).ButtonStyle(&ControlStyle()).ButtonColorAndOpacity_Lambda([this,I](){return MissionType==I?FLinearColor(0.3f,0.7f,1):FLinearColor::White;})
                 .OnClicked_Lambda([this,I](){MissionType=I;ObjectiveName.Empty();RefreshChoices();return FReply::Handled();})[Label(MissionNames[I],true)]];
         Root->AddSlot().AutoHeight().Padding(0,8)
             [SNew(SHorizontalBox)
@@ -148,17 +180,18 @@ private:
                 [SAssignNew(ObjectiveCombo,SComboBox<TSharedPtr<FString>>).OptionsSource(&ObjectiveOptions)
                     .OnGenerateWidget_Lambda([this](TSharedPtr<FString> Item){return Label(Item?*Item:FString());})
                     .OnSelectionChanged_Lambda([this](TSharedPtr<FString> Item,ESelectInfo::Type){if(Item)ObjectiveName=*Item;})
-                    [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this](){return FText::FromString(ObjectiveName.IsEmpty()?
+                    [SNew(STextBlock).ColorAndOpacity(FLinearColor::White).Clipping(EWidgetClipping::ClipToBounds)
+                        .OverflowPolicy(ETextOverflowPolicy::Ellipsis).Text_Lambda([this](){return FText::FromString(ObjectiveName.IsEmpty()?
                         (MissionType==0 || MissionType==5?TEXT("OBJECTIVE: PATROL ROUTE"):TEXT("NO ELIGIBLE OBJECTIVES")):TEXT("OBJECTIVE: ")+ObjectiveName);})]]
                 +SHorizontalBox::Slot().FillWidth(1).Padding(2)
                 [SAssignNew(LoadCombo,SComboBox<TSharedPtr<FString>>).OptionsSource(&LoadOptions)
                     .OnGenerateWidget_Lambda([this](TSharedPtr<FString> Item){return Label(Item?*Item:FString());})
                     .OnSelectionChanged_Lambda([this](TSharedPtr<FString> Item,ESelectInfo::Type){if(Item)LoadName=*Item;})
-                    [SNew(STextBlock).ColorAndOpacity(FLinearColor::Black).Text_Lambda([this](){return FText::FromString(LoadName.IsEmpty()?TEXT("LOADOUT: STORED"):TEXT("LOADOUT: ")+LoadName);})]]];
-        Root->AddSlot().AutoHeight()[Label(TEXT("Select up to four fighters in one squadron. PACKAGE uses the chosen loadout and auto-launches; ALERT retains stored loadouts and waits for LAUNCH."))];
+                    [SNew(STextBlock).ColorAndOpacity(FLinearColor::White).Clipping(EWidgetClipping::ClipToBounds)
+                        .OverflowPolicy(ETextOverflowPolicy::Ellipsis).Text_Lambda([this](){return FText::FromString(LoadName.IsEmpty()?TEXT("LOADOUT: STORED"):TEXT("LOADOUT: ")+LoadName);})]]];
         Root->AddSlot().AutoHeight()[SNew(SHorizontalBox)
-            +SHorizontalBox::Slot().Padding(4)[SNew(SButton).IsEnabled_Lambda([this](){return CanPrepare(true);}).OnClicked_Lambda([this](){return Prepare(true);})[Label(TEXT("PACKAGE"),true)]]
-            +SHorizontalBox::Slot().Padding(4)[SNew(SButton).IsEnabled_Lambda([this](){return CanPrepare(false);}).OnClicked_Lambda([this](){return Prepare(false);})[Label(TEXT("ALERT"),true)]]];
+            +SHorizontalBox::Slot().Padding(4)[SNew(SButton).ButtonStyle(&ControlStyle()).ToolTipText(INVTEXT("Apply the selected loadout and launch up to four fighters from one squadron.")).IsEnabled_Lambda([this](){return CanPrepare(true);}).OnClicked_Lambda([this](){return Prepare(true);})[Label(TEXT("PACKAGE"),true)]]
+            +SHorizontalBox::Slot().Padding(4)[SNew(SButton).ButtonStyle(&ControlStyle()).ToolTipText(INVTEXT("Ready up to four fighters from one squadron with their stored loadouts.")).IsEnabled_Lambda([this](){return CanPrepare(false);}).OnClicked_Lambda([this](){return Prepare(false);})[Label(TEXT("ALERT"),true)]]];
         Root->AddSlot().AutoHeight()[SNew(STextBlock).AutoWrapText(true).ColorAndOpacity(FLinearColor(0.25f,0.7f,1))
             .Text_Lambda([this](){return FText::FromString(StatusMessage);})];
         Refresh();
@@ -177,8 +210,20 @@ private:
             if(Filter==H->NumSquadrons() && !(Status>Hangar::STORAGE && Status<Hangar::ACTIVE))continue;
             if(Filter==H->NumSquadrons()+1 && Status<Hangar::ACTIVE)continue;
             auto* Craft=H->GetShip(Slot);
-            const FString Caption=FString::Printf(TEXT("%s%s / %d    %s    %s    %ds"),SelectedSquad==Q && SelectedSlots.Contains(I)?TEXT("> "):TEXT(""),UTF8_TO_TCHAR(H->SquadronName(Q).data()),I+1,Craft?UTF8_TO_TCHAR(Craft->GetName()):TEXT("--"),Status==Hangar::MAINT?TEXT("TURNAROUND (repair / refuel / rearm)"):UTF8_TO_TCHAR(H->StatusName(Slot).data()),FMath::Max(0,FMath::CeilToInt(H->TimeRemaining(Slot))));
-            Rows->AddSlot().AutoHeight().Padding(0,2)[SNew(SButton).OnClicked_Lambda([this,Q,I](){SelectSlot(Q,I);return FReply::Handled();})[Label(Caption,true)]];
+            const bool bSelected = SelectedSquad == Q && SelectedSlots.Contains(I);
+            const FString Squadron = FString::Printf(TEXT("%s%s / %d"), bSelected ? TEXT("> ") : TEXT(""),
+                UTF8_TO_TCHAR(H->SquadronName(Q).data()), I + 1);
+            const FString CraftName = Craft ? UTF8_TO_TCHAR(Craft->GetName()) : TEXT("—");
+            const FString StatusName = Status == Hangar::MAINT ? TEXT("Turnaround")
+                : FString(UTF8_TO_TCHAR(H->StatusName(Slot).data()));
+            const int32 Seconds = FMath::Max(0, FMath::CeilToInt(H->TimeRemaining(Slot)));
+            const FString Time = Seconds > 0 ? FString::Printf(TEXT("%d:%02d"), Seconds / 60, Seconds % 60) : TEXT("—");
+            Rows->AddSlot().AutoHeight().Padding(0, 2)
+            [
+                SNew(SButton).ButtonStyle(&ControlStyle()).ContentPadding(0).HAlign(HAlign_Fill)
+                .OnClicked_Lambda([this,Q,I](){SelectSlot(Q,I);return FReply::Handled();})
+                [SlotColumns(Squadron, CraftName, StatusName, Time)]
+            ];
         }
     }
 };

@@ -126,6 +126,7 @@ private:
     TArray<SSWDamagePanel::FCell> DamageRows;
     TArray<FBlip> Contacts;
     FString PlayerName, PlayerClass, TargetName, TargetClass, Primary, Secondary;
+    double TargetSpeed = -1;
     FString TargetRarity, TargetMineral, TargetDepositAmount, TargetDepositValue;
     FString TargetCargo;
     TArray<FString> JumpRoute;

@@ -26,6 +26,7 @@
 #include "Components/Button.h"
 #include "Components/ComboBoxString.h"
 #include "Components/ListView.h"
+#include "Components/TextBlock.h"
 #include "Blueprint/WidgetTree.h"
 #include "Engine/Engine.h"
 
@@ -310,6 +311,7 @@ Ship* UFlightOpsDlg::ResolveCarrier() const
 }
 TSharedRef<SWidget> UFlightOpsDlg::CreatePanelContent()
 {
+    if (PanelTitle) PanelTitle->SetVisibility(ESlateVisibility::Collapsed);
     const TWeakObjectPtr<UFlightOpsDlg> Owner(this);
     return SAssignNew(RuntimePanel,SFlightOpsPopup)
         .ResolveCarrier([Owner](){return Owner.IsValid()?Owner->ResolveCarrier():nullptr;})

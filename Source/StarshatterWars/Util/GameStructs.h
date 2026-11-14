@@ -2043,6 +2043,9 @@ struct FS_Galaxy : public FTableRowBase {
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FString AsteroidType;
 
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    TArray<FString> ProductionSites;
+
 	FS_Galaxy() {
 		Name = "";
 		Level = "";

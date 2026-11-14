@@ -13,6 +13,7 @@
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/SizeBox.h"
+#include "Components/TextBlock.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Input/SButton.h"
@@ -20,6 +21,7 @@
 #include "Widgets/Views/SListView.h"
 #include "Widgets/Images/SImage.h"
 #include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "Engine/Texture2D.h"
 #include "UObject/StrongObjectPtr.h"
 #include "ShipDesignRegistry.h"
@@ -38,6 +40,8 @@ const FButtonStyle& ContactButtonStyle()
 struct FContactRowData {
     TWeakObjectPtr<AActor> Actor;
     FString Name, Type;
+    FString Description;
+    bool bBase = false;
     double Range = 0;
     bool Enemy = false;
     FLinearColor Color = FLinearColor::Yellow;
@@ -55,7 +59,31 @@ public:
         Host = Args._Host;
         ChildSlot[SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("NoBrush")).Padding(10)
             [SNew(SVerticalBox)
-                +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,12)
+                +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,5)
+                [SAssignNew(TitleBar, SBorder)
+                    .BorderImage(FCoreStyle::Get().GetBrush("NoBrush"))
+                    .Padding(0)
+                    .Cursor(EMouseCursor::CardinalCross)
+                    .OnMouseButtonDown_Lambda([this](const FGeometry&, const FPointerEvent& Event)
+                    {
+                        return Event.GetEffectingButton() == EKeys::LeftMouseButton
+                            ? FReply::Handled().CaptureMouse(TitleBar.ToSharedRef()) : FReply::Unhandled();
+                    })
+                    .OnMouseMove_Lambda([this](const FGeometry&, const FPointerEvent& Event)
+                    {
+                        if (!TitleBar->HasMouseCapture()) return FReply::Unhandled();
+                        if (UMissionBriefingDlg* MissionHost = Host.Get())
+                            MissionHost->MoveContactsPanel(Event.GetLastScreenSpacePosition(), Event.GetScreenSpacePosition());
+                        return FReply::Handled();
+                    })
+                    .OnMouseButtonUp_Lambda([this](const FGeometry&, const FPointerEvent& Event)
+                    {
+                        return Event.GetEffectingButton() == EKeys::LeftMouseButton && TitleBar->HasMouseCapture()
+                            ? FReply::Handled().ReleaseMouseCapture() : FReply::Unhandled();
+                    })
+                    [SNew(STextBlock).Text(FText::FromString(TEXT("CONTACTS")))
+                        .Font(MissionUIStyle::GetInfoLabelFont(18))]]
+                +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,6)
                 [SNew(SBox).HeightOverride(1)
                     [SNew(SBorder).Padding(0).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
                         .BorderBackgroundColor(FlightPanelStyle::DividerColor())]]
@@ -75,7 +103,7 @@ public:
                             [SNew(SButton).ButtonStyle(&ContactButtonStyle()).IsFocusable(false)
                                 .ButtonColorAndOpacity_Lambda([this,Row](){return Host.IsValid() && Host->GetSelectedMissionContact()==Row->Actor.Get()
                                     ?FLinearColor(1.4f,1.8f,2.0f,1):FLinearColor::White;})
-                                .OnClicked_Lambda([this,Row](){if(Host.IsValid() && Row->Actor.IsValid())Host->SelectMissionContact(Row->Actor.Get());return FReply::Handled();})
+                                .OnClicked_Lambda([this,Row](){ Select(Row); return FReply::Handled(); })
                                 [SNew(SHorizontalBox)
                                     +SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0,0,8,0)
                                     [SNew(SBox).WidthOverride(48).HeightOverride(48)
@@ -86,17 +114,68 @@ public:
                                     .Text_Lambda([this,Row](){return FText::FromString(FString::Printf(TEXT("%s%s\n%s  |  %s"),
                                         Host.IsValid() && Host->GetSelectedMissionContact()==Row->Actor.Get()?TEXT("> "):TEXT(""),*Row->Name,*Row->Type,*UFormattingUtils::FormatDistance(Row->Range * 1000.0)));})]]];
                     })]
-                +SVerticalBox::Slot().AutoHeight()[SNew(STextBlock).Text_Lambda([this](){return FText::FromString(FString::Printf(TEXT("%d CONTACTS"),Rows.Num()));})]]];
+                +SVerticalBox::Slot().AutoHeight()[SNew(STextBlock).Text_Lambda([this](){return FText::FromString(FString::Printf(TEXT("%d CONTACTS"),Rows.Num()));})]
+                +SVerticalBox::Slot().AutoHeight().Padding(0,8,0,0)
+                [SNew(SBorder).Padding(10)
+                    .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+                    .BorderBackgroundColor(FLinearColor(.035f,.075f,.115f,1))
+                    .Visibility_Lambda([this](){return SelectedDetails() ? EVisibility::Visible : EVisibility::Collapsed;})
+                    [SNew(SVerticalBox)
+                        +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,4)
+                        [SNew(STextBlock).Font(MissionUIStyle::GetInfoLabelFont(15)).AutoWrapText(true)
+                            .Text_Lambda([this](){const auto Row = SelectedDetails(); return Row ? FText::FromString(Row->Name) : FText::GetEmpty();})]
+                        +SVerticalBox::Slot().AutoHeight()
+                        [SNew(SBox).MaxDesiredHeight(112)
+                            [SNew(SScrollBox)
+                                +SScrollBox::Slot()
+                                [SNew(STextBlock).AutoWrapText(true)
+                                    .Text_Lambda([this](){
+                                        const auto Row = SelectedDetails();
+                                        if (!Row) return FText::GetEmpty();
+                                        FString Details = Row->Type + TEXT("  |  ") + UFormattingUtils::FormatDistance(Row->Range * 1000);
+                                        if (!Row->Description.IsEmpty()) Details += TEXT("\n\n") + Row->Description;
+                                        return FText::FromString(Details);
+                                    })]]]]]]];
         Refresh();
     }
     virtual void Tick(const FGeometry& G,double Time,float Delta) override {
         SCompoundWidget::Tick(G,Time,Delta);
         if(Time>=NextRefresh){NextRefresh=Time+0.5;Refresh();}
     }
+    void MoveSelection(int32 Step)
+    {
+        if (!Host.IsValid() || Rows.IsEmpty()) return;
+        const int32 Index = Rows.IndexOfByPredicate([this](const FContactRow& Row)
+        {
+            return Row->Actor.Get() == Host->GetSelectedMissionContact();
+        });
+        const int32 Next = Index == INDEX_NONE ? (Step > 0 ? 0 : Rows.Num() - 1)
+            : FMath::Clamp(Index + Step, 0, Rows.Num() - 1);
+        Select(Rows[Next]);
+        List->RequestScrollIntoView(Rows[Next]);
+    }
 private:
+    TSharedPtr<SBorder> TitleBar;
     TWeakObjectPtr<UMissionBriefingDlg> Host;
     TArray<FContactRow> Rows;
     TSharedPtr<SListView<FContactRow>> List;
+
+    void Select(const FContactRow& Row)
+    {
+        if (Host.IsValid() && Row->Actor.IsValid())
+            Host->SelectMissionContact(Row->Actor.Get());
+    }
+
+    FContactRow SelectedDetails() const
+    {
+        if (!Host.IsValid()) return {};
+        const auto* Actor = Host->GetSelectedMissionContact();
+        for (const auto& Row : Rows)
+            if (Row->Actor.IsValid() && Row->Actor.Get() == Actor &&
+                (Row->bBase || !Row->Description.IsEmpty())) return Row;
+        return {};
+    }
+
     bool EnemiesOnly=false,ByName=false,Ascending=true;
     double NextRefresh=0;
     void Sort(bool Name){if(ByName==Name)Ascending=!Ascending;else{ByName=Name;Ascending=true;}Refresh();}
@@ -110,12 +189,24 @@ private:
             for(const FContactRow& Old:Rows)if(Old->Actor.Get()==Actor){Row=Old;break;}
             if(!Row)Row=MakeShared<FContactRowData>();
             Row->Actor=Actor;
+            Row->bBase = false;
+            Row->Description.Reset();
             Row->Enemy=false;Row->Color=FLinearColor::Yellow;
             AShipActor* Visual=Cast<AShipActor>(Actor);
             Ship* Data=Visual?Visual->GetRuntimeShip():nullptr;
             if(Data && Region->GetShips().contains(Data)) {
                 Row->Name=ANSI_TO_TCHAR(Data->GetName());
                 Row->Type=ANSI_TO_TCHAR(Data->GetShipClassName());
+                Row->bBase = Data->GetClassification() == CLASSIFICATION::STATION ||
+                    Data->GetClassification() == CLASSIFICATION::STARBASE;
+                if (Data->Design())
+                {
+                    if (const auto* Design = ShipDesignRegistry::Find(Data->Design()->name))
+                        Row->Description = Design->Description;
+                    const auto& Capacity = Data->Design()->CargoCapacity;
+                    if (Capacity.Tonnes > 0)
+                        Row->Description += FString::Printf(TEXT("\n\nCargo capacity  %.0f t"), Capacity.Tonnes);
+                }
                 Row->Range=FVector::Distance(Data->GetLocation(),Player->GetLocation())/1000.0;
                 const int Team=Player->GetIFF();
                 Row->Enemy=Data->GetIFF()>0 && Data->GetIFF()!=Team;
@@ -157,6 +248,7 @@ private:
                 FMissionObjectData Object;
                 if(!ReadMissionObject(Actor,Player,Region,Object))continue;
                 Row->Name=Object.Name;Row->Type=Object.Type;Row->Range=Object.RangeKm;
+                Row->bBase = Object.ImagePath == AirbaseContactIcon || Object.ImagePath == StationContactIcon;
                 if (!Row->IconLoadAttempted) {
                     Row->IconLoadAttempted = true;
                     FString ImagePath = Object.ImagePath;
@@ -187,9 +279,28 @@ private:
 }
 
 void UContactsDlg::SetMissionHost(UMissionBriefingDlg* Host){MissionHost=Host;}
+void UContactsDlg::NativeConstruct()
+{
+    ContentInsets.Top = 4;
+    Super::NativeConstruct();
+    if (PanelTitle) PanelTitle->SetVisibility(ESlateVisibility::Collapsed);
+}
 FReply UContactsDlg::NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& Event)
 {
-    if (!Event.IsRepeat()) RequestPanelClose();
+    const auto List = StaticCastSharedPtr<SContactsList>(ContactList.Pin());
+    const FKey Key = Event.GetKey();
+    if (Key == EKeys::Escape) return Super::NativeOnPreviewKeyDown(Geometry, Event);
+    if (Key == EKeys::Up || Key == EKeys::Down)
+    {
+        if (List) List->MoveSelection(Key == EKeys::Up ? -1 : 1);
+        return FReply::Handled();
+    }
+    if (!Event.IsRepeat())
+    {
+        if (UMissionBriefingDlg* Host = MissionHost.Get(); Host && Host->HandleContactsRadioKey(Key))
+            return FReply::Handled();
+        RequestPanelClose();
+    }
     return FReply::Handled();
 }
 TSharedRef<SWidget> UContactsDlg::RebuildWidget() {
@@ -208,5 +319,10 @@ TSharedRef<SWidget> UContactsDlg::RebuildWidget() {
     }
     return Super::RebuildWidget();
 }
-TSharedRef<SWidget> UContactsDlg::CreatePanelContent(){return SNew(SContactsList).Host(MissionHost);}
+TSharedRef<SWidget> UContactsDlg::CreatePanelContent()
+{
+    TSharedRef<SContactsList> List = SNew(SContactsList).Host(MissionHost);
+    ContactList = List;
+    return List;
+}
 FText UContactsDlg::GetPanelCaption() const{return FText::FromString(TEXT("CONTACTS"));}

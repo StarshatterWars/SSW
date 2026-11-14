@@ -59,6 +59,16 @@ element: {
 }
 
 element: {
+    name: "Janek Orbital Materials Works"
+    design: "Processing Facility"
+    count: 1
+    iff: 1
+    command_ai: 0
+    region: "Janek"
+    loc: (-56e3, 0, 10e3)
+}
+
+element: {
     name: "Janek Mining Freighter 1"
     design: Rockhopper
     regnum: "MF-7102"
@@ -83,7 +93,7 @@ element: {
 element: {
     name: "Janek Ore Shuttle"
     design: Prospector
-    regnum: "MS-7101"
+    regnum: "MSC-7101"
     count: 1
     iff: 1
     command_ai: 0

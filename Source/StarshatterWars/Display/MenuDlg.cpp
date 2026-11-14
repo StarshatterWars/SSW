@@ -24,6 +24,9 @@
 
 #include "MenuDlg.h"
 #include "FactionInsignia.h"
+#include "HAL/PlatformProcess.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 
 // UMG
 #include "Components/Button.h"
@@ -393,8 +396,21 @@ void UMenuDlg::NativeConstruct()
         const int32 Month = Months.Find(CompileDate.Left(3)) / 4 + 1;
         const int32 Day = FCString::Atoi(*CompileDate.Mid(4, 2));
         const int32 Year = FCString::Atoi(*CompileDate.Right(2));
+        FString Build = FString::Printf(TEXT("%02d%02d.%02d"), Year, Month, Day);
+#if !WITH_EDITOR
+        // Packaged executable: <install>/StarshatterWars/Binaries/<platform>/.
+        FString InstalledBuild;
+        const FString VersionFile = FPaths::ConvertRelativePathToFull(
+            FPlatformProcess::BaseDir(), TEXT("../../../.ssw-version"));
+        if (FFileHelper::LoadFileToString(InstalledBuild, *VersionFile))
+        {
+            InstalledBuild.TrimStartAndEndInline();
+            if (!InstalledBuild.IsEmpty())
+                Build = MoveTemp(InstalledBuild);
+        }
+#endif
         VersionText->SetText(FText::FromString(FString::Printf(
-            TEXT("%s  |  Build %02d%02d.%02d"), *Game::VersionInfo, Year, Month, Day)));
+            TEXT("%s  |  Build %s"), *Game::VersionInfo, *Build)));
     }
     else
     {

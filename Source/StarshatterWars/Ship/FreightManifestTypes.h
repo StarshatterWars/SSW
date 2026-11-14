@@ -15,7 +15,25 @@ enum class ESSWFinishedItem : uint8
     SealedDocuments,
     MilitaryRations,
     MilitarySpares,
-    FieldMedicalSupplies
+    FieldMedicalSupplies,
+    IndustrialConcentrate,
+    StructuralAlloy,
+    ConductiveMetal,
+    IndustrialCeramics,
+    CarbonComposite,
+    OpticalGlass,
+    ReactorFuel,
+    ThrusterPropellant,
+    Water,
+    LifeSupportSupplies,
+    Food,
+    ConstructionMaterials,
+    SensorAssembly,
+    NavigationComputer,
+    EngineAssembly,
+    ShieldComponents,
+    RepairKit,
+    HullSection
 };
 
 USTRUCT(BlueprintType)

@@ -765,6 +765,12 @@ void UStarshatterEnvironmentSubsystem::LoadGalaxyMap()
 					GetDefText(SystemName, pdef, Fn);
 					NewGalaxyData.Name = FString(SystemName);
 				}
+				else if (Key == "production_site")
+				{
+					Text Site;
+					GetDefText(Site, pdef, Fn);
+					NewGalaxyData.ProductionSites.AddUnique(UTF8_TO_TCHAR(Site.data()));
+				}
 				else if (Key == "loc")
 				{
 					GetDefVec(SystemLocation, pdef, Fn);

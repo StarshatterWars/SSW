@@ -23,7 +23,7 @@ bool Ship::IsTransferStation() const
 bool Ship::GetTransferBerth(int32 Index, double FreighterRadius, FVector& OutPosition) const
 {
     const bool bMiningFacility = IsStatic() && Design() &&
-        (FCStringAnsi::Stricmp(Design()->name, "Asteroid Base") == 0 ||
+        (!Design()->ProductionRecipe.IsNone() || FCStringAnsi::Stricmp(Design()->name, "Asteroid Base") == 0 ||
          FCStringAnsi::Stricmp(Design()->name, "Mining Station") == 0);
     if ((!IsTransferStation() && !bMiningFacility) || IsDead() || IsDying() || Index < 0 || Index >= 2 ||
         !FMath::IsFinite(FreighterRadius) || FreighterRadius < 0.0)

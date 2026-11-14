@@ -507,8 +507,23 @@ void UEngineeringDlg::OnClose()
 TSharedRef<SWidget> UEngineeringDlg::CreatePanelContent()
 {
     const TWeakObjectPtr<UEngineeringDlg> Owner(this);
-    return SNew(SEngineeringPopup).Embedded(true)
+    if (PanelTitle) PanelTitle->SetVisibility(ESlateVisibility::Collapsed);
+    const auto Panel = SNew(SEngineeringPopup).Embedded(true)
         .ResolveShip([Owner]()->Ship*{return Owner.IsValid()?Owner->ResolvePanelShip():nullptr;})
         .OnClose(FSimpleDelegate::CreateWeakLambda(this,[this](){RequestPanelClose();}));
+    RuntimeEngineeringPanel = Panel;
+    return Panel;
+}
+
+FReply UEngineeringDlg::NativeOnPreviewKeyDown(const FGeometry& Geometry, const FKeyEvent& Event)
+{
+    const FKey Key = Event.GetKey();
+    if (Key == EKeys::Up || Key == EKeys::Down)
+    {
+        if (const auto Panel = RuntimeEngineeringPanel.Pin())
+            Panel->MoveRepairPriority(Key == EKeys::Up ? -1 : 1);
+        return FReply::Handled();
+    }
+    return Super::NativeOnPreviewKeyDown(Geometry, Event);
 }
 FText UEngineeringDlg::GetPanelCaption() const{return FText::FromString(TEXT("Engineering"));}

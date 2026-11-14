@@ -1819,7 +1819,26 @@ Ship::TrackPoint(int i) const
 const char*
 Ship::Abbreviation() const
 {
-	return design->abrv;
+	return FCStringAnsi::Stricmp(design->name, "Prospector") == 0 ? "MSC" : design->abrv;
+}
+
+FString Ship::GetContactLabel() const
+{
+    const FString Name = UTF8_TO_TCHAR(GetName());
+    if (!design) return Name;
+
+    const FString ClassCode = FString(UTF8_TO_TCHAR(Abbreviation())).TrimStartAndEnd().ToUpper();
+    if (ClassCode.IsEmpty()) return Name;
+
+    FString Hull = FString(UTF8_TO_TCHAR(Registry())).TrimStartAndEnd();
+    if (ClassCode == TEXT("MSC") && Hull.StartsWith(TEXT("MS-"), ESearchCase::IgnoreCase))
+        Hull.RightChopInline(3);
+    if (Hull.StartsWith(ClassCode, ESearchCase::IgnoreCase))
+        Hull.RightChopInline(ClassCode.Len());
+    Hull.TrimStartInline();
+    while (Hull.RemoveFromStart(TEXT("-"))) Hull.TrimStartInline();
+    const FString Prefix = Hull.IsEmpty() ? ClassCode + TEXT(" ") : ClassCode + Hull + TEXT("-");
+    return Name.StartsWith(Prefix, ESearchCase::IgnoreCase) ? Name : Prefix + Name;
 }
 
 const char*
@@ -1837,7 +1856,7 @@ Ship::DesignFileName() const
 const char*
 Ship::GetShipClassName() const
 {
-	return ShipDesign::ClassName(design->type);
+	return FCStringAnsi::Stricmp(Abbreviation(), "MSC") == 0 ? "MSC" : ShipDesign::ClassName(design->type);
 }
 
 const char*

@@ -130,6 +130,7 @@ public:
 	char              display_name[64];
 	TArray<FSSWCargoOption> CargoManifest;
 	FSSWCargoCapacity CargoCapacity;
+	FName ProductionRecipe;
 	char              abrv[16];
 	int               type;
 	float             scale;
@@ -235,11 +236,11 @@ public:
 
 	float              splash_radius;
 	float              scuttle;
-	float              repair_speed;
-	int                repair_teams;
-	bool               repair_auto;
-	bool               repair_screen;
-	bool               wep_screen;
+	float              repair_speed = 1.0f;
+	int                repair_teams = 2;
+	bool               repair_auto = true;
+	bool               repair_screen = true;
+	bool               wep_screen = true;
 
 	Text               bolt_hit_sound;
 	Text               beam_hit_sound;

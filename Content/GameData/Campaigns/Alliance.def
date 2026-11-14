@@ -3716,6 +3716,120 @@ group: {
   }
 }
 
+group: {
+  type: station,
+  id: 8521,
+  name: "Janek Orbital Materials Works",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Janek",
+  loc: (-56e3, 0, 10e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Janek Orbital Materials Works",
+    type: "Station",
+    design: "Processing Facility",
+  }
+}
+
+group: {
+  type: station,
+  id: 8522,
+  name: "Adonis Alloy Works",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Adonis",
+  loc: (92e3, -26e3, 16e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Adonis Alloy Works",
+    type: "Station",
+    design: "Processing Facility",
+  }
+}
+
+group: {
+  type: station,
+  id: 8523,
+  name: "Maraner Materials Refinery",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Maraner",
+  loc: (90e3, 32e3, -14e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Maraner Materials Refinery",
+    type: "Station",
+    design: "Processing Facility",
+  }
+}
+
+group: {
+  type: station,
+  id: 8524,
+  name: "Pallas Industrial Works",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Pallas",
+  loc: (-87e3, 25e3, 18e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Pallas Industrial Works",
+    type: "Station",
+    design: "Processing Facility",
+  }
+}
+
+group: {
+  type: station,
+  id: 8525,
+  name: "Dorrath Metals Works",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Dorrath",
+  loc: (101e3, -29e3, 20e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Dorrath Metals Works",
+    type: "Station",
+    design: "Processing Facility",
+  }
+}
+
+group: {
+  type: station,
+  id: 8526,
+  name: "Hera Mineral Processing Works",
+  intel: known,
+  iff: 1,
+  empire_id: 0,
+  region: "Hera",
+  loc: (-96e3, -32e3, 16e3),
+  parent_type: force,
+  parent_id: 1,
+
+  unit: {
+    name: "Hera Mineral Processing Works",
+    type: "Station",
+    design: "Processing Facility",
+  }
+}
+
 // Additional cargo operators
 
 group: {
@@ -3973,7 +4087,25 @@ group: {
   loc: (-36e3, 0, 0),
   parent_type: force,
   parent_id: 1,
-  unit: { name: "Janek Ore Shuttle", type: "LCA", design: "Prospector", regnum: "MS-7101" },
+  unit: { name: "Janek Ore Shuttle", type: "LCA", design: "Prospector", regnum: "MSC-7101" },
   unit: { name: "Janek Mining Freighter 1", type: "Freighter", design: "Rockhopper", regnum: "MF-7102" },
   unit: { name: "Janek Mining Freighter 2", type: "Freighter", design: "Rockhopper", regnum: "MF-7103" },
 }
+
+
+group: { type: station, id: 8541, name: "Adonis Orbital Concentrator", intel: known, iff: 1, empire_id: 0, region: "Adonis", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Adonis Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8542, name: "Maraner Orbital Concentrator", intel: known, iff: 1, empire_id: 0, region: "Maraner", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Maraner Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8543, name: "Pallas Orbital Concentrator", intel: known, iff: 1, empire_id: 0, region: "Pallas", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Pallas Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8544, name: "Dorrath Orbital Concentrator", intel: known, iff: 1, empire_id: 0, region: "Dorrath", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Dorrath Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8545, name: "Hera Orbital Concentrator", intel: known, iff: 1, empire_id: 0, region: "Hera", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Hera Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8546, name: "Dante Orbital Concentrator", intel: known, iff: 1, empire_id: 0, region: "Dante", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Dante Orbital Concentrator", type: "Station", design: "Processing Facility" } }

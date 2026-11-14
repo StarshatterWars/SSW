@@ -72,6 +72,7 @@ public:
 
 protected:
     virtual TSharedRef<SWidget> CreatePanelContent() override;
+    virtual bool UsesFlightPanelStyle() const override { return true; }
     virtual FText GetPanelCaption() const override;
     Ship* ResolveCarrier() const;
     // -----------------------------------------------------------------

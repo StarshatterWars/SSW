@@ -73,6 +73,8 @@ protected:
     bool              bCombatHandoffPending = false;
     bool              bTrackingTarget = false;
     double            TrackSpeed = 0.0;
+    Steer             FilteredTrackSteering;
+    double            FilteredTrackSpeed = 0.0;
     int               drop_state = 0;
     int               quantum_state = 0;
     int               terrain_warning = 0;

@@ -29,8 +29,7 @@
 namespace MissionNavObjectLayout
 {
     static constexpr float RowHeight = 28.0f;
-    static constexpr float PrimaryCol = 190.0f;
-    static constexpr float SecondaryCol = 96.0f;
+    static constexpr float SecondaryCol = 90.0f;
     static constexpr float LeftPadding = 6.0f;
 }
 
@@ -84,7 +83,6 @@ void UMissionNavObjectLVElement::BuildRuntimeWidget()
         WidgetTree->ConstructWidget<USizeBox>(
             USizeBox::StaticClass(),
             TEXT("PrimarySizeBox"));
-    PrimarySizeBox->SetWidthOverride(MissionNavObjectLayout::PrimaryCol);
 
     SecondarySizeBox =
         WidgetTree->ConstructWidget<USizeBox>(
@@ -210,7 +208,7 @@ void UMissionNavObjectLVElement::ApplySelectionVisual()
 
 void UMissionNavObjectLVElement::ApplySlotRules()
 {
-    auto FixSlot = [](UWidget* Widget)
+    auto FixSlot = [](UWidget* Widget, bool bFill)
         {
             if (!Widget)
             {
@@ -219,14 +217,14 @@ void UMissionNavObjectLVElement::ApplySlotRules()
 
             if (UHorizontalBoxSlot* HBSlot = Cast<UHorizontalBoxSlot>(Widget->Slot))
             {
-                HBSlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
-                HBSlot->SetHorizontalAlignment(HAlign_Left);
+                HBSlot->SetSize(FSlateChildSize(bFill ? ESlateSizeRule::Fill : ESlateSizeRule::Automatic));
+                HBSlot->SetHorizontalAlignment(HAlign_Fill);
                 HBSlot->SetVerticalAlignment(VAlign_Center);
             }
         };
 
-    FixSlot(PrimarySizeBox);
-    FixSlot(SecondarySizeBox);
+    FixSlot(PrimarySizeBox, true);
+    FixSlot(SecondarySizeBox, false);
 }
 
 void UMissionNavObjectLVElement::ApplyColumnLayout()
@@ -238,7 +236,7 @@ void UMissionNavObjectLVElement::ApplyColumnLayout()
 
     if (PrimarySizeBox)
     {
-        PrimarySizeBox->SetWidthOverride(MissionNavObjectLayout::PrimaryCol);
+        PrimarySizeBox->ClearWidthOverride();
     }
 
     if (SecondarySizeBox)
@@ -257,6 +255,8 @@ void UMissionNavObjectLVElement::ApplyTextRules()
             }
 
             Text->SetAutoWrapText(false);
+            Text->SetClipping(EWidgetClipping::ClipToBounds);
+            Text->SetTextOverflowPolicy(ETextOverflowPolicy::Ellipsis);
             Text->SetJustification(ETextJustify::Left);
             Text->SetColorAndOpacity(MissionUIStyle::RowText);
             Text->SetFont(MissionUIStyle::GetTableRowFont());
@@ -264,6 +264,7 @@ void UMissionNavObjectLVElement::ApplyTextRules()
 
     FixText(PrimaryText);
     FixText(SecondaryText);
+    if (SecondaryText) SecondaryText->SetJustification(ETextJustify::Right);
 }
 
 TSharedRef<SWidget> UMissionNavObjectLVElement::RebuildWidget()

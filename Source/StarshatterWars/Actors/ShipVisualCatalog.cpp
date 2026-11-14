@@ -1,4 +1,5 @@
 #include "ShipVisualCatalog.h"
+#include "ProductionActor.h"
 #include "ShipActor.h"
 #include "Misc/PackageName.h"
 namespace {
@@ -62,6 +63,7 @@ const ShipVisualCatalog::FEntry Definitions[] = {
     { TEXT("Fortress"), TEXT("Station3"), TEXT("Fortress"), TEXT("FortressShipActor"), TEXT("station") },
     { TEXT("MiningStation"), TEXT("Mining Station"), TEXT("Xfer"), TEXT("MiningStationActor"), TEXT("station") },
     { TEXT("AsteroidBase"), TEXT("Asteroid Base"), TEXT("Xfer"), TEXT("AsteroidBaseActor"), TEXT("station") },
+    { TEXT("ProcessingFacility"), TEXT("Processing Facility"), TEXT("Xfer"), TEXT("ProductionActor"), TEXT("station") },
     { TEXT("FreightXfer"), TEXT("Station1"), TEXT("Xfer"), TEXT("FreightXferShipActor"), TEXT("station") },
     { TEXT("Goliath"), TEXT("Goliath"), TEXT("Goliath"), TEXT("GoliathShipActor"), TEXT("carrier") },
     { TEXT("Harmony"), TEXT("Station2"), TEXT("Harmony"), TEXT("HarmonyShipActor"), TEXT("station") },
@@ -153,6 +155,7 @@ UClass* ShipVisualCatalog::Resolve(const FString& DesignName, const FString& Mod
     Names.AddUnique(DesignName);
     if (DesignName.Equals(TEXT("Rockhopper"))) Names.AddUnique(TEXT("CargoA"));
     if (DesignName.Equals(TEXT("Prospector"))) Names.AddUnique(TEXT("Zodiac"));
+    if (Names[0] == TEXT("ProcessingFacility")) return AProductionActor::StaticClass();
     if (Names[0] == TEXT("AsteroidBase") || Names[0] == TEXT("MiningStation")) Names.AddUnique(TEXT("FreightXfer"));
     if (!ModelName.IsEmpty()) Names.AddUnique(ModelName);
     for (const FString& Name : Names)

@@ -189,7 +189,7 @@ void NavAI::FindObjective()
         }
         else if (const Ship* Contact = ship->GetAutoTrackTarget()) {
             obj_w = Contact->GetLocation();
-            objective = Transform(obj_w);
+            objective = ship->IsAirborne() ? Transform(obj_w) : AimTransform(obj_w);
             const FVector Separation = obj_w - ship->GetLocation();
             distance = Separation.Size();
             const double TargetSpeed = FVector::DotProduct(Contact->GetVelocity(), Separation.GetSafeNormal());
@@ -374,7 +374,7 @@ NavAI::Navigator()
         accumulator = TerrainRecovery;
     }
     else {
-        const bool bFixedTrack = bTrackingTarget && ship->GetFixedAutoTrackPoint();
+        const bool bFixedTrack = bTrackingTarget && (ship->GetFixedAutoTrackPoint() || !ship->IsAirborne());
         const Steer Avoidance = AvoidCollision(bFixedTrack);
         if (bFixedTrack) {
             // Yield to collision avoidance instead of steering back toward the
@@ -399,6 +399,22 @@ NavAI::Navigator()
         }
     }
 
+    if (bTrackingTarget && !ship->IsAirborne() && !terrain_warning)
+    {
+        const double Alpha = 1.0 - FMath::Exp(-5.0 * FMath::Max(0.0, seconds));
+        FilteredTrackSteering.yaw = FMath::Lerp(FilteredTrackSteering.yaw, accumulator.yaw, Alpha);
+        FilteredTrackSteering.pitch = FMath::Lerp(FilteredTrackSteering.pitch, accumulator.pitch, Alpha);
+        accumulator.yaw = FilteredTrackSteering.yaw;
+        accumulator.pitch = FilteredTrackSteering.pitch;
+        FilteredTrackSpeed = FMath::FInterpConstantTo(FilteredTrackSpeed, TrackSpeed,
+            seconds, TrackSpeed < FilteredTrackSpeed ? 500.0 : 120.0);
+        TrackSpeed = FilteredTrackSpeed;
+    }
+    else
+    {
+        FilteredTrackSteering.Clear();
+        FilteredTrackSpeed = 0.0;
+    }
     HelmControl();
     ThrottleControl();
 }
@@ -434,7 +450,7 @@ NavAI::HelmControl()
         ship->SetFLCSMode(EFLCSMode::AUTO);
 
         // are we being asked to flee?
-        const bool bFixedTrack = bTrackingTarget && ship->GetFixedAutoTrackPoint();
+        const bool bFixedTrack = bTrackingTarget && (ship->GetFixedAutoTrackPoint() || !ship->IsAirborne());
         if (!bFixedTrack && fabs(accumulator.yaw) == 1.0 && accumulator.pitch == 0.0) {
             accumulator.pitch = -0.7f;
             accumulator.yaw *= 0.25f;
@@ -507,7 +523,7 @@ void NavAI::ThrottleControl()
         if (!bTrackingTarget && DesiredSpeed < 10.0)
             DesiredSpeed = 250.0;
 
-        if (bTrackingTarget && ship->GetFixedAutoTrackPoint() && !ship->IsAirborne()) {
+        if (bTrackingTarget && !ship->IsAirborne()) {
             const double Error = DesiredSpeed - ship->GetVelocity().Size();
             const double Demand = FMath::Clamp(Error * 0.4, 0.0, 60.0);
             throttle = FMath::FInterpConstantTo(old_throttle, Demand, seconds, 80.0);
@@ -603,9 +619,9 @@ Steer
 NavAI::SeekTarget()
 {
     if (bTrackingTarget) {
-        if (!ship->GetFixedAutoTrackPoint()) return Seek(objective);
+        if (ship->IsAirborne() && !ship->GetFixedAutoTrackPoint()) return Seek(objective);
 
-        // Fixed contacts use continuous elevation through the side-on turn.
+        // Space tracking uses continuous elevation through the side-on turn.
         // Legacy Seek switches pitch formulas as the target crosses the beam.
         Steer Result;
         if (objective.IsNearlyZero()) return Result;

@@ -60,6 +60,8 @@ class STARSHATTERWARS_API UMissionBriefingDlg : public UBaseScreen
     GENERATED_BODY()
 
 public:
+    bool HandleContactsRadioKey(const FKey& Key);
+    void MoveContactsPanel(FVector2D PreviousCursor, FVector2D Cursor);
     UMissionBriefingDlg(const FObjectInitializer& ObjectInitializer);
     TArray<AActor*> GetSelectableMissionContacts() const;
     void SelectMissionContact(AActor* Selected);
@@ -140,21 +142,31 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UInputAction> EngineeringAction;
     TSharedPtr<SWidget> EngineeringPopup;
     UPROPERTY(Transient) TObjectPtr<UEngineeringDlg> EngineeringPanelWidget;
-    bool bEngineeringPreviousCursor = false;
     void ToggleEngineering();
     void CloseEngineering();
     TSharedPtr<SWidget> WeaponsPopup;
+    TSharedPtr<SWidget> FlightPanelToolbar;
+    void InstallFlightPanelToolbar();
+    bool CanOpenFlightPanel() const;
+    void UpdateFlightPanelInput(TSharedPtr<SWidget> Focus = nullptr);
+    void AddFloatingPanel(TSharedPtr<SWidget>& Panel, TSharedRef<SWidget> Content, const TCHAR* Title, int32 Index, FSimpleDelegate Close);
+    void RemoveFloatingPanel(TSharedPtr<SWidget>& Panel);
+    TSharedPtr<class SConstraintCanvas> FlightPanelCanvas;
+    int32 FlightPanelZ = 0;
+    bool bFlightPanelInput = false;
+    bool bFlightPanelPreviousCursor = false;
+    TSharedPtr<SWidget> ContactsPopup;
+    UPROPERTY(Transient) TObjectPtr<class UContactsDlg> ContactsPanelWidget;
+    void CloseContactsPopup();
+    TOptional<FVector2D> ContactsPanelPosition;
     UPROPERTY(Transient) TObjectPtr<UInMissionPanelBase> WeaponsPanelWidget;
-    bool bWeaponsPreviousCursor = false;
     void CloseWeaponsPopup();
     UPROPERTY(Transient) TObjectPtr<UInputAction> ObjectivesPanelAction;
     TSharedPtr<SWidget> ObjectivesPopup;
     UPROPERTY(Transient) TObjectPtr<UObjectivesDlg> ObjectivesPanelWidget;
-    bool bObjectivesPreviousCursor = false;
     UPROPERTY(Transient) TObjectPtr<UFlightOpsDlg> FlightOpsPanelWidget;
     UPROPERTY(Transient) TObjectPtr<UInputAction> FlightOpsPanelAction;
     TSharedPtr<SWidget> FlightOpsPopup;
-    bool bFlightOpsPreviousCursor=false;
     void ToggleFlightOpsPopup();
     void CloseFlightOpsPopup();
     void ToggleObjectivesPopup();
@@ -162,7 +174,6 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UInputAction> NavMapAction;
     UPROPERTY(Transient) TObjectPtr<UNavigationDlg> NavigationPanelWidget;
     TSharedPtr<SWidget> NavigationPopup;
-    bool bNavigationPreviousCursor=false;
     void ToggleNavigationPopup();
     void CloseNavigationPopup();
     void ToggleQuantumTravel();
@@ -185,7 +196,6 @@ protected:
     float AtmosphereTravelFade = 0.f;
     bool bAtmosphereTravel = false;
     bool bAtmosphereDescent = false;
-    bool bQuantumPreviousCursor = false;
     UPROPERTY(Transient) TObjectPtr<UInputAction> RadioMenuAction;
     UPROPERTY(Transient) TObjectPtr<UInputMappingContext> RadioChoiceContext;
     UPROPERTY(Transient) TArray<TObjectPtr<UInputAction>> RadioChoiceActions;
@@ -317,7 +327,6 @@ protected:
     bool bRecoveryTargetSelected = false;
     bool bAutoNavSelectionActive = false;
     UPROPERTY(Transient) TArray<TObjectPtr<UInputAction>> MissionWeaponActions;
-    bool bContactsOnlyPanel = false;
     bool CanUseFighterHUD() const;
     bool CanShowFighterHUD() const;
     TSharedPtr<SFighterHUDDetails> FighterHUDDetails;

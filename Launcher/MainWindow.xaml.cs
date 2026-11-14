@@ -26,18 +26,22 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        LauncherVersion.Text = $"Launcher {typeof(MainWindow).Assembly.GetName().Version!.ToString(3)}";
         sourceGame = FindGame();
-        game = sourceGame;
+        string installed = Path.Combine(@"C:\SSW", "StarshatterWars.exe");
+        if (File.Exists(installed)) game = installed;
         try
         {
             if (File.Exists(InstallRecord))
             {
                 string selected = File.ReadAllText(InstallRecord).Trim();
-                if (File.Exists(selected)) game = selected;
+                if (File.Exists(selected) && (game is null ||
+                    File.Exists(Path.Combine(Path.GetDirectoryName(selected)!, ".ssw-version"))))
+                    game = selected;
             }
         }
         catch (IOException) { }
-        InstallButton.IsEnabled = sourceGame is not null;
+        InstallButton.IsEnabled = true;
         PlayButton.IsEnabled = SteamButton.IsEnabled = OfflineButton.IsEnabled = game is not null;
         InstalledVersion.Text = game is null ? "Game not installed" : DescribeBuild(game);
         LaunchStatus.Text = game is null ? "Use Locate Game to select your Starshatter Wars installation." : "Ready to launch";
@@ -55,7 +59,7 @@ public partial class MainWindow : Window
         Loaded += async (_, _) =>
         {
             StartMusic();
-            await LoadFeedAsync();
+            await Task.WhenAll(LoadFeedAsync(), LoadPatchNotesAsync());
         };
         Closed += (_, _) => { closing.Cancel(); music.Close(); NewsView.Dispose(); };
     }
@@ -108,17 +112,44 @@ public partial class MainWindow : Window
 
     private async void Play_Click(object sender, RoutedEventArgs e) => await SignInAndLaunchAsync("EOS");
     private async void Steam_Click(object sender, RoutedEventArgs e) => await SignInAndLaunchAsync("STEAM");
-    private void PlayOffline_Click(object sender, RoutedEventArgs e) => Launch("NULL");
+    private async void PlayOffline_Click(object sender, RoutedEventArgs e) => await SignInAndLaunchAsync("NULL");
 
     private async Task SignInAndLaunchAsync(string provider)
     {
-        if (game is null) return;
+        if (busy || game is null) return;
         SetBusy(true);
-        LaunchStatus.Text = provider == "EOS" ? "Signing in with Epic…" : "Checking the Steam session…";
+        LaunchStatus.Text = "Checking installed game version…";
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(closing.Token);
         timeout.CancelAfter(TimeSpan.FromMinutes(3));
         try
         {
+            var config = JsonSerializer.Deserialize<LauncherSettings>(
+                await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "launcher.json"), timeout.Token), JsonOptions);
+            if (!Uri.TryCreate(config?.PatchManifestUrl, UriKind.Absolute, out Uri? manifestUrl) ||
+                string.IsNullOrWhiteSpace(config?.PatchPublicKeyPem))
+                throw new InvalidOperationException("Playing requires a configured update feed to verify your game version.");
+
+            string versionPath = Path.Combine(Path.GetDirectoryName(game)!, ".ssw-version");
+            if (!File.Exists(versionPath))
+                throw new InvalidOperationException("Install the game through the launcher before playing.");
+
+            using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
+            {
+                Timeout = TimeSpan.FromSeconds(10),
+                MaxResponseContentBufferSize = 16 * 1024 * 1024
+            };
+            var manifest = await new GamePatcher(http).ReadManifestAsync(manifestUrl, config.PatchPublicKeyPem, timeout.Token);
+            string installedVersion = (await File.ReadAllTextAsync(versionPath, timeout.Token)).Trim();
+            if (!string.Equals(installedVersion, manifest.Version, StringComparison.Ordinal))
+                throw new InvalidOperationException($"The game requires build {manifest.Version}. You have {installedVersion}. Use Check for Updates.");
+
+            if (provider == "NULL")
+            {
+                Launch(provider);
+                return;
+            }
+
+            LaunchStatus.Text = provider == "EOS" ? "Signing in with Epic…" : "Checking the Steam session…";
             if (provider == "EOS")
             {
                 string artifact = await PlatformSignIn.EpicAsync(game, sourceGame ?? game, timeout.Token);
@@ -126,17 +157,18 @@ public partial class MainWindow : Window
             }
             else
             {
-                string settings = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "launcher.json"), timeout.Token);
-                uint appId = JsonSerializer.Deserialize<LauncherSettings>(settings, JsonOptions)?.SteamAppId ?? 0;
+                uint appId = config.SteamAppId;
                 ulong account = PlatformSignIn.Steam(game, appId);
                 Launch(provider, steamAppId: appId, steamAccount: account);
             }
         }
         catch (OperationCanceledException)
         {
-            if (!closing.IsCancellationRequested) LaunchStatus.Text = "Sign-in timed out.";
+            if (!closing.IsCancellationRequested) LaunchStatus.Text = "The update check or sign-in timed out.";
         }
         catch (Exception ex) when (ex is IOException or JsonException or InvalidOperationException
+            or HttpRequestException or InvalidDataException or UnauthorizedAccessException
+            or System.Security.Cryptography.CryptographicException or ArgumentException
             or DllNotFoundException or EntryPointNotFoundException or BadImageFormatException
             or System.ComponentModel.Win32Exception)
         {
@@ -151,7 +183,7 @@ public partial class MainWindow : Window
     private void SetBusy(bool value)
     {
         busy = value;
-        InstallButton.IsEnabled = !value && sourceGame is not null;
+        InstallButton.IsEnabled = !value;
         UpdateButton.IsEnabled = !value;
         PlayButton.IsEnabled = SteamButton.IsEnabled = OfflineButton.IsEnabled = !value && game is not null;
     }
@@ -163,6 +195,8 @@ public partial class MainWindow : Window
         {
             Title = "Locate the Starshatter Wars game executable",
             Filter = "Starshatter Wars|StarshatterWars.exe",
+            InitialDirectory = game is not null ? Path.GetDirectoryName(game) :
+                Directory.Exists(@"C:\SSW") ? @"C:\SSW" : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             CheckFileExists = true
         };
         if (picker.ShowDialog(this) != true) return;
@@ -191,23 +225,88 @@ public partial class MainWindow : Window
 
     private async void Install_Click(object sender, RoutedEventArgs e)
     {
-        if (busy || sourceGame is null) return;
-        var picker = new Microsoft.Win32.OpenFolderDialog { Title = "Choose an empty folder for Starshatter Wars" };
-        if (picker.ShowDialog(this) != true) return;
+        if (busy) return;
+        var folder = new System.Windows.Controls.TextBox { Text = @"C:\SSW", Margin = new Thickness(0, 0, 0, 12) };
+        var installButton = new System.Windows.Controls.Button { Content = "Install", IsDefault = true, MinWidth = 84 };
+        var cancelButton = new System.Windows.Controls.Button { Content = "Cancel", IsCancel = true, MinWidth = 84 };
+        var buttons = new System.Windows.Controls.StackPanel
+        {
+            Orientation = System.Windows.Controls.Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        buttons.Children.Add(cancelButton);
+        buttons.Children.Add(installButton);
+        var content = new System.Windows.Controls.StackPanel { Margin = new Thickness(18) };
+        content.Children.Add(new System.Windows.Controls.TextBlock { Text = "Game installation folder", Margin = new Thickness(0, 0, 0, 6) });
+        content.Children.Add(folder);
+        content.Children.Add(buttons);
+        var picker = new Window
+        {
+            Owner = this, Title = "Install Starshatter Wars", Content = content, Width = 460,
+            SizeToContent = SizeToContent.Height, ResizeMode = ResizeMode.NoResize,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner, ShowInTaskbar = false
+        };
+        installButton.Click += (_, _) => picker.DialogResult = true;
+        if (picker.ShowDialog() != true) return;
+        string destination = folder.Text.Trim();
 
         SetBusy(true);
         try
         {
+            if (!Path.IsPathFullyQualified(destination)) throw new IOException("Enter a full installation path.");
+            string install = Path.TrimEndingDirectorySeparator(Path.GetFullPath(destination));
+            if (install.Equals(Path.GetPathRoot(install), StringComparison.OrdinalIgnoreCase))
+                throw new IOException("Choose a game folder inside the drive.");
+            Directory.CreateDirectory(install);
+            if ((File.GetAttributes(install) & FileAttributes.ReparsePoint) != 0)
+                throw new IOException("Choose a folder that is not a junction or symbolic link.");
+            bool overwrite = LocalInstaller.HasExistingFiles(install);
+            if (overwrite && MessageBox.Show(this,
+                $"Overwrite the installation in {install}? Existing files will be backed up in that folder.",
+                "Overwrite Starshatter Wars", MessageBoxButton.YesNo, MessageBoxImage.Warning,
+                MessageBoxResult.No) != MessageBoxResult.Yes) return;
+            if (overwrite && GameIsRunning()) throw new IOException("Close Starshatter Wars before overwriting.");
+            using var installLock = new FileStream(Path.Combine(install, LocalInstaller.LockName),
+                FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 1, FileOptions.DeleteOnClose);
             var progress = new Progress<string>(message => LaunchStatus.Text = message);
-            game = await Task.Run(() => LocalInstaller.Install(Path.GetDirectoryName(sourceGame)!,
-                picker.FolderName, progress, closing.Token), closing.Token);
+            string settings = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "launcher.json"), closing.Token);
+            var config = JsonSerializer.Deserialize<LauncherSettings>(settings, JsonOptions);
+            if (Uri.TryCreate(config?.PatchManifestUrl, UriKind.Absolute, out Uri? url) &&
+                !string.IsNullOrWhiteSpace(config?.PatchPublicKeyPem))
+            {
+                using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false });
+                Uri? archive = string.IsNullOrWhiteSpace(config.GameArchiveUrl) ? null : new Uri(config.GameArchiveUrl, UriKind.Absolute);
+                var transfer = new Progress<GamePatcher.TransferProgress>(state =>
+                {
+                    TransferBar.Visibility = Visibility.Visible;
+                    TransferBar.IsIndeterminate = state.Total <= 0;
+                    TransferBar.Value = state.Total > 0 ? 100.0 * state.Bytes / state.Total : 0;
+                    LaunchStatus.Text = state.Stage == "Downloading SSW"
+                        ? $"{state.Stage} · {TransferBar.Value:0.0}% · {state.Bytes / 1073741824.0:0.00}/{state.Total / 1073741824.0:0.00} GiB"
+                        : state.Stage;
+                });
+                var notes = CreateReleaseNotesProgress();
+                await Task.Run(async () =>
+                {
+                    return await new GamePatcher(http).UpdateAsync(install, url, config.PatchPublicKeyPem,
+                        progress, GameIsRunning, closing.Token, transfer, freshInstall: true, overwrite: overwrite,
+                        archiveUrl: archive, releaseNotes: notes);
+                }, closing.Token);
+                game = Path.Combine(install, "StarshatterWars.exe");
+            }
+            else if (sourceGame is not null)
+                game = await Task.Run(() => LocalInstaller.Install(Path.GetDirectoryName(sourceGame)!,
+                    install, progress, closing.Token, overwrite), closing.Token);
+            else
+                throw new IOException("Configure a release feed or provide a local Windows build.");
             Directory.CreateDirectory(Path.GetDirectoryName(InstallRecord)!);
             await File.WriteAllTextAsync(InstallRecord, game, closing.Token);
             InstalledVersion.Text = DescribeBuild(game);
             LaunchStatus.Text = $"Installed to {Path.GetDirectoryName(game)}";
         }
         catch (OperationCanceledException) { }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or ArgumentException
+            or HttpRequestException or JsonException or System.Security.Cryptography.CryptographicException)
         {
             LaunchStatus.Text = $"Install failed. {ex.Message}";
         }
@@ -222,6 +321,11 @@ public partial class MainWindow : Window
         try
         {
             string install = Path.GetDirectoryName(game)!;
+            if (!File.Exists(Path.Combine(install, ".ssw-version")))
+            {
+                LaunchStatus.Text = "Use Install or Locate Game to select a launcher-managed installation before updating.";
+                return;
+            }
             string settings = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "launcher.json"), closing.Token);
             var config = JsonSerializer.Deserialize<LauncherSettings>(settings, JsonOptions);
             if (!Uri.TryCreate(config?.PatchManifestUrl, UriKind.Absolute, out Uri? url) ||
@@ -240,12 +344,13 @@ public partial class MainWindow : Window
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(closing.Token);
             timeout.CancelAfter(TimeSpan.FromHours(2));
             var progress = new Progress<string>(message => LaunchStatus.Text = message);
+            var notes = CreateReleaseNotesProgress();
             string result = await Task.Run(async () =>
             {
-                using var updateLock = new FileStream(install + ".update.lock", FileMode.OpenOrCreate,
-                    FileAccess.ReadWrite, FileShare.None);
+                using var updateLock = new FileStream(Path.Combine(install, LocalInstaller.LockName),
+                    FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 1, FileOptions.DeleteOnClose);
                 return await new GamePatcher(http).UpdateAsync(install, url, config.PatchPublicKeyPem,
-                    progress, GameIsRunning, timeout.Token);
+                    progress, GameIsRunning, timeout.Token, releaseNotes: notes);
             }, timeout.Token);
             LaunchStatus.Text = result;
             InstalledVersion.Text = DescribeBuild(game);
@@ -262,9 +367,41 @@ public partial class MainWindow : Window
         finally { SetBusy(false); }
     }
 
+    private async Task LoadPatchNotesAsync()
+    {
+        try
+        {
+            string settings = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "launcher.json"), closing.Token);
+            var config = JsonSerializer.Deserialize<LauncherSettings>(settings, JsonOptions);
+            if (!Uri.TryCreate(config?.PatchManifestUrl, UriKind.Absolute, out Uri? url) ||
+                string.IsNullOrWhiteSpace(config?.PatchPublicKeyPem)) return;
+            using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
+            {
+                Timeout = TimeSpan.FromSeconds(10),
+                MaxResponseContentBufferSize = 16 * 1024 * 1024
+            };
+            var manifest = await new GamePatcher(http).ReadManifestAsync(url, config.PatchPublicKeyPem, closing.Token);
+            if (!string.IsNullOrWhiteSpace(manifest.About)) ShowPatchNotes(manifest.About);
+        }
+        catch (Exception ex) when (ex is IOException or InvalidDataException or HttpRequestException or JsonException
+            or System.Security.Cryptography.CryptographicException or ArgumentException or UnauthorizedAccessException or OperationCanceledException)
+        {
+            // The release feed is optional when starting the launcher offline.
+        }
+    }
+
+    private IProgress<string> CreateReleaseNotesProgress() => new Progress<string>(ShowPatchNotes);
+
+    private void ShowPatchNotes(string message)
+    {
+        PatchNotes.Text = message;
+        AboutPatch.Visibility = Visibility.Visible;
+    }
+
     private static bool GameIsRunning()
     {
-        Process[] games = Process.GetProcessesByName("StarshatterWars");
+        Process[] games = Process.GetProcessesByName("StarshatterWars")
+            .Concat(Process.GetProcessesByName("StarServer")).ToArray();
         foreach (Process process in games) process.Dispose();
         return games.Length > 0;
     }
@@ -272,7 +409,23 @@ public partial class MainWindow : Window
     private void Launch(string provider, string? artifact = null, uint steamAppId = 0, ulong steamAccount = 0)
     {
         if (game is null) return;
-        var start = new ProcessStartInfo(game) { WorkingDirectory = Path.GetDirectoryName(game)! };
+        string directory = Path.GetDirectoryName(game)!;
+        string executable = game;
+        if (provider == "EOS")
+        {
+            var config = JsonSerializer.Deserialize<LauncherSettings>(
+                File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "launcher.json")), JsonOptions);
+            if (config?.UseEasyAntiCheatBootstrapper == true)
+            {
+                executable = Path.Combine(directory, "start_protected_game.exe");
+                if (!File.Exists(executable) || !File.Exists(Path.Combine(directory, "EasyAntiCheat", "Settings.json")))
+                {
+                    LaunchStatus.Text = "Easy Anti-Cheat files are missing. Install the protected game build.";
+                    return;
+                }
+            }
+        }
+        var start = new ProcessStartInfo(executable) { WorkingDirectory = directory };
         start.ArgumentList.Add($"-ini:Engine:[OnlineSubsystem]:DefaultPlatformService={provider}");
         if (provider == "NULL")
             start.ArgumentList.Add("-ini:Game:[/Script/StarshatterWars.SSWDiagnosticsSettings]:bRequirePlatformSignIn=False");
@@ -393,7 +546,7 @@ public partial class MainWindow : Window
         return html.Append("</html>").ToString();
     }
 
-    private sealed record LauncherSettings(string? FeedUrl, uint SteamAppId, string? PatchManifestUrl, string? PatchPublicKeyPem);
+    private sealed record LauncherSettings(string? FeedUrl, uint SteamAppId, string? PatchManifestUrl, string? PatchPublicKeyPem, string? GameArchiveUrl, bool UseEasyAntiCheatBootstrapper);
     private sealed record Feed(FeedEntry[]? Entries);
     private sealed record FeedEntry(string? Category, string? Title, string? Date, string? Body);
 }

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include "GameStructs_products.h"
 #include "Types.h"
 #include "Delegates/Delegate.h"
 #include "Containers/Array.h"
@@ -300,9 +301,12 @@ protected:
         double Time = 0.0;
         double NextPulse = 0.0;
         bool bDelivering = false;
+        double LoadedTonnes = 0;
+        TOptional<FVector> AsteroidDetour;
     };
     TMap<int32, FMiningRun> JanekMiningRuns;
-    double JanekOreDelivered = 0;
+    FSSWProductionStock JanekRefinery;
+    TMap<FString, double> JanekMiningStock;
     Ship* DeferredLaunchPlayer = nullptr;
     Ship* PendingLaunchPlayer = nullptr; // staged player, awaiting click / timeout
     bool bPlayerLaunchRequested = false;

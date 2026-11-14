@@ -638,3 +638,9 @@ group: {
     regnum: "8723-2"
   }
 }
+
+
+group: { type: station, id: 8550, name: "Silessia Materials Works", intel: known, iff: 0, empire_id: 9, region: "Silessia", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Silessia Materials Works", type: "Station", design: "Processing Facility" } }
+
+
+group: { type: station, id: 8551, name: "Silessia Orbital Concentrator", intel: known, iff: 0, empire_id: 9, region: "Silessia", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Silessia Orbital Concentrator", type: "Station", design: "Processing Facility" } }
