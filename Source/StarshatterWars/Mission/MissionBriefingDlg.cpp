@@ -86,6 +86,7 @@
 #include "FlightTacticalReferenceDlg.h"
 #include "StarshatterAssetRegistrySubsystem.h"
 #include "LiveOptionsDlg.h"
+#include "CargoManifestDlg.h"
 #include "Kismet/GameplayStatics.h"
 
 #include "MenuScreen.h"
@@ -1844,6 +1845,16 @@ bool UMissionBriefingDlg::CanOpenFlightPanel() const
         && !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
 }
 
+bool UMissionBriefingDlg::CanOpenCameraAndRadio() const
+{
+    if (!CanOpenFlightPanel()) return false;
+
+    Sim* Simulation = Sim::GetSim();
+    const Ship* Pilot = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    return Pilot && !(Pilot->GetDock() && Pilot->GetDock()->IsLaunchDeck()
+        && Pilot->GetFlightPhase() < EOPSMode::ACTIVE);
+}
+
 void UMissionBriefingDlg::InstallFlightPanelToolbar()
 {
     if (FlightPanelToolbar || !GetWorld() || !GetWorld()->GetGameViewport()) return;
@@ -1852,32 +1863,138 @@ void UMissionBriefingDlg::InstallFlightPanelToolbar()
     FlightPanelZ = 0;
     auto Toolbar = SNew(SVerticalBox);
     using FToggle = void (UMissionBriefingDlg::*)();
-    auto AddButton = [this, &Toolbar](const TCHAR* Label, EShipSystemIcon Icon, FToggle Toggle,
-        const TSharedPtr<SWidget> UMissionBriefingDlg::* Panel)
+    const auto QuantumPilot = []() -> const Ship*
     {
+        Sim* Simulation = Sim::GetSim();
+        return Simulation ? Simulation->GetPlayerShip() : nullptr;
+    };
+    auto AddButton = [this, &Toolbar, QuantumPilot](const TCHAR* Label, EShipSystemIcon Icon, FToggle Toggle,
+        const TSharedPtr<SWidget> UMissionBriefingDlg::* Panel, bool bRequiresLaunch = false)
+    {
+        const bool bQuantum = Toggle == &UMissionBriefingDlg::ToggleQuantumTravel;
         Toolbar->AddSlot().AutoHeight().Padding(0, 0, 0, 5)
         [
             SNew(SBox).WidthOverride(38).HeightOverride(38)
+            .ToolTipText_Lambda([this, Label, Toggle, bRequiresLaunch, bQuantum, QuantumPilot]()
+            {
+                if (!Toggle) return INVTEXT("Marketplace (to be added)");
+                if (bQuantum)
+                {
+                    const Ship* Pilot = QuantumPilot();
+                    if (Pilot && Pilot->GetQuantumDrive()) return INVTEXT("Quantum jump drive");
+                    return Pilot && Pilot->IsDropship()
+                        ? INVTEXT("Fighter not equipped") : INVTEXT("Ship not equipped");
+                }
+                return bRequiresLaunch && !CanOpenCameraAndRadio()
+                    ? FText::Format(INVTEXT("{0} (available after launch)"), FText::FromString(Label))
+                    : FText::FromString(Label);
+            })
             [
                 SNew(SButton).IsFocusable(false).ContentPadding(0).HAlign(HAlign_Center).VAlign(VAlign_Center)
+                .IsEnabled_Lambda([this, Toggle, bRequiresLaunch, bQuantum, QuantumPilot]()
+                {
+                    if (bQuantum)
+                    {
+                        const Ship* Pilot = QuantumPilot();
+                        return Pilot && Pilot->GetQuantumDrive();
+                    }
+                    return Toggle && (!bRequiresLaunch || CanOpenCameraAndRadio());
+                })
                 .ButtonColorAndOpacity_Lambda([this, Panel]()
                 {
-                    return (this->*Panel).IsValid() ? FLinearColor(.25f, .75f, .95f) : FLinearColor(.25f, .38f, .48f);
+                    return Panel && (this->*Panel).IsValid() ? FLinearColor(.25f, .75f, .95f) : FLinearColor(.25f, .38f, .48f);
                 })
-                .ToolTipText(FText::FromString(Label))
-                .OnClicked_Lambda([this, Toggle]() { (this->*Toggle)(); return FReply::Handled(); })
+                .OnClicked_Lambda([this, Toggle]()
+                {
+                    if (Toggle) (this->*Toggle)();
+                    return FReply::Handled();
+                })
                 [SNew(SShipSystemIcon).Icon(Icon)]
             ]
         ];
     };
+    AddButton(TEXT("Camera"), EShipSystemIcon::Camera, &UMissionBriefingDlg::ToggleFlightCameraPanel, nullptr, true);
+    AddButton(TEXT("Cargo Manifest"), EShipSystemIcon::Cargo, &UMissionBriefingDlg::ToggleCargoManifest, &UMissionBriefingDlg::CargoManifestPopup);
+    AddButton(TEXT("Contacts"), EShipSystemIcon::Sensor, &UMissionBriefingDlg::ToggleContactsPanel, &UMissionBriefingDlg::ContactsPopup);
     AddButton(TEXT("Engineering"), EShipSystemIcon::Reactor, &UMissionBriefingDlg::ToggleEngineering, &UMissionBriefingDlg::EngineeringPopup);
-    AddButton(TEXT("Weapons"), EShipSystemIcon::Weapon, &UMissionBriefingDlg::ToggleFighterWeaponsPanel, &UMissionBriefingDlg::WeaponsPopup);
-    AddButton(TEXT("Navigation"), EShipSystemIcon::Navigation, &UMissionBriefingDlg::ToggleNavigationPopup, &UMissionBriefingDlg::NavigationPopup);
-    AddButton(TEXT("Quantum"), EShipSystemIcon::Jump, &UMissionBriefingDlg::ToggleQuantumTravel, &UMissionBriefingDlg::QuantumPopup);
     AddButton(TEXT("Flight Ops"), EShipSystemIcon::Deck, &UMissionBriefingDlg::ToggleFlightOpsPopup, &UMissionBriefingDlg::FlightOpsPopup);
+    AddButton(TEXT("Marketplace"), EShipSystemIcon::Marketplace, nullptr, nullptr);
+    AddButton(TEXT("Navigation"), EShipSystemIcon::Navigation, &UMissionBriefingDlg::ToggleNavigationPopup, &UMissionBriefingDlg::NavigationPopup);
     AddButton(TEXT("Objectives"), EShipSystemIcon::Computer, &UMissionBriefingDlg::ToggleObjectivesPopup, &UMissionBriefingDlg::ObjectivesPopup);
-    AddButton(TEXT("Tactical Reference"), EShipSystemIcon::Reference, &UMissionBriefingDlg::ToggleFlightReference, &UMissionBriefingDlg::ReferencePopup);
     AddButton(TEXT("Options"), EShipSystemIcon::Options, &UMissionBriefingDlg::ToggleLiveOptions, &UMissionBriefingDlg::LiveOptionsPopup);
+    AddButton(TEXT("Quantum"), EShipSystemIcon::Jump, &UMissionBriefingDlg::ToggleQuantumTravel, &UMissionBriefingDlg::QuantumPopup);
+    AddButton(TEXT("Radio"), EShipSystemIcon::Radio, &UMissionBriefingDlg::ToggleFighterRadio, nullptr, true);
+    AddButton(TEXT("Tactical Reference"), EShipSystemIcon::Reference, &UMissionBriefingDlg::ToggleFlightReference, &UMissionBriefingDlg::ReferencePopup);
+    AddButton(TEXT("Weapons"), EShipSystemIcon::Weapon, &UMissionBriefingDlg::ToggleFighterWeaponsPanel, &UMissionBriefingDlg::WeaponsPopup);
+    AddButton(TEXT("Mission exit menu"), EShipSystemIcon::Exit, &UMissionBriefingDlg::ToggleMissionMenu, nullptr);
+    const auto AddRadioWindow = [this](bool bCamera, const FText& Caption)
+    {
+        const auto IsOpen = [this, bCamera]()
+        {
+            return FighterHUDDetails && CanShowFighterHUD() && bFighterHUDVisible &&
+                (bCamera ? FighterHUDDetails->IsCameraPanelOpen()
+                         : FighterHUDDetails->IsRadioOpen() && !FighterHUDDetails->IsCameraPanelOpen()
+                             && !FighterHUDDetails->IsTravelSpeedOpen());
+        };
+        auto Window = SNew(SFlightPanelWindow)
+            .Title(Caption)
+            .Visibility_Lambda([IsOpen]() { return IsOpen() ? EVisibility::Visible : EVisibility::Collapsed; })
+            .OnClose(FSimpleDelegate::CreateWeakLambda(this, [this]()
+            {
+                FighterHUDDetails->CloseRadio();
+                UpdateFighterRadioInput();
+            }))
+            [
+                SNew(SBox).WidthOverride(260)
+                [
+                    SNew(STextBlock).Font(MissionUIStyle::GetInfoLabelFont(14))
+                    .ColorAndOpacity(FLinearColor(.78f, .89f, .96f)).AutoWrapText(true)
+                    .Margin(FMargin(8, 4, 8, 8))
+                    .Text_Lambda([this, IsOpen]()
+                    {
+                        if (!IsOpen()) return FText::GetEmpty();
+                        TArray<FString> Labels;
+                        TArray<int32> Commands;
+                        TArray<bool> Enabled;
+                        FString Title;
+                        FighterHUDDetails->BuildRadioRows(Labels, Commands, Enabled, Title);
+                        FString Body;
+                        for (int32 Index = 0; Index < Labels.Num(); ++Index)
+                            Body += FString::Printf(TEXT("%d. %s%s\n"), Index + 1, *Labels[Index],
+                                Enabled[Index] ? TEXT("") : TEXT(" (unavailable)"));
+                        Body += TEXT("\n0  Back / Close");
+                        return FText::FromString(Body);
+                    })
+                ]
+            ];
+        auto Position = MakeShared<TOptional<FVector2D>>();
+        SConstraintCanvas::FSlot* Slot = nullptr;
+        {
+            auto NewSlot = FlightPanelCanvas->AddSlot();
+            NewSlot.Expose(Slot).AutoSize(true).Alignment(FVector2D::ZeroVector).ZOrder(++FlightPanelZ)
+                .Offset(TAttribute<FMargin>::CreateLambda([this, Position, WeakWindow = TWeakPtr<SFlightPanelWindow>(Window)]()
+                {
+                    const FVector2D View = FlightPanelCanvas->GetCachedGeometry().GetLocalSize();
+                    const auto Panel = WeakWindow.Pin();
+                    const FVector2D Extent = Panel ? Panel->GetDesiredSize() : FVector2D::ZeroVector;
+                    const FVector2D Room = View - Extent;
+                    const FVector2D Desired = Position->Get(FVector2D(
+                        Room.X - FlightPanelStyle::RightPanelInset, FlightPanelStyle::RightPanelTop));
+                    return FMargin(FMath::Clamp(Desired.X, 0.0, FMath::Max(0.0, Room.X)),
+                        FMath::Clamp(Desired.Y, 0.0, FMath::Max(0.0, Room.Y)), 0, 0);
+                }))[Window];
+        }
+        Window->Raise = [this, Slot]() { Slot->SetZOrder(++FlightPanelZ); };
+        Window->Move = [this, Slot, Position](const FPointerEvent& Event)
+        {
+            const FGeometry& Geometry = FlightPanelCanvas->GetCachedGeometry();
+            const FMargin Offset = Slot->GetOffset();
+            *Position = FVector2D(Offset.Left, Offset.Top) + Geometry.AbsoluteToLocal(Event.GetScreenSpacePosition())
+                - Geometry.AbsoluteToLocal(Event.GetLastScreenSpacePosition());
+        };
+    };
+    AddRadioWindow(true, INVTEXT("Camera"));
+    AddRadioWindow(false, INVTEXT("Radio"));
     FlightPanelToolbar = SNew(SOverlay).Visibility(EVisibility::SelfHitTestInvisible)
         + SOverlay::Slot()[FlightPanelCanvas.ToSharedRef()]
         + SOverlay::Slot().HAlign(HAlign_Left).VAlign(VAlign_Center).Padding(10, 0)
@@ -1935,7 +2052,7 @@ void UMissionBriefingDlg::UpdateFlightPanelInput(TSharedPtr<SWidget> Focus)
     APlayerController* PC = GetOwningPlayer();
     if (!PC) return;
     const bool bHasPanels = EngineeringPopup || WeaponsPopup || NavigationPopup || QuantumPopup ||
-        ObjectivesPopup || FlightOpsPopup || ContactsPopup || ReferencePopup || LiveOptionsPopup;
+        ObjectivesPopup || FlightOpsPopup || ContactsPopup || ReferencePopup || LiveOptionsPopup || CargoManifestPopup;
     if (!bHasPanels && !bFlightPanelInput) return;
 
     if (!bFlightPanelInput) bFlightPanelPreviousCursor = PC->bShowMouseCursor;
@@ -2239,7 +2356,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
             const bool Staged=Pilot && Pilot->GetDock() && Pilot->GetDock()->IsLaunchDeck() && Pilot->GetFlightPhase()<EOPSMode::ACTIVE;
             return HUDOwner.IsValid() && HUDOwner->CanShowFighterHUD() && !Staged &&
                 HUDOwner->bFighterHUDVisible && !(HUDOwner->MissionCameraRig.IsValid() && HUDOwner->MissionCameraRig->bThirdPersonView) && !(HUDOwner->FighterHUDDetails.IsValid() && HUDOwner->FighterHUDDetails->IsCockpitDisplayActive()) && !HUDOwner->MissionSceneCover.IsValid() &&
-                !HUDOwner->LiveOptionsPopup && !HUDOwner->ReferencePopup &&
+                !HUDOwner->LiveOptionsPopup && !HUDOwner->CargoManifestPopup && !HUDOwner->ReferencePopup &&
                 !(HUDOwner->MissionQuitMenu && HUDOwner->MissionQuitMenu->IsMenuShown());
         });
         GetWorld()->GetGameViewport()->AddViewportWidgetContent(FighterHUDPanels.ToSharedRef(), 800);
@@ -2473,7 +2590,15 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
             })
             .ShowHUD_Lambda([Owner]() { return Owner.IsValid() && Owner->bFighterHUDVisible && Owner->CanShowFighterHUD(); })
             .SelectedTarget_Lambda([Owner]() { return Owner.IsValid() ? Owner->SelectedMissionTarget : TWeakObjectPtr<AActor>(); })
-            .SelectedName_Lambda([Owner]() { return Owner.IsValid() ? Owner->SelectedMissionTargetName : FText::GetEmpty(); });
+            .SelectedName_Lambda([Owner]() { return Owner.IsValid() ? Owner->SelectedMissionTargetName : FText::GetEmpty(); })
+            .OnOverviewWheel_Lambda([Owner](float Wheel)
+            {
+                if (!Owner.IsValid() || !Owner->MissionCameraRig ||
+                    Owner->MissionCameraRig->Mode != FMissionCameraRig::Overview || !Owner->CanUseFighterHUD() ||
+                    Owner->ContactsPopup) return false;
+                Owner->OnTargetZoom(FInputActionValue(Wheel));
+                return true;
+            });
         GetWorld()->GetGameViewport()->AddViewportWidgetContent(FighterHUDDetails.ToSharedRef(), 810);
     }
     InstallFlightPanelToolbar();
@@ -2550,6 +2675,7 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     CloseObjectivesPopup();
     ObjectivesPanelAction=nullptr;
     CloseFlightReference();
+    CloseCargoManifest();
     CloseLiveOptions();
     CloseContactsPopup();
     CloseWeaponsPopup();
@@ -2643,7 +2769,7 @@ void UMissionBriefingDlg::NextMissionTarget()
         if (HUDView* Hud = HUDView::GetInstance()) Hud->SetHUDColorSet(HUDView::DefaultColorSet());
         return;
     }
-    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || ReferencePopup || LiveOptionsPopup ||
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || ReferencePopup || LiveOptionsPopup || CargoManifestPopup ||
         EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() ||
         FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || !GetWorld() || GetWorld()->IsPaused())
@@ -2838,7 +2964,7 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
 bool UMissionBriefingDlg::CanUseFighterHUD() const
 {
     return bLiveMissionStarted && !bMissionCompleteHandedOff
-        && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() && !ReferencePopup && !LiveOptionsPopup &&
+        && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() && !ReferencePopup && !LiveOptionsPopup && !CargoManifestPopup &&
         !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
 }
 
@@ -2930,6 +3056,7 @@ void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 void UMissionBriefingDlg::ToggleMissionMenu()
 {
     CloseFlightReference();
+    CloseCargoManifest();
     CloseLiveOptions();
     CloseContactsPopup();
     if (QuantumPopup.IsValid()) { CloseQuantumTravel(); }
@@ -3307,9 +3434,18 @@ void UMissionBriefingDlg::UpdateFighterRadioInput()
     }
     else Input->RemoveMappingContext(RadioChoiceContext.Get());
 }
+void UMissionBriefingDlg::ToggleFlightCameraPanel()
+{
+    if (!CanOpenCameraAndRadio() || !FighterHUDDetails || !MissionCameraRig) return;
+    bFighterHUDVisible = true;
+    FighterHUDDetails->ToggleCameraPanel(MissionCameraRig);
+    if (FighterHUDDetails->IsCameraPanelOpen()) CloseContactsPopup();
+    UpdateFighterRadioInput();
+}
+
 void UMissionBriefingDlg::ToggleFighterRadio()
 {
-    if (!CanOpenFlightPanel() || !FighterHUDDetails) return;
+    if (!CanOpenCameraAndRadio() || !FighterHUDDetails) return;
     if (LastRadioInputFrame == GFrameCounter) return;
     LastRadioInputFrame = GFrameCounter;
     bFighterHUDVisible=true;
@@ -3594,7 +3730,7 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
     APlayerController* PC = GetOwningPlayer();
     if (!World || !PC || !bLiveMissionStarted || bMissionCompleteHandedOff
         || (Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) || !IsValid(MissionPreviewCamera)) return;
-    if (ReferencePopup || LiveOptionsPopup || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
+    if (ReferencePopup || LiveOptionsPopup || CargoManifestPopup || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
@@ -3732,10 +3868,7 @@ void UMissionBriefingDlg::OnMissionCameraCommand(const FInputActionValue& Value,
     if ((Command == 1 || Command == 3) && !Shift) return;
     if (Command == FMissionCameraRig::PanelCommand)
     {
-        if (!FighterHUDDetails.IsValid()) return;
-        bFighterHUDVisible = true;
-        FighterHUDDetails->ToggleCameraPanel(MissionCameraRig);
-        UpdateFighterRadioInput();
+        ToggleFlightCameraPanel();
         return;
     }
     if (Command >= 10)
@@ -3863,6 +3996,25 @@ void UMissionBriefingDlg::CloseFlightReference()
 {
     RemoveFloatingPanel(ReferencePopup);
     FlightReferenceWidget = nullptr;
+}
+
+void UMissionBriefingDlg::ToggleCargoManifest()
+{
+    if (CargoManifestPopup) { CloseCargoManifest(); return; }
+    if (!CanOpenFlightPanel() || !FlightPanelCanvas) return;
+
+    ClearMissionRotationInput();
+    CargoManifestWidget = CreateWidget<UCargoManifestDlg>(GetOwningPlayer(),
+        ResolveFlightPopupClass<UCargoManifestDlg>(GetGameInstance(), TEXT("UI.CargoManifestPopupClass")));
+    if (!CargoManifestWidget) return;
+    AddFloatingPanel(CargoManifestPopup, CargoManifestWidget->TakeWidget(), TEXT("Cargo Manifest"), 1,
+        FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseCargoManifest));
+}
+
+void UMissionBriefingDlg::CloseCargoManifest()
+{
+    RemoveFloatingPanel(CargoManifestPopup);
+    CargoManifestWidget = nullptr;
 }
 
 void UMissionBriefingDlg::ToggleLiveOptions()
@@ -4140,6 +4292,12 @@ void UMissionBriefingDlg::ToggleContactsPanel()
     ContactsPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     ContactsPanelWidget->SetVisibility(ESlateVisibility::Visible);
     const TSharedRef<SWidget> Panel = ContactsPanelWidget->TakeWidget();
+    auto Window = SNew(SFlightPanelWindow).Title(INVTEXT("Contacts"))
+        .OnClose(FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseContactsPopup))[Panel];
+    Window->Move = [this](const FPointerEvent& Event)
+    {
+        MoveContactsPanel(Event.GetLastScreenSpacePosition(), Event.GetScreenSpacePosition());
+    };
     ContactsPopup = SNew(SConstraintCanvas)
         .Visibility(EVisibility::SelfHitTestInvisible)
         .ForceVolatile(true)
@@ -4158,7 +4316,7 @@ void UMissionBriefingDlg::ToggleContactsPanel()
             .StretchDirection(EStretchDirection::DownOnly)
             [SNew(SBox).WidthOverride(ContactsDesignSize.X).HeightOverride(ContactsDesignSize.Y)
                 .Clipping(EWidgetClipping::ClipToBounds)
-                [SNew(SBorder).BorderImage(&FlightPanelStyle::Window()).Padding(0)[Panel]]]
+                [Window]]
         ];
     GetWorld()->GetGameViewport()->AddViewportWidgetContent(ContactsPopup.ToSharedRef(),1100);
     UpdateFlightPanelInput(Panel);

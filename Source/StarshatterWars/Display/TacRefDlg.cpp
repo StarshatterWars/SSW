@@ -28,6 +28,8 @@
 =============================================================================*/
 
 #include "TacRefDlg.h"
+#include "Components/NativeWidgetHost.h"
+#include "ShipSystemIcon.h"
 #include "Brushes/SlateColorBrush.h"
 #include "FactionInsignia.h"
 #include "ModernMenuLayout.h"
@@ -739,13 +741,22 @@ void UTacRefDlg::BuildModernShell()
     auto Shell=ModernMenuLayout::Build(WidgetTree,TEXT("TACTICAL REFERENCE"),true);
     CancelButton=ModernMenuLayout::AddArrow(WidgetTree,Shell.Actions,CancelButton.Get(),false);
     CancelButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleCloseClicked);
-    StationButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,StationButton,TEXT("STATIONS"));
-    ShipButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,ShipButton,TEXT("SHIPS"));
-    FighterButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,FighterButton,TEXT("FIGHTERS"));
-    TransportButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,TransportButton,TEXT("TRANSPORTS"));
-    BuildingButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,BuildingButton,TEXT("FACILITIES"));
-    WeaponButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,WeaponButton,TEXT("WEAPONS"));
-    GazetteerButton=ModernMenuLayout::AddButton(WidgetTree,Shell.Actions,nullptr,TEXT("GAZETTEER"));
+    const auto AddCategoryButton = [&](UButton* Existing, const TCHAR* Caption, EShipSystemIcon Icon)
+    {
+        UButton* Button = ModernMenuLayout::AddButton(WidgetTree, Shell.Actions, Existing, Caption);
+        auto* Host = WidgetTree->ConstructWidget<UNativeWidgetHost>();
+        Host->SetContent(SNew(SShipSystemIcon).Icon(Icon));
+        Button->SetContent(Host);
+        Button->SetToolTipText(FText::FromString(Caption));
+        return Button;
+    };
+    StationButton = AddCategoryButton(StationButton, TEXT("Stations"), EShipSystemIcon::Station);
+    ShipButton = AddCategoryButton(ShipButton, TEXT("Ships"), EShipSystemIcon::Ship);
+    FighterButton = AddCategoryButton(FighterButton, TEXT("Fighters"), EShipSystemIcon::Fighter);
+    TransportButton = AddCategoryButton(TransportButton, TEXT("Transports"), EShipSystemIcon::Transport);
+    BuildingButton = AddCategoryButton(BuildingButton, TEXT("Buildings"), EShipSystemIcon::Building);
+    WeaponButton = AddCategoryButton(WeaponButton, TEXT("Weapons"), EShipSystemIcon::Weapon);
+    GazetteerButton = AddCategoryButton(nullptr, TEXT("Gazetteer"), EShipSystemIcon::Reference);
     GazetteerButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleGazetteerClicked);
     StationButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleStationModeClicked);
     ShipButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleShipModeClicked);

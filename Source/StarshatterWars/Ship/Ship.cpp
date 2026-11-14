@@ -423,6 +423,44 @@ void Ship::SetCombatAllocation(FVector Shares)
         reactors[Index]->SetCombatAllocation(CombatAllocation);
 }
 
+int32 Ship::GetDockedCargoTransferQuantity() const
+{
+    if (!CargoManifest || CargoManifest->Quantity <= 0 || !dock || !carrier || carrier == this ||
+        !carrier->Design() || carrier->IsDead() || GetFlightPhase() < EOPSMode::DOCKED ||
+        GetFlightPhase() > EOPSMode::LOCKED) return 0;
+
+    const auto& Load = *CargoManifest;
+    const auto* Stored = carrier->CargoManifest.GetPtrOrNull();
+    if (Stored && (Stored->Quantity > 0 || carrier->FractionalMinedOre > 0.0) &&
+        (Stored->Item != Load.Item || Stored->Unit != Load.Unit ||
+         Stored->bPassengers != Load.bPassengers || Stored->FinishedItem != Load.FinishedItem))
+        return 0;
+
+    const auto& Capacity = carrier->Design()->CargoCapacity;
+    const double Limit = Load.bPassengers ? Capacity.PassengerBerths :
+        Load.Unit == TEXT("t") ? Capacity.Tonnes : 0.0;
+    const double Used = Stored ? Stored->Quantity + carrier->FractionalMinedOre : 0.0;
+    return FMath::FloorToInt32(FMath::Clamp(FMath::Min(Limit, double(MAX_int32)) - Used, 0.0, double(Load.Quantity)));
+}
+
+int32 Ship::TransferCargoToDock()
+{
+    const int32 Quantity = GetDockedCargoTransferQuantity();
+    if (Quantity <= 0) return 0;
+
+    auto* Stored = carrier->CargoManifest.GetPtrOrNull();
+    if (Stored && (Stored->Quantity > 0 || carrier->FractionalMinedOre > 0.0))
+        Stored->Quantity += Quantity;
+    else
+    {
+        auto Load = *CargoManifest;
+        Load.Quantity = Quantity;
+        carrier->SetSimulatedCargo(MoveTemp(Load));
+    }
+    CargoManifest->Quantity -= Quantity;
+    return Quantity;
+}
+
 double Ship::GetMinedOreTonnes() const
 {
     return CargoManifest ? CargoManifest->Quantity + FractionalMinedOre : 0.0;

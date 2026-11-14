@@ -59,34 +59,6 @@ public:
         Host = Args._Host;
         ChildSlot[SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("NoBrush")).Padding(10)
             [SNew(SVerticalBox)
-                +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,5)
-                [SAssignNew(TitleBar, SBorder)
-                    .BorderImage(FCoreStyle::Get().GetBrush("NoBrush"))
-                    .Padding(0)
-                    .Cursor(EMouseCursor::CardinalCross)
-                    .OnMouseButtonDown_Lambda([this](const FGeometry&, const FPointerEvent& Event)
-                    {
-                        return Event.GetEffectingButton() == EKeys::LeftMouseButton
-                            ? FReply::Handled().CaptureMouse(TitleBar.ToSharedRef()) : FReply::Unhandled();
-                    })
-                    .OnMouseMove_Lambda([this](const FGeometry&, const FPointerEvent& Event)
-                    {
-                        if (!TitleBar->HasMouseCapture()) return FReply::Unhandled();
-                        if (UMissionBriefingDlg* MissionHost = Host.Get())
-                            MissionHost->MoveContactsPanel(Event.GetLastScreenSpacePosition(), Event.GetScreenSpacePosition());
-                        return FReply::Handled();
-                    })
-                    .OnMouseButtonUp_Lambda([this](const FGeometry&, const FPointerEvent& Event)
-                    {
-                        return Event.GetEffectingButton() == EKeys::LeftMouseButton && TitleBar->HasMouseCapture()
-                            ? FReply::Handled().ReleaseMouseCapture() : FReply::Unhandled();
-                    })
-                    [SNew(STextBlock).Text(FText::FromString(TEXT("CONTACTS")))
-                        .Font(MissionUIStyle::GetInfoLabelFont(18))]]
-                +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,6)
-                [SNew(SBox).HeightOverride(1)
-                    [SNew(SBorder).Padding(0).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                        .BorderBackgroundColor(FlightPanelStyle::DividerColor())]]
                 +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,12)
                 [SNew(SButton).ButtonStyle(&ContactButtonStyle()).IsFocusable(false).OnClicked_Lambda([this](){EnemiesOnly=!EnemiesOnly;Refresh();return FReply::Handled();})
                     [SNew(STextBlock).Font(MissionUIStyle::GetInfoLabelFont(15)).ColorAndOpacity(FLinearColor::White).Text_Lambda([this](){return FText::FromString(EnemiesOnly?TEXT("ENEMIES - SHOW ALL"):TEXT("ALL CONTACTS - SHOW ENEMIES"));})]]
@@ -155,7 +127,6 @@ public:
         List->RequestScrollIntoView(Rows[Next]);
     }
 private:
-    TSharedPtr<SBorder> TitleBar;
     TWeakObjectPtr<UMissionBriefingDlg> Host;
     TArray<FContactRow> Rows;
     TSharedPtr<SListView<FContactRow>> List;

@@ -151,6 +151,9 @@ public:
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")
     TSoftObjectPtr<UDataTable> StoryMissionDataTable;
 
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")
+    TSoftObjectPtr<UDataTable> CargoDataTable;
+
     // ------------------------------------------------------------------
     // Optional UI bindings (config-backed)
     // ------------------------------------------------------------------
@@ -212,6 +215,12 @@ public:
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> TacticalPopupClass;
+
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> CargoManifestPopupClass;
+
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> MarketplacePopupClass;
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> OptionsPopupClass;

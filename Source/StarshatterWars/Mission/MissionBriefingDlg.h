@@ -149,6 +149,10 @@ protected:
     void InstallFlightPanelToolbar();
     TSharedPtr<SWidget> ReferencePopup;
     TSharedPtr<SWidget> LiveOptionsPopup;
+    TSharedPtr<SWidget> CargoManifestPopup;
+    UPROPERTY(Transient) TObjectPtr<class UCargoManifestDlg> CargoManifestWidget;
+    void ToggleCargoManifest();
+    void CloseCargoManifest();
     UPROPERTY(Transient) TObjectPtr<class UFlightTacticalReferenceDlg> FlightReferenceWidget;
     UPROPERTY(Transient) TObjectPtr<class ULiveOptionsDlg> LiveOptionsWidget;
     void ToggleFlightReference();
@@ -156,6 +160,7 @@ protected:
     void ToggleLiveOptions();
     void CloseLiveOptions();
     bool CanOpenFlightPanel() const;
+    bool CanOpenCameraAndRadio() const;
     void UpdateFlightPanelInput(TSharedPtr<SWidget> Focus = nullptr);
     void AddFloatingPanel(TSharedPtr<SWidget>& Panel, TSharedRef<SWidget> Content, const TCHAR* Title, int32 Index, FSimpleDelegate Close);
     void RemoveFloatingPanel(TSharedPtr<SWidget>& Panel);
@@ -208,6 +213,7 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UInputMappingContext> RadioChoiceContext;
     UPROPERTY(Transient) TArray<TObjectPtr<UInputAction>> RadioChoiceActions;
     void ToggleFighterRadio();
+    void ToggleFlightCameraPanel();
     void ToggleTravelSpeedMenu();
     void ResetTravelSpeed();
     void UpdateFighterRadioInput();

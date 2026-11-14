@@ -15,6 +15,7 @@
 #include "CoreMinimal.h"
 #include "Styling/SlateTypes.h"
 
+class SWidget;
 class UButton;
 class UImage;
 class UGameInstance;
@@ -29,6 +30,8 @@ namespace MissionUIStyle
     void ApplyActionButtonStyle(UButton* Button, const TCHAR* Color);
     void SetActionIcon(UImage* Image, const TCHAR* TexturePath, const FLinearColor& Color);
     UTexture2D* LoadCampaignArt(int32 CampaignId);
+    const FSliderStyle& OptionsSliderStyle();
+    TSharedRef<SWidget> MakeOptionsSliderTrack(TSharedRef<SWidget> Slider, TAttribute<float> Value);
 
     // Colors
     // -----------------------------------------------------------------

@@ -427,6 +427,25 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // Data.Cargoable
+    if (!Cache.Contains(TEXT("Data.CargoTable")))
+    {
+        if (!Settings->CargoDataTable.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->CargoDataTable.ToSoftObjectPath();
+            Cache.Add(TEXT("Data.CargoTable"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log,
+                TEXT("[ASSETS] Bind Data.CargoTable -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] CargoTable is not set in Project Settings"));
+        }
+    }
+
     // ------------------------------------------------------------------
     // 3) Inject typed UI widget classes (do not overwrite explicit map entries)
     //    NOTE: We store them in the generic Cache as UObject soft refs so the
@@ -776,6 +795,42 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         {
             UE_LOG(LogStarshatterAssetRegistry, Warning,
                 TEXT("[ASSETS] OptionsPopupClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.CargoManifestPopupClass
+    if (!Cache.Contains(TEXT("UI.CargoManifestPopupClass")))
+    {
+        if (!Settings->CargoManifestPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->CargoManifestPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.CargoManifestPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.CargoManifestPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] CargoManifestPopupClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.MarketplacePopupClass
+    if (!Cache.Contains(TEXT("UI.MarketplacePopupClass")))
+    {
+        if (!Settings->MarketplacePopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->MarketplacePopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.MarketplacePopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.MarketplacePopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] MarketplacePopupClass is not set in Project Settings"));
         }
     }
 

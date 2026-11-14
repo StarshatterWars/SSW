@@ -25,6 +25,8 @@
 #include "Components/Button.h"
 #include "Components/ComboBoxString.h"
 #include "Components/Slider.h"
+#include "Components/NativeWidgetHost.h"
+#include "MissionUIStyle.h"
 
 // UMG layout helpers
 #include "Components/CanvasPanel.h"
@@ -187,7 +189,7 @@ void UAudioDlg::RefreshFromModel()
     if (!S)
         return;
 
-    S->ReloadConfig();
+    if (auto* Save = GetSettingsSaveSubsystem()) Save->LoadOrCreate();
     S->Sanitize();
 
     MasterVolume = S->GetMasterVolume();
@@ -209,6 +211,8 @@ void UAudioDlg::PushToModel(bool bApplyRuntimeToo)
     if (!S)
         return;
 
+    if (auto* Save = GetSettingsSaveSubsystem()) Save->LoadOrCreate();
+
     S->SetMasterVolume(MasterVolume);
     S->SetMusicVolume(MusicVolume);
     S->SetEffectsVolume(EffectsVolume);
@@ -221,7 +225,7 @@ void UAudioDlg::PushToModel(bool bApplyRuntimeToo)
     SaveAudioToUnifiedSettings(S);
 
     if (bApplyRuntimeToo)
-        S->ApplyToRuntimeAudio(this);
+        S->ApplyToRuntimeAudio(GetGameInstance());
 
     bDirty = false;
 }
@@ -337,10 +341,24 @@ void UAudioDlg::BuildAudioRows()
         return;
     }
 
-    AddLabeledRow(TEXT("MASTER VOLUME"), MasterSlider, 520.f);
-    AddLabeledRow(TEXT("MUSIC VOLUME"), MusicSlider, 520.f);
-    AddLabeledRow(TEXT("EFFECTS VOLUME"), EffectsSlider, 520.f);
-    AddLabeledRow(TEXT("VOICE VOLUME"), VoiceSlider, 520.f);
+    const auto AddVolume = [this](const TCHAR* Label, USlider* Slider)
+    {
+        Slider->RemoveFromParent();
+        Slider->SetMinValue(0.f);
+        Slider->SetMaxValue(1.f);
+        Slider->SetIndentHandle(false);
+        Slider->SetWidgetStyle(MissionUIStyle::OptionsSliderStyle());
+        Slider->SetSliderHandleColor(FLinearColor::White);
+
+        auto* Host = WidgetTree->ConstructWidget<UNativeWidgetHost>();
+        Host->SetContent(MissionUIStyle::MakeOptionsSliderTrack(Slider->TakeWidget(),
+            TAttribute<float>::CreateLambda([Slider]() { return Slider->GetValue(); })));
+        AddLabeledRow(Label, Host, 520.f);
+    };
+    AddVolume(TEXT("MASTER VOLUME"), MasterSlider);
+    AddVolume(TEXT("MUSIC VOLUME"), MusicSlider);
+    AddVolume(TEXT("EFFECTS VOLUME"), EffectsSlider);
+    AddVolume(TEXT("VOICE VOLUME"), VoiceSlider);
     AddLabeledRow(TEXT("SOUND QUALITY"), QualityCombo, 520.f);
 }
 

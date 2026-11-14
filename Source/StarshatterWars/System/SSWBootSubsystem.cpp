@@ -48,6 +48,7 @@
 #include "StarshatterShipDesignSubsystem.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "StarshatterSystemDesignSubsystem.h"
+#include "CargoCatalogSubsystem.h"
 #include "StarshatterWeaponDesignSubsystem.h"
 #include "StarshatterAssetRegistrySubsystem.h"
 #include "StarshatterEnvironmentSubsystem.h"
@@ -126,6 +127,7 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
     Collection.InitializeDependency(UStarshatterShipDesignSubsystem::StaticClass());
     Collection.InitializeDependency(UStarshatterSystemDesignSubsystem::StaticClass());
+    Collection.InitializeDependency(UCargoCatalogSubsystem::StaticClass());
     Collection.InitializeDependency(UStarshatterWeaponDesignSubsystem::StaticClass());
     Collection.InitializeDependency(UStarshatterEnvironmentSubsystem::StaticClass());
     Collection.InitializeDependency(UStarshatterUIStyleSubsystem::StaticClass());
@@ -164,6 +166,7 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
         BootSystemDesignLoader(Ctx);
         BootWeaponDesignLoader(Ctx);
         BootShipDesignLoader(Ctx);
+        BootCargoCatalogLoader();
         BootGalaxyLoader(Ctx);
         BootCombatGroupLoader(Ctx);
         BootGameDataLoader(false);
@@ -206,6 +209,7 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
             BootWeaponDesignLoader(Ctx);
             BootShipDesignLoader(Ctx);
         }
+        BootCargoCatalogLoader();
         BootGalaxyLoader(Ctx);
         BootCombatGroupLoader(Ctx);
     }
@@ -315,6 +319,7 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("Data.MultiplayerMissionTable"),
         TEXT("Data.CustomMissionTable"),
         TEXT("Data.StoryMissionTable"),
+        TEXT("Data.CargoTable"),
 
         TEXT("Data.OrderOfBattleTable"),
         TEXT("Data.MedalsTable"),
@@ -353,6 +358,8 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.ContactListClass"),
         TEXT("UI.OptionsPopupClass"),
         TEXT("UI.TacticalPopupClass"),
+        TEXT("UI.CargoManifestPopupClass"),
+        TEXT("UI.MarketplacePopupClass"),
         TEXT("UI.MissionsPanelClass"),
         TEXT("UI.AwardPopupClass"),
 
@@ -504,6 +511,12 @@ bool USSWBootSubsystem::BootEditorGeneratedDesignTables(const FBootContext& Ctx)
     return true;
 }
 
+void USSWBootSubsystem::BootCargoCatalogLoader()
+{
+    if (auto* Cargo = GetGameInstance()->GetSubsystem<UCargoCatalogSubsystem>())
+        Cargo->LoadCatalog();
+}
+
 void USSWBootSubsystem::BootSystemDesignLoader(const FBootContext& Ctx)
 {
     if (!Ctx.SystemDesignSS)
@@ -609,6 +622,8 @@ void USSWBootSubsystem::IngestAllDesignData(bool bForceReimport)
 
     ShipSS->LoadAll(false);
     UE_LOG(LogSSWBoot, Log, TEXT("[INGEST] SHIPS=%d"), ShipSS->GetDesignsByName().Num());
+
+    BootCargoCatalogLoader();
 
     UE_LOG(LogSSWBoot, Log, TEXT("[INGEST] END FULL DESIGN INGESTION"));
 }

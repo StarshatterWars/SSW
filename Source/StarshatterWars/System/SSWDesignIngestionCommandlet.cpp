@@ -3,6 +3,7 @@
 #if WITH_EDITOR
 #include "Algo/Find.h"
 #include "Engine/DataTable.h"
+#include "CargoCatalogSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "Misc/PackageName.h"
 #include "Misc/Parse.h"
@@ -242,6 +243,13 @@ USSWDesignIngestionCommandlet::USSWDesignIngestionCommandlet()
 int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
 {
 #if WITH_EDITOR
+    if (FParse::Param(*Params, TEXT("WriteCargoCatalog")))
+    {
+        auto* Table = NewObject<UDataTable>();
+        return UCargoCatalogSubsystem::ImportDefinitions(*Table) &&
+            SaveOutputTable(*Table, TEXT("DT_CargoCatalog"), false) ? 0 : 1;
+    }
+
     FString ShipDefinition;
     if (FParse::Value(*Params, TEXT("ShipDefinition="), ShipDefinition))
         return ImportSingleShipDefinition(ShipDefinition) ? 0 : 1;

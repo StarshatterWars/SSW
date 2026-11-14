@@ -61,7 +61,7 @@ public:
             }
         }
         if (Embedded)
-            ChildSlot[SAssignNew(Root,SVerticalBox)];
+            ChildSlot.Padding(FMargin(0, 12, 0, 0))[SAssignNew(Root,SVerticalBox)];
         else
             ChildSlot[SNew(SScaleBox).Stretch(EStretch::ScaleToFit)
                 [SNew(SBox).WidthOverride(1024).HeightOverride(1024)
@@ -206,9 +206,13 @@ private:
         FString State=FString::Printf(TEXT("%p"),static_cast<void*>(P));
         if(P){
             State+=FString::Printf(TEXT(":%p:%p"),static_cast<void*>(P->GetTarget()),static_cast<void*>(P->GetSubTarget()));
+            State += FString::Printf(TEXT(":%d:%p"), P->GetIFF(), static_cast<void*>(P->GetRegion()));
             auto& List=P->GetContactList();
             for(int32 J=0;J<List.size();++J)if(auto* C=List[J])
-                if(IsListedContact(C,P) && C->GetShip())State+=FString::Printf(TEXT(";%p:%s"),static_cast<void*>(C->GetShip()),*ContactLabel(C,P));
+                if (Ship* ContactShip = C->GetShip(); IsListedContact(C, P) && ContactShip)
+                    State += FString::Printf(TEXT(";%p:%d:%d:%p:%s"), static_cast<void*>(ContactShip),
+                        ContactShip->GetIFF(), int32(ContactShip->IsDead()), static_cast<void*>(ContactShip->GetRegion()),
+                        *ContactLabel(C, P));
             if(auto* T=dynamic_cast<Ship*>(P->GetTarget()))for(int32 J=0;J<T->GetSystems().size();++J)
                 if(auto* Sys=T->GetSystems()[J])State+=FString::Printf(TEXT(";%p:%.0f"),static_cast<void*>(Sys),Sys->GetAvailability());
         }

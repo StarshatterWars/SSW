@@ -183,6 +183,7 @@ private:
     void BootGalaxyLoader(const FBootContext& Ctx);
     bool BootEditorGeneratedDesignTables(const FBootContext& Ctx);
     void BootSystemDesignLoader(const FBootContext& Ctx);
+    void BootCargoCatalogLoader();
     void BootWeaponDesignLoader(const FBootContext& Ctx);
     void BootCombatGroupLoader(const FBootContext& Ctx);
 

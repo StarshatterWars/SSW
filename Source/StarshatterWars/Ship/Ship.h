@@ -386,6 +386,8 @@ public:
     double LoadMinedOre(const FString& Mineral, double Tonnes);
     double UnloadMinedOre(double Tonnes);
     double GetMinedOreTonnes() const;
+    int32 GetDockedCargoTransferQuantity() const;
+    int32 TransferCargoToDock();
     EFreighterLoadStatus GetFreighterLoadStatus() const;
     const TOptional<SSWFreightManifest::FLoad>& GetCargoManifest() const { return CargoManifest; }
     const char*       Abbreviation() const;

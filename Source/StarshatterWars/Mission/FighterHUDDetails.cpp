@@ -154,9 +154,19 @@ namespace
 }
 // Match GEAR DOWN width; double its height for a larger launch target.
 // GEAR DOWN is at HUD center +126; LAUNCH is below it at +158.
+static FVector2D MiniHUDOrigin(const FVector2D& Size, float Scale)
+{
+    return FVector2D(Size.X * .5 - 330 * Scale - 16, 20 * Scale);
+}
+
+static FVector2D RadioPanelOrigin(const FVector2D& Size, float Scale)
+{
+    return FVector2D(Size.X - 244 * Scale - FlightPanelStyle::RightPanelInset, FlightPanelStyle::RightPanelTop);
+}
+
 static FVector2D GearButtonOrigin(FVector2D Size,float Scale,bool Mini)
 {
-    return Mini ? FVector2D(Size.X*.5-330*Scale,20*Scale)+FVector2D(-49,78)*Scale
+    return Mini ? MiniHUDOrigin(Size, Scale)+FVector2D(-49,78)*Scale
                 : FVector2D(182*Scale,Size.Y-36*Scale);
 }
 static FSlateRect CarrierLaunchButtonRect(const FVector2D& Size, float Scale)
@@ -177,6 +187,7 @@ void SFighterHUDDetails::Construct(const FArguments& A)
     Symbology=MakeUnique<FNativeHUDSymbology>();
     ThirdPerson = A._ThirdPerson;
     NetworkController = A._NetworkController;
+    OnOverviewWheel = A._OnOverviewWheel;
     ShowHUD = A._ShowHUD; CameraMode = A._CameraMode; SelectedTarget = A._SelectedTarget; SelectedName = A._SelectedName;
     SetVisibility(EVisibility::Visible);
     ForceVolatile(true);
@@ -681,7 +692,7 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
         if(!bPreTakeoff && !IsCockpitDisplayActive() && (Mini || Modes[0] == EMode::Ship) && P && P->GetGear() && SSWGearIndicator::Contains(Local,GearButtonOrigin(Size,Scale,Mini),FVector2D(28,26)*Scale))
         {P->ToggleGear();Refresh();return FReply::Handled();}
         const FVector2D StatusHeader = Mini
-            ? FVector2D(Size.X*.5-550*Scale,20*Scale) : FVector2D(0,Size.Y-215*Scale);
+            ? MiniHUDOrigin(Size, Scale) - FVector2D(220 * Scale, 0) : FVector2D(0,Size.Y-215*Scale);
         if (ShowHUD.Get() && P && !bPreTakeoff && !IsCockpitDisplayActive() &&
             SSWGearIndicator::Contains(Local, StatusHeader, FVector2D(Mini ? 206 : 220,24)*Scale))
         {
@@ -706,6 +717,14 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
     }
     return FReply::Unhandled();
 }
+FReply SFighterHUDDetails::OnMouseWheel(const FGeometry& Geometry, const FPointerEvent& Event)
+{
+    if (OnOverviewWheel.IsBound() && OnOverviewWheel.Execute(Event.GetWheelDelta()))
+        return FReply::Handled();
+
+    return SCompoundWidget::OnMouseWheel(Geometry, Event);
+}
+
 void SFighterHUDDetails::CycleWeapon(bool bPrimary)
 {
     if (Ship* P = PlayerShip()) { if (bPrimary) P->CyclePrimary(); else P->CycleSecondary(); Refresh(); }
@@ -949,7 +968,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     if (bHasPlayer && bMiniHUD)
     {
         // Compact flight deck: clear central view, stable alignment and restrained glass.
-        const FVector2D P(Size.X*.5-330*Scale,20*Scale);
+        const FVector2D P = MiniHUDOrigin(Size, Scale);
         const FVector2D Frame=P-FVector2D(220*Scale,0),D(880*Scale,112*Scale);
         static const FSlateRoundedBoxBrush Chassis(FLinearColor::White, 12.f);
         static const FSlateRoundedBoxBrush Inset(FLinearColor::White, 6.f);
@@ -1386,26 +1405,24 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             FString::Printf(TEXT("TRAVEL %uX    %s 1X"), Game::GetSimulationRate(),
                 *StarshatterInputBindings::ResolvedKey(TEXT("SSW_TravelSpeedReset"), EKeys::F12).GetDisplayName().ToString()));
 
-    if (IsRadioOpen())
+    if (IsTravelSpeedOpen())
     {
-        TArray<FString> Labels; TArray<int32> Commands; TArray<bool> Enabled; FString Title;
-        BuildRadioRows(Labels,Commands,Enabled,Title);
-        const FVector2D P(Size.X - 244 * Scale - FlightPanelStyle::RightPanelInset,
-            FlightPanelStyle::RightPanelTop);
-        const FVector2D D = FVector2D(244, 64 + Labels.Num() * 24) * Scale;
-        const auto& Glass = FlightPanelStyle::Glass();
-        FSlateDrawElement::MakeBox(E, L+1,
-            G.ToPaintGeometry(FVector2f(D), FSlateLayoutTransform(FVector2f(P))),
-            &Glass, ESlateDrawEffect::None, Glass.TintColor.GetSpecifiedColor());
-        Text(P+FVector2D(12,10)*Scale,Title);
-        for (int32 I=0; I<Labels.Num(); ++I)
-            Text(P+FVector2D(12,36+24*I)*Scale,FString::Printf(TEXT("%d. %s"),I+1,*Labels[I]),Enabled[I]?InstrumentColor:FLinearColor(0.12f,0.2f,0.25f,1));
-        Text(P+FVector2D(12,40+24*Labels.Num())*Scale,
-            IsTravelSpeedOpen() ? FString::Printf(TEXT("0 CLOSE    %s 1X"),
-                *StarshatterInputBindings::ResolvedKey(TEXT("SSW_TravelSpeedReset"), EKeys::F12).GetDisplayName().ToString())
-                : IsCameraPanelOpen() ? FString::Printf(TEXT("0 BACK / CLOSE    %s CLOSE"),
-                    *StarshatterInputBindings::ResolvedKey(TEXT("SSW_CameraPanel"), EKeys::Apostrophe).GetDisplayName().ToString().ToUpper())
-                : FString(TEXT("0 BACK    R CLOSE")));
+        TArray<FString> Labels;
+        TArray<int32> Commands;
+        TArray<bool> Enabled;
+        FString Title;
+        BuildRadioRows(Labels, Commands, Enabled, Title);
+        const FVector2D Origin = RadioPanelOrigin(Size, Scale);
+        const FVector2D Extent = FVector2D(244, 64 + Labels.Num() * 24) * Scale;
+        FlightPanelStyle::PaintGlass(E, L + 1, G, Origin, Extent);
+        Text(Origin + FVector2D(12, 10) * Scale, Title);
+        for (int32 Index = 0; Index < Labels.Num(); ++Index)
+            Text(Origin + FVector2D(12, 36 + 24 * Index) * Scale,
+                FString::Printf(TEXT("%d. %s"), Index + 1, *Labels[Index]),
+                Enabled[Index] ? InstrumentColor : FLinearColor(.35f, .45f, .5f));
+        Text(Origin + FVector2D(12, 40 + 24 * Labels.Num()) * Scale,
+            FString::Printf(TEXT("0 CLOSE    %s 1X"),
+                *StarshatterInputBindings::ResolvedKey(TEXT("SSW_TravelSpeedReset"), EKeys::F12).GetDisplayName().ToString()));
     }
     if (HUDPlayer && !bPreTakeoff)
     {
@@ -1467,7 +1484,7 @@ namespace
 
 void SFighterHUDDetails::ToggleRadio()
 {
-    if (IsRadioOpen()) { CloseRadio(); return; }
+    if (RadioPage >= 0 && !IsTravelSpeedOpen()) { CloseRadio(); return; }
     Ship* P = PlayerShip();
     if (P && (P->IsDropship() || P->IsStarship())) { CloseRadio(); RadioPage = 0; }
 }

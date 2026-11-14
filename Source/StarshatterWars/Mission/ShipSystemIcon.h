@@ -4,7 +4,7 @@
 #include "SimSystem.h"
 #include "Widgets/SLeafWidget.h"
 
-enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options };
+enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo };
 
 class SShipSystemIcon : public SLeafWidget
 {
@@ -70,7 +70,48 @@ public:
         case EShipSystemIcon::MediumRangeMissile: Line({{11,1},{15,6},{15,16},{7,16},{7,6},{11,1}}); Line({{7,11},{3,18},{7,16}}); Line({{15,11},{19,18},{15,16}}); Line({{8,20},{14,20}}); break;
         case EShipSystemIcon::Refresh: Line({{18,8},{15,4},{9,3},{4,7},{3,12},{6,17},{11,19},{16,17},{19,13}}); Line({{18,3},{18,8},{13,8}}); break;
         case EShipSystemIcon::Abort: Line({{5,5},{17,5},{17,17},{5,17},{5,5}}); Line({{8,8},{14,14}}); Line({{14,8},{8,14}}); break;
+        case EShipSystemIcon::Ship:
+            Line({{2,10},{6,6},{14,6},{20,11},{14,16},{6,16},{2,12},{2,10}});
+            Line({{7,9},{13,9},{16,11},{13,13},{7,13},{7,9}});
+            break;
+        case EShipSystemIcon::Fighter:
+            Line({{11,2},{14,10},{20,17},{14,16},{11,19},{8,16},{2,17},{8,10},{11,2}});
+            Line({{11,8},{11,13}});
+            break;
+        case EShipSystemIcon::Station:
+            Line({{6,5},{16,5},{20,11},{16,17},{6,17},{2,11},{6,5}});
+            Line({{8,8},{14,8},{14,14},{8,14},{8,8}});
+            Line({{11,2},{11,5}}); Line({{11,17},{11,20}});
+            break;
+        case EShipSystemIcon::Building:
+            Line({{2,19},{20,19}}); Line({{4,19},{4,4},{13,4},{13,19}});
+            Line({{13,10},{18,10},{18,19}}); Line({{7,8},{10,8}}); Line({{7,12},{10,12}});
+            break;
+        case EShipSystemIcon::Transport:
+            Line({{2,7},{15,7},{20,11},{15,15},{2,15},{2,7}});
+            Line({{6,7},{6,15}}); Line({{11,7},{11,15}});
+            break;
         case EShipSystemIcon::Reference: Line({{11,5},{7,3},{2,3},{2,17},{7,17},{11,19},{15,17},{20,17},{20,3},{15,3},{11,5},{11,19}}); break;
+        case EShipSystemIcon::Camera:
+            Line({{2,6},{14,6},{14,16},{2,16},{2,6}});
+            Line({{14,9},{20,6},{20,16},{14,13}});
+            break;
+        case EShipSystemIcon::Radio:
+            Line({{4,9},{18,9},{18,20},{4,20},{4,9}});
+            Line({{7,9},{7,2}}); Line({{8,13},{14,13}}); Line({{8,16},{14,16}});
+            break;
+        case EShipSystemIcon::Cargo:
+            Line({{3,6},{11,2},{19,6},{19,16},{11,20},{3,16},{3,6},{11,10},{19,6}});
+            Line({{11,10},{11,20}}); Line({{7,4},{15,8}});
+            break;
+        case EShipSystemIcon::Marketplace:
+            Line({{4,9},{18,9},{19,20},{3,20},{4,9}});
+            Line({{8,11},{8,5},{10,3},{12,3},{14,5},{14,11}});
+            break;
+        case EShipSystemIcon::Exit:
+            Line({{10,3},{3,3},{3,19},{10,19}});
+            Line({{8,11},{20,11}}); Line({{15,6},{20,11},{15,16}});
+            break;
         case EShipSystemIcon::Options: Line({{3,5},{19,5}}); Line({{7,2},{7,8}}); Line({{3,11},{19,11}}); Line({{15,8},{15,14}}); Line({{3,17},{19,17}}); Line({{9,14},{9,20}}); break;
         default: Line({{11,2},{20,11},{11,20},{2,11},{11,2}}); break;
         }

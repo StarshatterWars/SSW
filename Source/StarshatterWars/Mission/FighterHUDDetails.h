@@ -29,6 +29,7 @@ public:
         SLATE_ATTRIBUTE(TWeakObjectPtr<AActor>, SelectedTarget)
         SLATE_ATTRIBUTE(FText, SelectedName)
         SLATE_ARGUMENT(TWeakObjectPtr<ASSWSessionLobbyController>, NetworkController)
+        SLATE_EVENT(TDelegate<bool(float)>, OnOverviewWheel)
     SLATE_END_ARGS()
     virtual ~SFighterHUDDetails();
     void Construct(const FArguments& Args);
@@ -43,6 +44,8 @@ public:
             ContactIFF==0 ? FLinearColor(1.f,0.85f,0.f) :
             ContactIFF==ObserverIFF ? FLinearColor(0.25f,0.65f,1.f) : FLinearColor::Red;
     }
+    virtual FReply OnMouseWheel(const FGeometry& Geometry, const FPointerEvent& Event) override;
+    void BuildRadioRows(TArray<FString>& Labels, TArray<int32>& Commands, TArray<bool>& Enabled, FString& Title) const;
     void ToggleRadio();
     void RadioSelect(int32 Number);
     bool IsRadioOpen() const { return RadioPage >= 0 || IsCameraPanelOpen(); }
@@ -62,6 +65,7 @@ public:
     static FString FormatStatusReadout(const FString& Label, double Percent, bool bAugmenter=false);
     bool IsCockpitDisplayActive() const;
 private:
+    TDelegate<bool(float)> OnOverviewWheel;
     friend class SCockpitInstrument;
     friend class FCockpitDisplaysTest;
     friend class FThirdPersonMiniHUDTest;
@@ -82,7 +86,6 @@ private:
     int32 ILSPlayerId = INDEX_NONE;
     TStrongObjectPtr<UTexture2D> ILSTexture;
     FSlateBrush ILSBrush;
-    void BuildRadioRows(TArray<FString>& Labels, TArray<int32>& Commands, TArray<bool>& Enabled, FString& Title) const;
     int32 RadioPage = -1; // 0 root, 1 categories, 2 target, 3 combat, 4 formation, 5 mission, 6 sensors, 7 control
     enum class ECameraPage { Closed, Views, Look, Follow };
     ECameraPage CameraPage = ECameraPage::Closed;

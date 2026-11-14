@@ -19,7 +19,64 @@
 #include "Blueprint/UserWidget.h"
 #include "Text.h"
 #include "InputCoreTypes.h"
+#include "Engine/DataTable.h"
 #include "GameStructs.generated.h"
+UENUM(BlueprintType)
+enum class ECargoType : uint8
+{
+    General,
+    Bulk,
+    FinishedGoods UMETA(DisplayName = "Finished goods"),
+    Passengers
+};
+
+USTRUCT(BlueprintType)
+struct FS_CargoCatalogRow : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
+    ECargoType Type = ECargoType::General;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
+    FString Unit;
+
+    // Tonnes and SSW credits per manifest unit.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
+    double Size = 0.0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
+    double Value = -1.0;
+};
+
+USTRUCT(BlueprintType)
+struct FS_Cargo
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
+    FString Name;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
+    ECargoType Type = ECargoType::General;
+
+    // Tonnes per unit. Zero means the unit mass is unspecified.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
+    double Size = 0.0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
+    double Quantity = 0.0;
+
+    // Credits per unit. Negative means the cargo has no quoted price.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
+    double Value = -1.0;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cargo")
+    double TotalValue = -1.0;
+
+    void UpdateTotalValue() { TotalValue = Value >= 0.0 ? Quantity * Value : -1.0; }
+};
+
 
 const double STARSHIP_TACTICAL_DROP_TIME = 15;
 static const double GRAV = 6.673e-11;

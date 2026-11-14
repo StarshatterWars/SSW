@@ -11,6 +11,12 @@
 */
 
 #include "MissionUIStyle.h"
+#include "Brushes/SlateRoundedBoxBrush.h"
+#include "Brushes/SlateNoResource.h"
+#include "Styling/CoreStyle.h"
+#include "Widgets/Notifications/SProgressBar.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/SOverlay.h"
 #include "UObject/UObjectGlobals.h"
 #include "Engine/GameInstance.h"
 #include "StarshatterUIStyleSubsystem.h"
@@ -23,6 +29,38 @@
 
 namespace MissionUIStyle
 {
+    const FSliderStyle& OptionsSliderStyle()
+    {
+        static const FSliderStyle Style = []()
+        {
+            FSliderStyle Result = FCoreStyle::Get().GetWidgetStyle<FSliderStyle>("Slider");
+            FSlateRoundedBoxBrush Thumb(FLinearColor(.83f, .94f, 1.f), 3.f);
+            Thumb.ImageSize = FVector2f(20.f, 18.f);
+            const FSlateNoResource Empty;
+            return Result.SetNormalThumbImage(Thumb).SetHoveredThumbImage(Thumb).SetDisabledThumbImage(Thumb)
+                .SetNormalBarImage(Empty).SetHoveredBarImage(Empty).SetDisabledBarImage(Empty);
+        }();
+        return Style;
+    }
+
+    TSharedRef<SWidget> MakeOptionsSliderTrack(TSharedRef<SWidget> Slider, TAttribute<float> Value)
+    {
+        static const FProgressBarStyle Track = FProgressBarStyle()
+            .SetBackgroundImage(FSlateRoundedBoxBrush(FLinearColor(.06f, .12f, .18f), 4.f))
+            .SetFillImage(FSlateRoundedBoxBrush(FLinearColor(.14f, .8f, .95f), 4.f));
+
+        return SNew(SOverlay)
+            + SOverlay::Slot().VAlign(VAlign_Center).Padding(10, 0)
+            [
+                SNew(SBox).HeightOverride(8).Visibility(EVisibility::HitTestInvisible)
+                [
+                    SNew(SProgressBar).Style(&Track).Percent_Lambda([Value]() -> TOptional<float> { return Value.Get(); }).BorderPadding(FVector2D::ZeroVector)
+                    .FillColorAndOpacity(FLinearColor::White).BarFillStyle(EProgressBarFillStyle::Mask)
+                ]
+            ]
+            + SOverlay::Slot()[Slider];
+    }
+
     UTexture2D* LoadCampaignArt(int32 CampaignId)
     {
         static const TCHAR* Assets[] = {

@@ -26,7 +26,11 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
             + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)
             [SNew(STextBlock).Text(Name).Font(MissionUIStyle::GetRowFont(17))]
             + SHorizontalBox::Slot().FillWidth(2).VAlign(VAlign_Center)
-            [SNew(SSlider).Value(Value).OnValueChanged(OnChanged)]
+            [
+                MissionUIStyle::MakeOptionsSliderTrack(
+                    SNew(SSlider).Style(&MissionUIStyle::OptionsSliderStyle()).IndentHandle(false)
+                        .Value(Value).OnValueChanged(OnChanged), Value)
+            ]
             + SHorizontalBox::Slot().AutoWidth().Padding(12, 0, 0, 0).VAlign(VAlign_Center)
             [
                 SNew(SBox).WidthOverride(64)
@@ -47,7 +51,7 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
             FOnFloatValueChanged::CreateWeakLambda(this, [this, Audio, SetVolume](float Value)
             {
                 (Audio->*SetVolume)(Value);
-                Audio->ApplyToRuntimeAudio(this);
+                Audio->ApplyToRuntimeAudio(GetGameInstance());
             }));
     };
     AddVolume(INVTEXT("Master volume"), &UStarshatterAudioSettings::GetMasterVolume, &UStarshatterAudioSettings::SetMasterVolume);
