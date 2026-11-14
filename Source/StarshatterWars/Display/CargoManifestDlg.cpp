@@ -47,17 +47,19 @@ namespace
         TSharedRef<SWidget> GenerateWidgetForColumn(const FName& Column) override
         {
             FText Text;
-            if (Column == "Name") Text = FText::FromString(Item->Name);
+            if (Column == "Name") Text = FText::FromString(Item->DisplayName);
             else if (Column == "Type") Text = StaticEnum<ECargoType>()->GetDisplayNameTextByValue(int64(Item->Type));
             else if (Column == "Size")
                 Text = Item->Size > 0 ? FText::Format(INVTEXT("{0} t"), FText::AsNumber(Item->Size)) : INVTEXT("-");
             else if (Column == "Quantity") Text = FText::AsNumber(Item->Quantity);
+            else if (Column == "Rarity") Text = StaticEnum<ESSWAsteroidRarity>()->GetDisplayNameTextByValue(int64(Item->Rarity));
+            else if (Column == "Unit") Text = FText::FromString(Item->Unit);
             else
             {
                 const double Credits = Column == "Value" ? Item->Value : Item->TotalValue;
                 Text = Credits >= 0 ? FText::Format(INVTEXT("{0} cr"), FText::AsNumber(Credits)) : INVTEXT("-");
             }
-            return SNew(STextBlock).Margin(FMargin(6, 4)).Font(MissionUIStyle::GetRowFont(16)).Text(Text);
+            return SNew(STextBlock).Margin(FMargin(6, 4)).Font(MissionUIStyle::GetRowFont(13)).Text(Text.ToUpper());
         }
 
     private:
@@ -88,9 +90,11 @@ namespace
             if (SortColumn == "Type") return A.Type < B.Type;
             if (SortColumn == "Size") return A.Size < B.Size;
             if (SortColumn == "Quantity") return A.Quantity < B.Quantity;
+            if (SortColumn == "Rarity") return A.Rarity < B.Rarity;
+            if (SortColumn == "Unit") return A.Unit.Compare(B.Unit, ESearchCase::IgnoreCase) < 0;
             if (SortColumn == "Value") return A.Value < B.Value;
             if (SortColumn == "TotalValue") return A.TotalValue < B.TotalValue;
-            return A.Name.Compare(B.Name, ESearchCase::IgnoreCase) < 0;
+            return A.DisplayName.Compare(B.DisplayName, ESearchCase::IgnoreCase) < 0;
         }
 
         void Refresh()
@@ -99,7 +103,8 @@ namespace
             FS_Cargo Row;
             const bool bHasCargo = Pilot && Catalog.IsValid() && Catalog->DescribeCargo(*Pilot, Row);
             const bool SameItem = LastShip == Pilot && bHasCargo && !Rows.IsEmpty() &&
-                Rows[0]->Name == Row.Name && Rows[0]->Type == Row.Type && Rows[0]->Size == Row.Size;
+                Rows[0]->Name == Row.Name && Rows[0]->DisplayName == Row.DisplayName &&
+                Rows[0]->Unit == Row.Unit && Rows[0]->Rarity == Row.Rarity && Rows[0]->Type == Row.Type && Rows[0]->Size == Row.Size;
             if (SameItem && Rows[0]->Quantity == Row.Quantity && Rows[0]->Value == Row.Value) return;
             if (!bHasCargo && Rows.IsEmpty()) return;
 
@@ -124,7 +129,7 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
     auto Header = SNew(SHeaderRow);
     const auto AddColumn = [Header, Table](FName Id, const FText& Label, float Width)
     {
-        Header->AddColumn(SHeaderRow::Column(Id).DefaultLabel(Label).FillWidth(Width)
+        Header->AddColumn(SHeaderRow::Column(Id).DefaultLabel(Label.ToUpper()).FillWidth(Width)
             .SortMode_Lambda([Table, Id]()
             {
                 return Table->SortColumn == Id ? Table->SortMode : EColumnSortMode::None;
@@ -134,12 +139,15 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
                 Table->SortColumn = Column;
                 Table->SortMode = Mode;
                 Table->Sort();
-            }));
+            })
+            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).Text(Label.ToUpper())]);
     };
     AddColumn("Name", INVTEXT("Name"), 2.f);
     AddColumn("Type", INVTEXT("Type"), 1.4f);
     AddColumn("Size", INVTEXT("Size"), 1.f);
     AddColumn("Quantity", INVTEXT("Quantity"), 1.f);
+    AddColumn("Rarity", INVTEXT("RARITY"), 1.1f);
+    AddColumn("Unit", INVTEXT("Unit"), 1.f);
     AddColumn("Value", INVTEXT("Unit value"), 1.f);
     AddColumn("TotalValue", INVTEXT("Total value"), 1.f);
     auto List = SNew(SListView<FCargoItem>).ListItemsSource(&Table->Rows).HeaderRow(Header)
@@ -163,7 +171,7 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
         return View && Load && CargoShip() == Table->LastShip && !Table->Rows.IsEmpty() &&
             Table->Rows[0]->Name == Load->Item && View->IsItemSelected(Table->Rows[0]);
     };
-    const auto Font = MissionUIStyle::GetRowFont(17);
+    const auto Font = MissionUIStyle::GetRowFont(13);
     return SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(20, 18, 20, 8)
         [
@@ -171,7 +179,7 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
             .Text_Lambda([]()
             {
                 const Ship* Pilot = CargoShip();
-                return Pilot ? FText::FromString(Pilot->GetContactLabel()) : INVTEXT("No craft available");
+                return Pilot ? FText::FromString(Pilot->GetContactLabel()).ToUpper() : INVTEXT("NO CRAFT AVAILABLE");
             })
         ]
         + SVerticalBox::Slot().AutoHeight().Padding(20, 0, 20, 18)
@@ -182,9 +190,9 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
                 const Ship* Pilot = CargoShip();
                 if (!Pilot || !Pilot->Design()) return FText::GetEmpty();
                 const auto& Capacity = Pilot->Design()->CargoCapacity;
-                const FText Mass = FText::Format(INVTEXT("Cargo capacity  {0} t"), FText::AsNumber(Capacity.Tonnes));
+                const FText Mass = FText::Format(INVTEXT("CARGO CAPACITY  {0} t"), FText::AsNumber(Capacity.Tonnes));
                 return Capacity.PassengerBerths > 0
-                    ? FText::Format(INVTEXT("{0}    Passenger berths  {1}"), Mass, FText::AsNumber(Capacity.PassengerBerths))
+                    ? FText::Format(INVTEXT("{0}    PASSENGER BERTHS  {1}"), Mass, FText::AsNumber(Capacity.PassengerBerths))
                     : Mass;
             })
         ]
@@ -194,7 +202,7 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
         [
             SNew(STextBlock).Font(Font)
             .Visibility_Lambda([Table]() { return Table->Rows.IsEmpty() ? EVisibility::Visible : EVisibility::Collapsed; })
-            .Text(INVTEXT("Cargo hold empty"))
+            .Text(INVTEXT("CARGO HOLD EMPTY"))
         ]
         + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Right).Padding(20)
         [

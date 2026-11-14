@@ -587,6 +587,21 @@ struct FComponentDesign
 };
 
 USTRUCT(BlueprintType)
+struct FSystemComponentGrade
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    int32 Level = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    double RepairScale = 0.0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    double ReplacementScale = 0.0;
+};
+
+USTRUCT(BlueprintType)
 struct FSystemDesign : public FTableRowBase
 {
 	GENERATED_BODY()
@@ -596,6 +611,9 @@ struct FSystemDesign : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FComponentDesign> Components;
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    TArray<FSystemComponentGrade> ComponentGrades;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	FString SourceFile;

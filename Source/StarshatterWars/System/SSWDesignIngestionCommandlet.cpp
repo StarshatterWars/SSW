@@ -250,6 +250,13 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
             SaveOutputTable(*Table, TEXT("DT_CargoCatalog"), false) ? 0 : 1;
     }
 
+    if (FParse::Param(*Params, TEXT("WriteSystemDesign")))
+    {
+        auto* Table = NewObject<UDataTable>();
+        return UStarshatterSystemDesignSubsystem::ImportDefinitions(*Table) &&
+            SaveOutputTable(*Table, TEXT("DT_SystemDesign"), false) ? 0 : 1;
+    }
+
     FString ShipDefinition;
     if (FParse::Value(*Params, TEXT("ShipDefinition="), ShipDefinition))
         return ImportSingleShipDefinition(ShipDefinition) ? 0 : 1;
@@ -345,7 +352,6 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
             && SaveWorlds(Environment->MoonMapByName, TEXT("DT_Moons"), FMoon{}) ? 0 : 2;
     }
 
-    auto* Systems = NewObject<UStarshatterSystemDesignSubsystem>(Context);
     auto* Weapons = NewObject<UStarshatterWeaponDesignSubsystem>(Context);
     auto* Ships = NewObject<UStarshatterShipDesignSubsystem>(Context);
 
@@ -355,11 +361,10 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     SystemTable->RowStruct = FSystemDesign::StaticStruct();
     WeaponTable->RowStruct = FWeaponDesign::StaticStruct();
     ShipTable->RowStruct = FShipDesign::StaticStruct();
-    Systems->SystemDesignDataTable = SystemTable;
     Weapons->WeaponDesignDataTable = WeaponTable;
     Ships->ShipDesignDataTable = ShipTable;
 
-    Systems->LoadSystemDesigns();
+    if (!UStarshatterSystemDesignSubsystem::ImportDefinitions(*SystemTable)) return 1;
     Weapons->LoadWeaponDesigns();
     Ships->InitializeShipDesigns();
 
@@ -480,7 +485,7 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     TArray<FName> MissingKeys = UnresolvedSystemKeys.Array();
     MissingKeys.Sort(FNameLexicalLess());
     for (const FName Key : MissingKeys)
-        UE_LOG(LogTemp, Warning, TEXT("No sys.def component template for design key '%s'."), *Key.ToString());
+        UE_LOG(LogTemp, Warning, TEXT("No sys.json component template for design key '%s'."), *Key.ToString());
 
     bool bAliasesValid = true;
     for (const auto& Entry : ShipVisualCatalog::Entries())

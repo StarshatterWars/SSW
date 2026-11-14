@@ -20,6 +20,7 @@
 #include "Text.h"
 #include "InputCoreTypes.h"
 #include "Engine/DataTable.h"
+#include "AsteroidResource.h"
 #include "GameStructs.generated.h"
 UENUM(BlueprintType)
 enum class ECargoType : uint8
@@ -34,6 +35,18 @@ USTRUCT(BlueprintType)
 struct FS_CargoCatalogRow : public FTableRowBase
 {
     GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
+    FString DisplayName;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
+    ESSWAsteroidRarity Rarity = ESSWAsteroidRarity::Common;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
+    int32 PreviewQuantity = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
+    FString Description;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
     ECargoType Type = ECargoType::General;
@@ -56,6 +69,15 @@ struct FS_Cargo
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
     FString Name;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
+    FString DisplayName;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
+    ESSWAsteroidRarity Rarity = ESSWAsteroidRarity::Common;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
+    FString Unit;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
     ECargoType Type = ECargoType::General;

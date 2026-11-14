@@ -1,0 +1,158 @@
+{
+  "ComponentGrades": [
+    {"Level":1,"RepairScale":1.3,"ReplacementScale":0.8},
+    {"Level":2,"RepairScale":1.15,"ReplacementScale":0.9},
+    {"Level":3,"RepairScale":1.0,"ReplacementScale":1.0},
+    {"Level":4,"RepairScale":0.9,"ReplacementScale":1.15},
+    {"Level":5,"RepairScale":0.8,"ReplacementScale":1.3}
+  ],
+  "Systems": [
+    {
+      "Name": "Fusion Reactor",
+      "Components": [
+        {"Name":"Reactor Core","Abbrev":"Reac Core","RepairTime":120.0,"ReplaceTime":24000.0,"Spares":0,"Affects":3},
+        {"Name":"Fuel System","Abbrev":"Fuel Sys","RepairTime":120.0,"ReplaceTime":1200.0,"Spares":0,"Affects":1},
+        {"Name":"Presequencer","Abbrev":"Preseq","RepairTime":30.0,"ReplaceTime":400.0,"Spares":1,"Affects":1},
+        {"Name":"Radiation Shield","Abbrev":"Rad Shield","RepairTime":30.0,"ReplaceTime":300.0,"Spares":1,"Affects":2},
+        {"Name":"Power Regulator","Abbrev":"Pwr Reg","RepairTime":300.0,"ReplaceTime":60.0,"Spares":2,"Affects":4},
+        {"Name":"Heat Exchanger","Abbrev":"Heat Exch","RepairTime":60.0,"ReplaceTime":3600.0,"Spares":1,"Affects":6},
+        {"Name":"Coolant Tanks","Abbrev":"Coolant","RepairTime":45.0,"ReplaceTime":1800.0,"Spares":0,"Affects":6}
+      ]
+    },
+    {
+      "Name": "Auxilliary Reactor",
+      "Components": [
+        {"Name":"Reactor Core","Abbrev":"Reac Core","RepairTime":60.0,"ReplaceTime":2400.0,"Spares":0,"Affects":3},
+        {"Name":"Reactant","Abbrev":"Reactant","RepairTime":30.0,"ReplaceTime":600.0,"Spares":0,"Affects":1},
+        {"Name":"Injector","Abbrev":"Injector","RepairTime":60.0,"ReplaceTime":500.0,"Spares":1,"Affects":1},
+        {"Name":"Magnetic Coil","Abbrev":"Mag Coil","RepairTime":120.0,"ReplaceTime":300.0,"Spares":1,"Affects":1},
+        {"Name":"Radiation Shield","Abbrev":"Rad Shield","RepairTime":60.0,"ReplaceTime":300.0,"Spares":1,"Affects":2},
+        {"Name":"Power Regulator","Abbrev":"Pwr Reg","RepairTime":300.0,"ReplaceTime":60.0,"Spares":2,"Affects":4},
+        {"Name":"Heat Exchanger","Abbrev":"Heat Exch","RepairTime":120.0,"ReplaceTime":3600.0,"Spares":0,"Affects":6},
+        {"Name":"Coolant Tanks","Abbrev":"Coolant","RepairTime":120.0,"ReplaceTime":1800.0,"Spares":0,"Affects":6}
+      ]
+    },
+    {
+      "Name": "Battery",
+      "Components": [
+        {"Name":"EMG Cell","Abbrev":"EMG Cell","RepairTime":120.0,"ReplaceTime":2400.0,"Spares":0,"Affects":3},
+        {"Name":"Reactant","Abbrev":"Reactant","RepairTime":30.0,"ReplaceTime":1200.0,"Spares":0,"Affects":1},
+        {"Name":"Reactant Valves","Abbrev":"Reac Valve","RepairTime":20.0,"ReplaceTime":1200.0,"Spares":1,"Affects":1},
+        {"Name":"Power Regulator","Abbrev":"Pwr Reg","RepairTime":120.0,"ReplaceTime":60.0,"Spares":2,"Affects":4}
+      ]
+    },
+    {
+      "Name": "Plasma Drive",
+      "Components": [
+        {"Name":"Plasma Core","Abbrev":"Plasma Core","RepairTime":90.0,"ReplaceTime":1800.0,"Spares":0,"Affects":3},
+        {"Name":"Presequence Injector","Abbrev":"Injector","RepairTime":40.0,"ReplaceTime":600.0,"Spares":1,"Affects":5},
+        {"Name":"Plasma Impeller","Abbrev":"Impeller","RepairTime":30.0,"ReplaceTime":900.0,"Spares":1,"Affects":5},
+        {"Name":"Magnetic Resonance Focuser","Abbrev":"Mag Focus","RepairTime":600.0,"ReplaceTime":30.0,"Spares":2,"Affects":1},
+        {"Name":"Radiation Shield","Abbrev":"Rad Shield","RepairTime":60.0,"ReplaceTime":1200.0,"Spares":1,"Affects":2},
+        {"Name":"Heat Exchanger","Abbrev":"Heat Exch","RepairTime":90.0,"ReplaceTime":3600.0,"Spares":0,"Affects":6}
+      ]
+    },
+    {
+      "Name": "Thruster",
+      "Components": [
+        {"Name":"Lateral Thrust Motors","Abbrev":"Lateral","RepairTime":90.0,"ReplaceTime":3600.0,"Spares":1,"Affects":131},
+        {"Name":"Spinal Thrust Motors","Abbrev":"Spinal","RepairTime":90.0,"ReplaceTime":3600.0,"Spares":1,"Affects":131},
+        {"Name":"Braking Thrusters","Abbrev":"Braking","RepairTime":60.0,"ReplaceTime":3600.0,"Spares":1,"Affects":131},
+        {"Name":"Plasma Grid","Abbrev":"Plasma Grid","RepairTime":180.0,"ReplaceTime":7200.0,"Spares":1,"Affects":3}
+      ]
+    },
+    {
+      "Name": "Quantum Drive",
+      "Components": [
+        {"Name":"Graviscalar Bias Node A","Abbrev":"Alpha Node","RepairTime":200.0,"ReplaceTime":3600.0,"Spares":1,"Affects":1},
+        {"Name":"Graviscalar Bias Node B","Abbrev":"Beta Node","RepairTime":200.0,"ReplaceTime":3600.0,"Spares":1,"Affects":1},
+        {"Name":"Quantum Wave Containment Generator","Abbrev":"Containment","RepairTime":60.0,"ReplaceTime":1200.0,"Spares":1,"Affects":2},
+        {"Name":"Dimensional Waveguide","Abbrev":"Waveguide","RepairTime":30.0,"ReplaceTime":400.0,"Spares":2,"Affects":3},
+        {"Name":"Power Filter/Sync Lock","Abbrev":"Sync Lock","RepairTime":600.0,"ReplaceTime":60.0,"Spares":1,"Affects":1}
+      ]
+    },
+    {
+      "Name": "Grav Shield",
+      "Components": [
+        {"Name":"Grav Bias Generator","Abbrev":"Grav Gen","RepairTime":30.0,"ReplaceTime":300.0,"Spares":1,"Affects":1},
+        {"Name":"Fusion Power Adaptor","Abbrev":"Pwr Adaptor","RepairTime":600.0,"ReplaceTime":30.0,"Spares":2,"Affects":3},
+        {"Name":"Harmonic Oscillator","Abbrev":"Harm Osc","RepairTime":1200.0,"ReplaceTime":60.0,"Spares":2,"Affects":5},
+        {"Name":"Tactical Computer Interface","Abbrev":"Tac I/F","RepairTime":900.0,"ReplaceTime":60.0,"Spares":1,"Affects":5}
+      ]
+    },
+    {
+      "Name": "Sensor",
+      "Components": [
+        {"Name":"Transmit Array","Abbrev":"XMIT","RepairTime":1200.0,"ReplaceTime":120.0,"Spares":1,"Affects":1},
+        {"Name":"Receive Array","Abbrev":"RECV","RepairTime":1200.0,"ReplaceTime":120.0,"Spares":1,"Affects":1},
+        {"Name":"Spacial Filter","Abbrev":"Filter","RepairTime":1800.0,"ReplaceTime":60.0,"Spares":1,"Affects":1},
+        {"Name":"Processor","Abbrev":"CPU","RepairTime":600.0,"ReplaceTime":90.0,"Spares":2,"Affects":1},
+        {"Name":"System Interface","Abbrev":"Sys I/F","RepairTime":900.0,"ReplaceTime":60.0,"Spares":2,"Affects":1}
+      ]
+    },
+    {
+      "Name": "Computer",
+      "Components": [
+        {"Name":"Processor","Abbrev":"CPU","RepairTime":600.0,"ReplaceTime":30.0,"Spares":2,"Affects":1},
+        {"Name":"Storage","Abbrev":"Storage","RepairTime":300.0,"ReplaceTime":60.0,"Spares":2,"Affects":1},
+        {"Name":"System Interface","Abbrev":"Sys I/F","RepairTime":90.0,"ReplaceTime":30.0,"Spares":2,"Affects":1}
+      ]
+    },
+    {
+      "Name": "Beam Weapon",
+      "Components": [
+        {"Name":"Beam Generator","Abbrev":"Beam Gen","RepairTime":60.0,"ReplaceTime":2400.0,"Spares":1,"Affects":3},
+        {"Name":"Power Flux Coupling","Abbrev":"Pwr Coupling","RepairTime":60.0,"ReplaceTime":300.0,"Spares":2,"Affects":3},
+        {"Name":"Beam Focuser","Abbrev":"Beam Focus","RepairTime":900.0,"ReplaceTime":30.0,"Spares":2,"Affects":1},
+        {"Name":"Flashback Supressor","Abbrev":"Flash Sup","RepairTime":90.0,"ReplaceTime":1500.0,"Spares":1,"Affects":6},
+        {"Name":"Tactical Computer Interface","Abbrev":"Tac I/F","RepairTime":120.0,"ReplaceTime":30.0,"Spares":1,"Affects":5}
+      ]
+    },
+    {
+      "Name": "Bolt Weapon",
+      "Components": [
+        {"Name":"Laser Generator","Abbrev":"Laser Gen","RepairTime":60.0,"ReplaceTime":1800.0,"Spares":1,"Affects":3},
+        {"Name":"Power Flux Coupling","Abbrev":"Pwr Coupling","RepairTime":60.0,"ReplaceTime":300.0,"Spares":2,"Affects":3},
+        {"Name":"Tactical Computer Interface","Abbrev":"Tac I/F","RepairTime":300.0,"ReplaceTime":60.0,"Spares":1,"Affects":5}
+      ]
+    },
+    {
+      "Name": "Plasma Weapon",
+      "Components": [
+        {"Name":"Plasma Exciter","Abbrev":"Exciter","RepairTime":60.0,"ReplaceTime":300.0,"Spares":1,"Affects":3},
+        {"Name":"Plasma Coupling","Abbrev":"Plasma Cpl","RepairTime":60.0,"ReplaceTime":300.0,"Spares":2,"Affects":3},
+        {"Name":"Radiation Shield","Abbrev":"Rad Shield","RepairTime":120.0,"ReplaceTime":900.0,"Spares":1,"Affects":2},
+        {"Name":"Heat Exchanger","Abbrev":"Heat Exch","RepairTime":60.0,"ReplaceTime":1800.0,"Spares":1,"Affects":6},
+        {"Name":"Tactical Computer Interface","Abbrev":"Tac I/F","RepairTime":180.0,"ReplaceTime":30.0,"Spares":1,"Affects":5}
+      ]
+    },
+    {
+      "Name": "Missile Weapon",
+      "Components": [
+        {"Name":"Magnetic Launch Rail","Abbrev":"Launcher","RepairTime":300.0,"ReplaceTime":3000.0,"Spares":1,"Affects":3},
+        {"Name":"Ordnance Trolley/Loader","Abbrev":"Loader","RepairTime":120.0,"ReplaceTime":6000.0,"Spares":1,"Affects":1},
+        {"Name":"Power Flux Coupling","Abbrev":"Pwr Coupling","RepairTime":600.0,"ReplaceTime":30.0,"Spares":2,"Affects":3},
+        {"Name":"Tactical Computer Interface","Abbrev":"Tac I/F","RepairTime":90.0,"ReplaceTime":240.0,"Spares":1,"Affects":5}
+      ]
+    },
+    {
+      "Name": "Probe",
+      "Components": [
+        {"Name":"Magnetic Launcher","Abbrev":"Launcher","RepairTime":300.0,"ReplaceTime":3000.0,"Spares":1,"Affects":3},
+        {"Name":"Probe Caddy/Loader","Abbrev":"Loader","RepairTime":120.0,"ReplaceTime":6000.0,"Spares":1,"Affects":1},
+        {"Name":"Power Flux Coupling","Abbrev":"Pwr Coupling","RepairTime":600.0,"ReplaceTime":30.0,"Spares":2,"Affects":3},
+        {"Name":"System Computer Interface","Abbrev":"Sys I/F","RepairTime":90.0,"ReplaceTime":240.0,"Spares":1,"Affects":5}
+      ]
+    },
+    {
+      "Name": "Flight Deck",
+      "Components": [
+        {"Name":"Magnetic Launch Rail","Abbrev":"Mag Rail","RepairTime":120.0,"ReplaceTime":1800.0,"Spares":1,"Affects":3},
+        {"Name":"Hangar Access Causeway","Abbrev":"Elevator","RepairTime":300.0,"ReplaceTime":6000.0,"Spares":1,"Affects":1},
+        {"Name":"ILS Transponder","Abbrev":"ILS","RepairTime":120.0,"ReplaceTime":2000.0,"Spares":1,"Affects":1},
+        {"Name":"Power Coupling","Abbrev":"Pwr Coupling","RepairTime":600.0,"ReplaceTime":30.0,"Spares":2,"Affects":3},
+        {"Name":"Navigational Computer Interface","Abbrev":"Nav I/F","RepairTime":90.0,"ReplaceTime":240.0,"Spares":1,"Affects":5}
+      ]
+    }
+  ]
+}

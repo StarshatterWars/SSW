@@ -153,6 +153,11 @@ protected:
     UPROPERTY(Transient) TObjectPtr<class UCargoManifestDlg> CargoManifestWidget;
     void ToggleCargoManifest();
     void CloseCargoManifest();
+    TSharedPtr<SWidget> MarketplacePopup;
+    UPROPERTY(Transient) TObjectPtr<class UMarketplaceDlg> MarketplaceWidget;
+    bool CanOpenMarketplace() const;
+    void ToggleMarketplace();
+    void CloseMarketplace();
     UPROPERTY(Transient) TObjectPtr<class UFlightTacticalReferenceDlg> FlightReferenceWidget;
     UPROPERTY(Transient) TObjectPtr<class ULiveOptionsDlg> LiveOptionsWidget;
     void ToggleFlightReference();

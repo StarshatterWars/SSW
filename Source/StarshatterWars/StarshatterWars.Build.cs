@@ -39,6 +39,8 @@ public class StarshatterWars : ModuleRules
             "Chaos",
             "RHI",
             "DeveloperSettings",
+            "Json",
+            "JsonUtilities",
             "WorldScapeCore",
             "WorldScapeVolume",
             // WorldScapeRoot.h includes these modules' generated headers.

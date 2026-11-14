@@ -46,6 +46,11 @@ bool UCargoCatalogSubsystem::ImportDefinitions(UDataTable& Table)
     for (const auto& Pair : Table.GetRowMap())
     {
         const auto& Row = *reinterpret_cast<const FS_CargoCatalogRow*>(Pair.Value);
+        if (Row.Description.TrimStartAndEnd().IsEmpty())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("%s: missing description for '%s'"), *Path, *Pair.Key.ToString());
+            return false;
+        }
         if (!FMath::IsFinite(Row.Size) || Row.Size < 0.0 || !FMath::IsFinite(Row.Value) || Row.Value < 0.0)
         {
             UE_LOG(LogTemp, Warning, TEXT("%s: invalid mass or unit value for '%s'"), *Path, *Pair.Key.ToString());
@@ -59,9 +64,16 @@ bool UCargoCatalogSubsystem::ImportDefinitions(UDataTable& Table)
 const FS_CargoCatalogRow* UCargoCatalogSubsystem::FindCargo(const FString& Item, const FString& Unit) const
 {
     const auto* Definition = Catalog
-        ? Catalog->FindRow<FS_CargoCatalogRow>(FName(*Item.TrimStartAndEnd()), TEXT("Cargo Catalog"), false)
+        ? Catalog->FindRow<FS_CargoCatalogRow>(DataTableUtils::MakeValidName(Item.TrimStartAndEnd()), TEXT("Cargo Catalog"), false)
         : nullptr;
     return Definition && Definition->Unit.Equals(Unit, ESearchCase::IgnoreCase) ? Definition : nullptr;
+}
+
+void UCargoCatalogSubsystem::ForEachDefinition(TFunctionRef<void(FName, const FS_CargoCatalogRow&)> Visit) const
+{
+    if (!Catalog) return;
+    Catalog->ForeachRow<FS_CargoCatalogRow>(TEXT("Cargo catalog"),
+        [&Visit](const FName& Name, const FS_CargoCatalogRow& Row) { Visit(Name, Row); });
 }
 
 bool UCargoCatalogSubsystem::DescribeCargo(const Ship& Vessel, FS_Cargo& Row) const
@@ -75,6 +87,8 @@ bool UCargoCatalogSubsystem::DescribeCargo(const Ship& Vessel, FS_Cargo& Row) co
 
     Row = FS_Cargo{};
     Row.Name = Load->Item;
+    Row.DisplayName = Load->Item;
+    Row.Unit = Load->bPassengers ? TEXT("berths") : Load->Unit;
     Row.Quantity = Quantity;
     Row.Size = bByMass ? 1.0 : 0.0;
     Row.Type = Load->bPassengers ? ECargoType::Passengers :
@@ -83,6 +97,8 @@ bool UCargoCatalogSubsystem::DescribeCargo(const Ship& Vessel, FS_Cargo& Row) co
 
     if (const auto* Definition = FindCargo(Load->Item, Load->Unit))
     {
+        if (!Definition->DisplayName.IsEmpty()) Row.DisplayName = Definition->DisplayName;
+        Row.Rarity = Definition->Rarity;
         Row.Type = Definition->Type;
         Row.Size = Definition->Size;
         Row.Value = Definition->Value;

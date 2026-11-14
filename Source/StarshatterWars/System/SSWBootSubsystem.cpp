@@ -522,7 +522,7 @@ void USSWBootSubsystem::BootSystemDesignLoader(const FBootContext& Ctx)
     if (!Ctx.SystemDesignSS)
         return;
 
-    Ctx.SystemDesignSS->LoadAll(bRebuildTables);
+    Ctx.SystemDesignSS->LoadSystemDesigns();
 }
 
 void USSWBootSubsystem::BootWeaponDesignLoader(const FBootContext& Ctx)
@@ -606,7 +606,6 @@ void USSWBootSubsystem::IngestAllDesignData(bool bForceReimport)
         return;
     }
 
-    SysSS->bClearTables = bForceReimport;
     WepSS->bClearTables = bForceReimport;
     ShipSS->bClearTables = bForceReimport;
 

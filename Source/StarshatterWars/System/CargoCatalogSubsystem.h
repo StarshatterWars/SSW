@@ -16,6 +16,7 @@ class STARSHATTERWARS_API UCargoCatalogSubsystem : public UGameInstanceSubsystem
 public:
     void LoadCatalog();
     static bool ImportDefinitions(UDataTable& Table);
+    void ForEachDefinition(TFunctionRef<void(FName, const FS_CargoCatalogRow&)> Visit) const;
     const FS_CargoCatalogRow* FindCargo(const FString& Item, const FString& Unit) const;
     bool DescribeCargo(const Ship& Vessel, FS_Cargo& Row) const;
 
