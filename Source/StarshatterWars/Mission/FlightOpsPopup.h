@@ -25,7 +25,10 @@ public:
     SLATE_END_ARGS()
     void Construct(const FArguments& Args) {
         Resolve=Args._ResolveCarrier; Operate=Args._CanOperate;
-        ChildSlot[SAssignNew(Root,SVerticalBox)];
+        ChildSlot.Padding(FMargin(0, 16, 0, 0))
+        [
+            SAssignNew(Root, SVerticalBox)
+        ];
         Rebuild();
     }
     virtual void Tick(const FGeometry& G,double T,float D) override {

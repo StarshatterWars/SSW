@@ -4,7 +4,7 @@
 #include "SimSystem.h"
 #include "Widgets/SLeafWidget.h"
 
-enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down };
+enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options };
 
 class SShipSystemIcon : public SLeafWidget
 {
@@ -66,6 +66,12 @@ public:
         case EShipSystemIcon::Replace: Line({{3,7},{18,7},{14,3}}); Line({{19,15},{4,15},{8,19}}); break;
         case EShipSystemIcon::Up: Line({{5,14},{11,8},{17,14}}); break;
         case EShipSystemIcon::Down: Line({{5,8},{11,14},{17,8}}); break;
+        case EShipSystemIcon::Gun: Line({{3,16},{10,16},{19,7},{16,4},{7,13},{3,13},{3,16}}); Line({{12,7},{16,11}}); break;
+        case EShipSystemIcon::MediumRangeMissile: Line({{11,1},{15,6},{15,16},{7,16},{7,6},{11,1}}); Line({{7,11},{3,18},{7,16}}); Line({{15,11},{19,18},{15,16}}); Line({{8,20},{14,20}}); break;
+        case EShipSystemIcon::Refresh: Line({{18,8},{15,4},{9,3},{4,7},{3,12},{6,17},{11,19},{16,17},{19,13}}); Line({{18,3},{18,8},{13,8}}); break;
+        case EShipSystemIcon::Abort: Line({{5,5},{17,5},{17,17},{5,17},{5,5}}); Line({{8,8},{14,14}}); Line({{14,8},{8,14}}); break;
+        case EShipSystemIcon::Reference: Line({{11,5},{7,3},{2,3},{2,17},{7,17},{11,19},{15,17},{20,17},{20,3},{15,3},{11,5},{11,19}}); break;
+        case EShipSystemIcon::Options: Line({{3,5},{19,5}}); Line({{7,2},{7,8}}); Line({{3,11},{19,11}}); Line({{15,8},{15,14}}); Line({{3,17},{19,17}}); Line({{9,14},{9,20}}); break;
         default: Line({{11,2},{20,11},{11,20},{2,11},{11,2}}); break;
         }
     }

@@ -12,6 +12,7 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Styling/CoreStyle.h"
 #include "InMissionButtonStyle.h"
+#include "ShipSystemIcon.h"
 #include "Engine/Texture2D.h"
 #include "UObject/StrongObjectPtr.h"
 #include "Framework/Application/SlateApplication.h"
@@ -309,6 +310,24 @@ private:
         if (!Count) Rows->AddSlot().AutoHeight()[Label(TEXT("No weapon groups."))];
         for (int32 Slot=0;!ContactsOnly && Slot<4 && Page*4+Slot<Count;++Slot) {
             const int32 I=Page*4+Slot;auto* G=Group(I);if(!G)continue;
+            const FString GroupName = ANSI_TO_TCHAR(G->Name());
+            EShipSystemIcon GroupIcon = G->IsMissile() ? EShipSystemIcon::Projectile : EShipSystemIcon::Weapon;
+            FText GroupTooltip = FText::FromString(GroupName);
+            if (GroupName.Equals(TEXT("GUNS"), ESearchCase::IgnoreCase))
+            {
+                GroupIcon = EShipSystemIcon::Gun;
+                GroupTooltip = INVTEXT("Guns");
+            }
+            else if (GroupName.Equals(TEXT("SRM"), ESearchCase::IgnoreCase))
+            {
+                GroupIcon = EShipSystemIcon::Projectile;
+                GroupTooltip = INVTEXT("SRM — Short-range missiles");
+            }
+            else if (GroupName.Equals(TEXT("MRM"), ESearchCase::IgnoreCase))
+            {
+                GroupIcon = EShipSystemIcon::MediumRangeMissile;
+                GroupTooltip = INVTEXT("MRM — Medium-range missiles");
+            }
             Rows->AddSlot().FillHeight(1).Padding(0,3)
             [SNew(SHorizontalBox)
              +SHorizontalBox::Slot().FillWidth(1.5f)
@@ -316,7 +335,8 @@ private:
                .IsEnabled_Lambda([this,I](){auto* W=Group(I);return Operable() && W && W->NumWeapons()>0 && W->GetFiringOrders()==WeaponsOrders::MANUAL;})
                .OnPressed_Lambda([this,I](){if(Operable())HeldGroup=I;})
                .OnReleased_Lambda([this](){StopFire();})
-               [ButtonLabel(ANSI_TO_TCHAR(G->Name()),14)]]
+               .HAlign(HAlign_Center).VAlign(VAlign_Center).ToolTipText(GroupTooltip)
+               [SNew(SShipSystemIcon).Icon(GroupIcon)]]
              +SHorizontalBox::Slot().AutoWidth().Padding(3)[SNew(SBox).WidthOverride(12)
               [SNew(SProgressBar).BarFillType(EProgressBarFillType::BottomToTop)
                .Percent_Lambda([this,I](){auto* W=Group(I);double Sum=0;int32 N=0;if(W)for(int32 J=0;J<W->NumWeapons();++J)if(auto* Gun=W->GetWeapon(J)){if(Gun->GetCapacity()>0){Sum+=Gun->Charge();++N;}}

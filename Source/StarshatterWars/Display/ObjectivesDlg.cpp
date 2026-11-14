@@ -2,6 +2,7 @@
 #include "ObjectivesPopup.h"
 #include "Sim.h"
 #include "FlightPanelStyle.h"
+#include "Components/TextBlock.h"
 #include "Styling/CoreStyle.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/Layout/SBox.h"
@@ -9,9 +10,10 @@
 
 TSharedRef<SWidget> UObjectivesDlg::CreatePanelContent()
 {
+    if (PanelTitle) PanelTitle->SetVisibility(ESlateVisibility::Collapsed);
     const TWeakObjectPtr<UObjectivesDlg> Owner(this);
     return SNew(SVerticalBox)
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 12)
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 16, 0, 16)
         [
             SNew(SBox).HeightOverride(1)
             [

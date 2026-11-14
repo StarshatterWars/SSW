@@ -147,6 +147,14 @@ protected:
     TSharedPtr<SWidget> WeaponsPopup;
     TSharedPtr<SWidget> FlightPanelToolbar;
     void InstallFlightPanelToolbar();
+    TSharedPtr<SWidget> ReferencePopup;
+    TSharedPtr<SWidget> LiveOptionsPopup;
+    UPROPERTY(Transient) TObjectPtr<class UFlightTacticalReferenceDlg> FlightReferenceWidget;
+    UPROPERTY(Transient) TObjectPtr<class ULiveOptionsDlg> LiveOptionsWidget;
+    void ToggleFlightReference();
+    void CloseFlightReference();
+    void ToggleLiveOptions();
+    void CloseLiveOptions();
     bool CanOpenFlightPanel() const;
     void UpdateFlightPanelInput(TSharedPtr<SWidget> Focus = nullptr);
     void AddFloatingPanel(TSharedPtr<SWidget>& Panel, TSharedRef<SWidget> Content, const TCHAR* Title, int32 Index, FSimpleDelegate Close);
@@ -357,9 +365,6 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category="Mission|Pause Menu")
     TSubclassOf<UQuitMissionMenu> QuitMissionMenuClass;
     QuitView* MissionQuitMenu = nullptr;
-    bool bMissionControlsOpen = false;
-    bool bControlsPreviousWorldPaused = false;
-    bool bControlsPreviousRuntimePaused = false;
 
     UFUNCTION()
     void HandleMissionSystemLevelShown();

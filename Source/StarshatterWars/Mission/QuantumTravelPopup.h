@@ -13,8 +13,8 @@
 #include "Engine/Texture2D.h"
 #include "InputCoreTypes.h"
 #include "MissionUIStyle.h"
-#include "InMissionButtonStyle.h"
 #include "FlightPanelStyle.h"
+#include "ShipSystemIcon.h"
 #include "QuantumTravel.h"
 #include "QuantumDrive.h"
 #include "Ship.h"
@@ -42,9 +42,17 @@ public:
             + SVerticalBox::Slot().AutoHeight().Padding(16,4)[SNew(STextBlock).AutoWrapText(true).ColorAndOpacity(FLinearColor(1.f,0.8f,0.4f)).Font(MissionUIStyle::GetRowFont(15)).Text_Lambda([this](){return FText::FromString(Message);})]
             + SVerticalBox::Slot().AutoHeight().Padding(16,8)
              [SNew(SHorizontalBox)
-              +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&Blue).OnClicked_Lambda([this](){Rebuild();return FReply::Handled();})[ModernButtons.Content(TEXT("REFRESH"))]]
-              +SHorizontalBox::Slot().FillWidth(2).Padding(12,0)[SNew(SButton).ButtonStyle(&Red).IsEnabled_Lambda([this](){Ship* P=Player();auto* D=P?P->GetQuantumDrive():nullptr;return Operate() && D && (D->ActiveState()==QuantumDrive::ACTIVE_COUNTDOWN || D->ActiveState()==QuantumDrive::ACTIVE_PREWARP);}).OnClicked_Lambda([this](){Ship* P=Player();if(Operate() && P && P->GetQuantumDrive())P->GetQuantumDrive()->CancelJump();Message=TEXT("Quantum countdown aborted; drive discharged.");return FReply::Handled();})[ModernButtons.Content(TEXT("ABORT COUNTDOWN"))]]
-              +SHorizontalBox::Slot().FillWidth(1)[SNew(SButton).ButtonStyle(&Blue).ToolTipText(FText::FromString(TEXT("Close"))).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})[ModernButtons.Content(TEXT("CLOSE"))]]];
+              +SHorizontalBox::Slot().AutoWidth().Padding(0,0,8,0)
+              [SNew(SButton).ButtonStyle(&Blue).HAlign(HAlign_Center).VAlign(VAlign_Center)
+                .ContentPadding(FMargin(14,6)).ToolTipText(INVTEXT("Refresh destinations"))
+                .OnClicked_Lambda([this](){Rebuild();return FReply::Handled();})
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Refresh)]]
+              +SHorizontalBox::Slot().AutoWidth()
+              [SNew(SButton).ButtonStyle(&Red).HAlign(HAlign_Center).VAlign(VAlign_Center)
+                .ContentPadding(FMargin(14,6)).ToolTipText(INVTEXT("Abort jump countdown"))
+                .IsEnabled_Lambda([this](){Ship* P=Player();auto* D=P?P->GetQuantumDrive():nullptr;return Operate() && D && (D->ActiveState()==QuantumDrive::ACTIVE_COUNTDOWN || D->ActiveState()==QuantumDrive::ACTIVE_PREWARP);})
+                .OnClicked_Lambda([this](){Ship* P=Player();if(Operate() && P && P->GetQuantumDrive())P->GetQuantumDrive()->CancelJump();Message=TEXT("Quantum countdown aborted; drive discharged.");return FReply::Handled();})
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Abort)]]];
         ChildSlot[SNew(SBorder).BorderImage(&FlightPanelStyle::Glass()).Padding(12)[Content]];
     }
     virtual bool SupportsKeyboardFocus() const override { return true; }
@@ -65,7 +73,6 @@ public:
         return FReply::Unhandled();
     }
 private:
-    FInMissionButtonStyle ModernButtons;
     TFunction<Ship*()> ResolveShip;
     TFunction<bool()> CanOperate;
     FSimpleDelegate Close;

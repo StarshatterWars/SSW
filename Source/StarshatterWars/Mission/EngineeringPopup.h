@@ -18,6 +18,46 @@
 #include "SimSystem.h"
 #include "SimComponent.h"
 #include "CombatPowerTriangle.h"
+#include "Brushes/SlateRoundedBoxBrush.h"
+#include "Widgets/SOverlay.h"
+#include "Widgets/SLeafWidget.h"
+
+class SCombatAllocationTrack : public SLeafWidget
+{
+public:
+    static constexpr float ThumbWidth = 20.f;
+    SLATE_BEGIN_ARGS(SCombatAllocationTrack) : _WeaponsFraction(.5f) {}
+        SLATE_ATTRIBUTE(float, WeaponsFraction)
+    SLATE_END_ARGS()
+
+    void Construct(const FArguments& Args) { WeaponsFraction = Args._WeaponsFraction; }
+    FVector2D ComputeDesiredSize(float) const override { return FVector2D(0, 31); }
+    int32 OnPaint(const FPaintArgs&, const FGeometry& Geometry, const FSlateRect&,
+        FSlateWindowElementList& Elements, int32 Layer, const FWidgetStyle&, bool) const override
+    {
+        const FVector2D Size = Geometry.GetLocalSize();
+        const float Inset = ThumbWidth * .5f;
+        const float Width = FMath::Max(0.f, float(Size.X) - ThumbWidth);
+        const float CenterY = float(Size.Y) * .5f;
+        const float Split = Width * (1.f - FMath::Clamp(WeaponsFraction.Get(), 0.f, 1.f));
+        const auto* Brush = FCoreStyle::Get().GetBrush(TEXT("WhiteBrush"));
+        auto Draw = [&](float X, float Y, float W, float H, FLinearColor Color)
+        {
+            FSlateDrawElement::MakeBox(Elements, Layer,
+                Geometry.ToPaintGeometry(FVector2f(W, H), FSlateLayoutTransform(FVector2f(X, Y))),
+                Brush, ESlateDrawEffect::None, Color);
+        };
+        Draw(Inset, CenterY - 5, Split, 10, FLinearColor(.10f, .66f, .33f));
+        Draw(Inset + Split, CenterY - 5, Width - Split, 10, FLinearColor(.78f, .19f, .22f));
+        for (int32 Quarter = 0; Quarter <= 4; ++Quarter)
+            Draw(Inset + Width * Quarter / 4.f - .5f, CenterY + 8, 1, Quarter == 2 ? 6 : 4,
+                FLinearColor(.65f, .77f, .84f));
+        return Layer;
+    }
+
+private:
+    TAttribute<float> WeaponsFraction;
+};
 
 // Self-contained panel body following EngDlg.frm; the host owns registration,
 // visibility and input. ResolveShip/OnClose also support a future registered host.
@@ -45,7 +85,7 @@ public:
             ChildSlot
             [SNew(SBorder)
                 .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-                .BorderBackgroundColor(FLinearColor::Transparent).Padding(0)
+                .BorderBackgroundColor(FLinearColor::Transparent).Padding(FMargin(0, 16, 0, 0))
                 .HAlign(HAlign_Fill).VAlign(VAlign_Fill)
                 [SAssignNew(Root, SVerticalBox)]];
         }
@@ -171,7 +211,21 @@ private:
             Root->AddSlot().AutoHeight().HAlign(HAlign_Center)
             [SNew(SCombatPowerTriangle).ResolveShip(ResolveShip)];
         else
-            Root->AddSlot().AutoHeight().Padding(0, 0, 0, 12)
+        {
+            static const FSliderStyle AllocationSliderStyle = []()
+            {
+                FSliderStyle Style = FCoreStyle::Get().GetWidgetStyle<FSliderStyle>("Slider");
+                FSlateRoundedBoxBrush Thumb(FLinearColor(.83f, .94f, 1.f), 3.f);
+                Thumb.ImageSize = FVector2f(SCombatAllocationTrack::ThumbWidth, 18.f);
+                Style.SetNormalThumbImage(Thumb).SetHoveredThumbImage(Thumb).SetDisabledThumbImage(Thumb);
+                return Style;
+            }();
+            const auto WeaponsFraction = [this]()
+            {
+                const Ship* Player = GetShip();
+                return Player ? float(Player->GetCombatAllocation().Y) : .5f;
+            };
+            Root->AddSlot().AutoHeight().Padding(0, 14, 0, 20)
             [SNew(SVerticalBox)
                 + SVerticalBox::Slot().AutoHeight()
                 [SNew(STextBlock).Text_Lambda([this]() {
@@ -179,24 +233,36 @@ private:
                     const int32 Engines = Player ? FMath::RoundToInt(Player->GetCombatAllocation().X * 100) : 50;
                     return Text(FString::Printf(TEXT("ENGINES %d%%     WEAPONS %d%%"), Engines, 100 - Engines));
                 })]
-                + SVerticalBox::Slot().AutoHeight()
-                [SNew(SSlider).Value_Lambda([this]() { const Ship* Player = GetShip(); return Player ? float(Player->GetCombatAllocation().Y) : 0.5f; })
-                    .OnValueChanged_Lambda([this](float Weapons) { if (Ship* Player = GetShip()) Player->SetCombatAllocation(FVector(1.0 - Weapons, Weapons, 0)); })]];
+                + SVerticalBox::Slot().AutoHeight().Padding(0, 8, 0, 0)
+                [SNew(SOverlay)
+                    + SOverlay::Slot()
+                    [SNew(SCombatAllocationTrack).Visibility(EVisibility::HitTestInvisible)
+                        .WeaponsFraction_Lambda(WeaponsFraction)]
+                    + SOverlay::Slot()
+                    [SNew(SSlider).Style(&AllocationSliderStyle).IndentHandle(false)
+                        .SliderBarColor(FLinearColor::Transparent)
+                        .Value_Lambda([WeaponsFraction]() { return 1.f - WeaponsFraction(); })
+                        .OnValueChanged_Lambda([this](float Engines)
+                        {
+                            if (Ship* Player = GetShip())
+                                Player->SetCombatAllocation(FVector(Engines, 1.f - Engines, 0));
+                        })]]];
+        }
         TSharedPtr<SVerticalBox> Details, Components, Repairs;
         Root->AddSlot().FillHeight(1)
         [SNew(SHorizontalBox)
             // Full-height systems column: long client lists remain scrollable.
-            +SHorizontalBox::Slot().FillWidth(0.34f).Padding(0,0,16,0)
+            +SHorizontalBox::Slot().FillWidth(1.f).Padding(0,0,16,0)
             [SNew(SScrollBox).Clipping(EWidgetClipping::ClipToBounds)
                 +SScrollBox::Slot()[SAssignNew(SourceColumns,SVerticalBox)]]
-            +SHorizontalBox::Slot().FillWidth(0.66f)
+            +SHorizontalBox::Slot().FillWidth(2.f)
             [SNew(SVerticalBox)
                 +SVerticalBox::Slot().FillHeight(0.62f).Padding(0,0,0,16)
                 [SNew(SHorizontalBox)
-                    +SHorizontalBox::Slot().FillWidth(0.48f).Padding(0,0,16,0)
+                    +SHorizontalBox::Slot().FillWidth(1.f).Padding(0,0,16,0)
                     [SNew(SScrollBox).Clipping(EWidgetClipping::ClipToBounds)
                         +SScrollBox::Slot()[SAssignNew(Details,SVerticalBox)]]
-                    +SHorizontalBox::Slot().FillWidth(0.52f)
+                    +SHorizontalBox::Slot().FillWidth(1.f)
                     [SNew(SScrollBox).Clipping(EWidgetClipping::ClipToBounds)
                         +SScrollBox::Slot()[SAssignNew(Components,SVerticalBox)]]]
                 +SVerticalBox::Slot().FillHeight(0.38f)
@@ -238,7 +304,7 @@ private:
                         })]]];
             }
         }
-        Details->AddSlot().AutoHeight().Padding(0,0,0,8)[Label(Name(CurrentSystem()),16)];
+        Details->AddSlot().AutoHeight().Padding(0,0,0,12)[Label(Name(CurrentSystem()),16)];
         Details->AddSlot().AutoHeight()[SNew(STextBlock).AutoWrapText(true).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(FLinearColor(0.25f,0.7f,1)).Text_Lambda([this](){SimSystem* S=CurrentSystem();return Text(S ? FString::Printf(TEXT("Availability %.0f%%\nSafety %.0f%%   Stability %.0f%%\nPower %.0f%%"),S->GetAvailability(),S->GetSafety(),S->GetStability(),S->GetPowerLevel()):TEXT(""));})];
         Details->AddSlot().AutoHeight().Padding(0,8)
         [SNew(SHorizontalBox)
@@ -263,7 +329,7 @@ private:
                 ShipNow->GetReactors()[i]->AddClient(S); Dirty=true;
             },[this,i](){Ship* Now=GetShip();SimSystem* S=CurrentSystem();if(!Now || !S || i>=Now->GetReactors().size() || !Now->GetReactors()[i])return false;
                 for(int n=0;n<Now->GetReactors().size();++n)if(Now->GetReactors()[n]==S)return false;
-                return S->GetCapacity()>0 || S->GetSinkRate()>0;})];
+                return S->GetCapacity()>0 || S->GetSinkRate()>0;}, SNew(SShipSystemIcon).Icon(EShipSystemIcon::Reactor))];
         }
         Components->AddSlot().AutoHeight().Padding(0,0,0,12)[Label(TEXT("COMPONENTS / SPARES"),16)];
         if(SimSystem* S=CurrentSystem())for(int i=0;i<S->GetComponents().size();++i) {

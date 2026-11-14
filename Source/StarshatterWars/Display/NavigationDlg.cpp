@@ -8,6 +8,8 @@
 #include "SimRegion.h"
 #include "StarSystem.h"
 #include "Components/TextBlock.h"
+#include "Components/Button.h"
+#include "MissionUIStyle.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Blueprint/WidgetTree.h"
@@ -33,6 +35,9 @@ TSharedRef<SWidget> UNavigationDlg::CreatePanelContent()
     }
     NavigationMap->SetInMissionNavigation(true);
     NavigationMap->SetVisibility(ESlateVisibility::Visible);
+    UButton* WaypointStyle = WidgetTree->ConstructWidget<UButton>();
+    MissionUIStyle::ApplyActionButtonStyle(WaypointStyle, TEXT("Blue"));
+    FooterButtonStyle = WaypointStyle->GetStyle();
     const TSharedRef<SWidget> MapBody = SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(8.f, 4.f)
         [
@@ -43,12 +48,14 @@ TSharedRef<SWidget> UNavigationDlg::CreatePanelContent()
             ]
             + SHorizontalBox::Slot().AutoWidth()
             [
-                SNew(SButton).ButtonStyle(&FooterButtonStyle).Text(INVTEXT("DELETE WAYPOINT"))
+                SNew(SButton).ButtonStyle(&FooterButtonStyle).ContentPadding(FMargin(16, 5))
                 .OnClicked_Lambda([Map = TWeakObjectPtr<UMissionNavDlg>(NavigationMap)]()
                 {
                     if (Map.IsValid()) Map->DeleteSelectedLiveNavPoint();
                     return FReply::Handled();
                 })
+                [SNew(STextBlock).Text(INVTEXT("DELETE WAYPOINT"))
+                    .Font(MissionUIStyle::GetInfoLabelFont(13)).ColorAndOpacity(FLinearColor::White)]
             ]
         ]
         + SVerticalBox::Slot().FillHeight(1.f)[NavigationMap->TakeWidget()];
@@ -99,6 +106,7 @@ void UNavigationDlg::NativeConstruct()
     };
     AddLocationTitle(SystemTitleText, false);
     AddLocationTitle(SectorTitleText, true);
+    PanelTitle->SetVisibility(ESlateVisibility::Collapsed);
     UpdateLocationTitles();
 }
 

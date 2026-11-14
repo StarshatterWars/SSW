@@ -635,7 +635,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
-    // UI.MenuScreenClass
+    // UI.TacticalPopupClass
+    if (!Cache.Contains(TEXT("UI.TacticalPopupClass")))
+    {
+        if (!Settings->TacticalPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->TacticalPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.TacticalPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.TacticalPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] TacticalPopupClass is not set in Project Settings"));
+        }
+    }
+    // UI.TacRefScreenClass
     if (!Cache.Contains(TEXT("UI.TacRefScreenClass")))
     {
         if (!Settings->TacRefScreenClass.IsNull())
@@ -741,6 +758,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         {
             UE_LOG(LogStarshatterAssetRegistry, Warning,
                 TEXT("[ASSETS] MultiplayerMissionClass is not set in Project Settings"));
+        }
+    }
+
+	// UI.OptionsPopupClass
+    if (!Cache.Contains(TEXT("UI.OptionsPopupClass")))
+    {
+        if (!Settings->OptionsPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->OptionsPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.OptionsPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.OptionsPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] OptionsPopupClass is not set in Project Settings"));
         }
     }
 

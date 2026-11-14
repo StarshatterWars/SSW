@@ -351,6 +351,8 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.ObjectivesScreenClass"),
         TEXT("UI.FlightOpsScreenClass"),
         TEXT("UI.ContactListClass"),
+        TEXT("UI.OptionsPopupClass"),
+        TEXT("UI.TacticalPopupClass"),
         TEXT("UI.MissionsPanelClass"),
         TEXT("UI.AwardPopupClass"),
 

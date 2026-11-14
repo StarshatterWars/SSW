@@ -1447,8 +1447,15 @@ void UMissionNavDlg::ApplyBriefingPanelPresentation()
         DetailBodyText->SetWrapTextAt(0.f);
         DetailBodyText->SetAutoWrapText(true);
     }
-    if (ZoomOutButton) ZoomOutButton->SetToolTipText(NSLOCTEXT("MissionBriefing", "ZoomOut", "Zoom out"));
-    if (ZoomInButton) ZoomInButton->SetToolTipText(NSLOCTEXT("MissionBriefing", "ZoomIn", "Zoom in"));
+    auto StyleZoom = [](UButton* Button, UTextBlock* Label, const FText& Tooltip)
+    {
+        if (!Button) return;
+        MissionUIStyle::ApplyActionButtonStyle(Button, TEXT("Blue"));
+        Button->SetToolTipText(Tooltip);
+        if (Label) Label->SetColorAndOpacity(FLinearColor::White);
+    };
+    StyleZoom(ZoomOutButton, ZoomOutText, NSLOCTEXT("MissionBriefing", "ZoomOut", "Zoom out"));
+    StyleZoom(ZoomInButton, ZoomInText, NSLOCTEXT("MissionBriefing", "ZoomIn", "Zoom in"));
 }
 
 void UMissionNavDlg::ApplyPanelStyles()
