@@ -1830,6 +1830,12 @@ public:
         return FReply::Unhandled();
     }
 
+    FReply OnMouseWheel(const FGeometry&, const FPointerEvent&) override
+    {
+        // Children get first chance to scroll or zoom. Keep any unused wheel input off the flight camera.
+        return FReply::Handled();
+    }
+
     TFunction<void()> Raise;
     TFunction<void(const FPointerEvent&)> Move;
 
@@ -2596,8 +2602,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
             .OnOverviewWheel_Lambda([Owner](float Wheel)
             {
                 if (!Owner.IsValid() || !Owner->MissionCameraRig ||
-                    Owner->MissionCameraRig->Mode != FMissionCameraRig::Overview || !Owner->CanUseFighterHUD() ||
-                    Owner->ContactsPopup) return false;
+                    Owner->MissionCameraRig->Mode != FMissionCameraRig::Overview || !Owner->CanUseFighterHUD()) return false;
                 Owner->OnTargetZoom(FInputActionValue(Wheel));
                 return true;
             });
@@ -3046,7 +3051,7 @@ void UMissionBriefingDlg::ToggleFighterHUD()
 void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 {
     if (!bLiveMissionStarted ||
-        !IsValid(MissionPreviewCamera) || MissionSceneCover.IsValid() || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
+        !IsValid(MissionPreviewCamera) || MissionSceneCover.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
     const float Wheel = Value.Get<float>();
     if (!FMath::IsFinite(Wheel) || FMath::IsNearlyZero(Wheel)) return;
