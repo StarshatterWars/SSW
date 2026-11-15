@@ -2,6 +2,7 @@ SHIP
 
 name:         Dsrt04
 class:        Building
+base_cost:     647000
 display_name: Deserted Outpost
 abrv:		  BLDG
 hud_icon:     "hud_dsrt04"

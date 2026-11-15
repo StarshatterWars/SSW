@@ -2,6 +2,7 @@ SHIP
 
 name:         Fact01
 class:        Building
+base_cost:     556000
 abrv:         BLDG
 display_name: "Industrial Processing Plant"
 hud_icon:     "hud_fact01"

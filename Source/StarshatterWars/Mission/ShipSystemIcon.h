@@ -1,10 +1,11 @@
 #pragma once
 
+#include "HUDView.h"
 #include "Rendering/DrawElements.h"
 #include "SimSystem.h"
 #include "Widgets/SLeafWidget.h"
 
-enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo };
+enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore };
 
 class SShipSystemIcon : public SLeafWidget
 {
@@ -15,6 +16,17 @@ public:
 
     void Construct(const FArguments& Args) { Icon = Args._Icon; }
     FVector2D ComputeDesiredSize(float) const override { return FVector2D(22, 22); }
+
+    bool ComputeVolatility() const override { return true; }
+
+    static FLinearColor GetHUDTint()
+    {
+        static const FLinearColor Palette[] = {
+            FLinearColor(0.35f, 0.88f, 0.48f), FLinearColor(1.0f, 0.68f, 0.22f),
+            FLinearColor(0.15f, 0.55f, 1.0f), FLinearColor(0.90f, 0.94f, 1.0f)
+        };
+        return Palette[FMath::Clamp(HUDView::DefaultColorSet(), 0, static_cast<int32>(UE_ARRAY_COUNT(Palette)) - 1)];
+    }
 
     static EShipSystemIcon ForSystem(const SimSystem& System)
     {
@@ -70,6 +82,11 @@ public:
         case EShipSystemIcon::MediumRangeMissile: Line({{11,1},{15,6},{15,16},{7,16},{7,6},{11,1}}); Line({{7,11},{3,18},{7,16}}); Line({{15,11},{19,18},{15,16}}); Line({{8,20},{14,20}}); break;
         case EShipSystemIcon::Refresh: Line({{18,8},{15,4},{9,3},{4,7},{3,12},{6,17},{11,19},{16,17},{19,13}}); Line({{18,3},{18,8},{13,8}}); break;
         case EShipSystemIcon::Abort: Line({{5,5},{17,5},{17,17},{5,17},{5,5}}); Line({{8,8},{14,14}}); Line({{14,8},{8,14}}); break;
+        case EShipSystemIcon::ShipStore:
+            Line({{7,5},{3,5},{3,19},{19,19},{19,5},{15,5}});
+            Line({{6,12},{9,9},{14,9},{17,12},{14,15},{9,15},{6,12}});
+            Line({{10,12},{13,12}});
+            break;
         case EShipSystemIcon::Ship:
             Line({{2,10},{6,6},{14,6},{20,11},{14,16},{6,16},{2,12},{2,10}});
             Line({{7,9},{13,9},{16,11},{13,13},{7,13},{7,9}});
@@ -104,6 +121,10 @@ public:
             Line({{3,6},{11,2},{19,6},{19,16},{11,20},{3,16},{3,6},{11,10},{19,6}});
             Line({{11,10},{11,20}}); Line({{7,4},{15,8}});
             break;
+        case EShipSystemIcon::Production:
+            Line({{2,20},{2,11},{7,8},{7,11},{12,8},{12,11},{16,11},{16,3},{19,3},{20,20},{2,20}});
+            Line({{6,15},{8,15}}); Line({{11,15},{13,15}}); Line({{16,15},{18,15}});
+            break;
         case EShipSystemIcon::Marketplace:
             Line({{4,9},{18,9},{19,20},{3,20},{4,9}});
             Line({{8,11},{8,5},{10,3},{12,3},{14,5},{14,11}});
@@ -121,7 +142,7 @@ public:
         FSlateWindowElementList& Elements, int32 Layer, const FWidgetStyle&, bool) const override
     {
         PaintIcon(Elements, Layer, Geometry, (Geometry.GetLocalSize() - FVector2D(22, 22)) * 0.5,
-            Icon, FLinearColor(0.28f, 0.8f, 1.0f));
+            Icon, GetHUDTint());
         return Layer;
     }
 

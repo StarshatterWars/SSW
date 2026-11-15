@@ -3,6 +3,7 @@ SHIP
 name:         "SAM 1"
 display_name: SAM
 class:        SAM
+base_cost:     156000
 abrv:         SAM
 description:  "The Surface-to-Air Missile Battery is a rapid-response air defense platform designed to engage hostile fighters and inbound strike craft at medium range. Equipped with autonomous tracking and salvo-launch capability, it provides layered protection for installations and fleet staging areas."
 hud_icon:     "hud_sam"

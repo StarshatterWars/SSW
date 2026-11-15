@@ -2,6 +2,7 @@ SHIP
 
 name:         Fact02
 class:        Building
+base_cost:     556000
 abrv:         BLDG
 display_name: "Advanced Fabrication Center"
 hud_icon:     "hud_fact02"

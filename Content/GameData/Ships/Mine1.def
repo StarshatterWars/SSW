@@ -3,6 +3,7 @@ SHIP
 name:         "BlockadeMine"
 display_name:  Mine
 class:         Mine
+base_cost:     29000
 abrv:          MINE
 empire:        Dantari
 description:   "The Blockade Mine is a concealed proximity explosive deployed to deny access to strategic corridors and orbital approaches. Triggered by hostile signatures, it delivers a devastating detonation capable of crippling even heavily armored vessels."

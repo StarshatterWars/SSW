@@ -3,6 +3,7 @@ SHIP
 name:          Asher
 display_name:  Asher
 class:         Destroyer
+base_cost:     43971000
 cargo_capacity: { tonnes: 390, passengers: 0 }
 abrv:		   DD
 empire:        Terellian

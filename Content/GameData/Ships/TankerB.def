@@ -3,6 +3,7 @@ SHIP
 name:       IM1912
 display_name: "IM1912 Tanker"
 class:      Freighter
+base_cost:     12993000
 cargo_capacity: { tonnes: 12500, passengers: 0 }
 cargo_manifest: { item: "fusion propellant", unit: "t", min: 5800, max: 8400 }
 cargo_manifest: { item: "liquid hydrogen", unit: "t", min: 5000, max: 7600 }

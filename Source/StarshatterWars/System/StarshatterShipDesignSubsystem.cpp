@@ -2,7 +2,7 @@
 /*=============================================================================
 	Project Starshatter Wars
 	Fractal Dev Studios
-	Copyright (c) 2025–2026.
+	Copyright (c) 2025ï¿½2026.
 
 	SUBSYSTEM:    StarshatterShipDesignSubsystem (Unreal Engine)
 	FILE:         StarshatterShipDesignSubsystem.h / .cpp
@@ -55,6 +55,7 @@
 
 #include "StarshatterShipDesignSubsystem.h"
 #include "FreightManifest.h"
+#include "ShipVisualCatalog.h"
 #include "Farcaster.h"
 #include "FlightDeck.h"
 #include "LandingGear.h"
@@ -225,7 +226,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
 	{
 		const FName RowName = Pair.Key;
 
-		const FShipDesign* Row =
+		FShipDesign* Row =
 			ShipDesignDataTable->FindRow<FShipDesign>(
 				RowName,
 				TEXT("LoadFromExistingTable"),
@@ -245,6 +246,14 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
 			*Row->ShipName,
 			Row->Hardpoint.Num(),
 			Row->Loadout.Num());
+
+		if (Row->BaseCost <= 0)
+		{
+			const FString Definition = ShipVisualCatalog::DefinitionName(Row->ShipName, Row->Model);
+			Row->BaseCost = SSWFreightManifest::LoadProfile(Definition).BaseCost;
+			if (Row->BaseCost <= 0 && Definition != RowName.ToString())
+				Row->BaseCost = SSWFreightManifest::LoadProfile(RowName.ToString()).BaseCost;
+		}
 
 		DesignsByName.Add(RowName, *Row);
 		ShipDesignRegistry::RegisterDesign(RowName, *Row);
@@ -508,6 +517,10 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 			Text Recipe;
 			GetDefText(Recipe, Def, fn);
 			NewShipDesign.ProductionRecipe = FName(UTF8_TO_TCHAR(Recipe.data()));
+		}
+		else if (Key == "base_cost")
+		{
+			NewShipDesign.BaseCost = SSWFreightManifest::ReadBaseCost(*Def, fn);
 		}
 		else if (Key == "cargo_capacity")
 		{
@@ -4199,7 +4212,7 @@ void UStarshatterShipDesignSubsystem::ParseSquadron(TermStruct* Val, const char*
 		}
 	}
 
-	// Optional safety (legacy doesn’t clamp, but this prevents garbage):
+	// Optional safety (legacy doesnï¿½t clamp, but this prevents garbage):
 	if (NewSq.Count < 0) NewSq.Count = 0;
 	if (NewSq.Avail < 0) NewSq.Avail = 0;
 	if (NewSq.Avail > NewSq.Count) NewSq.Avail = NewSq.Count;
@@ -4747,7 +4760,7 @@ FDebris UStarshatterShipDesignSubsystem::ParseDebris(TermStruct* Val, const char
 		}
 	}
 
-	// Optional safety (legacy doesn’t clamp, but prevents nonsense):
+	// Optional safety (legacy doesnï¿½t clamp, but prevents nonsense):
 	if (NewDeb.Count < 0) NewDeb.Count = 0;
 
 	return NewDeb;

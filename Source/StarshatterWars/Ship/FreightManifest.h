@@ -33,9 +33,11 @@ namespace SSWFreightManifest
     struct FProfile
     {
         FSSWCargoCapacity Capacity;
+        int64 BaseCost = 0;
         TArray<FSSWCargoOption> Options;
     };
 
+    int64 ReadBaseCost(TermDef& Definition, const char* Filename);
     void ReadCapacity(FSSWCargoCapacity& Capacity, TermDef& Definition, const char* Filename);
     void AddOption(TArray<FSSWCargoOption>& Options, TermDef& Definition, const char* Filename);
     FProfile LoadProfile(const FString& DefinitionName);

@@ -2,6 +2,7 @@ SHIP
 
 name:          BioDome
 class:         Building
+base_cost:     659000
 display_name: "BioDome"
 abrv:		   BLDG
 empire:        All

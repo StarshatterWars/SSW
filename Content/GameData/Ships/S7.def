@@ -3,6 +3,7 @@ SHIP
 name:          Station7
 display_name:  "Military Lab"
 class:         STATION
+base_cost:     418818000
 cargo_capacity: { tonnes: 56000, passengers: 0 }
 abrv:          STN
 empire:        Marakan

@@ -41,6 +41,9 @@
 #include "Explosion.h"
 #include "Debris.h"
 #include "Asteroid.h"
+#include "MiningAI.h"
+#include "TransportAI.h"
+#include "ProductionAI.h"
 #include "Drive.h"
 #include "QuantumDrive.h"
 #include "Sensor.h"
@@ -500,6 +503,7 @@ void Sim::UnloadMission()
     JanekMiningRuns.Reset();
     JanekRefinery = {};
     JanekMiningStock.Reset();
+    JanusTransferStock.Reset();
     DeferredLaunchPlayer = nullptr;
     PendingLaunchPlayer = nullptr;
     bPlayerLaunchRequested = false;
@@ -2579,6 +2583,19 @@ void Sim::AssignNetworkObjectId(SimObject& Object)
         Object.SetObjID(NextNetworkObjectId++);
 }
 
+const FSSWProductionStock* Sim::GetProductionStock(const FSSWProductionFacility& Facility)
+{
+    if (!mission || mission->GetIdentity() != 101 || !active_region ||
+        !Facility.System.Equals(UTF8_TO_TCHAR(mission->GetSystem())) ||
+        !Facility.Region.Equals(UTF8_TO_TCHAR(active_region->GetName())) ||
+        Facility.Facility != TEXT("Janek Orbital Materials Works"))
+        return nullptr;
+
+    const FTCHARToUTF8 Name(*Facility.Facility);
+    const Ship* Refinery = active_region->FindShip(Name.Get());
+    return Refinery && !Refinery->IsDead() && !Refinery->IsDying() ? &JanekRefinery : nullptr;
+}
+
 void
 Sim::ExecFrame(double DeltaSeconds)
 {
@@ -2641,26 +2658,43 @@ Sim::ExecFrame(double DeltaSeconds)
 		active_region->ExecFrame(DeltaSeconds);
 
     if (mission && mission->GetIdentity() == 101 && active_region &&
-        FCStringAnsi::Stricmp(active_region->GetName(), "Janek") == 0 &&
         FCStringAnsi::Stricmp(mission->GetSystem(), "Janus") == 0)
     {
-        Ship* Depot = active_region->FindShip("Janek Mining Station");
-        Ship* Refinery = active_region->FindShip("Janek Orbital Materials Works");
+        Ship* Depot = FindShip("Janek Mining Station", "Janek");
+        Ship* Refinery = FindShip("Janek Orbital Materials Works", "Janek");
+        Ship* Transfer = FindShip("Janus Transfer Station");
         const FSSWProductionRecipe* Recipe = nullptr;
+        double RefineryCapacity = 0;
         if (Refinery && Refinery->Design())
         {
+            RefineryCapacity = Refinery->Design()->CargoCapacity.Tonnes;
+            static TWeakObjectPtr<UDataTable> Facilities;
+            if (!Facilities.IsValid())
+                Facilities = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionFacilities.DT_ProductionFacilities"));
+            if (Facilities.IsValid())
+            {
+                const auto* Facility = Facilities->FindRow<FSSWProductionFacility>(
+                    TEXT("Janek_Orbital_Materials_Works"), TEXT("Janus industry"), false);
+                if (Facility && Facility->CapacityTonnes > 0)
+                    RefineryCapacity = Facility->CapacityTonnes;
+            }
             static TWeakObjectPtr<UDataTable> Recipes;
             if (!Recipes.IsValid())
                 Recipes = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionRecipes.DT_ProductionRecipes"));
             if (Recipes.IsValid())
                 Recipe = Recipes->FindRow<FSSWProductionRecipe>(Refinery->Design()->ProductionRecipe, TEXT("Janus industry"), false);
         }
+        if (const auto* ProductRun = JanekMiningRuns.Find(2))
+            RefineryCapacity = FMath::Max(0.0, RefineryCapacity - ProductRun->Contract.GetReservedTonnes());
         const double Seconds = FMath::Max(0.0, static_cast<double>(DeltaSeconds));
-        if (Recipe && !Refinery->IsDead() && !Refinery->IsDying() &&
-            JanekRefinery.Advance(*Recipe, Refinery->Design()->CargoCapacity.Tonnes, Seconds))
+        static const ManufacturingAI::Job RefineryJob{
+            TEXT("Janek Orbital Materials Works"), TEXT("Ore Storage"), TEXT("Finished Goods Storage")
+        };
+        if (Recipe && ProductionAI::AdvanceFacility(!Refinery->IsDead() && !Refinery->IsDying(),
+            RefineryJob, *Recipe, JanekRefinery, RefineryCapacity, Seconds))
         {
             UE_LOG(LogTemp, Display, TEXT("[Production] Janek refinery produced %.1f t; stock %.1f t."),
-                Recipe->OutputTonnes, JanekRefinery.Product);
+                Recipe->OutputTonnes, JanekRefinery.GetInventory(RefineryJob.OutputLocation));
         }
         auto* Laser = WeaponDesignRegistry::FindLegacy("Mining Laser");
         if (Recipe && Laser && Depot && Depot->Design() && !Depot->IsDead() && !Depot->IsDying())
@@ -2668,9 +2702,23 @@ Sim::ExecFrame(double DeltaSeconds)
             const char* Names[] = {"Janek Ore Shuttle", "Janek Mining Freighter 1", "Janek Mining Freighter 2"};
             for (int32 Index = 0; Index < UE_ARRAY_COUNT(Names); ++Index)
             {
-                Ship* ShipOnRoute = active_region->FindShip(Names[Index]);
-                if (!ShipOnRoute || !ShipOnRoute->Design() || ShipOnRoute->IsDead() || ShipOnRoute->IsDying()) continue;
+                Ship* ShipOnRoute = FindShip(Names[Index]);
+                auto& Run = JanekMiningRuns.FindOrAdd(Index);
+                const bool bProductRun = Index == 2;
+                if (!ShipOnRoute || !ShipOnRoute->Design() || ShipOnRoute->IsDead() || ShipOnRoute->IsDying())
+                {
+                    if (Run.Contract.GetReservedTonnes() > 0)
+                    {
+                        double& SourceStock = bProductRun ? JanekRefinery.GetInventory(RefineryJob.OutputLocation)
+                            : JanekMiningStock.FindOrAdd(Run.Contract.GetItem());
+                        Run.Contract.Release(SourceStock);
+                    }
+                    Run = {};
+                    continue;
+                }
                 Ship& Hauler = *ShipOnRoute;
+                SimRegion* HaulerRegion = Hauler.GetRegion();
+                if (!HaulerRegion) continue;
                 Hauler.SetScriptedContactSpeed(0);
                 const bool bShuttle = Index == 0;
                 if (bShuttle && !Hauler.IsAirborne())
@@ -2679,7 +2727,19 @@ Sim::ExecFrame(double DeltaSeconds)
                         Hauler.SetFlightPhase(EOPSMode::ACTIVE);
                     Hauler.RaiseGear();
                 }
-                auto& Run = JanekMiningRuns.FindOrAdd(Index);
+                const auto FaceHeading = [&Hauler, Seconds](const FVector& Heading)
+                {
+                    if (Heading.IsNearlyZero() || Seconds <= 0) return;
+                    Camera Frame = Hauler.GetCam();
+                    const FQuat Turn = FQuat::FindBetweenNormals(Frame.vpn().GetSafeNormal(), Heading);
+                    const double Angle = Turn.GetAngle();
+                    if (Angle < UE_KINDA_SMALL_NUMBER) return;
+                    const double Fraction = FMath::Min(1.0, FMath::DegreesToRadians(35.0) * Seconds / Angle);
+                    const FQuat StepTurn = FQuat::Slerp(FQuat::Identity, Turn, Fraction);
+                    const FVector Position = Hauler.GetLocation();
+                    Frame.LookAt(Position + StepTurn.RotateVector(Frame.vpn()), Position, StepTurn.RotateVector(Frame.vup()));
+                    Hauler.CloneCam(Frame);
+                };
                 Run.Time += Seconds;
                 const double CargoTonnes = Hauler.GetMinedOreTonnes();
                 const auto* Cargo = Hauler.GetCargoManifest().GetPtrOrNull();
@@ -2689,17 +2749,22 @@ Sim::ExecFrame(double DeltaSeconds)
                     const bool bFull = CargoTonnes >= Hauler.Design()->CargoCapacity.Tonnes - UE_SMALL_NUMBER;
                     if (!bFull)
                     {
-                        double Best = TNumericLimits<double>::Max();
-                        for (ListIter<Asteroid> Rocks = active_region->GetRoids(); ++Rocks;)
+                        constexpr double MiningScanRange = 25000.0;
+                        if (Run.AsteroidScan.Region != HaulerRegion || Run.Time >= Run.NextScan)
                         {
-                            Asteroid* Rock = Rocks.value();
-                            if (!Rock || Rock->GetResource().AmountTonnes <= UE_SMALL_NUMBER ||
-                                !Recipe->Minerals.Contains(Rock->GetResource().Mineral) ||
-                                (CargoTonnes > UE_SMALL_NUMBER && Cargo->Item != Rock->GetResource().GetMineralName().ToString()))
-                                continue;
-                            const double RangeSquared = FVector::DistSquared(Hauler.GetLocation(), Rock->GetLocation());
-                            if (RangeSquared < Best) { Best = RangeSquared; Deposit = Rock; }
+                            Run.AsteroidScan = MiningAI::ScanAsteroids(*HaulerRegion, Hauler.GetLocation(),
+                                MiningScanRange, MiningAI::ScanTier::Assay);
+                            Run.NextScan = Run.Time + 1.0;
                         }
+                        Deposit = MiningAI::SelectDeposit(*HaulerRegion, Hauler.GetLocation(), Run.AsteroidScan, Recipe->Minerals,
+                            CargoTonnes > UE_SMALL_NUMBER && Cargo ? Cargo->Item : FString(), Run.DepositId);
+                    }
+                    if (!Deposit || !Run.DepositId || *Run.DepositId != Deposit->GetContactId())
+                    {
+                        Run.AsteroidDetour.Reset();
+                        Run.MiningOffset.Reset();
+                        Run.DepositId.Reset();
+                        if (Deposit) Run.DepositId = Deposit->GetContactId();
                     }
                     if (CargoTonnes > UE_SMALL_NUMBER && (bFull || !Deposit))
                     {
@@ -2707,24 +2772,40 @@ Sim::ExecFrame(double DeltaSeconds)
                         Run.LoadedTonnes = CargoTonnes;
                         UE_LOG(LogTemp, Display, TEXT("[Production] %hs mined %.2f t of %s with its mining laser; heading to %hs (%s)."),
                             Hauler.GetName(), CargoTonnes, *Cargo->Item, Depot->GetName(),
-                            bFull ? TEXT("hold full") : TEXT("matching deposits depleted"));
+                            bFull ? TEXT("hold full") : TEXT("no matching deposits in scanner range"));
                     }
                 }
 
-                Ship* Station = bShuttle ? (Run.bDelivering ? Depot : nullptr) : (Run.bDelivering ? Refinery : Depot);
+                Ship* Pickup = bProductRun ? Refinery : Depot;
+                Ship* Delivery = bProductRun ? Transfer : Refinery;
+                if (!bShuttle && (!Delivery || !Delivery->Design() || Delivery->IsDead() || Delivery->IsDying()))
+                {
+                    if (Run.Contract.GetReservedTonnes() > 0)
+                    {
+                        double& SourceStock = bProductRun ? JanekRefinery.GetInventory(RefineryJob.OutputLocation)
+                            : JanekMiningStock.FindOrAdd(Run.Contract.GetItem());
+                        Run.Contract.Release(SourceStock);
+                    }
+                    continue;
+                }
+                Ship* Station = bShuttle ? (Run.bDelivering ? Depot : nullptr)
+                    : (Run.bDelivering ? Delivery : Pickup);
                 FVector Destination;
                 double StopDistance = 0;
                 if (Station)
                 {
+                    if (!Station->GetRegion() || !TransportAI::FlyToRegion(Hauler, *Station->GetRegion(), Seconds)) continue;
                     if (!Station->GetTransferBerth(Index == 1 ? 1 : 0, Hauler.GetNavigationHullRadius(), Destination))
                         continue;
-                    if (Index == 2) Destination += Station->GetCam().vrt() * 3000;
                 }
                 else
                 {
                     if (!Deposit) continue;
                     Destination = Deposit->GetLocation();
-                    StopDistance = Deposit->GetRadius() + Hauler.GetNavigationHullRadius() + 600;
+                    if (Run.MiningOffset)
+                        Destination += *Run.MiningOffset;
+                    else
+                        StopDistance = Deposit->GetRadius() + Hauler.GetNavigationHullRadius() + 600;
                 }
                 const FVector Position = Hauler.GetLocation();
                 const FVector Offset = Destination - Position;
@@ -2739,7 +2820,7 @@ Sim::ExecFrame(double DeltaSeconds)
                     if (!Run.AsteroidDetour)
                     {
                         double Nearest = TNumericLimits<double>::Max();
-                        for (ListIter<Asteroid> Rocks = active_region->GetRoids(); ++Rocks;)
+                        for (ListIter<Asteroid> Rocks = HaulerRegion->GetRoids(); ++Rocks;)
                         {
                             const Asteroid* Rock = Rocks.value();
                             if (!Rock || Rock == Deposit) continue;
@@ -2765,7 +2846,7 @@ Sim::ExecFrame(double DeltaSeconds)
                     const double Step = FMath::Min(Seconds * FMath::Clamp(TravelDistance, 50.0, 750.0), TravelDistance);
                     const FVector Next = Position + Heading * Step;
                     bool bClear = true;
-                    for (ListIter<Asteroid> Rocks = active_region->GetRoids(); ++Rocks;)
+                    for (ListIter<Asteroid> Rocks = HaulerRegion->GetRoids(); ++Rocks;)
                     {
                         const Asteroid* Rock = Rocks.value();
                         if (!Rock) continue;
@@ -2783,7 +2864,8 @@ Sim::ExecFrame(double DeltaSeconds)
                     {
                         Hauler.MoveTo(Next);
                         Hauler.SetScriptedContactSpeed(Step / Seconds);
-                        Hauler.LookAt(Next + Heading * 1000);
+                        FaceHeading(Run.MiningOffset && !Station
+                            ? (Deposit->GetLocation() - Next).GetSafeNormal() : Heading);
                     }
                     if (!bClear) Run.AsteroidDetour.Reset();
                     Hauler.SetVelocity(FVector::ZeroVector);
@@ -2793,10 +2875,19 @@ Sim::ExecFrame(double DeltaSeconds)
 
                 if (!Station)
                 {
+                    if (!Run.MiningOffset)
+                    {
+                        Run.MiningOffset = Position - Deposit->GetLocation();
+                        Run.AsteroidDetour.Reset();
+                    }
+                    const FVector MiningHeading = (Deposit->GetLocation() - Position).GetSafeNormal();
+                    FaceHeading(MiningHeading);
+                    // Keep the laser idle until the shuttle is back on station and facing the rock.
+                    if (FVector::DotProduct(Hauler.GetCam().vpn(), MiningHeading) < 0.999)
+                        continue;
                     if (Run.Time < Run.NextPulse) continue;
                     Run.NextPulse = Run.Time + 1.5;
-                    Hauler.LookAt(Destination);
-                    if (auto* Shot = CreateShot(Destination, Hauler.GetCam(), Laser, &Hauler, active_region))
+                    if (auto* Shot = CreateShot(Destination, Hauler.GetCam(), Laser, &Hauler, HaulerRegion))
                         Shot->SetBeamPoints(Position, Destination);
                     continue;
                 }
@@ -2805,6 +2896,8 @@ Sim::ExecFrame(double DeltaSeconds)
                 {
                     double Total = 0;
                     for (const auto& Stock : JanekMiningStock) Total += Stock.Value;
+                    if (const auto* OreRun = JanekMiningRuns.Find(1))
+                        Total += OreRun->Contract.GetReservedTonnes();
                     const double Rate = FMath::Min(Hauler.Design()->CargoCapacity.UnloadTonnesPerSecond,
                         Depot->Design()->CargoCapacity.LoadTonnesPerSecond);
                     if (CargoTonnes > 0)
@@ -2817,39 +2910,59 @@ Sim::ExecFrame(double DeltaSeconds)
                 }
                 else if (!Run.bDelivering)
                 {
-                    FString Mineral;
-                    for (const auto& Stock : JanekMiningStock)
+                    if (Run.Contract.GetItem().IsEmpty())
                     {
-                        if (Stock.Value > UE_SMALL_NUMBER &&
-                            (CargoTonnes <= UE_SMALL_NUMBER || Stock.Key == Cargo->Item))
+                        if (!Pickup->GetRegion() || !Delivery->GetRegion()) continue;
+                        const auto* Environment = UStarshatterEnvironmentSubsystem::Get();
+                        const auto Route = TransportAI::FindJumpRoute(Pickup->GetRegion()->GetSystem(),
+                            Delivery->GetRegion()->GetSystem(),
+                            Environment ? Environment->GetRuntimeStarSystems() : TArray<StarSystem*>{});
+                        if (Route.IsEmpty()) continue;
+
+                        const double Capacity = Hauler.Design()->CargoCapacity.Tonnes;
+                        if (bProductRun)
                         {
-                            Mineral = Stock.Key;
-                            break;
+                            const FString Item = Recipe->CargoItem.IsEmpty() ? Recipe->OutputDisplayName : Recipe->CargoItem;
+                            Run.Contract.Reserve(Item, JanekRefinery.GetInventory(RefineryJob.OutputLocation), Capacity);
                         }
+                        else
+                        {
+                            for (auto& Stock : JanekMiningStock)
+                                if (Run.Contract.Reserve(Stock.Key, Stock.Value, FMath::Min(2.0, Capacity)))
+                                    break;
+                        }
+                        if (Run.Contract.GetItem().IsEmpty()) continue;
                     }
-                    if (!Mineral.IsEmpty())
-                    {
-                        double& Stock = JanekMiningStock.FindChecked(Mineral);
-                        const double Rate = FMath::Min(Hauler.Design()->CargoCapacity.LoadTonnesPerSecond,
-                            Depot->Design()->CargoCapacity.UnloadTonnesPerSecond);
-                        Stock -= Hauler.LoadMinedOre(Mineral, FMath::Min(Stock, Rate * Seconds));
-                    }
-                    const double Loaded = Hauler.GetMinedOreTonnes();
-                    if (Loaded < 2 && (Loaded <= UE_SMALL_NUMBER || !Mineral.IsEmpty())) continue;
+                    const double Rate = FMath::Min(Hauler.Design()->CargoCapacity.LoadTonnesPerSecond,
+                        Pickup->Design()->CargoCapacity.UnloadTonnesPerSecond);
+                    TransportAI::Load(Hauler, Run.Contract, Rate * Seconds);
+                    if (Run.Contract.GetReservedTonnes() > UE_SMALL_NUMBER) continue;
+
+                    Run.LoadedTonnes = Hauler.GetMinedOreTonnes();
+                    if (Run.LoadedTonnes <= UE_SMALL_NUMBER) { Run = {}; continue; }
                     Run.bDelivering = true;
-                    Run.LoadedTonnes = Loaded;
-                    UE_LOG(LogTemp, Display, TEXT("[Production] %hs picked up %.2f t at %hs for %hs."),
-                        Hauler.GetName(), Loaded, Depot->GetName(), Refinery->GetName());
+                    UE_LOG(LogTemp, Display, TEXT("[Production] %hs picked up %.2f t of %s at %hs for %hs."),
+                        Hauler.GetName(), Run.LoadedTonnes, *Run.Contract.GetItem(), Pickup->GetName(), Delivery->GetName());
                 }
                 else
                 {
                     const double Rate = FMath::Min(Hauler.Design()->CargoCapacity.UnloadTonnesPerSecond,
-                        Refinery->Design()->CargoCapacity.LoadTonnesPerSecond);
-                    JanekRefinery.Ore += Hauler.UnloadMinedOre(FMath::Min(Rate * Seconds,
-                        JanekRefinery.FreeInput(*Recipe, Refinery->Design()->CargoCapacity.Tonnes)));
+                        Delivery->Design()->CargoCapacity.LoadTonnesPerSecond);
+                    if (bProductRun)
+                    {
+                        double Total = 0;
+                        for (const auto& Stock : JanusTransferStock) Total += Stock.Value;
+                        TransportAI::Unload(Hauler, JanusTransferStock.FindOrAdd(Run.Contract.GetItem()),
+                            Delivery->Design()->CargoCapacity.Tonnes - Total, Rate * Seconds);
+                    }
+                    else
+                    {
+                        TransportAI::Unload(Hauler, JanekRefinery.GetInventory(RefineryJob.InputLocation),
+                            JanekRefinery.FreeSpace(RefineryCapacity), Rate * Seconds);
+                    }
                     if (Hauler.GetMinedOreTonnes() > UE_SMALL_NUMBER) continue;
-                    UE_LOG(LogTemp, Display, TEXT("[Production] %hs delivered %.2f t to %hs."),
-                        Hauler.GetName(), Run.LoadedTonnes, Refinery->GetName());
+                    UE_LOG(LogTemp, Display, TEXT("[Production] %hs delivered %.2f t of %s to %hs."),
+                        Hauler.GetName(), Run.LoadedTonnes, *Run.Contract.GetItem(), Delivery->GetName());
                     Run = {};
                 }
             }

@@ -2,6 +2,7 @@ SHIP
 
 name:         Barracks
 class:        Building
+base_cost:     556000
 display_name: Barracks
 abrv:		  BLDG
 empire:        All

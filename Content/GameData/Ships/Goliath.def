@@ -3,6 +3,7 @@ SHIP
 name:          Goliath
 display_name:  Goliath
 class:         Carrier
+base_cost:     353805000
 cargo_capacity: { tonnes: 31280, passengers: 0 }
 abrv:          CV
 empire:        Dantari 

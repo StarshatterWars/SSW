@@ -2,6 +2,7 @@ SHIP
 
 name:         Bldg05
 class:        Building
+base_cost:     556000
 display_name: Building
 abrv:		  BLDG
 description:  "The Bldg05 Facility is a multipurpose colonial structure supporting logistics, storage, and essential services within developing settlements. Though architecturally modest, it plays a quiet but critical role in sustaining long-term planetary operations."

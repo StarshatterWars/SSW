@@ -7,6 +7,29 @@
 #include "GameStructs_products.generated.h"
 
 USTRUCT(BlueprintType)
+struct FSSWProductionFacility : public FTableRowBase
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FString Facility;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FString System;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FString Planet;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FString Region;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FString Empire;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    bool bSurface = false;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FName Recipe;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin="0"))
+    double CapacityTonnes = 0;
+};
+
+USTRUCT(BlueprintType)
 struct FSSWProductionRecipe : public FTableRowBase
 {
     GENERATED_BODY()
@@ -16,6 +39,18 @@ struct FSSWProductionRecipe : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     ESSWFinishedItem Product = ESSWFinishedItem::None;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FString CargoItem;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    double OutputQuantity = 0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FString OutputUnit;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly)
+    FString OutputDisplayName;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     double InputTonnes = 0;
@@ -28,7 +63,7 @@ struct FSSWProductionRecipe : public FTableRowBase
 
     bool CanStart(double Available, double FreeSpace) const
     {
-        return Product != ESSWFinishedItem::None && InputTonnes > 0 &&
+        return (Product != ESSWFinishedItem::None || !CargoItem.IsEmpty()) && InputTonnes > 0 &&
             OutputTonnes > 0 && SecondsPerBatch > 0 &&
             Available >= InputTonnes && FreeSpace >= OutputTonnes;
     }
@@ -36,28 +71,20 @@ struct FSSWProductionRecipe : public FTableRowBase
 
 struct FSSWProductionStock
 {
-    double Ore = 0;
-    double Product = 0;
+    TMap<FName, double> Inventories;
     double RemainingSeconds = 0;
+    double ReservedOutput = 0;
+    FName PendingOutput;
 
-    double FreeInput(const FSSWProductionRecipe& Recipe, double Capacity) const
+    double GetTonnes(FName Location) const { return Inventories.FindRef(Location); }
+    double& GetInventory(FName Location) { return Inventories.FindOrAdd(Location); }
+
+    double UsedSpace() const
     {
-        const double ReservedOutput = RemainingSeconds > 0 ? Recipe.OutputTonnes : 0;
-        return FMath::Max(0.0, Capacity - Ore - Product - ReservedOutput);
+        double Used = ReservedOutput;
+        for (const auto& Inventory : Inventories) Used += Inventory.Value;
+        return Used;
     }
 
-    bool Advance(const FSSWProductionRecipe& Recipe, double Capacity, double Seconds)
-    {
-        if (RemainingSeconds <= 0 && Recipe.CanStart(Ore, Capacity - Product - Ore + Recipe.InputTonnes))
-        {
-            Ore -= Recipe.InputTonnes;
-            RemainingSeconds = Recipe.SecondsPerBatch;
-        }
-        if (RemainingSeconds <= 0) return false;
-
-        RemainingSeconds = FMath::Max(0.0, RemainingSeconds - Seconds);
-        if (RemainingSeconds > 0) return false;
-        Product += Recipe.OutputTonnes;
-        return true;
-    }
+    double FreeSpace(double Capacity) const { return FMath::Max(0.0, Capacity - UsedSpace()); }
 };

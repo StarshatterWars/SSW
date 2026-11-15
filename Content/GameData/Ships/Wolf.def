@@ -3,6 +3,7 @@ SHIP
 name:          Wolf
 display_name:  Wolf
 class:         Destroyer
+base_cost:     43999000
 cargo_capacity: { tonnes: 400, passengers: 0 }
 abrv:          DD
 empire:        Marakan

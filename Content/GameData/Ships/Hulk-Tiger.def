@@ -3,6 +3,7 @@ SHIP
 name:          "Hulk-Tiger"
 display_name:  Tiger
 class:         Hulk
+base_cost:     55000
 abrv:          FF
 
 hud_icon:   "TigerHud"

@@ -2,6 +2,7 @@ SHIP
 
 name:       City03
 class:      Building
+base_cost:     659000
 abrv:		BLDG
 display_name: "City Block"
 hud_icon:     "hud_bldg01"

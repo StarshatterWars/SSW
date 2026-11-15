@@ -3,6 +3,7 @@ SHIP
 name:          ZZDD
 display_name:  Zolon
 class:         Destroyer
+base_cost:     45933000
 cargo_capacity: { tonnes: 1450, passengers: 0 }
 abrv:          ZDA
 hud_icon:      "zmap"

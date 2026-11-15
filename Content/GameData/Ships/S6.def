@@ -3,6 +3,7 @@ SHIP
 name:          Station6
 display_name:  "Freight Xfer"
 class:         STATION
+base_cost:     414872000
 cargo_capacity: { tonnes: 90000, passengers: 0 }
 abrv:          STN
 empire:        Marakan

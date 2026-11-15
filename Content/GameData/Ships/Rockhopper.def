@@ -3,6 +3,7 @@ SHIP
 name:       Rockhopper
 display_name: "IM3500 Rockhopper"
 class:      Freighter
+base_cost:     12797000
 cargo_capacity: { tonnes: 12000, passengers: 0, load_tonnes_per_second: 0.75, unload_tonnes_per_second: 3 }
 abrv:		FREIGHT
 hud_icon:   "CAHud"

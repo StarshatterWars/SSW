@@ -4,6 +4,7 @@ name:          "Asteroid Base"
 display_name:  "Asteroid Base"
 abrv:          AB
 class:         STATION
+base_cost:     414872000
 cargo_capacity: { tonnes: 90000, passengers: 0, load_tonnes_per_second: 3, unload_tonnes_per_second: 3 }
 hud_icon:      "/Game/UI/Ships/AsteroidBase/AsteroidBaseHud.AsteroidBaseHud"
 description:   "Built into a rock at the edge of Janek's asteroid field, the Asteroid Base buffers ore shipments from the mining station. It has storage for 90,000 tonnes, two external freight berths, and one enclosed bay for launch and recovery. Ore shuttles load here for delivery to Janus Transfer Station."

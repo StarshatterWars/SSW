@@ -3,6 +3,7 @@ SHIP
 name:          Imperial
 display_name:  Imperial
 class:         Cruiser
+base_cost:     108694000
 cargo_capacity: { tonnes: 10440, passengers: 0 }
 abrv:          CA
 empire:        Marakan

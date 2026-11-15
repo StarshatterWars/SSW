@@ -2,6 +2,7 @@ SHIP
 
 name:       Farcaster
 class:      Farcaster
+base_cost:     262752000
 display_name:  Farcaster
 abrv:       GATE
 empire:     Terellian

@@ -2,6 +2,7 @@ SHIP
 
 name:       BioTrail
 class:      Building
+base_cost:     570000
 abrv:		  BLDG
 display_name: "Elevated Bridge"
 description:  "The Elevated Bridge is a reinforced transit structure spanning hazardous terrain to link critical installations across a colony zone. Built for durability rather than elegance, it enables secure troop movement, cargo transfer, and rapid response between strategic ground assets."

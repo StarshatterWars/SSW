@@ -4,6 +4,7 @@ name:          "Processing Facility"
 display_name:  "Processing Facility"
 abrv:          PRF
 class:         STATION
+base_cost:     414872000
 cargo_capacity: { tonnes: 90000, passengers: 0, load_tonnes_per_second: 6, unload_tonnes_per_second: 6 }
 production:    JanusConcentrate
 hud_icon:      "s1hud"

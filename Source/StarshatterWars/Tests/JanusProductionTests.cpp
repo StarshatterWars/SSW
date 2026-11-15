@@ -4,6 +4,14 @@
 #include "GameStructs.h"
 #include "GameStructs_System.h"
 #include "ProductionActor.h"
+#include "ProductionAI.h"
+#include "ContractAI.h"
+#include "Asteroid.h"
+#include "MiningAI.h"
+#include "Ship.h"
+#include "ShipDesign.h"
+#include "SimRegion.h"
+#include "TransportAI.h"
 #include "ShipVisualCatalog.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJanusProductionTest, "Starshatter.Industry.JanusProduction",
@@ -25,15 +33,94 @@ bool FJanusProductionTest::RunTest(const FString&)
     const auto* Janus = Galaxy->FindRow<FS_Galaxy>(TEXT("Janus"), TEXT("Test"));
     if (TestNotNull(TEXT("Janus"), Janus))
         TestTrue(TEXT("Janus has both production sites"), Janus->ProductionSites.Contains(TEXT("Janek Orbital Materials Works")) && Janus->ProductionSites.Contains(TEXT("Dante Orbital Concentrator")));
+    const ManufacturingAI::Job Job{FName(TEXT("Refinery")), FName(TEXT("Ore")), FName(TEXT("Product"))};
     FSSWProductionStock Stock;
-    TestFalse(TEXT("Waits for ore"), Stock.Advance(*Recipe, Facility->CargoCapacity.Tonnes, 20));
-    Stock.Ore = Recipe->InputTonnes;
-    TestFalse(TEXT("Waits for storage"), Stock.Advance(*Recipe, 0, 20));
-    TestFalse(TEXT("Waits for batch timer"), Stock.Advance(*Recipe, Facility->CargoCapacity.Tonnes, 1));
-    TestEqual(TEXT("Inputs reserved once"), Stock.Ore, 0.0);
-    TestTrue(TEXT("Batch completes"), Stock.Advance(*Recipe, Facility->CargoCapacity.Tonnes, Recipe->SecondsPerBatch));
-    TestEqual(TEXT("Product credited"), Stock.Product, Recipe->OutputTonnes);
-    TestFalse(TEXT("Completion is not repeated"), Stock.Advance(*Recipe, Facility->CargoCapacity.Tonnes, 20));
+    TestFalse(TEXT("Waits for ore"), ManufacturingAI::Advance(Job, *Recipe, Stock, Facility->CargoCapacity.Tonnes, 20));
+    Stock.GetInventory(Job.InputLocation) = Recipe->InputTonnes;
+    TestFalse(TEXT("Waits for storage"), ManufacturingAI::Advance(Job, *Recipe, Stock, 0, 20));
+    TestFalse(TEXT("Waits for batch timer"), ManufacturingAI::Advance(Job, *Recipe, Stock, Facility->CargoCapacity.Tonnes, 1));
+    TestEqual(TEXT("Inputs reserved once"), Stock.GetTonnes(Job.InputLocation), 0.0);
+    TestEqual(TEXT("Output is unavailable during production"), Stock.GetTonnes(Job.OutputLocation), 0.0);
+    TestEqual(TEXT("Batch reserves output space"), Stock.ReservedOutput, Recipe->OutputTonnes);
+    auto ChangedJob = Job;
+    ChangedJob.OutputLocation = FName(TEXT("Other Storage"));
+    TestTrue(TEXT("Batch completes"), ManufacturingAI::Advance(ChangedJob, *Recipe, Stock,
+        Facility->CargoCapacity.Tonnes, Recipe->SecondsPerBatch));
+    TestEqual(TEXT("Running batch keeps its original output inventory"), Stock.GetTonnes(ChangedJob.OutputLocation), 0.0);
+    TestEqual(TEXT("Product credited"), Stock.GetTonnes(Job.OutputLocation), Recipe->OutputTonnes);
+    TestFalse(TEXT("Completion is not repeated"), ManufacturingAI::Advance(Job, *Recipe, Stock, Facility->CargoCapacity.Tonnes, 20));
+    ManufacturingAI::Job EfficientJob = Job;
+    EfficientJob.MaterialMultiplier = 0.8;
+    FSSWProductionStock EfficientStock;
+    EfficientStock.GetInventory(Job.InputLocation) = Recipe->InputTonnes * 0.8;
+    TestFalse(TEXT("Offline facility leaves inputs available"),
+        ProductionAI::AdvanceFacility(false, EfficientJob, *Recipe, EfficientStock, Facility->CargoCapacity.Tonnes, Recipe->SecondsPerBatch));
+    TestEqual(TEXT("Offline facility preserves ore"), EfficientStock.GetTonnes(Job.InputLocation), Recipe->InputTonnes * 0.8);
+    TestTrue(TEXT("Material efficiency allows batch with fewer inputs"),
+        ProductionAI::AdvanceFacility(true, EfficientJob, *Recipe, EfficientStock, Facility->CargoCapacity.Tonnes, Recipe->SecondsPerBatch));
+    TestEqual(TEXT("Material efficiency preserves output"), EfficientStock.GetTonnes(Job.OutputLocation), Recipe->OutputTonnes);
+
+    ContractAI First;
+    ContractAI Second;
+    double Available = 4.0;
+    TestTrue(TEXT("First contract reserves available stock"), First.Reserve(TEXT("ore"), Available, 4.0));
+    TestFalse(TEXT("Second contract cannot book reserved stock"), Second.Reserve(TEXT("ore"), Available, 1.0));
+    First.CommitPickup(1.0);
+    First.Release(Available);
+    TestEqual(TEXT("Cancellation restores only the portion still at pickup"), Available, 3.0);
+    // Run real inventory transfers through the same handlers as T1.
+    SimRegion Sector(nullptr, "Janek", 0);
+    auto* Rock = new Asteroid(1, FVector(0, 0, 3000), 10000000);
+    auto* DistantRock = new Asteroid(2, FVector(0, 0, 26000), 10000000);
+    Sector.InsertObject(Rock);
+    Sector.InsertObject(DistantRock);
+    const TArray<ESSWMineral> Minerals{Rock->GetResource().Mineral};
+    const auto Survey = MiningAI::ScanAsteroids(Sector, FVector::ZeroVector, 25000, MiningAI::ScanTier::Survey);
+    TestEqual(TEXT("Survey omits the distant contact"), Survey.Readings.Num(), 1);
+    if (Survey.Readings.Num() != 1) return false;
+    TestEqual(TEXT("Survey gives contact distance"), Survey.Readings[0].Distance, 3000.0);
+    TestFalse(TEXT("Survey leaves tonnes unknown"), Survey.Readings[0].RemainingTonnes.IsSet());
+    TestNull(TEXT("A survey alone cannot assign a deposit"),
+        MiningAI::SelectDeposit(Sector, FVector::ZeroVector, Survey, Minerals, FString(), {}));
+    const auto Assay = MiningAI::ScanAsteroids(Sector, FVector::ZeroVector, 25000, MiningAI::ScanTier::Assay);
+    if (!TestTrue(TEXT("Assay selects the in-range rock"),
+        MiningAI::SelectDeposit(Sector, FVector::ZeroVector, Assay, Minerals, FString(), {}) == Rock))
+        return false;
+
+    ShipDesign HaulerDesign;
+    HaulerDesign.CargoCapacity.Tonnes = FMath::Max(Recipe->InputTonnes, Recipe->OutputTonnes) + 1.0;
+    Ship OreHauler("Ore hauler test", "", &HaulerDesign, 0, 0, nullptr, false);
+    Ship GoodsHauler("Goods hauler test", "", &HaulerDesign, 0, 0, nullptr, false);
+    double Depot = Rock->ExtractOre(Recipe->InputTonnes);
+    if (!TestEqual(TEXT("Mining puts enough ore in the depot"), Depot, Recipe->InputTonnes)) return false;
+    ContractAI OreContract;
+    TestTrue(TEXT("Freighter reserves depot ore"), OreContract.Reserve(TEXT("ore"), Depot, Recipe->InputTonnes));
+    TestEqual(TEXT("Reservation removes depot stock from availability"), Depot, 0.0);
+    TransportAI::Load(OreHauler, OreContract, Recipe->InputTonnes);
+    FSSWProductionStock DeliveredStock;
+    TestEqual(TEXT("Refinery receives nothing before unloading"), DeliveredStock.GetTonnes(Job.InputLocation), 0.0);
+    TransportAI::Unload(OreHauler, DeliveredStock.GetInventory(Job.InputLocation),
+        HaulerDesign.CargoCapacity.Tonnes, Recipe->InputTonnes);
+    TestTrue(TEXT("Delivered ore produces finished goods"),
+        ProductionAI::AdvanceFacility(true, Job, *Recipe, DeliveredStock, Facility->CargoCapacity.Tonnes, Recipe->SecondsPerBatch));
+    ContractAI GoodsContract;
+    TestTrue(TEXT("Second freighter reserves the finished goods"),
+        GoodsContract.Reserve(TEXT("finished goods"), DeliveredStock.GetInventory(Job.OutputLocation), Recipe->OutputTonnes));
+    TransportAI::Load(GoodsHauler, GoodsContract, Recipe->OutputTonnes);
+    double TransferStock = 0.0;
+    TestEqual(TEXT("Loading goods does not credit transfer stock"), TransferStock, 0.0);
+    TransportAI::Unload(GoodsHauler, TransferStock, HaulerDesign.CargoCapacity.Tonnes, Recipe->OutputTonnes);
+    TestEqual(TEXT("Transfer receives manufactured output after unloading"), TransferStock, Recipe->OutputTonnes);
+    TestEqual(TEXT("Unload retries cannot duplicate output"),
+        TransportAI::Unload(GoodsHauler, TransferStock, HaulerDesign.CargoCapacity.Tonnes, Recipe->OutputTonnes), 0.0);
+    Rock->ExtractOre(Rock->GetResource().AmountTonnes);
+    const auto Partial = MiningAI::ScanAsteroids(Sector, FVector::ZeroVector, 25000, MiningAI::ScanTier::Assay);
+    TestTrue(TEXT("Unscanned rocks keep belt status unknown"), Partial.Status == MiningAI::BeltStatus::Unknown);
+    DistantRock->ExtractOre(DistantRock->GetResource().AmountTonnes);
+    const auto Depleted = MiningAI::ScanAsteroids(Sector, FVector::ZeroVector, 30000, MiningAI::ScanTier::Assay);
+    TestTrue(TEXT("Complete assay confirms depletion"), Depleted.Status == MiningAI::BeltStatus::Depleted);
     return true;
 }
 #endif
+
+

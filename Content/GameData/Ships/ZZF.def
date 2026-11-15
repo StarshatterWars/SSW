@@ -3,6 +3,7 @@ SHIP
 name:          ZZF
 display_name:  Zolon
 class:         Fighter
+base_cost:     580000
 cargo_capacity: { tonnes: 0.36, passengers: 0 }
 abrv:          ZF
 hud_icon:      "zmap"

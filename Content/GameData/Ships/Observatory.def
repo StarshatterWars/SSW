@@ -3,6 +3,7 @@ SHIP
 name:          Observatory
 display_name:  "Tal Vesta Stellar Observatory"
 class:         STATION
+base_cost:     414872000
 cargo_capacity: { tonnes: 5000, passengers: 0 }
 abrv:          STN
 empire:        Terellian

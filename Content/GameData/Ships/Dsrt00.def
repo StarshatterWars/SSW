@@ -2,6 +2,7 @@ SHIP
 
 name:         Dsrt00
 class:        Building
+base_cost:     556000
 display_name: Deserted Building
 abrv:		  BLDG
 description:  "A Deserted Building is an abandoned colonial structure left behind after failed expansion or evacuation. Though officially inactive, such ruins often conceal salvageable technology, hidden supply caches, or unexpected tactical hazards."

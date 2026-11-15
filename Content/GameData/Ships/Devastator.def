@@ -3,6 +3,7 @@ SHIP
 name:          Devastator
 display_name:  Devastator
 class:         Cruiser
+base_cost:     104486000
 cargo_capacity: { tonnes: 2940, passengers: 0 }
 abrv:          CA
 empire:        Terellian

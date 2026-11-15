@@ -800,11 +800,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     FSlateWindowElementList& E, int32 L, const FWidgetStyle& Style, bool Enabled) const
 {
     if (!ShowHUD.Get()) return L;
-    static const FLinearColor Palette[] = {
-        FLinearColor(0.35f, 0.88f, 0.48f), FLinearColor(1.0f, 0.68f, 0.22f),
-        FLinearColor(0.15f, 0.55f, 1.0f), FLinearColor(0.90f, 0.94f, 1.0f)
-    };
-    const FLinearColor InstrumentColor = Palette[FMath::Clamp(HUDView::DefaultColorSet(), 0, 3)];
+    const FLinearColor InstrumentColor = SShipSystemIcon::GetHUDTint();
     const double LowerReadoutBaseline = 30.0;
     const double LowerReadoutRowHeight = 14.0;
     const FVector2D Size = G.GetLocalSize();
@@ -1301,7 +1297,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     }
     if (bHasTarget)
     {
-        const double ExtraRowHeight = !TargetMineral.IsEmpty() ? 40.0 : (TargetCargo.IsEmpty() ? 0.0 : 20.0);
+        const double ExtraRowHeight = !TargetMineral.IsEmpty() || !TargetCargo.IsEmpty() ? 20.0 : 0.0;
         const FVector2D P(Size.X-408*Scale,Size.Y-(192+ExtraRowHeight)*Scale);
         const auto* PanelBrush = FCoreStyle::Get().GetBrush("WhiteBrush");
         auto PanelFill = [&](FVector2D Offset, FVector2D Extent, FLinearColor Color)
@@ -1319,6 +1315,12 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         { ShipText(Position, Label.ToUpper(), Color, 9); };
         const FSlateFontInfo NameFont = FCoreStyle::GetDefaultFontStyle("Bold", FMath::Max(8, int32(9*Scale)));
         const auto NameMeasure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
+        auto RightAlignedTargetText = [&](FVector2D Position, const FString& Label)
+        {
+            const double Width = NameMeasure->Measure(Label.ToUpper(), NameFont).X;
+            TargetText(Position + FVector2D(FMath::Max(0.0, 176 * Scale - Width), 0),
+                Label, TargetDisplayColor);
+        };
         const bool WrapWaypoint = TargetClass.StartsWith(TEXT("Waypoint")) &&
             NameMeasure->Measure(TargetName.ToUpper(),NameFont).X > 176*Scale &&
             TargetName.Split(TEXT(" - "), &WaypointFirst, &WaypointSecond);
@@ -1342,8 +1344,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         {
             TargetText(P+FVector2D(0,132)*Scale, TargetRarity, TargetDisplayColor);
             TargetText(P+FVector2D(0,152)*Scale, TargetMineral, TargetDisplayColor);
-            TargetText(P+FVector2D(0,172)*Scale, TargetDepositAmount, TargetDisplayColor);
-            TargetText(P+FVector2D(0,192)*Scale, TargetDepositValue, TargetDisplayColor);
+            const FVector2D DepositRow = P + FVector2D(0, 172) * Scale;
+            TargetText(DepositRow, TargetDepositAmount, TargetDisplayColor);
+            RightAlignedTargetText(DepositRow, TargetDepositValue);
         }
         if (!TargetCargo.IsEmpty())
             TargetText(P+FVector2D(0,172)*Scale,TargetCargo,TargetDisplayColor);
@@ -1353,9 +1356,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         if (TargetSpeed >= 0)
         {
             const FString Speed = FString::Printf(TEXT("%.0f M/S"), TargetSpeed);
-            const double SpeedWidth = NameMeasure->Measure(Speed, NameFont).X;
-            TargetText(ReadoutPosition + FVector2D(FMath::Max(0.0, 176 * Scale - SpeedWidth), 0),
-                Speed, TargetDisplayColor);
+            RightAlignedTargetText(ReadoutPosition, Speed);
         }
     }
     } // External instruments; radio and information remain available in cockpit.

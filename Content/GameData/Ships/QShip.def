@@ -3,6 +3,7 @@ SHIP
 name:          QShip
 display_name:  Freighter
 class:         Freighter
+base_cost:     12723000
 cargo_capacity: { tonnes: 900, passengers: 0 }
 cargo_manifest: { item: "sealed freight", unit: "containers", min: 24, max: 60 }
 abrv:          FREIGHT

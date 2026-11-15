@@ -1681,6 +1681,9 @@ struct FShipDesign : public FTableRowBase {
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FSSWCargoCapacity CargoCapacity;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Economy")
+	int64 BaseCost = 0;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	FName ProductionRecipe;
 

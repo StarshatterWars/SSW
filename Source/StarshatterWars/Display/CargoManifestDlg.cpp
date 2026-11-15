@@ -10,6 +10,8 @@
 #include "Widgets/Views/SHeaderRow.h"
 #include "Widgets/Views/STableRow.h"
 #include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SCheckBox.h"
+#include "Widgets/Layout/SBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 
@@ -46,6 +48,12 @@ namespace
 
         TSharedRef<SWidget> GenerateWidgetForColumn(const FName& Column) override
         {
+            if (Column == "Illicit")
+                return SNew(SBox).HAlign(HAlign_Center).VAlign(VAlign_Center)
+                    .ToolTipText(Item->bIllicit ? INVTEXT("Illicit cargo") : INVTEXT("Legal cargo"))
+                    [SNew(SCheckBox).IsFocusable(false).Visibility(EVisibility::HitTestInvisible)
+                        .IsChecked(Item->bIllicit ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)];
+
             FText Text;
             if (Column == "Name") Text = FText::FromString(Item->DisplayName);
             else if (Column == "Type") Text = StaticEnum<ECargoType>()->GetDisplayNameTextByValue(int64(Item->Type));
@@ -91,6 +99,7 @@ namespace
             if (SortColumn == "Size") return A.Size < B.Size;
             if (SortColumn == "Quantity") return A.Quantity < B.Quantity;
             if (SortColumn == "Rarity") return A.Rarity < B.Rarity;
+            if (SortColumn == "Illicit") return A.bIllicit < B.bIllicit;
             if (SortColumn == "Unit") return A.Unit.Compare(B.Unit, ESearchCase::IgnoreCase) < 0;
             if (SortColumn == "Value") return A.Value < B.Value;
             if (SortColumn == "TotalValue") return A.TotalValue < B.TotalValue;
@@ -105,7 +114,8 @@ namespace
             const bool SameItem = LastShip == Pilot && bHasCargo && !Rows.IsEmpty() &&
                 Rows[0]->Name == Row.Name && Rows[0]->DisplayName == Row.DisplayName &&
                 Rows[0]->Unit == Row.Unit && Rows[0]->Rarity == Row.Rarity && Rows[0]->Type == Row.Type && Rows[0]->Size == Row.Size;
-            if (SameItem && Rows[0]->Quantity == Row.Quantity && Rows[0]->Value == Row.Value) return;
+            if (SameItem && Rows[0]->Quantity == Row.Quantity && Rows[0]->Value == Row.Value &&
+                Rows[0]->bIllicit == Row.bIllicit) return;
             if (!bHasCargo && Rows.IsEmpty()) return;
 
             LastShip = Pilot;
@@ -147,6 +157,7 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
     AddColumn("Size", INVTEXT("Size"), 1.f);
     AddColumn("Quantity", INVTEXT("Quantity"), 1.f);
     AddColumn("Rarity", INVTEXT("RARITY"), 1.1f);
+    AddColumn("Illicit", INVTEXT("ILLICIT"), 0.8f);
     AddColumn("Unit", INVTEXT("Unit"), 1.f);
     AddColumn("Value", INVTEXT("Unit value"), 1.f);
     AddColumn("TotalValue", INVTEXT("Total value"), 1.f);

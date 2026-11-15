@@ -2,6 +2,7 @@ SHIP
 
 name:         Bldg04
 class:        Building
+base_cost:     556000
 display_name: "Office Tower"
 abrv:		  BLDG
 description: "The Office Tower stands as a prominent administrative and commercial structure within the colony’s urban district. Beyond its civilian façade, its communications relays and data centers make it a strategically valuable objective during regional conflicts."

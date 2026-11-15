@@ -3,6 +3,7 @@ SHIP
 name:          "Hulk-Volnaris"
 display_name:  Volnaris
 class:         Hulk
+base_cost:     58000
 abrv:          DD
 
 hud_icon:   "VolnarisHud"

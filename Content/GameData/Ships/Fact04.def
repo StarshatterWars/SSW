@@ -2,6 +2,7 @@ SHIP
 
 name:         Fact04
 class:        Building
+base_cost:     556000
 abrv:         BLDG
 display_name: "Heavy Manufacturing Plant"
 hud_icon:     "hud_fact04"

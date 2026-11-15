@@ -2,6 +2,7 @@ SHIP
 
 name:       City02
 class:      Building
+base_cost:     601000
 abrv:		BLDG
 display_name: "City Block"
 description:  "The City Block is a compact urban sector integrating housing, utilities, and municipal services within a fortified colony perimeter. Though outwardly civilian, its infrastructure corridors and transit routes can become critical objectives during ground operations."

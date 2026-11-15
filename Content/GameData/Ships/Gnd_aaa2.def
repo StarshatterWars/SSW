@@ -4,6 +4,7 @@ name:         "AAA 2"
 display_name: "Quad AAA Gun"
 abrv:         SAM
 class:        SAM
+base_cost:     156000
 description:  "The Quad AAA Gun is a four-barrel anti-aerospace defense system engineered for high-volume intercept fire against fast-moving targets. Its synchronized tracking array and overlapping firing arcs make it especially effective against fighter swarms and precision strike craft."
 empire:       All
 hud_icon:     "hud_aaa4"

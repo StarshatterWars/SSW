@@ -74,6 +74,17 @@ void SSWFreightManifest::AddOption(TArray<FSSWCargoOption>& Options, TermDef& De
     Options.Add(MoveTemp(Option));
 }
 
+int64 SSWFreightManifest::ReadBaseCost(TermDef& Definition, const char* Filename)
+{
+    double Credits = 0.0;
+    // The DEF parser stores numbers as doubles, which represent integers exactly up to 2^53.
+    if (!GetDefNumber(Credits, &Definition, Filename) || !FMath::IsFinite(Credits) ||
+        Credits < 1.0 || Credits > 9007199254740992.0 || Credits != FMath::FloorToDouble(Credits))
+        return 0;
+
+    return static_cast<int64>(Credits);
+}
+
 SSWFreightManifest::FProfile SSWFreightManifest::LoadProfile(const FString& DefinitionName)
 {
     FProfile Profile;
@@ -91,6 +102,7 @@ SSWFreightManifest::FProfile SSWFreightManifest::LoadProfile(const FString& Defi
 
         const Text& Key = Def->name()->value();
         if (Key == "cargo_capacity") ReadCapacity(Profile.Capacity, *Def, Filename.Get());
+        else if (Key == "base_cost") Profile.BaseCost = ReadBaseCost(*Def, Filename.Get());
         else if (Key == "cargo_manifest") AddOption(Profile.Options, *Def, Filename.Get());
     }
     return Profile;

@@ -4070,6 +4070,14 @@ Ship::ExecEvalFrame(double seconds)
 void
 Ship::ExecPhysics(double seconds)
 {
+    // Scripted cargo routes advance position and attitude after the region tick.
+    if (bScriptedMotionLastFrame)
+    {
+        bScriptedMotionLastFrame = false;
+        ScriptedContactSpeed.Reset();
+        if (!IsDead() && !IsDying()) return;
+    }
+
     const auto ClampAugmentedSpeed = [this]()
     {
         // GetVelocity combines physical and arcade velocity. Scale both so the

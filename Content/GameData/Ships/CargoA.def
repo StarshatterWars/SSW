@@ -3,6 +3,7 @@ SHIP
 name:       IM3500
 display_name: "IM3500 Freighter"
 class:      Freighter
+base_cost:     12797000
 cargo_capacity: { tonnes: 12000, passengers: 0 }
 cargo_manifest: { item: "magnetite", unit: "t", min: 6000, max: 9000 }
 cargo_manifest: { item: "ilmenite", unit: "t", min: 5500, max: 8500 }

@@ -3,6 +3,7 @@ SHIP
 name:          Berents
 display_name:  Berents
 class:         Frigate
+base_cost:     20380000
 cargo_capacity: { tonnes: 200, passengers: 0 }
 abrv:		   FF
 empire:        Terellian

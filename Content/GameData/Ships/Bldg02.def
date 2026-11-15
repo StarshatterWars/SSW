@@ -2,6 +2,7 @@ SHIP
 
 name:         Bldg02
 class:        Building
+base_cost:     556000
 display_name: Building
 abrv:		  BLDG
 hud_icon:     "hud_bldg02"

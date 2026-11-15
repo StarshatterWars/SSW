@@ -4,6 +4,7 @@ name:          Station4
 display_name:  Fortress
 abrv:          S4
 class:         STATION
+base_cost:     414872000
 cargo_capacity: { tonnes: 40000, passengers: 0 }
 hud_icon:      "S4hud"
 

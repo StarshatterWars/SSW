@@ -3,6 +3,7 @@ SHIP
 name:          Orion
 display_name:  Orion
 class:         Carrier
+base_cost:     355936000
 cargo_capacity: { tonnes: 38280, passengers: 0 }
 abrv:          CV
 empire:        Terellian

@@ -3,6 +3,7 @@ SHIP
 name:          Adventure
 display_name:  Adventure
 class:         Carrier
+base_cost:     338740000
 cargo_capacity: { tonnes: 7500, passengers: 0 }
 abrv:		   CV
 empire:        Pirate

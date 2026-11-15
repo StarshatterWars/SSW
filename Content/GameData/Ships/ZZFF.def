@@ -3,6 +3,7 @@ SHIP
 name:          ZZFF
 display_name:  Zolon
 class:         Frigate
+base_cost:     21403000
 cargo_capacity: { tonnes: 880, passengers: 0 }
 abrv:          ZFF
 hud_icon:      "zmap"

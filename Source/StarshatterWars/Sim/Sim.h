@@ -20,6 +20,8 @@
 #pragma once
 
 #include "GameStructs_products.h"
+#include "ContractAI.h"
+#include "MiningAI.h"
 #include "Types.h"
 #include "Delegates/Delegate.h"
 #include "Containers/Array.h"
@@ -183,6 +185,7 @@ public:
     FProjectileAdded OnProjectileAdded;
     FShipRetired OnShipRetired;
     Mission* GetMission() { return mission; }
+    const FSSWProductionStock* GetProductionStock(const FSSWProductionFacility& Facility);
     List<MissionEvent>& GetEvents() { return events; }
     List<SimRegion>& GetRegions() { return regions; }
 
@@ -302,11 +305,17 @@ protected:
         double NextPulse = 0.0;
         bool bDelivering = false;
         double LoadedTonnes = 0;
+        ContractAI Contract;
+        MiningAI::ScanResult AsteroidScan;
+        double NextScan = 0.0;
+        TOptional<int> DepositId;
+        TOptional<FVector> MiningOffset;
         TOptional<FVector> AsteroidDetour;
     };
     TMap<int32, FMiningRun> JanekMiningRuns;
     FSSWProductionStock JanekRefinery;
     TMap<FString, double> JanekMiningStock;
+    TMap<FString, double> JanusTransferStock;
     Ship* DeferredLaunchPlayer = nullptr;
     Ship* PendingLaunchPlayer = nullptr; // staged player, awaiting click / timeout
     bool bPlayerLaunchRequested = false;

@@ -3,6 +3,7 @@ SHIP
 name:          Volnaris
 display_name:  Volnaris
 class:         Destroyer
+base_cost:     44429000
 cargo_capacity: { tonnes: 530, passengers: 0 }
 abrv:          DD
 empire:        Marakan

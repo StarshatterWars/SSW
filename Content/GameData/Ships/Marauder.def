@@ -3,6 +3,7 @@ SHIP
 name:          Marauder
 display_name:  Marauder
 class:         Frigate
+base_cost:     20354000
 cargo_capacity: { tonnes: 200, passengers: 0 }
 abrv:          FF
 empire:        Pirate

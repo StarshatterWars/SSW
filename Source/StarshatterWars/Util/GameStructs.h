@@ -46,6 +46,9 @@ struct FS_CargoCatalogRow : public FTableRowBase
     int32 PreviewQuantity = 0;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
+    bool bIllicit = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
     FString Description;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
@@ -66,6 +69,9 @@ USTRUCT(BlueprintType)
 struct FS_Cargo
 {
     GENERATED_BODY()
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Cargo")
+    bool bIllicit = false;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
     FString Name;

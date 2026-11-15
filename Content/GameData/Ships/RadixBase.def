@@ -3,6 +3,7 @@ SHIP
 name:          Airbase2
 display_name:  "Radix Base"
 class:         STARBASE
+base_cost:     898890000
 cargo_capacity: { tonnes: 20000, passengers: 0 }
 abrv:		   SB
 empire:        Marakan

@@ -3,6 +3,7 @@ SHIP
 name:          Courageous
 display_name:  Courageous
 class:         Cruiser
+base_cost:     101919000
 cargo_capacity: { tonnes: 1360, passengers: 0 }
 abrv:          CR
 empire:        Terellian

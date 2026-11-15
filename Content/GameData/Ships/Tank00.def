@@ -2,6 +2,7 @@ SHIP
 
 name:         Tank00
 class:        Building
+base_cost:     556000
 abrv:         BLDG
 display_name: "Cryo Tank"
 empire:       All

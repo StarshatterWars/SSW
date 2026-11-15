@@ -3,6 +3,7 @@ SHIP
 name:          Station5
 display_name:  "Orbital Station"
 class:         STATION
+base_cost:     414872000
 cargo_capacity: { tonnes: 40000, passengers: 0 }
 abrv:          STN
 empire:        Marakan

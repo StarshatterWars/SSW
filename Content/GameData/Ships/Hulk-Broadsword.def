@@ -3,6 +3,7 @@ SHIP
 name:          "Hulk-Broadsword"
 display_name:  Broadsword
 class:         Hulk
+base_cost:     59000
 abrv:          DD
 
 hud_icon:   "BroadHud"

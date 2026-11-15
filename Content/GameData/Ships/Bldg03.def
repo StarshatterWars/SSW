@@ -2,6 +2,7 @@ SHIP
 
 name:         Bldg03
 class:        Building
+base_cost:     556000
 display_name: Building
 abrv:		  BLDG
 description:  "This facility is a prefabricated support structure used to reinforce developing settlements and industrial outposts. Designed for rapid deployment and low maintenance, it quietly sustains the operational backbone of frontier expansion."

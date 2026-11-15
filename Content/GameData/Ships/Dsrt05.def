@@ -2,6 +2,7 @@ SHIP
 
 name:         Dsrt05
 class:        Building
+base_cost:     647000
 display_name: Deserted Minehead
 abrv:		  BLDG
 hud_icon:     "hud_dsrt05"

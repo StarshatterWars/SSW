@@ -3,6 +3,7 @@ SHIP
 name:          "Hulk-Imperial"
 display_name:  Imperial
 class:         Hulk
+base_cost:     64000
 abrv:          CA
 
 hud_icon:   "ImperialHud"

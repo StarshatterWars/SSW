@@ -2,6 +2,7 @@ SHIP
 
 name:         Cool00
 class:        Building
+base_cost:     556000
 abrv:         BLDG
 display_name: "Cooling Tower"
 description:  "The Cooling Tower is an industrial support structure responsible for thermal regulation of planetary power plants and heavy manufacturing facilities. While not a combat installation, its destruction can cripple energy production and destabilize critical infrastructure across the colony."

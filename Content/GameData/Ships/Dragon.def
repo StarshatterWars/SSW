@@ -3,6 +3,7 @@ SHIP
 name:          Dragon
 display_name:  Dragon
 class:         Carrier
+base_cost:     355720000
 cargo_capacity: { tonnes: 37500, passengers: 0 }
 abrv:		   CV
 empire:        Marakan

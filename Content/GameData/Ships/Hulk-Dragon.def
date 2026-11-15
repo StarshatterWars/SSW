@@ -4,6 +4,7 @@ name:          "Hulk-Dragon"
 display_name:  Dragon
 abrv:          Cv
 class:         Hulk
+base_cost:     66000
 
 hud_icon:   "DragonHud"
 

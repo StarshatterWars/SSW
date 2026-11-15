@@ -153,6 +153,14 @@ protected:
     UPROPERTY(Transient) TObjectPtr<class UCargoManifestDlg> CargoManifestWidget;
     void ToggleCargoManifest();
     void CloseCargoManifest();
+    TSharedPtr<SWidget> ProductionPopup;
+    UPROPERTY(Transient) TObjectPtr<class UProductionDlg> ProductionWidget;
+    void ToggleProduction();
+    void CloseProduction();
+    TSharedPtr<SWidget> ShipStorePopup;
+    UPROPERTY(Transient) TObjectPtr<class UShipStoreDlg> ShipStoreWidget;
+    void ToggleShipStore();
+    void CloseShipStore();
     TSharedPtr<SWidget> MarketplacePopup;
     UPROPERTY(Transient) TObjectPtr<class UMarketplaceDlg> MarketplaceWidget;
     bool CanOpenMarketplace() const;
@@ -167,7 +175,8 @@ protected:
     bool CanOpenFlightPanel() const;
     bool CanOpenCameraAndRadio() const;
     void UpdateFlightPanelInput(TSharedPtr<SWidget> Focus = nullptr);
-    void AddFloatingPanel(TSharedPtr<SWidget>& Panel, TSharedRef<SWidget> Content, const TCHAR* Title, int32 Index, FSimpleDelegate Close);
+    void AddFloatingPanel(TSharedPtr<SWidget>& Panel, TSharedRef<SWidget> Content, const TCHAR* Title,
+        int32 Index, FSimpleDelegate Close, bool bWide = false);
     void RemoveFloatingPanel(TSharedPtr<SWidget>& Panel);
     TSharedPtr<class SConstraintCanvas> FlightPanelCanvas;
     int32 FlightPanelZ = 0;

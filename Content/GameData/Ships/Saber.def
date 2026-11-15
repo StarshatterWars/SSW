@@ -3,6 +3,7 @@ SHIP
 name:          Saber
 display_name:  Saber
 class:         Fighter
+base_cost:     576000
 cargo_capacity: { tonnes: 0.3, passengers: 0 }
 abrv:          "F-22"
 empire:        Marakan

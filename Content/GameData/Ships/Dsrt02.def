@@ -2,6 +2,7 @@ SHIP
 
 name:         Dsrt02
 class:        Building
+base_cost:     556000
 display_name: Deserted Building
 abrv:		  BLDG
 hud_icon:     "hud_dsrt02"

@@ -2,6 +2,7 @@ SHIP
 
 name:       Senate
 class:      Building
+base_cost:     693000
 abrv:       BLDG
 display_name: "Senate"
 empire:      All

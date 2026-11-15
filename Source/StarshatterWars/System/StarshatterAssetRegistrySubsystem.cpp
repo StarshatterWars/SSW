@@ -834,6 +834,42 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.ProductionPopupClass
+    if (!Cache.Contains(TEXT("UI.ProductionPopupClass")))
+    {
+        if (!Settings->ProductionPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->ProductionPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.ProductionPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.ProductionPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] ProductionPopupClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.ShipStorePopupClass
+    if (!Cache.Contains(TEXT("UI.ShipStorePopupClass")))
+    {
+        if (!Settings->ShipStorePopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->ShipStorePopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.ShipStorePopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.ShipStorePopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] ShipStorePopupClass is not set in Project Settings"));
+        }
+    }
+
     // UI.CustomMissionScreenClass
     if (!Cache.Contains(TEXT("UI.CustomMissionScreenClass")))
     {

@@ -3,6 +3,7 @@ SHIP
 name:          Archaelith
 display_name:  Archaelith
 class:         Drone
+base_cost:     40000
 cargo_capacity: { tonnes: 0.07, passengers: 0 }
 abrv:		   DRN
 empire:        All

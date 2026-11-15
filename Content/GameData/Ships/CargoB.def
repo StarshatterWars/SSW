@@ -3,6 +3,7 @@ SHIP
 name:       IM4300
 display_name: "IM4300 Hauler"
 class:      Freighter
+base_cost:     13104000
 cargo_capacity: { tonnes: 7500, passengers: 0 }
 cargo_manifest: { item: "hematite", unit: "t", min: 3500, max: 5200 }
 cargo_manifest: { item: "quartz", unit: "t", min: 3200, max: 4900 }

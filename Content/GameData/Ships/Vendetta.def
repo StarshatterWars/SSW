@@ -3,6 +3,7 @@ SHIP
 name:          Vendetta
 display_name:  Vendetta
 class:         Cruiser
+base_cost:     110321000
 cargo_capacity: { tonnes: 15000, passengers: 0 }
 abrv:          CA
 empire:        Marakan

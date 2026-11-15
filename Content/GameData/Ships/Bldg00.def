@@ -2,6 +2,7 @@ SHIP
 
 name:         Bldg00
 class:        Building
+base_cost:     556000
 abrv:		  BLDG
 display_name: "Office Complex"
 description:   "The Office Complex serves as the administrative nerve center of a planetary settlement, coordinating logistics, communications, and civil governance. While lightly fortified, its data networks and command infrastructure make it a vital asset in maintaining operational control across the sector."

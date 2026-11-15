@@ -122,6 +122,37 @@ bool CheckTable(const UDataTable& Imported, const TCHAR* Name, bool bAllowEmpty)
     return true;
 }
 
+bool ImportProductionRecipes(UDataTable& Table)
+{
+    const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Cargo/recipes.json");
+    FString Json;
+    if (!FFileHelper::LoadFileToString(Json, *Path))
+    {
+        UE_LOG(LogTemp, Error, TEXT("Could not read production recipes from %s"), *Path);
+        return false;
+    }
+    Table.RowStruct = FSSWProductionRecipe::StaticStruct();
+    const TArray<FString> Problems = Table.CreateTableFromJSONString(Json);
+    for (const FString& Problem : Problems)
+        UE_LOG(LogTemp, Error, TEXT("%s: %s"), *Path, *Problem);
+    if (!Problems.IsEmpty() || Table.GetRowMap().IsEmpty()) return false;
+
+    for (const auto& Row : Table.GetRowMap())
+    {
+        const auto& Recipe = *reinterpret_cast<const FSSWProductionRecipe*>(Row.Value);
+        if (Recipe.Minerals.IsEmpty() || Recipe.Minerals.Contains(ESSWMineral::None) ||
+            !FMath::IsFinite(Recipe.InputTonnes) || !FMath::IsFinite(Recipe.OutputTonnes) ||
+            !FMath::IsFinite(Recipe.SecondsPerBatch) ||
+            !Recipe.CanStart(Recipe.InputTonnes, Recipe.OutputTonnes))
+        {
+            UE_LOG(LogTemp, Error, TEXT("Invalid production recipe %s in %s"), *Row.Key.ToString(), *Path);
+            return false;
+        }
+    }
+    UE_LOG(LogTemp, Display, TEXT("Imported %d production recipes from %s"), Table.GetRowMap().Num(), *Path);
+    return true;
+}
+
 bool SaveOutputTable(UDataTable& Imported, const TCHAR* Name, bool bStaged = true)
 {
     FString BaseName(Name);
@@ -149,7 +180,7 @@ bool SaveOutputTable(UDataTable& Imported, const TCHAR* Name, bool bStaged = tru
     return UPackage::SavePackage(Package, Staged, *Filename, Args);
 }
 
-bool ImportShipCargo()
+bool ImportShipCargo(bool bPricesOnly = false)
 {
     constexpr TCHAR TablePath[] = TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign");
     const UDataTable* Active = LoadObject<UDataTable>(nullptr, TablePath);
@@ -164,6 +195,16 @@ bool ImportShipCargo()
 
         const FString Definition = ShipVisualCatalog::DefinitionName(Row->ShipName, Row->Model);
         auto Profile = SSWFreightManifest::LoadProfile(Definition);
+        if (Profile.BaseCost <= 0 && Definition != RowName.ToString())
+            Profile.BaseCost = SSWFreightManifest::LoadProfile(RowName.ToString()).BaseCost;
+        if (Profile.BaseCost > 0)
+            Row->BaseCost = Profile.BaseCost;
+        if (bPricesOnly)
+        {
+            UpdatedRows += Profile.BaseCost > 0 ? 1 : 0;
+            continue;
+        }
+
         if (Profile.Capacity.Tonnes <= 0.0 && Definition != RowName.ToString())
             Profile = SSWFreightManifest::LoadProfile(RowName.ToString());
 
@@ -185,7 +226,8 @@ bool ImportShipCargo()
         Row->CargoCapacity = Profile.Capacity;
         ++UpdatedRows;
     }
-    UE_LOG(LogTemp, Display, TEXT("Imported cargo capacities for %d design rows."), UpdatedRows);
+    UE_LOG(LogTemp, Display, TEXT("Imported %s for %d design rows."),
+        bPricesOnly ? TEXT("base costs") : TEXT("cargo capacities"), UpdatedRows);
     return UpdatedRows > 0 && SaveOutputTable(*Updated, TEXT("DT_ShipDesign"), false);
 }
 }
@@ -261,23 +303,36 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     if (FParse::Value(*Params, TEXT("ShipDefinition="), ShipDefinition))
         return ImportSingleShipDefinition(ShipDefinition) ? 0 : 1;
 
+    if (FParse::Param(*Params, TEXT("WriteProductionFacilities")))
+    {
+        FString Json;
+        if (!FFileHelper::LoadFileToString(Json, *(FPaths::ProjectContentDir() /
+            TEXT("GameData/Production/facilities.json")))) return 1;
+        auto* Table = NewObject<UDataTable>();
+        Table->RowStruct = FSSWProductionFacility::StaticStruct();
+        const TArray<FString> Problems = Table->CreateTableFromJSONString(Json);
+        for (const FString& Problem : Problems)
+            UE_LOG(LogTemp, Error, TEXT("%s"), *Problem);
+        if (!Problems.IsEmpty() || Table->GetRowMap().IsEmpty()) return 1;
+        UE_LOG(LogTemp, Display, TEXT("Imported %d production facilities"), Table->GetRowMap().Num());
+        return SaveOutputTable(*Table, TEXT("DT_ProductionFacilities"), false) ? 0 : 1;
+    }
+
+    if (FParse::Param(*Params, TEXT("WriteProductionRecipes")))
+    {
+        auto* Table = NewObject<UDataTable>();
+        return ImportProductionRecipes(*Table) &&
+            SaveOutputTable(*Table, TEXT("DT_ProductionRecipes"), false) ? 0 : 1;
+    }
+
     if (FParse::Param(*Params, TEXT("WriteJanusProduction")))
     {
+        auto* Table = NewObject<UDataTable>();
+        if (!ImportProductionRecipes(*Table)) return 2;
         if (!ImportSingleShipDefinition(TEXT("ProcessingFacility")) ||
             !ImportSingleShipDefinition(TEXT("AsteroidBase")) ||
             !ImportSingleShipDefinition(TEXT("MiningStation")))
             return 2;
-
-        auto* Table = NewObject<UDataTable>();
-        Table->RowStruct = FSSWProductionRecipe::StaticStruct();
-        FSSWProductionRecipe Recipe;
-        for (uint8 Value = uint8(ESSWMineral::Olivine); Value <= uint8(ESSWMineral::Quantium40); ++Value)
-            Recipe.Minerals.Add(static_cast<ESSWMineral>(Value));
-        Recipe.Product = ESSWFinishedItem::IndustrialConcentrate;
-        Recipe.InputTonnes = 2;
-        Recipe.OutputTonnes = 1;
-        Recipe.SecondsPerBatch = 10;
-        Table->AddRow(TEXT("JanusConcentrate"), Recipe);
 
         auto* Context = NewObject<USSWGameInstance>();
         auto* Environment = NewObject<UStarshatterEnvironmentSubsystem>(Context);
@@ -306,6 +361,9 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
             SaveOutputTable(*Table, TEXT("DT_ProductionRecipes"), false) &&
             SaveOutputTable(*Updated, TEXT("DT_GalaxyMap"), false) ? 0 : 2;
     }
+
+    if (FParse::Param(*Params, TEXT("ShipPricesOnly")))
+        return ImportShipCargo(true) ? 0 : 1;
 
     if (FParse::Param(*Params, TEXT("ShipCargoOnly")))
         return ImportShipCargo() ? 0 : 1;

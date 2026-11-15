@@ -2,6 +2,7 @@ SHIP
 
 name:          BioDome2
 class:         Building
+base_cost:     623000
 display_name: "Utility Dome"
 abrv:		  BLDG
 description:  "The Utility Dome is a modular support installation designed to house power regulation, environmental processing, and logistical infrastructure for nearby settlements. Though unassuming in profile, it forms the operational backbone that keeps frontier colonies functioning under extreme conditions."

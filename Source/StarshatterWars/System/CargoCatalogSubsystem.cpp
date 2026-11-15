@@ -99,6 +99,7 @@ bool UCargoCatalogSubsystem::DescribeCargo(const Ship& Vessel, FS_Cargo& Row) co
     {
         if (!Definition->DisplayName.IsEmpty()) Row.DisplayName = Definition->DisplayName;
         Row.Rarity = Definition->Rarity;
+        Row.bIllicit = Definition->bIllicit;
         Row.Type = Definition->Type;
         Row.Size = Definition->Size;
         Row.Value = Definition->Value;

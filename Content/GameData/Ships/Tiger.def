@@ -3,6 +3,7 @@ SHIP
 name:          Tiger
 display_name:  Tiger
 class:         Frigate
+base_cost:     19963000
 cargo_capacity: { tonnes: 110, passengers: 0 }
 abrv:          FF
 empire:        Marakan

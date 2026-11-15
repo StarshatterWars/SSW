@@ -3,6 +3,7 @@ SHIP
 name:          Broadsword
 display_name:  Broadsword
 class:         Destroyer
+base_cost:     44828000
 cargo_capacity: { tonnes: 690, passengers: 0 }
 abrv:		   DD
 empire:        Marakan

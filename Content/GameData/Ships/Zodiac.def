@@ -3,6 +3,7 @@ SHIP
 name:          Zodiac
 display_name:  Zodiac
 class:         LCA
+base_cost:     458000
 cargo_capacity: { tonnes: 12, passengers: 16 }
 abrv:          LCA
 empire:        Terellian

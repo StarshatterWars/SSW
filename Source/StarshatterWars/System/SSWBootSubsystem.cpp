@@ -360,6 +360,8 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.TacticalPopupClass"),
         TEXT("UI.CargoManifestPopupClass"),
         TEXT("UI.MarketplacePopupClass"),
+        TEXT("UI.ProductionPopupClass"),
+        TEXT("UI.ShipStorePopupClass"),
         TEXT("UI.MissionsPanelClass"),
         TEXT("UI.AwardPopupClass"),
 

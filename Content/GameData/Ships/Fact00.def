@@ -2,6 +2,7 @@ SHIP
 
 name:         Fact00
 class:        Building
+base_cost:     556000
 display_name: "Assembly Works"
 abrv:		  BLDG
 hud_icon:     "hud_fact00"

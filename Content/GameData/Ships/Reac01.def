@@ -2,6 +2,7 @@ SHIP
 
 name:       Reac01
 class:      Building
+base_cost:     556000
 abrv:       BLDG
 display_name: Generator
 description:  "The Generator Complex provides primary power distribution for planetary installations and orbital facilities alike. Hardened against bombardment and sabotage, its reactor core feeds surrounding structures with stable, high-output energy essential for sustained operations."

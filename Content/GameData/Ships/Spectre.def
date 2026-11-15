@@ -3,6 +3,7 @@ SHIP
 name:          Spectre
 display_name:  Spectre
 class:         Destroyer
+base_cost:     44524000
 cargo_capacity: { tonnes: 560, passengers: 0 }
 abrv:          DD
 empire:        Terellian

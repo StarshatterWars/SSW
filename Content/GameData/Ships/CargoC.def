@@ -3,6 +3,7 @@ SHIP
 name:       IM2800
 display_name: "IM2800 Cargo"
 class:      Cargo
+base_cost:     2831000
 cargo_capacity: { tonnes: 2500, passengers: 0 }
 cargo_manifest: { item: "graphite", unit: "t", min: 900, max: 1700 }
 cargo_manifest: { item: "copper concentrate", unit: "t", min: 1100, max: 1900 }

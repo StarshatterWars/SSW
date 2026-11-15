@@ -1,0 +1,443 @@
+[
+  {
+    "Name": "Athenar",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "optical glass",
+      "apatite",
+      "hematite",
+      "reactor fuel",
+      "precision atmosphere filter",
+      "prototype thermal radiator",
+      "standard pressure relief valve",
+      "heavy duty bay door motor",
+      "precision navigation beacon receiver",
+      "prototype antenna gimbal",
+      "standard reactor control relay",
+      "heavy duty servo controller",
+      "precision refinery crucible"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Borova",
+    "DemandScale": 2.0,
+    "Production": [
+      "industrial concentrate",
+      "conductive metal",
+      "avionics",
+      "hull section",
+      "repair kit",
+      "prototype atmosphere filter",
+      "standard heat exchanger core",
+      "heavy duty pressure relief valve",
+      "precision bay door motor",
+      "prototype navigation beacon receiver",
+      "standard signal processor",
+      "heavy duty reactor control relay",
+      "precision servo controller",
+      "prototype refinery crucible"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Garrison",
+    "ExclusiveSupply": ["colorado tegridy"],
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "construction materials",
+      "calcite",
+      "ilmenite",
+      "rutile",
+      "standard carbon dioxide scrubber",
+      "heavy duty heat exchanger core",
+      "precision pressure relief valve",
+      "prototype bay door motor",
+      "standard transponder module",
+      "heavy duty signal processor",
+      "precision reactor control relay",
+      "prototype servo controller",
+      "standard survey drill head"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Haiche",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "water",
+      "carbon composite",
+      "kamacite",
+      "saponite",
+      "heavy duty carbon dioxide scrubber",
+      "precision heat exchanger core",
+      "prototype pressure relief valve",
+      "standard landing gear damper",
+      "heavy duty transponder module",
+      "precision signal processor",
+      "prototype reactor control relay",
+      "standard machine tool spindle",
+      "heavy duty survey drill head"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Isham",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "optical glass",
+      "cassiterite",
+      "life support supplies",
+      "scheelite",
+      "precision carbon dioxide scrubber",
+      "prototype heat exchanger core",
+      "standard vacuum seal kit",
+      "heavy duty landing gear damper",
+      "precision transponder module",
+      "prototype signal processor",
+      "standard battery cell pack",
+      "heavy duty machine tool spindle",
+      "precision survey drill head"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Janus",
+    "DemandScale": 2.0,
+    "Production": [
+      "industrial concentrate",
+      "industrial concentrate",
+      "chalcopyrite",
+      "liquid hydrogen",
+      "schreibersite",
+      "prototype carbon dioxide scrubber",
+      "standard coolant pump",
+      "heavy duty vacuum seal kit",
+      "precision landing gear damper",
+      "prototype transponder module",
+      "standard fiber data harness",
+      "heavy duty battery cell pack",
+      "precision machine tool spindle",
+      "prototype survey drill head"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Jarnell",
+    "DemandScale": 2.0,
+    "Production": [
+      "industrial concentrate",
+      "structural alloy",
+      "chromite",
+      "machine parts",
+      "sealed documents",
+      "standard oxygen regulator",
+      "heavy duty coolant pump",
+      "precision vacuum seal kit",
+      "prototype landing gear damper",
+      "standard optical sensor array",
+      "heavy duty fiber data harness",
+      "precision battery cell pack",
+      "prototype machine tool spindle",
+      "standard hull inspection scanner"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Kolchev",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "construction materials",
+      "cobaltite",
+      "magnetite",
+      "sensor assembly",
+      "heavy duty oxygen regulator",
+      "precision coolant pump",
+      "prototype vacuum seal kit",
+      "standard landing gear bearing",
+      "heavy duty optical sensor array",
+      "precision fiber data harness",
+      "prototype battery cell pack",
+      "standard ore sampler",
+      "heavy duty hull inspection scanner"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Korius",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "conductive metal",
+      "copper concentrate",
+      "medical supplies",
+      "serpentine",
+      "precision oxygen regulator",
+      "prototype coolant pump",
+      "standard docking collar gasket",
+      "heavy duty landing gear bearing",
+      "precision optical sensor array",
+      "prototype fiber data harness",
+      "standard flux sensor",
+      "heavy duty ore sampler",
+      "precision hull inspection scanner"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Loris",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "construction materials",
+      "diamond",
+      "merrillite",
+      "shield components",
+      "prototype oxygen regulator",
+      "standard thermal insulation panel",
+      "heavy duty docking collar gasket",
+      "precision landing gear bearing",
+      "prototype optical sensor array",
+      "standard circuit breaker bank",
+      "heavy duty flux sensor",
+      "precision ore sampler",
+      "prototype hull inspection scanner"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Marak",
+    "DemandScale": 2.0,
+    "Production": [
+      "industrial concentrate",
+      "conductive metal",
+      "dilithium",
+      "military rations",
+      "sphalerite",
+      "standard water purifier",
+      "heavy duty thermal insulation panel",
+      "precision docking collar gasket",
+      "prototype landing gear bearing",
+      "standard infrared detector",
+      "heavy duty circuit breaker bank",
+      "precision flux sensor",
+      "prototype ore sampler"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Nephrys",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "industrial concentrate",
+      "water",
+      "dolomite",
+      "military spare parts",
+      "spinel",
+      "heavy duty water purifier",
+      "precision thermal insulation panel",
+      "prototype docking collar gasket",
+      "standard inertial reference unit",
+      "heavy duty infrared detector",
+      "precision circuit breaker bank",
+      "prototype flux sensor",
+      "standard ore sorting sensor",
+      "unregistered survey cores",
+      "ketracel-white",
+      "khyber crystals"
+    ],
+    "bIllicitTrade": true
+  },
+  {
+    "Name": "Ostara",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "optical glass",
+      "engine assembly",
+      "monazite",
+      "taenite",
+      "precision water purifier",
+      "prototype thermal insulation panel",
+      "standard cargo restraint set",
+      "heavy duty inertial reference unit",
+      "precision infrared detector",
+      "prototype circuit breaker bank",
+      "standard thruster control valve",
+      "heavy duty ore sorting sensor"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Paragon",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "structural alloy",
+      "field medical supplies",
+      "navigation computer",
+      "thruster propellant",
+      "prototype water purifier",
+      "standard cryogenic valve",
+      "heavy duty cargo restraint set",
+      "precision inertial reference unit",
+      "prototype infrared detector",
+      "standard voltage converter",
+      "heavy duty thruster control valve",
+      "precision ore sorting sensor"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Radix",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "construction materials",
+      "finished electronics",
+      "olivine",
+      "troilite",
+      "standard humidity separator",
+      "heavy duty cryogenic valve",
+      "precision cargo restraint set",
+      "prototype inertial reference unit",
+      "standard radio receiver module",
+      "heavy duty voltage converter",
+      "precision thruster control valve",
+      "prototype ore sorting sensor"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Renser",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "conductive metal",
+      "fleet propellant",
+      "pentlandite",
+      "uraninite",
+      "heavy duty humidity separator",
+      "precision cryogenic valve",
+      "prototype cargo restraint set",
+      "standard star tracker",
+      "heavy duty radio receiver module",
+      "precision voltage converter",
+      "prototype thruster control valve",
+      "standard conveyor drive"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Silessia",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "industrial concentrate",
+      "industrial ceramics",
+      "fleet reserve water",
+      "plagioclase",
+      "water ice",
+      "precision humidity separator",
+      "prototype cryogenic valve",
+      "standard cargo lift actuator",
+      "heavy duty star tracker",
+      "precision radio receiver module",
+      "prototype voltage converter",
+      "standard gyroscope assembly",
+      "heavy duty conveyor drive",
+      "cipher relays",
+      "restricted memory crystals",
+      "dust"
+    ],
+    "bIllicitTrade": true
+  },
+  {
+    "Name": "Solus",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "industrial concentrate",
+      "industrial ceramics",
+      "food",
+      "pyrite",
+      "wolframite",
+      "prototype humidity separator",
+      "standard propellant feed pump",
+      "heavy duty cargo lift actuator",
+      "precision star tracker",
+      "prototype radio receiver module",
+      "standard power bus coupler",
+      "heavy duty gyroscope assembly",
+      "precision conveyor drive",
+      "ghost navigation charts"
+    ],
+    "bIllicitTrade": true
+  },
+  {
+    "Name": "Tarsus",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "construction materials",
+      "fusion propellant",
+      "pyroxene",
+      "zircon",
+      "standard thermal radiator",
+      "heavy duty propellant feed pump",
+      "precision cargo lift actuator",
+      "prototype star tracker",
+      "standard antenna gimbal",
+      "heavy duty power bus coupler",
+      "precision gyroscope assembly",
+      "prototype conveyor drive"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Thralis",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "industrial ceramics",
+      "galena",
+      "quantium-40",
+      "standard atmosphere filter",
+      "heavy duty thermal radiator",
+      "precision propellant feed pump",
+      "prototype cargo lift actuator",
+      "standard navigation beacon receiver",
+      "heavy duty antenna gimbal",
+      "precision power bus coupler",
+      "prototype gyroscope assembly",
+      "standard refinery crucible"
+    ],
+    "bIllicitTrade": false
+  },
+  {
+    "Name": "Trocanther",
+    "DemandScale": 1.0,
+    "Production": [
+      "industrial concentrate",
+      "industrial ceramics",
+      "graphite",
+      "quartz",
+      "heavy duty atmosphere filter",
+      "precision thermal radiator",
+      "prototype propellant feed pump",
+      "standard bay door motor",
+      "heavy duty navigation beacon receiver",
+      "precision antenna gimbal",
+      "prototype power bus coupler",
+      "standard servo controller",
+      "heavy duty refinery crucible"
+    ],
+    "bIllicitTrade": false
+  }
+]

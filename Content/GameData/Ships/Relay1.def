@@ -4,6 +4,7 @@ name:          Relay1
 display_name:  Relay
 abrv:          COMSSAT
 class:         COMSAT
+base_cost:     155000
 description:   "The Communications Relay Satellite serves as a long-range signal repeater, extending fleet communications across contested sectors. Though lightly armored, its strategic value makes it a priority target in any system-wide engagement."
 empire:        All
 hud_icon:      "hud_relay"

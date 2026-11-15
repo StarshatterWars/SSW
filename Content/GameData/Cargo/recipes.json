@@ -1,0 +1,3217 @@
+[
+  {
+    "Name": "JanusConcentrate",
+    "Minerals": [
+      "Olivine",
+      "Pyroxene",
+      "Plagioclase",
+      "Magnetite",
+      "Troilite",
+      "Kamacite",
+      "Taenite",
+      "Chromite",
+      "Ilmenite",
+      "Spinel",
+      "Apatite",
+      "Merrillite",
+      "Graphite",
+      "Diamond",
+      "Serpentine",
+      "Saponite",
+      "Calcite",
+      "Dolomite",
+      "Pyrite",
+      "Pentlandite",
+      "Schreibersite",
+      "Hematite",
+      "Quartz",
+      "Rutile",
+      "Cassiterite",
+      "Chalcopyrite",
+      "Sphalerite",
+      "Galena",
+      "Cobaltite",
+      "Scheelite",
+      "Wolframite",
+      "Monazite",
+      "Zircon",
+      "Uraninite",
+      "WaterIce",
+      "Dilithium",
+      "Quantium40"
+    ],
+    "InputTonnes": 2,
+    "Product": "IndustrialConcentrate",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 10,
+    "CargoItem": "industrial concentrate",
+    "OutputDisplayName": "Industrial Concentrate",
+    "OutputUnit": "t",
+    "OutputQuantity": 1
+  },
+  {
+    "Name": "OrbitalConcentrate",
+    "Minerals": [
+      "Magnetite",
+      "Hematite",
+      "Ilmenite"
+    ],
+    "InputTonnes": 4,
+    "Product": "IndustrialConcentrate",
+    "OutputTonnes": 2,
+    "SecondsPerBatch": 30,
+    "CargoItem": "industrial concentrate",
+    "OutputDisplayName": "Industrial Concentrate",
+    "OutputUnit": "t",
+    "OutputQuantity": 2
+  },
+  {
+    "Name": "StructuralAlloy",
+    "Minerals": [
+      "Kamacite",
+      "Taenite",
+      "Chromite"
+    ],
+    "InputTonnes": 5,
+    "Product": "StructuralAlloy",
+    "OutputTonnes": 3,
+    "SecondsPerBatch": 60,
+    "CargoItem": "structural alloy",
+    "OutputDisplayName": "Structural Alloy",
+    "OutputUnit": "t",
+    "OutputQuantity": 3
+  },
+  {
+    "Name": "ConductiveMetal",
+    "Minerals": [
+      "Chalcopyrite"
+    ],
+    "InputTonnes": 4,
+    "Product": "ConductiveMetal",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45,
+    "CargoItem": "conductive metal",
+    "OutputDisplayName": "Conductive Metal",
+    "OutputUnit": "t",
+    "OutputQuantity": 1
+  },
+  {
+    "Name": "IndustrialCeramics",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite",
+      "Dolomite"
+    ],
+    "InputTonnes": 4,
+    "Product": "IndustrialCeramics",
+    "OutputTonnes": 3,
+    "SecondsPerBatch": 50,
+    "CargoItem": "industrial ceramics",
+    "OutputDisplayName": "Industrial Ceramics",
+    "OutputUnit": "t",
+    "OutputQuantity": 3
+  },
+  {
+    "Name": "OpticalGlass",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 3,
+    "Product": "OpticalGlass",
+    "OutputTonnes": 2,
+    "SecondsPerBatch": 55,
+    "CargoItem": "optical glass",
+    "OutputDisplayName": "Optical Glass",
+    "OutputUnit": "t",
+    "OutputQuantity": 2
+  },
+  {
+    "Name": "ConstructionMaterials",
+    "Minerals": [
+      "Calcite",
+      "Dolomite",
+      "Plagioclase"
+    ],
+    "InputTonnes": 6,
+    "Product": "ConstructionMaterials",
+    "OutputTonnes": 4,
+    "SecondsPerBatch": 45,
+    "CargoItem": "construction materials",
+    "OutputDisplayName": "Construction Materials",
+    "OutputUnit": "t",
+    "OutputQuantity": 4
+  },
+  {
+    "Name": "WaterRecovery",
+    "Minerals": [
+      "WaterIce"
+    ],
+    "InputTonnes": 4,
+    "Product": "Water",
+    "OutputTonnes": 3,
+    "SecondsPerBatch": 35,
+    "CargoItem": "water",
+    "OutputDisplayName": "Water",
+    "OutputUnit": "t",
+    "OutputQuantity": 3
+  },
+  {
+    "Name": "Make_avionics",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 3.0,
+    "Product": "None",
+    "OutputTonnes": 2.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "avionics",
+    "OutputQuantity": 10,
+    "OutputUnit": "crates",
+    "OutputDisplayName": "Avionics"
+  },
+  {
+    "Name": "Make_carbon_composite",
+    "Minerals": [
+      "Graphite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "carbon composite",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Carbon Composite"
+  },
+  {
+    "Name": "Make_engine_assembly",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "engine assembly",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Engine Assembly"
+  },
+  {
+    "Name": "Make_field_medical_supplies",
+    "Minerals": [
+      "WaterIce",
+      "Apatite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "field medical supplies",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Field Medical Supplies"
+  },
+  {
+    "Name": "Make_finished_electronics",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.25,
+    "Product": "None",
+    "OutputTonnes": 1.5,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "finished electronics",
+    "OutputQuantity": 10,
+    "OutputUnit": "crates",
+    "OutputDisplayName": "Finished Electronics"
+  },
+  {
+    "Name": "Make_food",
+    "Minerals": [
+      "WaterIce",
+      "Apatite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "food",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Food"
+  },
+  {
+    "Name": "Make_hull_section",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "hull section",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Hull Section"
+  },
+  {
+    "Name": "Make_life_support_supplies",
+    "Minerals": [
+      "WaterIce",
+      "Apatite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "life support supplies",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Life Support Supplies"
+  },
+  {
+    "Name": "Make_machine_parts",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 6.0,
+    "Product": "None",
+    "OutputTonnes": 4.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "machine parts",
+    "OutputQuantity": 10,
+    "OutputUnit": "crates",
+    "OutputDisplayName": "Machine Parts"
+  },
+  {
+    "Name": "Make_medical_supplies",
+    "Minerals": [
+      "WaterIce",
+      "Apatite"
+    ],
+    "InputTonnes": 7.5,
+    "Product": "None",
+    "OutputTonnes": 5.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "medical supplies",
+    "OutputQuantity": 10,
+    "OutputUnit": "pallets",
+    "OutputDisplayName": "Medical Supplies"
+  },
+  {
+    "Name": "Make_military_rations",
+    "Minerals": [
+      "WaterIce",
+      "Apatite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "military rations",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Military Rations"
+  },
+  {
+    "Name": "Make_military_spare_parts",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "military spare parts",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Military Spare Parts"
+  },
+  {
+    "Name": "Make_navigation_computer",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "navigation computer",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Navigation Computer"
+  },
+  {
+    "Name": "Make_reactor_fuel",
+    "Minerals": [
+      "WaterIce"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "reactor fuel",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Reactor Fuel"
+  },
+  {
+    "Name": "Make_repair_kit",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "repair kit",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Repair Kit"
+  },
+  {
+    "Name": "Make_sealed_documents",
+    "Minerals": [
+      "WaterIce",
+      "Apatite"
+    ],
+    "InputTonnes": 0.3,
+    "Product": "None",
+    "OutputTonnes": 0.2,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "sealed documents",
+    "OutputQuantity": 10,
+    "OutputUnit": "cases",
+    "OutputDisplayName": "Sealed Documents"
+  },
+  {
+    "Name": "Make_sensor_assembly",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "sensor assembly",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Sensor Assembly"
+  },
+  {
+    "Name": "Make_shield_components",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "shield components",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Shield Components"
+  },
+  {
+    "Name": "Make_thruster_propellant",
+    "Minerals": [
+      "WaterIce"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "thruster propellant",
+    "OutputQuantity": 1,
+    "OutputUnit": "t",
+    "OutputDisplayName": "Thruster Propellant"
+  },
+  {
+    "Name": "Make_standard_atmosphere_filter",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard atmosphere filter",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Atmosphere Filter"
+  },
+  {
+    "Name": "Make_heavy_duty_atmosphere_filter",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty atmosphere filter",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Atmosphere Filter"
+  },
+  {
+    "Name": "Make_precision_atmosphere_filter",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision atmosphere filter",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Atmosphere Filter"
+  },
+  {
+    "Name": "Make_prototype_atmosphere_filter",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype atmosphere filter",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Atmosphere Filter"
+  },
+  {
+    "Name": "Make_standard_carbon_dioxide_scrubber",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard carbon dioxide scrubber",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Carbon Dioxide Scrubber"
+  },
+  {
+    "Name": "Make_heavy_duty_carbon_dioxide_scrubber",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty carbon dioxide scrubber",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Carbon Dioxide Scrubber"
+  },
+  {
+    "Name": "Make_precision_carbon_dioxide_scrubber",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision carbon dioxide scrubber",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Carbon Dioxide Scrubber"
+  },
+  {
+    "Name": "Make_prototype_carbon_dioxide_scrubber",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype carbon dioxide scrubber",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Carbon Dioxide Scrubber"
+  },
+  {
+    "Name": "Make_standard_oxygen_regulator",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard oxygen regulator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Oxygen Regulator"
+  },
+  {
+    "Name": "Make_heavy_duty_oxygen_regulator",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty oxygen regulator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Oxygen Regulator"
+  },
+  {
+    "Name": "Make_precision_oxygen_regulator",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision oxygen regulator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Oxygen Regulator"
+  },
+  {
+    "Name": "Make_prototype_oxygen_regulator",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype oxygen regulator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Oxygen Regulator"
+  },
+  {
+    "Name": "Make_standard_water_purifier",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard water purifier",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Water Purifier"
+  },
+  {
+    "Name": "Make_heavy_duty_water_purifier",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty water purifier",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Water Purifier"
+  },
+  {
+    "Name": "Make_precision_water_purifier",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision water purifier",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Water Purifier"
+  },
+  {
+    "Name": "Make_prototype_water_purifier",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype water purifier",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Water Purifier"
+  },
+  {
+    "Name": "Make_standard_humidity_separator",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard humidity separator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Humidity Separator"
+  },
+  {
+    "Name": "Make_heavy_duty_humidity_separator",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty humidity separator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Humidity Separator"
+  },
+  {
+    "Name": "Make_precision_humidity_separator",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision humidity separator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Humidity Separator"
+  },
+  {
+    "Name": "Make_prototype_humidity_separator",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype humidity separator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Humidity Separator"
+  },
+  {
+    "Name": "Make_standard_thermal_radiator",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard thermal radiator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Thermal Radiator"
+  },
+  {
+    "Name": "Make_heavy_duty_thermal_radiator",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty thermal radiator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Thermal Radiator"
+  },
+  {
+    "Name": "Make_precision_thermal_radiator",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision thermal radiator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Thermal Radiator"
+  },
+  {
+    "Name": "Make_prototype_thermal_radiator",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype thermal radiator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Thermal Radiator"
+  },
+  {
+    "Name": "Make_standard_heat_exchanger_core",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard heat exchanger core",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Heat Exchanger Core"
+  },
+  {
+    "Name": "Make_heavy_duty_heat_exchanger_core",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty heat exchanger core",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Heat Exchanger Core"
+  },
+  {
+    "Name": "Make_precision_heat_exchanger_core",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision heat exchanger core",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Heat Exchanger Core"
+  },
+  {
+    "Name": "Make_prototype_heat_exchanger_core",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype heat exchanger core",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Heat Exchanger Core"
+  },
+  {
+    "Name": "Make_standard_coolant_pump",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard coolant pump",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Coolant Pump"
+  },
+  {
+    "Name": "Make_heavy_duty_coolant_pump",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty coolant pump",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Coolant Pump"
+  },
+  {
+    "Name": "Make_precision_coolant_pump",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision coolant pump",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Coolant Pump"
+  },
+  {
+    "Name": "Make_prototype_coolant_pump",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype coolant pump",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Coolant Pump"
+  },
+  {
+    "Name": "Make_standard_thermal_insulation_panel",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard thermal insulation panel",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Thermal Insulation Panel"
+  },
+  {
+    "Name": "Make_heavy_duty_thermal_insulation_panel",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty thermal insulation panel",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Thermal Insulation Panel"
+  },
+  {
+    "Name": "Make_precision_thermal_insulation_panel",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision thermal insulation panel",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Thermal Insulation Panel"
+  },
+  {
+    "Name": "Make_prototype_thermal_insulation_panel",
+    "Minerals": [
+      "Plagioclase",
+      "Calcite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype thermal insulation panel",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Thermal Insulation Panel"
+  },
+  {
+    "Name": "Make_standard_cryogenic_valve",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard cryogenic valve",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Cryogenic Valve"
+  },
+  {
+    "Name": "Make_heavy_duty_cryogenic_valve",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty cryogenic valve",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Cryogenic Valve"
+  },
+  {
+    "Name": "Make_precision_cryogenic_valve",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision cryogenic valve",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Cryogenic Valve"
+  },
+  {
+    "Name": "Make_prototype_cryogenic_valve",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype cryogenic valve",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Cryogenic Valve"
+  },
+  {
+    "Name": "Make_standard_propellant_feed_pump",
+    "Minerals": [
+      "WaterIce"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard propellant feed pump",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Propellant Feed Pump"
+  },
+  {
+    "Name": "Make_heavy_duty_propellant_feed_pump",
+    "Minerals": [
+      "WaterIce"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty propellant feed pump",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Propellant Feed Pump"
+  },
+  {
+    "Name": "Make_precision_propellant_feed_pump",
+    "Minerals": [
+      "WaterIce"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision propellant feed pump",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Propellant Feed Pump"
+  },
+  {
+    "Name": "Make_prototype_propellant_feed_pump",
+    "Minerals": [
+      "WaterIce"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype propellant feed pump",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Propellant Feed Pump"
+  },
+  {
+    "Name": "Make_standard_pressure_relief_valve",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard pressure relief valve",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Pressure Relief Valve"
+  },
+  {
+    "Name": "Make_heavy_duty_pressure_relief_valve",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty pressure relief valve",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Pressure Relief Valve"
+  },
+  {
+    "Name": "Make_precision_pressure_relief_valve",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision pressure relief valve",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Pressure Relief Valve"
+  },
+  {
+    "Name": "Make_prototype_pressure_relief_valve",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype pressure relief valve",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Pressure Relief Valve"
+  },
+  {
+    "Name": "Make_standard_vacuum_seal_kit",
+    "Minerals": [
+      "Graphite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard vacuum seal kit",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Vacuum Seal Kit"
+  },
+  {
+    "Name": "Make_heavy_duty_vacuum_seal_kit",
+    "Minerals": [
+      "Graphite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty vacuum seal kit",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Vacuum Seal Kit"
+  },
+  {
+    "Name": "Make_precision_vacuum_seal_kit",
+    "Minerals": [
+      "Graphite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision vacuum seal kit",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Vacuum Seal Kit"
+  },
+  {
+    "Name": "Make_prototype_vacuum_seal_kit",
+    "Minerals": [
+      "Graphite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype vacuum seal kit",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Vacuum Seal Kit"
+  },
+  {
+    "Name": "Make_standard_docking_collar_gasket",
+    "Minerals": [
+      "Graphite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard docking collar gasket",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Docking Collar Gasket"
+  },
+  {
+    "Name": "Make_heavy_duty_docking_collar_gasket",
+    "Minerals": [
+      "Graphite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty docking collar gasket",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Docking Collar Gasket"
+  },
+  {
+    "Name": "Make_precision_docking_collar_gasket",
+    "Minerals": [
+      "Graphite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision docking collar gasket",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Docking Collar Gasket"
+  },
+  {
+    "Name": "Make_prototype_docking_collar_gasket",
+    "Minerals": [
+      "Graphite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype docking collar gasket",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Docking Collar Gasket"
+  },
+  {
+    "Name": "Make_standard_cargo_restraint_set",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard cargo restraint set",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Cargo Restraint Set"
+  },
+  {
+    "Name": "Make_heavy_duty_cargo_restraint_set",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty cargo restraint set",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Cargo Restraint Set"
+  },
+  {
+    "Name": "Make_precision_cargo_restraint_set",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision cargo restraint set",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Cargo Restraint Set"
+  },
+  {
+    "Name": "Make_prototype_cargo_restraint_set",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype cargo restraint set",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Cargo Restraint Set"
+  },
+  {
+    "Name": "Make_standard_cargo_lift_actuator",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard cargo lift actuator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Cargo Lift Actuator"
+  },
+  {
+    "Name": "Make_heavy_duty_cargo_lift_actuator",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty cargo lift actuator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Cargo Lift Actuator"
+  },
+  {
+    "Name": "Make_precision_cargo_lift_actuator",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision cargo lift actuator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Cargo Lift Actuator"
+  },
+  {
+    "Name": "Make_prototype_cargo_lift_actuator",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype cargo lift actuator",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Cargo Lift Actuator"
+  },
+  {
+    "Name": "Make_standard_bay_door_motor",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard bay door motor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Bay Door Motor"
+  },
+  {
+    "Name": "Make_heavy_duty_bay_door_motor",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty bay door motor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Bay Door Motor"
+  },
+  {
+    "Name": "Make_precision_bay_door_motor",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision bay door motor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Bay Door Motor"
+  },
+  {
+    "Name": "Make_prototype_bay_door_motor",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype bay door motor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Bay Door Motor"
+  },
+  {
+    "Name": "Make_standard_landing_gear_damper",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard landing gear damper",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Landing Gear Damper"
+  },
+  {
+    "Name": "Make_heavy_duty_landing_gear_damper",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty landing gear damper",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Landing Gear Damper"
+  },
+  {
+    "Name": "Make_precision_landing_gear_damper",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision landing gear damper",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Landing Gear Damper"
+  },
+  {
+    "Name": "Make_prototype_landing_gear_damper",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype landing gear damper",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Landing Gear Damper"
+  },
+  {
+    "Name": "Make_standard_landing_gear_bearing",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard landing gear bearing",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Landing Gear Bearing"
+  },
+  {
+    "Name": "Make_heavy_duty_landing_gear_bearing",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty landing gear bearing",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Landing Gear Bearing"
+  },
+  {
+    "Name": "Make_precision_landing_gear_bearing",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision landing gear bearing",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Landing Gear Bearing"
+  },
+  {
+    "Name": "Make_prototype_landing_gear_bearing",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype landing gear bearing",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Landing Gear Bearing"
+  },
+  {
+    "Name": "Make_standard_inertial_reference_unit",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard inertial reference unit",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Inertial Reference Unit"
+  },
+  {
+    "Name": "Make_heavy_duty_inertial_reference_unit",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty inertial reference unit",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Inertial Reference Unit"
+  },
+  {
+    "Name": "Make_precision_inertial_reference_unit",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision inertial reference unit",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Inertial Reference Unit"
+  },
+  {
+    "Name": "Make_prototype_inertial_reference_unit",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype inertial reference unit",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Inertial Reference Unit"
+  },
+  {
+    "Name": "Make_standard_star_tracker",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard star tracker",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Star Tracker"
+  },
+  {
+    "Name": "Make_heavy_duty_star_tracker",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty star tracker",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Star Tracker"
+  },
+  {
+    "Name": "Make_precision_star_tracker",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision star tracker",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Star Tracker"
+  },
+  {
+    "Name": "Make_prototype_star_tracker",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype star tracker",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Star Tracker"
+  },
+  {
+    "Name": "Make_standard_navigation_beacon_receiver",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard navigation beacon receiver",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Navigation Beacon Receiver"
+  },
+  {
+    "Name": "Make_heavy_duty_navigation_beacon_receiver",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty navigation beacon receiver",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Navigation Beacon Receiver"
+  },
+  {
+    "Name": "Make_precision_navigation_beacon_receiver",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision navigation beacon receiver",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Navigation Beacon Receiver"
+  },
+  {
+    "Name": "Make_prototype_navigation_beacon_receiver",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype navigation beacon receiver",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Navigation Beacon Receiver"
+  },
+  {
+    "Name": "Make_standard_transponder_module",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard transponder module",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Transponder Module"
+  },
+  {
+    "Name": "Make_heavy_duty_transponder_module",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty transponder module",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Transponder Module"
+  },
+  {
+    "Name": "Make_precision_transponder_module",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision transponder module",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Transponder Module"
+  },
+  {
+    "Name": "Make_prototype_transponder_module",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype transponder module",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Transponder Module"
+  },
+  {
+    "Name": "Make_standard_optical_sensor_array",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard optical sensor array",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Optical Sensor Array"
+  },
+  {
+    "Name": "Make_heavy_duty_optical_sensor_array",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty optical sensor array",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Optical Sensor Array"
+  },
+  {
+    "Name": "Make_precision_optical_sensor_array",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision optical sensor array",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Optical Sensor Array"
+  },
+  {
+    "Name": "Make_prototype_optical_sensor_array",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype optical sensor array",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Optical Sensor Array"
+  },
+  {
+    "Name": "Make_standard_infrared_detector",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard infrared detector",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Infrared Detector"
+  },
+  {
+    "Name": "Make_heavy_duty_infrared_detector",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty infrared detector",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Infrared Detector"
+  },
+  {
+    "Name": "Make_precision_infrared_detector",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision infrared detector",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Infrared Detector"
+  },
+  {
+    "Name": "Make_prototype_infrared_detector",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype infrared detector",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Infrared Detector"
+  },
+  {
+    "Name": "Make_standard_radio_receiver_module",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard radio receiver module",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Radio Receiver Module"
+  },
+  {
+    "Name": "Make_heavy_duty_radio_receiver_module",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty radio receiver module",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Radio Receiver Module"
+  },
+  {
+    "Name": "Make_precision_radio_receiver_module",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision radio receiver module",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Radio Receiver Module"
+  },
+  {
+    "Name": "Make_prototype_radio_receiver_module",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype radio receiver module",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Radio Receiver Module"
+  },
+  {
+    "Name": "Make_standard_antenna_gimbal",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard antenna gimbal",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Antenna Gimbal"
+  },
+  {
+    "Name": "Make_heavy_duty_antenna_gimbal",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty antenna gimbal",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Antenna Gimbal"
+  },
+  {
+    "Name": "Make_precision_antenna_gimbal",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision antenna gimbal",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Antenna Gimbal"
+  },
+  {
+    "Name": "Make_prototype_antenna_gimbal",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype antenna gimbal",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Antenna Gimbal"
+  },
+  {
+    "Name": "Make_standard_signal_processor",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard signal processor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Signal Processor"
+  },
+  {
+    "Name": "Make_heavy_duty_signal_processor",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty signal processor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Signal Processor"
+  },
+  {
+    "Name": "Make_precision_signal_processor",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision signal processor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Signal Processor"
+  },
+  {
+    "Name": "Make_prototype_signal_processor",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype signal processor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Signal Processor"
+  },
+  {
+    "Name": "Make_standard_fiber_data_harness",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard fiber data harness",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Fiber Data Harness"
+  },
+  {
+    "Name": "Make_heavy_duty_fiber_data_harness",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty fiber data harness",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Fiber Data Harness"
+  },
+  {
+    "Name": "Make_precision_fiber_data_harness",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision fiber data harness",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Fiber Data Harness"
+  },
+  {
+    "Name": "Make_prototype_fiber_data_harness",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype fiber data harness",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Fiber Data Harness"
+  },
+  {
+    "Name": "Make_standard_circuit_breaker_bank",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard circuit breaker bank",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Circuit Breaker Bank"
+  },
+  {
+    "Name": "Make_heavy_duty_circuit_breaker_bank",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty circuit breaker bank",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Circuit Breaker Bank"
+  },
+  {
+    "Name": "Make_precision_circuit_breaker_bank",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision circuit breaker bank",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Circuit Breaker Bank"
+  },
+  {
+    "Name": "Make_prototype_circuit_breaker_bank",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype circuit breaker bank",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Circuit Breaker Bank"
+  },
+  {
+    "Name": "Make_standard_voltage_converter",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard voltage converter",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Voltage Converter"
+  },
+  {
+    "Name": "Make_heavy_duty_voltage_converter",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty voltage converter",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Voltage Converter"
+  },
+  {
+    "Name": "Make_precision_voltage_converter",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision voltage converter",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Voltage Converter"
+  },
+  {
+    "Name": "Make_prototype_voltage_converter",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype voltage converter",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Voltage Converter"
+  },
+  {
+    "Name": "Make_standard_power_bus_coupler",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard power bus coupler",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Power Bus Coupler"
+  },
+  {
+    "Name": "Make_heavy_duty_power_bus_coupler",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty power bus coupler",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Power Bus Coupler"
+  },
+  {
+    "Name": "Make_precision_power_bus_coupler",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision power bus coupler",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Power Bus Coupler"
+  },
+  {
+    "Name": "Make_prototype_power_bus_coupler",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype power bus coupler",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Power Bus Coupler"
+  },
+  {
+    "Name": "Make_standard_reactor_control_relay",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard reactor control relay",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Reactor Control Relay"
+  },
+  {
+    "Name": "Make_heavy_duty_reactor_control_relay",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty reactor control relay",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Reactor Control Relay"
+  },
+  {
+    "Name": "Make_precision_reactor_control_relay",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision reactor control relay",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Reactor Control Relay"
+  },
+  {
+    "Name": "Make_prototype_reactor_control_relay",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype reactor control relay",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Reactor Control Relay"
+  },
+  {
+    "Name": "Make_standard_battery_cell_pack",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard battery cell pack",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Battery Cell Pack"
+  },
+  {
+    "Name": "Make_heavy_duty_battery_cell_pack",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty battery cell pack",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Battery Cell Pack"
+  },
+  {
+    "Name": "Make_precision_battery_cell_pack",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision battery cell pack",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Battery Cell Pack"
+  },
+  {
+    "Name": "Make_prototype_battery_cell_pack",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype battery cell pack",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Battery Cell Pack"
+  },
+  {
+    "Name": "Make_standard_flux_sensor",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard flux sensor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Flux Sensor"
+  },
+  {
+    "Name": "Make_heavy_duty_flux_sensor",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty flux sensor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Flux Sensor"
+  },
+  {
+    "Name": "Make_precision_flux_sensor",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision flux sensor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Flux Sensor"
+  },
+  {
+    "Name": "Make_prototype_flux_sensor",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype flux sensor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Flux Sensor"
+  },
+  {
+    "Name": "Make_standard_thruster_control_valve",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard thruster control valve",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Thruster Control Valve"
+  },
+  {
+    "Name": "Make_heavy_duty_thruster_control_valve",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty thruster control valve",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Thruster Control Valve"
+  },
+  {
+    "Name": "Make_precision_thruster_control_valve",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision thruster control valve",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Thruster Control Valve"
+  },
+  {
+    "Name": "Make_prototype_thruster_control_valve",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype thruster control valve",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Thruster Control Valve"
+  },
+  {
+    "Name": "Make_standard_gyroscope_assembly",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard gyroscope assembly",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Gyroscope Assembly"
+  },
+  {
+    "Name": "Make_heavy_duty_gyroscope_assembly",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty gyroscope assembly",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Gyroscope Assembly"
+  },
+  {
+    "Name": "Make_precision_gyroscope_assembly",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision gyroscope assembly",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Gyroscope Assembly"
+  },
+  {
+    "Name": "Make_prototype_gyroscope_assembly",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype gyroscope assembly",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Gyroscope Assembly"
+  },
+  {
+    "Name": "Make_standard_servo_controller",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard servo controller",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Servo Controller"
+  },
+  {
+    "Name": "Make_heavy_duty_servo_controller",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty servo controller",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Servo Controller"
+  },
+  {
+    "Name": "Make_precision_servo_controller",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision servo controller",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Servo Controller"
+  },
+  {
+    "Name": "Make_prototype_servo_controller",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype servo controller",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Servo Controller"
+  },
+  {
+    "Name": "Make_standard_machine_tool_spindle",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard machine tool spindle",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Machine Tool Spindle"
+  },
+  {
+    "Name": "Make_heavy_duty_machine_tool_spindle",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty machine tool spindle",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Machine Tool Spindle"
+  },
+  {
+    "Name": "Make_precision_machine_tool_spindle",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision machine tool spindle",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Machine Tool Spindle"
+  },
+  {
+    "Name": "Make_prototype_machine_tool_spindle",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype machine tool spindle",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Machine Tool Spindle"
+  },
+  {
+    "Name": "Make_standard_ore_sampler",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard ore sampler",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Ore Sampler"
+  },
+  {
+    "Name": "Make_heavy_duty_ore_sampler",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty ore sampler",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Ore Sampler"
+  },
+  {
+    "Name": "Make_precision_ore_sampler",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision ore sampler",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Ore Sampler"
+  },
+  {
+    "Name": "Make_prototype_ore_sampler",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype ore sampler",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Ore Sampler"
+  },
+  {
+    "Name": "Make_standard_ore_sorting_sensor",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard ore sorting sensor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Ore Sorting Sensor"
+  },
+  {
+    "Name": "Make_heavy_duty_ore_sorting_sensor",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty ore sorting sensor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Ore Sorting Sensor"
+  },
+  {
+    "Name": "Make_precision_ore_sorting_sensor",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision ore sorting sensor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Ore Sorting Sensor"
+  },
+  {
+    "Name": "Make_prototype_ore_sorting_sensor",
+    "Minerals": [
+      "Chalcopyrite",
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype ore sorting sensor",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Ore Sorting Sensor"
+  },
+  {
+    "Name": "Make_standard_conveyor_drive",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard conveyor drive",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Conveyor Drive"
+  },
+  {
+    "Name": "Make_heavy_duty_conveyor_drive",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty conveyor drive",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Conveyor Drive"
+  },
+  {
+    "Name": "Make_precision_conveyor_drive",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision conveyor drive",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Conveyor Drive"
+  },
+  {
+    "Name": "Make_prototype_conveyor_drive",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype conveyor drive",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Conveyor Drive"
+  },
+  {
+    "Name": "Make_standard_refinery_crucible",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard refinery crucible",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Refinery Crucible"
+  },
+  {
+    "Name": "Make_heavy_duty_refinery_crucible",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty refinery crucible",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Refinery Crucible"
+  },
+  {
+    "Name": "Make_precision_refinery_crucible",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision refinery crucible",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Refinery Crucible"
+  },
+  {
+    "Name": "Make_prototype_refinery_crucible",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype refinery crucible",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Refinery Crucible"
+  },
+  {
+    "Name": "Make_standard_survey_drill_head",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard survey drill head",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Survey Drill Head"
+  },
+  {
+    "Name": "Make_heavy_duty_survey_drill_head",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty survey drill head",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Survey Drill Head"
+  },
+  {
+    "Name": "Make_precision_survey_drill_head",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision survey drill head",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Survey Drill Head"
+  },
+  {
+    "Name": "Make_prototype_survey_drill_head",
+    "Minerals": [
+      "Kamacite",
+      "Chromite"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype survey drill head",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Survey Drill Head"
+  },
+  {
+    "Name": "Make_standard_hull_inspection_scanner",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 1.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 45.0,
+    "CargoItem": "standard hull inspection scanner",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Standard Hull Inspection Scanner"
+  },
+  {
+    "Name": "Make_heavy_duty_hull_inspection_scanner",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 1.75,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 52.5,
+    "CargoItem": "heavy duty hull inspection scanner",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Heavy Duty Hull Inspection Scanner"
+  },
+  {
+    "Name": "Make_precision_hull_inspection_scanner",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 2.0,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 60,
+    "CargoItem": "precision hull inspection scanner",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Precision Hull Inspection Scanner"
+  },
+  {
+    "Name": "Make_prototype_hull_inspection_scanner",
+    "Minerals": [
+      "Quartz"
+    ],
+    "InputTonnes": 2.5,
+    "Product": "None",
+    "OutputTonnes": 1.0,
+    "SecondsPerBatch": 75.0,
+    "CargoItem": "prototype hull inspection scanner",
+    "OutputQuantity": 10,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Prototype Hull Inspection Scanner"
+  },
+  {
+    "Name": "Make_Cipher_Relays",
+    "Minerals": [
+      "Quartz",
+      "Graphite"
+    ],
+    "InputTonnes": 1,
+    "Product": "None",
+    "OutputTonnes": 0.4,
+    "SecondsPerBatch": 120,
+    "CargoItem": "cipher relays",
+    "OutputQuantity": 4,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Cipher Relays"
+  },
+  {
+    "Name": "Make_Ghost_Navigation_Charts",
+    "Minerals": [
+      "Quartz",
+      "Graphite"
+    ],
+    "InputTonnes": 1,
+    "Product": "None",
+    "OutputTonnes": 0.4,
+    "SecondsPerBatch": 120,
+    "CargoItem": "ghost navigation charts",
+    "OutputQuantity": 4,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Ghost Navigation Charts"
+  },
+  {
+    "Name": "Make_Unregistered_Survey_Cores",
+    "Minerals": [
+      "Quartz",
+      "Graphite"
+    ],
+    "InputTonnes": 1,
+    "Product": "None",
+    "OutputTonnes": 0.4,
+    "SecondsPerBatch": 120,
+    "CargoItem": "unregistered survey cores",
+    "OutputQuantity": 4,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Unregistered Survey Cores"
+  },
+  {
+    "Name": "Make_Restricted_Memory_Crystals",
+    "Minerals": [
+      "Quartz",
+      "Graphite"
+    ],
+    "InputTonnes": 1,
+    "Product": "None",
+    "OutputTonnes": 0.4,
+    "SecondsPerBatch": 120,
+    "CargoItem": "restricted memory crystals",
+    "OutputQuantity": 4,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Restricted Memory Crystals"
+  },
+  {
+    "Name": "Make_Colorado_Tegridy",
+    "Minerals": [
+      "WaterIce",
+      "Graphite"
+    ],
+    "InputTonnes": 0.2,
+    "Product": "None",
+    "OutputTonnes": 0.06,
+    "SecondsPerBatch": 120,
+    "CargoItem": "colorado tegridy",
+    "OutputQuantity": 6,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Colorado Tegridy"
+  },
+  {
+    "Name": "Make_Dust",
+    "Minerals": [
+      "Quartz",
+      "Graphite"
+    ],
+    "InputTonnes": 0.2,
+    "Product": "None",
+    "OutputTonnes": 0.04,
+    "SecondsPerBatch": 120,
+    "CargoItem": "dust",
+    "OutputQuantity": 4,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Dust"
+  },
+  {
+    "Name": "Make_Ketracel_White",
+    "Minerals": [
+      "Quartz",
+      "Graphite"
+    ],
+    "InputTonnes": 0.2,
+    "Product": "None",
+    "OutputTonnes": 0.04,
+    "SecondsPerBatch": 120,
+    "CargoItem": "ketracel-white",
+    "OutputQuantity": 4,
+    "OutputUnit": "units",
+    "OutputDisplayName": "Ketracel-white"
+  }
+]

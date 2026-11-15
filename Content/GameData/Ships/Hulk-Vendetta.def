@@ -3,6 +3,7 @@ SHIP
 name:          "Hulk-Vendetta"
 display_name:  Vendetta
 class:         Hulk
+base_cost:     65000
 abrv:          CA
 
 hud_icon:   "VendettaHud"

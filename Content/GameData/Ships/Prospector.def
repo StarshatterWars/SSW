@@ -3,6 +3,7 @@ SHIP
 name:          Prospector
 display_name:  "Zodiac Prospector"
 class:         LCA
+base_cost:     458000
 cargo_capacity: { tonnes: 48, passengers: 0, load_tonnes_per_second: 0.25, unload_tonnes_per_second: 1 }
 abrv:          MSC
 empire:        Terellian

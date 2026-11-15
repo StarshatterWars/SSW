@@ -56,23 +56,23 @@ public:
         const FVector2D Size = Geometry.GetLocalSize();
         const FVector2D A(48, 34), B(Size.X - 48, 34), C(Size.X * 0.5, Size.Y - 26);
         const FVector Shares = Player->GetCombatAllocation();
-        const FLinearColor Cyan(0.28f, 0.8f, 1.0f);
+        const FLinearColor Tint = SShipSystemIcon::GetHUDTint();
         FSlateDrawElement::MakeLines(Elements, Layer, Geometry.ToPaintGeometry(),
-            {A, B, C, A}, ESlateDrawEffect::None, Cyan * 0.65f, true, 1.5f);
+            {A, B, C, A}, ESlateDrawEffect::None, Tint * 0.65f, true, 1.5f);
         const FVector2D Marker = A * Shares.X + B * Shares.Y + C * Shares.Z;
         const auto* Brush = FCoreStyle::Get().GetBrush(TEXT("WhiteBrush"));
         FSlateDrawElement::MakeBox(Elements, Layer + 1, Geometry.ToPaintGeometry(FVector2f(8, 8),
-            FSlateLayoutTransform(FVector2f(Marker - FVector2D(4, 4)))), Brush, ESlateDrawEffect::None, Cyan);
+            FSlateLayoutTransform(FVector2f(Marker - FVector2D(4, 4)))), Brush, ESlateDrawEffect::None, Tint);
 
         const EShipSystemIcon Icons[] = {EShipSystemIcon::Engine, EShipSystemIcon::Weapon, EShipSystemIcon::Shield};
         const FVector2D Positions[] = {{30, 3}, {Size.X - 70, 3}, {Size.X * 0.5 - 20, Size.Y - 22}};
         for (int Index = 0; Index < 3; ++Index)
         {
-            SShipSystemIcon::PaintIcon(Elements, Layer + 1, Geometry, Positions[Index], Icons[Index], Cyan);
+            SShipSystemIcon::PaintIcon(Elements, Layer + 1, Geometry, Positions[Index], Icons[Index], Tint);
             const FString Text = FString::Printf(TEXT("%d%%"), FMath::RoundToInt(Shares[Index] * 100));
             FSlateDrawElement::MakeText(Elements, Layer + 1, Geometry.ToPaintGeometry(FVector2f(104, 18),
                 FSlateLayoutTransform(FVector2f(Positions[Index] + FVector2D(25, 4)))), Text,
-                FCoreStyle::GetDefaultFontStyle("Bold", 12), ESlateDrawEffect::None, Cyan);
+                FCoreStyle::GetDefaultFontStyle("Bold", 12), ESlateDrawEffect::None, Tint);
         }
         return Layer + 1;
     }

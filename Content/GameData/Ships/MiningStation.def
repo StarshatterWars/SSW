@@ -4,6 +4,7 @@ name:          "Mining Station"
 display_name:  "Mining Station"
 abrv:          MIN
 class:         STATION
+base_cost:     414872000
 cargo_capacity: { tonnes: 90000, passengers: 0, load_tonnes_per_second: 3, unload_tonnes_per_second: 3 }
 hud_icon:      "/Game/UI/Ships/MiningStation/MiningStationHud.MiningStationHud"
 description:   "The ring-shaped Mining Station operates inside Janek's asteroid field. Its crews survey nearby deposits, extract ore and sort concentrates for shipment to the Asteroid Base. It has storage for 90,000 tonnes and two external freight berths. Visiting craft berth externally."

@@ -470,7 +470,11 @@ public:
     // only an import scale in its radius field. Simulation coordinates remain legacy.
     double GetNavigationHullRadius() const { return navigation_hull_radius > 0.0 ? navigation_hull_radius : GetRadius(); }
     double GetContactSpeed() const { return ScriptedContactSpeed.Get(GetVelocity().Size()); }
-    void SetScriptedContactSpeed(double Speed) { ScriptedContactSpeed = Speed; }
+    void SetScriptedContactSpeed(double Speed)
+    {
+        ScriptedContactSpeed = Speed;
+        bScriptedMotionLastFrame = true;
+    }
     void SetNativeCockpitRequested(bool Requested) {bNativeCockpitRequested=Requested;}
     bool IsNativeCockpitRequested() const {return bNativeCockpitRequested;}
     void BindNativePresentation(AShipActor* Actor);
@@ -481,6 +485,7 @@ public:
 private:
     double navigation_hull_radius = 0.0;
     TOptional<double> ScriptedContactSpeed;
+    bool bScriptedMotionLastFrame = false;
 public:
     bool                    IsAutoNavEngaged();
     bool                    IsAutoTrackEngaged() const { return bAutoTrack; }
