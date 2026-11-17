@@ -5,7 +5,7 @@
 #include "SimSystem.h"
 #include "Widgets/SLeafWidget.h"
 
-enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore, Contracts, Gazetteer, PlanetMoon, Agent, Accept, Audio, Keyboard, Display };
+enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore, Contracts, Gazetteer, PlanetMoon, Agent, Accept, Audio, Keyboard, Display, SettingsGear, Hangar, Insurance, Loadout, Skills, Mineral, Electronics, Medical, Liquid, Passengers };
 
 class SShipSystemIcon : public SLeafWidget
 {
@@ -26,6 +26,18 @@ public:
             FLinearColor(0.15f, 0.55f, 1.0f), FLinearColor(0.90f, 0.94f, 1.0f)
         };
         return Palette[FMath::Clamp(HUDView::DefaultColorSet(), 0, static_cast<int32>(UE_ARRAY_COUNT(Palette)) - 1)];
+    }
+
+    // JSON image keys use native vectors so they stay sharp and follow the HUD palette.
+    static EShipSystemIcon ForCatalogImage(FName Image)
+    {
+        if (Image == TEXT("Mineral")) return EShipSystemIcon::Mineral;
+        if (Image == TEXT("Electronics")) return EShipSystemIcon::Electronics;
+        if (Image == TEXT("Medical")) return EShipSystemIcon::Medical;
+        if (Image == TEXT("Liquid")) return EShipSystemIcon::Liquid;
+        if (Image == TEXT("Passengers")) return EShipSystemIcon::Passengers;
+        if (Image == TEXT("Production")) return EShipSystemIcon::Production;
+        return EShipSystemIcon::Cargo;
     }
 
     static EShipSystemIcon ForSystem(const SimSystem& System)
@@ -57,6 +69,11 @@ public:
         };
         switch (Symbol)
         {
+        case EShipSystemIcon::Mineral: Line({{4,7},{12,2},{20,8},{17,18},{7,21},{2,14},{4,7},{13,10},{12,2}}); Line({{13,10},{17,18}}); Line({{13,10},{7,21}}); break;
+        case EShipSystemIcon::Electronics: Line({{5,5},{17,5},{17,17},{5,17},{5,5}}); Line({{8,1},{8,5}}); Line({{14,1},{14,5}}); Line({{8,17},{8,21}}); Line({{14,17},{14,21}}); Line({{1,8},{5,8}}); Line({{17,14},{21,14}}); Line({{9,9},{13,9},{13,13},{9,13},{9,9}}); break;
+        case EShipSystemIcon::Medical: Line({{8,3},{14,3},{14,8},{20,8},{20,14},{14,14},{14,20},{8,20},{8,14},{2,14},{2,8},{8,8},{8,3}}); break;
+        case EShipSystemIcon::Liquid: Line({{11,2},{18,12},{19,16},{16,20},{11,21},{6,20},{3,16},{4,12},{11,2}}); Line({{7,14},{7,17},{10,18}}); break;
+        case EShipSystemIcon::Passengers: Line({{8,3},{14,3},{16,6},{14,10},{8,10},{6,6},{8,3}}); Line({{3,21},{4,15},{8,12},{14,12},{18,15},{19,21}}); break;
         case EShipSystemIcon::Engine: Line({{5,3},{17,3},{15,12},{7,12},{5,3}}); Line({{7,15},{7,20}}); Line({{11,15},{11,21}}); Line({{15,15},{15,20}}); break;
         case EShipSystemIcon::Weapon: Line({{3,11},{19,11}}); Line({{11,3},{11,19}}); Line({{5,5},{17,5},{17,17},{5,17},{5,5}}); break;
         case EShipSystemIcon::Projectile: Line({{11,2},{15,7},{15,17},{7,17},{7,7},{11,2}}); Line({{7,12},{4,18},{7,17}}); Line({{15,12},{18,18},{15,17}}); Line({{9,20},{13,20}}); break;
@@ -165,6 +182,29 @@ public:
         case EShipSystemIcon::Exit:
             Line({{10,3},{3,3},{3,19},{10,19}});
             Line({{8,11},{20,11}}); Line({{15,6},{20,11},{15,16}});
+            break;
+        case EShipSystemIcon::Loadout:
+            Line({{3,5},{19,5}}); Line({{6,5},{6,16},{9,19},{12,16},{12,5}});
+            Line({{15,5},{15,16},{18,19},{21,16},{21,5}});
+            break;
+        case EShipSystemIcon::Skills:
+            Line({{2,4},{9,4},{11,6},{13,4},{20,4},{20,18},{13,18},{11,20},{9,18},{2,18},{2,4}});
+            Line({{11,6},{11,20}}); Line({{5,8},{8,8}}); Line({{5,12},{8,12}});
+            Line({{14,9},{17,9}}); Line({{14,13},{17,13}}); break;
+        case EShipSystemIcon::Hangar:
+            Line({{2,20},{2,7},{11,2},{20,7},{20,20}});
+            Line({{6,20},{6,10},{16,10},{16,20}});
+            Line({{8,16},{14,16},{11,12},{8,16}});
+            break;
+        case EShipSystemIcon::Insurance:
+            Line({{3,4},{11,2},{19,4},{18,12},{15,17},{11,20},{7,17},{4,12},{3,4}});
+            Line({{7,10},{10,13},{15,7}});
+            break;
+        case EShipSystemIcon::SettingsGear:
+            Line({{8,5},{9,2},{13,2},{14,5},{17,6},{20,5},{22,9},{19,11},{19,14},{21,16},
+                  {19,20},{16,19},{13,20},{12,22},{8,21},{8,18},{5,16},{2,17},{0,13},
+                  {3,11},{3,8},{2,6},{5,3},{8,5}});
+            Line({{11,7},{14,8},{16,11},{14,15},{11,16},{8,15},{6,11},{8,8},{11,7}});
             break;
         case EShipSystemIcon::Options: Line({{3,5},{19,5}}); Line({{7,2},{7,8}}); Line({{3,11},{19,11}}); Line({{15,8},{15,14}}); Line({{3,17},{19,17}}); Line({{9,14},{9,20}}); break;
         default: Line({{11,2},{20,11},{11,20},{2,11},{11,2}}); break;

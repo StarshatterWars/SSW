@@ -47,6 +47,8 @@
 #include "Components/ScaleBox.h"
 #include "Brushes/SlateColorBrush.h"
 #include "MissionUIStyle.h"
+#include "ShipSystemIcon.h"
+#include "Components/NativeWidgetHost.h"
 #include "Styling/CoreStyle.h"
 #include "Engine/Texture2D.h"
 #include "Materials/MaterialInterface.h"
@@ -131,7 +133,8 @@ void UMenuDlg::BuildModernMenu()
     Label(TEXT("OPERATIONS"),30,White,1100,162,664,48,true);
     auto NewButton=[this](const TCHAR* Name){return WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(),Name);};
     BtnStart=Start?Start:NewButton(TEXT("BtnStart"));BtnCampaign=NewButton(TEXT("BtnCampaign"));BtnMission=NewButton(TEXT("BtnMission"));
-    BtnPlayer=NewButton(TEXT("BtnPlayer"));BtnMulti=NewButton(TEXT("BtnMulti"));BtnOptions=NewButton(TEXT("BtnOptions"));
+    if (BtnPlayer) BtnPlayer->SetVisibility(ESlateVisibility::Collapsed);
+    BtnPlayer=nullptr;BtnMulti=NewButton(TEXT("BtnMulti"));BtnOptions=NewButton(TEXT("BtnOptions"));
     if (Tactical) Tactical->SetVisibility(ESlateVisibility::Collapsed);
     BtnTac=nullptr;BtnQuit=Exit?Exit:NewButton(TEXT("BtnQuit"));
     auto Card=[&](UButton* Button,const TCHAR* Heading,const TCHAR* Subtitle,float X,float Y,float W,float H,bool Primary=false){
@@ -144,12 +147,20 @@ void UMenuDlg::BuildModernMenu()
     Card(BtnStart,TEXT("CONTINUE"),TEXT("Return to your active campaign"),1100,234,664,116,true);
     Card(BtnCampaign,TEXT("CAMPAIGNS"),TEXT("Choose your operation"),1100,376,324,104);
     Card(BtnMission,TEXT("MISSIONS"),TEXT("Campaign, single and custom"),1440,376,324,104);
-    Card(BtnPlayer,TEXT("PLAYER"),TEXT("Personnel and logbook"),1100,498,324,104);
-    Card(BtnMulti,TEXT("MULTIPLAYER"),TEXT("Create or join a session"),1440,498,324,104);
+    Card(BtnMulti,TEXT("MULTIPLAYER"),TEXT("Create or join a session"),1100,498,324,104);
     BtnFreeMode = NewButton(TEXT("BtnFreeMode"));
-    Card(BtnFreeMode,TEXT("FREE MODE"),TEXT("Start aboard Orion in Janek orbit"),1100,620,324,104);
-    Card(BtnOptions,TEXT("OPTIONS"),TEXT("Display, sound and controls"),1440,620,324,104);
-    Card(BtnQuit,TEXT("EXIT TO WINDOWS"),TEXT("Close Starshatter Wars"),1100,750,664,96);
+    Card(BtnFreeMode,TEXT("FREE MODE"),TEXT("Start aboard Orion in Janek orbit"),1440,498,324,104);
+    Place(BtnOptions, 1696, 126, 68, 48);
+    BtnOptions->SetToolTipText(INVTEXT("Options"));
+    auto* Gear = WidgetTree->ConstructWidget<UNativeWidgetHost>();
+    Gear->SetContent(SNew(SShipSystemIcon).Icon(EShipSystemIcon::SettingsGear));
+    Gear->SetVisibility(ESlateVisibility::HitTestInvisible);
+    auto* GearSize = WidgetTree->ConstructWidget<USizeBox>();
+    GearSize->SetWidthOverride(32);
+    GearSize->SetHeightOverride(32);
+    GearSize->SetContent(Gear);
+    BtnOptions->SetContent(GearSize);
+    Card(BtnQuit,TEXT("EXIT TO WINDOWS"),TEXT("Close Starshatter Wars"),1100,635,664,96);
     // Compact, persistent campaign/pilot context; no opaque full-width slab.
     Label(TEXT("ACTIVE CAMPAIGN"),12,Cyan,104,930,560,25);
     CampaignIdentityText=Label(TEXT("NO ACTIVE CAMPAIGN"),19,White,104,960,580,32);

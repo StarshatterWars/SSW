@@ -4,6 +4,7 @@
 #include "Engine/DataTable.h"
 #include "AsteroidResource.h"
 #include "FreightManifestTypes.h"
+#include "GameStructs_economy.h"
 #include "GameStructs_products.generated.h"
 
 USTRUCT(BlueprintType)
@@ -13,6 +14,7 @@ struct FSSWProductionFacility : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     FString Facility;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FName Image = TEXT("Production");
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     FString System;
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -36,6 +38,10 @@ struct FSSWProductionRecipe : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TArray<ESSWMineral> Minerals;
+
+    // Exact bill of materials. Empty only for ore refining, where Minerals are alternatives.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<FCommodityAmount> Inputs;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FName Image = TEXT("Production");
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     ESSWFinishedItem Product = ESSWFinishedItem::None;

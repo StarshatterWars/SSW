@@ -42,6 +42,7 @@ bool AcceptanceAI::Publish(FContractTransaction& Contract, FContractAccounts& Ac
 
     if (!TakeItems(*Issuer, Terms.PickupStationId, Terms.OfferedItems))
         return false;
+    if (!Contract.Id.IsValid()) Contract.Id=FGuid::NewGuid();
     Issuer->Credits -= Terms.RewardCredits;
     Contract.ExpiresAt = Now + FTimespan::FromMinutes(Terms.OfferExpiryMinutes);
     Contract.State = EContractState::Open;

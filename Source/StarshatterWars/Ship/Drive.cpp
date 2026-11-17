@@ -291,7 +291,7 @@ Drive::GetRequest(double seconds) const
     return
         TFactor *
         power_level *
-        sink_rate *
+        sink_rate * GetPowerDemandMultiplier() *
         seconds;
 }
 
@@ -340,7 +340,7 @@ Drive::GetThrust(double seconds)
 
     float eff =
         (energy / Denom) *
-        availability *
+        GetOperatingAvailability() *
         100.0f;
 
     float output =

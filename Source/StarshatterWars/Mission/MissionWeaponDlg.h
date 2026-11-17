@@ -76,6 +76,8 @@ protected:
     // Mission / player resolution
     // ------------------------------------------------------------
 
+    bool CanEditLoadout() const;
+    bool ApplyLiveLoadout(MissionLoad* Load);
     Mission* ResolveMission() const;
     MissionElement* ResolvePlayerElement() const;
     const FShipDesign* ResolvePlayerShipDesign() const;

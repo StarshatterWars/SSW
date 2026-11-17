@@ -240,6 +240,17 @@ public:
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> PlayersPopupClass;
 
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> HangarPopupClass;
+
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> InsurancePopupClass;
+
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> ShipFitPopupClass;
+
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> SkillsPopupClass;
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> CmdMessageDialogClass;

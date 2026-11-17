@@ -188,6 +188,7 @@ void SFighterHUDDetails::Construct(const FArguments& A)
     ThirdPerson = A._ThirdPerson;
     NetworkController = A._NetworkController;
     OnOverviewWheel = A._OnOverviewWheel;
+    OnCockpitShortcut = A._OnCockpitShortcut;
     ShowHUD = A._ShowHUD; CameraMode = A._CameraMode; SelectedTarget = A._SelectedTarget; SelectedName = A._SelectedName;
     SetVisibility(EVisibility::Visible);
     ForceVolatile(true);
@@ -379,33 +380,15 @@ void SFighterHUDDetails::Refresh()
         return;
     }
     Ship* P = PlayerShip(); bHasPlayer = P != nullptr;
-    if (P && P->GetRegion() && P->GetRegion()->GetSystem())
+    JumpReadout = {};
+    if (P && Sim::GetSim())
     {
-        const FString CurrentSystem = UTF8_TO_TCHAR(P->GetRegion()->GetSystem()->GetName());
+        TArray<FString> Selected;
         if (const auto* Actor = P->GetNativePresentation())
-        {
-            const auto* Instance = Actor->GetGameInstance();
-            const auto* Runtime = Instance ? Instance->GetSubsystem<USSWRuntimeSubsystem>() : nullptr;
-            if (Runtime)
-            {
-                const auto& Selected = Runtime->GetSelectedJumpRoute();
-                const int32 Index = Selected.IndexOfByKey(CurrentSystem);
-                if (Index != INDEX_NONE && Index + 1 < Selected.Num())
-                    JumpRoute.Append(Selected.GetData() + Index, Selected.Num() - Index);
-            }
-        }
-        if (JumpRoute.IsEmpty())
-        {
-            JumpRoute.Add(CurrentSystem);
-            for (ListIter<Instruction> Route = P->GetFlightPlan(); ++Route;)
-            {
-                const Instruction* Point = Route.value();
-                if (!Point || Point->GetStatus() > INSTRUCTION_STATUS::ACTIVE || !Point->GetRegion()) continue;
-                const StarSystem* System = Point->GetRegion()->GetSystem();
-                if (System && !JumpRoute.Last().Equals(UTF8_TO_TCHAR(System->GetName()), ESearchCase::IgnoreCase))
-                    JumpRoute.Add(UTF8_TO_TCHAR(System->GetName()));
-            }
-        }
+            if (const auto* Instance = Actor->GetGameInstance())
+                if (const auto* Runtime = Instance->GetSubsystem<USSWRuntimeSubsystem>()) Selected = Runtime->GetSelectedJumpRoute();
+        JumpReadout = FJumpRouteModel::Build(*Sim::GetSim(), *P, Selected);
+        JumpRoute = JumpReadout.Systems;
     }
     PlayerHull = Hull(P); Primary = Secondary = TEXT("NONE");
     if (P)
@@ -687,6 +670,7 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
     {
         Ship* P=PlayerShip();
         const bool bPreTakeoff = P && P->GetDock() && P->GetDock()->IsLaunchDeck() && P->GetFlightPhase()<EOPSMode::ACTIVE;
+        if (CockpitDisplays && CockpitDisplays->HandleControlClick()) return FReply::Handled();
         if (!bPreTakeoff && CockpitDisplays && CockpitDisplays->HandleGearClick()) return FReply::Handled();
         const bool Mini=ThirdPerson.Get() && !bPreTakeoff && !IsCockpitDisplayActive();
         if(!bPreTakeoff && !IsCockpitDisplayActive() && (Mini || Modes[0] == EMode::Ship) && P && P->GetGear() && SSWGearIndicator::Contains(Local,GearButtonOrigin(Size,Scale,Mini),FVector2D(28,26)*Scale))
@@ -1427,12 +1411,12 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     }
     if (HUDPlayer && !bPreTakeoff)
     {
-        if (JumpRoute.Num() > 1)
+        if (JumpRoute.Num() > 1 || !JumpReadout.Gate.IsEmpty() || JumpReadout.bArrived)
         {
             const int32 VisibleSystems = FMath::Min(JumpRoute.Num(), 5);
             const int32 HiddenSystems = JumpRoute.Num() - VisibleSystems;
-            const FVector2D Origin = FVector2D(20, bMiniHUD ? 146 : 52) * Scale;
-            const FVector2D Extent = FVector2D(196, 34 + (VisibleSystems + (HiddenSystems > 0 ? 1 : 0)) * 18) * Scale;
+            const FVector2D Origin = FVector2D(72, bMiniHUD ? 146 : 52) * Scale;
+            const FVector2D Extent = FVector2D(260, 84 + (VisibleSystems + (HiddenSystems > 0 ? 1 : 0)) * 18) * Scale;
             const auto& Glass = FlightPanelStyle::Glass();
             FSlateDrawElement::MakeBox(E,L+1,
                 G.ToPaintGeometry(FVector2f(Extent), FSlateLayoutTransform(FVector2f(Origin))),
@@ -1450,6 +1434,15 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             if (HiddenSystems > 0)
                 Text(Origin+FVector2D(25,30+VisibleSystems*18)*Scale,
                     FString::Printf(TEXT("+%d MORE"), HiddenSystems), InstrumentColor, 10);
+            const float DetailY = 34 + (VisibleSystems + (HiddenSystems > 0 ? 1 : 0)) * 18;
+            const FString GateLine = JumpReadout.Gate.IsEmpty() ? JumpReadout.Status : TEXT("NEXT: ") + JumpReadout.Gate;
+            Text(Origin+FVector2D(10,DetailY)*Scale, GateLine.Left(38), InstrumentColor, 10);
+            if (!JumpReadout.Gate.IsEmpty())
+            {
+                const FString RangeLine = JumpReadout.Range >= 0 ? UFormattingUtils::FormatDistance(JumpReadout.Range) : JumpReadout.Region;
+                Text(Origin+FVector2D(10,DetailY+17)*Scale,RangeLine,InstrumentColor,10);
+                Text(Origin+FVector2D(10,DetailY+34)*Scale,JumpReadout.Status,InstrumentColor,10);
+            }
         }
         if (FlightHUDMode == EFlightHUDMode::Tactical) DrawSensorTracks(*HUDPlayer, G, E, L);
         DrawFlightNavigation(*HUDPlayer, G, E, L+3);
@@ -1797,3 +1790,13 @@ void SFighterHUDDetails::UpdateInformationMessages()
     }
     if(InformationScroll)InformationScroll->ScrollToEnd();
 }
+
+bool SFighterHUDDetails::CanUseCockpitShortcut(FName Action) const
+{
+    const Ship* Craft=PlayerShip();
+    if (!Craft || Craft->IsDead() || Craft->IsDying() || Game::IsTimeCompressed()) return false;
+    if ((Action==TEXT("Radio") || Action==TEXT("Camera")) && Craft->GetFlightPhase()<EOPSMode::ACTIVE) return false;
+    return OnCockpitShortcut.IsBound();
+}
+void SFighterHUDDetails::ExecuteCockpitShortcut(FName Action)
+{ if (CanUseCockpitShortcut(Action)) OnCockpitShortcut.ExecuteIfBound(Action); }

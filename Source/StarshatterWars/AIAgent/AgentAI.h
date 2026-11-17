@@ -9,6 +9,8 @@ class PlayerCharacter;
 class AgentAI
 {
 public:
+    FString SaveJournal() const;
+    bool RestoreJournal(const FString& Json);
     static FName PilotKey(const PlayerCharacter& Pilot);
 
     enum class EState : uint8 { None, Offered, Accepted, InProgress, Completed, Failed, Declined };
@@ -18,6 +20,7 @@ public:
         int32 MissionId = INDEX_NONE;
         EState State = EState::None;
         FName Issuer;
+        int64 ExpiresUtc = 0;
     };
 
     const FAssignment* Find(FName Pilot) const;
@@ -35,4 +38,5 @@ private:
     TMap<FName, TMap<FName, FAssignment>> Offers;
     TMap<FName, TArray<FAssignment>> Queues;
     TMap<FName, FAssignment> LastOutcome;
+    TMap<FName, TSet<int32>> Completed;
 };

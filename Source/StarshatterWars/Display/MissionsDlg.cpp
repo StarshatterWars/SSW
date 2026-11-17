@@ -1,4 +1,5 @@
 #include "MissionsDlg.h"
+#include "PanelCloseIcon.h"
 
 #include "MissionUIStyle.h"
 #include "ShipSystemIcon.h"
@@ -26,8 +27,9 @@ TSharedRef<SWidget> UMissionsDlg::RebuildWidget()
             + SHorizontalBox::Slot().FillWidth(1)
             [SNew(STextBlock).Text(Title).Font(MissionUIStyle::GetHeaderFont(17)).AutoWrapText(true)]
             + SHorizontalBox::Slot().AutoWidth()
-            [SNew(SButton).Text(INVTEXT("×")).ButtonColorAndOpacity(FLinearColor(.55f, .09f, .07f))
-                .OnClicked_Lambda([Action = Close]() { Action.ExecuteIfBound(); return FReply::Handled(); })]
+            [SNew(SButton).ContentPadding(FMargin(8)).HAlign(HAlign_Center).VAlign(VAlign_Center).ToolTipText(INVTEXT("Close panel")).ButtonColorAndOpacity(FLinearColor(.55f, .09f, .07f))
+                .OnClicked_Lambda([Action = Close]() { Action.ExecuteIfBound(); return FReply::Handled(); })
+                [SNew(SPanelCloseIcon)]]
         ]
         + SVerticalBox::Slot().FillHeight(1)
         [SNew(SScrollBox) + SScrollBox::Slot()

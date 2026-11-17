@@ -1,4 +1,5 @@
 #include "CargoManifestDlg.h"
+#include "StationServices.h"
 #include "Algo/AllOf.h"
 #include "MissionUIStyle.h"
 #include "Ship.h"
@@ -25,13 +26,6 @@ namespace
         return Pilot && !Pilot->IsDead() ? Pilot : nullptr;
     }
 
-    const SSWFreightManifest::FLoad* CurrentLoad()
-    {
-        const Ship* Pilot = CargoShip();
-        const auto* Load = Pilot ? Pilot->GetCargoManifest().GetPtrOrNull() : nullptr;
-        return Load && (Load->Quantity > 0 || (Load->Unit == TEXT("t") && Pilot->GetMinedOreTonnes() > 0))
-            ? Load : nullptr;
-    }
     using FCargoItem = TSharedPtr<FS_Cargo>;
 
     class SCargoRow : public SMultiColumnTableRow<FCargoItem>
@@ -44,11 +38,15 @@ namespace
         void Construct(const FArguments& Args, const TSharedRef<STableViewBase>& Owner)
         {
             Item = Args._Item;
-            SMultiColumnTableRow<FCargoItem>::Construct(FSuperRowType::FArguments(), Owner);
+            SMultiColumnTableRow<FCargoItem>::Construct(FSuperRowType::FArguments().Style(&MissionUIStyle::FlightTableRowStyle()), Owner);
         }
 
         TSharedRef<SWidget> GenerateWidgetForColumn(const FName& Column) override
         {
+            if (Column == "Name")
+                return SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().AutoWidth().Padding(4,2)[SNew(SShipSystemIcon).Icon(SShipSystemIcon::ForCatalogImage(Item->Image))]
+                    + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(FText::FromString(Item->DisplayName).ToUpper())];
             if (Column == "Illicit")
                 return SNew(SBox).HAlign(HAlign_Center).VAlign(VAlign_Center)
                     .ToolTipText(Item->bIllicit ? INVTEXT("Illicit cargo") : INVTEXT("Legal cargo"))
@@ -83,6 +81,8 @@ namespace
         FName SortColumn = "Name";
         EColumnSortMode::Type SortMode = EColumnSortMode::Ascending;
         const Ship* LastShip = nullptr;
+        FString Compartment;
+        FText ServiceMessage;
 
         void Sort()
         {
@@ -111,18 +111,36 @@ namespace
         {
             const Ship* Pilot = CargoShip();
             TArray<FS_Cargo> Current;
-            FS_Cargo Freight;
-            if (Pilot && Catalog.IsValid() && Catalog->DescribeCargo(*Pilot, Freight))
-                Current.Add(MoveTemp(Freight));
-            if (const auto* Package = Pilot ? Pilot->GetCourierPackage() : nullptr)
+            if (auto* Craft = CargoShip())
             {
-                auto& Row = Current.AddDefaulted_GetRef();
-                Row.Name = TEXT("Sealed Courier Package/") + Package->ContractId.ToString();
-                Row.DisplayName = TEXT("Sealed Courier Package");
-                Row.Unit = TEXT("crate");
-                Row.Size = Package->Tonnes;
-                Row.Quantity = 1;
+                Craft->SyncCargoInventory();
+                const auto& State = Sim::GetSim()->ReadEconomy();
+                const FName Key = Compartment.IsEmpty() ? Craft->GetCargoInventoryKey() : FStationServices::Inventory(*Compartment);
+                if (const auto* Inventory = State.Inventories.Find(Key))
+                    for (const auto& Stack : Inventory->Items)
+                    {
+                        if (Stack.Quantity <= 0) continue;
+                        FS_Cargo Row; Row.Name = Stack.Type.ToString(); Row.DisplayName = Row.Name;
+                        Row.Size = Stack.UnitTonnes; Row.Quantity = Stack.Quantity;
+                        if (Catalog.IsValid()) Catalog->ForEachDefinition([&](FName Name, const FS_CargoCatalogRow& Definition)
+                        {
+                            if (Name != Stack.Type) return;
+                            Row.DisplayName = Definition.DisplayName; Row.Type = Definition.Type; Row.Unit = Definition.Unit;
+                            Row.Value = Definition.Value; Row.Rarity = Definition.Rarity; Row.bIllicit = Definition.bIllicit; Row.Image = Definition.Image;
+                        });
+                        if (Row.Name.StartsWith(TEXT("Courier/"))) { Row.DisplayName = TEXT("Sealed Courier Package"); Row.Unit = TEXT("crate"); }
+                        Row.UpdateTotalValue(); Current.Add(MoveTemp(Row));
+                    }
             }
+
+            // Passenger berths remain separate from mass-based inventories.
+            if (Pilot && Catalog.IsValid())
+                if (const auto* Load = Pilot->GetCargoManifest().GetPtrOrNull(); Load && Load->bPassengers)
+                {
+                    FS_Cargo Passengers;
+                    if (Catalog->DescribeCargo(*Pilot, Passengers))
+                    { Passengers.Image = TEXT("Passengers"); Current.Add(MoveTemp(Passengers)); }
+                }
 
             if (LastShip == Pilot && Current.Num() == Rows.Num() &&
                 Algo::AllOf(Current, [this](const FS_Cargo& Item)
@@ -198,14 +216,6 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
         Table->Refresh();
         return EActiveTimerReturnType::Continue;
     }));
-    const auto IsSelected = [Table]()
-    {
-        const auto View = Table->List.Pin();
-        const auto* Load = CurrentLoad();
-        if (!View || !Load || CargoShip() != Table->LastShip) return false;
-        const auto Selected = View->GetSelectedItems();
-        return !Selected.IsEmpty() && Selected[0]->Name == Load->Item;
-    };
     const auto Font = MissionUIStyle::GetRowFont(13);
     return SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(20, 18, 20, 8)
@@ -240,20 +250,52 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
             .Visibility_Lambda([Table]() { return Table->Rows.IsEmpty() ? EVisibility::Visible : EVisibility::Collapsed; })
             .Text(INVTEXT("CARGO HOLD EMPTY"))
         ]
-        + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Right).Padding(20)
-        [
-            SNew(SButton).ContentPadding(FMargin(12, 6)).ToolTipText(INVTEXT("Transfer selected cargo to dock"))
-            .IsEnabled_Lambda([IsSelected]()
-            {
-                const Ship* Pilot = CargoShip();
-                return IsSelected() && Pilot && Pilot->GetDockedCargoTransferQuantity() > 0;
-            })
-            .OnClicked_Lambda([IsSelected, Table]()
-            {
-                if (Ship* Pilot = CargoShip(); Pilot && IsSelected() && Pilot->TransferCargoToDock() > 0)
-                    Table->Refresh();
-                return FReply::Handled();
-            })
-            [ SNew(SShipSystemIcon).Icon(EShipSystemIcon::Replace) ]
+        + SVerticalBox::Slot().AutoHeight().Padding(20,8)
+        [SNew(STextBlock).Font(Font).Text_Lambda([Table]() { return Table->ServiceMessage; })]
+        + SVerticalBox::Slot().AutoHeight().Padding(20)
+        [SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().AutoWidth().Padding(2)
+            [SNew(SButton).ToolTipText(INVTEXT("Ship cargo"))
+                .OnClicked_Lambda([Table]() { Table->Compartment.Empty(); Table->Refresh(); return FReply::Handled(); })
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Cargo)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(2)
+            [SNew(SButton).ToolTipText(INVTEXT("Local station storage")) .IsEnabled_Lambda([](){return FStationServices::IsDocked();})
+                .OnClicked_Lambda([Table]() { Table->Compartment = TEXT("Player Storage"); Table->Refresh(); return FReply::Handled(); })
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Hangar)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(2)
+            [SNew(SButton).ToolTipText(INVTEXT("Facility input inventory")) .IsEnabled_Lambda([](){return FStationServices::HasIndustry();})
+                .OnClicked_Lambda([Table]() { Table->Compartment = TEXT("Player Input"); Table->Refresh(); return FReply::Handled(); })
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Production)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(2)
+            [SNew(SButton).ToolTipText(INVTEXT("Collect completed facility output")) .IsEnabled_Lambda([](){return FStationServices::HasIndustry();})
+                .OnClicked_Lambda([Table]() { Table->Compartment = TEXT("Player Output"); Table->Refresh(); return FReply::Handled(); })
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Accept)]]
+            + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center).Padding(8,0)
+            [SNew(STextBlock).Font(Font).Text_Lambda([Table]() { return FText::FromString(Table->Compartment.IsEmpty() ? TEXT("SHIP CARGO") : Table->Compartment.ToUpper()); })]
+            + SHorizontalBox::Slot().AutoWidth().Padding(2)
+            [SNew(SButton).ToolTipText(INVTEXT("Transfer selected cargo: ship to local storage, or selected station inventory to ship"))
+                .IsEnabled_Lambda([](){return FStationServices::IsDocked();})
+                .OnClicked_Lambda([Table, WeakInstance = TWeakObjectPtr<UGameInstance>(GetGameInstance())]()
+                {
+                    if (auto View = Table->List.Pin(); View && !View->GetSelectedItems().IsEmpty())
+                        FStationServices::MoveCargo(WeakInstance.Get(), FName(*View->GetSelectedItems()[0]->Name), Table->Compartment.IsEmpty(),
+                            Table->Compartment.IsEmpty() ? TEXT("Player Storage") : *Table->Compartment, Table->ServiceMessage);
+                    Table->Refresh(); return FReply::Handled();
+                })[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Replace)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(2)
+            [SNew(SButton).ToolTipText(INVTEXT("Supply selected ship cargo to this facility input inventory"))
+                .IsEnabled_Lambda([Table](){return Table->Compartment.IsEmpty() && FStationServices::HasIndustry();})
+                .OnClicked_Lambda([Table, WeakInstance = TWeakObjectPtr<UGameInstance>(GetGameInstance())]()
+                {
+                    if (auto View = Table->List.Pin(); View && !View->GetSelectedItems().IsEmpty())
+                        FStationServices::MoveCargo(WeakInstance.Get(), FName(*View->GetSelectedItems()[0]->Name), true, TEXT("Player Input"), Table->ServiceMessage);
+                    Table->Refresh(); return FReply::Handled();
+                })[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Production)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(2)
+            [SNew(SButton).ToolTipText_Lambda([](){return FText::Format(INVTEXT("Full repair: {0} credits. Restores hull and installed components while docked."), FText::AsNumber(FStationServices::FullRepairCost()));})
+                .IsEnabled_Lambda([](){return FStationServices::FullRepairCost() > 0;})
+                .OnClicked_Lambda([Table, WeakInstance = TWeakObjectPtr<UGameInstance>(GetGameInstance())]()
+                { FStationServices::RepairAll(WeakInstance.Get(), Table->ServiceMessage); return FReply::Handled(); })
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Repair)]]
         ];
 }

@@ -25,6 +25,10 @@ public:
         SLATE_ARGUMENT(TFunction<void(const FShipDesign*)>, UpdatePreview)
     SLATE_END_ARGS()
 
+    void SetReferenceActive(bool Active)
+    {
+        if (UpdatePreview) UpdatePreview(Active && Selected && !Selected->DesignKey.IsNone() ? ShipDesignRegistry::Find(Selected->DesignKey) : nullptr);
+    }
     void Construct(const FArguments& Args)
     {
         UpdatePreview = Args._UpdatePreview;

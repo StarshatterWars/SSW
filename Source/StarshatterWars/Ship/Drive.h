@@ -58,6 +58,7 @@ public:
 
     float GetThrust(double seconds);
 
+    double GetRatedDemand() const override { return sink_rate * GetPowerDemandMultiplier() * (augmenter > 0 ? 1.5 : 1.0); }
     float MaxThrust() const
     {
         return thrust;

@@ -1,0 +1,2931 @@
+[
+  {
+    "Name": "gunnery",
+    "DisplayName": "Gunnery",
+    "Group": "Gunnery",
+    "Prerequisites": [],
+    "Description": "Operation and safety of ship-mounted guns.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510001,
+    "SkillRank": 1,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {}
+  },
+  {
+    "Name": "missile_operations",
+    "DisplayName": "Missile Operations",
+    "Group": "Missile Systems",
+    "Prerequisites": [],
+    "Description": "Missile handling, seeker operation and launch procedures.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510002,
+    "SkillRank": 1,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {}
+  },
+  {
+    "Name": "target_analysis",
+    "DisplayName": "Target Analysis",
+    "Group": "Gunnery",
+    "Prerequisites": [
+      "gunnery"
+    ],
+    "Description": "Identification of target systems and weapon engagement limits.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510003,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "gunnery": 1
+    }
+  },
+  {
+    "Name": "point_defence",
+    "DisplayName": "Point Defence",
+    "Group": "Gunnery",
+    "Prerequisites": [
+      "gunnery"
+    ],
+    "Description": "Coordinated defensive fire against incoming missiles and small craft.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510004,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "gunnery": 1
+    }
+  },
+  {
+    "Name": "navigation",
+    "DisplayName": "Navigation",
+    "Group": "Navigation",
+    "Prerequisites": [],
+    "Description": "Flight planning and safe navigation within a sector.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510005,
+    "SkillRank": 1,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {}
+  },
+  {
+    "Name": "quantum_navigation",
+    "DisplayName": "Quantum Navigation",
+    "Group": "Navigation",
+    "Prerequisites": [
+      "navigation"
+    ],
+    "Description": "Quantum departure, arrival and route safety procedures.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510006,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "navigation": 1
+    }
+  },
+  {
+    "Name": "farcaster_navigation",
+    "DisplayName": "Farcaster Navigation",
+    "Group": "Navigation",
+    "Prerequisites": [
+      "quantum_navigation"
+    ],
+    "Description": "Planning and traversing intersystem farcaster routes.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510007,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "quantum_navigation": 1
+    }
+  },
+  {
+    "Name": "formation_operations",
+    "DisplayName": "Formation Operations",
+    "Group": "Navigation",
+    "Prerequisites": [
+      "navigation"
+    ],
+    "Description": "Formation spacing and coordinated flight procedures.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510008,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "navigation": 1
+    }
+  },
+  {
+    "Name": "engineering",
+    "DisplayName": "Engineering",
+    "Group": "Engineering",
+    "Prerequisites": [],
+    "Description": "Ship-system operation, maintenance and power allocation.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510009,
+    "SkillRank": 1,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {}
+  },
+  {
+    "Name": "reactor_operations",
+    "DisplayName": "Reactor Operations",
+    "Group": "Engineering",
+    "Prerequisites": [
+      "engineering"
+    ],
+    "Description": "Operation of SSW ship reactors within their rated output limits.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510010,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "engineering": 1
+    }
+  },
+  {
+    "Name": "shield_operations",
+    "DisplayName": "Shield Operations",
+    "Group": "Engineering",
+    "Prerequisites": [
+      "engineering"
+    ],
+    "Description": "Capacitor and shield-system operation on equipped ships.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510011,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "engineering": 1
+    }
+  },
+  {
+    "Name": "damage_control",
+    "DisplayName": "Damage Control",
+    "Group": "Engineering",
+    "Prerequisites": [
+      "engineering"
+    ],
+    "Description": "Repair priorities and safe management of damaged components.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510012,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "engineering": 1
+    }
+  },
+  {
+    "Name": "component_fitting",
+    "DisplayName": "Component Fitting",
+    "Group": "Engineering",
+    "Prerequisites": [
+      "engineering",
+      "reactor_operations"
+    ],
+    "Description": "Component compatibility, fitting and reactor-budget checks.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510013,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "engineering": 1,
+      "reactor_operations": 1
+    }
+  },
+  {
+    "Name": "surveying",
+    "DisplayName": "Surveying",
+    "Group": "Mining",
+    "Prerequisites": [],
+    "Description": "Identification and surveying of asteroid deposits.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510014,
+    "SkillRank": 1,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {}
+  },
+  {
+    "Name": "ore_assaying",
+    "DisplayName": "Ore Assaying",
+    "Group": "Mining",
+    "Prerequisites": [
+      "surveying"
+    ],
+    "Description": "Ore composition and remaining-resource assessment.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510015,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "surveying": 1
+    }
+  },
+  {
+    "Name": "mining_operations",
+    "DisplayName": "Mining Operations",
+    "Group": "Mining",
+    "Prerequisites": [
+      "surveying"
+    ],
+    "Description": "Mining-laser cycles, station keeping and ore handling.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510016,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "surveying": 1
+    }
+  },
+  {
+    "Name": "advanced_mining",
+    "DisplayName": "Advanced Mining",
+    "Group": "Mining",
+    "Prerequisites": [
+      "ore_assaying",
+      "mining_operations",
+      "cargo_handling"
+    ],
+    "Description": "Coordinated extraction in dense asteroid fields.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510017,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "ore_assaying": 1,
+      "mining_operations": 1,
+      "cargo_handling": 1
+    }
+  },
+  {
+    "Name": "reprocessing",
+    "DisplayName": "Reprocessing",
+    "Group": "Industry",
+    "Prerequisites": [
+      "ore_assaying"
+    ],
+    "Description": "Refinery inputs, recovery yield and processing residue.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510018,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "ore_assaying": 1
+    }
+  },
+  {
+    "Name": "manufacturing",
+    "DisplayName": "Manufacturing",
+    "Group": "Industry",
+    "Prerequisites": [
+      "engineering"
+    ],
+    "Description": "Blueprint-based production with material and output inventories.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510019,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "engineering": 1
+    }
+  },
+  {
+    "Name": "material_efficiency",
+    "DisplayName": "Material Efficiency",
+    "Group": "Industry",
+    "Prerequisites": [
+      "manufacturing"
+    ],
+    "Description": "Understanding material-efficiency research and blueprint requirements.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510020,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    }
+  },
+  {
+    "Name": "production_management",
+    "DisplayName": "Production Management",
+    "Group": "Industry",
+    "Prerequisites": [
+      "manufacturing"
+    ],
+    "Description": "Facility queues, storage and production scheduling.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510021,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    }
+  },
+  {
+    "Name": "blueprint_research",
+    "DisplayName": "Blueprint Research",
+    "Group": "Industry",
+    "Prerequisites": [
+      "material_efficiency"
+    ],
+    "Description": "Blueprint originals, limited-run copies and research planning.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510022,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "material_efficiency": 1
+    }
+  },
+  {
+    "Name": "cargo_handling",
+    "DisplayName": "Cargo Handling",
+    "Group": "Logistics",
+    "Prerequisites": [],
+    "Description": "Safe loading, unloading and cargo-capacity management.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510023,
+    "SkillRank": 1,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {}
+  },
+  {
+    "Name": "freight_operations",
+    "DisplayName": "Freight Operations",
+    "Group": "Logistics",
+    "Prerequisites": [
+      "cargo_handling",
+      "navigation"
+    ],
+    "Description": "Freighter pickup reservations and delivery operations.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510024,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "cargo_handling": 1,
+      "navigation": 1
+    }
+  },
+  {
+    "Name": "intersystem_logistics",
+    "DisplayName": "Intersystem Logistics",
+    "Group": "Logistics",
+    "Prerequisites": [
+      "freight_operations",
+      "farcaster_navigation"
+    ],
+    "Description": "Multi-system freight routes and destination delivery planning.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510025,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "freight_operations": 1,
+      "farcaster_navigation": 1
+    }
+  },
+  {
+    "Name": "contract_administration",
+    "DisplayName": "Contract Administration",
+    "Group": "Trade",
+    "Prerequisites": [],
+    "Description": "Courier terms, collateral, deadlines and contract settlement.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510026,
+    "SkillRank": 1,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {}
+  },
+  {
+    "Name": "trade",
+    "DisplayName": "Trade",
+    "Group": "Trade",
+    "Prerequisites": [],
+    "Description": "Market quantities, prices and safe exchange of goods.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510027,
+    "SkillRank": 1,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {}
+  },
+  {
+    "Name": "procurement",
+    "DisplayName": "Procurement",
+    "Group": "Trade",
+    "Prerequisites": [
+      "trade",
+      "contract_administration"
+    ],
+    "Description": "Sourcing goods through local markets and transport contracts.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510028,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "trade": 1,
+      "contract_administration": 1
+    }
+  },
+  {
+    "Name": "risk_management",
+    "DisplayName": "Risk Management",
+    "Group": "Trade",
+    "Prerequisites": [
+      "trade"
+    ],
+    "Description": "Hull valuation, insurance coverage and commercial risk.",
+    "MinimumRank": 0,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510029,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "trade": 1
+    }
+  },
+  {
+    "Name": "fleet_logistics",
+    "DisplayName": "Fleet Logistics",
+    "Group": "Command",
+    "Prerequisites": [
+      "intersystem_logistics",
+      "production_management"
+    ],
+    "Description": "Coordinating fleet supply and industrial transport.",
+    "MinimumRank": 2,
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1,
+    "SkillTypeID": 510030,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "intersystem_logistics": 1,
+      "production_management": 1
+    }
+  },
+  {
+    "Name": "weapon_calibration",
+    "DisplayName": "Weapon Calibration",
+    "Group": "Gunnery",
+    "Description": "SSW specialist qualification in weapon calibration. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "gunnery"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510031,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "gunnery": 1
+    }
+  },
+  {
+    "Name": "fire_control",
+    "DisplayName": "Fire Control",
+    "Group": "Gunnery",
+    "Description": "SSW specialist qualification in fire control. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "weapon_calibration"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510032,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "weapon_calibration": 1
+    }
+  },
+  {
+    "Name": "tracking_solutions",
+    "DisplayName": "Tracking Solutions",
+    "Group": "Gunnery",
+    "Description": "SSW specialist qualification in tracking solutions. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "fire_control"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510033,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "fire_control": 1
+    }
+  },
+  {
+    "Name": "ballistic_analysis",
+    "DisplayName": "Ballistic Analysis",
+    "Group": "Gunnery",
+    "Description": "SSW specialist qualification in ballistic analysis. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "tracking_solutions"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510034,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "tracking_solutions": 1
+    }
+  },
+  {
+    "Name": "precision_gunnery",
+    "DisplayName": "Precision Gunnery",
+    "Group": "Gunnery",
+    "Description": "SSW specialist qualification in precision gunnery. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "ballistic_analysis"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510035,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "ballistic_analysis": 1
+    }
+  },
+  {
+    "Name": "turret_coordination",
+    "DisplayName": "Turret Coordination",
+    "Group": "Gunnery",
+    "Description": "SSW specialist qualification in turret coordination. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "precision_gunnery"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510036,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "precision_gunnery": 1
+    }
+  },
+  {
+    "Name": "concentrated_fire",
+    "DisplayName": "Concentrated Fire",
+    "Group": "Gunnery",
+    "Description": "SSW specialist qualification in concentrated fire. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "turret_coordination"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510037,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "turret_coordination": 1
+    }
+  },
+  {
+    "Name": "capital_fire_control",
+    "DisplayName": "Capital Fire Control",
+    "Group": "Gunnery",
+    "Description": "SSW specialist qualification in capital fire control. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 2,
+    "Prerequisites": [
+      "concentrated_fire"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5.0,
+    "SkillTypeID": 510038,
+    "SkillRank": 9,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "concentrated_fire": 1
+    }
+  },
+  {
+    "Name": "fleet_gunnery_doctrine",
+    "DisplayName": "Fleet Gunnery Doctrine",
+    "Group": "Gunnery",
+    "Description": "SSW specialist qualification in fleet gunnery doctrine. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 2,
+    "Prerequisites": [
+      "capital_fire_control"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5.5,
+    "SkillTypeID": 510039,
+    "SkillRank": 10,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "capital_fire_control": 1
+    }
+  },
+  {
+    "Name": "seeker_calibration",
+    "DisplayName": "Seeker Calibration",
+    "Group": "Missile Systems",
+    "Description": "SSW specialist qualification in seeker calibration. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "missile_operations"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510040,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "missile_operations": 1
+    }
+  },
+  {
+    "Name": "missile_guidance",
+    "DisplayName": "Missile Guidance",
+    "Group": "Missile Systems",
+    "Description": "SSW specialist qualification in missile guidance. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "seeker_calibration"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510041,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "seeker_calibration": 1
+    }
+  },
+  {
+    "Name": "launch_coordination",
+    "DisplayName": "Launch Coordination",
+    "Group": "Missile Systems",
+    "Description": "SSW specialist qualification in launch coordination. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "missile_guidance"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510042,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "missile_guidance": 1
+    }
+  },
+  {
+    "Name": "electronic_counter_countermeasures",
+    "DisplayName": "Electronic Counter-Countermeasures",
+    "Group": "Missile Systems",
+    "Description": "SSW specialist qualification in electronic counter-countermeasures. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "launch_coordination"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510043,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "launch_coordination": 1
+    }
+  },
+  {
+    "Name": "salvo_planning",
+    "DisplayName": "Salvo Planning",
+    "Group": "Missile Systems",
+    "Description": "SSW specialist qualification in salvo planning. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "electronic_counter_countermeasures"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510044,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "electronic_counter_countermeasures": 1
+    }
+  },
+  {
+    "Name": "long_range_ordnance",
+    "DisplayName": "Long Range Ordnance",
+    "Group": "Missile Systems",
+    "Description": "SSW specialist qualification in long range ordnance. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "salvo_planning"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510045,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "salvo_planning": 1
+    }
+  },
+  {
+    "Name": "capital_missile_control",
+    "DisplayName": "Capital Missile Control",
+    "Group": "Missile Systems",
+    "Description": "SSW specialist qualification in capital missile control. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "long_range_ordnance"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510046,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "long_range_ordnance": 1
+    }
+  },
+  {
+    "Name": "fleet_ordnance_doctrine",
+    "DisplayName": "Fleet Ordnance Doctrine",
+    "Group": "Missile Systems",
+    "Description": "SSW specialist qualification in fleet ordnance doctrine. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 2,
+    "Prerequisites": [
+      "capital_missile_control"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5.0,
+    "SkillTypeID": 510047,
+    "SkillRank": 9,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "capital_missile_control": 1
+    }
+  },
+  {
+    "Name": "orbital_navigation",
+    "DisplayName": "Orbital Navigation",
+    "Group": "Navigation",
+    "Description": "SSW specialist qualification in orbital navigation. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "navigation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510048,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "navigation": 1
+    }
+  },
+  {
+    "Name": "approach_planning",
+    "DisplayName": "Approach Planning",
+    "Group": "Navigation",
+    "Description": "SSW specialist qualification in approach planning. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "orbital_navigation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510049,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "orbital_navigation": 1
+    }
+  },
+  {
+    "Name": "high_velocity_navigation",
+    "DisplayName": "High Velocity Navigation",
+    "Group": "Navigation",
+    "Description": "SSW specialist qualification in high velocity navigation. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "approach_planning"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510050,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "approach_planning": 1
+    }
+  },
+  {
+    "Name": "transit_coordination",
+    "DisplayName": "Transit Coordination",
+    "Group": "Navigation",
+    "Description": "SSW specialist qualification in transit coordination. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "high_velocity_navigation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510051,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "high_velocity_navigation": 1
+    }
+  },
+  {
+    "Name": "farcaster_cartography",
+    "DisplayName": "Farcaster Cartography",
+    "Group": "Navigation",
+    "Description": "SSW specialist qualification in farcaster cartography. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "transit_coordination"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510052,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "transit_coordination": 1
+    }
+  },
+  {
+    "Name": "hazardous_route_analysis",
+    "DisplayName": "Hazardous Route Analysis",
+    "Group": "Navigation",
+    "Description": "SSW specialist qualification in hazardous route analysis. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "farcaster_cartography"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510053,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "farcaster_cartography": 1
+    }
+  },
+  {
+    "Name": "deep_space_navigation",
+    "DisplayName": "Deep Space Navigation",
+    "Group": "Navigation",
+    "Description": "SSW specialist qualification in deep space navigation. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "hazardous_route_analysis"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510054,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "hazardous_route_analysis": 1
+    }
+  },
+  {
+    "Name": "fleet_transit_planning",
+    "DisplayName": "Fleet Transit Planning",
+    "Group": "Navigation",
+    "Description": "SSW specialist qualification in fleet transit planning. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 2,
+    "Prerequisites": [
+      "deep_space_navigation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5.0,
+    "SkillTypeID": 510055,
+    "SkillRank": 9,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "deep_space_navigation": 1
+    }
+  },
+  {
+    "Name": "system_diagnostics",
+    "DisplayName": "System Diagnostics",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in system diagnostics. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "engineering"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510056,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "engineering": 1
+    }
+  },
+  {
+    "Name": "power_routing",
+    "DisplayName": "Power Routing",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in power routing. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "system_diagnostics"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510057,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "system_diagnostics": 1
+    }
+  },
+  {
+    "Name": "capacitor_management",
+    "DisplayName": "Capacitor Management",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in capacitor management. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "power_routing"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510058,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "power_routing": 1
+    }
+  },
+  {
+    "Name": "thermal_management",
+    "DisplayName": "Thermal Management",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in thermal management. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "capacitor_management"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510059,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "capacitor_management": 1
+    }
+  },
+  {
+    "Name": "advanced_reactor_safety",
+    "DisplayName": "Advanced Reactor Safety",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in advanced reactor safety. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "thermal_management"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510060,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "thermal_management": 1
+    }
+  },
+  {
+    "Name": "emergency_power_control",
+    "DisplayName": "Emergency Power Control",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in emergency power control. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "advanced_reactor_safety"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510061,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "advanced_reactor_safety": 1
+    }
+  },
+  {
+    "Name": "capital_power_management",
+    "DisplayName": "Capital Power Management",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in capital power management. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "emergency_power_control"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510062,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "emergency_power_control": 1
+    }
+  },
+  {
+    "Name": "integrated_ship_engineering",
+    "DisplayName": "Integrated Ship Engineering",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in integrated ship engineering. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 2,
+    "Prerequisites": [
+      "capital_power_management"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5.0,
+    "SkillTypeID": 510063,
+    "SkillRank": 9,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "capital_power_management": 1
+    }
+  },
+  {
+    "Name": "hull_repair_procedures",
+    "DisplayName": "Hull Repair Procedures",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in hull repair procedures. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "damage_control"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510064,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "damage_control": 1
+    }
+  },
+  {
+    "Name": "component_fault_isolation",
+    "DisplayName": "Component Fault Isolation",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in component fault isolation. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "hull_repair_procedures"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510065,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "hull_repair_procedures": 1
+    }
+  },
+  {
+    "Name": "structural_assessment",
+    "DisplayName": "Structural Assessment",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in structural assessment. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "component_fault_isolation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510066,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "component_fault_isolation": 1
+    }
+  },
+  {
+    "Name": "damage_containment",
+    "DisplayName": "Damage Containment",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in damage containment. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "structural_assessment"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510067,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "structural_assessment": 1
+    }
+  },
+  {
+    "Name": "distributed_repair_control",
+    "DisplayName": "Distributed Repair Control",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in distributed repair control. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "damage_containment"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510068,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "damage_containment": 1
+    }
+  },
+  {
+    "Name": "capital_damage_control",
+    "DisplayName": "Capital Damage Control",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in capital damage control. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "distributed_repair_control"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510069,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "distributed_repair_control": 1
+    }
+  },
+  {
+    "Name": "fleet_recovery_engineering",
+    "DisplayName": "Fleet Recovery Engineering",
+    "Group": "Engineering",
+    "Description": "SSW specialist qualification in fleet recovery engineering. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "capital_damage_control"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510070,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "capital_damage_control": 1
+    }
+  },
+  {
+    "Name": "laser_focusing",
+    "DisplayName": "Laser Focusing",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in laser focusing. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "mining_operations"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510071,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "mining_operations": 1
+    }
+  },
+  {
+    "Name": "extraction_cycles",
+    "DisplayName": "Extraction Cycles",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in extraction cycles. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "laser_focusing"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510072,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "laser_focusing": 1
+    }
+  },
+  {
+    "Name": "ore_face_analysis",
+    "DisplayName": "Ore Face Analysis",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in ore face analysis. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "extraction_cycles"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510073,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "extraction_cycles": 1
+    }
+  },
+  {
+    "Name": "selective_extraction",
+    "DisplayName": "Selective Extraction",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in selective extraction. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "ore_face_analysis"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510074,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "ore_face_analysis": 1
+    }
+  },
+  {
+    "Name": "dense_field_operations",
+    "DisplayName": "Dense Field Operations",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in dense field operations. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "selective_extraction"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510075,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "selective_extraction": 1
+    }
+  },
+  {
+    "Name": "multi_beam_extraction",
+    "DisplayName": "Multi Beam Extraction",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in multi beam extraction. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "dense_field_operations"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510076,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "dense_field_operations": 1
+    }
+  },
+  {
+    "Name": "remote_deposit_coordination",
+    "DisplayName": "Remote Deposit Coordination",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in remote deposit coordination. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "multi_beam_extraction"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510077,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "multi_beam_extraction": 1
+    }
+  },
+  {
+    "Name": "deep_belt_extraction",
+    "DisplayName": "Deep Belt Extraction",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in deep belt extraction. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "remote_deposit_coordination"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5.0,
+    "SkillTypeID": 510078,
+    "SkillRank": 9,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "remote_deposit_coordination": 1
+    }
+  },
+  {
+    "Name": "spectral_surveying",
+    "DisplayName": "Spectral Surveying",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in spectral surveying. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "ore_assaying"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510079,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "ore_assaying": 1
+    }
+  },
+  {
+    "Name": "deposit_classification",
+    "DisplayName": "Deposit Classification",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in deposit classification. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "spectral_surveying"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510080,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "spectral_surveying": 1
+    }
+  },
+  {
+    "Name": "trace_mineral_analysis",
+    "DisplayName": "Trace Mineral Analysis",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in trace mineral analysis. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "deposit_classification"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510081,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "deposit_classification": 1
+    }
+  },
+  {
+    "Name": "deep_ore_assaying",
+    "DisplayName": "Deep Ore Assaying",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in deep ore assaying. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "trace_mineral_analysis"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510082,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "trace_mineral_analysis": 1
+    }
+  },
+  {
+    "Name": "exotic_deposit_analysis",
+    "DisplayName": "Exotic Deposit Analysis",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in exotic deposit analysis. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "deep_ore_assaying"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510083,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "deep_ore_assaying": 1
+    }
+  },
+  {
+    "Name": "dilithium_handling",
+    "DisplayName": "Dilithium Handling",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in dilithium handling. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "exotic_deposit_analysis"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510084,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "exotic_deposit_analysis": 1
+    }
+  },
+  {
+    "Name": "quantium_40_handling",
+    "DisplayName": "Quantium-40 Handling",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in quantium-40 handling. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "dilithium_handling"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510085,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "dilithium_handling": 1
+    }
+  },
+  {
+    "Name": "exotic_extraction_safety",
+    "DisplayName": "Exotic Extraction Safety",
+    "Group": "Mining",
+    "Description": "SSW specialist qualification in exotic extraction safety. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "quantium_40_handling"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5.0,
+    "SkillTypeID": 510086,
+    "SkillRank": 9,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "quantium_40_handling": 1
+    }
+  },
+  {
+    "Name": "industrial_planning",
+    "DisplayName": "Industrial Planning",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in industrial planning. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "manufacturing"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510087,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    }
+  },
+  {
+    "Name": "batch_control",
+    "DisplayName": "Batch Control",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in batch control. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "industrial_planning"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510088,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "industrial_planning": 1
+    }
+  },
+  {
+    "Name": "production_optimization",
+    "DisplayName": "Production Optimization",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in production optimization. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "batch_control"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510089,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "batch_control": 1
+    }
+  },
+  {
+    "Name": "blueprint_interpretation",
+    "DisplayName": "Blueprint Interpretation",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in blueprint interpretation. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "production_optimization",
+      "engineering"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510090,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "production_optimization": 1,
+      "engineering": 1
+    }
+  },
+  {
+    "Name": "assembly_coordination",
+    "DisplayName": "Assembly Coordination",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in assembly coordination. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "blueprint_interpretation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510091,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "blueprint_interpretation": 1
+    }
+  },
+  {
+    "Name": "precision_manufacturing",
+    "DisplayName": "Precision Manufacturing",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in precision manufacturing. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "assembly_coordination"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510092,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "assembly_coordination": 1
+    }
+  },
+  {
+    "Name": "advanced_industrial_integration",
+    "DisplayName": "Advanced Industrial Integration",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in advanced industrial integration. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "precision_manufacturing",
+      "engineering"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510093,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "precision_manufacturing": 1,
+      "engineering": 1
+    }
+  },
+  {
+    "Name": "orbital_factory_management",
+    "DisplayName": "Orbital Factory Management",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in orbital factory management. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "advanced_industrial_integration"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5.0,
+    "SkillTypeID": 510094,
+    "SkillRank": 9,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "advanced_industrial_integration": 1
+    }
+  },
+  {
+    "Name": "ore_separation",
+    "DisplayName": "Ore Separation",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in ore separation. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "reprocessing"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510095,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "reprocessing": 1
+    }
+  },
+  {
+    "Name": "concentrate_grading",
+    "DisplayName": "Concentrate Grading",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in concentrate grading. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "ore_separation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510096,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "ore_separation": 1
+    }
+  },
+  {
+    "Name": "metal_recovery",
+    "DisplayName": "Metal Recovery",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in metal recovery. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "concentrate_grading"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510097,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "concentrate_grading": 1
+    }
+  },
+  {
+    "Name": "residue_management",
+    "DisplayName": "Residue Management",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in residue management. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "metal_recovery",
+      "engineering"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510098,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "metal_recovery": 1,
+      "engineering": 1
+    }
+  },
+  {
+    "Name": "rare_mineral_recovery",
+    "DisplayName": "Rare Mineral Recovery",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in rare mineral recovery. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "residue_management"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510099,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "residue_management": 1
+    }
+  },
+  {
+    "Name": "exotic_materials_processing",
+    "DisplayName": "Exotic Materials Processing",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in exotic materials processing. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "rare_mineral_recovery"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510100,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "rare_mineral_recovery": 1
+    }
+  },
+  {
+    "Name": "closed_cycle_reprocessing",
+    "DisplayName": "Closed Cycle Reprocessing",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in closed cycle reprocessing. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "exotic_materials_processing",
+      "engineering"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510101,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "exotic_materials_processing": 1,
+      "engineering": 1
+    }
+  },
+  {
+    "Name": "integrated_refinery_management",
+    "DisplayName": "Integrated Refinery Management",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in integrated refinery management. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "closed_cycle_reprocessing"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5.0,
+    "SkillTypeID": 510102,
+    "SkillRank": 9,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "closed_cycle_reprocessing": 1
+    }
+  },
+  {
+    "Name": "technical_documentation",
+    "DisplayName": "Technical Documentation",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in technical documentation. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "blueprint_research"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510103,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "blueprint_research": 1
+    }
+  },
+  {
+    "Name": "material_research",
+    "DisplayName": "Material Research",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in material research. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "technical_documentation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510104,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "technical_documentation": 1
+    }
+  },
+  {
+    "Name": "process_research",
+    "DisplayName": "Process Research",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in process research. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "material_research"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510105,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "material_research": 1
+    }
+  },
+  {
+    "Name": "blueprint_duplication",
+    "DisplayName": "Blueprint Duplication",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in blueprint duplication. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "process_research",
+      "engineering"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510106,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "process_research": 1,
+      "engineering": 1
+    }
+  },
+  {
+    "Name": "prototype_evaluation",
+    "DisplayName": "Prototype Evaluation",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in prototype evaluation. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "blueprint_duplication"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510107,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "blueprint_duplication": 1
+    }
+  },
+  {
+    "Name": "advanced_blueprint_research",
+    "DisplayName": "Advanced Blueprint Research",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in advanced blueprint research. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "prototype_evaluation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510108,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "prototype_evaluation": 1
+    }
+  },
+  {
+    "Name": "industrial_design_integration",
+    "DisplayName": "Industrial Design Integration",
+    "Group": "Industry",
+    "Description": "SSW specialist qualification in industrial design integration. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "advanced_blueprint_research",
+      "engineering"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510109,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "advanced_blueprint_research": 1,
+      "engineering": 1
+    }
+  },
+  {
+    "Name": "freight_scheduling",
+    "DisplayName": "Freight Scheduling",
+    "Group": "Logistics",
+    "Description": "SSW specialist qualification in freight scheduling. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "freight_operations"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510110,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "freight_operations": 1
+    }
+  },
+  {
+    "Name": "load_balancing",
+    "DisplayName": "Load Balancing",
+    "Group": "Logistics",
+    "Description": "SSW specialist qualification in load balancing. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "freight_scheduling"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510111,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "freight_scheduling": 1
+    }
+  },
+  {
+    "Name": "bulk_handling",
+    "DisplayName": "Bulk Handling",
+    "Group": "Logistics",
+    "Description": "SSW specialist qualification in bulk handling. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "load_balancing"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510112,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "load_balancing": 1
+    }
+  },
+  {
+    "Name": "hazardous_cargo_procedures",
+    "DisplayName": "Hazardous Cargo Procedures",
+    "Group": "Logistics",
+    "Description": "SSW specialist qualification in hazardous cargo procedures. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "bulk_handling",
+      "navigation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510113,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "bulk_handling": 1,
+      "navigation": 1
+    }
+  },
+  {
+    "Name": "supply_route_planning",
+    "DisplayName": "Supply Route Planning",
+    "Group": "Logistics",
+    "Description": "SSW specialist qualification in supply route planning. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "hazardous_cargo_procedures"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510114,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "hazardous_cargo_procedures": 1
+    }
+  },
+  {
+    "Name": "multi_system_distribution",
+    "DisplayName": "Multi System Distribution",
+    "Group": "Logistics",
+    "Description": "SSW specialist qualification in multi system distribution. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "supply_route_planning"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510115,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "supply_route_planning": 1
+    }
+  },
+  {
+    "Name": "strategic_stockpiles",
+    "DisplayName": "Strategic Stockpiles",
+    "Group": "Logistics",
+    "Description": "SSW specialist qualification in strategic stockpiles. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "multi_system_distribution",
+      "navigation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510116,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "multi_system_distribution": 1,
+      "navigation": 1
+    }
+  },
+  {
+    "Name": "fleet_supply_coordination",
+    "DisplayName": "Fleet Supply Coordination",
+    "Group": "Logistics",
+    "Description": "SSW specialist qualification in fleet supply coordination. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "strategic_stockpiles"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5.0,
+    "SkillTypeID": 510117,
+    "SkillRank": 9,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "strategic_stockpiles": 1
+    }
+  },
+  {
+    "Name": "market_analysis",
+    "DisplayName": "Market Analysis",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in market analysis. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "trade"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510118,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "trade": 1
+    }
+  },
+  {
+    "Name": "inventory_accounting",
+    "DisplayName": "Inventory Accounting",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in inventory accounting. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "market_analysis"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510119,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "market_analysis": 1
+    }
+  },
+  {
+    "Name": "purchase_planning",
+    "DisplayName": "Purchase Planning",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in purchase planning. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "inventory_accounting"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510120,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "inventory_accounting": 1
+    }
+  },
+  {
+    "Name": "supply_forecasting",
+    "DisplayName": "Supply Forecasting",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in supply forecasting. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "purchase_planning",
+      "procurement"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510121,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "purchase_planning": 1,
+      "procurement": 1
+    }
+  },
+  {
+    "Name": "wholesale_procurement",
+    "DisplayName": "Wholesale Procurement",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in wholesale procurement. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "supply_forecasting"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510122,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "supply_forecasting": 1
+    }
+  },
+  {
+    "Name": "regional_trade_analysis",
+    "DisplayName": "Regional Trade Analysis",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in regional trade analysis. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "wholesale_procurement"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510123,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "wholesale_procurement": 1
+    }
+  },
+  {
+    "Name": "interstellar_trade_planning",
+    "DisplayName": "Interstellar Trade Planning",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in interstellar trade planning. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "regional_trade_analysis",
+      "procurement"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510124,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "regional_trade_analysis": 1,
+      "procurement": 1
+    }
+  },
+  {
+    "Name": "strategic_procurement",
+    "DisplayName": "Strategic Procurement",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in strategic procurement. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "interstellar_trade_planning"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5.0,
+    "SkillTypeID": 510125,
+    "SkillRank": 9,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "interstellar_trade_planning": 1
+    }
+  },
+  {
+    "Name": "courier_planning",
+    "DisplayName": "Courier Planning",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in courier planning. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "contract_administration"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510126,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "contract_administration": 1
+    }
+  },
+  {
+    "Name": "collateral_assessment",
+    "DisplayName": "Collateral Assessment",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in collateral assessment. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "courier_planning"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510127,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "courier_planning": 1
+    }
+  },
+  {
+    "Name": "auction_procedures",
+    "DisplayName": "Auction Procedures",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in auction procedures. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "collateral_assessment"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510128,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "collateral_assessment": 1
+    }
+  },
+  {
+    "Name": "contract_risk_analysis",
+    "DisplayName": "Contract Risk Analysis",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in contract risk analysis. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "auction_procedures",
+      "procurement"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510129,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "auction_procedures": 1,
+      "procurement": 1
+    }
+  },
+  {
+    "Name": "multi_region_contracting",
+    "DisplayName": "Multi Region Contracting",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in multi region contracting. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "contract_risk_analysis"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510130,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "contract_risk_analysis": 1
+    }
+  },
+  {
+    "Name": "industrial_procurement_contracts",
+    "DisplayName": "Industrial Procurement Contracts",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in industrial procurement contracts. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "multi_region_contracting"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510131,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "multi_region_contracting": 1
+    }
+  },
+  {
+    "Name": "strategic_supply_contracts",
+    "DisplayName": "Strategic Supply Contracts",
+    "Group": "Trade",
+    "Description": "SSW specialist qualification in strategic supply contracts. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "industrial_procurement_contracts",
+      "procurement"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510132,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "industrial_procurement_contracts": 1,
+      "procurement": 1
+    }
+  },
+  {
+    "Name": "squadron_coordination",
+    "DisplayName": "Squadron Coordination",
+    "Group": "Command",
+    "Description": "SSW specialist qualification in squadron coordination. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "formation_operations"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 1.5,
+    "SkillTypeID": 510133,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "formation_operations": 1
+    }
+  },
+  {
+    "Name": "escort_coordination",
+    "DisplayName": "Escort Coordination",
+    "Group": "Command",
+    "Description": "SSW specialist qualification in escort coordination. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "squadron_coordination"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.0,
+    "SkillTypeID": 510134,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "squadron_coordination": 1
+    }
+  },
+  {
+    "Name": "tactical_communications",
+    "DisplayName": "Tactical Communications",
+    "Group": "Command",
+    "Description": "SSW specialist qualification in tactical communications. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "escort_coordination"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2.5,
+    "SkillTypeID": 510135,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "escort_coordination": 1
+    }
+  },
+  {
+    "Name": "task_group_coordination",
+    "DisplayName": "Task Group Coordination",
+    "Group": "Command",
+    "Description": "SSW specialist qualification in task group coordination. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 2,
+    "Prerequisites": [
+      "tactical_communications"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.0,
+    "SkillTypeID": 510136,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "tactical_communications": 1
+    }
+  },
+  {
+    "Name": "capital_formation_planning",
+    "DisplayName": "Capital Formation Planning",
+    "Group": "Command",
+    "Description": "SSW specialist qualification in capital formation planning. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 2,
+    "Prerequisites": [
+      "task_group_coordination",
+      "fleet_logistics"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3.5,
+    "SkillTypeID": 510137,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "task_group_coordination": 1,
+      "fleet_logistics": 1
+    }
+  },
+  {
+    "Name": "battle_group_logistics",
+    "DisplayName": "Battle Group Logistics",
+    "Group": "Command",
+    "Description": "SSW specialist qualification in battle group logistics. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 3,
+    "Prerequisites": [
+      "capital_formation_planning"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.0,
+    "SkillTypeID": 510138,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "capital_formation_planning": 1
+    }
+  },
+  {
+    "Name": "operational_fleet_planning",
+    "DisplayName": "Operational Fleet Planning",
+    "Group": "Command",
+    "Description": "SSW specialist qualification in operational fleet planning. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 3,
+    "Prerequisites": [
+      "battle_group_logistics"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4.5,
+    "SkillTypeID": 510139,
+    "SkillRank": 8,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "battle_group_logistics": 1
+    }
+  },
+  {
+    "Name": "fleet_command_doctrine",
+    "DisplayName": "Fleet Command Doctrine",
+    "Group": "Command",
+    "Description": "SSW specialist qualification in fleet command doctrine. Builds on prior training for Force:Space and civilian operations.",
+    "MinimumRank": 4,
+    "Prerequisites": [
+      "operational_fleet_planning",
+      "fleet_logistics"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5.0,
+    "SkillTypeID": 510140,
+    "SkillRank": 9,
+    "PrimaryAttribute": "Charisma",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "operational_fleet_planning": 1,
+      "fleet_logistics": 1
+    }
+  },
+  {
+    "Name": "spacecraft_command",
+    "DisplayName": "Spacecraft Command",
+    "Group": "Spacecraft Command",
+    "Description": "Qualification to command SSW spacecraft command hulls. The military command-rank requirement remains mandatory.",
+    "MinimumRank": 0,
+    "Prerequisites": [],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 2,
+    "SkillTypeID": 510141,
+    "SkillRank": 2,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {}
+  },
+  {
+    "Name": "capital_operations",
+    "DisplayName": "Capital Operations",
+    "Group": "Spacecraft Command",
+    "Description": "Qualification to command SSW capital hulls. The military command-rank requirement remains mandatory.",
+    "MinimumRank": 2,
+    "Prerequisites": [
+      "spacecraft_command",
+      "reactor_operations"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4,
+    "SkillTypeID": 510142,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "spacecraft_command": 1,
+      "reactor_operations": 1
+    }
+  },
+  {
+    "Name": "corvette_operations",
+    "DisplayName": "Corvette Operations",
+    "Group": "Spacecraft Command",
+    "Description": "Qualification to command SSW corvette hulls. The military command-rank requirement remains mandatory.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "spacecraft_command",
+      "navigation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3,
+    "SkillTypeID": 510143,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "spacecraft_command": 1,
+      "navigation": 1
+    }
+  },
+  {
+    "Name": "frigate_operations",
+    "DisplayName": "Frigate Operations",
+    "Group": "Spacecraft Command",
+    "Description": "Qualification to command SSW frigate hulls. The military command-rank requirement remains mandatory.",
+    "MinimumRank": 3,
+    "Prerequisites": [
+      "capital_operations",
+      "damage_control"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5,
+    "SkillTypeID": 510144,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "capital_operations": 1,
+      "damage_control": 1
+    }
+  },
+  {
+    "Name": "destroyer_operations",
+    "DisplayName": "Destroyer Operations",
+    "Group": "Spacecraft Command",
+    "Description": "Qualification to command SSW destroyer hulls. The military command-rank requirement remains mandatory.",
+    "MinimumRank": 2,
+    "Prerequisites": [
+      "capital_operations",
+      "point_defence"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 4,
+    "SkillTypeID": 510145,
+    "SkillRank": 4,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "capital_operations": 1,
+      "point_defence": 1
+    }
+  },
+  {
+    "Name": "cruiser_operations",
+    "DisplayName": "Cruiser Operations",
+    "Group": "Spacecraft Command",
+    "Description": "Qualification to command SSW cruiser hulls. The military command-rank requirement remains mandatory.",
+    "MinimumRank": 3,
+    "Prerequisites": [
+      "frigate_operations",
+      "power_routing"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5,
+    "SkillTypeID": 510146,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "frigate_operations": 1,
+      "power_routing": 1
+    }
+  },
+  {
+    "Name": "carrier_operations",
+    "DisplayName": "Carrier Operations",
+    "Group": "Spacecraft Command",
+    "Description": "Qualification to command SSW carrier hulls. The military command-rank requirement remains mandatory.",
+    "MinimumRank": 3,
+    "Prerequisites": [
+      "capital_operations",
+      "fleet_logistics"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 5,
+    "SkillTypeID": 510147,
+    "SkillRank": 5,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "capital_operations": 1,
+      "fleet_logistics": 1
+    }
+  },
+  {
+    "Name": "battleship_operations",
+    "DisplayName": "Battleship Operations",
+    "Group": "Spacecraft Command",
+    "Description": "Qualification to command SSW battleship hulls. The military command-rank requirement remains mandatory.",
+    "MinimumRank": 4,
+    "Prerequisites": [
+      "cruiser_operations",
+      "capital_fire_control"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 6,
+    "SkillTypeID": 510148,
+    "SkillRank": 6,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "cruiser_operations": 1,
+      "capital_fire_control": 1
+    }
+  },
+  {
+    "Name": "dreadnought_operations",
+    "DisplayName": "Dreadnought Operations",
+    "Group": "Spacecraft Command",
+    "Description": "Qualification to command SSW dreadnought hulls. The military command-rank requirement remains mandatory.",
+    "MinimumRank": 5,
+    "Prerequisites": [
+      "battleship_operations",
+      "capital_power_management"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 7,
+    "SkillTypeID": 510149,
+    "SkillRank": 7,
+    "PrimaryAttribute": "Perception",
+    "SecondaryAttribute": "Willpower",
+    "RequiredSkillLevels": {
+      "battleship_operations": 1,
+      "capital_power_management": 1
+    }
+  },
+  {
+    "Name": "sensor_operations",
+    "DisplayName": "Sensor Operations",
+    "Group": "Sensors",
+    "Description": "SSW sensor and fleet-reporting qualification.",
+    "MinimumRank": 0,
+    "Prerequisites": [],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3,
+    "SkillTypeID": 510150,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {}
+  },
+  {
+    "Name": "signal_analysis",
+    "DisplayName": "Signal Analysis",
+    "Group": "Sensors",
+    "Description": "SSW sensor and fleet-reporting qualification.",
+    "MinimumRank": 0,
+    "Prerequisites": [
+      "sensor_operations"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3,
+    "SkillTypeID": 510151,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "sensor_operations": 1
+    }
+  },
+  {
+    "Name": "fleet_telemetry",
+    "DisplayName": "Fleet Telemetry",
+    "Group": "Sensors",
+    "Description": "SSW sensor and fleet-reporting qualification.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "signal_analysis",
+      "navigation"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3,
+    "SkillTypeID": 510152,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "signal_analysis": 1,
+      "navigation": 1
+    }
+  },
+  {
+    "Name": "sensor_networking",
+    "DisplayName": "Sensor Networking",
+    "Group": "Sensors",
+    "Description": "Forces reporting coverage: level I covers the current sector, level III the current system, and level V directly connected neighboring systems. A complete skill book currently grants all coverage.",
+    "MinimumRank": 1,
+    "Prerequisites": [
+      "fleet_telemetry",
+      "reactor_operations"
+    ],
+    "MaximumLevel": 5,
+    "TrainingMultiplier": 3,
+    "SkillTypeID": 510153,
+    "SkillRank": 3,
+    "PrimaryAttribute": "Intelligence",
+    "SecondaryAttribute": "Memory",
+    "RequiredSkillLevels": {
+      "fleet_telemetry": 1,
+      "reactor_operations": 1
+    }
+  }
+]

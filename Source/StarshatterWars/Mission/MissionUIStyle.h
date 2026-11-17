@@ -56,6 +56,7 @@ namespace MissionUIStyle
     extern const FLinearColor InfoValueText;
 
     extern const FLinearColor RowSelectedBG;
+    const FTableRowStyle& FlightTableRowStyle();
 
     extern const FLinearColor ComboBG;
     extern const FLinearColor ComboHoverBG;

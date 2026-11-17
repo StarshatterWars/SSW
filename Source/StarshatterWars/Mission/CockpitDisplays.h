@@ -15,8 +15,11 @@ public:
     void Update(AFighterActor* Fighter, TSharedRef<SFighterHUDDetails> HUD, bool Visible);
     bool IsActive() const;
     bool HandleGearClick();
+    bool HandleControlClick();
     void Clear();
 private:
+    TWeakObjectPtr<UWidgetComponent> ControlSurface;
+    TSharedPtr<class SCockpitMiniControls> ControlWidget;
     TWeakObjectPtr<UStaticMeshComponent> Mesh;
     TArray<TWeakObjectPtr<UWidgetComponent>> Panels;
     TStrongObjectPtr<UMaterialInterface> OriginalHUD;

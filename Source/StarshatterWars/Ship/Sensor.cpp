@@ -554,7 +554,7 @@ Sensor::ProcessContact(Ship* c_ship, double az1, double az2)
         double d_act = 0;
 
         double effectivity =
-            energy / capacity * availability;
+            energy / capacity * GetOperatingAvailability();
 
         if (effectivity > SENSOR_THRESHOLD)
         {
@@ -716,7 +716,7 @@ void Sensor::ProcessContact(SimShot* c_shot, double az1, double az2)
 
         double d_pas = 0;
         double d_act = 0;
-        double effectivity = energy / capacity * availability;
+        double effectivity = energy / capacity * GetOperatingAvailability();
 
         // did this contact get scanned this frame?
         if (effectivity > SENSOR_THRESHOLD) {

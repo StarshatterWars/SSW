@@ -15,6 +15,7 @@
 #include "MissionTargetOverlay.h"
 #include "MissionViewCamera.h"
 #include "Components/LineBatchComponent.h"
+#include "Components/PointLightComponent.h"
 #include "SceneTypes.h"
 #include "OrbitalRegion.h"
 #include "PlayerCharacter.h"
@@ -75,6 +76,7 @@ struct FMissionCameraRig
     FVector LaunchExitBlendEye = FVector::ZeroVector;
     FQuat LaunchExitBlendRotation = FQuat::Identity;
 
+    TWeakObjectPtr<UPointLightComponent> LaunchFill;
     TWeakObjectPtr<ULineBatchComponent> TacticalGrid;
     FVector TacticalGridCenter = FVector::ZeroVector;
     double TacticalGridSpacing = 0.0;
@@ -166,6 +168,7 @@ struct FMissionCameraRig
         RestoreVisibility(PC);
         if (auto* Visual=PlayerActor.Get()) Visual->ReleaseRecoveryPresentation();
         if (auto* Lines = TacticalGrid.Get()) Lines->DestroyComponent();
+        if (auto* Fill = LaunchFill.Get()) Fill->DestroyComponent();
         *this = FMissionCameraRig();
     }
 
@@ -380,7 +383,7 @@ struct FMissionCameraRig
                     const FVector Chase = Visual->ChasePoint
                         ? Visual->ChasePoint->GetComponentLocation() - Pose.GetLocation() : FVector::ZeroVector;
                     const double Back = FMath::Max(FMath::Abs(FVector::DotProduct(Chase, Forward)), FighterRadius * 3.0);
-                    const double Height = FMath::Max(FMath::Abs(FVector::DotProduct(Chase, Up)), FighterRadius * 1.25);
+                    const double Height = FMath::Max(FMath::Abs(FVector::DotProduct(Chase, Up)), FighterRadius * 0.65);
                     Eye = Target - Forward * Back + Up * Height;
                     Rotation = Aim(Target - Eye, CarrierUp, ShipRotation);
                     HeldLaunchEyeLocal = CarrierFrame.InverseTransformPositionNoScale(Eye);
@@ -478,6 +481,25 @@ struct FMissionCameraRig
                 bLaunchExitBlendActive = false;
         }
         if (Eye.ContainsNaN() || Rotation.ContainsNaN()) return;
+        const bool bLightDeck = bDock && (bLaunchDeckHold || (Deck && Deck->IsLaunchDeck())) && !Player->IsAirborne();
+        if (bLightDeck && !LaunchFill.IsValid())
+        {
+            auto* Fill = NewObject<UPointLightComponent>(CameraActor);
+            CameraActor->AddInstanceComponent(Fill);
+            Fill->SetupAttachment(CameraActor->GetRootComponent());
+            Fill->SetMobility(EComponentMobility::Movable);
+            Fill->SetRelativeLocation(FVector(90, 35, 45));
+            Fill->SetAttenuationRadius(1200.0f);
+            Fill->SetUseInverseSquaredFalloff(false);
+            Fill->SetLightFalloffExponent(2.0f);
+            Fill->SetIntensity(4.0f);
+            Fill->SetInverseExposureBlend(0.85f);
+            Fill->SetCastShadows(false);
+            Fill->RegisterComponent();
+            LaunchFill = Fill;
+        }
+        if (auto* Fill = LaunchFill.Get()) Fill->SetVisibility(bLightDeck);
+
         // The actor updates every rendered frame; the old 60 Hz timer left the camera
         // behind on intervening frames (a large offset at fighter speeds).
         // The cockpit and chase cameras must follow the rendered hull between updates.

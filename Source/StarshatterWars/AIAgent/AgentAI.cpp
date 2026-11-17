@@ -1,5 +1,7 @@
 #include "AgentAI.h"
 #include "PlayerCharacter.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 
 FName AgentAI::PilotKey(const PlayerCharacter& Pilot)
 {
@@ -30,7 +32,7 @@ const AgentAI::FAssignment* AgentAI::Request(FName Pilot, TConstArrayView<int32>
 {
     if (Pilot.IsNone()) return nullptr;
     auto& PilotOffers = Offers.FindOrAdd(Pilot);
-    if (const auto* Existing = PilotOffers.Find(Issuer); Existing && EligibleMissions.Contains(Existing->MissionId))
+    if (const auto* Existing = PilotOffers.Find(Issuer); Existing && (Existing->ExpiresUtc == 0 || Existing->ExpiresUtc > FDateTime::UtcNow().ToUnixTimestamp()) && EligibleMissions.Contains(Existing->MissionId))
         return Existing;
     PilotOffers.Remove(Issuer);
 
@@ -39,7 +41,7 @@ const AgentAI::FAssignment* AgentAI::Request(FName Pilot, TConstArrayView<int32>
     int32 Next = INDEX_NONE;
     for (const int32 Id : EligibleMissions)
     {
-        if (Id <= 0 || (Next != INDEX_NONE && Id >= Next)) continue;
+        if (Id <= 0 || Completed.FindRef(Pilot).Contains(Id) || (Next != INDEX_NONE && Id >= Next)) continue;
         if (Outcome && Outcome->MissionId == Id &&
             (Outcome->State == EState::Declined || Outcome->State == EState::Completed)) continue;
         if (Queue.ContainsByPredicate([Id](const FAssignment& Item) { return Item.MissionId == Id; })) continue;
@@ -50,7 +52,7 @@ const AgentAI::FAssignment* AgentAI::Request(FName Pilot, TConstArrayView<int32>
         Next = Id;
     }
     if (Next == INDEX_NONE) return nullptr;
-    return &PilotOffers.Add(Issuer, FAssignment{Next, EState::Offered, Issuer});
+    return &PilotOffers.Add(Issuer, FAssignment{Next, EState::Offered, Issuer, FDateTime::UtcNow().ToUnixTimestamp() + 3600});
 }
 
 bool AgentAI::Transition(FName Pilot, int32 MissionId, EState From, EState To)
@@ -66,7 +68,7 @@ bool AgentAI::Accept(FName Pilot, int32 MissionId)
     auto* PilotOffers = Offers.Find(Pilot);
     if (!PilotOffers) return false;
     for (auto It = PilotOffers->CreateIterator(); It; ++It)
-        if (It.Value().MissionId == MissionId)
+        if (It.Value().MissionId == MissionId && (It.Value().ExpiresUtc == 0 || It.Value().ExpiresUtc > FDateTime::UtcNow().ToUnixTimestamp()))
         {
             Queues.FindOrAdd(Pilot).Add(FAssignment{MissionId, EState::Accepted, It.Key()});
             It.RemoveCurrent();
@@ -104,6 +106,7 @@ bool AgentAI::Resolve(FName Pilot, int32 MissionId, bool bSucceeded)
 {
     const auto Outcome = bSucceeded ? EState::Completed : EState::Failed;
     if (!Transition(Pilot, MissionId, EState::InProgress, Outcome)) return false;
+    if (bSucceeded) Completed.FindOrAdd(Pilot).Add(MissionId);
     LastOutcome.Add(Pilot, Queues.FindChecked(Pilot)[0]);
     Queues.FindChecked(Pilot).RemoveAt(0);
     return true;
@@ -112,4 +115,48 @@ bool AgentAI::Resolve(FName Pilot, int32 MissionId, bool bSucceeded)
 void AgentAI::Interrupt(FName Pilot, int32 MissionId)
 {
     Transition(Pilot, MissionId, EState::InProgress, EState::Accepted);
+}
+
+FString AgentAI::SaveJournal() const
+{
+    TArray<TSharedPtr<FJsonValue>> Entries;
+    const auto Add = [&Entries](FName Pilot, const FAssignment& Item, const TCHAR* Kind)
+    {
+        auto Object = MakeShared<FJsonObject>();
+        Object->SetStringField(TEXT("Pilot"), Pilot.ToString()); Object->SetStringField(TEXT("Kind"), Kind);
+        Object->SetStringField(TEXT("Issuer"), Item.Issuer.ToString()); Object->SetNumberField(TEXT("Mission"), Item.MissionId);
+        Object->SetNumberField(TEXT("State"), static_cast<int32>(Item.State)); Object->SetNumberField(TEXT("Expiry"), Item.ExpiresUtc);
+        Entries.Add(MakeShared<FJsonValueObject>(Object));
+    };
+    for (const auto& Pilot : Offers) for (const auto& Offer : Pilot.Value) Add(Pilot.Key, Offer.Value, TEXT("Offer"));
+    for (const auto& Pilot : Queues) for (const auto& Item : Pilot.Value) Add(Pilot.Key, Item, TEXT("Queue"));
+    for (const auto& Pilot : LastOutcome) Add(Pilot.Key, Pilot.Value, TEXT("Outcome"));
+    for (const auto& Pilot : Completed) for (int32 Id : Pilot.Value) Add(Pilot.Key, FAssignment{Id, EState::Completed}, TEXT("Completed"));
+    FString Json; FJsonSerializer::Serialize(Entries, TJsonWriterFactory<>::Create(&Json)); return Json;
+}
+bool AgentAI::RestoreJournal(const FString& Json)
+{
+    if (Json.IsEmpty()) { *this = AgentAI(); return true; }
+    TArray<TSharedPtr<FJsonValue>> Entries;
+    if (!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Entries) || Entries.Num() > 4096) return false;
+    AgentAI Restored;
+    for (const auto& Value : Entries)
+    {
+        const TSharedPtr<FJsonObject>* Object = nullptr; if (!Value->TryGetObject(Object) || !Object || !Object->IsValid()) return false;
+        FString Pilot, Kind, Issuer; int32 Mission = 0, State = 0; double Expiry = 0;
+        if (!(*Object)->TryGetStringField(TEXT("Pilot"), Pilot) || Pilot.IsEmpty() ||
+            !(*Object)->TryGetStringField(TEXT("Kind"), Kind) || !(*Object)->TryGetStringField(TEXT("Issuer"), Issuer) ||
+            !(*Object)->TryGetNumberField(TEXT("Mission"), Mission) || Mission <= 0 ||
+            !(*Object)->TryGetNumberField(TEXT("State"), State) || State < 0 || State > static_cast<int32>(EState::Declined) ||
+            !(*Object)->TryGetNumberField(TEXT("Expiry"), Expiry) || !FMath::IsFinite(Expiry) || Expiry < 0 || Expiry > 1.e12) return false;
+        FAssignment Item{Mission, static_cast<EState>(State), FName(*Issuer), static_cast<int64>(Expiry)};
+        const FName Id(*Pilot);
+        if (Kind == TEXT("Offer") && Item.State == EState::Offered) Restored.Offers.FindOrAdd(Id).Add(Item.Issuer, Item);
+        else if (Kind == TEXT("Queue") && (Item.State == EState::Accepted || Item.State == EState::InProgress))
+        { Item.State = EState::Accepted; Restored.Queues.FindOrAdd(Id).Add(Item); }
+        else if (Kind == TEXT("Outcome")) Restored.LastOutcome.Add(Id, Item);
+        else if (Kind == TEXT("Completed")) Restored.Completed.FindOrAdd(Id).Add(Mission);
+        else return false;
+    }
+    *this = MoveTemp(Restored); return true;
 }

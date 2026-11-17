@@ -1,11 +1,12 @@
 SYSTEM
 
-// Free Verse grades I through V. Grade III uses the authored baseline.
-component_grade: { level: 1, repair_scale: 1.30, replacement_scale: 0.80 }
-component_grade: { level: 2, repair_scale: 1.15, replacement_scale: 0.90 }
-component_grade: { level: 3, repair_scale: 1.00, replacement_scale: 1.00 }
-component_grade: { level: 4, repair_scale: 0.90, replacement_scale: 1.15 }
-component_grade: { level: 5, repair_scale: 0.80, replacement_scale: 1.30 }
+// Component costs are level I prices in credits.
+// Grade III retains the original repair and replacement performance.
+component_grade: { level: 1, repair_scale: 1.30, replacement_scale: 0.80, price_multiplier: 1 }
+component_grade: { level: 2, repair_scale: 1.15, replacement_scale: 0.90, price_multiplier: 2 }
+component_grade: { level: 3, repair_scale: 1.00, replacement_scale: 1.00, price_multiplier: 4 }
+component_grade: { level: 4, repair_scale: 0.90, replacement_scale: 1.15, price_multiplier: 8 }
+component_grade: { level: 5, repair_scale: 0.80, replacement_scale: 1.30, price_multiplier: 16 }
 
 system: {
    name:             "Fusion Reactor",
@@ -15,6 +16,7 @@ system: {
       abrv:          "Reac Core",
       repair_time:   120,
       replace_time:  24000,
+      cost:          36500,
       spares:        0,
       affects:       3
    },
@@ -24,6 +26,7 @@ system: {
       abrv:          "Fuel Sys",
       repair_time:   120,
       replace_time:  1200,
+      cost:          12500,
       spares:        0,
       affects:       1
    },
@@ -33,6 +36,7 @@ system: {
       abrv:          "Preseq",
       repair_time:   30,
       replace_time:  400,
+      cost:          4500,
       spares:        1,
       affects:       1
    },
@@ -42,6 +46,7 @@ system: {
       abrv:          "Rad Shield",
       repair_time:   30,
       replace_time:  300,
+      cost:          3500,
       spares:        1,
       affects:       2
    },
@@ -51,6 +56,7 @@ system: {
       abrv:          "Pwr Reg",
       repair_time:   300,
       replace_time:  60,
+      cost:          1100,
       spares:        2,
       affects:       4
    },
@@ -60,6 +66,7 @@ system: {
       abrv:          "Heat Exch",
       repair_time:   60,
       replace_time:  3600,
+      cost:          36500,
       spares:        1,
       affects:       6
    },
@@ -69,6 +76,7 @@ system: {
       abrv:          "Coolant",
       repair_time:   45,
       replace_time:  1800,
+      cost:          18500,
       spares:        0,
       affects:       6
    }
@@ -84,6 +92,7 @@ system: {
       abrv:          "Reac Core",
       repair_time:   60,
       replace_time:  2400,
+      cost:          24500,
       spares:        0,
       affects:       3
    },
@@ -93,6 +102,7 @@ system: {
       abrv:          "Reactant",
       repair_time:   30,
       replace_time:  600,
+      cost:          6500,
       spares:        0,
       affects:       1
    },
@@ -102,6 +112,7 @@ system: {
       abrv:          "Injector",
       repair_time:   60,
       replace_time:  500,
+      cost:          5500,
       spares:        1,
       affects:       1
    },
@@ -111,6 +122,7 @@ system: {
       abrv:          "Mag Coil",
       repair_time:   120,
       replace_time:  300,
+      cost:          3500,
       spares:        1,
       affects:       1
    },
@@ -120,6 +132,7 @@ system: {
       abrv:          "Rad Shield",
       repair_time:   60,
       replace_time:  300,
+      cost:          3500,
       spares:        1,
       affects:       2
    },
@@ -129,6 +142,7 @@ system: {
       abrv:          "Pwr Reg",
       repair_time:   300,
       replace_time:  60,
+      cost:          1100,
       spares:        2,
       affects:       4
    },
@@ -138,6 +152,7 @@ system: {
       abrv:          "Heat Exch",
       repair_time:   120,
       replace_time:  3600,
+      cost:          36500,
       spares:        0,
       affects:       6
    },
@@ -147,6 +162,7 @@ system: {
       abrv:          "Coolant",
       repair_time:   120,
       replace_time:  1800,
+      cost:          18500,
       spares:        0,
       affects:       6
    }
@@ -162,6 +178,7 @@ system: {
       abrv:          "EMG Cell",
       repair_time:   120,
       replace_time:  2400,
+      cost:          24500,
       spares:        0,
       affects:       3
    },
@@ -171,6 +188,7 @@ system: {
       abrv:          "Reactant",
       repair_time:   30,
       replace_time:  1200,
+      cost:          12500,
       spares:        0,
       affects:       1
    },
@@ -180,6 +198,7 @@ system: {
       abrv:          "Reac Valve",
       repair_time:   20,
       replace_time:  1200,
+      cost:          12500,
       spares:        1,
       affects:       1
    },
@@ -189,6 +208,7 @@ system: {
       abrv:          "Pwr Reg",
       repair_time:   120,
       replace_time:  60,
+      cost:          1100,
       spares:        2,
       affects:       4
    }
@@ -204,6 +224,7 @@ system: {
       abrv:          "Plasma Core",
       repair_time:   90,
       replace_time:  1800,
+      cost:          18500,
       spares:        0,
       affects:       3
    },
@@ -213,6 +234,7 @@ system: {
       abrv:          "Injector",
       repair_time:   40,
       replace_time:  600,
+      cost:          6500,
       spares:        1,
       affects:       5
    },
@@ -222,6 +244,7 @@ system: {
       abrv:          "Impeller",
       repair_time:   30,
       replace_time:  900,
+      cost:          9500,
       spares:        1,
       affects:       5
    },
@@ -231,6 +254,7 @@ system: {
       abrv:          "Mag Focus",
       repair_time:   600,
       replace_time:  30,
+      cost:          800,
       spares:        2,
       affects:       1
    },
@@ -240,6 +264,7 @@ system: {
       abrv:          "Rad Shield",
       repair_time:   60,
       replace_time:  1200,
+      cost:          12500,
       spares:        1,
       affects:       2
    },
@@ -249,6 +274,7 @@ system: {
       abrv:          "Heat Exch",
       repair_time:   90,
       replace_time:  3600,
+      cost:          36500,
       spares:        0,
       affects:       6
    }
@@ -264,6 +290,7 @@ system: {
       abrv:          "Lateral",
       repair_time:   90,
       replace_time:  3600,
+      cost:          36500,
       spares:        1,
       affects:       0x83
    },
@@ -273,6 +300,7 @@ system: {
       abrv:          "Spinal",
       repair_time:   90,
       replace_time:  3600,
+      cost:          36500,
       spares:        1,
       affects:       0x83
    },
@@ -282,6 +310,7 @@ system: {
       abrv:          "Braking",
       repair_time:   60,
       replace_time:  3600,
+      cost:          36500,
       spares:        1,
       affects:       0x83
    },
@@ -291,6 +320,7 @@ system: {
       abrv:          "Plasma Grid",
       repair_time:   180,
       replace_time:  7200,
+      cost:          36500,
       spares:        1,
       affects:       3
    }
@@ -306,6 +336,7 @@ system: {
       abrv:          "Alpha Node",
       repair_time:   200,
       replace_time:  3600,
+      cost:          36500,
       spares:        1,
       affects:       1
    },
@@ -315,6 +346,7 @@ system: {
       abrv:          "Beta Node",
       repair_time:   200,
       replace_time:  3600,
+      cost:          36500,
       spares:        1,
       affects:       1
    },
@@ -324,6 +356,7 @@ system: {
       abrv:          "Containment",
       repair_time:   60,
       replace_time:  1200,
+      cost:          12500,
       spares:        1,
       affects:       2
    },
@@ -333,6 +366,7 @@ system: {
       abrv:          "Waveguide",
       repair_time:   30,
       replace_time:  400,
+      cost:          4500,
       spares:        2,
       affects:       3
    },
@@ -342,6 +376,7 @@ system: {
       abrv:          "Sync Lock",
       repair_time:   600,
       replace_time:  60,
+      cost:          1100,
       spares:        1,
       affects:       1
    }
@@ -357,6 +392,7 @@ system: {
       abrv:          "Grav Gen",
       repair_time:   30,
       replace_time:  300,
+      cost:          3500,
       spares:        1,
       affects:       1
    },
@@ -366,6 +402,7 @@ system: {
       abrv:          "Pwr Adaptor",
       repair_time:   600,
       replace_time:  30,
+      cost:          800,
       spares:        2,
       affects:       3
    },
@@ -375,6 +412,7 @@ system: {
       abrv:          "Harm Osc",
       repair_time:   1200,
       replace_time:  60,
+      cost:          1100,
       spares:        2,
       affects:       5
    },
@@ -384,6 +422,7 @@ system: {
       abrv:          "Tac I/F",
       repair_time:   900,
       replace_time:  60,
+      cost:          1100,
       spares:        1,
       affects:       5
    }
@@ -399,6 +438,7 @@ system: {
       abrv:          "XMIT",
       repair_time:   1200,
       replace_time:  120,
+      cost:          1700,
       spares:        1,
       affects:       1
    },
@@ -408,6 +448,7 @@ system: {
       abrv:          "RECV",
       repair_time:   1200,
       replace_time:  120,
+      cost:          1700,
       spares:        1,
       affects:       1
    },
@@ -417,6 +458,7 @@ system: {
       abrv:          "Filter",
       repair_time:   1800,
       replace_time:  60,
+      cost:          1100,
       spares:        1,
       affects:       1
    },
@@ -426,6 +468,7 @@ system: {
       abrv:          "CPU",
       repair_time:   600,
       replace_time:  90,
+      cost:          1400,
       spares:        2,
       affects:       1
    },
@@ -435,6 +478,7 @@ system: {
       abrv:          "Sys I/F",
       repair_time:   900,
       replace_time:  60,
+      cost:          1100,
       spares:        2,
       affects:       1
    }
@@ -451,6 +495,7 @@ system: {
       abrv:          "CPU",
       repair_time:   600,
       replace_time:  30,
+      cost:          800,
       spares:        2,
       affects:       1
    },
@@ -460,6 +505,7 @@ system: {
       abrv:          "Storage",
       repair_time:   300,
       replace_time:  60,
+      cost:          1100,
       spares:        2,
       affects:       1
    },
@@ -469,6 +515,7 @@ system: {
       abrv:          "Sys I/F",
       repair_time:   90,
       replace_time:  30,
+      cost:          800,
       spares:        2,
       affects:       1
    }
@@ -485,6 +532,7 @@ system: {
       abrv:          "Beam Gen",
       repair_time:   60,
       replace_time:  2400,
+      cost:          24500,
       spares:        1,
       affects:       3
    },
@@ -494,6 +542,7 @@ system: {
       abrv:          "Pwr Coupling",
       repair_time:   60,
       replace_time:  300,
+      cost:          3500,
       spares:        2,
       affects:       3
    },
@@ -503,6 +552,7 @@ system: {
       abrv:          "Beam Focus",
       repair_time:   900,
       replace_time:  30,
+      cost:          800,
       spares:        2,
       affects:       1
    },
@@ -512,6 +562,7 @@ system: {
       abrv:          "Flash Sup",
       repair_time:   90,
       replace_time:  1500,
+      cost:          15500,
       spares:        1,
       affects:       6
    },
@@ -521,6 +572,7 @@ system: {
       abrv:          "Tac I/F",
       repair_time:   120,
       replace_time:  30,
+      cost:          800,
       spares:        1,
       affects:       5
    }
@@ -536,6 +588,7 @@ system: {
       abrv:          "Laser Gen",
       repair_time:   60,
       replace_time:  1800,
+      cost:          18500,
       spares:        1,
       affects:       3
    },
@@ -545,6 +598,7 @@ system: {
       abrv:          "Pwr Coupling",
       repair_time:   60,
       replace_time:  300,
+      cost:          3500,
       spares:        2,
       affects:       3
    },
@@ -554,6 +608,7 @@ system: {
       abrv:          "Tac I/F",
       repair_time:   300,
       replace_time:  60,
+      cost:          1100,
       spares:        1,
       affects:       5
    }
@@ -569,6 +624,7 @@ system: {
       abrv:          "Exciter",
       repair_time:   60,
       replace_time:  300,
+      cost:          3500,
       spares:        1,
       affects:       3
    },
@@ -578,6 +634,7 @@ system: {
       abrv:          "Plasma Cpl",
       repair_time:   60,
       replace_time:  300,
+      cost:          3500,
       spares:        2,
       affects:       3
    },
@@ -587,6 +644,7 @@ system: {
       abrv:          "Rad Shield",
       repair_time:   120,
       replace_time:  900,
+      cost:          9500,
       spares:        1,
       affects:       2
    },
@@ -596,6 +654,7 @@ system: {
       abrv:          "Heat Exch",
       repair_time:   60,
       replace_time:  1800,
+      cost:          18500,
       spares:        1,
       affects:       6
    },
@@ -605,6 +664,7 @@ system: {
       abrv:          "Tac I/F",
       repair_time:   180,
       replace_time:  30,
+      cost:          800,
       spares:        1,
       affects:       5
    }
@@ -620,6 +680,7 @@ system: {
       abrv:          "Launcher",
       repair_time:   300,
       replace_time:  3000,
+      cost:          30500,
       spares:        1,
       affects:       3
    },
@@ -629,6 +690,7 @@ system: {
       abrv:          "Loader",
       repair_time:   120,
       replace_time:  6000,
+      cost:          36500,
       spares:        1,
       affects:       1
    },
@@ -638,6 +700,7 @@ system: {
       abrv:          "Pwr Coupling",
       repair_time:   600,
       replace_time:  30,
+      cost:          800,
       spares:        2,
       affects:       3
    },
@@ -647,6 +710,7 @@ system: {
       abrv:          "Tac I/F",
       repair_time:   90,
       replace_time:  240,
+      cost:          2900,
       spares:        1,
       affects:       5
    }
@@ -663,6 +727,7 @@ system: {
       abrv:          "Launcher",
       repair_time:   300,
       replace_time:  3000,
+      cost:          30500,
       spares:        1,
       affects:       3
    },
@@ -672,6 +737,7 @@ system: {
       abrv:          "Loader",
       repair_time:   120,
       replace_time:  6000,
+      cost:          36500,
       spares:        1,
       affects:       1
    },
@@ -681,6 +747,7 @@ system: {
       abrv:          "Pwr Coupling",
       repair_time:   600,
       replace_time:  30,
+      cost:          800,
       spares:        2,
       affects:       3
    },
@@ -690,6 +757,7 @@ system: {
       abrv:          "Sys I/F",
       repair_time:   90,
       replace_time:  240,
+      cost:          2900,
       spares:        1,
       affects:       5
    }
@@ -705,6 +773,7 @@ system: {
       abrv:          "Mag Rail",
       repair_time:   120,
       replace_time:  1800,
+      cost:          18500,
       spares:        1,
       affects:       3
    },
@@ -714,6 +783,7 @@ system: {
       abrv:          "Elevator",
       repair_time:   300,
       replace_time:  6000,
+      cost:          36500,
       spares:        1,
       affects:       1
    },
@@ -723,6 +793,7 @@ system: {
       abrv:          "ILS",
       repair_time:   120,
       replace_time:  2000,
+      cost:          20500,
       spares:        1,
       affects:       1
    },
@@ -732,6 +803,7 @@ system: {
       abrv:          "Pwr Coupling",
       repair_time:   600,
       replace_time:  30,
+      cost:          800,
       spares:        2,
       affects:       3
    },
@@ -741,6 +813,7 @@ system: {
       abrv:          "Nav I/F",
       repair_time:   90,
       replace_time:  240,
+      cost:          2900,
       spares:        1,
       affects:       5
    }

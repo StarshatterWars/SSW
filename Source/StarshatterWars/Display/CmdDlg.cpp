@@ -168,6 +168,7 @@ void UCmdDlg::NativeConstruct()
         NewButton->SetButtonSize(256.0f, 32.0f);
         NewButton->SetLabelFontSizeValue(16);
         NewButton->SetMenuOption(MenuItems[i]);
+        if (i==2) NewButton->SetVisibility(ESlateVisibility::Collapsed);
         NewButton->SetButtonText(FText::FromString(MenuItems[i]).ToUpper());
 
         if (UVerticalBoxSlot* VBoxSlot = MenuButtonContainer->AddChildToVerticalBox(NewButton))
@@ -467,7 +468,7 @@ void UCmdDlg::BuildOperationsChrome()
     }
     OperationsOrdersTab = MakeTab(TEXT("ORDERS"));
     OperationsTheaterTab = MakeTab(TEXT("THEATER"));
-    OperationsForcesTab = MakeTab(TEXT("FORCES"));
+    OperationsForcesTab = nullptr; // Live Forces is available in Tactical Reference.
     OperationsIntelTab = MakeTab(TEXT("INTEL"));
     OperationsMissionTab = MakeTab(TEXT("MISSION"));
     OperationsPlayTab = MakeIconTab(TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Briefing_256x256.T_Briefing_256x256"));
@@ -480,7 +481,7 @@ void UCmdDlg::BuildOperationsChrome()
     OperationsMenuTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OnCancelButtonClicked);
     OperationsOrdersTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OpenOperationsOrders);
     OperationsTheaterTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OpenOperationsTheater);
-    OperationsForcesTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OpenOperationsForces);
+
     OperationsIntelTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OpenOperationsIntel);
     OperationsMissionTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OpenOperationsMissions);
     OperationsPlayTab->OnClicked.AddUniqueDynamic(this, &UCmdDlg::OnMissionButtonClicked);
@@ -571,7 +572,7 @@ void UCmdDlg::RefreshOperationsTabStyles()
 
 void UCmdDlg::OpenOperationsOrders() { CurrentScreen = ECmdScreen::Orders; LoadOrdersInfo(); RefreshOperationsTabStyles(); }
 void UCmdDlg::OpenOperationsTheater() { CurrentScreen = ECmdScreen::Theater; LoadTheaterInfo(); RefreshOperationsTabStyles(); }
-void UCmdDlg::OpenOperationsForces() { CurrentScreen = ECmdScreen::Forces; LoadForcesInfo(); RefreshOperationsTabStyles(); }
+void UCmdDlg::OpenOperationsForces() { OpenOperationsOrders(); }
 void UCmdDlg::OpenOperationsIntel() { CurrentScreen = ECmdScreen::Intel; LoadIntelInfo(); RefreshOperationsTabStyles(); }
 void UCmdDlg::OpenOperationsMissions() { CurrentScreen = ECmdScreen::Missions; LoadMissionsInfo(); RefreshOperationsTabStyles(); }
 
@@ -667,8 +668,7 @@ void UCmdDlg::OnMenuToggleSelected(UMenuButton* SelectedButton)
     }
     else if (MenuOption == MenuItems[2])
     {
-        CurrentScreen = ECmdScreen::Forces;
-        LoadForcesInfo();
+        OpenOperationsOrders();
     }
     else if (MenuOption == MenuItems[3])
     {

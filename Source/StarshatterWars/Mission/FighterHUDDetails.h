@@ -6,6 +6,7 @@ class SVerticalBox;
 #include "DamagePanelData.h"
 #include "ShipMFDPreview.h"
 #include "CockpitDisplays.h"
+#include "JumpRouteReadout.h"
 #include "Engine/Texture2D.h"
 #include "UObject/StrongObjectPtr.h"
 
@@ -30,6 +31,7 @@ public:
         SLATE_ATTRIBUTE(FText, SelectedName)
         SLATE_ARGUMENT(TWeakObjectPtr<ASSWSessionLobbyController>, NetworkController)
         SLATE_EVENT(TDelegate<bool(float)>, OnOverviewWheel)
+        SLATE_EVENT(TDelegate<void(FName)>, OnCockpitShortcut)
     SLATE_END_ARGS()
     virtual ~SFighterHUDDetails();
     void Construct(const FArguments& Args);
@@ -64,8 +66,11 @@ public:
     static FString FormatWeaponReadout(const WeaponGroup* Group);
     static FString FormatStatusReadout(const FString& Label, double Percent, bool bAugmenter=false);
     bool IsCockpitDisplayActive() const;
+    bool CanUseCockpitShortcut(FName Action) const;
+    void ExecuteCockpitShortcut(FName Action);
 private:
     TDelegate<bool(float)> OnOverviewWheel;
+    TDelegate<void(FName)> OnCockpitShortcut;
     friend class SCockpitInstrument;
     friend class FCockpitDisplaysTest;
     friend class FThirdPersonMiniHUDTest;
@@ -132,6 +137,7 @@ private:
     double TargetSpeed = -1;
     FString TargetRarity, TargetMineral, TargetDepositAmount, TargetDepositValue;
     FString TargetCargo;
+    FJumpRouteReadout JumpReadout;
     TArray<FString> JumpRoute;
     double PlayerShield = -1, PlayerHull = -1, TargetHull = -1, TargetShield = -1, TargetRange = -1, SensorRange = 1;
     bool bHasPlayer = false, bHasTarget = false;

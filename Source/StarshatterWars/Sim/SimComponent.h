@@ -44,6 +44,9 @@ public:
 	Text   name;
 	Text   abrv;
 
+	int64  base_cost = 0;
+    double performance_multiplier = 1.0;
+    double power_demand_multiplier = 1.0;
 	float  repair_time;
 	float  replace_time;
 	int    spares;
@@ -72,6 +75,9 @@ public:
 	const char* Abbreviation() const { return design.abrv; }
 	float       RepairTime()   const { return design.repair_time; }
 	float       ReplaceTime()  const { return design.replace_time; }
+    int64       Cost() const { return design.base_cost; }
+    double PerformanceMultiplier() const { return design.performance_multiplier; }
+    double PowerDemandMultiplier() const { return design.power_demand_multiplier; }
 
 	bool DamageEfficiency() const { return (design.affects & DAMAGE_EFFICIENCY) ? true : false; }
 	bool DamageSafety()     const { return (design.affects & DAMAGE_SAFETY) ? true : false; }
@@ -92,6 +98,9 @@ public:
 	virtual void ExecMaintFrame(double seconds);
 	virtual void Repair();
 	virtual void Replace();
+    void RestoreAtStation();
+    void InstallDesign(const ComponentDesign& NewDesign);
+    void ApplyGradeDesign(const ComponentDesign& NewDesign);
 
 protected:
 	ComponentDesign design;

@@ -192,3 +192,27 @@ SimComponent::NumJerried() const
 {
 	return jerried;
 }
+
+void SimComponent::InstallDesign(const ComponentDesign& NewDesign)
+{
+    design = NewDesign;
+    Status = SYSTEM_STATUS::NOMINAL;
+    availability = 100.0f;
+    time_remaining = 0.f;
+    spares = NewDesign.spares;
+    jerried = 0;
+    if (system) system->CalcStatus();
+}
+
+void SimComponent::ApplyGradeDesign(const ComponentDesign& NewDesign)
+{
+    design = NewDesign;
+    if (system) system->CalcStatus();
+}
+
+void SimComponent::RestoreAtStation()
+{
+    // A station workshop supplies the repairs; installed grade and onboard spares stay intact.
+    availability = 100.f; time_remaining = 0; jerried = 0; Status = SYSTEM_STATUS::NOMINAL;
+    if (system) system->CalcStatus();
+}

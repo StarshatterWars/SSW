@@ -1,4 +1,7 @@
 #include "ProductionDlg.h"
+#include "BlueprintsDlg.h"
+#include "ShipSystemIcon.h"
+#include "ReprocessingAI.h"
 
 #include "GameStructs_products.h"
 #include "MissionUIStyle.h"
@@ -26,6 +29,7 @@ struct FRecipeLabels
     FText Minerals;
     FText Product;
     FText ProcessingTime;
+    FName Image;
 };
 
 const FSSWProductionStock* GetLiveStock(const FSSWProductionFacility& Facility)
@@ -50,6 +54,7 @@ public:
         SLATE_ARGUMENT(FText, Minerals)
         SLATE_ARGUMENT(FText, Product)
         SLATE_ARGUMENT(FText, ProcessingTime)
+        SLATE_ARGUMENT(FName, Image)
     SLATE_END_ARGS()
 
     void Construct(const FArguments& Args, const TSharedRef<STableViewBase>& Owner)
@@ -58,11 +63,20 @@ public:
         Minerals = Args._Minerals;
         Product = Args._Product;
         ProcessingTime = Args._ProcessingTime;
-        SMultiColumnTableRow<FFacilityPtr>::Construct(FSuperRowType::FArguments(), Owner);
+        Image = Args._Image;
+        SMultiColumnTableRow<FFacilityPtr>::Construct(FSuperRowType::FArguments().Style(&MissionUIStyle::FlightTableRowStyle()), Owner);
     }
 
     TSharedRef<SWidget> GenerateWidgetForColumn(const FName& Column) override
     {
+        if (Column == "Facility")
+            return SNew(SHorizontalBox)
+                + SHorizontalBox::Slot().AutoWidth().Padding(4,2)[SNew(SShipSystemIcon).Icon(SShipSystemIcon::ForCatalogImage(Facility->Image))]
+                + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(FText::FromString(Facility->Facility).ToUpper()).OverflowPolicy(ETextOverflowPolicy::Ellipsis)];
+        if (Column == "Product")
+            return SNew(SHorizontalBox)
+                + SHorizontalBox::Slot().AutoWidth().Padding(4,2)[SNew(SShipSystemIcon).Icon(SShipSystemIcon::ForCatalogImage(Image))]
+                + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(Product.ToUpper()).OverflowPolicy(ETextOverflowPolicy::Ellipsis)];
         if (Column == "Status")
             return SNew(STextBlock).Margin(FMargin(5, 4)).Font(MissionUIStyle::GetRowFont(12))
                 .Text_Lambda([Site = Facility]() { return GetProductionStatus(GetLiveStock(*Site)); });
@@ -88,6 +102,7 @@ private:
     FText Minerals;
     FText Product;
     FText ProcessingTime;
+    FName Image;
 };
 }
 
@@ -124,6 +139,12 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                     Resource.Mineral = Mineral;
                     Minerals.Add(Resource.GetMineralName());
                 }
+                if (!Recipe.Inputs.IsEmpty())
+                {
+                    Minerals.Reset();
+                    for (const auto& Input : Recipe.Inputs)
+                        Minerals.Add(FText::Format(INVTEXT("{0} t {1}"), FText::AsNumber(Input.Quantity * Input.UnitTonnes), FText::FromName(Input.Item)));
+                }
                 RecipeLabels->Add(Name, FRecipeLabels{
                     FText::Format(INVTEXT("{0} t: {1}"), FText::AsNumber(Recipe.InputTonnes),
                         FText::Join(INVTEXT(", "), Minerals)),
@@ -132,7 +153,8 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                             StaticEnum<ESSWFinishedItem>()->GetDisplayNameTextByValue(int64(Recipe.Product)))
                         : FText::Format(INVTEXT("{0} {1}: {2}"), FText::AsNumber(Recipe.OutputQuantity),
                             FText::FromString(Recipe.OutputUnit), FText::FromString(Recipe.OutputDisplayName)),
-                    FText::Format(INVTEXT("{0} s"), FText::AsNumber(Recipe.SecondsPerBatch))
+                    FText::Format(INVTEXT("{0} s | {1} t residue"), FText::AsNumber(Recipe.SecondsPerBatch),
+                        FText::AsNumber(ReprocessingAI::Calculate(Recipe).WasteTonnes)), Recipe.Image
                 });
             });
 
@@ -177,6 +199,7 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
         {
             const FRecipeLabels* Recipe = RecipeLabels->Find(Site->Recipe);
             return SNew(SProductionRow, Owner).Facility(Site)
+                .Image(Recipe ? Recipe->Image : FName(TEXT("Production")))
                 .Minerals(Recipe ? Recipe->Minerals : INVTEXT("UNASSIGNED"))
                 .Product(Recipe ? Recipe->Product : INVTEXT("UNASSIGNED"))
                 .ProcessingTime(Recipe ? Recipe->ProcessingTime : INVTEXT("—"));
@@ -356,5 +379,18 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
         ];
     Screens->AddSlot()[Browser];
     Screens->AddSlot()[Factory];
-    return Screens;
+    BlueprintBrowser = CreateWidget<UBlueprintsDlg>(GetOwningPlayer());
+    if (BlueprintBrowser) Screens->AddSlot()[BlueprintBrowser->TakeWidget()];
+    return SNew(SVerticalBox)
+        + SVerticalBox::Slot().AutoHeight().Padding(8)
+        [SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().AutoWidth().Padding(0,0,6,0)
+            [SNew(SButton).ToolTipText(INVTEXT("Production facilities"))
+                .OnClicked_Lambda([Weak=TWeakPtr<SWidgetSwitcher>(Screens)]() { if (auto View=Weak.Pin()) View->SetActiveWidgetIndex(0); return FReply::Handled(); })
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Production)]]
+            + SHorizontalBox::Slot().AutoWidth()
+            [SNew(SButton).ToolTipText(INVTEXT("NPC blueprint catalogue and your blueprint library"))
+                .OnClicked_Lambda([Weak=TWeakPtr<SWidgetSwitcher>(Screens)]() { if (auto View=Weak.Pin(); View && View->GetNumWidgets()>2) View->SetActiveWidgetIndex(2); return FReply::Handled(); })
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Reference)]]]
+        + SVerticalBox::Slot().FillHeight(1)[Screens];
 }

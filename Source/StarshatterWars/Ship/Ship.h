@@ -310,6 +310,7 @@ public:
     virtual List<SimShot>& GetActiveDecoys();
     virtual void      AddActiveDecoy(Drone* d);
     virtual int* GetLoadout() { return loadout; }
+    bool ApplyDockedLoadout(const TArray<int32>& Stations);
 
     List<SimShot>& GetThreatList();
     void              AddThreat(SimShot* s);
@@ -383,8 +384,13 @@ public:
     const ShipDesign* Design() const { return design; }
     void AssignMilitaryCargo();
     void SetSimulatedCargo(SSWFreightManifest::FLoad Load);
-    double LoadMinedOre(const FString& Mineral, double Tonnes);
-    double UnloadMinedOre(double Tonnes);
+    FName GetCargoInventoryKey() const;
+    void SyncCargoInventory();
+    void ApplyCargoInventoryToManifest();
+    void BindCargoInventory(FGuid Hull);
+    bool RepairAtStation();
+    double LoadMinedOre(const FString& Mineral, double Tonnes, bool bRecordInventory = true);
+    double UnloadMinedOre(double Tonnes, bool bRecordInventory = true);
     double GetMinedOreTonnes() const;
     struct FSealedCourierPackage
     {
@@ -569,6 +575,7 @@ protected:
 
     char              regnum[16];
     ShipDesign*       design;
+    FGuid CargoInventoryId = FGuid::NewGuid();
     TOptional<SSWFreightManifest::FLoad> CargoManifest;
     TOptional<FSealedCourierPackage> CourierPackage;
     double FractionalMinedOre = 0.0;

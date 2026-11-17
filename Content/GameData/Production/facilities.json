@@ -8,7 +8,8 @@
     "Empire": "Terellian Alliance",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Adonis_Alloy_Works",
@@ -19,7 +20,8 @@
     "Empire": "Terellian Alliance",
     "bSurface": false,
     "Recipe": "StructuralAlloy",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Maraner_Orbital_Concentrator",
@@ -30,7 +32,8 @@
     "Empire": "Terellian Alliance",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Maraner_Materials_Refinery",
@@ -41,7 +44,8 @@
     "Empire": "Terellian Alliance",
     "bSurface": false,
     "Recipe": "ConductiveMetal",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Pallas_Orbital_Concentrator",
@@ -52,7 +56,8 @@
     "Empire": "Terellian Alliance",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Pallas_Industrial_Works",
@@ -63,7 +68,8 @@
     "Empire": "Terellian Alliance",
     "bSurface": false,
     "Recipe": "OpticalGlass",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Dorrath_Orbital_Concentrator",
@@ -74,7 +80,8 @@
     "Empire": "Terellian Alliance",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Dorrath_Metals_Works",
@@ -85,7 +92,8 @@
     "Empire": "Terellian Alliance",
     "bSurface": false,
     "Recipe": "StructuralAlloy",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Hera_Orbital_Concentrator",
@@ -96,7 +104,8 @@
     "Empire": "Terellian Alliance",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Hera_Mineral_Processing_Works",
@@ -107,7 +116,8 @@
     "Empire": "Terellian Alliance",
     "bSurface": false,
     "Recipe": "IndustrialCeramics",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Dante_Orbital_Concentrator",
@@ -118,7 +128,8 @@
     "Empire": "Terellian Alliance",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Janek_Orbital_Materials_Works",
@@ -129,7 +140,8 @@
     "Empire": "Terellian Alliance",
     "bSurface": false,
     "Recipe": "JanusConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Jalah_Orbital_Concentrator",
@@ -140,7 +152,8 @@
     "Empire": "Dantari Separatists",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Kalon_Orbital_Concentrator",
@@ -151,7 +164,8 @@
     "Empire": "Solus",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Kalon_Materials_Works",
@@ -162,7 +176,8 @@
     "Empire": "Solus",
     "bSurface": false,
     "Recipe": "IndustrialCeramics",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Prosenar_Orbital_Concentrator",
@@ -173,7 +188,8 @@
     "Empire": "Pirates",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Silessia_Orbital_Concentrator",
@@ -184,7 +200,8 @@
     "Empire": "Silessia",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Silessia_Materials_Works",
@@ -195,7 +212,8 @@
     "Empire": "Silessia",
     "bSurface": false,
     "Recipe": "IndustrialCeramics",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Tal_Amin_Orbital_Concentrator",
@@ -206,7 +224,8 @@
     "Empire": "Haiche",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Tal_Amin_Materials_Works",
@@ -217,7 +236,8 @@
     "Empire": "Haiche",
     "bSurface": false,
     "Recipe": "WaterRecovery",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Renser_Orbital_Concentrator",
@@ -228,7 +248,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Renser_Materials_Works",
@@ -239,7 +260,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "ConductiveMetal",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Loris_Orbital_Concentrator",
@@ -250,7 +272,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Loris_Materials_Works",
@@ -261,7 +284,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "ConstructionMaterials",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Aram_Orbital_Concentrator",
@@ -272,7 +296,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Aram_Materials_Works",
@@ -283,7 +308,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OpticalGlass",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Kolchev_Orbital_Concentrator",
@@ -294,7 +320,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Kolchev_Materials_Works",
@@ -305,7 +332,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "ConstructionMaterials",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Adantar_Orbital_Concentrator",
@@ -316,7 +344,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Adantar_Materials_Works",
@@ -327,7 +356,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "ConductiveMetal",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Tarsus_Orbital_Concentrator",
@@ -338,7 +368,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Tarsus_Materials_Works",
@@ -349,7 +380,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "ConstructionMaterials",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Sintar_Orbital_Concentrator",
@@ -360,7 +392,8 @@
     "Empire": "Zolon Empire",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Nergal_Orbital_Concentrator",
@@ -371,7 +404,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Nergal_Materials_Works",
@@ -382,7 +416,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "WaterRecovery",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Radix_Orbital_Concentrator",
@@ -393,7 +428,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Radix_Materials_Works",
@@ -404,7 +440,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "ConstructionMaterials",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Ramek_Orbital_Concentrator",
@@ -415,7 +452,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Ramek_Materials_Works",
@@ -426,7 +464,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OpticalGlass",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Marak_Orbital_Concentrator",
@@ -437,7 +476,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Marak_Materials_Works",
@@ -448,7 +488,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "ConductiveMetal",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Garrison_Orbital_Concentrator",
@@ -459,7 +500,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Garrison_Materials_Works",
@@ -470,7 +512,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "ConstructionMaterials",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Volante_Orbital_Concentrator",
@@ -481,7 +524,8 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   },
   {
     "Name": "Volante_Materials_Works",
@@ -492,6 +536,7 @@
     "Empire": "Marakan Hegemony",
     "bSurface": false,
     "Recipe": "IndustrialCeramics",
-    "CapacityTonnes": 90000
+    "CapacityTonnes": 90000,
+    "Image": "Production"
   }
 ]

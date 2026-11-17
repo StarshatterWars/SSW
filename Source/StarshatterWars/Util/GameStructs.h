@@ -21,6 +21,9 @@
 #include "InputCoreTypes.h"
 #include "Engine/DataTable.h"
 #include "AsteroidResource.h"
+#include "GameStructs_insurance.h"
+#include "GameStructs_economy.h"
+#include "GameStructs_skills.h"
 #include "GameStructs.generated.h"
 UENUM(BlueprintType)
 enum class ECargoType : uint8
@@ -38,6 +41,9 @@ struct FS_CargoCatalogRow : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
     FString DisplayName;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
+    FName Image = TEXT("Cargo");
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
     ESSWAsteroidRarity Rarity = ESSWAsteroidRarity::Common;
@@ -78,6 +84,9 @@ struct FS_Cargo
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
     FString DisplayName;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
+    FName Image = TEXT("Cargo");
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Cargo")
     ESSWAsteroidRarity Rarity = ESSWAsteroidRarity::Common;
@@ -1390,7 +1399,14 @@ struct FS_CompletedMission
 USTRUCT(BlueprintType)
 struct FS_PlayerGameInfo : public FTableRowBase
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadWrite, SaveGame) TArray<FPlayerHangarShip> HangarShips;
+    UPROPERTY(BlueprintReadWrite, SaveGame) FGuid AssignedHangarHull;
+    UPROPERTY(BlueprintReadWrite, SaveGame) FGuid SelectedHangarHull;
+    UPROPERTY(BlueprintReadWrite, SaveGame) int64 InsuranceCredits = 0; // Legacy save migration only.
+    UPROPERTY(SaveGame) FEconomyState Economy;
+    UPROPERTY(SaveGame) FString AgentJournalJson;
+    UPROPERTY(SaveGame) TMap<FName, FSkillProgress> Skills;
     UPROPERTY(BlueprintReadWrite, SaveGame) bool bTrainingGraduate = false;
     UPROPERTY(SaveGame) bool bStartedAsEnsign = false;
     /** Successful assignments, scoped by campaign; additive for existing saves. */

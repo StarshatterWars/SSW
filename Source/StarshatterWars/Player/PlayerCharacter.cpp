@@ -502,6 +502,9 @@ int32 PlayerCharacter::CommandRankRequired(int32 Mask)
     case (int32)CLASSIFICATION::LCA:
         return 1;
 
+    case (int32)CLASSIFICATION::FRIGATE:
+        return FMath::Max(3, UAwardInfoRegistry::RankFromName(TEXT("Lt. Commander")));
+
     case (int32)CLASSIFICATION::DESTROYER:
         return 2;
 

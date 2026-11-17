@@ -34,7 +34,8 @@ public:
 
 	virtual void ExecFrame(double seconds);
 
-	void AddClient(SimSystem* client);
+	double GetRatedOutput() const { return max_output * GetPerformanceMultiplier(); }
+    void AddClient(SimSystem* client);
 	void RemoveClient(SimSystem* client);
 
 	void SetCombatAllocation(FVector Shares) { CombatAllocation = Shares; }

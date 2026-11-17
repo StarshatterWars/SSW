@@ -2,6 +2,7 @@
 
 #include "NavAI.h"
 
+struct FEconomyState;
 class ContractAI;
 class StarSystem;
 class SimRegion;
@@ -18,6 +19,8 @@ public:
 
     static bool FlyToRegion(Ship& Freighter, SimRegion& Destination, double Seconds);
 
+    static double Load(FEconomyState&, Ship&, ContractAI&, double TransferLimit);
+    static double Unload(FEconomyState&, Ship&, FName Destination, double TransferLimit);
     static double Load(Ship& Freighter, ContractAI& Contract, double TransferLimit);
     static double Unload(Ship& Freighter, double& DestinationStock, double FreeSpace, double TransferLimit);
 };

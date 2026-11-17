@@ -13,6 +13,7 @@
 #include "MissionUIStyle.h"
 #include "Brushes/SlateRoundedBoxBrush.h"
 #include "Brushes/SlateNoResource.h"
+#include "Brushes/SlateColorBrush.h"
 #include "Styling/CoreStyle.h"
 #include "Widgets/Notifications/SProgressBar.h"
 #include "Widgets/Layout/SBox.h"
@@ -30,6 +31,20 @@
 
 namespace MissionUIStyle
 {
+    const FTableRowStyle& FlightTableRowStyle()
+    {
+        static const FTableRowStyle Style = []()
+        {
+            FTableRowStyle Row = FCoreStyle::Get().GetWidgetStyle<FTableRowStyle>("TableView.Row");
+            const FSlateColorBrush Selected(RowSelectedBG);
+            const FSlateColorBrush Hovered(FLinearColor(0.20f, 0.34f, 0.56f));
+            Row.SetActiveBrush(Selected).SetInactiveBrush(Selected)
+                .SetActiveHoveredBrush(Hovered).SetInactiveHoveredBrush(Hovered);
+            return Row;
+        }();
+        return Style;
+    }
+
     TSharedRef<SWidget> MakeDataPane(TSharedRef<SWidget> Content, FMargin Padding)
     {
         return SNew(SBorder).Padding(Padding)

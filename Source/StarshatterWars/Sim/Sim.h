@@ -20,6 +20,7 @@
 #pragma once
 
 #include "GameStructs_products.h"
+#include "GameStructs_economy.h"
 #include "ContractAI.h"
 #include "ContractTransactions.h"
 #include "MiningAI.h"
@@ -100,6 +101,8 @@ public:
     int32 CountPendingArenaRespawns(int32 Iff);
     bool HasSimulationAuthority() const;
     bool IsNetworked() const;
+    FEconomyState& GetEconomy();
+    const FEconomyState& ReadEconomy() const;
     void AssignNetworkObjectId(SimObject& Object);
 
     void LoadMission(Mission* msn, bool preload_textures = false);
@@ -282,6 +285,7 @@ protected:
     bool FindReadyPlayerLaunchSlot(Ship* Player, Hangar*& CarrierHangar, int& Squadron, int& Slot);
     TWeakObjectPtr<UWorld> NetworkWorld;
     uint32 NextNetworkObjectId = 1;
+    void TickIndustry(double Seconds);
     void CreateRegions();
     void CreateElements(const char* SpawnName = nullptr);
     void CopyEvents();
@@ -334,9 +338,10 @@ protected:
     FName AssignedAgentPilot;
     FContractAccounts TrainingContractAccounts;
     TMap<FName, FContractTransaction> TrainingContracts;
+    TMap<FName, FSSWProductionStock> ProductionViews;
+    double IndustrySeconds = 0;
+    FEconomyState LocalEconomy;
     FSSWProductionStock JanekRefinery;
-    TMap<FString, double> JanekMiningStock;
-    TMap<FString, double> JanusTransferStock;
     Ship* DeferredLaunchPlayer = nullptr;
     Ship* PendingLaunchPlayer = nullptr; // staged player, awaiting click / timeout
     bool bPlayerLaunchRequested = false;

@@ -927,6 +927,78 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.HangarPopupClass
+    if (!Cache.Contains(TEXT("UI.HangarPopupClass")))
+    {
+        if (!Settings->HangarPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->HangarPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.HangarPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.HangarPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            Cache.Add(TEXT("UI.HangarPopupClass"), TSoftObjectPtr<UObject>(
+                FSoftObjectPath(TEXT("/Script/StarshatterWars.HangarDlg"))));
+        }
+    }
+
+    // UI.InsurancePopupClass
+    if (!Cache.Contains(TEXT("UI.InsurancePopupClass")))
+    {
+        if (!Settings->InsurancePopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->InsurancePopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.InsurancePopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.InsurancePopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            Cache.Add(TEXT("UI.InsurancePopupClass"), TSoftObjectPtr<UObject>(
+                FSoftObjectPath(TEXT("/Script/StarshatterWars.InsuranceDlg"))));
+        }
+    }
+
+    // UI.ShipFitPopupClass
+    if (!Cache.Contains(TEXT("UI.ShipFitPopupClass")))
+    {
+        if (!Settings->ShipFitPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->ShipFitPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.ShipFitPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.ShipFitPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            Cache.Add(TEXT("UI.ShipFitPopupClass"), TSoftObjectPtr<UObject>(
+                FSoftObjectPath(TEXT("/Script/StarshatterWars.ShipFitDlg"))));
+        }
+    }
+
+    // UI.SkillsPopupClass
+    if (!Cache.Contains(TEXT("UI.SkillsPopupClass")))
+    {
+        if (!Settings->SkillsPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->SkillsPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.SkillsPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.SkillsPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            Cache.Add(TEXT("UI.SkillsPopupClass"), TSoftObjectPtr<UObject>(
+                FSoftObjectPath(TEXT("/Script/StarshatterWars.SkillsDlg"))));
+        }
+    }
+
     // UI.CustomMissionScreenClass
     if (!Cache.Contains(TEXT("UI.CustomMissionScreenClass")))
     {

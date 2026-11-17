@@ -46,6 +46,7 @@ public:
     // AUTHORITATIVE ACCESS
     const FS_PlayerGameInfo& GetPlayerInfo() const;
     FS_PlayerGameInfo& GetMutablePlayerInfo();
+    FEconomyState& GetEconomy();
 
     UFUNCTION(BlueprintPure, Category = "Starshatter|PlayerSave")
     FS_PlayerGameInfo GetPlayerInfoCopy() const { return PlayerInfo; }

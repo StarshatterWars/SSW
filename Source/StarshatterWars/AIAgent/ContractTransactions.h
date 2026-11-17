@@ -1,11 +1,6 @@
 #pragma once
 
-#include "GameStructs_Contracts.h"
-
-enum class EContractState : uint8
-{
-    Draft, Open, InProgress, AwaitingClaims, Completed, Failed, Expired
-};
+#include "GameStructs_contractstate.h"
 
 struct FContractAccount
 {
@@ -16,21 +11,6 @@ struct FContractAccount
 using FContractAccounts = TMap<FName, FContractAccount>;
 
 // State and balances are owned by the simulation or authoritative economy caller.
-struct FContractTransaction
-{
-    FSSWContractTerms Terms;
-    FName Issuer;
-    FName Acceptor;
-    FName HighBidder;
-    int64 HighBid = 0;
-    int64 Buyout = 0;
-    FDateTime ExpiresAt;
-    FDateTime DeliverBy;
-    bool bSellerClaimed = false;
-    bool bBuyerClaimed = false;
-    EContractState State = EContractState::Draft;
-};
-
 namespace ContractTransactions
 {
     inline bool CanReceiveCredits(const FContractAccount& Account, int64 Amount)

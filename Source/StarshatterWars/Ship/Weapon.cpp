@@ -842,7 +842,7 @@ SimShot* Weapon::FireBarrel(int n)
             shot_load = energy;
 
         energy -= shot_load;
-        shot->SetCharge(shot_load * availability);
+        shot->SetCharge(shot_load * GetOperatingAvailability());
 
         if (target && design->flak && !design->guided) {
             double speed = shot->GetVelocity().Length();

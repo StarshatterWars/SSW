@@ -1,4 +1,5 @@
 #include "ShipStoreDlg.h"
+#include "SkillsSubsystem.h"
 
 #include "Engine/GameInstance.h"
 #include "GameStructs.h"
@@ -42,7 +43,7 @@ public:
     void Construct(const FArguments& Args, const TSharedRef<STableViewBase>& Owner)
     {
         Entry = Args._Entry;
-        SMultiColumnTableRow<FStoreRow>::Construct(FSuperRowType::FArguments(), Owner);
+        SMultiColumnTableRow<FStoreRow>::Construct(FSuperRowType::FArguments().Style(&MissionUIStyle::FlightTableRowStyle()), Owner);
     }
 
     TSharedRef<SWidget> GenerateWidgetForColumn(const FName& Column) override
@@ -123,7 +124,7 @@ TSharedRef<SWidget> MakeCatalog(const TSharedRef<FStoreRows>& Rows, bool bCompon
     else
     {
         AddColumn("Empire", INVTEXT("EMPIRE"), 1.4f);
-        AddColumn("Access", INVTEXT("MINIMUM RANK"), 1.2f);
+        AddColumn("Access", INVTEXT("RANK / SKILL"), 1.2f);
     }
     AddColumn("Price", INVTEXT("BASE COST (CR)"), 1.1f);
 
@@ -172,6 +173,15 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
             Row->Empire = EmpireEnum->GetDisplayNameTextByValue(static_cast<int64>(Hull->ShipEmpire));
             Row->RequiredRank = RequiredRank;
             Row->Access = FText::FromString(ANSI_TO_TCHAR(PlayerCharacter::RankName(RequiredRank)));
+            const FName RequiredSkill=USkillsSubsystem::RequiredHullSkill(Hull->ShipType);
+            if (!RequiredSkill.IsNone())
+            {
+                const auto* Skills=GetGameInstance()->GetSubsystem<USkillsSubsystem>();
+                const auto* Definition=Skills ? Skills->GetCatalog().Find(RequiredSkill) : nullptr;
+                Row->Access=FText::Format(INVTEXT("{0} + {1} ({2})"),Row->Access,
+                    Definition ? FText::FromString(Definition->DisplayName) : FText::FromName(RequiredSkill),
+                    Skills && Skills->HasSkill(RequiredSkill) ? INVTEXT("COMPLETE") : INVTEXT("REQUIRED"));
+            }
             Row->Credits = Hull->BaseCost;
             Hulls->Add(Row);
         }
@@ -181,7 +191,6 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
     if (SystemCatalog)
     {
         static const TCHAR* GradeNames[] = { TEXT("I"), TEXT("II"), TEXT("III"), TEXT("IV"), TEXT("V") };
-        static constexpr int32 GradeMultipliers[] = { 1, 2, 4, 8, 16 };
         for (const auto& Entry : SystemCatalog->GetDesignsByName())
         {
             const FSystemDesign* System = &Entry.Value;
@@ -197,9 +206,8 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
                     Row->Category = FText::FromString(System->Name);
                     Row->RequiredRank = Grade.Level;
                     Row->Grade = FText::FromString(GradeNames[Grade.Level - 1]);
-                    const float ReplacementTime = FMath::IsFinite(Part.ReplaceTime)
-                        ? FMath::Clamp(Part.ReplaceTime, 0.f, 3600.f) : 0.f;
-                    Row->Credits = (500 + FMath::RoundToInt64(ReplacementTime * 10.f)) * GradeMultipliers[Grade.Level - 1];
+                    const auto Variant = SystemCatalog->FindComponentGrade(Entry.Key, FName(*Part.Name), Grade.Level);
+                    Row->Credits = Variant ? Variant->BaseCost : 0;
                     Components->Add(Row);
                 }
             }

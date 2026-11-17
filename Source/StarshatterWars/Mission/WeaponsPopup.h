@@ -1,5 +1,6 @@
 #include "Sensor.h"
 #pragma once
+#include "FittingMetrics.h"
 
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/SOverlay.h"
@@ -162,15 +163,16 @@ private:
     FString Readout(int32 I) const {
         auto* G=Group(I); if (!G) return TEXT("Unavailable");
         int32 Ammo=0, Powered=0, Count=0; bool Unlimited=false;
-        double Charge=0;
+        double Charge=0,BurstDPS=0,SustainedDPS=0;
         for (int32 W=0; W<G->NumWeapons(); ++W) if (auto* Gun=G->GetWeapon(W)) {
             if (Gun->Ammo()<0) Unlimited=true; else Ammo+=Gun->Ammo();
             Powered+=Gun->IsPowerOn()?1:0;
             if (Gun->GetCapacity()>0) Charge+=FMath::Clamp(double(Gun->Charge()),0.0,100.0);
+            if (Gun->Design() && Gun->Ammo()!=0) { const auto Output=FFittingMetrics::Weapon(*Gun->Design(),Gun->GetTurretBarrelCount(),Gun->GetOperatingAvailability(),Gun->GetRatedDemand(),Gun->GetStatus()==SYSTEM_STATUS::NOMINAL ? 1 : 2); BurstDPS+=Output.BurstDPS; SustainedDPS+=Output.SustainedDPS; }
             ++Count;
         }
         const FString Amount=Unlimited ? TEXT("UNLIMITED") : FString::FromInt(Ammo);
-        return FString::Printf(TEXT("AMMO  %s\nCHARGE  %.0f%%\nPOWER  %d / %d"),*Amount,Count?Charge/Count:0.0,Powered,Count);
+        return FString::Printf(TEXT("AMMO  %s\nCHARGE  %.0f%%\nPOWER  %d / %d\nBURST %.2f DPS / SUSTAINED %.2f DPS"),*Amount,Count?Charge/Count:0.0,Powered,Count,BurstDPS,SustainedDPS);
     }
     static bool IsListedContact(SimContact* Contact, Ship* Player) {
         Ship* Target = Contact->GetShip();

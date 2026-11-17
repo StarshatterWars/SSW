@@ -53480,34 +53480,29 @@
 				"bLaunchDeck": true,
 				"bRecoveryDeck": false,
 				"AzimuthRadians": 0,
-				"Location":
-				{
-					"X": 10,
+				"Location": {
+					"X": 40,
 					"Y": 0,
-					"Z": 920
+					"Z": 3680
 				},
-				"Size": 170,
+				"Size": 680,
 				"HullFactor": 0.5,
-				"StartPoint":
-				{
-					"X": 60,
-					"Y": -20,
-					"Z": 850
+				"StartPoint": {
+					"X": 240,
+					"Y": -80,
+					"Z": 3400
 				},
-				"EndPoint":
-				{
-					"X": 2000,
-					"Y": 15,
-					"Z": 3500
+				"EndPoint": {
+					"X": 8000,
+					"Y": 60,
+					"Z": 14000
 				},
-				"CamLocation":
-				{
+				"CamLocation": {
 					"X": 0,
 					"Y": 0,
-					"Z": 885
+					"Z": 3540
 				},
-				"BoundingBox":
-				{
+				"BoundingBox": {
 					"X": 0,
 					"Y": 0,
 					"Z": 0
@@ -53515,34 +53510,31 @@
 				"ExplosionType": 0,
 				"Light": 0,
 				"CycleTime": 15,
-				"MaxShips": 0,
+				"MaxShips": 2,
 				"ApproachPoints": [],
 				"RunwayPoints": [],
 				"Slots": [
 					{
-						"Location":
-						{
-							"X": 45,
-							"Y": -20,
-							"Z": 825
+						"Location": {
+							"X": 180,
+							"Y": -80,
+							"Z": 3100
 						},
 						"FilterMask": 7
 					},
 					{
-						"Location":
-						{
-							"X": 75,
-							"Y": -20,
-							"Z": 825
+						"Location": {
+							"X": 300,
+							"Y": -80,
+							"Z": 3100
 						},
 						"FilterMask": 7
 					},
 					{
-						"Location":
-						{
-							"X": 60,
-							"Y": -20,
-							"Z": 825
+						"Location": {
+							"X": 240,
+							"Y": -80,
+							"Z": 3100
 						},
 						"FilterMask": 8
 					}
@@ -53556,34 +53548,29 @@
 				"bLaunchDeck": true,
 				"bRecoveryDeck": false,
 				"AzimuthRadians": 0,
-				"Location":
-				{
-					"X": -10,
+				"Location": {
+					"X": -40,
 					"Y": 0,
-					"Z": 920
+					"Z": 3680
 				},
-				"Size": 170,
+				"Size": 680,
 				"HullFactor": 0.5,
-				"StartPoint":
-				{
-					"X": -60,
-					"Y": -20,
-					"Z": 850
+				"StartPoint": {
+					"X": -240,
+					"Y": -80,
+					"Z": 3400
 				},
-				"EndPoint":
-				{
-					"X": -2000,
-					"Y": 15,
-					"Z": 3500
+				"EndPoint": {
+					"X": -8000,
+					"Y": 60,
+					"Z": 14000
 				},
-				"CamLocation":
-				{
+				"CamLocation": {
 					"X": 0,
 					"Y": 0,
-					"Z": 885
+					"Z": 3540
 				},
-				"BoundingBox":
-				{
+				"BoundingBox": {
 					"X": 0,
 					"Y": 0,
 					"Z": 0
@@ -53591,34 +53578,31 @@
 				"ExplosionType": 0,
 				"Light": 0,
 				"CycleTime": 15,
-				"MaxShips": 0,
+				"MaxShips": 2,
 				"ApproachPoints": [],
 				"RunwayPoints": [],
 				"Slots": [
 					{
-						"Location":
-						{
-							"X": -45,
-							"Y": -20,
-							"Z": 825
+						"Location": {
+							"X": -180,
+							"Y": -80,
+							"Z": 3100
 						},
 						"FilterMask": 7
 					},
 					{
-						"Location":
-						{
-							"X": -75,
-							"Y": -20,
-							"Z": 825
+						"Location": {
+							"X": -300,
+							"Y": -80,
+							"Z": 3100
 						},
 						"FilterMask": 7
 					},
 					{
-						"Location":
-						{
-							"X": -60,
-							"Y": -20,
-							"Z": 825
+						"Location": {
+							"X": -240,
+							"Y": -80,
+							"Z": 3100
 						},
 						"FilterMask": 8
 					}
@@ -53632,34 +53616,29 @@
 				"bLaunchDeck": false,
 				"bRecoveryDeck": true,
 				"AzimuthRadians": 0,
-				"Location":
-				{
-					"X": 305,
+				"Location": {
+					"X": 1220,
 					"Y": 0,
-					"Z": -550
+					"Z": -2200
 				},
-				"Size": 120,
+				"Size": 480,
 				"HullFactor": 0.5,
-				"StartPoint":
-				{
-					"X": 305,
+				"StartPoint": {
+					"X": 1220,
 					"Y": 0,
-					"Z": -1950
+					"Z": -7800
 				},
-				"EndPoint":
-				{
-					"X": 305,
-					"Y": -12,
-					"Z": -500
+				"EndPoint": {
+					"X": 1220,
+					"Y": -48,
+					"Z": -2000
 				},
-				"CamLocation":
-				{
-					"X": 340,
-					"Y": 10,
-					"Z": -475
+				"CamLocation": {
+					"X": 1360,
+					"Y": 40,
+					"Z": -1900
 				},
-				"BoundingBox":
-				{
+				"BoundingBox": {
 					"X": 0,
 					"Y": 0,
 					"Z": 0
@@ -53667,37 +53646,36 @@
 				"ExplosionType": 0,
 				"Light": 0,
 				"CycleTime": 12,
-				"MaxShips": 0,
+				"MaxShips": 1,
 				"ApproachPoints": [
 					{
-						"X": 280,
+						"X": 1120,
 						"Y": 0,
-						"Z": -2300
+						"Z": -9200
 					},
 					{
-						"X": 1500,
+						"X": 6000,
 						"Y": 0,
-						"Z": -1000
+						"Z": -4000
 					},
 					{
-						"X": 1500,
+						"X": 6000,
 						"Y": 0,
-						"Z": 1000
+						"Z": 4000
 					},
 					{
-						"X": 250,
+						"X": 1000,
 						"Y": 0,
-						"Z": 2500
+						"Z": 10000
 					}
 				],
 				"RunwayPoints": [],
 				"Slots": [
 					{
-						"Location":
-						{
-							"X": 305,
-							"Y": -12,
-							"Z": -500
+						"Location": {
+							"X": 1220,
+							"Y": -48,
+							"Z": -2000
 						},
 						"FilterMask": 15
 					}
@@ -53711,34 +53689,29 @@
 				"bLaunchDeck": false,
 				"bRecoveryDeck": true,
 				"AzimuthRadians": 0,
-				"Location":
-				{
-					"X": -305,
+				"Location": {
+					"X": -1220,
 					"Y": 0,
-					"Z": -550
+					"Z": -2200
 				},
-				"Size": 120,
+				"Size": 480,
 				"HullFactor": 0.5,
-				"StartPoint":
-				{
-					"X": -305,
+				"StartPoint": {
+					"X": -1220,
 					"Y": 0,
-					"Z": -1950
+					"Z": -7800
 				},
-				"EndPoint":
-				{
-					"X": -305,
-					"Y": -12,
-					"Z": -500
+				"EndPoint": {
+					"X": -1220,
+					"Y": -48,
+					"Z": -2000
 				},
-				"CamLocation":
-				{
-					"X": -340,
-					"Y": 10,
-					"Z": -475
+				"CamLocation": {
+					"X": -1360,
+					"Y": 40,
+					"Z": -1900
 				},
-				"BoundingBox":
-				{
+				"BoundingBox": {
 					"X": 0,
 					"Y": 0,
 					"Z": 0
@@ -53746,37 +53719,36 @@
 				"ExplosionType": 0,
 				"Light": 0,
 				"CycleTime": 12,
-				"MaxShips": 0,
+				"MaxShips": 1,
 				"ApproachPoints": [
 					{
-						"X": -280,
+						"X": -1120,
 						"Y": 0,
-						"Z": -2300
+						"Z": -9200
 					},
 					{
-						"X": -1500,
+						"X": -6000,
 						"Y": 0,
-						"Z": -1000
+						"Z": -4000
 					},
 					{
-						"X": -1500,
+						"X": -6000,
 						"Y": 0,
-						"Z": 1000
+						"Z": 4000
 					},
 					{
-						"X": -250,
+						"X": -1000,
 						"Y": 0,
-						"Z": 2500
+						"Z": 10000
 					}
 				],
 				"RunwayPoints": [],
 				"Slots": [
 					{
-						"Location":
-						{
-							"X": -305,
-							"Y": -12,
-							"Z": -500
+						"Location": {
+							"X": -1220,
+							"Y": -48,
+							"Z": -2000
 						},
 						"FilterMask": 15
 					}

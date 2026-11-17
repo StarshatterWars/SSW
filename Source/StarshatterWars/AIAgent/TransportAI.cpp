@@ -1,4 +1,6 @@
 #include "TransportAI.h"
+#include "EconomyRuntime.h"
+#include "Engine/DataTable.h"
 
 #include "Algo/Reverse.h"
 #include "ContractAI.h"
@@ -141,3 +143,27 @@ double TransportAI::Unload(Ship& Freighter, double& DestinationStock, double Fre
 }
 
 
+
+double TransportAI::Load(FEconomyState& State, Ship& Freighter, ContractAI& Contract, double Limit)
+{
+    if (!FMath::IsFinite(Limit) || Limit <= 0) return 0;
+    Freighter.SyncCargoInventory();
+    const double Loaded = Freighter.LoadMinedOre(Contract.GetItem(), FMath::Min(Contract.GetReservedTonnes(), Limit), false);
+    if (Loaded <= 0) return 0;
+    if (!FEconomyLedger::Transfer(State, FEconomyRuntime::IndustryOwner(), Contract.GetSource(), Freighter.GetCargoInventoryKey(),
+        DataTableUtils::MakeValidName(Contract.GetItem()), Loaded, Contract.GetId()))
+    { Freighter.UnloadMinedOre(Loaded, false); return 0; }
+    Contract.CommitPickup(Loaded);
+    return Loaded;
+}
+double TransportAI::Unload(FEconomyState& State, Ship& Freighter, FName Destination, double Limit)
+{
+    if (!FMath::IsFinite(Limit) || Limit <= 0 || !Freighter.GetCargoManifest()) return 0;
+    Freighter.SyncCargoInventory();
+    const auto* To = State.Inventories.Find(Destination);
+    if (!To) return 0;
+    const double Amount = FMath::Min3(Freighter.GetMinedOreTonnes(), Limit, FMath::Max(0.0, To->CapacityTonnes - FEconomyLedger::Used(*To)));
+    if (Amount <= 0 || !FEconomyLedger::Transfer(State, FEconomyRuntime::IndustryOwner(), Freighter.GetCargoInventoryKey(), Destination,
+        DataTableUtils::MakeValidName(Freighter.GetCargoManifest()->Item), Amount)) return 0;
+    return Freighter.UnloadMinedOre(Amount, false);
+}

@@ -3,6 +3,7 @@
 #include "AsteroidResource.h"
 #include "NavAI.h"
 
+struct FEconomyState;
 class Asteroid;
 class SimRegion;
 
@@ -26,11 +27,15 @@ public:
         TArray<AsteroidReading> Readings;
         BeltStatus Status = BeltStatus::Unknown;
         double Range = 0.0;
+        double ScannedAt = 0.0;
     };
 
     explicit MiningAI(Ship* InShip);
 
     static ScanResult ScanAsteroids(SimRegion& Region, const FVector& Origin, double Range, ScanTier Tier);
+    static Asteroid* SelectClaimedDeposit(FEconomyState&, FName Claimant, SimRegion&, const FVector&, const ScanResult&,
+        const TArray<ESSWMineral>&, const FString& LoadedMineral, TOptional<int> PreferredContactId);
+    static void ReleaseClaims(FEconomyState&, FName Claimant);
     static Asteroid* SelectDeposit(SimRegion& Region, const FVector& Origin, const ScanResult& Scan,
         const TArray<ESSWMineral>& AcceptedMinerals, const FString& LoadedMineral, TOptional<int> PreferredContactId);
 };

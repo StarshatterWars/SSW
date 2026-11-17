@@ -1,0 +1,1714 @@
+[
+  {
+    "Recipe": "JanusConcentrate",
+    "DisplayName": "Industrial Concentrate Blueprint",
+    "OriginalPrice": 15000,
+    "CopyPrice": 1500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "OrbitalConcentrate",
+    "DisplayName": "Industrial Concentrate Blueprint",
+    "OriginalPrice": 30000,
+    "CopyPrice": 3000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "StructuralAlloy",
+    "DisplayName": "Structural Alloy Blueprint",
+    "OriginalPrice": 165000,
+    "CopyPrice": 16500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "ConductiveMetal",
+    "DisplayName": "Conductive Metal Blueprint",
+    "OriginalPrice": 42000,
+    "CopyPrice": 4200,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "IndustrialCeramics",
+    "DisplayName": "Industrial Ceramics Blueprint",
+    "OriginalPrice": 228000,
+    "CopyPrice": 22800,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "OpticalGlass",
+    "DisplayName": "Optical Glass Blueprint",
+    "OriginalPrice": 190000,
+    "CopyPrice": 19000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "ConstructionMaterials",
+    "DisplayName": "Construction Materials Blueprint",
+    "OriginalPrice": 112000,
+    "CopyPrice": 11200,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "WaterRecovery",
+    "DisplayName": "Water Blueprint",
+    "OriginalPrice": 7500,
+    "CopyPrice": 750,
+    "CopyRuns": 10,
+    "Image": "Mineral"
+  },
+  {
+    "Recipe": "Make_avionics",
+    "DisplayName": "Avionics Blueprint",
+    "OriginalPrice": 8300000,
+    "CopyPrice": 830000,
+    "CopyRuns": 10,
+    "Image": "Electronics"
+  },
+  {
+    "Recipe": "Make_carbon_composite",
+    "DisplayName": "Carbon Composite Blueprint",
+    "OriginalPrice": 140000,
+    "CopyPrice": 14000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_engine_assembly",
+    "DisplayName": "Engine Assembly Blueprint",
+    "OriginalPrice": 4200000,
+    "CopyPrice": 420000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_field_medical_supplies",
+    "DisplayName": "Field Medical Supplies Blueprint",
+    "OriginalPrice": 580000,
+    "CopyPrice": 58000,
+    "CopyRuns": 10,
+    "Image": "Medical"
+  },
+  {
+    "Recipe": "Make_finished_electronics",
+    "DisplayName": "Finished Electronics Blueprint",
+    "OriginalPrice": 4200000,
+    "CopyPrice": 420000,
+    "CopyRuns": 10,
+    "Image": "Electronics"
+  },
+  {
+    "Recipe": "Make_food",
+    "DisplayName": "Food Blueprint",
+    "OriginalPrice": 38000,
+    "CopyPrice": 3800,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_hull_section",
+    "DisplayName": "Hull Section Blueprint",
+    "OriginalPrice": 1200000,
+    "CopyPrice": 120000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_life_support_supplies",
+    "DisplayName": "Life Support Supplies Blueprint",
+    "OriginalPrice": 115000,
+    "CopyPrice": 11500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_machine_parts",
+    "DisplayName": "Machine Parts Blueprint",
+    "OriginalPrice": 1000000,
+    "CopyPrice": 100000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_medical_supplies",
+    "DisplayName": "Medical Supplies Blueprint",
+    "OriginalPrice": 3000000,
+    "CopyPrice": 300000,
+    "CopyRuns": 10,
+    "Image": "Medical"
+  },
+  {
+    "Recipe": "Make_military_rations",
+    "DisplayName": "Military Rations Blueprint",
+    "OriginalPrice": 60000,
+    "CopyPrice": 6000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_military_spare_parts",
+    "DisplayName": "Military Spare Parts Blueprint",
+    "OriginalPrice": 260000,
+    "CopyPrice": 26000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_navigation_computer",
+    "DisplayName": "Navigation Computer Blueprint",
+    "OriginalPrice": 1800000,
+    "CopyPrice": 180000,
+    "CopyRuns": 10,
+    "Image": "Electronics"
+  },
+  {
+    "Recipe": "Make_reactor_fuel",
+    "DisplayName": "Reactor Fuel Blueprint",
+    "OriginalPrice": 180000,
+    "CopyPrice": 18000,
+    "CopyRuns": 10,
+    "Image": "Liquid"
+  },
+  {
+    "Recipe": "Make_repair_kit",
+    "DisplayName": "Repair Kit Blueprint",
+    "OriginalPrice": 320000,
+    "CopyPrice": 32000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_sealed_documents",
+    "DisplayName": "Sealed Documents Blueprint",
+    "OriginalPrice": 450000,
+    "CopyPrice": 45000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_sensor_assembly",
+    "DisplayName": "Sensor Assembly Blueprint",
+    "OriginalPrice": 850000,
+    "CopyPrice": 85000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_shield_components",
+    "DisplayName": "Shield Components Blueprint",
+    "OriginalPrice": 2400000,
+    "CopyPrice": 240000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_thruster_propellant",
+    "DisplayName": "Thruster Propellant Blueprint",
+    "OriginalPrice": 22000,
+    "CopyPrice": 2200,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_atmosphere_filter",
+    "DisplayName": "Standard Atmosphere Filter Blueprint",
+    "OriginalPrice": 200000,
+    "CopyPrice": 20000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_atmosphere_filter",
+    "DisplayName": "Heavy Duty Atmosphere Filter Blueprint",
+    "OriginalPrice": 400000,
+    "CopyPrice": 40000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_atmosphere_filter",
+    "DisplayName": "Precision Atmosphere Filter Blueprint",
+    "OriginalPrice": 800000,
+    "CopyPrice": 80000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_atmosphere_filter",
+    "DisplayName": "Prototype Atmosphere Filter Blueprint",
+    "OriginalPrice": 1800000,
+    "CopyPrice": 180000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_carbon_dioxide_scrubber",
+    "DisplayName": "Standard Carbon Dioxide Scrubber Blueprint",
+    "OriginalPrice": 235000,
+    "CopyPrice": 23500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_carbon_dioxide_scrubber",
+    "DisplayName": "Heavy Duty Carbon Dioxide Scrubber Blueprint",
+    "OriginalPrice": 470000,
+    "CopyPrice": 47000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_carbon_dioxide_scrubber",
+    "DisplayName": "Precision Carbon Dioxide Scrubber Blueprint",
+    "OriginalPrice": 940000,
+    "CopyPrice": 94000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_carbon_dioxide_scrubber",
+    "DisplayName": "Prototype Carbon Dioxide Scrubber Blueprint",
+    "OriginalPrice": 2115000,
+    "CopyPrice": 211500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_oxygen_regulator",
+    "DisplayName": "Standard Oxygen Regulator Blueprint",
+    "OriginalPrice": 270000,
+    "CopyPrice": 27000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_oxygen_regulator",
+    "DisplayName": "Heavy Duty Oxygen Regulator Blueprint",
+    "OriginalPrice": 540000,
+    "CopyPrice": 54000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_oxygen_regulator",
+    "DisplayName": "Precision Oxygen Regulator Blueprint",
+    "OriginalPrice": 1080000,
+    "CopyPrice": 108000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_oxygen_regulator",
+    "DisplayName": "Prototype Oxygen Regulator Blueprint",
+    "OriginalPrice": 2430000,
+    "CopyPrice": 243000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_water_purifier",
+    "DisplayName": "Standard Water Purifier Blueprint",
+    "OriginalPrice": 305000,
+    "CopyPrice": 30500,
+    "CopyRuns": 10,
+    "Image": "Liquid"
+  },
+  {
+    "Recipe": "Make_heavy_duty_water_purifier",
+    "DisplayName": "Heavy Duty Water Purifier Blueprint",
+    "OriginalPrice": 610000,
+    "CopyPrice": 61000,
+    "CopyRuns": 10,
+    "Image": "Liquid"
+  },
+  {
+    "Recipe": "Make_precision_water_purifier",
+    "DisplayName": "Precision Water Purifier Blueprint",
+    "OriginalPrice": 1220000,
+    "CopyPrice": 122000,
+    "CopyRuns": 10,
+    "Image": "Liquid"
+  },
+  {
+    "Recipe": "Make_prototype_water_purifier",
+    "DisplayName": "Prototype Water Purifier Blueprint",
+    "OriginalPrice": 2745000,
+    "CopyPrice": 274500,
+    "CopyRuns": 10,
+    "Image": "Liquid"
+  },
+  {
+    "Recipe": "Make_standard_humidity_separator",
+    "DisplayName": "Standard Humidity Separator Blueprint",
+    "OriginalPrice": 340000,
+    "CopyPrice": 34000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_humidity_separator",
+    "DisplayName": "Heavy Duty Humidity Separator Blueprint",
+    "OriginalPrice": 680000,
+    "CopyPrice": 68000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_humidity_separator",
+    "DisplayName": "Precision Humidity Separator Blueprint",
+    "OriginalPrice": 1360000,
+    "CopyPrice": 136000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_humidity_separator",
+    "DisplayName": "Prototype Humidity Separator Blueprint",
+    "OriginalPrice": 3060000,
+    "CopyPrice": 306000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_thermal_radiator",
+    "DisplayName": "Standard Thermal Radiator Blueprint",
+    "OriginalPrice": 375000,
+    "CopyPrice": 37500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_thermal_radiator",
+    "DisplayName": "Heavy Duty Thermal Radiator Blueprint",
+    "OriginalPrice": 750000,
+    "CopyPrice": 75000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_thermal_radiator",
+    "DisplayName": "Precision Thermal Radiator Blueprint",
+    "OriginalPrice": 1500000,
+    "CopyPrice": 150000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_thermal_radiator",
+    "DisplayName": "Prototype Thermal Radiator Blueprint",
+    "OriginalPrice": 3375000,
+    "CopyPrice": 337500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_heat_exchanger_core",
+    "DisplayName": "Standard Heat Exchanger Core Blueprint",
+    "OriginalPrice": 410000,
+    "CopyPrice": 41000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_heat_exchanger_core",
+    "DisplayName": "Heavy Duty Heat Exchanger Core Blueprint",
+    "OriginalPrice": 820000,
+    "CopyPrice": 82000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_heat_exchanger_core",
+    "DisplayName": "Precision Heat Exchanger Core Blueprint",
+    "OriginalPrice": 1640000,
+    "CopyPrice": 164000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_heat_exchanger_core",
+    "DisplayName": "Prototype Heat Exchanger Core Blueprint",
+    "OriginalPrice": 3690000,
+    "CopyPrice": 369000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_coolant_pump",
+    "DisplayName": "Standard Coolant Pump Blueprint",
+    "OriginalPrice": 445000,
+    "CopyPrice": 44500,
+    "CopyRuns": 10,
+    "Image": "Liquid"
+  },
+  {
+    "Recipe": "Make_heavy_duty_coolant_pump",
+    "DisplayName": "Heavy Duty Coolant Pump Blueprint",
+    "OriginalPrice": 890000,
+    "CopyPrice": 89000,
+    "CopyRuns": 10,
+    "Image": "Liquid"
+  },
+  {
+    "Recipe": "Make_precision_coolant_pump",
+    "DisplayName": "Precision Coolant Pump Blueprint",
+    "OriginalPrice": 1780000,
+    "CopyPrice": 178000,
+    "CopyRuns": 10,
+    "Image": "Liquid"
+  },
+  {
+    "Recipe": "Make_prototype_coolant_pump",
+    "DisplayName": "Prototype Coolant Pump Blueprint",
+    "OriginalPrice": 4005000,
+    "CopyPrice": 400500,
+    "CopyRuns": 10,
+    "Image": "Liquid"
+  },
+  {
+    "Recipe": "Make_standard_thermal_insulation_panel",
+    "DisplayName": "Standard Thermal Insulation Panel Blueprint",
+    "OriginalPrice": 480000,
+    "CopyPrice": 48000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_thermal_insulation_panel",
+    "DisplayName": "Heavy Duty Thermal Insulation Panel Blueprint",
+    "OriginalPrice": 960000,
+    "CopyPrice": 96000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_thermal_insulation_panel",
+    "DisplayName": "Precision Thermal Insulation Panel Blueprint",
+    "OriginalPrice": 1920000,
+    "CopyPrice": 192000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_thermal_insulation_panel",
+    "DisplayName": "Prototype Thermal Insulation Panel Blueprint",
+    "OriginalPrice": 4320000,
+    "CopyPrice": 432000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_cryogenic_valve",
+    "DisplayName": "Standard Cryogenic Valve Blueprint",
+    "OriginalPrice": 515000,
+    "CopyPrice": 51500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_cryogenic_valve",
+    "DisplayName": "Heavy Duty Cryogenic Valve Blueprint",
+    "OriginalPrice": 1030000,
+    "CopyPrice": 103000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_cryogenic_valve",
+    "DisplayName": "Precision Cryogenic Valve Blueprint",
+    "OriginalPrice": 2060000,
+    "CopyPrice": 206000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_cryogenic_valve",
+    "DisplayName": "Prototype Cryogenic Valve Blueprint",
+    "OriginalPrice": 4635000,
+    "CopyPrice": 463500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_propellant_feed_pump",
+    "DisplayName": "Standard Propellant Feed Pump Blueprint",
+    "OriginalPrice": 550000,
+    "CopyPrice": 55000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_propellant_feed_pump",
+    "DisplayName": "Heavy Duty Propellant Feed Pump Blueprint",
+    "OriginalPrice": 1100000,
+    "CopyPrice": 110000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_propellant_feed_pump",
+    "DisplayName": "Precision Propellant Feed Pump Blueprint",
+    "OriginalPrice": 2200000,
+    "CopyPrice": 220000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_propellant_feed_pump",
+    "DisplayName": "Prototype Propellant Feed Pump Blueprint",
+    "OriginalPrice": 4950000,
+    "CopyPrice": 495000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_pressure_relief_valve",
+    "DisplayName": "Standard Pressure Relief Valve Blueprint",
+    "OriginalPrice": 585000,
+    "CopyPrice": 58500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_pressure_relief_valve",
+    "DisplayName": "Heavy Duty Pressure Relief Valve Blueprint",
+    "OriginalPrice": 1170000,
+    "CopyPrice": 117000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_pressure_relief_valve",
+    "DisplayName": "Precision Pressure Relief Valve Blueprint",
+    "OriginalPrice": 2340000,
+    "CopyPrice": 234000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_pressure_relief_valve",
+    "DisplayName": "Prototype Pressure Relief Valve Blueprint",
+    "OriginalPrice": 5265000,
+    "CopyPrice": 526500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_vacuum_seal_kit",
+    "DisplayName": "Standard Vacuum Seal Kit Blueprint",
+    "OriginalPrice": 620000,
+    "CopyPrice": 62000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_vacuum_seal_kit",
+    "DisplayName": "Heavy Duty Vacuum Seal Kit Blueprint",
+    "OriginalPrice": 1240000,
+    "CopyPrice": 124000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_vacuum_seal_kit",
+    "DisplayName": "Precision Vacuum Seal Kit Blueprint",
+    "OriginalPrice": 2480000,
+    "CopyPrice": 248000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_vacuum_seal_kit",
+    "DisplayName": "Prototype Vacuum Seal Kit Blueprint",
+    "OriginalPrice": 5580000,
+    "CopyPrice": 558000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_docking_collar_gasket",
+    "DisplayName": "Standard Docking Collar Gasket Blueprint",
+    "OriginalPrice": 655000,
+    "CopyPrice": 65500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_docking_collar_gasket",
+    "DisplayName": "Heavy Duty Docking Collar Gasket Blueprint",
+    "OriginalPrice": 1310000,
+    "CopyPrice": 131000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_docking_collar_gasket",
+    "DisplayName": "Precision Docking Collar Gasket Blueprint",
+    "OriginalPrice": 2620000,
+    "CopyPrice": 262000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_docking_collar_gasket",
+    "DisplayName": "Prototype Docking Collar Gasket Blueprint",
+    "OriginalPrice": 5895000,
+    "CopyPrice": 589500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_cargo_restraint_set",
+    "DisplayName": "Standard Cargo Restraint Set Blueprint",
+    "OriginalPrice": 690000,
+    "CopyPrice": 69000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_cargo_restraint_set",
+    "DisplayName": "Heavy Duty Cargo Restraint Set Blueprint",
+    "OriginalPrice": 1380000,
+    "CopyPrice": 138000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_cargo_restraint_set",
+    "DisplayName": "Precision Cargo Restraint Set Blueprint",
+    "OriginalPrice": 2760000,
+    "CopyPrice": 276000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_cargo_restraint_set",
+    "DisplayName": "Prototype Cargo Restraint Set Blueprint",
+    "OriginalPrice": 6210000,
+    "CopyPrice": 621000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_cargo_lift_actuator",
+    "DisplayName": "Standard Cargo Lift Actuator Blueprint",
+    "OriginalPrice": 725000,
+    "CopyPrice": 72500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_cargo_lift_actuator",
+    "DisplayName": "Heavy Duty Cargo Lift Actuator Blueprint",
+    "OriginalPrice": 1450000,
+    "CopyPrice": 145000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_cargo_lift_actuator",
+    "DisplayName": "Precision Cargo Lift Actuator Blueprint",
+    "OriginalPrice": 2900000,
+    "CopyPrice": 290000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_cargo_lift_actuator",
+    "DisplayName": "Prototype Cargo Lift Actuator Blueprint",
+    "OriginalPrice": 6525000,
+    "CopyPrice": 652500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_bay_door_motor",
+    "DisplayName": "Standard Bay Door Motor Blueprint",
+    "OriginalPrice": 760000,
+    "CopyPrice": 76000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_bay_door_motor",
+    "DisplayName": "Heavy Duty Bay Door Motor Blueprint",
+    "OriginalPrice": 1520000,
+    "CopyPrice": 152000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_bay_door_motor",
+    "DisplayName": "Precision Bay Door Motor Blueprint",
+    "OriginalPrice": 3040000,
+    "CopyPrice": 304000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_bay_door_motor",
+    "DisplayName": "Prototype Bay Door Motor Blueprint",
+    "OriginalPrice": 6840000,
+    "CopyPrice": 684000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_landing_gear_damper",
+    "DisplayName": "Standard Landing Gear Damper Blueprint",
+    "OriginalPrice": 795000,
+    "CopyPrice": 79500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_landing_gear_damper",
+    "DisplayName": "Heavy Duty Landing Gear Damper Blueprint",
+    "OriginalPrice": 1590000,
+    "CopyPrice": 159000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_landing_gear_damper",
+    "DisplayName": "Precision Landing Gear Damper Blueprint",
+    "OriginalPrice": 3180000,
+    "CopyPrice": 318000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_landing_gear_damper",
+    "DisplayName": "Prototype Landing Gear Damper Blueprint",
+    "OriginalPrice": 7155000,
+    "CopyPrice": 715500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_landing_gear_bearing",
+    "DisplayName": "Standard Landing Gear Bearing Blueprint",
+    "OriginalPrice": 830000,
+    "CopyPrice": 83000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_landing_gear_bearing",
+    "DisplayName": "Heavy Duty Landing Gear Bearing Blueprint",
+    "OriginalPrice": 1660000,
+    "CopyPrice": 166000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_landing_gear_bearing",
+    "DisplayName": "Precision Landing Gear Bearing Blueprint",
+    "OriginalPrice": 3320000,
+    "CopyPrice": 332000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_landing_gear_bearing",
+    "DisplayName": "Prototype Landing Gear Bearing Blueprint",
+    "OriginalPrice": 7470000,
+    "CopyPrice": 747000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_inertial_reference_unit",
+    "DisplayName": "Standard Inertial Reference Unit Blueprint",
+    "OriginalPrice": 865000,
+    "CopyPrice": 86500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_inertial_reference_unit",
+    "DisplayName": "Heavy Duty Inertial Reference Unit Blueprint",
+    "OriginalPrice": 1730000,
+    "CopyPrice": 173000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_inertial_reference_unit",
+    "DisplayName": "Precision Inertial Reference Unit Blueprint",
+    "OriginalPrice": 3460000,
+    "CopyPrice": 346000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_inertial_reference_unit",
+    "DisplayName": "Prototype Inertial Reference Unit Blueprint",
+    "OriginalPrice": 7785000,
+    "CopyPrice": 778500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_star_tracker",
+    "DisplayName": "Standard Star Tracker Blueprint",
+    "OriginalPrice": 900000,
+    "CopyPrice": 90000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_star_tracker",
+    "DisplayName": "Heavy Duty Star Tracker Blueprint",
+    "OriginalPrice": 1800000,
+    "CopyPrice": 180000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_star_tracker",
+    "DisplayName": "Precision Star Tracker Blueprint",
+    "OriginalPrice": 3600000,
+    "CopyPrice": 360000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_star_tracker",
+    "DisplayName": "Prototype Star Tracker Blueprint",
+    "OriginalPrice": 8100000,
+    "CopyPrice": 810000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_navigation_beacon_receiver",
+    "DisplayName": "Standard Navigation Beacon Receiver Blueprint",
+    "OriginalPrice": 935000,
+    "CopyPrice": 93500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_navigation_beacon_receiver",
+    "DisplayName": "Heavy Duty Navigation Beacon Receiver Blueprint",
+    "OriginalPrice": 1870000,
+    "CopyPrice": 187000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_navigation_beacon_receiver",
+    "DisplayName": "Precision Navigation Beacon Receiver Blueprint",
+    "OriginalPrice": 3740000,
+    "CopyPrice": 374000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_navigation_beacon_receiver",
+    "DisplayName": "Prototype Navigation Beacon Receiver Blueprint",
+    "OriginalPrice": 8415000,
+    "CopyPrice": 841500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_transponder_module",
+    "DisplayName": "Standard Transponder Module Blueprint",
+    "OriginalPrice": 970000,
+    "CopyPrice": 97000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_transponder_module",
+    "DisplayName": "Heavy Duty Transponder Module Blueprint",
+    "OriginalPrice": 1940000,
+    "CopyPrice": 194000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_transponder_module",
+    "DisplayName": "Precision Transponder Module Blueprint",
+    "OriginalPrice": 3880000,
+    "CopyPrice": 388000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_transponder_module",
+    "DisplayName": "Prototype Transponder Module Blueprint",
+    "OriginalPrice": 8730000,
+    "CopyPrice": 873000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_optical_sensor_array",
+    "DisplayName": "Standard Optical Sensor Array Blueprint",
+    "OriginalPrice": 1005000,
+    "CopyPrice": 100500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_optical_sensor_array",
+    "DisplayName": "Heavy Duty Optical Sensor Array Blueprint",
+    "OriginalPrice": 2010000,
+    "CopyPrice": 201000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_optical_sensor_array",
+    "DisplayName": "Precision Optical Sensor Array Blueprint",
+    "OriginalPrice": 4020000,
+    "CopyPrice": 402000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_optical_sensor_array",
+    "DisplayName": "Prototype Optical Sensor Array Blueprint",
+    "OriginalPrice": 9045000,
+    "CopyPrice": 904500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_infrared_detector",
+    "DisplayName": "Standard Infrared Detector Blueprint",
+    "OriginalPrice": 1040000,
+    "CopyPrice": 104000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_infrared_detector",
+    "DisplayName": "Heavy Duty Infrared Detector Blueprint",
+    "OriginalPrice": 2080000,
+    "CopyPrice": 208000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_infrared_detector",
+    "DisplayName": "Precision Infrared Detector Blueprint",
+    "OriginalPrice": 4160000,
+    "CopyPrice": 416000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_infrared_detector",
+    "DisplayName": "Prototype Infrared Detector Blueprint",
+    "OriginalPrice": 9360000,
+    "CopyPrice": 936000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_radio_receiver_module",
+    "DisplayName": "Standard Radio Receiver Module Blueprint",
+    "OriginalPrice": 1075000,
+    "CopyPrice": 107500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_radio_receiver_module",
+    "DisplayName": "Heavy Duty Radio Receiver Module Blueprint",
+    "OriginalPrice": 2150000,
+    "CopyPrice": 215000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_radio_receiver_module",
+    "DisplayName": "Precision Radio Receiver Module Blueprint",
+    "OriginalPrice": 4300000,
+    "CopyPrice": 430000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_radio_receiver_module",
+    "DisplayName": "Prototype Radio Receiver Module Blueprint",
+    "OriginalPrice": 9675000,
+    "CopyPrice": 967500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_antenna_gimbal",
+    "DisplayName": "Standard Antenna Gimbal Blueprint",
+    "OriginalPrice": 1110000,
+    "CopyPrice": 111000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_antenna_gimbal",
+    "DisplayName": "Heavy Duty Antenna Gimbal Blueprint",
+    "OriginalPrice": 2220000,
+    "CopyPrice": 222000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_antenna_gimbal",
+    "DisplayName": "Precision Antenna Gimbal Blueprint",
+    "OriginalPrice": 4440000,
+    "CopyPrice": 444000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_antenna_gimbal",
+    "DisplayName": "Prototype Antenna Gimbal Blueprint",
+    "OriginalPrice": 9990000,
+    "CopyPrice": 999000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_signal_processor",
+    "DisplayName": "Standard Signal Processor Blueprint",
+    "OriginalPrice": 1145000,
+    "CopyPrice": 114500,
+    "CopyRuns": 10,
+    "Image": "Electronics"
+  },
+  {
+    "Recipe": "Make_heavy_duty_signal_processor",
+    "DisplayName": "Heavy Duty Signal Processor Blueprint",
+    "OriginalPrice": 2290000,
+    "CopyPrice": 229000,
+    "CopyRuns": 10,
+    "Image": "Electronics"
+  },
+  {
+    "Recipe": "Make_precision_signal_processor",
+    "DisplayName": "Precision Signal Processor Blueprint",
+    "OriginalPrice": 4580000,
+    "CopyPrice": 458000,
+    "CopyRuns": 10,
+    "Image": "Electronics"
+  },
+  {
+    "Recipe": "Make_prototype_signal_processor",
+    "DisplayName": "Prototype Signal Processor Blueprint",
+    "OriginalPrice": 10305000,
+    "CopyPrice": 1030500,
+    "CopyRuns": 10,
+    "Image": "Electronics"
+  },
+  {
+    "Recipe": "Make_standard_fiber_data_harness",
+    "DisplayName": "Standard Fiber Data Harness Blueprint",
+    "OriginalPrice": 1180000,
+    "CopyPrice": 118000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_fiber_data_harness",
+    "DisplayName": "Heavy Duty Fiber Data Harness Blueprint",
+    "OriginalPrice": 2360000,
+    "CopyPrice": 236000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_fiber_data_harness",
+    "DisplayName": "Precision Fiber Data Harness Blueprint",
+    "OriginalPrice": 4720000,
+    "CopyPrice": 472000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_fiber_data_harness",
+    "DisplayName": "Prototype Fiber Data Harness Blueprint",
+    "OriginalPrice": 10620000,
+    "CopyPrice": 1062000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_circuit_breaker_bank",
+    "DisplayName": "Standard Circuit Breaker Bank Blueprint",
+    "OriginalPrice": 1215000,
+    "CopyPrice": 121500,
+    "CopyRuns": 10,
+    "Image": "Electronics"
+  },
+  {
+    "Recipe": "Make_heavy_duty_circuit_breaker_bank",
+    "DisplayName": "Heavy Duty Circuit Breaker Bank Blueprint",
+    "OriginalPrice": 2430000,
+    "CopyPrice": 243000,
+    "CopyRuns": 10,
+    "Image": "Electronics"
+  },
+  {
+    "Recipe": "Make_precision_circuit_breaker_bank",
+    "DisplayName": "Precision Circuit Breaker Bank Blueprint",
+    "OriginalPrice": 4860000,
+    "CopyPrice": 486000,
+    "CopyRuns": 10,
+    "Image": "Electronics"
+  },
+  {
+    "Recipe": "Make_prototype_circuit_breaker_bank",
+    "DisplayName": "Prototype Circuit Breaker Bank Blueprint",
+    "OriginalPrice": 10935000,
+    "CopyPrice": 1093500,
+    "CopyRuns": 10,
+    "Image": "Electronics"
+  },
+  {
+    "Recipe": "Make_standard_voltage_converter",
+    "DisplayName": "Standard Voltage Converter Blueprint",
+    "OriginalPrice": 1250000,
+    "CopyPrice": 125000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_voltage_converter",
+    "DisplayName": "Heavy Duty Voltage Converter Blueprint",
+    "OriginalPrice": 2500000,
+    "CopyPrice": 250000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_voltage_converter",
+    "DisplayName": "Precision Voltage Converter Blueprint",
+    "OriginalPrice": 5000000,
+    "CopyPrice": 500000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_voltage_converter",
+    "DisplayName": "Prototype Voltage Converter Blueprint",
+    "OriginalPrice": 11250000,
+    "CopyPrice": 1125000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_power_bus_coupler",
+    "DisplayName": "Standard Power Bus Coupler Blueprint",
+    "OriginalPrice": 1285000,
+    "CopyPrice": 128500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_power_bus_coupler",
+    "DisplayName": "Heavy Duty Power Bus Coupler Blueprint",
+    "OriginalPrice": 2570000,
+    "CopyPrice": 257000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_power_bus_coupler",
+    "DisplayName": "Precision Power Bus Coupler Blueprint",
+    "OriginalPrice": 5140000,
+    "CopyPrice": 514000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_power_bus_coupler",
+    "DisplayName": "Prototype Power Bus Coupler Blueprint",
+    "OriginalPrice": 11565000,
+    "CopyPrice": 1156500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_reactor_control_relay",
+    "DisplayName": "Standard Reactor Control Relay Blueprint",
+    "OriginalPrice": 1320000,
+    "CopyPrice": 132000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_reactor_control_relay",
+    "DisplayName": "Heavy Duty Reactor Control Relay Blueprint",
+    "OriginalPrice": 2640000,
+    "CopyPrice": 264000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_reactor_control_relay",
+    "DisplayName": "Precision Reactor Control Relay Blueprint",
+    "OriginalPrice": 5280000,
+    "CopyPrice": 528000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_reactor_control_relay",
+    "DisplayName": "Prototype Reactor Control Relay Blueprint",
+    "OriginalPrice": 11880000,
+    "CopyPrice": 1188000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_battery_cell_pack",
+    "DisplayName": "Standard Battery Cell Pack Blueprint",
+    "OriginalPrice": 1355000,
+    "CopyPrice": 135500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_battery_cell_pack",
+    "DisplayName": "Heavy Duty Battery Cell Pack Blueprint",
+    "OriginalPrice": 2710000,
+    "CopyPrice": 271000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_battery_cell_pack",
+    "DisplayName": "Precision Battery Cell Pack Blueprint",
+    "OriginalPrice": 5420000,
+    "CopyPrice": 542000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_battery_cell_pack",
+    "DisplayName": "Prototype Battery Cell Pack Blueprint",
+    "OriginalPrice": 12195000,
+    "CopyPrice": 1219500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_flux_sensor",
+    "DisplayName": "Standard Flux Sensor Blueprint",
+    "OriginalPrice": 1390000,
+    "CopyPrice": 139000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_flux_sensor",
+    "DisplayName": "Heavy Duty Flux Sensor Blueprint",
+    "OriginalPrice": 2780000,
+    "CopyPrice": 278000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_flux_sensor",
+    "DisplayName": "Precision Flux Sensor Blueprint",
+    "OriginalPrice": 5560000,
+    "CopyPrice": 556000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_flux_sensor",
+    "DisplayName": "Prototype Flux Sensor Blueprint",
+    "OriginalPrice": 12510000,
+    "CopyPrice": 1251000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_thruster_control_valve",
+    "DisplayName": "Standard Thruster Control Valve Blueprint",
+    "OriginalPrice": 1425000,
+    "CopyPrice": 142500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_thruster_control_valve",
+    "DisplayName": "Heavy Duty Thruster Control Valve Blueprint",
+    "OriginalPrice": 2850000,
+    "CopyPrice": 285000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_thruster_control_valve",
+    "DisplayName": "Precision Thruster Control Valve Blueprint",
+    "OriginalPrice": 5700000,
+    "CopyPrice": 570000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_thruster_control_valve",
+    "DisplayName": "Prototype Thruster Control Valve Blueprint",
+    "OriginalPrice": 12825000,
+    "CopyPrice": 1282500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_gyroscope_assembly",
+    "DisplayName": "Standard Gyroscope Assembly Blueprint",
+    "OriginalPrice": 1460000,
+    "CopyPrice": 146000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_gyroscope_assembly",
+    "DisplayName": "Heavy Duty Gyroscope Assembly Blueprint",
+    "OriginalPrice": 2920000,
+    "CopyPrice": 292000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_gyroscope_assembly",
+    "DisplayName": "Precision Gyroscope Assembly Blueprint",
+    "OriginalPrice": 5840000,
+    "CopyPrice": 584000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_gyroscope_assembly",
+    "DisplayName": "Prototype Gyroscope Assembly Blueprint",
+    "OriginalPrice": 13140000,
+    "CopyPrice": 1314000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_servo_controller",
+    "DisplayName": "Standard Servo Controller Blueprint",
+    "OriginalPrice": 1495000,
+    "CopyPrice": 149500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_servo_controller",
+    "DisplayName": "Heavy Duty Servo Controller Blueprint",
+    "OriginalPrice": 2990000,
+    "CopyPrice": 299000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_servo_controller",
+    "DisplayName": "Precision Servo Controller Blueprint",
+    "OriginalPrice": 5980000,
+    "CopyPrice": 598000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_servo_controller",
+    "DisplayName": "Prototype Servo Controller Blueprint",
+    "OriginalPrice": 13455000,
+    "CopyPrice": 1345500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_machine_tool_spindle",
+    "DisplayName": "Standard Machine Tool Spindle Blueprint",
+    "OriginalPrice": 1530000,
+    "CopyPrice": 153000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_machine_tool_spindle",
+    "DisplayName": "Heavy Duty Machine Tool Spindle Blueprint",
+    "OriginalPrice": 3060000,
+    "CopyPrice": 306000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_machine_tool_spindle",
+    "DisplayName": "Precision Machine Tool Spindle Blueprint",
+    "OriginalPrice": 6120000,
+    "CopyPrice": 612000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_machine_tool_spindle",
+    "DisplayName": "Prototype Machine Tool Spindle Blueprint",
+    "OriginalPrice": 13770000,
+    "CopyPrice": 1377000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_ore_sampler",
+    "DisplayName": "Standard Ore Sampler Blueprint",
+    "OriginalPrice": 1565000,
+    "CopyPrice": 156500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_ore_sampler",
+    "DisplayName": "Heavy Duty Ore Sampler Blueprint",
+    "OriginalPrice": 3130000,
+    "CopyPrice": 313000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_ore_sampler",
+    "DisplayName": "Precision Ore Sampler Blueprint",
+    "OriginalPrice": 6260000,
+    "CopyPrice": 626000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_ore_sampler",
+    "DisplayName": "Prototype Ore Sampler Blueprint",
+    "OriginalPrice": 14085000,
+    "CopyPrice": 1408500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_ore_sorting_sensor",
+    "DisplayName": "Standard Ore Sorting Sensor Blueprint",
+    "OriginalPrice": 1600000,
+    "CopyPrice": 160000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_ore_sorting_sensor",
+    "DisplayName": "Heavy Duty Ore Sorting Sensor Blueprint",
+    "OriginalPrice": 3200000,
+    "CopyPrice": 320000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_ore_sorting_sensor",
+    "DisplayName": "Precision Ore Sorting Sensor Blueprint",
+    "OriginalPrice": 6400000,
+    "CopyPrice": 640000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_ore_sorting_sensor",
+    "DisplayName": "Prototype Ore Sorting Sensor Blueprint",
+    "OriginalPrice": 14400000,
+    "CopyPrice": 1440000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_conveyor_drive",
+    "DisplayName": "Standard Conveyor Drive Blueprint",
+    "OriginalPrice": 1635000,
+    "CopyPrice": 163500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_conveyor_drive",
+    "DisplayName": "Heavy Duty Conveyor Drive Blueprint",
+    "OriginalPrice": 3270000,
+    "CopyPrice": 327000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_conveyor_drive",
+    "DisplayName": "Precision Conveyor Drive Blueprint",
+    "OriginalPrice": 6540000,
+    "CopyPrice": 654000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_conveyor_drive",
+    "DisplayName": "Prototype Conveyor Drive Blueprint",
+    "OriginalPrice": 14715000,
+    "CopyPrice": 1471500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_refinery_crucible",
+    "DisplayName": "Standard Refinery Crucible Blueprint",
+    "OriginalPrice": 1670000,
+    "CopyPrice": 167000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_refinery_crucible",
+    "DisplayName": "Heavy Duty Refinery Crucible Blueprint",
+    "OriginalPrice": 3340000,
+    "CopyPrice": 334000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_refinery_crucible",
+    "DisplayName": "Precision Refinery Crucible Blueprint",
+    "OriginalPrice": 6680000,
+    "CopyPrice": 668000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_refinery_crucible",
+    "DisplayName": "Prototype Refinery Crucible Blueprint",
+    "OriginalPrice": 15030000,
+    "CopyPrice": 1503000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_survey_drill_head",
+    "DisplayName": "Standard Survey Drill Head Blueprint",
+    "OriginalPrice": 1705000,
+    "CopyPrice": 170500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_survey_drill_head",
+    "DisplayName": "Heavy Duty Survey Drill Head Blueprint",
+    "OriginalPrice": 3410000,
+    "CopyPrice": 341000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_survey_drill_head",
+    "DisplayName": "Precision Survey Drill Head Blueprint",
+    "OriginalPrice": 6820000,
+    "CopyPrice": 682000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_survey_drill_head",
+    "DisplayName": "Prototype Survey Drill Head Blueprint",
+    "OriginalPrice": 15345000,
+    "CopyPrice": 1534500,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_standard_hull_inspection_scanner",
+    "DisplayName": "Standard Hull Inspection Scanner Blueprint",
+    "OriginalPrice": 1740000,
+    "CopyPrice": 174000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_heavy_duty_hull_inspection_scanner",
+    "DisplayName": "Heavy Duty Hull Inspection Scanner Blueprint",
+    "OriginalPrice": 3480000,
+    "CopyPrice": 348000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_precision_hull_inspection_scanner",
+    "DisplayName": "Precision Hull Inspection Scanner Blueprint",
+    "OriginalPrice": 6960000,
+    "CopyPrice": 696000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_prototype_hull_inspection_scanner",
+    "DisplayName": "Prototype Hull Inspection Scanner Blueprint",
+    "OriginalPrice": 15660000,
+    "CopyPrice": 1566000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_Cipher_Relays",
+    "DisplayName": "Cipher Relays Blueprint",
+    "OriginalPrice": 3400000,
+    "CopyPrice": 340000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_Ghost_Navigation_Charts",
+    "DisplayName": "Ghost Navigation Charts Blueprint",
+    "OriginalPrice": 3400000,
+    "CopyPrice": 340000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_Unregistered_Survey_Cores",
+    "DisplayName": "Unregistered Survey Cores Blueprint",
+    "OriginalPrice": 3400000,
+    "CopyPrice": 340000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_Restricted_Memory_Crystals",
+    "DisplayName": "Restricted Memory Crystals Blueprint",
+    "OriginalPrice": 3400000,
+    "CopyPrice": 340000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_Colorado_Tegridy",
+    "DisplayName": "Colorado Tegridy Blueprint",
+    "OriginalPrice": 1440000,
+    "CopyPrice": 144000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_Dust",
+    "DisplayName": "Dust Blueprint",
+    "OriginalPrice": 3800000,
+    "CopyPrice": 380000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_Ketracel_White",
+    "DisplayName": "Ketracel-white Blueprint",
+    "OriginalPrice": 4800000,
+    "CopyPrice": 480000,
+    "CopyRuns": 10,
+    "Image": "Cargo"
+  }
+]

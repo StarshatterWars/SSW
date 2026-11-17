@@ -1,4 +1,9 @@
 #include "FlightTacticalReferenceDlg.h"
+#include "ForcesDlg.h"
+#include "ShipSystemIcon.h"
+#include "Widgets/Layout/SWidgetSwitcher.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/SBoxPanel.h"
 #include "FlightReferencePanel.h"
 #include "ShipBriefingPreview.h"
 #include "SystemMapPanel.h"
@@ -13,7 +18,7 @@ TSharedRef<SWidget> UFlightTacticalReferenceDlg::RebuildWidget()
     Preview->SetReferencePreview();
     GazetteerMap = WidgetTree->ConstructWidget<USystemMapPanel>();
     GazetteerMap->EnableMissionBodyMeshes();
-    return SNew(SFlightReferencePanel)
+    auto Reference=SNew(SFlightReferencePanel)
         .GameInstance(GetGameInstance())
         .GazetteerMap(GazetteerMap->TakeWidget())
         .UpdateGazetteerMap([Map = TWeakObjectPtr<USystemMapPanel>(GazetteerMap)](const FString& SystemName)
@@ -30,4 +35,19 @@ TSharedRef<SWidget> UFlightTacticalReferenceDlg::RebuildWidget()
                 View->SetPreviewActive(Design != nullptr);
             }
         });
+    Forces=CreateWidget<UForcesDlg>(GetOwningPlayer());
+    auto Pages=SNew(SWidgetSwitcher)+SWidgetSwitcher::Slot()[Reference]+SWidgetSwitcher::Slot()[Forces ? Forces->TakeWidget() : SNullWidget::NullWidget];
+    return SNew(SVerticalBox)
+        + SVerticalBox::Slot().AutoHeight().Padding(8)
+        [SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().AutoWidth().Padding(0,0,6,0)
+            [SNew(SButton).ToolTipText(INVTEXT("Tactical Reference"))
+                .OnClicked_Lambda([Weak=TWeakPtr<SWidgetSwitcher>(Pages),Ref=TWeakPtr<SFlightReferencePanel>(Reference)](){if(auto View=Weak.Pin())View->SetActiveWidgetIndex(0);if(auto Panel=Ref.Pin())Panel->SetReferenceActive(true);return FReply::Handled();})
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Reference)]]
+            + SHorizontalBox::Slot().AutoWidth()
+            [SNew(SButton).ToolTipText(INVTEXT("Forces — sector, system and neighboring-system reports"))
+                .OnClicked_Lambda([Weak=TWeakPtr<SWidgetSwitcher>(Pages),Preview=TWeakObjectPtr<UShipBriefingPreview>(Preview)]()
+                    {if(auto View=Weak.Pin())View->SetActiveWidgetIndex(1);if(Preview.IsValid())Preview->SetPreviewActive(false);return FReply::Handled();})
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Ship)]]]
+        + SVerticalBox::Slot().FillHeight(1)[Pages];
 }

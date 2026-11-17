@@ -212,14 +212,14 @@ Shield::DeflectDamage(SimShot* shot, double damage)
 			energy -= (float)(damage * deflection_cost);
 		}
 		else {
-			leak = damage * (1.0 - FMath::Pow((double)shield_level, (double)shield_curve) * filter * availability);
+			leak = damage * (1.0 - FMath::Pow((double)shield_level, (double)shield_curve) * filter * FMath::Clamp(GetOperatingAvailability(), 0.0, 1.0));
 
 			const double deflected = damage - leak;
 			energy -= (float)(deflected * deflection_cost);
 		}
 	}
 	else {
-		leak = damage * (1.0 - FMath::Pow((double)shield_level, (double)shield_curve) * filter * availability);
+		leak = damage * (1.0 - FMath::Pow((double)shield_level, (double)shield_curve) * filter * FMath::Clamp(GetOperatingAvailability(), 0.0, 1.0));
 	}
 
 	return leak;

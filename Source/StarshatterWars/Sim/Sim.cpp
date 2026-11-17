@@ -14,6 +14,11 @@
 
 #include "Sim.h"
 #include "AcceptanceAI.h"
+#include "ContractLedger.h"
+#include "StarshatterPlayerSubsystem.h"
+#include "CargoCatalogSubsystem.h"
+#include "EconomyRuntime.h"
+#include "Misc/ScopeExit.h"
 #include "BiddingAI.h"
 #include "SettlementAI.h"
 #include "SSWSessionLobbyGameMode.h"
@@ -510,12 +515,14 @@ void Sim::UnloadMission()
     AssignedAgentPilot = NAME_None;
     bPlayerDocked = false;
     DeferredPlayerWingmen.Reset();
+    for (auto& Run : JanekMiningRuns) Run.Value.Contract.Release(GetEconomy());
     JanekMiningRuns.Reset();
     TrainingContracts.Reset();
     TrainingContractAccounts.Reset();
     JanekRefinery = {};
-    JanekMiningStock.Reset();
-    JanusTransferStock.Reset();
+    GetEconomy().MiningLeases.Reset();
+    ProductionViews.Reset();
+    IndustrySeconds = 0;
     DeferredLaunchPlayer = nullptr;
     PendingLaunchPlayer = nullptr;
     bPlayerLaunchRequested = false;
@@ -2615,13 +2622,40 @@ void Sim::ResolveAgentAssignment(bool bSucceeded)
                 AssignedAgentPilot = NAME_None;
 }
 
-const FName Sim::TrainingContractPilot(TEXT("Training Pilot"));
+const FName Sim::TrainingContractPilot(TEXT("Pilot"));
+
+FEconomyState& Sim::GetEconomy()
+{
+    // Dedicated/network matches own independent server state; offline careers save it with the pilot.
+    if (!IsNetworked())
+        if (auto* World = NetworkWorld.Get())
+            if (auto* Instance = World->GetGameInstance())
+                if (auto* Players = Instance->GetSubsystem<UStarshatterPlayerSubsystem>())
+                    return Players->GetEconomy();
+    return LocalEconomy;
+}
+
+const FEconomyState& Sim::ReadEconomy() const
+{
+    if (!IsNetworked())
+        if (auto* World = NetworkWorld.Get())
+            if (auto* Instance = World->GetGameInstance())
+                if (const auto* Players = Instance->GetSubsystem<UStarshatterPlayerSubsystem>())
+                    return Players->GetPlayerInfo().Economy;
+    return LocalEconomy;
+}
 
 const TMap<FName, FContractTransaction>& Sim::GetTrainingContracts()
 {
     if (!mission || mission->GetIdentity() != 101 || IsNetworked() || !HasSimulationAuthority())
         return TrainingContracts;
 
+    auto& Economy = GetEconomy();
+    if (TrainingContracts.IsEmpty() && !Economy.Contracts.IsEmpty())
+        FContractLedger::Restore(Economy, TrainingContracts, TrainingContractAccounts);
+    for (auto& Account : TrainingContractAccounts)
+        Account.Value.Credits = Economy.Wallets.FindRef(Account.Key);
+    ON_SCOPE_EXIT { FContractLedger::Capture(Economy, TrainingContracts, TrainingContractAccounts); };
     const FDateTime Now = FDateTime::UtcNow();
     if (TrainingContracts.IsEmpty())
     {
@@ -2630,11 +2664,15 @@ const TMap<FName, FContractTransaction>& Sim::GetTrainingContracts()
         const FName Supplies(TEXT("Training Supplies"));
         const FName Parts(TEXT("Training Spare Parts"));
         auto& DepotAccount = TrainingContractAccounts.Add(Depot);
-        DepotAccount.Credits = 20000;
+        DepotAccount.Credits = Economy.Wallets.FindRef(Depot);
+        if (!Economy.InitializedMarkets.Contains(TEXT("Training issuer grant")))
+        { DepotAccount.Credits += 20000; Economy.InitializedMarkets.Add(TEXT("Training issuer grant")); }
         auto& Stock = DepotAccount.StationStock.Add(Terminal);
         Stock.Add(Parts, 1);
         auto& PilotAccount = TrainingContractAccounts.Add(TrainingContractPilot);
-        PilotAccount.Credits = 10000;
+        PilotAccount.Credits = Economy.Wallets.FindRef(TrainingContractPilot);
+        if (!Economy.InitializedMarkets.Contains(TEXT("Training pilot grant")))
+        { PilotAccount.Credits += 10000; Economy.InitializedMarkets.Add(TEXT("Training pilot grant")); }
         PilotAccount.StationStock.FindOrAdd(Terminal).Add(Parts, 1);
 
         FContractTransaction Courier;
@@ -2685,6 +2723,16 @@ const TMap<FName, FContractTransaction>& Sim::GetTrainingContracts()
     for (auto& Entry : TrainingContracts)
     {
         auto& Contract = Entry.Value;
+        if (Contract.State == EContractState::InProgress && Contract.Terms.Type == ESSWContractType::Courier)
+        {
+            const Ship* Player = GetPlayerShip();
+            const bool Lost = !Player || Player->IsDead() || Player->IsDying() || !Player->HasCourierPackage(Entry.Key);
+            if ((Lost || Now >= Contract.DeliverBy) && SettlementAI::FailCourier(Contract, TrainingContractAccounts, Contract.Acceptor, Now, true))
+            {
+                if (Ship* LivePlayer = GetPlayerShip()) LivePlayer->RemoveCourierPackage(Entry.Key);
+                UE_LOG(LogTemp, Display, TEXT("[Contracts] %s failed: %s."), *Entry.Key.ToString(), Lost ? TEXT("package lost") : TEXT("delivery deadline expired"));
+            }
+        }
         SettlementAI::CloseExpired(Contract, TrainingContractAccounts, Now);
         if (Contract.State == EContractState::AwaitingClaims &&
             Contract.Issuer != TrainingContractPilot && !Contract.bSellerClaimed)
@@ -2695,8 +2743,7 @@ const TMap<FName, FContractTransaction>& Sim::GetTrainingContracts()
 
 int64 Sim::GetTrainingContractBalance() const
 {
-    const auto* Account = TrainingContractAccounts.Find(TrainingContractPilot);
-    return Account ? Account->Credits : 0;
+    return ReadEconomy().Wallets.FindRef(FEconomyLedger::Pilot());
 }
 
 FText Sim::ExecuteTrainingContract(FName ContractId, ETrainingContractAction Action, int64 Bid)
@@ -2704,6 +2751,9 @@ FText Sim::ExecuteTrainingContract(FName ContractId, ETrainingContractAction Act
     if (!mission || mission->GetIdentity() != 101 || IsNetworked() || !HasSimulationAuthority())
         return INVTEXT("Training contracts are available in offline T1.");
     GetTrainingContracts();
+    auto& Economy = GetEconomy();
+    for (auto& Account : TrainingContractAccounts) Account.Value.Credits = Economy.Wallets.FindRef(Account.Key);
+    ON_SCOPE_EXIT { FContractLedger::Capture(Economy, TrainingContracts, TrainingContractAccounts); };
     auto* Contract = TrainingContracts.Find(ContractId);
     if (!Contract)
         return INVTEXT("Contract unavailable.");
@@ -2805,22 +2855,51 @@ TArray<Sim::FActiveHaul> Sim::GetActiveHauls()
 
 const FSSWProductionStock* Sim::GetProductionStock(const FSSWProductionFacility& Facility)
 {
-    if (!mission || mission->GetIdentity() != 101 || !active_region ||
-        !Facility.System.Equals(UTF8_TO_TCHAR(mission->GetSystem())) ||
-        !Facility.Region.Equals(UTF8_TO_TCHAR(active_region->GetName())) ||
-        Facility.Facility != TEXT("Janek Orbital Materials Works"))
-        return nullptr;
+    return ProductionViews.Find(FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("View")));
+}
 
-    const FTCHARToUTF8 Name(*Facility.Facility);
-    const Ship* Refinery = active_region->FindShip(Name.Get());
-    return Refinery && !Refinery->IsDead() && !Refinery->IsDying() ? &JanekRefinery : nullptr;
+void Sim::TickIndustry(double Seconds)
+{
+    if (!FMath::IsFinite(Seconds) || Seconds <= 0) return;
+    IndustrySeconds += Seconds;
+    if (IndustrySeconds < 0.25) return;
+    const double Step = IndustrySeconds; IndustrySeconds = 0;
+    if (!TrainingContracts.IsEmpty()) GetTrainingContracts();
+    static TWeakObjectPtr<UDataTable> Facilities, Recipes;
+    if (!Facilities.IsValid()) Facilities = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionFacilities.DT_ProductionFacilities"));
+    if (!Recipes.IsValid()) Recipes = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionRecipes.DT_ProductionRecipes"));
+    if (!Facilities.IsValid() || !Recipes.IsValid()) return;
+    auto& Economy = GetEconomy();
+    ProductionViews.Reset();
+    for (const auto& Row : Facilities->GetRowMap())
+    {
+        const auto& Facility = *reinterpret_cast<const FSSWProductionFacility*>(Row.Value);
+        Ship* Station = FindShip(TCHAR_TO_UTF8(*Facility.Facility), TCHAR_TO_UTF8(*Facility.Region));
+        if (!Station || !Station->Design() || !Station->GetRegion() || !Station->GetRegion()->GetSystem() ||
+            !Facility.System.Equals(UTF8_TO_TCHAR(Station->GetRegion()->GetSystem()->GetName()), ESearchCase::IgnoreCase)) continue;
+        const auto* Recipe = Recipes->FindRow<FSSWProductionRecipe>(Facility.Recipe, TEXT("Live industry"), false);
+        if (!Recipe) continue;
+        const double Capacity = Facility.CapacityTonnes > 0 ? Facility.CapacityTonnes : Station->Design()->CargoCapacity.Tonnes;
+        const FName Input = FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("Input"));
+        const FName Output = FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("Output"));
+        FEconomyRuntime::EnsureWarehouse(Economy, Input, FName(*Facility.System), Capacity);
+        FEconomyRuntime::EnsureWarehouse(Economy, Output, FName(*Facility.System), Capacity, true);
+        ManufacturingAI::AdvanceLive(Economy, FName(*Facility.Facility), Input, Output, Facility.Recipe, *Recipe,
+            !Station->IsDead() && !Station->IsDying(), Step);
+        ProductionViews.Add(FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("View")),
+            ManufacturingAI::Describe(Economy, FName(*Facility.Facility), Input, Output));
+    }
 }
 
 void
 Sim::ExecFrame(double DeltaSeconds)
 {
     if (!HasSimulationAuthority()) return;
-	UE_LOG(LogTemp, VeryVerbose,
+    if (auto* World = NetworkWorld.Get())
+        if (auto* Instance = World->GetGameInstance())
+            if (auto* Catalog = Instance->GetSubsystem<UCargoCatalogSubsystem>())
+                FEconomyRuntime::InitializeMarkets(GetEconomy(), *Catalog);
+    UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[Sim::ExecFrame] Seconds=%.4f GameTime=%u Regions=%d"),
 		DeltaSeconds,
 		Game::GetGameTime(),
@@ -2877,6 +2956,7 @@ Sim::ExecFrame(double DeltaSeconds)
 	if (active_region)
 		active_region->ExecFrame(DeltaSeconds);
 
+    TickIndustry(DeltaSeconds);
     if (mission && mission->GetIdentity() == 101 && active_region &&
         FCStringAnsi::Stricmp(mission->GetSystem(), "Janus") == 0)
     {
@@ -2904,17 +2984,19 @@ Sim::ExecFrame(double DeltaSeconds)
             if (Recipes.IsValid())
                 Recipe = Recipes->FindRow<FSSWProductionRecipe>(Refinery->Design()->ProductionRecipe, TEXT("Janus industry"), false);
         }
-        if (const auto* ProductRun = JanekMiningRuns.Find(2))
-            RefineryCapacity = FMath::Max(0.0, RefineryCapacity - ProductRun->Contract.GetReservedTonnes());
+        auto& Economy = GetEconomy();
+        const FName DepotInventory = FEconomyRuntime::Warehouse(TEXT("Janus"), TEXT("Janek Mining Station"), TEXT("Ore"));
+        const FName InputInventory = FEconomyRuntime::Warehouse(TEXT("Janus"), TEXT("Janek Orbital Materials Works"), TEXT("Input"));
+        const FName OutputInventory = FEconomyRuntime::Warehouse(TEXT("Janus"), TEXT("Janek Orbital Materials Works"), TEXT("Output"));
+        const FName TransferInventory = FEconomyRuntime::Warehouse(TEXT("Janus"), TEXT("Janus Transfer Station"), TEXT("Stock"));
+        if (Depot && Depot->Design()) FEconomyRuntime::EnsureWarehouse(Economy, DepotInventory, TEXT("Janus"), Depot->Design()->CargoCapacity.Tonnes);
+        if (Transfer && Transfer->Design()) FEconomyRuntime::EnsureWarehouse(Economy, TransferInventory, TEXT("Janus"), Transfer->Design()->CargoCapacity.Tonnes, true);
+        FEconomyRuntime::EnsureWarehouse(Economy, InputInventory, TEXT("Janus"), RefineryCapacity);
+        FEconomyRuntime::EnsureWarehouse(Economy, OutputInventory, TEXT("Janus"), RefineryCapacity, true);
         const double Seconds = FMath::Max(0.0, static_cast<double>(DeltaSeconds));
-        static const ManufacturingAI::Job RefineryJob{
-            TEXT("Janek Orbital Materials Works"), TEXT("Ore Storage"), TEXT("Finished Goods Storage")
-        };
-        if (Recipe && ProductionAI::AdvanceFacility(!Refinery->IsDead() && !Refinery->IsDying(),
-            RefineryJob, *Recipe, JanekRefinery, RefineryCapacity, Seconds))
+        if (Recipe && Refinery)
         {
-            UE_LOG(LogTemp, Display, TEXT("[Production] Janek refinery produced %.1f t; stock %.1f t."),
-                Recipe->OutputTonnes, JanekRefinery.GetInventory(RefineryJob.OutputLocation));
+            JanekRefinery = ManufacturingAI::Describe(Economy, TEXT("Janek Orbital Materials Works"), InputInventory, OutputInventory);
         }
         auto* Laser = WeaponDesignRegistry::FindLegacy("Mining Laser");
         if (Recipe && Laser && Depot && Depot->Design() && !Depot->IsDead() && !Depot->IsDying())
@@ -2927,12 +3009,7 @@ Sim::ExecFrame(double DeltaSeconds)
                 const bool bProductRun = Index == 2;
                 if (!ShipOnRoute || !ShipOnRoute->Design() || ShipOnRoute->IsDead() || ShipOnRoute->IsDying())
                 {
-                    if (Run.Contract.GetReservedTonnes() > 0)
-                    {
-                        double& SourceStock = bProductRun ? JanekRefinery.GetInventory(RefineryJob.OutputLocation)
-                            : JanekMiningStock.FindOrAdd(Run.Contract.GetItem());
-                        Run.Contract.Release(SourceStock);
-                    }
+                    Run.Contract.Release(Economy);
                     Run = {};
                     continue;
                 }
@@ -2976,7 +3053,7 @@ Sim::ExecFrame(double DeltaSeconds)
                                 MiningScanRange, MiningAI::ScanTier::Assay);
                             Run.NextScan = Run.Time + 1.0;
                         }
-                        Deposit = MiningAI::SelectDeposit(*HaulerRegion, Hauler.GetLocation(), Run.AsteroidScan, Recipe->Minerals,
+                        Deposit = MiningAI::SelectClaimedDeposit(Economy, Hauler.GetCargoInventoryKey(), *HaulerRegion, Hauler.GetLocation(), Run.AsteroidScan, Recipe->Minerals,
                             CargoTonnes > UE_SMALL_NUMBER && Cargo ? Cargo->Item : FString(), Run.DepositId);
                     }
                     if (!Deposit || !Run.DepositId || *Run.DepositId != Deposit->GetContactId())
@@ -2988,7 +3065,8 @@ Sim::ExecFrame(double DeltaSeconds)
                     }
                     if (CargoTonnes > UE_SMALL_NUMBER && (bFull || !Deposit))
                     {
-                        Run.bDelivering = true;
+                        MiningAI::ReleaseClaims(Economy, Hauler.GetCargoInventoryKey());
+                    Run.bDelivering = true;
                         Run.LoadedTonnes = CargoTonnes;
                         UE_LOG(LogTemp, Display, TEXT("[Production] %hs mined %.2f t of %s with its mining laser; heading to %hs (%s)."),
                             Hauler.GetName(), CargoTonnes, *Cargo->Item, Depot->GetName(),
@@ -3000,12 +3078,7 @@ Sim::ExecFrame(double DeltaSeconds)
                 Ship* Delivery = bProductRun ? Transfer : Refinery;
                 if (!bShuttle && (!Delivery || !Delivery->Design() || Delivery->IsDead() || Delivery->IsDying()))
                 {
-                    if (Run.Contract.GetReservedTonnes() > 0)
-                    {
-                        double& SourceStock = bProductRun ? JanekRefinery.GetInventory(RefineryJob.OutputLocation)
-                            : JanekMiningStock.FindOrAdd(Run.Contract.GetItem());
-                        Run.Contract.Release(SourceStock);
-                    }
+                    Run.Contract.Release(Economy);
                     continue;
                 }
                 Ship* Station = bShuttle ? (Run.bDelivering ? Depot : nullptr)
@@ -3114,15 +3187,9 @@ Sim::ExecFrame(double DeltaSeconds)
 
                 if (bShuttle)
                 {
-                    double Total = 0;
-                    for (const auto& Stock : JanekMiningStock) Total += Stock.Value;
-                    if (const auto* OreRun = JanekMiningRuns.Find(1))
-                        Total += OreRun->Contract.GetReservedTonnes();
                     const double Rate = FMath::Min(Hauler.Design()->CargoCapacity.UnloadTonnesPerSecond,
                         Depot->Design()->CargoCapacity.LoadTonnesPerSecond);
-                    if (CargoTonnes > 0)
-                        JanekMiningStock.FindOrAdd(Cargo->Item) += Hauler.UnloadMinedOre(
-                            FMath::Min(Rate * Seconds, FMath::Max(0.0, Depot->Design()->CargoCapacity.Tonnes - Total)));
+                    if (CargoTonnes > 0) TransportAI::Unload(Economy, Hauler, DepotInventory, Rate * Seconds);
                     if (Hauler.GetMinedOreTonnes() > UE_SMALL_NUMBER) continue;
                     UE_LOG(LogTemp, Display, TEXT("[Production] %hs unloaded %.2f t at %hs."),
                         Hauler.GetName(), Run.LoadedTonnes, Depot->GetName());
@@ -3143,23 +3210,24 @@ Sim::ExecFrame(double DeltaSeconds)
                         if (bProductRun)
                         {
                             const FString Item = Recipe->CargoItem.IsEmpty() ? Recipe->OutputDisplayName : Recipe->CargoItem;
-                            Run.Contract.Reserve(Item, JanekRefinery.GetInventory(RefineryJob.OutputLocation), Capacity);
+                            Run.Contract.Reserve(Economy, OutputInventory, Item, Capacity);
                         }
                         else
                         {
-                            for (auto& Stock : JanekMiningStock)
-                                if (Run.Contract.Reserve(Stock.Key, Stock.Value, FMath::Min(2.0, Capacity)))
-                                    break;
+                            if (const auto* Stock = Economy.Inventories.Find(DepotInventory))
+                                for (const auto& Stack : Stock->Items)
+                                    if (Run.Contract.Reserve(Economy, DepotInventory, Stack.Type.ToString(), FMath::Min(2.0, Capacity))) break;
                         }
                         if (Run.Contract.GetItem().IsEmpty()) continue;
                     }
                     const double Rate = FMath::Min(Hauler.Design()->CargoCapacity.LoadTonnesPerSecond,
                         Pickup->Design()->CargoCapacity.UnloadTonnesPerSecond);
-                    TransportAI::Load(Hauler, Run.Contract, Rate * Seconds);
+                    TransportAI::Load(Economy, Hauler, Run.Contract, Rate * Seconds);
                     if (Run.Contract.GetReservedTonnes() > UE_SMALL_NUMBER) continue;
 
                     Run.LoadedTonnes = Hauler.GetMinedOreTonnes();
                     if (Run.LoadedTonnes <= UE_SMALL_NUMBER) { Run = {}; continue; }
+                    MiningAI::ReleaseClaims(Economy, Hauler.GetCargoInventoryKey());
                     Run.bDelivering = true;
                     UE_LOG(LogTemp, Display, TEXT("[Production] %hs picked up %.2f t of %s at %hs for %hs."),
                         Hauler.GetName(), Run.LoadedTonnes, *Run.Contract.GetItem(), Pickup->GetName(), Delivery->GetName());
@@ -3168,18 +3236,9 @@ Sim::ExecFrame(double DeltaSeconds)
                 {
                     const double Rate = FMath::Min(Hauler.Design()->CargoCapacity.UnloadTonnesPerSecond,
                         Delivery->Design()->CargoCapacity.LoadTonnesPerSecond);
-                    if (bProductRun)
-                    {
-                        double Total = 0;
-                        for (const auto& Stock : JanusTransferStock) Total += Stock.Value;
-                        TransportAI::Unload(Hauler, JanusTransferStock.FindOrAdd(Run.Contract.GetItem()),
-                            Delivery->Design()->CargoCapacity.Tonnes - Total, Rate * Seconds);
-                    }
-                    else
-                    {
-                        TransportAI::Unload(Hauler, JanekRefinery.GetInventory(RefineryJob.InputLocation),
-                            JanekRefinery.FreeSpace(RefineryCapacity), Rate * Seconds);
-                    }
+                    const FName DestinationInventory = bProductRun ? TransferInventory : InputInventory;
+                    const double Space = bProductRun ? Rate * Seconds : FMath::Min(Rate * Seconds, JanekRefinery.FreeSpace(RefineryCapacity));
+                    TransportAI::Unload(Economy, Hauler, DestinationInventory, Space);
                     if (Hauler.GetMinedOreTonnes() > UE_SMALL_NUMBER) continue;
                     UE_LOG(LogTemp, Display, TEXT("[Production] %hs delivered %.2f t of %s to %hs."),
                         Hauler.GetName(), Run.LoadedTonnes, *Run.Contract.GetItem(), Delivery->GetName());

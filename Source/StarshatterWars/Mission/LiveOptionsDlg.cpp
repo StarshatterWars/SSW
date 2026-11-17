@@ -16,6 +16,7 @@
 #include "Widgets/Layout/SConstraintCanvas.h"
 #include "Styling/CoreStyle.h"
 #include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/Layout/SWidgetSwitcher.h"
 #include "InputMappingContext.h"
 #include "StarshatterInputBindings.h"
 #include "StarshatterInputLabels.h"
@@ -69,7 +70,10 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
         if (auto* Save = Instance->GetSubsystem<UStarshatterSettingsSaveSubsystem>())
             Save->LoadOrCreate();
 
-    const auto Settings = SNew(SVerticalBox);
+    const auto AudioPage = SNew(SVerticalBox);
+    const auto VideoPage = SNew(SVerticalBox);
+    const auto KeyboardPage = SNew(SVerticalBox);
+    auto Settings = AudioPage;
     const auto AddSection = [&Settings](EShipSystemIcon Icon, FText Label)
     {
         Settings->AddSlot().AutoHeight().Padding(0, 14, 0, 6)
@@ -123,6 +127,7 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
     AddVolume(INVTEXT("Effects"), &UStarshatterAudioSettings::GetEffectsVolume, &UStarshatterAudioSettings::SetEffectsVolume);
     AddVolume(INVTEXT("Voice"), &UStarshatterAudioSettings::GetVoiceVolume, &UStarshatterAudioSettings::SetVoiceVolume);
 
+    Settings = KeyboardPage;
     AddSection(EShipSystemIcon::Options, INVTEXT("FLIGHT CONTROLS"));
     auto* Controls = UStarshatterControlsSettings::Get();
     AddSlider(INVTEXT("Mouse sensitivity"),
@@ -135,7 +140,8 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
         .OnCheckStateChanged_Lambda([Controls](ECheckBoxState State) { Controls->SetMouseInvert(State == ECheckBoxState::Checked); })
         [SNew(STextBlock).Text(INVTEXT("Invert mouse pitch")).Font(MissionUIStyle::GetRowFont(17))]
     ];
-    AddSection(EShipSystemIcon::Display, INVTEXT("DISPLAY"));
+    Settings = VideoPage;
+    AddSection(EShipSystemIcon::Display, INVTEXT("VIDEO AND HUD"));
     if (auto* Video = GEngine ? GEngine->GetGameUserSettings() : nullptr)
     {
         Settings->AddSlot().AutoHeight().Padding(0, 8)
@@ -183,6 +189,7 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
         })
         [SNew(STextBlock).Text(INVTEXT("Gunsight")).Font(MissionUIStyle::GetRowFont(17))]
     ];
+    Settings = KeyboardPage;
     AddSection(EShipSystemIcon::Keyboard, INVTEXT("KEY BINDINGS"));
 
     TArray<UInputMappingContext*> Contexts;
@@ -228,7 +235,7 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
                 KeyFunctions.FindOrAdd(Mapping.Key).AddUnique(bShift ? TEXT("Shift + ") + Function : Function);
             Bindings.Emplace(Function, MoveTemp(Key));
         }
-    const auto KeyboardZoom = MakeShared<float>(0.9f);
+    const auto KeyboardZoom = MakeShared<float>(0.48f);
     Settings->AddSlot().AutoHeight().Padding(0, 4, 0, 8)
     [
         SNew(SHorizontalBox)
@@ -238,7 +245,7 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
         [SNew(SSlider).Value(*KeyboardZoom).OnValueChanged_Lambda([KeyboardZoom](float Value) { *KeyboardZoom = Value; })]
     ];
     auto Keyboard = SNew(SConstraintCanvas);
-    // Full-size US Windows layout. Positions and widths are measured in key units.
+    // US Windows layout without the numeric keypad. Positions and widths are measured in key units.
     const auto AddKey = [&Keyboard, KeyboardZoom, &KeyFunctions](const FString& Name, float X, float Y, float W, float H)
     {
         const FKey Key(*Name);
@@ -308,13 +315,6 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
     AddRow(15.35, 2.4, TEXT("Delete End PageDown"));
     AddRow(16.35, 4.4, TEXT("Up"));
     AddRow(15.35, 5.4, TEXT("Left Down Right"));
-    AddRow(18.7, 1.4, TEXT("NumLock Divide Multiply Subtract"));
-    AddRow(18.7, 2.4, TEXT("NumPadSeven NumPadEight NumPadNine"));
-    AddRow(18.7, 3.4, TEXT("NumPadFour NumPadFive NumPadSix"));
-    AddRow(18.7, 4.4, TEXT("NumPadOne NumPadTwo NumPadThree"));
-    AddRow(18.7, 5.4, TEXT("NumPadZero:2 Decimal"));
-    AddKey(TEXT("Add"), 21.7, 2.4, 1, 2);
-    AddKey(TEXT("NumPadEnter"), 21.7, 4.4, 1, 2);
     Settings->AddSlot().AutoHeight().Padding(0, 0, 0, 10)
     [
         SNew(SKeyboardScrollBox).Orientation(Orient_Horizontal)
@@ -323,7 +323,7 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
         + SScrollBox::Slot()
         [
             SNew(SBox)
-            .WidthOverride_Lambda([KeyboardZoom]() { return 22.7f * FMath::Lerp(36.f, 76.f, *KeyboardZoom); })
+            .WidthOverride_Lambda([KeyboardZoom]() { return 18.35f * FMath::Lerp(36.f, 76.f, *KeyboardZoom); })
             .HeightOverride_Lambda([KeyboardZoom]() { return 6.4f * FMath::Lerp(36.f, 76.f, *KeyboardZoom); })
             [Keyboard]
         ]
@@ -338,7 +338,23 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
             + SHorizontalBox::Slot().FillWidth(1)
             [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(14)).Text(FText::FromString(Binding.Value))]
         ];
-    return SNew(SBox).Padding(24)[SNew(SScrollBox) + SScrollBox::Slot()[Settings]];
+    const auto Pages = SNew(SWidgetSwitcher)
+        + SWidgetSwitcher::Slot()[SNew(SScrollBox) + SScrollBox::Slot()[AudioPage]]
+        + SWidgetSwitcher::Slot()[SNew(SScrollBox) + SScrollBox::Slot()[VideoPage]]
+        + SWidgetSwitcher::Slot()[SNew(SScrollBox) + SScrollBox::Slot()[KeyboardPage]];
+    const auto Tabs = SNew(SHorizontalBox);
+    const TArray<EShipSystemIcon> Icons = {EShipSystemIcon::Audio, EShipSystemIcon::Display, EShipSystemIcon::Keyboard};
+    const TArray<FText> Labels = {INVTEXT("Audio"), INVTEXT("Video and HUD"), INVTEXT("Keyboard and flight controls")};
+    for (int32 Index = 0; Index < Icons.Num(); ++Index)
+        Tabs->AddSlot().AutoWidth().Padding(0,0,8,0)
+        [SNew(SButton).ContentPadding(FMargin(14,8)).ToolTipText(Labels[Index])
+            .ButtonColorAndOpacity_Lambda([Pages,Index]() { return Pages->GetActiveWidgetIndex() == Index ? FLinearColor(.12f,.42f,.55f) : FLinearColor(.12f,.18f,.23f); })
+            .OnClicked_Lambda([Pages,Index]() { Pages->SetActiveWidgetIndex(Index); return FReply::Handled(); })
+            [SNew(SShipSystemIcon).Icon(Icons[Index])]];
+    return SNew(SBox).Padding(24)
+        [SNew(SVerticalBox)
+            + SVerticalBox::Slot().AutoHeight().Padding(0,0,0,12)[Tabs]
+            + SVerticalBox::Slot().FillHeight(1)[Pages]];
 }
 
 void ULiveOptionsDlg::SaveSettings()

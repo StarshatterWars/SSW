@@ -47,7 +47,9 @@
     "CargoItem": "industrial concentrate",
     "OutputDisplayName": "Industrial Concentrate",
     "OutputUnit": "t",
-    "OutputQuantity": 1
+    "OutputQuantity": 1,
+    "Image": "Cargo",
+    "Inputs": []
   },
   {
     "Name": "OrbitalConcentrate",
@@ -63,7 +65,9 @@
     "CargoItem": "industrial concentrate",
     "OutputDisplayName": "Industrial Concentrate",
     "OutputUnit": "t",
-    "OutputQuantity": 2
+    "OutputQuantity": 2,
+    "Image": "Cargo",
+    "Inputs": []
   },
   {
     "Name": "StructuralAlloy",
@@ -79,7 +83,25 @@
     "CargoItem": "structural alloy",
     "OutputDisplayName": "Structural Alloy",
     "OutputUnit": "t",
-    "OutputQuantity": 3
+    "OutputQuantity": 3,
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.6666666666666667,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Taenite",
+        "Quantity": 1.6666666666666667,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.6666666666666667,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "ConductiveMetal",
@@ -93,7 +115,15 @@
     "CargoItem": "conductive metal",
     "OutputDisplayName": "Conductive Metal",
     "OutputUnit": "t",
-    "OutputQuantity": 1
+    "OutputQuantity": 1,
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 4.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "IndustrialCeramics",
@@ -109,7 +139,25 @@
     "CargoItem": "industrial ceramics",
     "OutputDisplayName": "Industrial Ceramics",
     "OutputUnit": "t",
-    "OutputQuantity": 3
+    "OutputQuantity": 3,
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 1.3333333333333333,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 1.3333333333333333,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Dolomite",
+        "Quantity": 1.3333333333333333,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "OpticalGlass",
@@ -123,7 +171,15 @@
     "CargoItem": "optical glass",
     "OutputDisplayName": "Optical Glass",
     "OutputUnit": "t",
-    "OutputQuantity": 2
+    "OutputQuantity": 2,
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 3.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "ConstructionMaterials",
@@ -139,7 +195,25 @@
     "CargoItem": "construction materials",
     "OutputDisplayName": "Construction Materials",
     "OutputUnit": "t",
-    "OutputQuantity": 4
+    "OutputQuantity": 4,
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Calcite",
+        "Quantity": 2.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Dolomite",
+        "Quantity": 2.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Plagioclase",
+        "Quantity": 2.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "WaterRecovery",
@@ -153,7 +227,15 @@
     "CargoItem": "water",
     "OutputDisplayName": "Water",
     "OutputUnit": "t",
-    "OutputQuantity": 3
+    "OutputQuantity": 3,
+    "Image": "Mineral",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 4.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_avionics",
@@ -168,7 +250,20 @@
     "CargoItem": "avionics",
     "OutputQuantity": 10,
     "OutputUnit": "crates",
-    "OutputDisplayName": "Avionics"
+    "OutputDisplayName": "Avionics",
+    "Image": "Electronics",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.5,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_carbon_composite",
@@ -182,7 +277,15 @@
     "CargoItem": "carbon composite",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Carbon Composite"
+    "OutputDisplayName": "Carbon Composite",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Graphite",
+        "Quantity": 1.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_engine_assembly",
@@ -197,7 +300,20 @@
     "CargoItem": "engine assembly",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Engine Assembly"
+    "OutputDisplayName": "Engine Assembly",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_field_medical_supplies",
@@ -212,7 +328,20 @@
     "CargoItem": "field medical supplies",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Field Medical Supplies"
+    "OutputDisplayName": "Field Medical Supplies",
+    "Image": "Medical",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Apatite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_finished_electronics",
@@ -227,7 +356,20 @@
     "CargoItem": "finished electronics",
     "OutputQuantity": 10,
     "OutputUnit": "crates",
-    "OutputDisplayName": "Finished Electronics"
+    "OutputDisplayName": "Finished Electronics",
+    "Image": "Electronics",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.125,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.125,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_food",
@@ -242,7 +384,20 @@
     "CargoItem": "food",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Food"
+    "OutputDisplayName": "Food",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Apatite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_hull_section",
@@ -257,7 +412,20 @@
     "CargoItem": "hull section",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Hull Section"
+    "OutputDisplayName": "Hull Section",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_life_support_supplies",
@@ -272,7 +440,20 @@
     "CargoItem": "life support supplies",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Life Support Supplies"
+    "OutputDisplayName": "Life Support Supplies",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Apatite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_machine_parts",
@@ -287,7 +468,20 @@
     "CargoItem": "machine parts",
     "OutputQuantity": 10,
     "OutputUnit": "crates",
-    "OutputDisplayName": "Machine Parts"
+    "OutputDisplayName": "Machine Parts",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 3.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 3.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_medical_supplies",
@@ -302,7 +496,20 @@
     "CargoItem": "medical supplies",
     "OutputQuantity": 10,
     "OutputUnit": "pallets",
-    "OutputDisplayName": "Medical Supplies"
+    "OutputDisplayName": "Medical Supplies",
+    "Image": "Medical",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 3.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Apatite",
+        "Quantity": 3.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_military_rations",
@@ -317,7 +524,20 @@
     "CargoItem": "military rations",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Military Rations"
+    "OutputDisplayName": "Military Rations",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Apatite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_military_spare_parts",
@@ -332,7 +552,20 @@
     "CargoItem": "military spare parts",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Military Spare Parts"
+    "OutputDisplayName": "Military Spare Parts",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_navigation_computer",
@@ -347,7 +580,20 @@
     "CargoItem": "navigation computer",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Navigation Computer"
+    "OutputDisplayName": "Navigation Computer",
+    "Image": "Electronics",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_reactor_fuel",
@@ -361,7 +607,15 @@
     "CargoItem": "reactor fuel",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Reactor Fuel"
+    "OutputDisplayName": "Reactor Fuel",
+    "Image": "Liquid",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 1.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_repair_kit",
@@ -376,7 +630,20 @@
     "CargoItem": "repair kit",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Repair Kit"
+    "OutputDisplayName": "Repair Kit",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_sealed_documents",
@@ -391,7 +658,20 @@
     "CargoItem": "sealed documents",
     "OutputQuantity": 10,
     "OutputUnit": "cases",
-    "OutputDisplayName": "Sealed Documents"
+    "OutputDisplayName": "Sealed Documents",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 0.15,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Apatite",
+        "Quantity": 0.15,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_sensor_assembly",
@@ -406,7 +686,20 @@
     "CargoItem": "sensor assembly",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Sensor Assembly"
+    "OutputDisplayName": "Sensor Assembly",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_shield_components",
@@ -421,7 +714,20 @@
     "CargoItem": "shield components",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Shield Components"
+    "OutputDisplayName": "Shield Components",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_thruster_propellant",
@@ -435,7 +741,15 @@
     "CargoItem": "thruster propellant",
     "OutputQuantity": 1,
     "OutputUnit": "t",
-    "OutputDisplayName": "Thruster Propellant"
+    "OutputDisplayName": "Thruster Propellant",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 1.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_atmosphere_filter",
@@ -450,7 +764,20 @@
     "CargoItem": "standard atmosphere filter",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Atmosphere Filter"
+    "OutputDisplayName": "Standard Atmosphere Filter",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_atmosphere_filter",
@@ -465,7 +792,20 @@
     "CargoItem": "heavy duty atmosphere filter",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Atmosphere Filter"
+    "OutputDisplayName": "Heavy Duty Atmosphere Filter",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_atmosphere_filter",
@@ -480,7 +820,20 @@
     "CargoItem": "precision atmosphere filter",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Atmosphere Filter"
+    "OutputDisplayName": "Precision Atmosphere Filter",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_atmosphere_filter",
@@ -495,7 +848,20 @@
     "CargoItem": "prototype atmosphere filter",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Atmosphere Filter"
+    "OutputDisplayName": "Prototype Atmosphere Filter",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_carbon_dioxide_scrubber",
@@ -510,7 +876,20 @@
     "CargoItem": "standard carbon dioxide scrubber",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Carbon Dioxide Scrubber"
+    "OutputDisplayName": "Standard Carbon Dioxide Scrubber",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_carbon_dioxide_scrubber",
@@ -525,7 +904,20 @@
     "CargoItem": "heavy duty carbon dioxide scrubber",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Carbon Dioxide Scrubber"
+    "OutputDisplayName": "Heavy Duty Carbon Dioxide Scrubber",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_carbon_dioxide_scrubber",
@@ -540,7 +932,20 @@
     "CargoItem": "precision carbon dioxide scrubber",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Carbon Dioxide Scrubber"
+    "OutputDisplayName": "Precision Carbon Dioxide Scrubber",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_carbon_dioxide_scrubber",
@@ -555,7 +960,20 @@
     "CargoItem": "prototype carbon dioxide scrubber",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Carbon Dioxide Scrubber"
+    "OutputDisplayName": "Prototype Carbon Dioxide Scrubber",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_oxygen_regulator",
@@ -570,7 +988,20 @@
     "CargoItem": "standard oxygen regulator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Oxygen Regulator"
+    "OutputDisplayName": "Standard Oxygen Regulator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_oxygen_regulator",
@@ -585,7 +1016,20 @@
     "CargoItem": "heavy duty oxygen regulator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Oxygen Regulator"
+    "OutputDisplayName": "Heavy Duty Oxygen Regulator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_oxygen_regulator",
@@ -600,7 +1044,20 @@
     "CargoItem": "precision oxygen regulator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Oxygen Regulator"
+    "OutputDisplayName": "Precision Oxygen Regulator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_oxygen_regulator",
@@ -615,7 +1072,20 @@
     "CargoItem": "prototype oxygen regulator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Oxygen Regulator"
+    "OutputDisplayName": "Prototype Oxygen Regulator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_water_purifier",
@@ -630,7 +1100,20 @@
     "CargoItem": "standard water purifier",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Water Purifier"
+    "OutputDisplayName": "Standard Water Purifier",
+    "Image": "Liquid",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_water_purifier",
@@ -645,7 +1128,20 @@
     "CargoItem": "heavy duty water purifier",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Water Purifier"
+    "OutputDisplayName": "Heavy Duty Water Purifier",
+    "Image": "Liquid",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_water_purifier",
@@ -660,7 +1156,20 @@
     "CargoItem": "precision water purifier",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Water Purifier"
+    "OutputDisplayName": "Precision Water Purifier",
+    "Image": "Liquid",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_water_purifier",
@@ -675,7 +1184,20 @@
     "CargoItem": "prototype water purifier",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Water Purifier"
+    "OutputDisplayName": "Prototype Water Purifier",
+    "Image": "Liquid",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_humidity_separator",
@@ -690,7 +1212,20 @@
     "CargoItem": "standard humidity separator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Humidity Separator"
+    "OutputDisplayName": "Standard Humidity Separator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_humidity_separator",
@@ -705,7 +1240,20 @@
     "CargoItem": "heavy duty humidity separator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Humidity Separator"
+    "OutputDisplayName": "Heavy Duty Humidity Separator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_humidity_separator",
@@ -720,7 +1268,20 @@
     "CargoItem": "precision humidity separator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Humidity Separator"
+    "OutputDisplayName": "Precision Humidity Separator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_humidity_separator",
@@ -735,7 +1296,20 @@
     "CargoItem": "prototype humidity separator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Humidity Separator"
+    "OutputDisplayName": "Prototype Humidity Separator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_thermal_radiator",
@@ -750,7 +1324,20 @@
     "CargoItem": "standard thermal radiator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Thermal Radiator"
+    "OutputDisplayName": "Standard Thermal Radiator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_thermal_radiator",
@@ -765,7 +1352,20 @@
     "CargoItem": "heavy duty thermal radiator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Thermal Radiator"
+    "OutputDisplayName": "Heavy Duty Thermal Radiator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_thermal_radiator",
@@ -780,7 +1380,20 @@
     "CargoItem": "precision thermal radiator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Thermal Radiator"
+    "OutputDisplayName": "Precision Thermal Radiator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_thermal_radiator",
@@ -795,7 +1408,20 @@
     "CargoItem": "prototype thermal radiator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Thermal Radiator"
+    "OutputDisplayName": "Prototype Thermal Radiator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_heat_exchanger_core",
@@ -810,7 +1436,20 @@
     "CargoItem": "standard heat exchanger core",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Heat Exchanger Core"
+    "OutputDisplayName": "Standard Heat Exchanger Core",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_heat_exchanger_core",
@@ -825,7 +1464,20 @@
     "CargoItem": "heavy duty heat exchanger core",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Heat Exchanger Core"
+    "OutputDisplayName": "Heavy Duty Heat Exchanger Core",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_heat_exchanger_core",
@@ -840,7 +1492,20 @@
     "CargoItem": "precision heat exchanger core",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Heat Exchanger Core"
+    "OutputDisplayName": "Precision Heat Exchanger Core",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_heat_exchanger_core",
@@ -855,7 +1520,20 @@
     "CargoItem": "prototype heat exchanger core",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Heat Exchanger Core"
+    "OutputDisplayName": "Prototype Heat Exchanger Core",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_coolant_pump",
@@ -870,7 +1548,20 @@
     "CargoItem": "standard coolant pump",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Coolant Pump"
+    "OutputDisplayName": "Standard Coolant Pump",
+    "Image": "Liquid",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_coolant_pump",
@@ -885,7 +1576,20 @@
     "CargoItem": "heavy duty coolant pump",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Coolant Pump"
+    "OutputDisplayName": "Heavy Duty Coolant Pump",
+    "Image": "Liquid",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_coolant_pump",
@@ -900,7 +1604,20 @@
     "CargoItem": "precision coolant pump",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Coolant Pump"
+    "OutputDisplayName": "Precision Coolant Pump",
+    "Image": "Liquid",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_coolant_pump",
@@ -915,7 +1632,20 @@
     "CargoItem": "prototype coolant pump",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Coolant Pump"
+    "OutputDisplayName": "Prototype Coolant Pump",
+    "Image": "Liquid",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_thermal_insulation_panel",
@@ -930,7 +1660,20 @@
     "CargoItem": "standard thermal insulation panel",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Thermal Insulation Panel"
+    "OutputDisplayName": "Standard Thermal Insulation Panel",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_thermal_insulation_panel",
@@ -945,7 +1688,20 @@
     "CargoItem": "heavy duty thermal insulation panel",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Thermal Insulation Panel"
+    "OutputDisplayName": "Heavy Duty Thermal Insulation Panel",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_thermal_insulation_panel",
@@ -960,7 +1716,20 @@
     "CargoItem": "precision thermal insulation panel",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Thermal Insulation Panel"
+    "OutputDisplayName": "Precision Thermal Insulation Panel",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_thermal_insulation_panel",
@@ -975,7 +1744,20 @@
     "CargoItem": "prototype thermal insulation panel",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Thermal Insulation Panel"
+    "OutputDisplayName": "Prototype Thermal Insulation Panel",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Plagioclase",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Calcite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_cryogenic_valve",
@@ -990,7 +1772,20 @@
     "CargoItem": "standard cryogenic valve",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Cryogenic Valve"
+    "OutputDisplayName": "Standard Cryogenic Valve",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_cryogenic_valve",
@@ -1005,7 +1800,20 @@
     "CargoItem": "heavy duty cryogenic valve",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Cryogenic Valve"
+    "OutputDisplayName": "Heavy Duty Cryogenic Valve",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_cryogenic_valve",
@@ -1020,7 +1828,20 @@
     "CargoItem": "precision cryogenic valve",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Cryogenic Valve"
+    "OutputDisplayName": "Precision Cryogenic Valve",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_cryogenic_valve",
@@ -1035,7 +1856,20 @@
     "CargoItem": "prototype cryogenic valve",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Cryogenic Valve"
+    "OutputDisplayName": "Prototype Cryogenic Valve",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_propellant_feed_pump",
@@ -1049,7 +1883,15 @@
     "CargoItem": "standard propellant feed pump",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Propellant Feed Pump"
+    "OutputDisplayName": "Standard Propellant Feed Pump",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 1.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_propellant_feed_pump",
@@ -1063,7 +1905,15 @@
     "CargoItem": "heavy duty propellant feed pump",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Propellant Feed Pump"
+    "OutputDisplayName": "Heavy Duty Propellant Feed Pump",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 1.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_propellant_feed_pump",
@@ -1077,7 +1927,15 @@
     "CargoItem": "precision propellant feed pump",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Propellant Feed Pump"
+    "OutputDisplayName": "Precision Propellant Feed Pump",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 2.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_propellant_feed_pump",
@@ -1091,7 +1949,15 @@
     "CargoItem": "prototype propellant feed pump",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Propellant Feed Pump"
+    "OutputDisplayName": "Prototype Propellant Feed Pump",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 2.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_pressure_relief_valve",
@@ -1106,7 +1972,20 @@
     "CargoItem": "standard pressure relief valve",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Pressure Relief Valve"
+    "OutputDisplayName": "Standard Pressure Relief Valve",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_pressure_relief_valve",
@@ -1121,7 +2000,20 @@
     "CargoItem": "heavy duty pressure relief valve",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Pressure Relief Valve"
+    "OutputDisplayName": "Heavy Duty Pressure Relief Valve",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_pressure_relief_valve",
@@ -1136,7 +2028,20 @@
     "CargoItem": "precision pressure relief valve",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Pressure Relief Valve"
+    "OutputDisplayName": "Precision Pressure Relief Valve",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_pressure_relief_valve",
@@ -1151,7 +2056,20 @@
     "CargoItem": "prototype pressure relief valve",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Pressure Relief Valve"
+    "OutputDisplayName": "Prototype Pressure Relief Valve",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_vacuum_seal_kit",
@@ -1165,7 +2083,15 @@
     "CargoItem": "standard vacuum seal kit",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Vacuum Seal Kit"
+    "OutputDisplayName": "Standard Vacuum Seal Kit",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Graphite",
+        "Quantity": 1.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_vacuum_seal_kit",
@@ -1179,7 +2105,15 @@
     "CargoItem": "heavy duty vacuum seal kit",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Vacuum Seal Kit"
+    "OutputDisplayName": "Heavy Duty Vacuum Seal Kit",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Graphite",
+        "Quantity": 1.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_vacuum_seal_kit",
@@ -1193,7 +2127,15 @@
     "CargoItem": "precision vacuum seal kit",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Vacuum Seal Kit"
+    "OutputDisplayName": "Precision Vacuum Seal Kit",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Graphite",
+        "Quantity": 2.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_vacuum_seal_kit",
@@ -1207,7 +2149,15 @@
     "CargoItem": "prototype vacuum seal kit",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Vacuum Seal Kit"
+    "OutputDisplayName": "Prototype Vacuum Seal Kit",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Graphite",
+        "Quantity": 2.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_docking_collar_gasket",
@@ -1221,7 +2171,15 @@
     "CargoItem": "standard docking collar gasket",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Docking Collar Gasket"
+    "OutputDisplayName": "Standard Docking Collar Gasket",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Graphite",
+        "Quantity": 1.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_docking_collar_gasket",
@@ -1235,7 +2193,15 @@
     "CargoItem": "heavy duty docking collar gasket",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Docking Collar Gasket"
+    "OutputDisplayName": "Heavy Duty Docking Collar Gasket",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Graphite",
+        "Quantity": 1.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_docking_collar_gasket",
@@ -1249,7 +2215,15 @@
     "CargoItem": "precision docking collar gasket",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Docking Collar Gasket"
+    "OutputDisplayName": "Precision Docking Collar Gasket",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Graphite",
+        "Quantity": 2.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_docking_collar_gasket",
@@ -1263,7 +2237,15 @@
     "CargoItem": "prototype docking collar gasket",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Docking Collar Gasket"
+    "OutputDisplayName": "Prototype Docking Collar Gasket",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Graphite",
+        "Quantity": 2.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_cargo_restraint_set",
@@ -1278,7 +2260,20 @@
     "CargoItem": "standard cargo restraint set",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Cargo Restraint Set"
+    "OutputDisplayName": "Standard Cargo Restraint Set",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_cargo_restraint_set",
@@ -1293,7 +2288,20 @@
     "CargoItem": "heavy duty cargo restraint set",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Cargo Restraint Set"
+    "OutputDisplayName": "Heavy Duty Cargo Restraint Set",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_cargo_restraint_set",
@@ -1308,7 +2316,20 @@
     "CargoItem": "precision cargo restraint set",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Cargo Restraint Set"
+    "OutputDisplayName": "Precision Cargo Restraint Set",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_cargo_restraint_set",
@@ -1323,7 +2344,20 @@
     "CargoItem": "prototype cargo restraint set",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Cargo Restraint Set"
+    "OutputDisplayName": "Prototype Cargo Restraint Set",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_cargo_lift_actuator",
@@ -1338,7 +2372,20 @@
     "CargoItem": "standard cargo lift actuator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Cargo Lift Actuator"
+    "OutputDisplayName": "Standard Cargo Lift Actuator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_cargo_lift_actuator",
@@ -1353,7 +2400,20 @@
     "CargoItem": "heavy duty cargo lift actuator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Cargo Lift Actuator"
+    "OutputDisplayName": "Heavy Duty Cargo Lift Actuator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_cargo_lift_actuator",
@@ -1368,7 +2428,20 @@
     "CargoItem": "precision cargo lift actuator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Cargo Lift Actuator"
+    "OutputDisplayName": "Precision Cargo Lift Actuator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_cargo_lift_actuator",
@@ -1383,7 +2456,20 @@
     "CargoItem": "prototype cargo lift actuator",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Cargo Lift Actuator"
+    "OutputDisplayName": "Prototype Cargo Lift Actuator",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_bay_door_motor",
@@ -1398,7 +2484,20 @@
     "CargoItem": "standard bay door motor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Bay Door Motor"
+    "OutputDisplayName": "Standard Bay Door Motor",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_bay_door_motor",
@@ -1413,7 +2512,20 @@
     "CargoItem": "heavy duty bay door motor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Bay Door Motor"
+    "OutputDisplayName": "Heavy Duty Bay Door Motor",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_bay_door_motor",
@@ -1428,7 +2540,20 @@
     "CargoItem": "precision bay door motor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Bay Door Motor"
+    "OutputDisplayName": "Precision Bay Door Motor",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_bay_door_motor",
@@ -1443,7 +2568,20 @@
     "CargoItem": "prototype bay door motor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Bay Door Motor"
+    "OutputDisplayName": "Prototype Bay Door Motor",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_landing_gear_damper",
@@ -1458,7 +2596,20 @@
     "CargoItem": "standard landing gear damper",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Landing Gear Damper"
+    "OutputDisplayName": "Standard Landing Gear Damper",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_landing_gear_damper",
@@ -1473,7 +2624,20 @@
     "CargoItem": "heavy duty landing gear damper",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Landing Gear Damper"
+    "OutputDisplayName": "Heavy Duty Landing Gear Damper",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_landing_gear_damper",
@@ -1488,7 +2652,20 @@
     "CargoItem": "precision landing gear damper",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Landing Gear Damper"
+    "OutputDisplayName": "Precision Landing Gear Damper",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_landing_gear_damper",
@@ -1503,7 +2680,20 @@
     "CargoItem": "prototype landing gear damper",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Landing Gear Damper"
+    "OutputDisplayName": "Prototype Landing Gear Damper",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_landing_gear_bearing",
@@ -1518,7 +2708,20 @@
     "CargoItem": "standard landing gear bearing",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Landing Gear Bearing"
+    "OutputDisplayName": "Standard Landing Gear Bearing",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_landing_gear_bearing",
@@ -1533,7 +2736,20 @@
     "CargoItem": "heavy duty landing gear bearing",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Landing Gear Bearing"
+    "OutputDisplayName": "Heavy Duty Landing Gear Bearing",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_landing_gear_bearing",
@@ -1548,7 +2764,20 @@
     "CargoItem": "precision landing gear bearing",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Landing Gear Bearing"
+    "OutputDisplayName": "Precision Landing Gear Bearing",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_landing_gear_bearing",
@@ -1563,7 +2792,20 @@
     "CargoItem": "prototype landing gear bearing",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Landing Gear Bearing"
+    "OutputDisplayName": "Prototype Landing Gear Bearing",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_inertial_reference_unit",
@@ -1578,7 +2820,20 @@
     "CargoItem": "standard inertial reference unit",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Inertial Reference Unit"
+    "OutputDisplayName": "Standard Inertial Reference Unit",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_inertial_reference_unit",
@@ -1593,7 +2848,20 @@
     "CargoItem": "heavy duty inertial reference unit",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Inertial Reference Unit"
+    "OutputDisplayName": "Heavy Duty Inertial Reference Unit",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_inertial_reference_unit",
@@ -1608,7 +2876,20 @@
     "CargoItem": "precision inertial reference unit",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Inertial Reference Unit"
+    "OutputDisplayName": "Precision Inertial Reference Unit",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_inertial_reference_unit",
@@ -1623,7 +2904,20 @@
     "CargoItem": "prototype inertial reference unit",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Inertial Reference Unit"
+    "OutputDisplayName": "Prototype Inertial Reference Unit",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_star_tracker",
@@ -1637,7 +2931,15 @@
     "CargoItem": "standard star tracker",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Star Tracker"
+    "OutputDisplayName": "Standard Star Tracker",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 1.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_star_tracker",
@@ -1651,7 +2953,15 @@
     "CargoItem": "heavy duty star tracker",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Star Tracker"
+    "OutputDisplayName": "Heavy Duty Star Tracker",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 1.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_star_tracker",
@@ -1665,7 +2975,15 @@
     "CargoItem": "precision star tracker",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Star Tracker"
+    "OutputDisplayName": "Precision Star Tracker",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 2.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_star_tracker",
@@ -1679,7 +2997,15 @@
     "CargoItem": "prototype star tracker",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Star Tracker"
+    "OutputDisplayName": "Prototype Star Tracker",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 2.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_navigation_beacon_receiver",
@@ -1694,7 +3020,20 @@
     "CargoItem": "standard navigation beacon receiver",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Navigation Beacon Receiver"
+    "OutputDisplayName": "Standard Navigation Beacon Receiver",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_navigation_beacon_receiver",
@@ -1709,7 +3048,20 @@
     "CargoItem": "heavy duty navigation beacon receiver",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Navigation Beacon Receiver"
+    "OutputDisplayName": "Heavy Duty Navigation Beacon Receiver",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_navigation_beacon_receiver",
@@ -1724,7 +3076,20 @@
     "CargoItem": "precision navigation beacon receiver",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Navigation Beacon Receiver"
+    "OutputDisplayName": "Precision Navigation Beacon Receiver",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_navigation_beacon_receiver",
@@ -1739,7 +3104,20 @@
     "CargoItem": "prototype navigation beacon receiver",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Navigation Beacon Receiver"
+    "OutputDisplayName": "Prototype Navigation Beacon Receiver",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_transponder_module",
@@ -1754,7 +3132,20 @@
     "CargoItem": "standard transponder module",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Transponder Module"
+    "OutputDisplayName": "Standard Transponder Module",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_transponder_module",
@@ -1769,7 +3160,20 @@
     "CargoItem": "heavy duty transponder module",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Transponder Module"
+    "OutputDisplayName": "Heavy Duty Transponder Module",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_transponder_module",
@@ -1784,7 +3188,20 @@
     "CargoItem": "precision transponder module",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Transponder Module"
+    "OutputDisplayName": "Precision Transponder Module",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_transponder_module",
@@ -1799,7 +3216,20 @@
     "CargoItem": "prototype transponder module",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Transponder Module"
+    "OutputDisplayName": "Prototype Transponder Module",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_optical_sensor_array",
@@ -1814,7 +3244,20 @@
     "CargoItem": "standard optical sensor array",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Optical Sensor Array"
+    "OutputDisplayName": "Standard Optical Sensor Array",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_optical_sensor_array",
@@ -1829,7 +3272,20 @@
     "CargoItem": "heavy duty optical sensor array",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Optical Sensor Array"
+    "OutputDisplayName": "Heavy Duty Optical Sensor Array",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_optical_sensor_array",
@@ -1844,7 +3300,20 @@
     "CargoItem": "precision optical sensor array",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Optical Sensor Array"
+    "OutputDisplayName": "Precision Optical Sensor Array",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_optical_sensor_array",
@@ -1859,7 +3328,20 @@
     "CargoItem": "prototype optical sensor array",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Optical Sensor Array"
+    "OutputDisplayName": "Prototype Optical Sensor Array",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_infrared_detector",
@@ -1873,7 +3355,15 @@
     "CargoItem": "standard infrared detector",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Infrared Detector"
+    "OutputDisplayName": "Standard Infrared Detector",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 1.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_infrared_detector",
@@ -1887,7 +3377,15 @@
     "CargoItem": "heavy duty infrared detector",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Infrared Detector"
+    "OutputDisplayName": "Heavy Duty Infrared Detector",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 1.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_infrared_detector",
@@ -1901,7 +3399,15 @@
     "CargoItem": "precision infrared detector",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Infrared Detector"
+    "OutputDisplayName": "Precision Infrared Detector",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 2.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_infrared_detector",
@@ -1915,7 +3421,15 @@
     "CargoItem": "prototype infrared detector",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Infrared Detector"
+    "OutputDisplayName": "Prototype Infrared Detector",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 2.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_radio_receiver_module",
@@ -1930,7 +3444,20 @@
     "CargoItem": "standard radio receiver module",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Radio Receiver Module"
+    "OutputDisplayName": "Standard Radio Receiver Module",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_radio_receiver_module",
@@ -1945,7 +3472,20 @@
     "CargoItem": "heavy duty radio receiver module",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Radio Receiver Module"
+    "OutputDisplayName": "Heavy Duty Radio Receiver Module",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_radio_receiver_module",
@@ -1960,7 +3500,20 @@
     "CargoItem": "precision radio receiver module",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Radio Receiver Module"
+    "OutputDisplayName": "Precision Radio Receiver Module",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_radio_receiver_module",
@@ -1975,7 +3528,20 @@
     "CargoItem": "prototype radio receiver module",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Radio Receiver Module"
+    "OutputDisplayName": "Prototype Radio Receiver Module",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_antenna_gimbal",
@@ -1990,7 +3556,20 @@
     "CargoItem": "standard antenna gimbal",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Antenna Gimbal"
+    "OutputDisplayName": "Standard Antenna Gimbal",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_antenna_gimbal",
@@ -2005,7 +3584,20 @@
     "CargoItem": "heavy duty antenna gimbal",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Antenna Gimbal"
+    "OutputDisplayName": "Heavy Duty Antenna Gimbal",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_antenna_gimbal",
@@ -2020,7 +3612,20 @@
     "CargoItem": "precision antenna gimbal",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Antenna Gimbal"
+    "OutputDisplayName": "Precision Antenna Gimbal",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_antenna_gimbal",
@@ -2035,7 +3640,20 @@
     "CargoItem": "prototype antenna gimbal",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Antenna Gimbal"
+    "OutputDisplayName": "Prototype Antenna Gimbal",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_signal_processor",
@@ -2050,7 +3668,20 @@
     "CargoItem": "standard signal processor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Signal Processor"
+    "OutputDisplayName": "Standard Signal Processor",
+    "Image": "Electronics",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_signal_processor",
@@ -2065,7 +3696,20 @@
     "CargoItem": "heavy duty signal processor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Signal Processor"
+    "OutputDisplayName": "Heavy Duty Signal Processor",
+    "Image": "Electronics",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_signal_processor",
@@ -2080,7 +3724,20 @@
     "CargoItem": "precision signal processor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Signal Processor"
+    "OutputDisplayName": "Precision Signal Processor",
+    "Image": "Electronics",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_signal_processor",
@@ -2095,7 +3752,20 @@
     "CargoItem": "prototype signal processor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Signal Processor"
+    "OutputDisplayName": "Prototype Signal Processor",
+    "Image": "Electronics",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_fiber_data_harness",
@@ -2109,7 +3779,15 @@
     "CargoItem": "standard fiber data harness",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Fiber Data Harness"
+    "OutputDisplayName": "Standard Fiber Data Harness",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 1.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_fiber_data_harness",
@@ -2123,7 +3801,15 @@
     "CargoItem": "heavy duty fiber data harness",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Fiber Data Harness"
+    "OutputDisplayName": "Heavy Duty Fiber Data Harness",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 1.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_fiber_data_harness",
@@ -2137,7 +3823,15 @@
     "CargoItem": "precision fiber data harness",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Fiber Data Harness"
+    "OutputDisplayName": "Precision Fiber Data Harness",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 2.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_fiber_data_harness",
@@ -2151,7 +3845,15 @@
     "CargoItem": "prototype fiber data harness",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Fiber Data Harness"
+    "OutputDisplayName": "Prototype Fiber Data Harness",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 2.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_circuit_breaker_bank",
@@ -2166,7 +3868,20 @@
     "CargoItem": "standard circuit breaker bank",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Circuit Breaker Bank"
+    "OutputDisplayName": "Standard Circuit Breaker Bank",
+    "Image": "Electronics",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_circuit_breaker_bank",
@@ -2181,7 +3896,20 @@
     "CargoItem": "heavy duty circuit breaker bank",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Circuit Breaker Bank"
+    "OutputDisplayName": "Heavy Duty Circuit Breaker Bank",
+    "Image": "Electronics",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_circuit_breaker_bank",
@@ -2196,7 +3924,20 @@
     "CargoItem": "precision circuit breaker bank",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Circuit Breaker Bank"
+    "OutputDisplayName": "Precision Circuit Breaker Bank",
+    "Image": "Electronics",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_circuit_breaker_bank",
@@ -2211,7 +3952,20 @@
     "CargoItem": "prototype circuit breaker bank",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Circuit Breaker Bank"
+    "OutputDisplayName": "Prototype Circuit Breaker Bank",
+    "Image": "Electronics",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_voltage_converter",
@@ -2226,7 +3980,20 @@
     "CargoItem": "standard voltage converter",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Voltage Converter"
+    "OutputDisplayName": "Standard Voltage Converter",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_voltage_converter",
@@ -2241,7 +4008,20 @@
     "CargoItem": "heavy duty voltage converter",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Voltage Converter"
+    "OutputDisplayName": "Heavy Duty Voltage Converter",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_voltage_converter",
@@ -2256,7 +4036,20 @@
     "CargoItem": "precision voltage converter",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Voltage Converter"
+    "OutputDisplayName": "Precision Voltage Converter",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_voltage_converter",
@@ -2271,7 +4064,20 @@
     "CargoItem": "prototype voltage converter",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Voltage Converter"
+    "OutputDisplayName": "Prototype Voltage Converter",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_power_bus_coupler",
@@ -2286,7 +4092,20 @@
     "CargoItem": "standard power bus coupler",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Power Bus Coupler"
+    "OutputDisplayName": "Standard Power Bus Coupler",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_power_bus_coupler",
@@ -2301,7 +4120,20 @@
     "CargoItem": "heavy duty power bus coupler",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Power Bus Coupler"
+    "OutputDisplayName": "Heavy Duty Power Bus Coupler",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_power_bus_coupler",
@@ -2316,7 +4148,20 @@
     "CargoItem": "precision power bus coupler",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Power Bus Coupler"
+    "OutputDisplayName": "Precision Power Bus Coupler",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_power_bus_coupler",
@@ -2331,7 +4176,20 @@
     "CargoItem": "prototype power bus coupler",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Power Bus Coupler"
+    "OutputDisplayName": "Prototype Power Bus Coupler",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_reactor_control_relay",
@@ -2346,7 +4204,20 @@
     "CargoItem": "standard reactor control relay",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Reactor Control Relay"
+    "OutputDisplayName": "Standard Reactor Control Relay",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_reactor_control_relay",
@@ -2361,7 +4232,20 @@
     "CargoItem": "heavy duty reactor control relay",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Reactor Control Relay"
+    "OutputDisplayName": "Heavy Duty Reactor Control Relay",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_reactor_control_relay",
@@ -2376,7 +4260,20 @@
     "CargoItem": "precision reactor control relay",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Reactor Control Relay"
+    "OutputDisplayName": "Precision Reactor Control Relay",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_reactor_control_relay",
@@ -2391,7 +4288,20 @@
     "CargoItem": "prototype reactor control relay",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Reactor Control Relay"
+    "OutputDisplayName": "Prototype Reactor Control Relay",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_battery_cell_pack",
@@ -2406,7 +4316,20 @@
     "CargoItem": "standard battery cell pack",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Battery Cell Pack"
+    "OutputDisplayName": "Standard Battery Cell Pack",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_battery_cell_pack",
@@ -2421,7 +4344,20 @@
     "CargoItem": "heavy duty battery cell pack",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Battery Cell Pack"
+    "OutputDisplayName": "Heavy Duty Battery Cell Pack",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_battery_cell_pack",
@@ -2436,7 +4372,20 @@
     "CargoItem": "precision battery cell pack",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Battery Cell Pack"
+    "OutputDisplayName": "Precision Battery Cell Pack",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_battery_cell_pack",
@@ -2451,7 +4400,20 @@
     "CargoItem": "prototype battery cell pack",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Battery Cell Pack"
+    "OutputDisplayName": "Prototype Battery Cell Pack",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_flux_sensor",
@@ -2466,7 +4428,20 @@
     "CargoItem": "standard flux sensor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Flux Sensor"
+    "OutputDisplayName": "Standard Flux Sensor",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_flux_sensor",
@@ -2481,7 +4456,20 @@
     "CargoItem": "heavy duty flux sensor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Flux Sensor"
+    "OutputDisplayName": "Heavy Duty Flux Sensor",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_flux_sensor",
@@ -2496,7 +4484,20 @@
     "CargoItem": "precision flux sensor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Flux Sensor"
+    "OutputDisplayName": "Precision Flux Sensor",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_flux_sensor",
@@ -2511,7 +4512,20 @@
     "CargoItem": "prototype flux sensor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Flux Sensor"
+    "OutputDisplayName": "Prototype Flux Sensor",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_thruster_control_valve",
@@ -2526,7 +4540,20 @@
     "CargoItem": "standard thruster control valve",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Thruster Control Valve"
+    "OutputDisplayName": "Standard Thruster Control Valve",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_thruster_control_valve",
@@ -2541,7 +4568,20 @@
     "CargoItem": "heavy duty thruster control valve",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Thruster Control Valve"
+    "OutputDisplayName": "Heavy Duty Thruster Control Valve",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_thruster_control_valve",
@@ -2556,7 +4596,20 @@
     "CargoItem": "precision thruster control valve",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Thruster Control Valve"
+    "OutputDisplayName": "Precision Thruster Control Valve",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_thruster_control_valve",
@@ -2571,7 +4624,20 @@
     "CargoItem": "prototype thruster control valve",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Thruster Control Valve"
+    "OutputDisplayName": "Prototype Thruster Control Valve",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_gyroscope_assembly",
@@ -2586,7 +4652,20 @@
     "CargoItem": "standard gyroscope assembly",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Gyroscope Assembly"
+    "OutputDisplayName": "Standard Gyroscope Assembly",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_gyroscope_assembly",
@@ -2601,7 +4680,20 @@
     "CargoItem": "heavy duty gyroscope assembly",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Gyroscope Assembly"
+    "OutputDisplayName": "Heavy Duty Gyroscope Assembly",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_gyroscope_assembly",
@@ -2616,7 +4708,20 @@
     "CargoItem": "precision gyroscope assembly",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Gyroscope Assembly"
+    "OutputDisplayName": "Precision Gyroscope Assembly",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_gyroscope_assembly",
@@ -2631,7 +4736,20 @@
     "CargoItem": "prototype gyroscope assembly",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Gyroscope Assembly"
+    "OutputDisplayName": "Prototype Gyroscope Assembly",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_servo_controller",
@@ -2646,7 +4764,20 @@
     "CargoItem": "standard servo controller",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Servo Controller"
+    "OutputDisplayName": "Standard Servo Controller",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_servo_controller",
@@ -2661,7 +4792,20 @@
     "CargoItem": "heavy duty servo controller",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Servo Controller"
+    "OutputDisplayName": "Heavy Duty Servo Controller",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_servo_controller",
@@ -2676,7 +4820,20 @@
     "CargoItem": "precision servo controller",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Servo Controller"
+    "OutputDisplayName": "Precision Servo Controller",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_servo_controller",
@@ -2691,7 +4848,20 @@
     "CargoItem": "prototype servo controller",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Servo Controller"
+    "OutputDisplayName": "Prototype Servo Controller",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_machine_tool_spindle",
@@ -2706,7 +4876,20 @@
     "CargoItem": "standard machine tool spindle",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Machine Tool Spindle"
+    "OutputDisplayName": "Standard Machine Tool Spindle",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_machine_tool_spindle",
@@ -2721,7 +4904,20 @@
     "CargoItem": "heavy duty machine tool spindle",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Machine Tool Spindle"
+    "OutputDisplayName": "Heavy Duty Machine Tool Spindle",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_machine_tool_spindle",
@@ -2736,7 +4932,20 @@
     "CargoItem": "precision machine tool spindle",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Machine Tool Spindle"
+    "OutputDisplayName": "Precision Machine Tool Spindle",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_machine_tool_spindle",
@@ -2751,7 +4960,20 @@
     "CargoItem": "prototype machine tool spindle",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Machine Tool Spindle"
+    "OutputDisplayName": "Prototype Machine Tool Spindle",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_ore_sampler",
@@ -2766,7 +4988,20 @@
     "CargoItem": "standard ore sampler",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Ore Sampler"
+    "OutputDisplayName": "Standard Ore Sampler",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_ore_sampler",
@@ -2781,7 +5016,20 @@
     "CargoItem": "heavy duty ore sampler",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Ore Sampler"
+    "OutputDisplayName": "Heavy Duty Ore Sampler",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_ore_sampler",
@@ -2796,7 +5044,20 @@
     "CargoItem": "precision ore sampler",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Ore Sampler"
+    "OutputDisplayName": "Precision Ore Sampler",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_ore_sampler",
@@ -2811,7 +5072,20 @@
     "CargoItem": "prototype ore sampler",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Ore Sampler"
+    "OutputDisplayName": "Prototype Ore Sampler",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_ore_sorting_sensor",
@@ -2826,7 +5100,20 @@
     "CargoItem": "standard ore sorting sensor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Ore Sorting Sensor"
+    "OutputDisplayName": "Standard Ore Sorting Sensor",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_ore_sorting_sensor",
@@ -2841,7 +5128,20 @@
     "CargoItem": "heavy duty ore sorting sensor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Ore Sorting Sensor"
+    "OutputDisplayName": "Heavy Duty Ore Sorting Sensor",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_ore_sorting_sensor",
@@ -2856,7 +5156,20 @@
     "CargoItem": "precision ore sorting sensor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Ore Sorting Sensor"
+    "OutputDisplayName": "Precision Ore Sorting Sensor",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_ore_sorting_sensor",
@@ -2871,7 +5184,20 @@
     "CargoItem": "prototype ore sorting sensor",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Ore Sorting Sensor"
+    "OutputDisplayName": "Prototype Ore Sorting Sensor",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Chalcopyrite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Quartz",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_conveyor_drive",
@@ -2886,7 +5212,20 @@
     "CargoItem": "standard conveyor drive",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Conveyor Drive"
+    "OutputDisplayName": "Standard Conveyor Drive",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_conveyor_drive",
@@ -2901,7 +5240,20 @@
     "CargoItem": "heavy duty conveyor drive",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Conveyor Drive"
+    "OutputDisplayName": "Heavy Duty Conveyor Drive",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_conveyor_drive",
@@ -2916,7 +5268,20 @@
     "CargoItem": "precision conveyor drive",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Conveyor Drive"
+    "OutputDisplayName": "Precision Conveyor Drive",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_conveyor_drive",
@@ -2931,7 +5296,20 @@
     "CargoItem": "prototype conveyor drive",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Conveyor Drive"
+    "OutputDisplayName": "Prototype Conveyor Drive",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_refinery_crucible",
@@ -2946,7 +5324,20 @@
     "CargoItem": "standard refinery crucible",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Refinery Crucible"
+    "OutputDisplayName": "Standard Refinery Crucible",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_refinery_crucible",
@@ -2961,7 +5352,20 @@
     "CargoItem": "heavy duty refinery crucible",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Refinery Crucible"
+    "OutputDisplayName": "Heavy Duty Refinery Crucible",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_refinery_crucible",
@@ -2976,7 +5380,20 @@
     "CargoItem": "precision refinery crucible",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Refinery Crucible"
+    "OutputDisplayName": "Precision Refinery Crucible",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_refinery_crucible",
@@ -2991,7 +5408,20 @@
     "CargoItem": "prototype refinery crucible",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Refinery Crucible"
+    "OutputDisplayName": "Prototype Refinery Crucible",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_survey_drill_head",
@@ -3006,7 +5436,20 @@
     "CargoItem": "standard survey drill head",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Survey Drill Head"
+    "OutputDisplayName": "Standard Survey Drill Head",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_survey_drill_head",
@@ -3021,7 +5464,20 @@
     "CargoItem": "heavy duty survey drill head",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Survey Drill Head"
+    "OutputDisplayName": "Heavy Duty Survey Drill Head",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 0.875,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_survey_drill_head",
@@ -3036,7 +5492,20 @@
     "CargoItem": "precision survey drill head",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Survey Drill Head"
+    "OutputDisplayName": "Precision Survey Drill Head",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_survey_drill_head",
@@ -3051,7 +5520,20 @@
     "CargoItem": "prototype survey drill head",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Survey Drill Head"
+    "OutputDisplayName": "Prototype Survey Drill Head",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Kamacite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Chromite",
+        "Quantity": 1.25,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_standard_hull_inspection_scanner",
@@ -3065,7 +5547,15 @@
     "CargoItem": "standard hull inspection scanner",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Standard Hull Inspection Scanner"
+    "OutputDisplayName": "Standard Hull Inspection Scanner",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 1.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_hull_inspection_scanner",
@@ -3079,7 +5569,15 @@
     "CargoItem": "heavy duty hull inspection scanner",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Heavy Duty Hull Inspection Scanner"
+    "OutputDisplayName": "Heavy Duty Hull Inspection Scanner",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 1.75,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_precision_hull_inspection_scanner",
@@ -3093,7 +5591,15 @@
     "CargoItem": "precision hull inspection scanner",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Precision Hull Inspection Scanner"
+    "OutputDisplayName": "Precision Hull Inspection Scanner",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 2.0,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_prototype_hull_inspection_scanner",
@@ -3107,7 +5613,15 @@
     "CargoItem": "prototype hull inspection scanner",
     "OutputQuantity": 10,
     "OutputUnit": "units",
-    "OutputDisplayName": "Prototype Hull Inspection Scanner"
+    "OutputDisplayName": "Prototype Hull Inspection Scanner",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 2.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_Cipher_Relays",
@@ -3122,7 +5636,20 @@
     "CargoItem": "cipher relays",
     "OutputQuantity": 4,
     "OutputUnit": "units",
-    "OutputDisplayName": "Cipher Relays"
+    "OutputDisplayName": "Cipher Relays",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 0.5,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Graphite",
+        "Quantity": 0.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_Ghost_Navigation_Charts",
@@ -3137,7 +5664,20 @@
     "CargoItem": "ghost navigation charts",
     "OutputQuantity": 4,
     "OutputUnit": "units",
-    "OutputDisplayName": "Ghost Navigation Charts"
+    "OutputDisplayName": "Ghost Navigation Charts",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 0.5,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Graphite",
+        "Quantity": 0.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_Unregistered_Survey_Cores",
@@ -3152,7 +5692,20 @@
     "CargoItem": "unregistered survey cores",
     "OutputQuantity": 4,
     "OutputUnit": "units",
-    "OutputDisplayName": "Unregistered Survey Cores"
+    "OutputDisplayName": "Unregistered Survey Cores",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 0.5,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Graphite",
+        "Quantity": 0.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_Restricted_Memory_Crystals",
@@ -3167,7 +5720,20 @@
     "CargoItem": "restricted memory crystals",
     "OutputQuantity": 4,
     "OutputUnit": "units",
-    "OutputDisplayName": "Restricted Memory Crystals"
+    "OutputDisplayName": "Restricted Memory Crystals",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 0.5,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Graphite",
+        "Quantity": 0.5,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_Colorado_Tegridy",
@@ -3182,7 +5748,20 @@
     "CargoItem": "colorado tegridy",
     "OutputQuantity": 6,
     "OutputUnit": "units",
-    "OutputDisplayName": "Colorado Tegridy"
+    "OutputDisplayName": "Colorado Tegridy",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "WaterIce",
+        "Quantity": 0.1,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Graphite",
+        "Quantity": 0.1,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_Dust",
@@ -3197,7 +5776,20 @@
     "CargoItem": "dust",
     "OutputQuantity": 4,
     "OutputUnit": "units",
-    "OutputDisplayName": "Dust"
+    "OutputDisplayName": "Dust",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 0.1,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Graphite",
+        "Quantity": 0.1,
+        "UnitTonnes": 1
+      }
+    ]
   },
   {
     "Name": "Make_Ketracel_White",
@@ -3212,6 +5804,19 @@
     "CargoItem": "ketracel-white",
     "OutputQuantity": 4,
     "OutputUnit": "units",
-    "OutputDisplayName": "Ketracel-white"
+    "OutputDisplayName": "Ketracel-white",
+    "Image": "Cargo",
+    "Inputs": [
+      {
+        "Item": "Quartz",
+        "Quantity": 0.1,
+        "UnitTonnes": 1
+      },
+      {
+        "Item": "Graphite",
+        "Quantity": 0.1,
+        "UnitTonnes": 1
+      }
+    ]
   }
 ]

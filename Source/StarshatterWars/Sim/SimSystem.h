@@ -68,12 +68,17 @@ public:
 	virtual int       GetValue()        const { return (int)(max_value * availability * 100); }
 	int               GetMaxValue()     const { return (int)(max_value * 100); }
 
-	double            GetAvailability() const { return       availability * 100; }
+	double GetPerformanceMultiplier() const { return quality_multiplier; }
+    double GetPowerDemandMultiplier() const { return demand_multiplier; }
+    double GetOperatingAvailability() const { return availability * quality_multiplier; }
+    virtual double GetRatedDemand() const { return sink_rate * demand_multiplier; }
+    double            GetAvailability() const { return       availability * 100; }
 	double            GetSafety()       const { return       safety * 100; }
 	double            GetStability()    const { return       stability * 100; }
 
 	virtual void      CalcStatus();
 	virtual void      Repair();
+    void RestoreAtStation();
 
 	double            NetAvail()      const { return net_avail; }
 	void              SetNetAvail(double d) { net_avail = (float)d; }
@@ -139,6 +144,8 @@ public:
 	void              SetID(int n) { id = n; }
 
 protected:
+    double quality_multiplier = 1.0;
+    double demand_multiplier = 1.0;
 	// AI information:
 	SYSTEM_CATEGORY   type;
 	Ship*			  ship;

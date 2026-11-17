@@ -20,7 +20,10 @@ bool HasCompleteGrades(const TArray<FSystemComponentGrade>& Grades)
     {
         if (Grade.Level < 1 || Grade.Level > 5 ||
             !FMath::IsFinite(Grade.RepairScale) || Grade.RepairScale <= 0 ||
-            !FMath::IsFinite(Grade.ReplacementScale) || Grade.ReplacementScale <= 0)
+            !FMath::IsFinite(Grade.ReplacementScale) || Grade.ReplacementScale <= 0 ||
+            !FMath::IsFinite(Grade.PriceMultiplier) || Grade.PriceMultiplier <= 0 ||
+            !FMath::IsFinite(Grade.PerformanceMultiplier) || Grade.PerformanceMultiplier < 0.5 || Grade.PerformanceMultiplier > 2 ||
+            !FMath::IsFinite(Grade.PowerDemandMultiplier) || Grade.PowerDemandMultiplier < 0.5 || Grade.PowerDemandMultiplier > 2)
             return false;
         Levels |= 1u << (Grade.Level - 1);
     }
@@ -42,6 +45,9 @@ void PublishSystemComponents(const TMap<FName, FSystemDesign>& Rows)
             Component->abrv = TCHAR_TO_UTF8(*Entry.Abbrev);
             Component->repair_time = Entry.RepairTime;
             Component->replace_time = Entry.ReplaceTime;
+            Component->base_cost = Entry.BaseCost;
+            Component->performance_multiplier = Entry.PerformanceMultiplier;
+            Component->power_demand_multiplier = Entry.PowerDemandMultiplier;
             Component->spares = Entry.Spares;
             Component->affects = Entry.Affects;
             Design->components.append(Component);
@@ -83,7 +89,9 @@ bool UStarshatterSystemDesignSubsystem::ImportDefinitions(UDataTable& Table)
             const FName Name(*Component.Name);
             if (Name.IsNone() || Components.Contains(Name) || Component.Abbrev.TrimStartAndEnd().IsEmpty() ||
                 !FMath::IsFinite(Component.RepairTime) || Component.RepairTime < 0 ||
-                !FMath::IsFinite(Component.ReplaceTime) || Component.ReplaceTime < 0 || Component.Spares < 0)
+                !FMath::IsFinite(Component.ReplaceTime) || Component.ReplaceTime < 0 || Component.Spares < 0 || Component.BaseCost < 0 ||
+                !FMath::IsFinite(Component.PerformanceMultiplier) || Component.PerformanceMultiplier<0.5 || Component.PerformanceMultiplier>2 ||
+                !FMath::IsFinite(Component.PowerDemandMultiplier) || Component.PowerDemandMultiplier<0.5 || Component.PowerDemandMultiplier>2)
             {
                 UE_LOG(LogTemp, Warning, TEXT("[SYSTEM] Invalid or duplicate component in %s: %s / %s"),
                     *Path, *System.Name, *Component.Name);
@@ -172,7 +180,11 @@ TOptional<FComponentDesign> UStarshatterSystemDesignSubsystem::FindComponentGrad
     static const TCHAR* Labels[] = {TEXT("I"), TEXT("II"), TEXT("III"), TEXT("IV"), TEXT("V")};
     FComponentDesign Variant = *Base;
     Variant.Name += FString(TEXT(" ")) + Labels[Grade - 1];
+    Variant.PerformanceMultiplier *= Multipliers->PerformanceMultiplier;
+    Variant.PowerDemandMultiplier *= Multipliers->PowerDemandMultiplier;
     Variant.RepairTime *= Multipliers->RepairScale;
     Variant.ReplaceTime *= Multipliers->ReplacementScale;
+    Variant.BaseCost = FMath::CeilToInt64(FMath::Clamp(
+        static_cast<double>(Base->BaseCost) * Multipliers->PriceMultiplier, 0.0, 1.e15));
     return Variant;
 }

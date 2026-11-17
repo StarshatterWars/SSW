@@ -142,7 +142,7 @@ bool ImportProductionRecipes(UDataTable& Table)
     for (const auto& Row : Table.GetRowMap())
     {
         const auto& Recipe = *reinterpret_cast<const FSSWProductionRecipe*>(Row.Value);
-        if (Recipe.Minerals.IsEmpty() || Recipe.Minerals.Contains(ESSWMineral::None) ||
+        if ((Recipe.Minerals.IsEmpty() && Recipe.Inputs.IsEmpty()) || Recipe.Minerals.Contains(ESSWMineral::None) ||
             !FMath::IsFinite(Recipe.InputTonnes) || !FMath::IsFinite(Recipe.OutputTonnes) ||
             !FMath::IsFinite(Recipe.SecondsPerBatch) ||
             !Recipe.CanStart(Recipe.InputTonnes, Recipe.OutputTonnes))
@@ -150,6 +150,18 @@ bool ImportProductionRecipes(UDataTable& Table)
             UE_LOG(LogTemp, Error, TEXT("Invalid production recipe %s in %s"), *Row.Key.ToString(), *Path);
             return false;
         }
+    }
+    for (const auto& Pair : Table.GetRowMap())
+    {
+        const auto& Recipe = *reinterpret_cast<const FSSWProductionRecipe*>(Pair.Value);
+        TSet<FName> Seen; double Mass = 0;
+        for (const auto& Input : Recipe.Inputs)
+        {
+            if (Input.Item.IsNone() || Seen.Contains(Input.Item) || !FMath::IsFinite(Input.Quantity) ||
+                !FMath::IsFinite(Input.UnitTonnes) || Input.Quantity <= 0 || Input.UnitTonnes <= 0) return false;
+            Seen.Add(Input.Item); Mass += Input.Quantity * Input.UnitTonnes;
+        }
+        if (!Recipe.Inputs.IsEmpty() && !FMath::IsNearlyEqual(Mass, Recipe.InputTonnes, 1.e-6)) return false;
     }
     UE_LOG(LogTemp, Display, TEXT("Imported %d production recipes from %s"), Table.GetRowMap().Num(), *Path);
     return true;

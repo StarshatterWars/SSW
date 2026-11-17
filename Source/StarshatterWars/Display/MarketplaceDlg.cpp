@@ -1,4 +1,5 @@
 #include "MarketplaceDlg.h"
+#include "ShipSystemIcon.h"
 
 #include "CargoCatalogSubsystem.h"
 #include "Engine/GameInstance.h"
@@ -129,11 +130,15 @@ namespace
         void Construct(const FArguments& Args, const TSharedRef<STableViewBase>& Owner)
         {
             Offer = Args._Offer;
-            SMultiColumnTableRow<FOfferPtr>::Construct(FSuperRowType::FArguments(), Owner);
+            SMultiColumnTableRow<FOfferPtr>::Construct(FSuperRowType::FArguments().Style(&MissionUIStyle::FlightTableRowStyle()), Owner);
         }
 
         TSharedRef<SWidget> GenerateWidgetForColumn(const FName& Column) override
         {
+            if (Column == "Item")
+                return SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().AutoWidth().Padding(4,2)[SNew(SShipSystemIcon).Icon(SShipSystemIcon::ForCatalogImage(Offer->Goods.Image))]
+                    + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(FText::FromString(Offer->DisplayName()).ToUpper())];
             if (Column == "Illicit")
                 return SNew(SBox).HAlign(HAlign_Center).VAlign(VAlign_Center)
                     .ToolTipText(Offer->Goods.bIllicit ? INVTEXT("Illicit cargo") : INVTEXT("Legal cargo"))
@@ -246,13 +251,12 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
     {
         return Market.Name.Equals(System, ESearchCase::IgnoreCase);
     });
-    const int32 Hours = Simulation ? FMath::Clamp(FMath::FloorToInt(Simulation->MissionClock() / 3600.0), 0, 168) : 0;
     if (UGameInstance* Instance = GetGameInstance())
     {
         if (const auto* Catalog = Instance->GetSubsystem<UCargoCatalogSubsystem>())
         {
             const auto Distances = GetJumpDistances(Instance->GetSubsystem<UStarshatterEnvironmentSubsystem>(), System);
-            Catalog->ForEachDefinition([Table, &Markets, &Distances, LocalIndex, Hours](FName Name, const FS_CargoCatalogRow& Goods)
+            Catalog->ForEachDefinition([Table, &Markets, &Distances, LocalIndex](FName Name, const FS_CargoCatalogRow& Goods)
             {
                 if (LocalIndex == INDEX_NONE) return;
                 auto Offer = MakeShared<FMarketOffer>();
@@ -267,35 +271,17 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                 const int32 BaseStock = FMath::Max(1, FMath::Min(Goods.PreviewQuantity,
                     160 >> static_cast<uint8>(Goods.Rarity)));
                 TArray<int32> Stock, Demand, Production;
+                const auto* Simulation = Sim::GetSim();
+                const auto* Economy = Simulation ? &Simulation->ReadEconomy() : nullptr;
                 for (int32 Index = 0; Index < Markets.Num(); ++Index)
                 {
                     const auto& Market = Markets[Index];
-                    const bool bTrades = ExclusiveIndex != INDEX_NONE
-                        ? Index == ExclusiveIndex : !Goods.bIllicit || Market.bIllicitTrade;
+                    const bool bTrades = ExclusiveIndex != INDEX_NONE ? Index == ExclusiveIndex : !Goods.bIllicit || Market.bIllicitTrade;
                     const bool bProduces = Market.Production.Contains(Name) || Index == ExclusiveIndex;
-                    const int32 Need = bTrades ? FMath::Max(1, FMath::RoundToInt(BaseStock * 0.15 * Market.DemandScale)) : 0;
-                    Demand.Add(Need);
+                    Demand.Add(bTrades ? FMath::Max(1, FMath::RoundToInt(BaseStock * 0.15 * Market.DemandScale)) : 0);
                     Production.Add(bProduces && bTrades ? BaseStock : 0);
-                    Stock.Add(bProduces && bTrades ? BaseStock * 2 : 0);
-                }
-                // Model hourly use, production and abstract intersystem deliveries.
-                for (int32 Hour = 0; Hour < Hours; ++Hour)
-                {
-                    for (int32 Index = 0; Index < Markets.Num(); ++Index)
-                        Stock[Index] = FMath::Clamp(Stock[Index] - Demand[Index] + Production[Index], 0, BaseStock * 4);
-                    for (int32 Destination = 0; Destination < Markets.Num(); ++Destination)
-                    {
-                        int32 Deficit = Demand[Destination] - Stock[Destination];
-                        for (int32 Source = 0; Source < Markets.Num() && Deficit > 0; ++Source)
-                        {
-                            if (Source == Destination || Production[Source] == 0) continue;
-                            const int32 Shipment = FMath::Min3(Deficit, FMath::Max(0, Stock[Source] - 2 * Demand[Source]),
-                                FMath::Max(1, Production[Source] / 8));
-                            Stock[Source] -= Shipment;
-                            Stock[Destination] += Shipment;
-                            Deficit -= Shipment;
-                        }
-                    }
+                    const double Tonnes = Economy ? FEconomyLedger::SystemQuantity(*Economy, FName(*Market.Name), Name) : 0;
+                    Stock.Add(Goods.Size > 0 ? static_cast<int32>(FMath::Clamp(FMath::FloorToDouble(Tonnes / Goods.Size), 0.0, double(MAX_int32))) : 0);
                 }
                 Offer->Available = Stock[LocalIndex];
                 Offer->Demand = Demand[LocalIndex];
@@ -304,15 +290,11 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                 Offer->Price = Goods.Value * FMath::Clamp(0.8 + Pressure, 0.85, 3.0);
                 for (int32 Index = 0; Index < Markets.Num(); ++Index)
                 {
-                    if (Production[Index] <= 0 || Stock[Index] <= 0) continue;
+                    if (Stock[Index] <= 0) continue;
                     const FString& MarketName = Markets[Index].Name;
                     const int32* Jumps = Distances.Find(FName(*MarketName));
                     if (!Jumps || *Jumps > Offer->ProducerJumps) continue;
-                    if (*Jumps == Offer->ProducerJumps &&
-                        (Stock[Index] < Offer->ProducerStock ||
-                            (Stock[Index] == Offer->ProducerStock && MarketName.Compare(Offer->Producer, ESearchCase::IgnoreCase) >= 0)))
-                        continue;
-
+                    if (*Jumps == Offer->ProducerJumps && Stock[Index] <= Offer->ProducerStock) continue;
                     Offer->Producer = MarketName;
                     Offer->ProducerJumps = *Jumps;
                     Offer->ProducerStock = Stock[Index];

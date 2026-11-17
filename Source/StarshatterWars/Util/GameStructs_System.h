@@ -566,6 +566,12 @@ USTRUCT(BlueprintType)
 struct FComponentDesign
 {
 	GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) double PerformanceMultiplier = 1.0;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite) double PowerDemandMultiplier = 1.0;
+
+    /** Authored price in credits for level I. */
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, meta=(ClampMin="0"))
+    int64 BaseCost = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString Name;
@@ -590,6 +596,8 @@ USTRUCT(BlueprintType)
 struct FSystemComponentGrade
 {
     GENERATED_BODY()
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) double PerformanceMultiplier = 1.0;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) double PowerDemandMultiplier = 1.0;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     int32 Level = 0;
@@ -599,6 +607,9 @@ struct FSystemComponentGrade
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     double ReplacementScale = 0.0;
+
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin="0.01"))
+    double PriceMultiplier = 1.0;
 };
 
 USTRUCT(BlueprintType)

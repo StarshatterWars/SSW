@@ -8,6 +8,8 @@ class STARSHATTERWARS_API UProductionDlg : public UBaseScreen
 {
     GENERATED_BODY()
 
+private:
+    UPROPERTY(Transient) TObjectPtr<class UBlueprintsDlg> BlueprintBrowser;
 protected:
     TSharedRef<SWidget> RebuildWidget() override;
 };

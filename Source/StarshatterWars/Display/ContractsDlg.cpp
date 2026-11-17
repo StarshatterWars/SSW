@@ -102,12 +102,12 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
     {
         Rows->ClearChildren();
         Sim* Simulation = Sim::GetSim();
-        const auto AddRow = [&Rows, &Query](const FString& Text, FOnClicked Click)
+        const auto AddRow = [&Rows, &Query](const FString& Text, TAttribute<FSlateColor> Color, FOnClicked Click)
         {
             if (Query->IsEmpty() || Text.Contains(*Query))
                 Rows->AddSlot().Padding(0, 0, 0, 4)
                 [
-                    SNew(SButton).HAlign(HAlign_Left).OnClicked(Click)
+                    SNew(SButton).HAlign(HAlign_Left).ButtonColorAndOpacity(Color).OnClicked(Click)
                     [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(FText::FromString(Text).ToUpper())]
                 ];
         };
@@ -121,7 +121,10 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
                 if (*Tab == ETab::Personal ? !bMine : Contract.State != EContractState::Open)
                     continue;
                 const FString Row = FString::Printf(TEXT("%s  |  %s"), *Contract.Terms.Title, *Contract.Terms.PickupStationId.ToString());
-                AddRow(Row, FOnClicked::CreateLambda([SelectedId, Feedback, BidInput, Id = Entry.Key]()
+                AddRow(Row, TAttribute<FSlateColor>::CreateLambda([SelectedId, Id = Entry.Key]()
+                {
+                    return FSlateColor(*SelectedId == Id ? MissionUIStyle::RowSelectedBG : MissionUIStyle::RowBG);
+                }), FOnClicked::CreateLambda([SelectedId, Feedback, BidInput, Id = Entry.Key]()
                 {
                     *SelectedId = Id;
                     *Feedback = FText::GetEmpty();
@@ -140,7 +143,11 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
                 const FString Row = FString::Printf(TEXT("%s  |  %s → %s  |  %s"), *Terms.Title,
                     *Terms.PickupStationId.ToString(), *Terms.DestinationStationId.ToString(), *DescribeItems(Terms.OfferedItems));
                 if (Haul.Id == Previous) *Selected = Haul;
-                AddRow(Row, FOnClicked::CreateLambda([Selected, Haul]() { *Selected = Haul; return FReply::Handled(); }));
+                AddRow(Row, TAttribute<FSlateColor>::CreateLambda([Selected, Id = Haul.Id]()
+                {
+                    return FSlateColor(Selected->IsSet() && Selected->GetValue().Id == Id
+                        ? MissionUIStyle::RowSelectedBG : MissionUIStyle::RowBG);
+                }), FOnClicked::CreateLambda([Selected, Haul]() { *Selected = Haul; return FReply::Handled(); }));
             }
         }
         if (Rows->GetChildren()->Num() == 0)

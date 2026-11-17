@@ -98,6 +98,7 @@ bool UCargoCatalogSubsystem::DescribeCargo(const Ship& Vessel, FS_Cargo& Row) co
     if (const auto* Definition = FindCargo(Load->Item, Load->Unit))
     {
         if (!Definition->DisplayName.IsEmpty()) Row.DisplayName = Definition->DisplayName;
+        Row.Image = Definition->Image;
         Row.Rarity = Definition->Rarity;
         Row.bIllicit = Definition->bIllicit;
         Row.Type = Definition->Type;

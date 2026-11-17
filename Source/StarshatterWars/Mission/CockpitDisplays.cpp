@@ -1,4 +1,5 @@
 #include "CockpitDisplays.h"
+#include "CockpitMiniControls.h"
 #include "GearIndicator.h"
 #include "GameFramework/PlayerController.h"
 #include "FighterHUDDetails.h"
@@ -232,8 +233,11 @@ bool FCockpitDisplays::HandleGearClick()
     if(!SSWGearIndicator::Contains(FVector2D(-Hit.Y,-Hit.Z),FVector2D(426,24),FVector2D(60,55)))return false;
     if(Ship* P=Fighter->GetRuntimeShip())P->ToggleGear();return true;
 }
+bool FCockpitDisplays::HandleControlClick() { return ControlWidget && ControlWidget->HandleClick(); }
 void FCockpitDisplays::Clear()
 {
+    if (ControlSurface.IsValid()) ControlSurface->DestroyComponent();
+    ControlSurface.Reset(); ControlWidget.Reset();
     if(Mesh.IsValid() && OriginalHUD.IsValid() && OriginalHUDSlot != INDEX_NONE)
         Mesh->SetMaterial(OriginalHUDSlot, OriginalHUD.Get());
     OriginalHUDSlot = INDEX_NONE;
@@ -246,7 +250,7 @@ void FCockpitDisplays::Update(AFighterActor* Fighter,TSharedRef<SFighterHUDDetai
     UStaticMeshComponent* Screen=Child?Child->FindComponentByClass<UStaticMeshComponent>():nullptr;
     const auto Layout = Screen && Screen->GetStaticMesh()
         ? CockpitPanelLayout(Screen->GetStaticMesh()->GetFName()) : TConstArrayView<FCockpitPanelSurface>{};
-    if (!Visible || !Fighter || !Fighter->IsCockpitViewActive() || Layout.IsEmpty()) { Clear(); return; }
+    if (!Visible || !Fighter || !Fighter->IsCockpitViewActive() || !Screen) { Clear(); return; }
     if (Mesh.Get() != Screen)
     {
         Clear();
@@ -269,6 +273,37 @@ void FCockpitDisplays::Update(AFighterActor* Fighter,TSharedRef<SFighterHUDDetai
             W->SetSlateWidget(SNew(SCockpitInstrument,HUD,I,TWeakObjectPtr<AFighterActor>(Fighter),W));W->RegisterComponent();Panels.Add(W);
         }
     }
+    if (!ControlSurface.IsValid())
+    {
+        FCockpitPanelSurface Face;
+        if (!Layout.IsEmpty())
+        {
+            const auto& Combiner=Layout[2]; const FVector Across=Combiner.TopRight-Combiner.TopLeft;
+            const double Gap=FMath::Abs(Combiner.BottomLeft.Z-FMath::Max(Layout[1].TopLeft.Z,Layout[3].TopLeft.Z));
+            const double Height=FMath::Clamp(Gap-2.0,3.5,7.0);
+            Face.TopLeft=Combiner.BottomLeft+Across*0.15+FVector(0,8,-1);
+            Face.TopRight=Face.TopLeft+Across*0.7; Face.BottomLeft=Face.TopLeft+FVector(0,-0.5,-Height);
+        }
+        else
+        {
+            FVector Min,Max; Screen->GetLocalBounds(Min,Max); const FVector Extent=(Max-Min)*0.5;
+            const double Width=FMath::Clamp(Extent.X*0.8,30.0,90.0);
+            Face.TopLeft=FVector(Width*0.5,FMath::Max(20.0,double(Max.Y)*0.7),-FMath::Max(8.0,double(Extent.Z)*0.25));
+            Face.TopRight=Face.TopLeft-FVector(Width,0,0); Face.BottomLeft=Face.TopLeft-FVector(0,0,Width*0.12);
+        }
+        auto* W=NewObject<UWidgetComponent>(Child,NAME_None,RF_Transient); W->SetupAttachment(Screen);
+        W->SetWidgetSpace(EWidgetSpace::World); W->SetDrawSize(FVector2D(800,96)); W->SetPivot(FVector2D::ZeroVector);
+        W->SetTwoSided(true); W->SetBlendMode(EWidgetBlendMode::Opaque); W->SetBackgroundColor(FLinearColor::Black);
+        W->SetCollisionEnabled(ECollisionEnabled::NoCollision); W->SetGenerateOverlapEvents(false); W->SetCastShadow(false);
+        W->SetTickWhenOffscreen(false); W->SetRedrawTime(0.1f);
+        const FVector Across=Face.TopRight-Face.TopLeft,Down=Face.BottomLeft-Face.TopLeft;
+        const FVector Normal=FVector::CrossProduct(Across,Down).GetSafeNormal();
+        W->SetRelativeLocation(Face.TopLeft+Normal); W->SetRelativeRotation(FRotationMatrix::MakeFromYZ(-Across,-Down).Rotator());
+        W->SetRelativeScale3D(FVector(1,Across.Size()/800,Down.Size()/96));
+        ControlWidget=SNew(SCockpitMiniControls,TWeakPtr<SFighterHUDDetails>(HUD),W); W->SetSlateWidget(ControlWidget); W->RegisterComponent();
+        ControlSurface=W;
+    }
+    if (ControlWidget) ControlWidget->SampleHover();
     // Blank the imported HUD artwork only once the replacement is rendered.
     if(IsActive() && OriginalHUDSlot != INDEX_NONE && !Blank.IsValid())
     {
@@ -318,7 +353,7 @@ bool FCockpitDisplaysTest::RunTest(const FString&)
     FCockpitDisplays Displays;Fighter->SetCockpitViewActive(true);Displays.Update(Fighter,HUD,true);
     AActor* Child=Fighter->CockpitComponent->GetChildActor();
     TArray<UWidgetComponent*> Panels;Child->GetComponents(Panels);
-    TestEqual(TEXT("Four physical MFDs and a combiner"),Panels.Num(),5);
+    TestEqual(TEXT("Four physical MFDs, combiner and cockpit controls"),Panels.Num(),6);
     for(int32 I=0;I<Panels.Num();++I){
         TestEqual(TEXT("Attached to actual cockpit mesh"),Panels[I]->GetAttachParent(),static_cast<USceneComponent*>(Child->FindComponentByClass<UStaticMeshComponent>()));
         TestEqual(TEXT("Display collision disabled"),Panels[I]->GetCollisionEnabled(),ECollisionEnabled::NoCollision);
@@ -331,7 +366,7 @@ bool FCockpitDisplaysTest::RunTest(const FString&)
     FString Capture;
     if(!GUsingNullRHI && FParse::Value(FCommandLine::Get(),TEXT("CockpitCapture="),Capture)){
         FWidgetRenderer* Renderer=new FWidgetRenderer(true);
-        for(int32 I=0;I<Panels.Num();++I){
+        for(int32 I=0;I<FMath::Min(5,Panels.Num());++I){
             const FVector2D Size=I==2?FVector2D(1024,512):FVector2D(512,512);
             TStrongObjectPtr<UTextureRenderTarget2D> RT(FWidgetRenderer::CreateTargetFor(Size,TF_Bilinear,true));
             RT->ClearColor=I==2?FLinearColor::Transparent:FLinearColor::Black;
@@ -383,7 +418,7 @@ bool FCockpitDisplaysTest::RunTest(const FString&)
         TArray<UWidgetComponent*> Instruments;
         if (Cockpit) Cockpit->GetComponents(Instruments);
         const bool bHasSuppliedCockpit = FCString::Stricmp(Name, TEXT("Zodiac")) != 0;
-        TestEqual(FString(Name) + TEXT(" physical instruments"), Instruments.Num(), bHasSuppliedCockpit ? 5 : 0);
+        TestEqual(FString(Name) + TEXT(" physical instruments"), Instruments.Num(), bHasSuppliedCockpit ? 6 : 0);
         for (auto* Instrument : Instruments)
         {
             TestEqual(TEXT("Attached to the cockpit surface"), Instrument->GetAttachParent(),

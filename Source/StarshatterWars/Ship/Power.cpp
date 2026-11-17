@@ -162,7 +162,7 @@ PowerSource::ExecFrame(double seconds)
 		capacity -= (float)(0.03 * seconds);
 
 	if (IsPowerOn() && capacity > 0) {
-		energy_avail = max_output * seconds * power_level * availability;
+		energy_avail = max_output * seconds * power_level * GetOperatingAvailability();
 
 		if (power_level < requested_power_level) {
 			power_level += (float)(seconds * 0.03);     // thirty seconds to charge up

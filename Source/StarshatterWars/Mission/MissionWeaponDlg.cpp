@@ -43,6 +43,10 @@
 #include "MissionUIStyle.h"
 
 #include "MissionLoad.h"
+#include "Sim.h"
+#include "ShipInsuranceSubsystem.h"
+#include "Engine/GameInstance.h"
+#include "Ship.h"
 #include "MissionLoadoutTypes.h"
 
 #include "Mission.h"
@@ -870,9 +874,41 @@ void UMissionWeaponDlg::HandleLoadoutSelectionChanged(UObject* Item)
     OnLoadoutSelected(SelectedItem);
 }
 
+bool UMissionWeaponDlg::CanEditLoadout() const
+{
+    auto* Simulation = Sim::GetSim();
+    if (!Simulation || Simulation->GetMission() != ResolveMission()) return true;
+    auto* Craft = Simulation->GetPlayerShip();
+    return Simulation->HasSimulationAuthority() && Craft && !Craft->IsDead() &&
+        Craft->GetFlightPhase() <= EOPSMode::ALERT;
+}
+
+bool UMissionWeaponDlg::ApplyLiveLoadout(MissionLoad* Load)
+{
+    auto* Simulation = Sim::GetSim();
+    if (!Simulation || Simulation->GetMission() != ResolveMission()) return true;
+    auto* Craft = Simulation->GetPlayerShip();
+    const auto* Design = ResolvePlayerShipDesign();
+    if (!Craft || !Design || !Load) return false;
+    TArray<int32> Stations;
+    for (int32 Index = 0; Index < Design->Hardpoint.Num(); ++Index)
+        Stations.Add(Load->GetStation(Index));
+    TArray<int32> Previous;
+    if (int* Current = Craft->GetLoadout())
+        for (int32 Index = 0; Index < Stations.Num(); ++Index) Previous.Add(Current[Index]);
+    if (!Craft->ApplyDockedLoadout(Stations)) return false;
+    auto* Insurance = GetGameInstance() ? GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>() : nullptr;
+    if (Insurance && !Insurance->RememberLoadout(Stations, UTF8_TO_TCHAR(Load->GetName().data())))
+    {
+        Craft->ApplyDockedLoadout(Previous);
+        return false;
+    }
+    return true;
+}
+
 void UMissionWeaponDlg::OnLoadoutSelected(UMissionWeaponLoadoutListObject* SelectedItem)
 {
-    if (!SelectedItem)
+    if (!SelectedItem || !CanEditLoadout())
     {
         return;
     }
@@ -906,7 +942,17 @@ void UMissionWeaponDlg::OnLoadoutSelected(UMissionWeaponLoadoutListObject* Selec
         TEXT("APPLYING LOADOUT '%s'"),
         *Src.Name);
 
+    TArray<int32> PreviousStations;
+    for (int32 Station = 0; Station < Design->Hardpoint.Num(); ++Station)
+        PreviousStations.Add(Load->GetStation(Station));
+    const FString PreviousName(UTF8_TO_TCHAR(Load->GetName().data()));
     ApplyShipLoadoutToMissionLoad(Load, Src);
+    if (!ApplyLiveLoadout(Load))
+    {
+        for (int32 Station = 0; Station < PreviousStations.Num(); ++Station)
+            Load->SetStation(Station, PreviousStations[Station]);
+        Load->SetName(TCHAR_TO_UTF8(*PreviousName));
+    }
 
     RefreshFromMission();
 }
@@ -1215,6 +1261,7 @@ void UMissionWeaponDlg::RefreshSelectedLoadoutStations()
 
 void UMissionWeaponDlg::HandleStationChanged(int32 StationIndex, int32 NewSelection)
 {
+    if (!CanEditLoadout()) return;
     Mission* MissionPtr = ResolveMission();
     if (!MissionPtr)
     {
@@ -1227,7 +1274,11 @@ void UMissionWeaponDlg::HandleStationChanged(int32 StationIndex, int32 NewSelect
         return;
     }
 
+    const auto* CurrentDesign = ResolvePlayerShipDesign();
+    if (!CurrentDesign || !CurrentDesign->Hardpoint.IsValidIndex(StationIndex)) return;
+    const int32 Previous = Load->GetStation(StationIndex);
     Load->SetStation(StationIndex, NewSelection);
+    if (!ApplyLiveLoadout(Load)) { Load->SetStation(StationIndex, Previous); return; }
 
     // This is no longer an untouched preset loadout.
     Load->SetName("");

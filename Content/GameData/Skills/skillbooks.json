@@ -1,0 +1,1379 @@
+[
+  {
+    "SkillTypeID": 510001,
+    "Name": "Gunnery Skill Book",
+    "BasePrice": 1500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510002,
+    "Name": "Missile Operations Skill Book",
+    "BasePrice": 2000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510003,
+    "Name": "Target Analysis Skill Book",
+    "BasePrice": 3000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510004,
+    "Name": "Point Defence Skill Book",
+    "BasePrice": 6000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510005,
+    "Name": "Navigation Skill Book",
+    "BasePrice": 1000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510006,
+    "Name": "Quantum Navigation Skill Book",
+    "BasePrice": 5000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510007,
+    "Name": "Farcaster Navigation Skill Book",
+    "BasePrice": 7500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510008,
+    "Name": "Formation Operations Skill Book",
+    "BasePrice": 2500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510009,
+    "Name": "Engineering Skill Book",
+    "BasePrice": 1000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510010,
+    "Name": "Reactor Operations Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510011,
+    "Name": "Shield Operations Skill Book",
+    "BasePrice": 6000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510012,
+    "Name": "Damage Control Skill Book",
+    "BasePrice": 3500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510013,
+    "Name": "Component Fitting Skill Book",
+    "BasePrice": 5000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510014,
+    "Name": "Surveying Skill Book",
+    "BasePrice": 1500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510015,
+    "Name": "Ore Assaying Skill Book",
+    "BasePrice": 3500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510016,
+    "Name": "Mining Operations Skill Book",
+    "BasePrice": 2500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510017,
+    "Name": "Advanced Mining Skill Book",
+    "BasePrice": 10000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510018,
+    "Name": "Reprocessing Skill Book",
+    "BasePrice": 3500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510019,
+    "Name": "Manufacturing Skill Book",
+    "BasePrice": 5000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510020,
+    "Name": "Material Efficiency Skill Book",
+    "BasePrice": 12000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510021,
+    "Name": "Production Management Skill Book",
+    "BasePrice": 15000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510022,
+    "Name": "Blueprint Research Skill Book",
+    "BasePrice": 20000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510023,
+    "Name": "Cargo Handling Skill Book",
+    "BasePrice": 1500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510024,
+    "Name": "Freight Operations Skill Book",
+    "BasePrice": 4500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510025,
+    "Name": "Intersystem Logistics Skill Book",
+    "BasePrice": 12000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510026,
+    "Name": "Contract Administration Skill Book",
+    "BasePrice": 2500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510027,
+    "Name": "Trade Skill Book",
+    "BasePrice": 1500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510028,
+    "Name": "Procurement Skill Book",
+    "BasePrice": 5000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510029,
+    "Name": "Risk Management Skill Book",
+    "BasePrice": 6000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510030,
+    "Name": "Fleet Logistics Skill Book",
+    "BasePrice": 20000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510031,
+    "Name": "Weapon Calibration Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510032,
+    "Name": "Fire Control Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510033,
+    "Name": "Tracking Solutions Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510034,
+    "Name": "Ballistic Analysis Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510035,
+    "Name": "Precision Gunnery Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510036,
+    "Name": "Turret Coordination Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510037,
+    "Name": "Concentrated Fire Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510038,
+    "Name": "Capital Fire Control Skill Book",
+    "BasePrice": 98500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510039,
+    "Name": "Fleet Gunnery Doctrine Skill Book",
+    "BasePrice": 124000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510040,
+    "Name": "Seeker Calibration Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510041,
+    "Name": "Missile Guidance Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510042,
+    "Name": "Launch Coordination Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510043,
+    "Name": "Electronic Counter-Countermeasures Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510044,
+    "Name": "Salvo Planning Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510045,
+    "Name": "Long Range Ordnance Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510046,
+    "Name": "Capital Missile Control Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510047,
+    "Name": "Fleet Ordnance Doctrine Skill Book",
+    "BasePrice": 98500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510048,
+    "Name": "Orbital Navigation Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510049,
+    "Name": "Approach Planning Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510050,
+    "Name": "High Velocity Navigation Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510051,
+    "Name": "Transit Coordination Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510052,
+    "Name": "Farcaster Cartography Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510053,
+    "Name": "Hazardous Route Analysis Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510054,
+    "Name": "Deep Space Navigation Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510055,
+    "Name": "Fleet Transit Planning Skill Book",
+    "BasePrice": 98500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510056,
+    "Name": "System Diagnostics Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510057,
+    "Name": "Power Routing Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510058,
+    "Name": "Capacitor Management Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510059,
+    "Name": "Thermal Management Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510060,
+    "Name": "Advanced Reactor Safety Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510061,
+    "Name": "Emergency Power Control Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510062,
+    "Name": "Capital Power Management Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510063,
+    "Name": "Integrated Ship Engineering Skill Book",
+    "BasePrice": 98500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510064,
+    "Name": "Hull Repair Procedures Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510065,
+    "Name": "Component Fault Isolation Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510066,
+    "Name": "Structural Assessment Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510067,
+    "Name": "Damage Containment Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510068,
+    "Name": "Distributed Repair Control Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510069,
+    "Name": "Capital Damage Control Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510070,
+    "Name": "Fleet Recovery Engineering Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510071,
+    "Name": "Laser Focusing Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510072,
+    "Name": "Extraction Cycles Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510073,
+    "Name": "Ore Face Analysis Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510074,
+    "Name": "Selective Extraction Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510075,
+    "Name": "Dense Field Operations Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510076,
+    "Name": "Multi Beam Extraction Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510077,
+    "Name": "Remote Deposit Coordination Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510078,
+    "Name": "Deep Belt Extraction Skill Book",
+    "BasePrice": 98500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510079,
+    "Name": "Spectral Surveying Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510080,
+    "Name": "Deposit Classification Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510081,
+    "Name": "Trace Mineral Analysis Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510082,
+    "Name": "Deep Ore Assaying Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510083,
+    "Name": "Exotic Deposit Analysis Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510084,
+    "Name": "Dilithium Handling Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510085,
+    "Name": "Quantium-40 Handling Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510086,
+    "Name": "Exotic Extraction Safety Skill Book",
+    "BasePrice": 98500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510087,
+    "Name": "Industrial Planning Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510088,
+    "Name": "Batch Control Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510089,
+    "Name": "Production Optimization Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510090,
+    "Name": "Blueprint Interpretation Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510091,
+    "Name": "Assembly Coordination Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510092,
+    "Name": "Precision Manufacturing Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510093,
+    "Name": "Advanced Industrial Integration Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510094,
+    "Name": "Orbital Factory Management Skill Book",
+    "BasePrice": 98500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510095,
+    "Name": "Ore Separation Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510096,
+    "Name": "Concentrate Grading Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510097,
+    "Name": "Metal Recovery Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510098,
+    "Name": "Residue Management Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510099,
+    "Name": "Rare Mineral Recovery Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510100,
+    "Name": "Exotic Materials Processing Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510101,
+    "Name": "Closed Cycle Reprocessing Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510102,
+    "Name": "Integrated Refinery Management Skill Book",
+    "BasePrice": 98500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510103,
+    "Name": "Technical Documentation Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510104,
+    "Name": "Material Research Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510105,
+    "Name": "Process Research Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510106,
+    "Name": "Blueprint Duplication Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510107,
+    "Name": "Prototype Evaluation Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510108,
+    "Name": "Advanced Blueprint Research Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510109,
+    "Name": "Industrial Design Integration Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510110,
+    "Name": "Freight Scheduling Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510111,
+    "Name": "Load Balancing Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510112,
+    "Name": "Bulk Handling Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510113,
+    "Name": "Hazardous Cargo Procedures Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510114,
+    "Name": "Supply Route Planning Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510115,
+    "Name": "Multi System Distribution Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510116,
+    "Name": "Strategic Stockpiles Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510117,
+    "Name": "Fleet Supply Coordination Skill Book",
+    "BasePrice": 98500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510118,
+    "Name": "Market Analysis Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510119,
+    "Name": "Inventory Accounting Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510120,
+    "Name": "Purchase Planning Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510121,
+    "Name": "Supply Forecasting Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510122,
+    "Name": "Wholesale Procurement Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510123,
+    "Name": "Regional Trade Analysis Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510124,
+    "Name": "Interstellar Trade Planning Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510125,
+    "Name": "Strategic Procurement Skill Book",
+    "BasePrice": 98500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510126,
+    "Name": "Courier Planning Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510127,
+    "Name": "Collateral Assessment Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510128,
+    "Name": "Auction Procedures Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510129,
+    "Name": "Contract Risk Analysis Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510130,
+    "Name": "Multi Region Contracting Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510131,
+    "Name": "Industrial Procurement Contracts Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510132,
+    "Name": "Strategic Supply Contracts Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510133,
+    "Name": "Squadron Coordination Skill Book",
+    "BasePrice": 4000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510134,
+    "Name": "Escort Coordination Skill Book",
+    "BasePrice": 8500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510135,
+    "Name": "Tactical Communications Skill Book",
+    "BasePrice": 16000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510136,
+    "Name": "Task Group Coordination Skill Book",
+    "BasePrice": 26500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510137,
+    "Name": "Capital Formation Planning Skill Book",
+    "BasePrice": 40000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510138,
+    "Name": "Battle Group Logistics Skill Book",
+    "BasePrice": 56500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510139,
+    "Name": "Operational Fleet Planning Skill Book",
+    "BasePrice": 76000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510140,
+    "Name": "Fleet Command Doctrine Skill Book",
+    "BasePrice": 98500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510141,
+    "Name": "Spacecraft Command Skill Book",
+    "BasePrice": 2000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510142,
+    "Name": "Capital Operations Skill Book",
+    "BasePrice": 50000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510143,
+    "Name": "Corvette Operations Skill Book",
+    "BasePrice": 14000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510144,
+    "Name": "Frigate Operations Skill Book",
+    "BasePrice": 110000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510145,
+    "Name": "Destroyer Operations Skill Book",
+    "BasePrice": 50000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510146,
+    "Name": "Cruiser Operations Skill Book",
+    "BasePrice": 110000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510147,
+    "Name": "Carrier Operations Skill Book",
+    "BasePrice": 110000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510148,
+    "Name": "Battleship Operations Skill Book",
+    "BasePrice": 194000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510149,
+    "Name": "Dreadnought Operations Skill Book",
+    "BasePrice": 302000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510150,
+    "Name": "Sensor Operations Skill Book",
+    "BasePrice": 1500,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510151,
+    "Name": "Signal Analysis Skill Book",
+    "BasePrice": 5000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510152,
+    "Name": "Fleet Telemetry Skill Book",
+    "BasePrice": 5000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  },
+  {
+    "SkillTypeID": 510153,
+    "Name": "Sensor Networking Skill Book",
+    "BasePrice": 20000,
+    "PurchaseTaxRate": 0,
+    "IsPublished": true,
+    "IsAvailableForPurchase": true,
+    "GrantCompleteSkill": true
+  }
+]

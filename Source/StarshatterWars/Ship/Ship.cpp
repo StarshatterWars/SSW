@@ -15,7 +15,10 @@
 	Starship class
 */
 #include "Ship.h"
+#include "EconomyRuntime.h"
 #include "CargoCatalogSubsystem.h"
+#include "ShipInsuranceSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "ShipActor.h"
 #include "CapitalShipActor.h"
 #include "MeshCollision.h"
@@ -381,19 +384,98 @@ EFreighterLoadStatus Ship::GetFreighterLoadStatus() const
         ? EFreighterLoadStatus::Full : EFreighterLoadStatus::PartiallyLoaded;
 }
 
+FName Ship::GetCargoInventoryKey() const
+{ return FName(*(TEXT("Ship/") + CargoInventoryId.ToString(EGuidFormats::Digits))); }
+
+void Ship::SyncCargoInventory()
+{
+    auto* Simulation = Sim::GetSim();
+    if (!Simulation || !Simulation->HasSimulationAuthority() || !design) return;
+    auto& State = Simulation->GetEconomy();
+    const FName SystemName(GetRegion() && GetRegion()->GetSystem() ? UTF8_TO_TCHAR(GetRegion()->GetSystem()->GetName()) : TEXT(""));
+    auto* Inventory = State.Inventories.Find(GetCargoInventoryKey());
+    if (!Inventory) Inventory = FEconomyLedger::CreateInventory(State, GetCargoInventoryKey(), (Simulation->GetPlayerShip() == this ? FEconomyLedger::Pilot() : FEconomyRuntime::IndustryOwner()), SystemName, design->CargoCapacity.Tonnes);
+    if (!Inventory) return;
+    Inventory->System = SystemName;
+    // Legacy manifest is a presentation adapter for existing mission provisioning and sensors.
+    // This explicit synchronization only follows actual physical cargo changes, never a UI refresh.
+    TArray<FCommodityAmount> Desired;
+    const auto Add = [&Desired](FName Item, double Quantity, double UnitTonnes)
+    { if (Quantity > 0 && UnitTonnes > 0) { FCommodityAmount Amount; Amount.Item = Item; Amount.Quantity = Quantity; Amount.UnitTonnes = UnitTonnes; Desired.Add(Amount); } };
+    if (CargoManifest && CargoManifest->Unit == TEXT("t"))
+        Add(DataTableUtils::MakeValidName(CargoManifest->Item), GetMinedOreTonnes(), 1);
+    if (CargoManifest && CargoManifest->Quantity > 0 && CargoManifest->Unit != TEXT("t") && !CargoManifest->bPassengers)
+    {
+        auto* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr;
+        auto* Instance = World ? World->GetGameInstance() : nullptr;
+        auto* Catalog = Instance ? Instance->GetSubsystem<UCargoCatalogSubsystem>() : nullptr;
+        const auto* Definition = Catalog ? Catalog->FindCargo(CargoManifest->Item, CargoManifest->Unit) : nullptr;
+        const double Mass = Definition && Definition->Size > 0 ? Definition->Size : design->CargoCapacity.Tonnes / CargoManifest->Quantity;
+        Add(DataTableUtils::MakeValidName(CargoManifest->Item), CargoManifest->Quantity, Mass);
+    }
+    if (CourierPackage) Add(FName(*(TEXT("Courier/") + CourierPackage->ContractId.ToString())), 1, CourierPackage->Tonnes);
+    if (!FEconomyLedger::ReconcileManifest(State, GetCargoInventoryKey(), Desired))
+        UE_LOG(LogTemp, Warning, TEXT("Cargo reconciliation rejected for %s: capacity, reservation or unit mismatch."), UTF8_TO_TCHAR(GetName()));
+
+}
+
+bool Ship::RepairAtStation()
+{
+    auto* Simulation = Sim::GetSim();
+    if (!Simulation || !Simulation->HasSimulationAuthority() || !carrier || carrier->IsDead() || carrier->IsDying() ||
+        GetFlightPhase() > EOPSMode::ALERT || IsDead() || IsDying() || !design) return false;
+    integrity = design->integrity;
+    for (int Index = 0; Index < systems.size(); ++Index)
+        if (auto* System = systems[Index]) System->RestoreAtStation();
+    repair_queue.clear();
+    return true;
+}
+
+void Ship::BindCargoInventory(FGuid Hull)
+{
+    auto* Simulation = Sim::GetSim();
+    if (!Hull.IsValid() || CargoInventoryId == Hull || !Simulation || Simulation->IsNetworked() || Simulation->GetPlayerShip() != this) return;
+    auto& State = Simulation->GetEconomy();
+    const FName PreviousKey = GetCargoInventoryKey(); CargoInventoryId = Hull;
+    const FName BoundKey = GetCargoInventoryKey();
+    if (!State.Inventories.Contains(BoundKey))
+        if (const auto* Previous = State.Inventories.Find(PreviousKey))
+        { const auto Copy = *Previous; State.Inventories.Add(BoundKey, Copy); }
+    for (auto& Pair : State.Reservations)
+        if (Pair.Value.Inventory == PreviousKey) Pair.Value.Inventory = BoundKey;
+    State.Inventories.Remove(PreviousKey);
+    if (State.Inventories.Contains(BoundKey)) ApplyCargoInventoryToManifest();
+    else SyncCargoInventory();
+}
+
+void Ship::ApplyCargoInventoryToManifest()
+{
+    auto* Simulation = Sim::GetSim();
+    if (!Simulation || !CargoManifest || CargoManifest->bPassengers) return;
+    const double Amount = FEconomyLedger::Quantity(Simulation->GetEconomy(), GetCargoInventoryKey(), DataTableUtils::MakeValidName(CargoManifest->Item));
+    CargoManifest->Quantity = FMath::FloorToInt(Amount);
+    FractionalMinedOre = CargoManifest->Unit == TEXT("t") ? Amount - CargoManifest->Quantity : 0;
+}
+
 void Ship::SetSimulatedCargo(SSWFreightManifest::FLoad Load)
 {
     CargoManifest = MoveTemp(Load);
     FractionalMinedOre = 0.0;
+    SyncCargoInventory();
 }
 
 double Ship::GetCargoUsedTonnes() const
 {
+    double LedgerMass = 0;
+    if (const auto* Simulation = Sim::GetSim())
+        if (const auto* Inventory = Simulation->ReadEconomy().Inventories.Find(GetCargoInventoryKey()))
+            LedgerMass = FEconomyLedger::Used(*Inventory);
+    const auto Total = [LedgerMass](double LegacyMass) { return FMath::Max(LedgerMass, LegacyMass); };
     double Used = CourierPackage ? CourierPackage->Tonnes : 0.0;
     const auto* Load = CargoManifest.GetPtrOrNull();
-    if (!Load || Load->bPassengers) return Used;
-    if (Load->Unit.Equals(TEXT("t"), ESearchCase::IgnoreCase)) return Used + GetMinedOreTonnes();
-    if (Load->Quantity <= 0) return Used;
+    if (!Load || Load->bPassengers) return Total(Used);
+    if (Load->Unit.Equals(TEXT("t"), ESearchCase::IgnoreCase)) return Total(Used + GetMinedOreTonnes());
+    if (Load->Quantity <= 0) return Total(Used);
 
     UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr;
     auto* Instance = World ? World->GetGameInstance() : nullptr;
@@ -402,7 +484,7 @@ double Ship::GetCargoUsedTonnes() const
     // Keep unknown-mass freight from being overbooked.
     const double FreightMass = Definition && Definition->Size > 0.0
         ? Definition->Size * Load->Quantity : (design ? design->CargoCapacity.Tonnes : 0.0);
-    return Used + FreightMass;
+    return Total(Used + FreightMass);
 }
 
 bool Ship::LoadCourierPackage(FName ContractId, double Tonnes)
@@ -412,6 +494,7 @@ bool Ship::LoadCourierPackage(FName ContractId, double Tonnes)
         Tonnes > design->CargoCapacity.Tonnes - GetCargoUsedTonnes())
         return false;
     CourierPackage = FSealedCourierPackage{ContractId, Tonnes};
+    SyncCargoInventory();
     return true;
 }
 
@@ -422,10 +505,10 @@ bool Ship::HasCourierPackage(FName ContractId) const
 
 void Ship::RemoveCourierPackage(FName ContractId)
 {
-    if (HasCourierPackage(ContractId)) CourierPackage.Reset();
+    if (HasCourierPackage(ContractId)) { CourierPackage.Reset(); SyncCargoInventory(); }
 }
 
-double Ship::LoadMinedOre(const FString& Mineral, double Tonnes)
+double Ship::LoadMinedOre(const FString& Mineral, double Tonnes, bool bRecordInventory)
 {
     if (!design || !FMath::IsFinite(Tonnes) || Tonnes <= 0.0) return 0.0;
     auto* Load = CargoManifest.GetPtrOrNull();
@@ -441,6 +524,7 @@ double Ship::LoadMinedOre(const FString& Mineral, double Tonnes)
     if (!Load->Origin && GetRegion()) Load->CaptureOrigin(*GetRegion(), GetLocation());
     Load->Quantity = FMath::FloorToInt32(Current + Added);
     FractionalMinedOre = Current + Added - Load->Quantity;
+    if (bRecordInventory) SyncCargoInventory();
     return Added;
 }
 
@@ -497,6 +581,7 @@ int32 Ship::TransferCargoToDock()
         carrier->SetSimulatedCargo(MoveTemp(Load));
     }
     CargoManifest->Quantity -= Quantity;
+    SyncCargoInventory(); carrier->SyncCargoInventory();
     return Quantity;
 }
 
@@ -505,7 +590,7 @@ double Ship::GetMinedOreTonnes() const
     return CargoManifest ? CargoManifest->Quantity + FractionalMinedOre : 0.0;
 }
 
-double Ship::UnloadMinedOre(double Tonnes)
+double Ship::UnloadMinedOre(double Tonnes, bool bRecordInventory)
 {
     if (!CargoManifest || !FMath::IsFinite(Tonnes) || Tonnes <= 0.0) return 0.0;
     const double Current = GetMinedOreTonnes();
@@ -513,6 +598,7 @@ double Ship::UnloadMinedOre(double Tonnes)
     const double Remaining = Current - Delivered;
     CargoManifest->Quantity = FMath::FloorToInt32(Remaining);
     FractionalMinedOre = Remaining - CargoManifest->Quantity;
+    if (bRecordInventory) SyncCargoInventory();
     return Delivered;
 }
 
@@ -998,6 +1084,46 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 		flcs);
 }
 
+bool Ship::ApplyDockedLoadout(const TArray<int32>& Stations)
+{
+    Sim* Simulation = Sim::GetSim();
+    if (!Simulation || !Simulation->HasSimulationAuthority() || IsDead() || IsDying() ||
+        GetFlightPhase() > EOPSMode::ALERT || !design || Stations.Num() != design->hardpoints.size())
+        return false;
+    for (int32 Index = 0; Index < Stations.Num(); ++Index)
+    {
+        if (Stations[Index] < -1 || !design->hardpoints[Index] ||
+            (Stations[Index] >= 0 && !design->hardpoints[Index]->GetWeaponDesign(Stations[Index])))
+            return false;
+    }
+    // Weapon groups own their weapons; systems and reactor client lists only reference them.
+    TArray<Weapon*> OldWeapons;
+    for (int GroupIndex = 0; GroupIndex < weapons.size(); ++GroupIndex)
+        if (auto* Group = weapons[GroupIndex])
+            for (int Index = 0; Index < Group->NumWeapons(); ++Index)
+                if (auto* Weapon = Group->GetWeapon(Index)) OldWeapons.AddUnique(Weapon);
+    if (decoy) OldWeapons.AddUnique(decoy);
+    if (probe) OldWeapons.AddUnique(probe);
+    for (Weapon* Weapon : OldWeapons)
+    {
+        for (int Index = 0; Index < reactors.size(); ++Index)
+            if (reactors[Index]) reactors[Index]->RemoveClient(Weapon);
+        repair_queue.remove(Weapon);
+        systems.remove(Weapon);
+    }
+    delete decoy;
+    delete probe;
+    decoy = nullptr;
+    probe = nullptr;
+    weapons.destroy();
+    hardpoints.destroy();
+    delete[] loadout;
+    loadout = Stations.IsEmpty() ? nullptr : new int[Stations.Num()];
+    for (int32 Index = 0; Index < Stations.Num(); ++Index) loadout[Index] = Stations[Index];
+    InitializeRuntimeWeaponsFromDesign();
+    return true;
+}
+
 void Ship::InitializeRuntimeWeaponsFromDesign()
 {
 	if (!design)
@@ -1009,6 +1135,8 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 	}
 
 	int SysID = systems.size();
+    for (int Index = 0; Index < systems.size(); ++Index)
+        if (systems[Index]) SysID = FMath::Max(SysID, systems[Index]->GetID() + 1);
     int WeaponIndex = 1; // Legacy one-based firing/mount identity.
 
 	//-------------------------------------------------------------
@@ -5438,6 +5566,12 @@ Ship::DeathSpiral()
 	transition_type = TRANSITION_DEATH_SPIRAL;
 
 	killer->BeginDeathSpiral();
+    if (auto* Simulation = Sim::GetSim(); Simulation && Simulation->HasSimulationAuthority() &&
+        Simulation->GetPlayerShip() == this && GWorld)
+        if (auto* Instance = GWorld->GetGameInstance())
+            if (auto* Insurance = Instance->GetSubsystem<UShipInsuranceSubsystem>())
+                Insurance->RefreshAssignment();
+
 
 	transition_time = killer->TransitionTime();
 	transition_loc = killer->TransitionLoc();

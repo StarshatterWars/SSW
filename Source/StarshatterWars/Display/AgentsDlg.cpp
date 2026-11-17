@@ -1,4 +1,6 @@
 #include "AgentsDlg.h"
+#include "PanelCloseIcon.h"
+#include "StarshatterPlayerSubsystem.h"
 
 #include "AgentAI.h"
 #include "AgentCatalogSubsystem.h"
@@ -8,6 +10,7 @@
 #include "MenuScreen.h"
 #include "Mission.h"
 #include "MissionsDlg.h"
+#include "MissionObjectivesDlg.h"
 #include "MissionUIStyle.h"
 #include "PlayerCharacter.h"
 #include "SSWGameInstance.h"
@@ -53,6 +56,10 @@ void UAgentsDlg::RefreshBoard()
                     OpenDetails(Id, bOffer);
                     return FReply::Handled();
                 }))]
+            + SHorizontalBox::Slot().AutoWidth().Padding(0,0,8,0)
+            [SNew(SButton).ToolTipText(INVTEXT("Mission briefing and objectives"))
+                .OnClicked(FOnClicked::CreateWeakLambda(this,[this,Id,bOffer](){OpenDetails(Id,bOffer);return FReply::Handled();}))
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Computer)]]
             + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
             [SNew(STextBlock).Text(Status).Font(MissionUIStyle::GetRowFont(13))]
             + SHorizontalBox::Slot().AutoWidth().Padding(8, 0, 0, 0)
@@ -104,7 +111,7 @@ void UAgentsDlg::OpenDetails(int32 MissionId, bool bOffer)
         Feedback = INVTEXT("Mission details are unavailable.");
         return;
     }
-    Details = CreateWidget<UMissionsDlg>(GetOwningPlayer());
+    Details = CreateWidget<UMissionObjectivesDlg>(GetOwningPlayer());
     if (!Details) return;
 
     FSimpleDelegate Accept;
@@ -115,6 +122,7 @@ void UAgentsDlg::OpenDetails(int32 MissionId, bool bOffer)
             auto* Catalog = Instance ? Instance->GetSubsystem<UAgentCatalogSubsystem>() : nullptr;
             if (!Catalog || !Catalog->CanAccept(MissionId, Issuer) ||
                 !Instance->GetTrainingAgent().Accept(PilotId(), MissionId)) return;
+            if (auto* Players = Instance->GetSubsystem<UStarshatterPlayerSubsystem>()) Players->SavePlayer(true);
             CloseDetails();
             RefreshBoard();
         });
@@ -130,10 +138,13 @@ void UAgentsDlg::OpenDetails(int32 MissionId, bool bOffer)
             RefreshBoard();
         });
 
-    const FString Brief = FString::Printf(TEXT("%hs  /  %hs\n\nOBJECTIVE\n%hs\n\nSITUATION\n%hs"),
-        Mission->GetSystem(), Mission->GetRegion(), Mission->GetObjective(), Mission->GetSituation());
-    Details->SetDetails(Catalog->GetMissionTitle(MissionId), FText::FromString(Brief),
-        MoveTemp(Accept), MoveTemp(Decline), FSimpleDelegate::CreateUObject(this, &UAgentsDlg::CloseDetails));
+    FName Issuer=SelectedAgent; FText Status=bOffer ? INVTEXT("OFFERED") : INVTEXT("QUEUED");
+    for (const auto& Assignment : Game->GetTrainingAgent().GetQueue(PilotId()))
+        if (Assignment.MissionId==MissionId) { Issuer=Assignment.Issuer; if(Assignment.State==State::InProgress)Status=INVTEXT("IN PROGRESS"); break; }
+    const auto* Officer=Catalog->FindAgent(Issuer);
+    CastChecked<UMissionObjectivesDlg>(Details)->SetMissionBriefing(*Mission,Catalog->GetMissionTitle(MissionId),
+        Officer ? FText::FromString(Officer->DisplayName) : INVTEXT("Mission Control"),Status,
+        MoveTemp(Accept),MoveTemp(Decline),FSimpleDelegate::CreateUObject(this,&UAgentsDlg::CloseDetails));
     DetailLayer->SetContent(Details->TakeWidget());
     DetailLayer->SetVisibility(EVisibility::Visible);
 }
@@ -157,6 +168,7 @@ void UAgentsDlg::RequestMission()
     const auto* Offer = Game->GetTrainingAgent().Request(PilotId(), Eligible, SelectedAgent);
     Feedback = Offer ? FText::GetEmpty() : INVTEXT("No assignments are available for this agent and rank.");
     RefreshBoard();
+    if (auto* Players = Game->GetSubsystem<UStarshatterPlayerSubsystem>()) Players->SavePlayer(true);
     if (Offer) OpenDetails(Offer->MissionId, true);
 }
 
@@ -258,13 +270,13 @@ TSharedRef<SWidget> UAgentsDlg::RebuildWidget()
                     + SHorizontalBox::Slot().FillWidth(1)
                     [SNew(STextBlock).Text(INVTEXT("AGENTS")).Font(MissionUIStyle::GetHeaderFont(17))]
                     + SHorizontalBox::Slot().AutoWidth()
-                    [SNew(SButton).Text(INVTEXT("×")).ButtonColorAndOpacity(FLinearColor(.55f, .09f, .07f))
+                    [SNew(SButton).ContentPadding(FMargin(8)).HAlign(HAlign_Center).VAlign(VAlign_Center).ToolTipText(INVTEXT("Close panel")).ButtonColorAndOpacity(FLinearColor(.55f, .09f, .07f))
                         .OnClicked(FOnClicked::CreateWeakLambda(this, [this]()
                         {
                             CloseDetails();
                             RemoveFromParent();
                             return FReply::Handled();
-                        }))]
+                        }))[SNew(SPanelCloseIcon)]]
                 ]
                 + SVerticalBox::Slot().FillHeight(1)[Content])]
         ];

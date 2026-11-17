@@ -207,7 +207,7 @@ void Thruster::ExecFrame(double seconds)
 
     const float denom = (capacity > 0.0f) ? capacity : 1.0f;
 
-    thrust = energy / denom;
+    thrust = energy / denom * GetPerformanceMultiplier();
     energy = 0.0f;
 
     if (thrust < 0.0f)
@@ -818,7 +818,7 @@ double Thruster::GetRequest(double seconds) const
     {
         if (burn[i] != 0.0f)
         {
-            return power_level * sink_rate * seconds;
+            return power_level * sink_rate * GetPowerDemandMultiplier() * seconds;
         }
     }
 

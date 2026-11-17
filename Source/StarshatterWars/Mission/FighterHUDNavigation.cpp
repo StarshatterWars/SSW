@@ -1,4 +1,5 @@
 #include "FighterHUDDetails.h"
+#include "FormattingUtils.h"
 
 #include "Engine/GameInstance.h"
 #include "Engine/GameViewportClient.h"
@@ -19,7 +20,7 @@ void SFighterHUDDetails::DrawFlightNavigation(Ship& Player, const FGeometry& Geo
 {
     const bool bNavigation = FlightHUDMode == EFlightHUDMode::Navigation;
     const bool bFlightPath = !ThirdPerson.Get() && Player.GetVelocity().SizeSquared() > FMath::Square(50.0);
-    if (!bNavigation && !bFlightPath) return;
+    if (!bNavigation && !bFlightPath && !JumpReadout.bHasEntryPoint) return;
 
     const AShipActor* Presentation = Player.GetNativePresentation();
     UWorld* World = IsValid(Presentation) ? Presentation->GetWorld() : nullptr;
@@ -57,6 +58,18 @@ void SFighterHUDDetails::DrawFlightNavigation(Ship& Player, const FGeometry& Geo
         FSlateDrawElement::MakeLines(Elements, Layer, Geometry.ToPaintGeometry(), Points,
             ESlateDrawEffect::None, Color, true, 1.25f);
     };
+    if (JumpReadout.bHasEntryPoint)
+    {
+        const FVector4 Clip = Project(JumpReadout.EntryPoint);
+        if (IsOnScreen(Clip))
+        {
+            const FVector2D At = Center + FVector2D(Clip.X,-Clip.Y) / Clip.W * HalfView;
+            DrawLine({At+FVector2D(0,-10),At+FVector2D(10,0),At+FVector2D(0,10),At+FVector2D(-10,0),At+FVector2D(0,-10)},ActiveColor);
+            const FString Label = FString::Printf(TEXT("FARCASTER: %s\n%s"),*JumpReadout.Gate,*UFormattingUtils::FormatDistance(JumpReadout.Range));
+            FSlateDrawElement::MakeText(Elements,Layer+1,Geometry.ToPaintGeometry(FVector2f(220,36),FSlateLayoutTransform(FVector2f(At+FVector2D(14,12)))),
+                Label,FCoreStyle::GetDefaultFontStyle("Bold",10),ESlateDrawEffect::None,ActiveColor);
+        }
+    }
     if (bFlightPath)
     {
         const FVector4 Clip = Project(Player.GetLocation() + Player.GetVelocity().GetSafeNormal() * 1e8);

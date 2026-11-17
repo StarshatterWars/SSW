@@ -348,6 +348,18 @@ SimSystem::ApplyDamage(double damage)
 void
 SimSystem::CalcStatus()
 {
+    double QualityLog = 0, DemandLog = 0;
+    int32 Count = 0;
+    for (int32 Index = 0; Index < components.size(); ++Index)
+        if (const auto* Part = components[Index])
+        {
+            QualityLog += FMath::Loge(FMath::Clamp(Part->PerformanceMultiplier(), 0.5, 2.0));
+            DemandLog += FMath::Loge(FMath::Clamp(Part->PowerDemandMultiplier(), 0.5, 2.0));
+            ++Count;
+        }
+    // These are constituent parts of one system, not stackable independent modules.
+    quality_multiplier = Count ? FMath::Exp(QualityLog / Count) : 1.0;
+    demand_multiplier = Count ? FMath::Exp(DemandLog / Count) : 1.0;
 	if (components.size() > 0) {
 		availability = 1.0f;
 		safety = 1.0f;
@@ -427,7 +439,7 @@ SimSystem::GetRequest(double seconds) const
 		return 0;
 
 	else
-		return power_level * sink_rate * seconds;
+		return power_level * sink_rate * demand_multiplier * seconds;
 }
 
 // +----------------------------------------------------------------------+
@@ -465,3 +477,12 @@ SimSystem::DrainPower(double to_level)
 	UE_LOG(LogStarshatterSystem, Verbose, TEXT("SimSystem::DrainPower to_level=%f (ignored; energy set to 0)"), (double)to_level);
 }
 
+
+void SimSystem::RestoreAtStation()
+{
+    for (int Index = 0; Index < components.size(); ++Index)
+        if (auto* Part = components[Index]) Part->RestoreAtStation();
+    availability = safety = stability = 1.f; safety_overload = 0; net_avail = -1;
+    Status = SYSTEM_STATUS::NOMINAL;
+    CalcStatus();
+}

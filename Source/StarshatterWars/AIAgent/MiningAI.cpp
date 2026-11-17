@@ -1,4 +1,7 @@
 #include "MiningAI.h"
+#include "GameStructs_economy.h"
+#include "HAL/PlatformTime.h"
+#include "StarSystem.h"
 
 #include "Asteroid.h"
 #include "SimRegion.h"
@@ -15,6 +18,7 @@ MiningAI::ScanResult MiningAI::ScanAsteroids(SimRegion& Region, const FVector& O
 
     Scan.Region = &Region;
     Scan.Range = Range;
+    Scan.ScannedAt = FPlatformTime::Seconds();
     bool bCompleteCoverage = true;
     for (ListIter<Asteroid> Rocks = Region.GetRoids(); ++Rocks;)
     {
@@ -49,7 +53,7 @@ MiningAI::ScanResult MiningAI::ScanAsteroids(SimRegion& Region, const FVector& O
 Asteroid* MiningAI::SelectDeposit(SimRegion& Region, const FVector& Origin, const ScanResult& Scan,
     const TArray<ESSWMineral>& AcceptedMinerals, const FString& LoadedMineral, TOptional<int> PreferredContactId)
 {
-    if (Scan.Region != &Region || Scan.Readings.IsEmpty()) return nullptr;
+    if (Scan.Region != &Region || Scan.Readings.IsEmpty() || FPlatformTime::Seconds() - Scan.ScannedAt > 5.0) return nullptr;
 
     const auto IsCandidate = [&AcceptedMinerals, &LoadedMineral](const AsteroidReading& Reading)
     {
@@ -89,4 +93,31 @@ Asteroid* MiningAI::SelectDeposit(SimRegion& Region, const FVector& Origin, cons
         if (IsCandidate(Reading))
             if (Asteroid* Rock = Resolve(Reading.ContactId)) return Rock;
     return nullptr;
+}
+
+void MiningAI::ReleaseClaims(FEconomyState& State, FName Claimant)
+{
+    for (auto It = State.MiningLeases.CreateIterator(); It; ++It)
+        if (It.Value().Claimant == Claimant) It.RemoveCurrent();
+}
+Asteroid* MiningAI::SelectClaimedDeposit(FEconomyState& State, FName Claimant, SimRegion& Region, const FVector& Origin,
+    const ScanResult& Scan, const TArray<ESSWMineral>& Accepted, const FString& Loaded, TOptional<int> Preferred)
+{
+    if (Claimant.IsNone()) return nullptr;
+    const double Now = static_cast<double>(FDateTime::UtcNow().ToUnixTimestamp());
+    const FString Prefix = FString::Printf(TEXT("%hs/%hs/"), Region.GetSystem() ? Region.GetSystem()->GetName() : "", Region.GetName());
+    const auto Key = [&Prefix](int32 Id) { return FName(*(Prefix + FString::FromInt(Id))); };
+    auto Candidates = Scan;
+    Candidates.Readings.RemoveAll([&](const auto& Reading)
+    {
+        const auto* Lease = State.MiningLeases.Find(Key(Reading.ContactId));
+        return Lease && Lease->Claimant != Claimant && Lease->ExpiresAt > Now;
+    });
+    Asteroid* Rock = SelectDeposit(Region, Origin, Candidates, Accepted, Loaded, Preferred);
+    ReleaseClaims(State, Claimant);
+    if (Rock) { FMiningLease Lease; Lease.Claimant = Claimant; Lease.ExpiresAt = Now + 5;
+        State.MiningLeases.Add(Key(Rock->GetContactId()), Lease); }
+    for (auto It = State.MiningLeases.CreateIterator(); It; ++It)
+        if (It.Value().ExpiresAt <= Now) It.RemoveCurrent();
+    return Rock;
 }

@@ -998,8 +998,11 @@ void UBaseScreen::NativeConstruct()
 {
     Super::NativeConstruct();
 
+    UGameInstance* GameSession = GetGameInstance();
+    if (IsDesignTime() || !GameSession) return;
+
     if (UStarshatterUIStyleSubsystem* Style =
-        GetGameInstance()->GetSubsystem<UStarshatterUIStyleSubsystem>())
+        GameSession->GetSubsystem<UStarshatterUIStyleSubsystem>())
     {
         if (MenuButton)
         {
