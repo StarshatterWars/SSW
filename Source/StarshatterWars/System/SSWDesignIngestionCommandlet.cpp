@@ -3,6 +3,8 @@
 #if WITH_EDITOR
 #include "Algo/Find.h"
 #include "Engine/DataTable.h"
+#include "DesignTableJson.h"
+#include "ShipDesignRegistry.h"
 #include "CargoCatalogSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "Misc/PackageName.h"
@@ -180,6 +182,71 @@ bool SaveOutputTable(UDataTable& Imported, const TCHAR* Name, bool bStaged = tru
     return UPackage::SavePackage(Package, Staged, *Filename, Args);
 }
 
+bool ExportVerifiedShipCatalog(UDataTable& Legacy)
+{
+    const auto* Active = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign"));
+    if (!Active || Active->GetRowStruct() != FShipDesign::StaticStruct() || Active->GetRowMap().IsEmpty())
+        return false;
+
+    const FString Verification = FPaths::ProjectSavedDir() / TEXT("ShipJsonRoundTrip.json");
+    const auto Verify = [&Verification](UDataTable& Source, FString& Json)
+    {
+        if (!DesignTableJson::Export(Source, Json) ||
+            !FFileHelper::SaveStringToFile(Json, *Verification, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
+            return false;
+        auto* Imported = NewObject<UDataTable>();
+        return UStarshatterShipDesignSubsystem::ImportJsonCatalog(*Imported, Verification) &&
+            DesignTableJson::Compare(Source, *Imported);
+    };
+
+    FString Json;
+    if (!Verify(Legacy, Json)) return false;
+    UE_LOG(LogTemp, Display, TEXT("Verified exact JSON round trip of %d legacy ship definitions"), Legacy.GetRowMap().Num());
+
+    auto* Catalog = DuplicateObject<UDataTable>(Active, GetTransientPackage());
+    int32 Added = 0;
+    Legacy.ForeachRow<FShipDesign>(TEXT("Include DEF-only ships"), [Catalog, &Added](FName Name, const FShipDesign& Row)
+    {
+        if (!Catalog->GetRowMap().Contains(Name))
+        {
+            Catalog->AddRow(Name, Row);
+            ++Added;
+        }
+    });
+
+    for (const auto& Pair : Catalog->GetRowMap())
+    {
+        auto& Row = *reinterpret_cast<FShipDesign*>(Pair.Value);
+        UStarshatterShipDesignSubsystem::CompleteLegacyBaseCost(Pair.Key, Row);
+        ShipDesignRegistry::CompleteLegacySkinMetadata(Pair.Key, Row.Skin);
+    }
+    if (!Verify(*Catalog, Json)) return false;
+
+    const FString Destination = FPaths::ProjectContentDir() / TEXT("GameData/Ships/ships.json");
+    if (!FFileHelper::SaveStringToFile(Json, *Destination, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
+        return false;
+    UE_LOG(LogTemp, Display, TEXT("Verified and wrote %d ship rows (%d active, %d DEF-only) to %s"),
+        Catalog->GetRowMap().Num(), Active->GetRowMap().Num(), Added, *Destination);
+    return true;
+}
+
+bool WriteShipAndWeaponJsonTables()
+{
+    auto* Ships = NewObject<UDataTable>();
+    auto* Weapons = NewObject<UDataTable>();
+    const FString GameData = FPaths::ProjectContentDir() / TEXT("GameData");
+    if (!UStarshatterShipDesignSubsystem::ImportJsonCatalog(*Ships, GameData / TEXT("Ships/ships.json")) ||
+        !UStarshatterWeaponDesignSubsystem::ImportJsonCatalog(*Weapons, GameData / TEXT("Weapons/wep.json")))
+        return false;
+    if (!SaveOutputTable(*Ships, TEXT("DT_ShipDesign"), false) ||
+        !SaveOutputTable(*Weapons, TEXT("DT_WeaponDesign"), false))
+        return false;
+
+    UE_LOG(LogTemp, Display, TEXT("Saved %d JSON ship rows and %d JSON weapon rows to the active DataTables"),
+        Ships->GetRowMap().Num(), Weapons->GetRowMap().Num());
+    return true;
+}
+
 bool ImportShipCargo(bool bPricesOnly = false)
 {
     constexpr TCHAR TablePath[] = TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign");
@@ -285,6 +352,53 @@ USSWDesignIngestionCommandlet::USSWDesignIngestionCommandlet()
 int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
 {
 #if WITH_EDITOR
+    if (FParse::Param(*Params, TEXT("ExportShipJson")))
+    {
+        auto* Legacy = NewObject<UDataTable>();
+        Legacy->RowStruct = FShipDesign::StaticStruct();
+        auto* Parser = NewObject<UStarshatterShipDesignSubsystem>(NewObject<UGameInstance>());
+        auto* Individual = NewObject<UDataTable>();
+        Individual->RowStruct = FShipDesign::StaticStruct();
+        Parser->ShipDesignDataTable = Individual;
+        const FString Directory = FPaths::ProjectContentDir() / TEXT("GameData/Ships");
+        TArray<FString> Files;
+        IFileManager::Get().FindFiles(Files, *(Directory / TEXT("*.def")), true, false);
+
+        struct FSourceDesign { FName Key; FName FileKey; FShipDesign Design; };
+        TArray<FSourceDesign> Sources;
+        for (const FString& File : Files)
+        {
+            Individual->EmptyTable();
+            const FTCHARToUTF8 Path(*(Directory / File));
+            Parser->LoadShipDesign(Path.Get());
+            if (Individual->GetRowMap().Num() != 1)
+            {
+                UE_LOG(LogTemp, Error, TEXT("Expected one ship design in %s"), *File);
+                return 1;
+            }
+            for (const auto& Entry : Individual->GetRowMap())
+            {
+                const auto& Row = *reinterpret_cast<const FShipDesign*>(Entry.Value);
+                Legacy->AddRow(Entry.Key, Row);
+                Sources.Add({Entry.Key, FName(*FPaths::GetBaseFilename(File)), Row});
+            }
+        }
+        for (const auto& Source : Sources)
+        {
+            const auto* Canonical = Legacy->FindRow<FShipDesign>(Source.Key, TEXT("Ship JSON migration"), false);
+            if (!Canonical || Canonical->Model == Source.Design.Model) continue;
+            if (Legacy->GetRowMap().Contains(Source.FileKey))
+            {
+                UE_LOG(LogTemp, Error, TEXT("Conflicting ship variant key %s"), *Source.FileKey.ToString());
+                return 1;
+            }
+            Legacy->AddRow(Source.FileKey, Source.Design);
+        }
+        return ExportVerifiedShipCatalog(*Legacy) ? 0 : 1;
+    }
+    if (FParse::Param(*Params, TEXT("WriteShipAndWeaponJsonTables")))
+        return WriteShipAndWeaponJsonTables() ? 0 : 1;
+
     if (FParse::Param(*Params, TEXT("WriteCargoCatalog")))
     {
         auto* Table = NewObject<UDataTable>();
@@ -423,8 +537,10 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     Ships->ShipDesignDataTable = ShipTable;
 
     if (!UStarshatterSystemDesignSubsystem::ImportDefinitions(*SystemTable)) return 1;
-    Weapons->LoadWeaponDesigns();
-    Ships->InitializeShipDesigns();
+    const FString GameData = FPaths::ProjectContentDir() / TEXT("GameData");
+    if (!UStarshatterWeaponDesignSubsystem::ImportJsonCatalog(*WeaponTable, GameData / TEXT("Weapons/wep.json")) ||
+        !UStarshatterShipDesignSubsystem::ImportJsonCatalog(*ShipTable, GameData / TEXT("Ships/ships.json"))) return 1;
+    Weapons->ReadWeaponDesignData();
 
     struct FTableOutput { UDataTable* Table; const TCHAR* Name; bool bAllowEmpty = false; };
     TArray<FTableOutput> Tables = {

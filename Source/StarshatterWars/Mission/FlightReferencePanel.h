@@ -111,23 +111,58 @@ public:
         AddFilter(EShipSystemIcon::Weapon, INVTEXT("Weapons"));
         AddFilter(EShipSystemIcon::Gazetteer, INVTEXT("Gazetteer"));
 
+        using ESection = UTacRefDlg::EGazetteerSection;
+        auto Sections = SNew(SHorizontalBox);
+        const auto AddSection = [&](ESection Section, EShipSystemIcon Icon, const FText& Label)
+        {
+            Sections->AddSlot().FillWidth(1).Padding(0, 0, 6, 0)
+            [
+                SNew(SButton).ContentPadding(FMargin(8, 5)).HAlign(HAlign_Center).ToolTipText(Label)
+                .ButtonColorAndOpacity_Lambda([this, Section]()
+                {
+                    return GazetteerSection == Section ? MissionUIStyle::RowSelectedBG : MissionUIStyle::RowBG;
+                })
+                .OnClicked_Lambda([this, Section]()
+                {
+                    if (GazetteerSection != Section)
+                    {
+                        GazetteerSection = Section;
+                        SelectCategory(EShipSystemIcon::Gazetteer);
+                    }
+                    return FReply::Handled();
+                })
+                [SNew(SShipSystemIcon).Icon(Icon)]
+            ];
+        };
+        AddSection(ESection::Systems, EShipSystemIcon::PlanetMoon, INVTEXT("Systems and worlds"));
+        AddSection(ESection::Factions, EShipSystemIcon::Gazetteer, INVTEXT("Factions and field guide"));
+        AddSection(ESection::Figures, EShipSystemIcon::Agent, INVTEXT("Major figures"));
+
         ChildSlot.Padding(20, 16)
         [
             SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 10)
             [ Filters ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 10)
+            [
+                SNew(SBox).Visibility_Lambda([this]()
+                {
+                    return ActiveCategory == EShipSystemIcon::Gazetteer ? EVisibility::Visible : EVisibility::Collapsed;
+                })
+                [Sections]
+            ]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 16)
             [
                 SAssignNew(Picker, SComboBox<TSharedPtr<FEntry>>).OptionsSource(&Entries).InitiallySelectedItem(Selected)
                 .OnGenerateWidget_Lambda([](TSharedPtr<FEntry> Entry) -> TSharedRef<SWidget>
                 {
-                    return SNew(STextBlock).Text(Entry ? FText::FromString(Entry->Name) : FText::GetEmpty())
+                    return SNew(STextBlock).Text(Entry ? FText::FromString(Entry->DisplayName()) : FText::GetEmpty())
                         .ColorAndOpacity(FLinearColor::White).Font(MissionUIStyle::GetRowFont(16));
                 })
-                .OnSelectionChanged_Lambda([this](TSharedPtr<FEntry> Entry, ESelectInfo::Type) { SetEntry(MoveTemp(Entry)); })
+                .OnSelectionChanged_Lambda([this](TSharedPtr<FEntry> Entry, ESelectInfo::Type) { if (Entry) SetEntry(MoveTemp(Entry)); })
                 [
                     SNew(STextBlock).Font(MissionUIStyle::GetRowFont(17)).ColorAndOpacity(FLinearColor::White)
-                    .Text_Lambda([this]() { return Selected ? FText::FromString(Selected->Name) : INVTEXT("No entries in this category"); })
+                    .Text_Lambda([this]() { return Selected ? FText::FromString(Selected->DisplayName()) : INVTEXT("No entries in this category"); })
                 ]
             ]
             + SVerticalBox::Slot().FillHeight(1)
@@ -135,7 +170,7 @@ public:
                 SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().FillWidth(1).Padding(0, 0, 12, 0)
                 [
-                    SNew(SBox).Visibility_Lambda([this]() { return Selected && !Selected->DesignKey.IsNone()
+                    SNew(SBox).Clipping(EWidgetClipping::ClipToBounds).Visibility_Lambda([this]() { return Selected && !Selected->DesignKey.IsNone()
                         ? EVisibility::Visible : EVisibility::Collapsed; })
                     [Args._PreviewWidget.IsValid() ? Args._PreviewWidget.ToSharedRef() : SNullWidget::NullWidget]
                 ]
@@ -172,6 +207,11 @@ private:
         FString Stats;
         FString Description;
         FName DesignKey;
+
+        FString DisplayName() const
+        {
+            return Category == EShipSystemIcon::Gazetteer ? UTacRefDlg::GetGazetteerDisplayName(Name) : Name;
+        }
     };
     void SelectCategory(EShipSystemIcon Category)
     {
@@ -179,7 +219,9 @@ private:
         Entries.Reset();
         for (const auto& Entry : Catalog)
         {
-            if (Entry->Category == Category) Entries.Add(Entry);
+            if (Entry->Category == Category && (Category != EShipSystemIcon::Gazetteer ||
+                UTacRefDlg::GetGazetteerSection(Entry->Name) == GazetteerSection))
+                Entries.Add(Entry);
         }
         const TSharedPtr<FEntry> First = Entries.IsEmpty() ? nullptr : Entries[0];
         if (Picker)
@@ -203,6 +245,7 @@ private:
 
     TFunction<void(const FShipDesign*)> UpdatePreview;
     TFunction<void(const FString&)> UpdateGazetteerMap;
+    UTacRefDlg::EGazetteerSection GazetteerSection = UTacRefDlg::EGazetteerSection::Systems;
     EShipSystemIcon ActiveCategory = EShipSystemIcon::Ship;
     TArray<TSharedPtr<FEntry>> Catalog;
     TArray<TSharedPtr<FEntry>> Entries;

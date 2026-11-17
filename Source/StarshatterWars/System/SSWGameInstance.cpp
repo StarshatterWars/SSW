@@ -706,6 +706,15 @@ UUserWidget* USSWGameInstance::GetActiveWidget() {
 	return ActiveWidget;
 }
 
+Campaign* USSWGameInstance::GetAgentTrainingCampaign()
+{
+    if (!AgentTrainingCampaign)
+        if (auto* Data = GetSubsystem<UStarshatterGameDataSubsystem>())
+            if (const auto* Row = Data->GetCampaignByIndex1Based(Campaign::TRAINING_CAMPAIGN))
+                AgentTrainingCampaign = MakeShareable(Campaign::CreateFromData(*Row));
+    return AgentTrainingCampaign.Get();
+}
+
 void USSWGameInstance::Shutdown()
 {
     ClearPlatformSignInRequest();

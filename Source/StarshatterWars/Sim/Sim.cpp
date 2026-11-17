@@ -13,6 +13,9 @@
 */
 
 #include "Sim.h"
+#include "AcceptanceAI.h"
+#include "BiddingAI.h"
+#include "SettlementAI.h"
 #include "SSWSessionLobbyGameMode.h"
 #include "SSWGameInstance.h"
 #include "CampaignSave.h"
@@ -498,9 +501,18 @@ void Sim::UnloadMission()
     const int RegionCount = regions.size();
     const int JumpCount = jumplist.size();
     const int SplashCount = splashlist.size();
+    if (!AssignedAgentPilot.IsNone() && mission)
+    {
+        if (auto* Runtime = GetSSWRuntimeSubsystem())
+            if (auto* Instance = Cast<USSWGameInstance>(Runtime->GetGameInstance()))
+                Instance->GetTrainingAgent().Interrupt(AssignedAgentPilot, mission->GetIdentity());
+    }
+    AssignedAgentPilot = NAME_None;
     bPlayerDocked = false;
     DeferredPlayerWingmen.Reset();
     JanekMiningRuns.Reset();
+    TrainingContracts.Reset();
+    TrainingContractAccounts.Reset();
     JanekRefinery = {};
     JanekMiningStock.Reset();
     JanusTransferStock.Reset();
@@ -932,6 +944,17 @@ Sim::ExecMission()
 	AudioConfig::SetTraining(
 		mission->GetMissionType() ==
 		(int)EMissionType::TRAINING);
+
+    if (!IsNetworked() && (mission->GetMissionType() == int(EMissionType::TRAINING) ||
+        mission->IsRegionalAgentMission()) && GetPlayerShip())
+        if (auto* Runtime = GetSSWRuntimeSubsystem())
+            if (auto* Instance = Cast<USSWGameInstance>(Runtime->GetGameInstance()))
+                if (const auto* Pilot = PlayerCharacter::GetCurrentPlayer())
+                {
+                    const FName PilotId = AgentAI::PilotKey(*Pilot);
+                    if (Instance->GetTrainingAgent().Start(PilotId, mission->GetIdentity()))
+                        AssignedAgentPilot = PilotId;
+                }
 
 	UE_LOG(LogTemp, Warning,
 		TEXT("[Sim::ExecMission] COMPLETE Mission='%hs' Regions=%d Elements=%d"),
@@ -2581,6 +2604,158 @@ void Sim::AssignNetworkObjectId(SimObject& Object)
 {
     if (Object.GetObjID() == 0 && IsNetworked() && HasSimulationAuthority())
         Object.SetObjID(NextNetworkObjectId++);
+}
+
+void Sim::ResolveAgentAssignment(bool bSucceeded)
+{
+    if (!mission || AssignedAgentPilot.IsNone()) return;
+    if (auto* Runtime = GetSSWRuntimeSubsystem())
+        if (auto* Instance = Cast<USSWGameInstance>(Runtime->GetGameInstance()))
+            if (Instance->GetTrainingAgent().Resolve(AssignedAgentPilot, mission->GetIdentity(), bSucceeded))
+                AssignedAgentPilot = NAME_None;
+}
+
+const FName Sim::TrainingContractPilot(TEXT("Training Pilot"));
+
+const TMap<FName, FContractTransaction>& Sim::GetTrainingContracts()
+{
+    if (!mission || mission->GetIdentity() != 101 || IsNetworked() || !HasSimulationAuthority())
+        return TrainingContracts;
+
+    const FDateTime Now = FDateTime::UtcNow();
+    if (TrainingContracts.IsEmpty())
+    {
+        const FName Depot(TEXT("Janek Logistics"));
+        const FName Terminal(TEXT("Janus Transfer Station"));
+        const FName Supplies(TEXT("Training Supplies"));
+        const FName Parts(TEXT("Training Spare Parts"));
+        auto& DepotAccount = TrainingContractAccounts.Add(Depot);
+        DepotAccount.Credits = 20000;
+        auto& Stock = DepotAccount.StationStock.Add(Terminal);
+        Stock.Add(Parts, 1);
+        auto& PilotAccount = TrainingContractAccounts.Add(TrainingContractPilot);
+        PilotAccount.Credits = 10000;
+        PilotAccount.StationStock.FindOrAdd(Terminal).Add(Parts, 1);
+
+        FContractTransaction Courier;
+        Courier.Issuer = Depot;
+        Courier.Terms.Title = TEXT("Training courier delivery");
+        Courier.Terms.Description = TEXT("Accept a sealed 0.1 t training package, then fly within 2 km of Janus Transfer Station to deliver it.");
+        Courier.Terms.PickupStationId = TEXT("Archon");
+        Courier.Terms.DestinationStationId = Terminal;
+        Courier.Terms.OfferExpiryMinutes = 120;
+        Courier.Terms.CompletionDays = 1;
+        Courier.Terms.CollateralCredits = 500;
+        Courier.Terms.RewardCredits = 750;
+        auto& CourierCargo = Courier.Terms.OfferedItems.AddDefaulted_GetRef();
+        CourierCargo.ItemId = Supplies;
+        CourierCargo.Quantity = 1;
+        CourierCargo.Unit = TEXT("crate");
+        TrainingContractAccounts.FindChecked(Depot).StationStock.FindOrAdd(Courier.Terms.PickupStationId).Add(Supplies, 1);
+        if (AcceptanceAI::Publish(Courier, TrainingContractAccounts, Now))
+            TrainingContracts.Add(TEXT("Courier"), MoveTemp(Courier));
+
+        FContractTransaction Auction;
+        Auction.Issuer = Depot;
+        Auction.Terms.Type = ESSWContractType::Auction;
+        Auction.Terms.Title = TEXT("Spare parts auction");
+        Auction.Terms.Description = TEXT("Place a bid, or choose Buyout to receive the training parts immediately. A winning bid can be claimed after the auction closes.");
+        Auction.Terms.PickupStationId = Terminal;
+        Auction.Terms.OfferExpiryMinutes = 5;
+        Auction.Terms.PriceCredits = 1000;
+        Auction.Buyout = 2500;
+        auto& AuctionCargo = Auction.Terms.OfferedItems.AddDefaulted_GetRef();
+        AuctionCargo.ItemId = Parts;
+        AuctionCargo.Quantity = 1;
+        AuctionCargo.Unit = TEXT("crate");
+        if (AcceptanceAI::Publish(Auction, TrainingContractAccounts, Now))
+            TrainingContracts.Add(TEXT("Auction"), Auction);
+
+        FContractTransaction Sale = Auction;
+        Sale.State = EContractState::Draft;
+        Sale.Issuer = TrainingContractPilot;
+        Sale.Terms.Title = TEXT("Training auction payout");
+        Sale.Terms.Description = TEXT("Janek Logistics purchased your training parts. Claim the sale proceeds.");
+        Sale.Buyout = 1500;
+        if (AcceptanceAI::Publish(Sale, TrainingContractAccounts, Now) &&
+            BiddingAI::PlaceBid(Sale, TrainingContractAccounts, Depot, Sale.Buyout, Now))
+            TrainingContracts.Add(TEXT("Sale"), MoveTemp(Sale));
+    }
+
+    for (auto& Entry : TrainingContracts)
+    {
+        auto& Contract = Entry.Value;
+        SettlementAI::CloseExpired(Contract, TrainingContractAccounts, Now);
+        if (Contract.State == EContractState::AwaitingClaims &&
+            Contract.Issuer != TrainingContractPilot && !Contract.bSellerClaimed)
+            SettlementAI::ClaimAuction(Contract, TrainingContractAccounts, Contract.Issuer);
+    }
+    return TrainingContracts;
+}
+
+int64 Sim::GetTrainingContractBalance() const
+{
+    const auto* Account = TrainingContractAccounts.Find(TrainingContractPilot);
+    return Account ? Account->Credits : 0;
+}
+
+FText Sim::ExecuteTrainingContract(FName ContractId, ETrainingContractAction Action, int64 Bid)
+{
+    if (!mission || mission->GetIdentity() != 101 || IsNetworked() || !HasSimulationAuthority())
+        return INVTEXT("Training contracts are available in offline T1.");
+    GetTrainingContracts();
+    auto* Contract = TrainingContracts.Find(ContractId);
+    if (!Contract)
+        return INVTEXT("Contract unavailable.");
+
+    const FDateTime Now = FDateTime::UtcNow();
+    switch (Action)
+    {
+    case ETrainingContractAction::Accept:
+    {
+        Ship* Player = GetPlayerShip();
+        if (!Player || Player->IsDead() || Player->IsDying())
+            return INVTEXT("A live fighter is required to accept the courier package.");
+        if (Contract->Terms.Type != ESSWContractType::Courier || Contract->State != EContractState::Open)
+            return INVTEXT("This courier offer is no longer open.");
+        constexpr double PackageTonnes = 0.1;
+        if (!Player->LoadCourierPackage(ContractId, PackageTonnes))
+            return INVTEXT("The courier package needs 0.1 t of free cargo capacity.");
+        if (AcceptanceAI::Accept(*Contract, TrainingContractAccounts, TrainingContractPilot, Now))
+            return INVTEXT("Package loaded. Fly to Janus Transfer Station to deliver it.");
+        Player->RemoveCourierPackage(ContractId);
+        return INVTEXT("Could not accept. Check the contract status and your collateral balance.");
+    }
+    case ETrainingContractAction::Bid:
+        if (BiddingAI::PlaceBid(*Contract, TrainingContractAccounts, TrainingContractPilot, Bid, Now))
+            return Contract->bBuyerClaimed ? INVTEXT("Buyout complete. Goods credited at Janus Transfer Station.")
+                                          : INVTEXT("Bid placed. Credits are held until you are outbid or the auction settles.");
+        return INVTEXT("Bid rejected. Check the bid amount, your balance, and the auction deadline.");
+    case ETrainingContractAction::Deliver:
+    {
+        Ship* Player = GetPlayerShip();
+        const FName Destination = Contract->Terms.DestinationStationId;
+        Ship* Station = FindShip(TCHAR_TO_UTF8(*Destination.ToString()));
+        if (!Player || !Station || Player->IsDead() || Player->IsDying() || Station->IsDead() || Station->IsDying() ||
+            !Player->GetRegion() || Player->GetRegion() != Station->GetRegion() ||
+            FVector::DistSquared(Player->GetLocation(), Station->GetLocation()) > FMath::Square(TrainingDeliveryRange))
+            return INVTEXT("Fly within 2 km of Janus Transfer Station to deliver.");
+        if (!Player->HasCourierPackage(ContractId))
+            return INVTEXT("The sealed courier package is missing from this cargo hold.");
+        if (SettlementAI::DeliverCourier(*Contract, TrainingContractAccounts, TrainingContractPilot, Destination))
+        {
+            Player->RemoveCourierPackage(ContractId);
+            return INVTEXT("Delivered. Reward and collateral credited.");
+        }
+        return INVTEXT("This contract cannot be delivered.");
+    }
+    case ETrainingContractAction::Claim:
+        if (SettlementAI::ClaimAuction(*Contract, TrainingContractAccounts, TrainingContractPilot))
+            return Contract->Issuer == TrainingContractPilot ? INVTEXT("Auction payout credited.")
+                                                           : INVTEXT("Auction goods credited at Janus Transfer Station.");
+        return INVTEXT("No auction claim is available.");
+    }
+    return FText::GetEmpty();
 }
 
 TArray<Sim::FActiveHaul> Sim::GetActiveHauls()

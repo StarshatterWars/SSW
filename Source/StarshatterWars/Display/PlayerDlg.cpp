@@ -12,7 +12,7 @@
     Player profile dialog (authoritative-only).
 
     - Reads/writes FS_PlayerGameInfo via UStarshatterPlayerSubsystem
-    - DOES NOT use legacy PlayerCharacter
+    - Uses the live pilot for the read-only mission logbook
     - DOES NOT use lambdas
     - Fixes common �nothing shows up� issues:
         * edt_callsign was never created
@@ -22,6 +22,12 @@
 =============================================================================*/
 
 #include "PlayerDlg.h"
+#include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Styling/CoreStyle.h"
+#include "Widgets/SBoxPanel.h"
+#include "Widgets/Text/STextBlock.h"
+
 #include "ModernMenuLayout.h"
 #include "MissionUIStyle.h"
 
@@ -50,6 +56,11 @@
 #include "FactionInsignia.h"
 #include "Campaign.h"
 #include "CombatGroup.h"
+#include "PlayerCharacter.h"
+#include "Sim.h"
+#include "Ship.h"
+#include "SimRegion.h"
+#include "Mission.h"
 
 // Manager
 #include "MenuScreen.h"
@@ -1001,4 +1012,167 @@ void UPlayerDlg::OnConfirmDeleteSavedPlayer()
 void UPlayerDlg::OnKeepSavedPlayer()
 {
     if(DeleteSavedConfirmation) DeleteSavedConfirmation->SetVisibility(ESlateVisibility::Collapsed);
+}
+
+TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
+{
+    const auto* Players = Instance ? Instance->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    FS_PlayerGameInfo Pilot = Players ? Players->GetPlayerInfo() : FS_PlayerGameInfo{};
+    if (const auto* Live = PlayerCharacter::GetCurrentPlayer();
+        Live && (Pilot.Name.IsEmpty() || Pilot.Name.Equals(Live->GetName(), ESearchCase::IgnoreCase)))
+    {
+        Live->ToPlayerInfo(Pilot);
+        Pilot.Empire = static_cast<int32>(Live->GetEmpire());
+    }
+    if (Pilot.Name.IsEmpty())
+        return MissionUIStyle::MakeDataPane(SNew(STextBlock).Text(INVTEXT("No active pilot record.")));
+
+    const auto Overview = SNew(SVerticalBox);
+    const auto ServiceRecord = SNew(SVerticalBox);
+    const auto Awards = SNew(SVerticalBox);
+    const auto History = SNew(SVerticalBox);
+    const auto Radio = SNew(SVerticalBox);
+    TSharedRef<SVerticalBox> Rows = Overview;
+    const auto Display = [](FString Value)
+    {
+        Value.TrimStartAndEndInline();
+        if (Value.IsEmpty()) return INVTEXT("Unassigned");
+        Value[0] = FChar::ToUpper(Value[0]);
+        return FText::FromString(Value);
+    };
+
+    const auto AddSection = [&Rows](FText SectionTitle)
+    {
+        Rows->AddSlot().AutoHeight().Padding(0, 12, 0, 4)
+            [SNew(STextBlock).Text(SectionTitle).Font(MissionUIStyle::GetHeaderFont(15))
+                .ColorAndOpacity(FLinearColor(.46f, .77f, .9f))];
+    };
+    const auto AddStat = [&Rows](FText Label, FText Value)
+    {
+        Rows->AddSlot().AutoHeight().Padding(0, 1)
+        [
+            SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+            .BorderBackgroundColor(MissionUIStyle::RowBG).Padding(FMargin(10, 5))
+            [
+            SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().FillWidth(.45f).Padding(0, 0, 10, 0)
+            [SNew(STextBlock).Text(Label).Font(MissionUIStyle::GetRowFont(14)).AutoWrapText(true)]
+            + SHorizontalBox::Slot().FillWidth(.55f)
+            [SNew(STextBlock).Text(Value).Font(MissionUIStyle::GetRowFont(14))
+                .Justification(ETextJustify::Right).AutoWrapText(true)]
+            ]
+        ];
+    };
+    const auto* EmpireEnum = StaticEnum<EEMPIRE_NAME>();
+    FString Unit = Pilot.Squadron;
+    if (auto* Active = Campaign::GetCampaign())
+        if (auto* Group = Active->GetPlayerGroup()) Unit = UTF8_TO_TCHAR(Group->GetDescription());
+
+    AddSection(INVTEXT("Pilot overview"));
+    AddStat(INVTEXT("Callsign"), Display(Pilot.Callsign));
+    AddStat(INVTEXT("Faction"), EmpireEnum->IsValidEnumValue(Pilot.Empire)
+        ? EmpireEnum->GetDisplayNameTextByValue(Pilot.Empire) : INVTEXT("Unassigned"));
+    AddStat(INVTEXT("Unit"), Display(Unit));
+    if (!Pilot.Squadron.IsEmpty() && Pilot.Squadron != Unit) AddStat(INVTEXT("Squadron"), Display(Pilot.Squadron));
+    if (Pilot.CreateTime > 0)
+        AddStat(INVTEXT("Service began"), FText::FromString(UFormattingUtils::FormatDateFromUnixSeconds(Pilot.CreateTime)));
+    if (!Pilot.Signature.IsEmpty()) AddStat(INVTEXT("Signature"), Display(Pilot.Signature));
+
+    if (auto* Simulation = Sim::GetSim())
+    {
+        if (auto* Mission = Simulation->GetMission())
+            AddStat(INVTEXT("Current assignment"), Display(UTF8_TO_TCHAR(Mission->GetName())));
+        if (auto* Ship = Simulation->GetPlayerShip())
+            AddStat(INVTEXT("Current ship"), Display(UTF8_TO_TCHAR(Ship->GetName())));
+        if (auto* Region = Simulation->GetActiveRegion())
+            AddStat(INVTEXT("Current sector"), Display(UTF8_TO_TCHAR(Region->GetName())));
+    }
+
+    Rows = ServiceRecord;
+    AddSection(INVTEXT("Service record"));
+    AddStat(INVTEXT("Flight training"), Pilot.bTrainingGraduate || Pilot.HasCompletedMission(1, 103)
+        ? INVTEXT("Graduate") : INVTEXT("In progress"));
+    AddStat(INVTEXT("Flight time"), FText::FromString(UFormattingUtils::FormatTimeHMS(static_cast<double>(Pilot.FlightTime))));
+    AddStat(INVTEXT("Missions flown"), FText::AsNumber(Pilot.PlayerMissions));
+    AddStat(INVTEXT("Assignments completed"), FText::AsNumber(Pilot.CompletedMissions.Num()));
+    AddStat(INVTEXT("Wins"), FText::AsNumber(Pilot.PlayerWins));
+    AddStat(INVTEXT("Losses"), FText::AsNumber(Pilot.PlayerLosses));
+    AddStat(INVTEXT("Kills"), FText::AsNumber(Pilot.PlayerKills));
+    AddStat(INVTEXT("Deaths"), FText::AsNumber(Pilot.PlayerDeaths));
+    AddStat(INVTEXT("Career points"), FText::AsNumber(Pilot.PlayerPoints));
+
+    Rows = Awards;
+    AddSection(INVTEXT("Decorations"));
+    const auto* Data = Instance ? Instance->GetSubsystem<UStarshatterGameDataSubsystem>() : nullptr;
+    const uint32 Medals = static_cast<uint32>(Pilot.MedalsMask);
+    AddStat(INVTEXT("Awards earned"), FText::AsNumber(FMath::CountBits(static_cast<uint64>(Medals))));
+    if (Data)
+        for (uint32 Bit = 0; Bit < 32; ++Bit)
+        {
+            const uint32 Flag = 1u << Bit;
+            FMedalInfo Medal;
+            if ((Medals & Flag) && Data->GetMedalInfoByFlag(Flag, Medal) && !Medal.Name.IsEmpty())
+                Rows->AddSlot().AutoHeight().Padding(0, 3)
+                    [SNew(STextBlock).Text(Display(Medal.Name)).Font(MissionUIStyle::GetRowFont(14))];
+        }
+
+    if (!Pilot.CompletedMissions.IsEmpty())
+    {
+        Rows = History;
+        AddSection(INVTEXT("Recent completions"));
+        const int32 First = FMath::Max(0, Pilot.CompletedMissions.Num() - 10);
+        for (int32 Index = Pilot.CompletedMissions.Num() - 1; Index >= First; --Index)
+        {
+            const auto& Record = Pilot.CompletedMissions[Index];
+            const auto* CampaignData = Data ? Data->GetCampaignByIndex1Based(Record.CampaignId) : nullptr;
+            const FS_CampaignMission* Scene = CampaignData
+                ? CampaignData->Missions.FindByPredicate([&Record](const auto& Entry) { return Entry.Id == Record.MissionId; })
+                : nullptr;
+            if (!Scene && Data && Record.CampaignId == Campaign::SINGLE_MISSIONS &&
+                Record.MissionId > Mission::RegionalAgentMissionOffset)
+                Scene = Data->FindSingleMissionScenario(Record.MissionId - Mission::RegionalAgentMissionOffset);
+            const FText MissionTitle = Scene && !Scene->MissionName.IsEmpty()
+                ? Display(Scene->MissionName)
+                : FText::Format(INVTEXT("Assignment {0}"), FText::AsNumber(Record.MissionId));
+            AddStat(MissionTitle, INVTEXT("Complete"));
+        }
+    }
+
+    if (Pilot.ChatMacros.ContainsByPredicate([](const FString& Value) { return !Value.IsEmpty(); }))
+    {
+        Rows = Radio;
+        AddSection(INVTEXT("Radio macros"));
+        for (int32 Index = 0; Index < Pilot.ChatMacros.Num(); ++Index)
+            if (!Pilot.ChatMacros[Index].IsEmpty())
+                AddStat(FText::AsNumber(Index + 1), Display(Pilot.ChatMacros[Index]));
+    }
+
+    return MissionUIStyle::MakeDataPane(
+        SNew(SVerticalBox)
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 12)
+        [
+            SNew(STextBlock).Text(Display(Pilot.GetRankedDisplayName()))
+            .Font(MissionUIStyle::GetHeaderFont(24)).AutoWrapText(true)
+        ]
+        + SVerticalBox::Slot().FillHeight(1)
+        [
+            SNew(SScrollBox)
+            + SScrollBox::Slot()
+            [
+                SNew(SHorizontalBox)
+                + SHorizontalBox::Slot().FillWidth(1).Padding(0, 0, 8, 0)
+                [
+                    SNew(SVerticalBox)
+                    + SVerticalBox::Slot().AutoHeight()[Overview]
+                    + SVerticalBox::Slot().AutoHeight()[Awards]
+                ]
+                + SHorizontalBox::Slot().FillWidth(1).Padding(8, 0, 0, 0)
+                [
+                    SNew(SVerticalBox)
+                    + SVerticalBox::Slot().AutoHeight()[ServiceRecord]
+                    + SVerticalBox::Slot().AutoHeight()[History]
+                    + SVerticalBox::Slot().AutoHeight()[Radio]
+                ]
+            ]
+        ]);
 }

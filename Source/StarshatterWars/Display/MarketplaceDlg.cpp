@@ -8,7 +8,7 @@
 #include "Sim.h"
 #include "SimRegion.h"
 #include "Styling/CoreStyle.h"
-#include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "StarSystem.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "Widgets/Input/SSearchBox.h"
@@ -163,7 +163,7 @@ namespace
                     ? FText::Format(INVTEXT("{0} cr"), FText::AsNumber(Offer->Price))
                     : INVTEXT("—");
 
-            return SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).Margin(FMargin(8, 5))
+            return SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Margin(FMargin(8, 5))
                 .Text(Text.ToUpper()).ToolTipText(Text).OverflowPolicy(ETextOverflowPolicy::Ellipsis)
                 .Justification(bNumeric ? ETextJustify::Right : ETextJustify::Left);
         }
@@ -335,7 +335,7 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                 Table->SortMode = Mode;
                 Table->Sort();
             })
-            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).Text(Label.ToUpper())]);
+            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(Label.ToUpper())]);
     };
     AddColumn("Item", INVTEXT("Item"), 2.f);
     AddColumn("Description", INVTEXT("Description"), 4.f);
@@ -379,12 +379,13 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
             })
         ]
         + SVerticalBox::Slot().FillHeight(0.7f).Padding(20, 0, 20, 8)
-        [List]
+        [MissionUIStyle::MakeDataPane(List, FMargin(0))]
         + SVerticalBox::Slot().FillHeight(0.3f).Padding(20, 0, 20, 18)
         [
-            SNew(SBorder).Padding(12).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(FLinearColor(0.075f, 0.09f, 0.11f))
-            [
+            MissionUIStyle::MakeDataPane(
+                SNew(SScrollBox)
+                + SScrollBox::Slot()
+                [
                 SNew(STextBlock).Font(MissionUIStyle::GetRowFont(14)).AutoWrapText(true)
                 .Text_Lambda([Selected]()
                 {
@@ -399,6 +400,6 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                         Offer.Goods.bIllicit ? INVTEXT("ILLICIT") : INVTEXT("LEGAL"),
                         FText::AsNumber(Offer.Available), FText::FromString(Offer.Unit()), Source);
                 })
-            ]
+                ])
         ];
 }

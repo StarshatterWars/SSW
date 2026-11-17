@@ -5,7 +5,7 @@
 #include "SimSystem.h"
 #include "Widgets/SLeafWidget.h"
 
-enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore, Contracts, Gazetteer };
+enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore, Contracts, Gazetteer, PlanetMoon, Agent, Accept, Audio, Keyboard, Display };
 
 class SShipSystemIcon : public SLeafWidget
 {
@@ -82,9 +82,24 @@ public:
         case EShipSystemIcon::MediumRangeMissile: Line({{11,1},{15,6},{15,16},{7,16},{7,6},{11,1}}); Line({{7,11},{3,18},{7,16}}); Line({{15,11},{19,18},{15,16}}); Line({{8,20},{14,20}}); break;
         case EShipSystemIcon::Refresh: Line({{18,8},{15,4},{9,3},{4,7},{3,12},{6,17},{11,19},{16,17},{19,13}}); Line({{18,3},{18,8},{13,8}}); break;
         case EShipSystemIcon::Abort: Line({{5,5},{17,5},{17,17},{5,17},{5,5}}); Line({{8,8},{14,14}}); Line({{14,8},{8,14}}); break;
-        case EShipSystemIcon::Gazetteer:
+        case EShipSystemIcon::PlanetMoon:
             Line({{8,4},{12,5},{15,8},{15,13},{12,17},{8,18},{4,17},{1,13},{1,9},{4,5},{8,4}});
             Line({{18,1},{21,2},{22,5},{20,7},{17,7},{16,4},{18,1}});
+            break;
+        case EShipSystemIcon::Accept: Line({{3,11},{8,16},{19,5}}); break;
+        case EShipSystemIcon::Audio:
+            Line({{2,8},{7,8},{12,4},{12,18},{7,14},{2,14},{2,8}});
+            Line({{15,8},{17,11},{15,14}}); Line({{18,5},{21,11},{18,17}}); break;
+        case EShipSystemIcon::Keyboard:
+            Line({{2,5},{20,5},{20,17},{2,17},{2,5}});
+            Line({{5,9},{7,9}}); Line({{10,9},{12,9}}); Line({{15,9},{17,9}});
+            Line({{6,13},{16,13}}); break;
+        case EShipSystemIcon::Display:
+            Line({{2,3},{20,3},{20,15},{2,15},{2,3}});
+            Line({{11,15},{11,19}}); Line({{6,19},{16,19}}); break;
+        case EShipSystemIcon::Agent:
+            Line({{8,3},{14,3},{16,6},{15,10},{12,12},{10,12},{7,10},{6,6},{8,3}});
+            Line({{3,20},{3,17},{7,14},{15,14},{19,17},{19,20},{3,20}});
             break;
         case EShipSystemIcon::Contracts:
             Line({{4,2},{13,2},{18,7},{18,20},{4,20},{4,2}});
@@ -118,7 +133,15 @@ public:
             Line({{2,7},{15,7},{20,11},{15,15},{2,15},{2,7}});
             Line({{6,7},{6,15}}); Line({{11,7},{11,15}});
             break;
-        case EShipSystemIcon::Reference: Line({{11,5},{7,3},{2,3},{2,17},{7,17},{11,19},{15,17},{20,17},{20,3},{15,3},{11,5},{11,19}}); break;
+        case EShipSystemIcon::Reference:
+            Line({{5,3},{18,3},{18,17},{5,17},{3,19},{5,21},{18,21}});
+            Line({{5,3},{3,5},{3,19}});
+            Line({{8,7},{15,7}}); Line({{8,10},{14,10}});
+            break;
+        case EShipSystemIcon::Gazetteer:
+            Line({{11,5},{7,3},{2,3},{2,17},{7,17},{11,19},{15,17},{20,17},{20,3},{15,3},{11,5},{11,19}});
+            Line({{5,7},{8,8}}); Line({{14,8},{17,7}});
+            break;
         case EShipSystemIcon::Camera:
             Line({{2,6},{14,6},{14,16},{2,16},{2,6}});
             Line({{14,9},{20,6},{20,16},{14,13}});

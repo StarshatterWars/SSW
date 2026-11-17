@@ -10,7 +10,9 @@ TSharedRef<SWidget> UFlightTacticalReferenceDlg::RebuildWidget()
     Preview = CreateWidget<UShipBriefingPreview>(GetOwningPlayer());
     if (!Preview) return SNew(SFlightReferencePanel);
 
+    Preview->SetReferencePreview();
     GazetteerMap = WidgetTree->ConstructWidget<USystemMapPanel>();
+    GazetteerMap->EnableMissionBodyMeshes();
     return SNew(SFlightReferencePanel)
         .GameInstance(GetGameInstance())
         .GazetteerMap(GazetteerMap->TakeWidget())
@@ -24,8 +26,8 @@ TSharedRef<SWidget> UFlightTacticalReferenceDlg::RebuildWidget()
         {
             if (auto* View = Widget.Get())
             {
-                View->SetPreviewActive(Design != nullptr);
                 if (Design) View->SetShipDesign(Design);
+                View->SetPreviewActive(Design != nullptr);
             }
         });
 }

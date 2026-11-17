@@ -18,6 +18,7 @@
 
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
+#include "DataTableUtils.h"
 #include "Engine/DataTable.h"
 #include "WeaponDesignRegistry.h"
 #include "ShipDesign.h"
@@ -128,20 +129,57 @@ void UStarshatterWeaponDesignSubsystem::Deinitialize()
 void UStarshatterWeaponDesignSubsystem::LoadAll(bool bFull)
 {
     UE_LOG(LogTemp, Log, TEXT("UStarshatterWeaponDesignSubsystem::LoadAll()"));
-    //if (!bFull) {
-        LoadWeaponDesigns();
-   //}
-    
-    // Runtime path:
-    ReadWeaponDesignData();
+    LoadWeaponDesigns();
 }
 
 void UStarshatterWeaponDesignSubsystem::LoadWeaponDesigns()
 {
-    // Adjust if your path differs:
-    const FString WepDefPath = FPaths::ProjectContentDir() / TEXT("GameData/Weapons/wep.def");
-    const FTCHARToUTF8 Utf8(*WepDefPath);
-    LoadWeaponDesign(Utf8.Get());
+    const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Weapons/wep.json");
+    auto* Imported = NewObject<UDataTable>(this);
+    if (ImportJsonCatalog(*Imported, Path))
+    {
+        const bool bUpdateTable = WeaponDesignDataTable &&
+            WeaponDesignDataTable->GetRowStruct() == FWeaponDesign::StaticStruct();
+        if (bUpdateTable)
+            WeaponDesignDataTable->CreateTableFromOtherTable(Imported);
+        else
+            WeaponDesignDataTable = Imported;
+        UE_LOG(LogTemp, Display, TEXT("[WEAPON] Imported %d designs from %s"), Imported->GetRowMap().Num(), *Path);
+    }
+    else
+        UE_LOG(LogTemp, Warning, TEXT("[WEAPON] Using the existing data table because %s could not be loaded"), *Path);
+    ReadWeaponDesignData();
+}
+
+bool UStarshatterWeaponDesignSubsystem::ImportJsonCatalog(UDataTable& Table, const FString& Path)
+{
+    FString Json;
+    if (!FFileHelper::LoadFileToString(Json, *Path)) return false;
+    Table.RowStruct = FWeaponDesign::StaticStruct();
+    Table.ImportKeyField = TEXT("Row");
+    const TArray<FString> Problems = Table.CreateTableFromJSONString(Json);
+    for (const auto& Problem : Problems) UE_LOG(LogTemp, Warning, TEXT("%s: %s"), *Path, *Problem);
+    if (!Problems.IsEmpty() || Table.GetRowMap().IsEmpty()) return false;
+
+    TArray<TPair<FName, FWeaponDesign>> Designs;
+    Designs.Reserve(Table.GetRowMap().Num());
+    for (const auto& Pair : Table.GetRowMap())
+    {
+        const auto& Design = *reinterpret_cast<const FWeaponDesign*>(Pair.Value);
+        const FString Name = Design.Name.TrimStartAndEnd();
+        if (Name.IsEmpty() || Pair.Key != DataTableUtils::MakeValidName(Name))
+        {
+            UE_LOG(LogTemp, Error, TEXT("[WEAPON] Invalid row/display name in %s: %s"), *Path, *Pair.Key.ToString());
+            return false;
+        }
+        Designs.Emplace(FName(*Name), Design);
+    }
+
+    // Unreal's JSON table importer removes spaces from row keys.
+    // Restore the legacy keys used by weapon lookups and the design table.
+    Table.EmptyTable();
+    for (const auto& Pair : Designs) Table.AddRow(Pair.Key, Pair.Value);
+    return true;
 }
 
 void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)

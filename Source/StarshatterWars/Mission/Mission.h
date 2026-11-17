@@ -81,6 +81,10 @@ public:
     virtual MissionElement* GetPlayer();
 
     // accessors/mutators:
+    static constexpr int FreeFlightId = 900001;
+    bool IsFreeFlight() const { return id == FreeFlightId; }
+    static constexpr int RegionalAgentMissionOffset = 910000;
+    bool IsRegionalAgentMission() const { return id > RegionalAgentMissionOffset && id < 1000000; }
     int               GetIdentity()     const { return id; }
     const char*       FileName()        const { return filename; }
     const char*       GetName()         const { return name; }

@@ -91,6 +91,24 @@ bool FJanusProductionTest::RunTest(const FString&)
         MiningAI::SelectDeposit(Sector, FVector::ZeroVector, Assay, Minerals, FString(), {}) == Rock))
         return false;
 
+    ShipDesign CourierDesign;
+    CourierDesign.CargoCapacity.Tonnes = 0.3;
+    Ship Courier("Courier test", "", &CourierDesign, 0, 0, nullptr, false);
+    const FName PackageId(TEXT("TestCourier"));
+    TestTrue(TEXT("Sealed package fits on an empty fighter"), Courier.LoadCourierPackage(PackageId, 0.1));
+    TestFalse(TEXT("The package cannot be loaded twice"), Courier.LoadCourierPackage(PackageId, 0.1));
+    TestTrue(TEXT("Other cargo uses only remaining capacity"),
+        FMath::IsNearlyEqual(Courier.LoadMinedOre(TEXT("ore"), 1.0), 0.2));
+    TestTrue(TEXT("Used capacity includes ordinary cargo and the package"),
+        FMath::IsNearlyEqual(Courier.GetCargoUsedTonnes(), 0.3));
+    Courier.RemoveCourierPackage(TEXT("WrongContract"));
+    TestTrue(TEXT("Only the matching contract can remove the package"), Courier.HasCourierPackage(PackageId));
+    Courier.RemoveCourierPackage(PackageId);
+    TestFalse(TEXT("Delivery removed the sealed package"), Courier.HasCourierPackage(PackageId));
+    TestTrue(TEXT("Delivery restores capacity and preserves ordinary cargo"),
+        FMath::IsNearlyEqual(Courier.GetCargoUsedTonnes(), 0.2));
+    TestFalse(TEXT("A package exceeding remaining capacity is refused"), Courier.LoadCourierPackage(PackageId, 0.15));
+
     ShipDesign HaulerDesign;
     HaulerDesign.CargoCapacity.Tonnes = FMath::Max(Recipe->InputTonnes, Recipe->OutputTonnes) + 1.0;
     Ship OreHauler("Ore hauler test", "", &HaulerDesign, 0, 0, nullptr, false);

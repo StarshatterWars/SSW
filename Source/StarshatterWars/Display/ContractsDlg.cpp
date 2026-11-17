@@ -9,11 +9,27 @@
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Input/SCheckBox.h"
 #include "Widgets/Input/SSearchBox.h"
+#include "Widgets/Input/SEditableTextBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 
 namespace
 {
+    int64 ParseBid(const FString& Input)
+    {
+        int64 Amount = 0;
+        for (const TCHAR Character : Input)
+        {
+            if (Character < TEXT('0') || Character > TEXT('9'))
+                return 0;
+            const int64 Digit = Character - TEXT('0');
+            if (Amount > (MAX_int64 - Digit) / 10)
+                return 0;
+            Amount = Amount * 10 + Digit;
+        }
+        return Amount;
+    }
+
     FString DescribeItems(const TArray<FSSWContractItem>& Items)
     {
         TArray<FString> Lines;
@@ -71,81 +87,232 @@ namespace
 
 TSharedRef<SWidget> UContractsDlg::RebuildWidget()
 {
-    const auto bPersonal = MakeShared<bool>(false);
+    using Action = Sim::ETrainingContractAction;
+    enum class ETab { Offers, Personal, Hauls };
+    Sim* InitialSim = Sim::GetSim();
+    const bool bTraining = InitialSim && !InitialSim->GetTrainingContracts().IsEmpty();
+    const auto Tab = MakeShared<ETab>(bTraining ? ETab::Offers : ETab::Hauls);
     const auto Query = MakeShared<FString>();
     const auto Selected = MakeShared<TOptional<Sim::FActiveHaul>>();
+    const auto SelectedId = MakeShared<FName>();
+    const auto Feedback = MakeShared<FText>();
+    const auto BidInput = SNew(SEditableTextBox).HintText(INVTEXT("Bid in credits"));
     auto Rows = SNew(SScrollBox);
-    const auto Refresh = [Rows, Query, bPersonal, Selected]()
+    const auto Refresh = [Rows, Query, Tab, Selected, SelectedId, Feedback, BidInput]()
     {
         Rows->ClearChildren();
-        const FGuid PreviousSelection = Selected->IsSet() ? Selected->GetValue().Id : FGuid();
-        Selected->Reset();
         Sim* Simulation = Sim::GetSim();
-        const auto Hauls = Simulation && !*bPersonal ? Simulation->GetActiveHauls() : TArray<Sim::FActiveHaul>{};
-        for (const auto& Haul : Hauls)
+        const auto AddRow = [&Rows, &Query](const FString& Text, FOnClicked Click)
         {
-            const FSSWContractTerms& Terms = Haul.Terms;
-            const FString Cargo = DescribeItems(Terms.OfferedItems);
-            const FString Row = FString::Printf(TEXT("%s   |   %s → %s   |   %s"),
-                *Terms.Title, *Terms.PickupStationId.ToString(), *Terms.DestinationStationId.ToString(), *Cargo);
-            if (!Query->IsEmpty() && !Row.Contains(*Query) && !Terms.AssignedToId.ToString().Contains(*Query))
-                continue;
-
-            if (Haul.Id == PreviousSelection) *Selected = Haul;
-            Rows->AddSlot().Padding(0, 0, 0, 4)
-            [
-                SNew(SButton)
-                .HAlign(HAlign_Left)
-                .OnClicked_Lambda([Selected, Haul]() { *Selected = Haul; return FReply::Handled(); })
-                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).Text(FText::FromString(Row))]
-            ];
+            if (Query->IsEmpty() || Text.Contains(*Query))
+                Rows->AddSlot().Padding(0, 0, 0, 4)
+                [
+                    SNew(SButton).HAlign(HAlign_Left).OnClicked(Click)
+                    [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(FText::FromString(Text).ToUpper())]
+                ];
+        };
+        if (Simulation && *Tab != ETab::Hauls)
+        {
+            for (const auto& Entry : Simulation->GetTrainingContracts())
+            {
+                const auto& Contract = Entry.Value;
+                const bool bMine = Contract.Issuer == Sim::TrainingContractPilot ||
+                    Contract.Acceptor == Sim::TrainingContractPilot || Contract.HighBidder == Sim::TrainingContractPilot;
+                if (*Tab == ETab::Personal ? !bMine : Contract.State != EContractState::Open)
+                    continue;
+                const FString Row = FString::Printf(TEXT("%s  |  %s"), *Contract.Terms.Title, *Contract.Terms.PickupStationId.ToString());
+                AddRow(Row, FOnClicked::CreateLambda([SelectedId, Feedback, BidInput, Id = Entry.Key]()
+                {
+                    *SelectedId = Id;
+                    *Feedback = FText::GetEmpty();
+                    BidInput->SetText(FText::GetEmpty());
+                    return FReply::Handled();
+                }));
+            }
+        }
+        else if (Simulation)
+        {
+            const FGuid Previous = Selected->IsSet() ? Selected->GetValue().Id : FGuid();
+            Selected->Reset();
+            for (const auto& Haul : Simulation->GetActiveHauls())
+            {
+                const auto& Terms = Haul.Terms;
+                const FString Row = FString::Printf(TEXT("%s  |  %s → %s  |  %s"), *Terms.Title,
+                    *Terms.PickupStationId.ToString(), *Terms.DestinationStationId.ToString(), *DescribeItems(Terms.OfferedItems));
+                if (Haul.Id == Previous) *Selected = Haul;
+                AddRow(Row, FOnClicked::CreateLambda([Selected, Haul]() { *Selected = Haul; return FReply::Handled(); }));
+            }
         }
         if (Rows->GetChildren()->Num() == 0)
-            Rows->AddSlot()[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13))
-                .Text(*bPersonal ? INVTEXT("NO PERSONAL CONTRACTS") : INVTEXT("NO MATCHING ACTIVE HAULS"))];
+            Rows->AddSlot()[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).Text(INVTEXT("No matching contracts"))];
     };
     Refresh();
 
+    const auto GetSelectedOffer = [Tab, SelectedId]() -> const FContractTransaction*
+    {
+        Sim* Simulation = Sim::GetSim();
+        return *Tab != ETab::Hauls && Simulation && !SelectedId->IsNone()
+            ? Simulation->GetTrainingContracts().Find(*SelectedId) : nullptr;
+    };
+    const auto Execute = [SelectedId, Feedback, Refresh, Tab](Action Task, int64 Credits)
+    {
+        if (Sim* Simulation = Sim::GetSim())
+        {
+            *Feedback = Simulation->ExecuteTrainingContract(*SelectedId, Task, Credits);
+            if (Task == Action::Accept)
+                if (const auto* Offer = Simulation->GetTrainingContracts().Find(*SelectedId);
+                    Offer && Offer->Acceptor == Sim::TrainingContractPilot)
+                    *Tab = ETab::Personal;
+            Refresh();
+        }
+        return FReply::Handled();
+    };
+
     auto Tabs = SNew(SHorizontalBox);
-    const auto AddTab = [&Tabs, bPersonal, Refresh](const FText& Label, bool bMyContracts)
+    const auto AddTab = [&Tabs, Tab, Refresh, SelectedId, Feedback](const FText& Label, ETab Value)
     {
         Tabs->AddSlot().AutoWidth().Padding(0, 0, 16, 0)
         [
             SNew(SCheckBox)
-            .IsChecked_Lambda([bPersonal, bMyContracts]()
+            .IsChecked_Lambda([Tab, Value]() { return *Tab == Value ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
+            .OnCheckStateChanged_Lambda([Tab, Value, Refresh, SelectedId, Feedback](ECheckBoxState)
             {
-                return *bPersonal == bMyContracts ? ECheckBoxState::Checked : ECheckBoxState::Unchecked;
-            })
-            .OnCheckStateChanged_Lambda([bPersonal, bMyContracts, Refresh](ECheckBoxState)
-            {
-                *bPersonal = bMyContracts;
+                *Tab = Value;
+                *SelectedId = NAME_None;
+                *Feedback = FText::GetEmpty();
                 Refresh();
             })
             [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(14)).Text(Label)]
         ];
     };
-    AddTab(INVTEXT("ACTIVE HAULS"), false);
-    AddTab(INVTEXT("MY CONTRACTS"), true);
+    if (bTraining)
+    {
+        AddTab(INVTEXT("TRAINING OFFERS"), ETab::Offers);
+        AddTab(INVTEXT("MY CONTRACTS"), ETab::Personal);
+    }
+    AddTab(INVTEXT("ACTIVE HAULS"), ETab::Hauls);
     Tabs->AddSlot().AutoWidth()
     [
         SNew(SButton).Text(INVTEXT("REFRESH"))
         .OnClicked_Lambda([Refresh]() { Refresh(); return FReply::Handled(); })
     ];
 
-    const auto GetLocalFreighter = [Selected]() -> Ship*
+    const auto GetLocalFreighter = [Selected, Tab]() -> Ship*
     {
         Sim* Simulation = Sim::GetSim();
         Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
-        if (!Player || !Selected->IsSet() || !Player->GetRegion())
+        if (*Tab != ETab::Hauls || !Player || !Selected->IsSet() || !Player->GetRegion())
             return nullptr;
         Ship* Freighter = Simulation->FindShip(TCHAR_TO_UTF8(*Selected->GetValue().Terms.AssignedToId.ToString()));
         return Freighter && Freighter->GetRegion() == Player->GetRegion() &&
             !Freighter->IsDead() && !Freighter->IsDying() ? Freighter : nullptr;
     };
 
+    const auto CanBid = [GetSelectedOffer]()
+    {
+        const auto* Offer = GetSelectedOffer();
+        return Offer && Offer->Terms.Type == ESSWContractType::Auction && Offer->State == EContractState::Open;
+    };
+    auto Actions = SNew(SHorizontalBox);
+    const auto AddAction = [&Actions](FText Label, TFunction<bool()> Available, FOnClicked Click)
+    {
+        Actions->AddSlot().AutoWidth().Padding(0, 0, 6, 0)
+        [
+            SNew(SButton).Text(Label).OnClicked(Click)
+            .Visibility_Lambda([Available]() { return Available() ? EVisibility::Visible : EVisibility::Collapsed; })
+        ];
+    };
+    AddAction(INVTEXT("ACCEPT"), [GetSelectedOffer]()
+    {
+        const auto* Offer = GetSelectedOffer();
+        return Offer && Offer->State == EContractState::Open && Offer->Terms.Type == ESSWContractType::Courier;
+    }, FOnClicked::CreateLambda([Execute]() { return Execute(Action::Accept, 0); }));
+    Actions->AddSlot().AutoWidth().Padding(0, 0, 6, 0)
+    [
+        SNew(SBox).WidthOverride(130)
+        .Visibility_Lambda([CanBid]() { return CanBid() ? EVisibility::Visible : EVisibility::Collapsed; })
+        [BidInput]
+    ];
+    AddAction(INVTEXT("PLACE BID"), CanBid, FOnClicked::CreateLambda([Execute, BidInput, Feedback]()
+    {
+        const FString Input = BidInput->GetText().ToString().TrimStartAndEnd();
+        const int64 Credits = ParseBid(Input);
+        if (Credits <= 0)
+        {
+            *Feedback = INVTEXT("Enter a positive whole-credit bid.");
+            return FReply::Handled();
+        }
+        return Execute(Action::Bid, Credits);
+    }));
+    AddAction(INVTEXT("BUYOUT"), [CanBid, GetSelectedOffer]() { return CanBid() && GetSelectedOffer()->Buyout > 0; },
+        FOnClicked::CreateLambda([Execute, GetSelectedOffer]()
+        {
+            if (const auto* Offer = GetSelectedOffer()) return Execute(Action::Bid, Offer->Buyout);
+            return FReply::Handled();
+        }));
+    AddAction(INVTEXT("DELIVER"), [GetSelectedOffer]()
+    {
+        const auto* Offer = GetSelectedOffer();
+        return Offer && Offer->State == EContractState::InProgress && Offer->Acceptor == Sim::TrainingContractPilot;
+    }, FOnClicked::CreateLambda([Execute]() { return Execute(Action::Deliver, 0); }));
+    const auto FindDestination = [GetSelectedOffer]() -> Ship*
+    {
+        const auto* Offer = GetSelectedOffer();
+        Sim* CurrentSim = Sim::GetSim();
+        Ship* Player = CurrentSim ? CurrentSim->GetPlayerShip() : nullptr;
+        if (!Offer || Offer->State != EContractState::InProgress || !Player || !Player->GetRegion())
+            return nullptr;
+        Ship* Station = CurrentSim->FindShip(TCHAR_TO_UTF8(*Offer->Terms.DestinationStationId.ToString()));
+        return Station && Station->GetRegion() == Player->GetRegion() && !Station->IsDead() && !Station->IsDying()
+            ? Station : nullptr;
+    };
+    AddAction(INVTEXT("TARGET DESTINATION"), [FindDestination]() { return FindDestination() != nullptr; },
+        FOnClicked::CreateLambda([FindDestination]()
+        {
+            if (Ship* Station = FindDestination()) Sim::GetSim()->GetPlayerShip()->SetTarget(Station);
+            return FReply::Handled();
+        }));
+    AddAction(INVTEXT("AUTO TRACK DESTINATION"), [FindDestination]() { return FindDestination() != nullptr; },
+        FOnClicked::CreateLambda([FindDestination, Feedback]()
+        {
+            if (Ship* Station = FindDestination())
+            {
+                Ship* Player = Sim::GetSim()->GetPlayerShip();
+                Player->SetTarget(Station);
+                const bool bTracking = Player->SetFixedAutoTrackPoint(Station->GetLocation(), UTF8_TO_TCHAR(Station->GetName()));
+                *Feedback = bTracking ? INVTEXT("Auto Track engaged. Close Contracts to return to flight.")
+                                      : INVTEXT("Auto Track needs an airborne fighter with navigation powered.");
+            }
+            return FReply::Handled();
+        }));
+    AddAction(INVTEXT("CLAIM"), [GetSelectedOffer]()
+    {
+        const auto* Offer = GetSelectedOffer();
+        return Offer && Offer->State == EContractState::AwaitingClaims &&
+            ((Offer->Issuer == Sim::TrainingContractPilot && !Offer->bSellerClaimed) ||
+             (Offer->HighBidder == Sim::TrainingContractPilot && !Offer->bBuyerClaimed));
+    }, FOnClicked::CreateLambda([Execute]() { return Execute(Action::Claim, 0); }));
+    AddAction(INVTEXT("TARGET FREIGHTER"), [GetLocalFreighter]() { return GetLocalFreighter() != nullptr; },
+        FOnClicked::CreateLambda([GetLocalFreighter]()
+        {
+            if (Ship* Freighter = GetLocalFreighter())
+                Sim::GetSim()->GetPlayerShip()->SetTarget(Freighter);
+            return FReply::Handled();
+        }));
+
     return SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(12, 10)
         [Tabs]
+        + SVerticalBox::Slot().AutoHeight().Padding(12, 0, 12, 8)
+        [
+            SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13))
+            .Visibility(bTraining ? EVisibility::Visible : EVisibility::Collapsed)
+            .Text_Lambda([]()
+            {
+                const Sim* Simulation = Sim::GetSim();
+                return FText::Format(INVTEXT("Training balance  {0} cr"), FText::AsNumber(Simulation ? Simulation->GetTrainingContractBalance() : int64(0)));
+            })
+        ]
         + SVerticalBox::Slot().AutoHeight().Padding(12, 0, 12, 10)
         [
             SNew(SSearchBox)
@@ -153,11 +320,10 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
             .OnTextChanged_Lambda([Query, Refresh](const FText& Text) { *Query = Text.ToString().TrimStartAndEnd(); Refresh(); })
         ]
         + SVerticalBox::Slot().FillHeight(1.0f).Padding(12, 0)
-        [Rows]
+        [MissionUIStyle::MakeDataPane(Rows)]
         + SVerticalBox::Slot().AutoHeight().Padding(12, 8)
         [
-            SNew(SBorder).Padding(12).BorderBackgroundColor(FLinearColor(0.15f, 0.18f, 0.21f, 1.0f))
-            [
+            MissionUIStyle::MakeDataPane(
                 SNew(SVerticalBox)
                 + SVerticalBox::Slot().AutoHeight()
                 [
@@ -167,24 +333,38 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
                         + SScrollBox::Slot()
                         [
                             SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).AutoWrapText(true)
-                            .Text_Lambda([Selected]()
+                            .Text_Lambda([Selected, GetSelectedOffer, Tab]()
                             {
-                                return Selected->IsSet() ? DescribeContract(Selected->GetValue()) : INVTEXT("SELECT A CONTRACT");
+                                if (*Tab == ETab::Hauls && Selected->IsSet()) return DescribeContract(Selected->GetValue());
+                                const auto* Offer = GetSelectedOffer();
+                                if (!Offer) return INVTEXT("SELECT A CONTRACT");
+                                const auto& Terms = Offer->Terms;
+                                FString Body = FString::Printf(TEXT("%s\n%s\nPickup  %s\n%s"), *Terms.Title,
+                                    *Terms.Description, *Terms.PickupStationId.ToString(), *DescribeItems(Terms.OfferedItems));
+                                const TCHAR* States[] = {TEXT("Draft"), TEXT("Open"), TEXT("In progress"),
+                                    TEXT("Awaiting claims"), TEXT("Completed"), TEXT("Failed"), TEXT("Expired")};
+                                Body += FString::Printf(TEXT("\nStatus  %s"), States[static_cast<uint8>(Offer->State)]);
+                                if (Terms.Type == ESSWContractType::Courier)
+                                    Body += FString::Printf(TEXT("\nDestination  %s\nReward  %lld cr  |  Collateral  %lld cr"),
+                                        *Terms.DestinationStationId.ToString(), Terms.RewardCredits, Terms.CollateralCredits);
+                                else
+                                    Body += FString::Printf(TEXT("\nOpening bid  %lld cr  |  High bid  %lld cr  |  Buyout  %lld cr"),
+                                        Terms.PriceCredits, Offer->HighBid, Offer->Buyout);
+                                if (Terms.Type == ESSWContractType::Auction && Offer->State == EContractState::Open)
+                                {
+                                    const auto Remaining = Offer->ExpiresAt - FDateTime::UtcNow();
+                                    const int32 Seconds = FMath::Max(0, FMath::CeilToInt(Remaining.GetTotalSeconds()));
+                                    Body += FString::Printf(TEXT("\nCloses in  %d:%02d"), Seconds / 60, Seconds % 60);
+                                }
+                                return FText::FromString(Body);
                             })
                         ]
                     ]
                 ]
                 + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Left).Padding(0, 8, 0, 0)
-                [
-                    SNew(SButton).Text(INVTEXT("TARGET FREIGHTER"))
-                    .IsEnabled_Lambda([GetLocalFreighter]() { return GetLocalFreighter() != nullptr; })
-                    .OnClicked_Lambda([GetLocalFreighter]()
-                    {
-                        if (Ship* Freighter = GetLocalFreighter())
-                            Sim::GetSim()->GetPlayerShip()->SetTarget(Freighter);
-                        return FReply::Handled();
-                    })
-                ]
-            ]
+                [Actions]
+                + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)
+                [SNew(STextBlock).AutoWrapText(true).Text_Lambda([Feedback]() { return *Feedback; })]
+            )
         ];
 }

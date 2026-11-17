@@ -16,6 +16,7 @@
 #include "Styling/CoreStyle.h"
 #include "Widgets/Notifications/SProgressBar.h"
 #include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SBorder.h"
 #include "Widgets/SOverlay.h"
 #include "UObject/UObjectGlobals.h"
 #include "Engine/GameInstance.h"
@@ -29,6 +30,15 @@
 
 namespace MissionUIStyle
 {
+    TSharedRef<SWidget> MakeDataPane(TSharedRef<SWidget> Content, FMargin Padding)
+    {
+        return SNew(SBorder).Padding(Padding)
+            .BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+            .BorderBackgroundColor(PanelBG.CopyWithNewOpacity(1.0f))
+            [Content];
+    }
+
+
     const FSliderStyle& OptionsSliderStyle()
     {
         static const FSliderStyle Style = []()

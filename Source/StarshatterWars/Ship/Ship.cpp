@@ -15,6 +15,7 @@
 	Starship class
 */
 #include "Ship.h"
+#include "CargoCatalogSubsystem.h"
 #include "ShipActor.h"
 #include "CapitalShipActor.h"
 #include "MeshCollision.h"
@@ -386,6 +387,44 @@ void Ship::SetSimulatedCargo(SSWFreightManifest::FLoad Load)
     FractionalMinedOre = 0.0;
 }
 
+double Ship::GetCargoUsedTonnes() const
+{
+    double Used = CourierPackage ? CourierPackage->Tonnes : 0.0;
+    const auto* Load = CargoManifest.GetPtrOrNull();
+    if (!Load || Load->bPassengers) return Used;
+    if (Load->Unit.Equals(TEXT("t"), ESearchCase::IgnoreCase)) return Used + GetMinedOreTonnes();
+    if (Load->Quantity <= 0) return Used;
+
+    UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr;
+    auto* Instance = World ? World->GetGameInstance() : nullptr;
+    const auto* Catalog = Instance ? Instance->GetSubsystem<UCargoCatalogSubsystem>() : nullptr;
+    const auto* Definition = Catalog ? Catalog->FindCargo(Load->Item, Load->Unit) : nullptr;
+    // Keep unknown-mass freight from being overbooked.
+    const double FreightMass = Definition && Definition->Size > 0.0
+        ? Definition->Size * Load->Quantity : (design ? design->CargoCapacity.Tonnes : 0.0);
+    return Used + FreightMass;
+}
+
+bool Ship::LoadCourierPackage(FName ContractId, double Tonnes)
+{
+    if (CourierPackage || ContractId.IsNone() || !design || !FMath::IsFinite(Tonnes) || Tonnes <= 0.0 ||
+        !FMath::IsFinite(design->CargoCapacity.Tonnes) ||
+        Tonnes > design->CargoCapacity.Tonnes - GetCargoUsedTonnes())
+        return false;
+    CourierPackage = FSealedCourierPackage{ContractId, Tonnes};
+    return true;
+}
+
+bool Ship::HasCourierPackage(FName ContractId) const
+{
+    return CourierPackage && CourierPackage->ContractId == ContractId;
+}
+
+void Ship::RemoveCourierPackage(FName ContractId)
+{
+    if (HasCourierPackage(ContractId)) CourierPackage.Reset();
+}
+
 double Ship::LoadMinedOre(const FString& Mineral, double Tonnes)
 {
     if (!design || !FMath::IsFinite(Tonnes) || Tonnes <= 0.0) return 0.0;
@@ -394,7 +433,7 @@ double Ship::LoadMinedOre(const FString& Mineral, double Tonnes)
         (Load->Item != Mineral || Load->Unit != TEXT("t"))) return 0.0;
 
     const double Current = (Load ? Load->Quantity : 0) + FractionalMinedOre;
-    const double Added = FMath::Min(Tonnes, FMath::Max(0.0, FMath::Min<double>(design->CargoCapacity.Tonnes, MAX_int32) - Current));
+    const double Added = FMath::Min(Tonnes, FMath::Max(0.0, FMath::Min<double>(design->CargoCapacity.Tonnes - (CourierPackage ? CourierPackage->Tonnes : 0.0), MAX_int32) - Current));
     if (Added <= 0.0) return 0.0;
     if (!Load) Load = &CargoManifest.Emplace();
     Load->Item = Mineral;
@@ -439,7 +478,7 @@ int32 Ship::GetDockedCargoTransferQuantity() const
     const auto& Capacity = carrier->Design()->CargoCapacity;
     const double Limit = Load.bPassengers ? Capacity.PassengerBerths :
         Load.Unit == TEXT("t") ? Capacity.Tonnes : 0.0;
-    const double Used = Stored ? Stored->Quantity + carrier->FractionalMinedOre : 0.0;
+    const double Used = Load.bPassengers ? (Stored ? Stored->Quantity : 0.0) : carrier->GetCargoUsedTonnes();
     return FMath::FloorToInt32(FMath::Clamp(FMath::Min(Limit, double(MAX_int32)) - Used, 0.0, double(Load.Quantity)));
 }
 
@@ -3304,6 +3343,15 @@ bool Ship::SetAutoTrack(bool engage)
 
     if (engage)
     {
+        // A mission action may select the station directly without a radar lock
+        // or a selected world actor (for example, Contracts > Target Destination).
+        if (target && target->GetType() == ESimObject::SHIP)
+        {
+            const auto* Station = static_cast<const Ship*>(target);
+            if (Station != this && Station->IsStatic() && Station->GetRegion() == GetRegion() &&
+                !Station->IsDead() && !Station->IsDying() && !Station->InTransition())
+                return SetFixedAutoTrackPoint(Station->GetLocation(), UTF8_TO_TCHAR(Station->GetName()));
+        }
         Ship* Contact = GetAutoTrackTarget();
         if (!Contact) return false;
 

@@ -1683,7 +1683,7 @@ void USSWRuntimeSubsystem::EndMissionPresentation()
 
 // Deck positions must share the carrier's visual frame: region-shell offsets,
 // per-group depth and overlap spacing are not valid inside a hangar.
-bool USSWRuntimeSubsystem::GetCarrierVisualPoint(Ship* Carrier, const FVector& SimPoint, FVector& OutPoint) const
+bool USSWRuntimeSubsystem::GetCarrierVisualPoint(const Ship* Carrier, const FVector& SimPoint, FVector& OutPoint) const
 {
     if (!Carrier || !Carrier->GetRegion()) return false;
     for(const TWeakObjectPtr<AShipActor>& Visual:MissionPresentationShips)

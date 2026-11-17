@@ -54,6 +54,7 @@
 =============================================================================*/
 
 #include "StarshatterShipDesignSubsystem.h"
+#include "DesignTableJson.h"
 #include "FreightManifest.h"
 #include "ShipVisualCatalog.h"
 #include "Farcaster.h"
@@ -187,7 +188,7 @@ void UStarshatterShipDesignSubsystem::LoadStagedShipDesignTable(const UDataTable
     LoadShipDesignTable();
 }
 
-void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
+void UStarshatterShipDesignSubsystem::LoadShipDesignTable(bool bUseLegacyFallbacks)
 {
 	if (!ShipDesignDataTable)
 	{
@@ -247,16 +248,10 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
 			Row->Hardpoint.Num(),
 			Row->Loadout.Num());
 
-		if (Row->BaseCost <= 0)
-		{
-			const FString Definition = ShipVisualCatalog::DefinitionName(Row->ShipName, Row->Model);
-			Row->BaseCost = SSWFreightManifest::LoadProfile(Definition).BaseCost;
-			if (Row->BaseCost <= 0 && Definition != RowName.ToString())
-				Row->BaseCost = SSWFreightManifest::LoadProfile(RowName.ToString()).BaseCost;
-		}
+        if (bUseLegacyFallbacks) CompleteLegacyBaseCost(RowName, *Row);
 
 		DesignsByName.Add(RowName, *Row);
-		ShipDesignRegistry::RegisterDesign(RowName, *Row);
+		ShipDesignRegistry::RegisterDesign(RowName, *Row, bUseLegacyFallbacks);
 
 		UE_LOG(LogTemp, Verbose,
 			TEXT("[SHIPDESIGN] Cached row '%s' Display='%s' Class='%s'"),
@@ -275,10 +270,10 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable()
 		TEXT("[SHIPDESIGN] ShipDesignRegistry now has %d rows"),
 		ShipDesignRegistry::Num());
 
-	EnsureViperLaser();
+	EnsureViperLaser(bUseLegacyFallbacks);
 }
 
-void UStarshatterShipDesignSubsystem::EnsureViperLaser()
+void UStarshatterShipDesignSubsystem::EnsureViperLaser(bool bUseLegacyFallbacks)
 {
 	const FName RowName(TEXT("Viper"));
 	FShipDesign* Row = DesignsByName.Find(RowName);
@@ -323,7 +318,7 @@ void UStarshatterShipDesignSubsystem::EnsureViperLaser()
 			ShipDesignDataTable->AddRow(RowName, *Row);
 	}
 
-	ShipDesignRegistry::RegisterDesign(RowName, *Row);
+	ShipDesignRegistry::RegisterDesign(RowName, *Row, bUseLegacyFallbacks);
 
 	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] Added Laser Cannon to Viper and re-registered"));
 }
@@ -337,12 +332,35 @@ void UStarshatterShipDesignSubsystem::LoadAll(bool bFull)
 {
 	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] LoadAll()"));
 
-	//if (bFull)
-	//{
-		InitializeShipDesigns();
-	//}
+    const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Ships/ships.json");
+    auto* Imported = NewObject<UDataTable>(this);
+    if (ImportJsonCatalog(*Imported, Path))
+    {
+        if (ShipDesignDataTable && ShipDesignDataTable->GetRowStruct() == FShipDesign::StaticStruct())
+            ShipDesignDataTable->CreateTableFromOtherTable(Imported);
+        else
+            ShipDesignDataTable = Imported;
+        UE_LOG(LogTemp, Display, TEXT("[SHIPDESIGN] Imported %d ship designs from %s"), Imported->GetRowMap().Num(), *Path);
+        LoadShipDesignTable(false);
+        return;
+    }
 
-	LoadShipDesignTable();
+    UE_LOG(LogTemp, Warning, TEXT("[SHIPDESIGN] Using the existing data table because %s could not be loaded"), *Path);
+    LoadShipDesignTable();
+}
+
+bool UStarshatterShipDesignSubsystem::ImportJsonCatalog(UDataTable& Table, const FString& Path)
+{
+    return DesignTableJson::Import(Table, *FShipDesign::StaticStruct(), Path);
+}
+
+void UStarshatterShipDesignSubsystem::CompleteLegacyBaseCost(FName Key, FShipDesign& Row)
+{
+    if (Row.BaseCost > 0) return;
+    const FString Definition = ShipVisualCatalog::DefinitionName(Row.ShipName, Row.Model);
+    Row.BaseCost = SSWFreightManifest::LoadProfile(Definition).BaseCost;
+    if (Row.BaseCost <= 0 && Definition != Key.ToString())
+        Row.BaseCost = SSWFreightManifest::LoadProfile(Key.ToString()).BaseCost;
 }
 
 void UStarshatterShipDesignSubsystem::InitializeShipDesigns()

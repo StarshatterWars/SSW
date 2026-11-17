@@ -66,7 +66,7 @@ void ShipDesignRegistry::Clear()
 // Registration
 //-------------------------------------------------------------
 
-void ShipDesignRegistry::RegisterDesign(const FName& RowName, const FShipDesign& Row)
+void ShipDesignRegistry::RegisterDesign(const FName& RowName, const FShipDesign& Row, bool bRecoverLegacySkins)
 {
     if (RowName.IsNone())
     {
@@ -82,7 +82,7 @@ void ShipDesignRegistry::RegisterDesign(const FName& RowName, const FShipDesign&
         LegacyDesignsByName.Remove(RowName);
     }
 
-    ShipDesign* Legacy = ConvertToLegacyDesign(RowName, Row);
+    ShipDesign* Legacy = ConvertToLegacyDesign(RowName, Row, bRecoverLegacySkins);
 
     if (Legacy)
     {
@@ -221,7 +221,7 @@ ShipDesignRegistry::ResetShipComponents(ShipDesign* Ship) {
 }
 
 ShipDesign*
-ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesign& Row)
+ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesign& Row, bool bRecoverLegacySkins)
 {
     ShipDesign* Legacy = new ShipDesign();
 
@@ -1334,28 +1334,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         Legacy->hardpoints.size());
 
     TArray<FShipSkin> EffectiveSkins=Row.Skin;
-    const auto NeedsMetadata=[](const FShipSkin& Skin)
-    {
-        if(Skin.Cells.IsEmpty()) return true;
-        for(const auto& Cell:Skin.Cells)
-            if(!Cell.TextureName.IsEmpty() || !Cell.AuxTextureName.IsEmpty() || !Cell.SpecularTextureName.IsEmpty() ||
-               !Cell.BumpTextureName.IsEmpty() || !Cell.EmissiveTextureName.IsEmpty() || Cell.bHasAmbientColor ||
-               Cell.bHasDiffuseColor || Cell.bHasSpecularColor || Cell.bHasEmissiveColor || Cell.bHasSpecularPower || Cell.bHasBumpScale) return false;
-        return true;
-    };
-    bool Missing=EffectiveSkins.IsEmpty();for(const auto& Skin:EffectiveSkins) Missing|=NeedsMetadata(Skin);
-    if(Missing)
-    {
-        TArray<FShipSkin> Authored;
-        FString Source=NameStr+TEXT(".def");
-        if(!EffectiveSkins.IsEmpty() && !EffectiveSkins[0].SourceFile.IsEmpty()) Source=EffectiveSkins[0].SourceFile;
-        if(NativeSkinDefinition::LoadAuthoredSkins(Source,Authored))
-        {
-            if(EffectiveSkins.IsEmpty()) EffectiveSkins=MoveTemp(Authored);
-            else for(auto& Skin:EffectiveSkins) if(NeedsMetadata(Skin))
-                for(const auto& Original:Authored) if(Original.Name==Skin.Name) {Skin=Original;break;}
-        }
-    }
+    if (bRecoverLegacySkins) CompleteLegacySkinMetadata(RowName, EffectiveSkins);
     for (const FShipSkin& SourceSkin : EffectiveSkins)
     {
         auto* Converted=new Skin(TCHAR_TO_ANSI(*SourceSkin.Name));
@@ -1376,3 +1355,29 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
 
 
     
+
+void ShipDesignRegistry::CompleteLegacySkinMetadata(const FName& RowName, TArray<FShipSkin>& Skins)
+{
+    const auto NeedsMetadata=[](const FShipSkin& Skin)
+    {
+        if(Skin.Cells.IsEmpty()) return true;
+        for(const auto& Cell:Skin.Cells)
+            if(!Cell.TextureName.IsEmpty() || !Cell.AuxTextureName.IsEmpty() || !Cell.SpecularTextureName.IsEmpty() ||
+               !Cell.BumpTextureName.IsEmpty() || !Cell.EmissiveTextureName.IsEmpty() || Cell.bHasAmbientColor ||
+               Cell.bHasDiffuseColor || Cell.bHasSpecularColor || Cell.bHasEmissiveColor || Cell.bHasSpecularPower || Cell.bHasBumpScale) return false;
+        return true;
+    };
+    bool Missing=Skins.IsEmpty();for(const auto& Skin:Skins) Missing|=NeedsMetadata(Skin);
+    if(Missing)
+    {
+        TArray<FShipSkin> Authored;
+        FString Source=RowName.ToString()+TEXT(".def");
+        if(!Skins.IsEmpty() && !Skins[0].SourceFile.IsEmpty()) Source=Skins[0].SourceFile;
+        if(NativeSkinDefinition::LoadAuthoredSkins(Source,Authored))
+        {
+            if(Skins.IsEmpty()) Skins=MoveTemp(Authored);
+            else for(auto& Skin:Skins) if(NeedsMetadata(Skin))
+                for(const auto& Original:Authored) if(Original.Name==Skin.Name) {Skin=Original;break;}
+        }
+    }
+}

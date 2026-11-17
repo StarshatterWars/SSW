@@ -62,6 +62,7 @@ class STARSHATTERWARS_API UTacRefDlg : public UBaseScreen
 
 public:
     static void BuildWeaponTexts(const WeaponDesign& Design, FString& Caption, FString& Stats, FString& Description);
+    static FString GetGazetteerDisplayName(const FString& Entry);
     static FString GetGazetteerSystemName(const FString& Entry);
     static FString BuildGazetteerDetails(const FString& Entry, const UGameInstance* Instance);
     static void LoadGazetteer(TArray<FString>& Titles, TMap<FString, FString>& Entries);
@@ -80,7 +81,13 @@ public:
     void StyleReferenceCombo(UComboBoxString& Combo);
     UFUNCTION() UWidget* MakeReferenceComboItem(FString Item);
     void SetGazetteerVisible(bool bVisible);
+    enum class EGazetteerSection : uint8 { Systems, Factions, Figures };
+    static EGazetteerSection GetGazetteerSection(const FString& LoreTitle);
+    void SelectGazetteerSection(EGazetteerSection Section);
     UFUNCTION() void HandleGazetteerClicked();
+    UFUNCTION() void HandleGazetteerSystems();
+    UFUNCTION() void HandleGazetteerFactions();
+    UFUNCTION() void HandleGazetteerFigures();
     UFUNCTION() void HandleGazetteerEntry(FString Entry, ESelectInfo::Type Selection);
     UPROPERTY(Transient) TObjectPtr<UWidget> GazetteerPanel;
     UPROPERTY(Transient) TObjectPtr<UWidget> EquipmentSelectors;
@@ -90,6 +97,10 @@ public:
     UPROPERTY(Transient) TObjectPtr<UTextBlock> GazetteerMapTitle;
     UPROPERTY(Transient) TObjectPtr<class USystemMapPanel> GazetteerMap;
     UPROPERTY(Transient) TObjectPtr<class UScrollBox> GazetteerScroll;
+    UPROPERTY(Transient) TObjectPtr<UComboBoxString> GazetteerSelector;
+    UPROPERTY(Transient) TArray<TObjectPtr<UButton>> GazetteerSectionButtons;
+    UPROPERTY(Transient) TObjectPtr<UWidget> GazetteerMapColumn;
+    TArray<FString> GazetteerTitles;
     TMap<FString, FString> GazetteerEntries;
     void RefreshCategoryStyles();
     friend class FModernReferenceScreensTest;

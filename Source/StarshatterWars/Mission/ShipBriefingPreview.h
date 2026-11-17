@@ -45,6 +45,7 @@ public:
     bool SetShipDesign(const FShipDesign* Design, const TArray<const FWeaponDesign*>& Stores = {});
     bool SetMissionScene(Mission* MissionDef);
     void SetPreviewActive(bool bActive);
+    void SetReferencePreview() { bReferencePreview = true; }
     void ResetView();
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
@@ -95,5 +96,7 @@ private:
     float OrbitPitch = 20.f;
     float Zoom = 1.f;
     bool bPreviewActive = true;
+    bool bReferencePreview = false;
+    bool bShowReferenceGrid = false;
     bool bDragging = false;
 };

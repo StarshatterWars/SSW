@@ -398,14 +398,7 @@ void UShipBriefingPreview::NativeConstruct()
 {
     Super::NativeConstruct();
     // UViewport's Slate resources now exist. Never create scene actors during RebuildWidget.
-    if (!IsDesignTime() && PreviewViewport && PreviewViewport->GetViewportWorld())
-    {
-        PreviewViewport->SetEnableAdvancedFeatures(false);
-        PreviewViewport->SetLightIntensity(3.f);
-        PreviewViewport->SetSkyIntensity(0.f);
-        PreviewViewport->SetShowFlag(TEXT("Fog"), false);
-        UpdateVisual();
-    }
+    UpdateVisual();
 }
 
 void UShipBriefingPreview::ClearVisual()
@@ -453,6 +446,9 @@ bool UShipBriefingPreview::SetShipDesign(const FShipDesign* Design, const TArray
     ClearVisual();
     Parts.Empty();
     DesignKey = NewKey;
+    bShowReferenceGrid = bReferencePreview && Design &&
+        (Design->Category == EShipCategory::CapitalShip || Design->Category == EShipCategory::Station ||
+         Design->Category == EShipCategory::Platform || Design->Category == EShipCategory::Fighter);
     if (!Design || !BriefingShipPreview::ResolveParts(*Design, Parts, Stores)) return false;
     if (!bSameShip)
     {
@@ -787,8 +783,9 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
 
 void UShipBriefingPreview::SetPreviewActive(bool bActive)
 {
-    bPreviewActive = bActive;
     SetVisibility(bActive ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+    if (bPreviewActive == bActive) { if (bActive) UpdateVisual(); return; }
+    bPreviewActive = bActive;
     if (bActive) UpdateVisual();
     else { PauseRehearsal(); ClearVisual(); }
 }
@@ -798,10 +795,51 @@ void UShipBriefingPreview::UpdateVisual()
     if (IsDesignTime() || !bPreviewActive || !PreviewViewport || !PreviewViewport->GetViewportWorld()) return;
     if (PreviewVisual.IsValid() && PreviewVisual->GetWorld() == PreviewViewport->GetViewportWorld()) return;
     ClearVisual();
-    PreviewViewport->SetShowFlag(TEXT("EyeAdaptation"), !bMissionScene);
+    PreviewViewport->SetEnableAdvancedFeatures(false);
+    PreviewViewport->SetLightIntensity(3.f);
+    PreviewViewport->SetSkyIntensity(0.f);
+    PreviewViewport->SetShowFlag(TEXT("Fog"), false);
+    PreviewViewport->SetShowFlag(TEXT("EyeAdaptation"), false);
+    PreviewViewport->SetShowFlag(TEXT("TemporalAA"), false);
     PreviewViewport->SetBackgroundColor(bMissionScene ? FLinearColor(.002f, .004f, .009f, 1.f)
         : FLinearColor(.018f, .025f, .035f, 1.f));
-    PreviewVisual = BriefingShipPreview::CreateVisual(PreviewViewport->GetViewportWorld(), Parts);
+    if (bShowReferenceGrid && !bMissionScene && !Parts.IsEmpty())
+    {
+        TArray<FBriefingShipPreviewPart> DisplayParts = Parts;
+        const FBox Bounds = BriefingShipPreview::CalculateBounds(Parts);
+        UStaticMesh* Line = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
+        auto* Base = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/M_NavlightEmissive.M_NavlightEmissive"));
+        if (Bounds.IsValid && Line && Base)
+        {
+            auto* Material = UMaterialInstanceDynamic::Create(Base, this);
+            Material->SetVectorParameterValue(TEXT("GlowColor"), FLinearColor(.11f, .22f, .31f));
+            Material->SetScalarParameterValue(TEXT("GlowIntensity"), 1.f);
+            const FVector Extent = Bounds.GetExtent();
+            constexpr int32 HalfCells = 5;
+            const double Edge = FMath::Max3(Extent.X, Extent.Y, Extent.Z) * 1.35;
+            const double Height = Bounds.Min.Z - Edge * .06;
+            const FVector Center(Bounds.GetCenter().X, Bounds.GetCenter().Y, Height);
+            for (int32 Index = -HalfCells; Index <= HalfCells; ++Index)
+            {
+                const double Offset = Edge * Index / HalfCells;
+                const double Width = Edge * (Index == 0 ? .004 : .0025);
+                auto AddLine = [&](const FRotator& Rotation, const FVector& Delta)
+                {
+                    auto& Part = DisplayParts.AddDefaulted_GetRef();
+                    Part.Mesh = Line;
+                    Part.Materials.Add(Material);
+                    Part.Transform = FTransform(Rotation, Center + Delta, FVector(Edge * .02, Width * .01, Width * .01));
+                };
+                AddLine(FRotator::ZeroRotator, FVector(0, Offset, 0));
+                AddLine(FRotator(0, 90, 0), FVector(Offset, 0, 0));
+            }
+        }
+        PreviewVisual = BriefingShipPreview::CreateVisual(PreviewViewport->GetViewportWorld(), DisplayParts);
+    }
+    else
+    {
+        PreviewVisual = BriefingShipPreview::CreateVisual(PreviewViewport->GetViewportWorld(), Parts);
+    }
     if (bMissionScene && PreviewVisual.IsValid())
     {
         RouteShip = BriefingShipPreview::CreateVisual(PreviewViewport->GetViewportWorld(), RouteShipParts, false);
@@ -930,7 +968,10 @@ void UShipBriefingPreview::UpdateRehearsal()
 void UShipBriefingPreview::NativeTick(const FGeometry& Geometry, float DeltaTime)
 {
     Super::NativeTick(Geometry, DeltaTime);
-    if (!bPreviewActive || !PreviewVisual.IsValid() || !PreviewViewport) return;
+    if (!bPreviewActive || !PreviewViewport) return;
+    // First activation can precede creation of the Slate viewport world.
+    if (!PreviewVisual.IsValid() && !Parts.IsEmpty()) UpdateVisual();
+    if (!PreviewVisual.IsValid()) return;
     if (bMissionScene && bRehearsalPlaying)
     {
         // Keep authored timing ratios while fitting the whole briefing into a short viewing window.

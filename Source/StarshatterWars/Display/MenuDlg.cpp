@@ -132,7 +132,8 @@ void UMenuDlg::BuildModernMenu()
     auto NewButton=[this](const TCHAR* Name){return WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(),Name);};
     BtnStart=Start?Start:NewButton(TEXT("BtnStart"));BtnCampaign=NewButton(TEXT("BtnCampaign"));BtnMission=NewButton(TEXT("BtnMission"));
     BtnPlayer=NewButton(TEXT("BtnPlayer"));BtnMulti=NewButton(TEXT("BtnMulti"));BtnOptions=NewButton(TEXT("BtnOptions"));
-    BtnTac=Tactical?Tactical:NewButton(TEXT("BtnTac"));BtnQuit=Exit?Exit:NewButton(TEXT("BtnQuit"));
+    if (Tactical) Tactical->SetVisibility(ESlateVisibility::Collapsed);
+    BtnTac=nullptr;BtnQuit=Exit?Exit:NewButton(TEXT("BtnQuit"));
     auto Card=[&](UButton* Button,const TCHAR* Heading,const TCHAR* Subtitle,float X,float Y,float W,float H,bool Primary=false){
         Button->ClearChildren();Button->SetToolTipText(FText::FromString(Subtitle));Place(Button,X,Y,W,H);
         // Separate hit-test-transparent labels protect against stale BP content.
@@ -145,7 +146,8 @@ void UMenuDlg::BuildModernMenu()
     Card(BtnMission,TEXT("MISSIONS"),TEXT("Campaign, single and custom"),1440,376,324,104);
     Card(BtnPlayer,TEXT("PLAYER"),TEXT("Personnel and logbook"),1100,498,324,104);
     Card(BtnMulti,TEXT("MULTIPLAYER"),TEXT("Create or join a session"),1440,498,324,104);
-    Card(BtnTac,TEXT("REFERENCE"),TEXT("Ships, weapons and tactics"),1100,620,324,104);
+    BtnFreeMode = NewButton(TEXT("BtnFreeMode"));
+    Card(BtnFreeMode,TEXT("FREE MODE"),TEXT("Start aboard Orion in Janek orbit"),1100,620,324,104);
     Card(BtnOptions,TEXT("OPTIONS"),TEXT("Display, sound and controls"),1440,620,324,104);
     Card(BtnQuit,TEXT("EXIT TO WINDOWS"),TEXT("Close Starshatter Wars"),1100,750,664,96);
     // Compact, persistent campaign/pilot context; no opaque full-width slab.
@@ -327,7 +329,7 @@ void UMenuDlg::NativeConstruct()
 
     const TArray<UButton*> MenuButtons = {
         BtnStart, BtnCampaign, BtnMission, BtnMulti,
-        BtnPlayer, BtnOptions, BtnTac, BtnQuit
+        BtnPlayer, BtnOptions, BtnFreeMode, BtnTac, BtnQuit
     };
     for (UButton* StyledButton : MenuButtons)
     {
@@ -465,6 +467,7 @@ void UMenuDlg::BindUMGDelegates()
     // SINGLE entry point for all options:
     if (BtnOptions)  BtnOptions->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnOptions);
 
+    if (BtnFreeMode) BtnFreeMode->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnFreeMode);
     if (BtnTac)      BtnTac->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnTacReference);
     if (BtnQuit)     BtnQuit->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnQuit);
 
@@ -749,6 +752,11 @@ void UMenuDlg::ClearDescription()
         DescriptionText->SetText(FText::GetEmpty());
 }
 
+void UMenuDlg::OnFreeMode()
+{
+    if (auto* Menu = GetMenuManager()) Menu->StartFreeFlight();
+}
+
 void UMenuDlg::SetDescription(const FString& Text)
 {
     if (DescriptionText)
@@ -764,6 +772,7 @@ void UMenuDlg::SetButtonEnabled(UButton* Button, bool bEnable)
 void UMenuDlg::EnableMenuButtons(bool bEnable)
 {
     SetButtonEnabled(BtnStart, bEnable);
+    SetButtonEnabled(BtnFreeMode, bEnable);
     SetButtonEnabled(BtnCampaign, bEnable);
     SetButtonEnabled(BtnMission, bEnable);
     SetButtonEnabled(BtnPlayer, bEnable);
@@ -799,6 +808,7 @@ void UMenuDlg::ApplyMenuGating()
 
         SetButtonEnabled(BtnPlayer, true);
         SetButtonEnabled(BtnMission, true);
+        SetButtonEnabled(BtnFreeMode, true);
 
         SetButtonEnabled(BtnOptions, true);
 

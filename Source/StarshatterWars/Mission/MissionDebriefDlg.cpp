@@ -734,16 +734,20 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
         if (DebriefResult.bSuccess) MissionPtr->SetComplete(true);
     }
     if (!SimPtr || !MissionPtr || (RecordedMission==MissionPtr && RecordedStartTime==SimPtr->StartTime())) return;
+    if (SimPtr->GetMission() == MissionPtr) SimPtr->ResolveAgentAssignment(DebriefResult.bSuccess);
     const bool bStoryMission = MissionPtr->IsStoryMission();
     // Snapshot before CommitMission clears ShipStats. Save evidence and score separately.
     if (auto* GI=Cast<USSWGameInstance>(GetGameInstance()))
     {
-        if (DebriefResult.bSuccess && CampaignPtr && (bStoryMission || CampaignPtr->OwnsMission(MissionPtr))
-            && !CampaignPtr->IsCutsceneMission(MissionPtr->GetIdentity()))
+        const bool bRegionalAssignment = MissionPtr->IsRegionalAgentMission();
+        const bool bRecordCampaignMission = CampaignPtr && (bStoryMission || CampaignPtr->OwnsMission(MissionPtr))
+            && !CampaignPtr->IsCutsceneMission(MissionPtr->GetIdentity());
+        if (DebriefResult.bSuccess && (bRecordCampaignMission || bRegionalAssignment))
             if (auto* Players=GI->GetSubsystem<UStarshatterPlayerSubsystem>())
             {
                 auto& Info=Players->GetMutablePlayerInfo();
-                const bool bFirstCompletion = Info.MarkMissionCompleted(CampaignPtr->GetCampaignId(), MissionPtr->GetIdentity());
+                const int32 CampaignId = bRegionalAssignment ? Campaign::SINGLE_MISSIONS : CampaignPtr->GetCampaignId();
+                const bool bFirstCompletion = Info.MarkMissionCompleted(CampaignId, MissionPtr->GetIdentity());
                 if (bStoryMission && bFirstCompletion)
                 {
                     const int32 Bonus = MissionPtr->GetStoryPoints();
@@ -756,7 +760,7 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
                     if (UTextBlock* MissionScore = GetLabel(211))
                         MissionScore->SetText(FText::FromString(FString::Printf(TEXT("%d points (%d story completion)"), Points, Bonus)));
                 }
-                if(CampaignPtr->GetCampaignId()==1 && MissionPtr->GetIdentity()==103
+                if(CampaignId==Campaign::TRAINING_CAMPAIGN && MissionPtr->GetIdentity()==103
                     && MissionPtr->GetMissionType()==int(EMissionType::TRAINING))
                 {
                     Info.bTrainingGraduate=true;
@@ -784,7 +788,7 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
             if (DebriefResult.bSuccess)
             {
                 if (!bStoryMission) Save->RecordCompletedMission(CampaignPtr,MissionPtr);
-                if(CampaignPtr->GetCampaignId()==1 && MissionPtr->GetIdentity()==103
+                if(CampaignPtr->GetCampaignId()==Campaign::TRAINING_CAMPAIGN && MissionPtr->GetIdentity()==103
                     && MissionPtr->GetMissionType()==int(EMissionType::TRAINING)) Save->bTrainingGraduate=true;
             }
             if (!GI->SaveCampaign())

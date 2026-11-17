@@ -888,6 +888,45 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    if (!Cache.Contains(TEXT("UI.PlayersPopupClass")) && !Settings->PlayersPopupClass.IsNull())
+        Cache.Add(TEXT("UI.PlayersPopupClass"), TSoftObjectPtr<UObject>(Settings->PlayersPopupClass.ToSoftObjectPath()));
+
+    // UI.AgentsPopupClass
+    if (!Cache.Contains(TEXT("UI.AgentsPopupClass")))
+    {
+        if (!Settings->AgentsPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->AgentsPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.AgentsPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.AgentsPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] AgentsPopupClass is not set in Project Settings"));
+        }
+    }
+
+    // UI.PlayersPopupClass
+    if (!Cache.Contains(TEXT("UI.PlayersPopupClass")))
+    {
+        if (!Settings->PlayersPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->PlayersPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.PlayersPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.PlayersPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] PlayersPopupClass is not set in Project Settings"));
+        }
+    }
+
     // UI.CustomMissionScreenClass
     if (!Cache.Contains(TEXT("UI.CustomMissionScreenClass")))
     {

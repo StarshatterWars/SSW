@@ -58,7 +58,10 @@
 #include "OrbitalRegion.h"
 #include "Engine/GameInstance.h"
 #include "Engine/DataTable.h"
+#include "Dom/JsonObject.h"
 #include "Misc/FileHelper.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 #include "Misc/Paths.h"
 #include "EngineUtils.h"
 
@@ -756,7 +759,7 @@ void UTacRefDlg::BuildModernShell()
     TransportButton = AddCategoryButton(TransportButton, TEXT("Transports"), EShipSystemIcon::Transport);
     BuildingButton = AddCategoryButton(BuildingButton, TEXT("Buildings"), EShipSystemIcon::Building);
     WeaponButton = AddCategoryButton(WeaponButton, TEXT("Weapons"), EShipSystemIcon::Weapon);
-    GazetteerButton = AddCategoryButton(nullptr, TEXT("Gazetteer"), EShipSystemIcon::Reference);
+    GazetteerButton = AddCategoryButton(nullptr, TEXT("Gazetteer"), EShipSystemIcon::Gazetteer);
     GazetteerButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleGazetteerClicked);
     StationButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleStationModeClicked);
     ShipButton->OnClicked.AddUniqueDynamic(this,&UTacRefDlg::HandleShipModeClicked);
@@ -855,8 +858,31 @@ void UTacRefDlg::BuildGazetteer(UVerticalBox& Body)
     Frame->SetBrushColor(FLinearColor(.015f,.025f,.038f,1.f));
     Frame->SetPadding(FMargin(22));
     auto* Split = WidgetTree->ConstructWidget<UHorizontalBox>();
-    Frame->SetContent(Split);
+    auto* Content = WidgetTree->ConstructWidget<UVerticalBox>();
+    Frame->SetContent(Content);
+    auto* SectionBar = WidgetTree->ConstructWidget<UHorizontalBox>();
+    Content->AddChildToVerticalBox(SectionBar)->SetPadding(FMargin(0,0,0,14));
+    Content->AddChildToVerticalBox(Split)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+    GazetteerSectionButtons.Reset();
+    const auto AddSection = [&](const TCHAR* Label, EShipSystemIcon Icon)
+    {
+        auto* Button = ModernMenuLayout::AddButton(WidgetTree, SectionBar, nullptr, Label);
+        auto* Host = WidgetTree->ConstructWidget<UNativeWidgetHost>();
+        Host->SetContent(SNew(SShipSystemIcon).Icon(Icon));
+        Button->SetContent(Host);
+        Button->SetToolTipText(FText::FromString(Label));
+        GazetteerSectionButtons.Add(Button);
+        return Button;
+    };
+    AddSection(TEXT("Systems and worlds"), EShipSystemIcon::PlanetMoon)
+        ->OnClicked.AddUniqueDynamic(this, &UTacRefDlg::HandleGazetteerSystems);
+    AddSection(TEXT("Factions and field guide"), EShipSystemIcon::Gazetteer)
+        ->OnClicked.AddUniqueDynamic(this, &UTacRefDlg::HandleGazetteerFactions);
+    AddSection(TEXT("Major figures"), EShipSystemIcon::Agent)
+        ->OnClicked.AddUniqueDynamic(this, &UTacRefDlg::HandleGazetteerFigures);
+
     auto* MapColumn = WidgetTree->ConstructWidget<UVerticalBox>();
+    GazetteerMapColumn = MapColumn;
     auto* MapSlot = Split->AddChildToHorizontalBox(MapColumn);
     FSlateChildSize MapWidth(ESlateSizeRule::Fill);
     MapWidth.Value = 1.55f;
@@ -869,6 +895,7 @@ void UTacRefDlg::BuildGazetteer(UVerticalBox& Body)
     if (GazetteerMap)
     {
         GazetteerMap->SetClipping(EWidgetClipping::ClipToBounds);
+        GazetteerMap->EnableMissionBodyMeshes();
         MapColumn->AddChildToVerticalBox(GazetteerMap)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
     }
     auto* Column = WidgetTree->ConstructWidget<UVerticalBox>();
@@ -901,42 +928,94 @@ void UTacRefDlg::BuildGazetteer(UVerticalBox& Body)
     GazetteerText->SetDefaultTextStyle(BodyStyle);
     GazetteerScroll->AddChild(GazetteerText);
 
-    TArray<FString> Titles;
-    LoadGazetteer(Titles, GazetteerEntries);
-    for (const FString& LoreTitle : Titles) Entries->AddOption(LoreTitle);
+    GazetteerSelector = Entries;
     Entries->OnSelectionChanged.AddUniqueDynamic(this, &UTacRefDlg::HandleGazetteerEntry);
-    if (Entries->GetOptionCount() > 0)
+    LoadGazetteer(GazetteerTitles, GazetteerEntries);
+    HandleGazetteerSystems();
+}
+
+void UTacRefDlg::HandleGazetteerSystems() { SelectGazetteerSection(EGazetteerSection::Systems); }
+void UTacRefDlg::HandleGazetteerFactions() { SelectGazetteerSection(EGazetteerSection::Factions); }
+void UTacRefDlg::HandleGazetteerFigures() { SelectGazetteerSection(EGazetteerSection::Figures); }
+
+UTacRefDlg::EGazetteerSection UTacRefDlg::GetGazetteerSection(const FString& LoreTitle)
+{
+    if (LoreTitle.StartsWith(TEXT("System — ")) || LoreTitle.StartsWith(TEXT("World — ")))
+        return EGazetteerSection::Systems;
+    if (LoreTitle.StartsWith(TEXT("Figure — ")) || LoreTitle.StartsWith(TEXT("Major Figures")))
+        return EGazetteerSection::Figures;
+    return EGazetteerSection::Factions;
+}
+
+void UTacRefDlg::SelectGazetteerSection(EGazetteerSection Section)
+{
+    if (!GazetteerSelector) return;
+    for (int32 Index = 0; Index < GazetteerSectionButtons.Num(); ++Index)
+        ModernMenuLayout::SetSelected(GazetteerSectionButtons[Index], Index == static_cast<int32>(Section));
+
+    const FString Previous = GazetteerSelector->GetSelectedOption();
+    GazetteerSelector->ClearOptions();
+    for (const FString& LoreTitle : GazetteerTitles)
     {
-        const int32 Janus = Entries->FindOptionIndex(TEXT("System — Janus"));
-        Entries->SetSelectedIndex(Janus != INDEX_NONE ? Janus : 0);
-        HandleGazetteerEntry(Entries->GetSelectedOption(), ESelectInfo::Direct);
+        if (GetGazetteerSection(LoreTitle) == Section) GazetteerSelector->AddOption(LoreTitle);
     }
-    else GazetteerText->SetText(FText::FromString(TEXT("Gazetteer data unavailable.")));
+
+    if (GazetteerSelector->GetOptionCount() == 0)
+    {
+        GazetteerMapColumn->SetVisibility(ESlateVisibility::Collapsed);
+        GazetteerText->SetText(FText::FromString(TEXT("Gazetteer data unavailable.")));
+        return;
+    }
+
+    int32 Selection = GazetteerSelector->FindOptionIndex(Previous);
+    if (Selection == INDEX_NONE && Section == EGazetteerSection::Systems)
+        Selection = GazetteerSelector->FindOptionIndex(TEXT("System — Janus"));
+    GazetteerSelector->SetSelectedIndex(Selection == INDEX_NONE ? 0 : Selection);
+    HandleGazetteerEntry(GazetteerSelector->GetSelectedOption(), ESelectInfo::Direct);
 }
 
 void UTacRefDlg::LoadGazetteer(TArray<FString>& Titles, TMap<FString, FString>& Entries)
 {
     Titles.Reset();
     Entries.Reset();
+    const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Lore/BlueDrift.json");
     FString Source;
-    FFileHelper::LoadFileToString(Source, *(FPaths::ProjectContentDir() / TEXT("GameData/Lore/BlueDrift.txt")));
-    TArray<FString> Lines;
-    Source.ParseIntoArrayLines(Lines, false);
-    FString Entry;
-    for (const FString& Line : Lines)
+    TSharedPtr<FJsonObject> Document;
+    if (!FFileHelper::LoadFileToString(Source, *Path) ||
+        !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Source), Document) || !Document)
     {
-        if (Line.StartsWith(TEXT("@@ ")))
-        {
-            Entry = Line.RightChop(3).TrimStartAndEnd();
-            if (Entry.IsEmpty() || Entries.Contains(Entry)) { Entry.Reset(); continue; }
-            Titles.Add(Entry);
-            Entries.Add(Entry);
-        }
-        else if (!Entry.IsEmpty())
-        {
-            Entries.FindChecked(Entry) += Line + TEXT("\n");
-        }
+        UE_LOG(LogTemp, Warning, TEXT("Could not load Gazetteer JSON: %s"), *Path);
+        return;
     }
+
+    int32 SchemaVersion = 0;
+    const TArray<TSharedPtr<FJsonValue>>* Records = nullptr;
+    if (!Document->TryGetNumberField(TEXT("SchemaVersion"), SchemaVersion) || SchemaVersion != 1 ||
+        !Document->TryGetArrayField(TEXT("Entries"), Records) || Records->IsEmpty())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Unsupported or empty Gazetteer JSON: %s"), *Path);
+        return;
+    }
+
+    TArray<FString> ParsedTitles;
+    TMap<FString, FString> ParsedEntries;
+    for (const auto& Record : *Records)
+    {
+        const TSharedPtr<FJsonObject>* Entry = nullptr;
+        FString Title;
+        FString Body;
+        if (!Record->TryGetObject(Entry) || !(*Entry)->TryGetStringField(TEXT("Title"), Title) ||
+            Title.TrimStartAndEnd().IsEmpty() || ParsedEntries.Contains(Title) ||
+            !(*Entry)->TryGetStringField(TEXT("Body"), Body))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Malformed or duplicate Gazetteer entry at index %d in %s"), ParsedTitles.Num(), *Path);
+            return;
+        }
+        ParsedTitles.Add(Title);
+        ParsedEntries.Add(MoveTemp(Title), MoveTemp(Body));
+    }
+    Titles = MoveTemp(ParsedTitles);
+    Entries = MoveTemp(ParsedEntries);
 }
 
 void UTacRefDlg::StyleReferenceCombo(UComboBoxString& Combo)
@@ -952,7 +1031,7 @@ UWidget* UTacRefDlg::MakeReferenceComboItem(FString Item)
     auto* Label = NewObject<UTextBlock>(this);
     Label->SetFont(ShipCombo->GetFont());
     Label->SetColorAndOpacity(FLinearColor::White);
-    Label->SetText(FText::FromString(Item));
+    Label->SetText(FText::FromString(GetGazetteerDisplayName(Item)));
     return Label;
 }
 
@@ -974,6 +1053,15 @@ void UTacRefDlg::HandleGazetteerClicked()
     SetGazetteerVisible(true);
 }
 
+FString UTacRefDlg::GetGazetteerDisplayName(const FString& Entry)
+{
+    if (Entry.StartsWith(TEXT("System — ")) || Entry.StartsWith(TEXT("World — ")) ||
+        Entry.StartsWith(TEXT("Faction — ")) || Entry.StartsWith(TEXT("Figure — ")) ||
+        Entry.StartsWith(TEXT("Field Guide — ")) || Entry.StartsWith(TEXT("Major Figures — ")))
+        return Entry.Mid(Entry.Find(TEXT(" — ")) + 3);
+    return Entry;
+}
+
 FString UTacRefDlg::GetGazetteerSystemName(const FString& Entry)
 {
     FString SystemName;
@@ -991,7 +1079,7 @@ FString UTacRefDlg::GetGazetteerSystemName(const FString& Entry)
 FString UTacRefDlg::BuildGazetteerDetails(const FString& Entry, const UGameInstance* Instance)
 {
     const FString SystemName = GetGazetteerSystemName(Entry);
-    FString Details = FString::Printf(TEXT("<HUD_Label>%s</>\n\n"), *Entry.ToUpper());
+    FString Details = FString::Printf(TEXT("<HUD_Label>%s</>\n\n"), *GetGazetteerDisplayName(Entry).ToUpper());
     const auto AddFact = [&](const TCHAR* Label, const FString& Value)
     {
         if (!Value.IsEmpty())
@@ -1051,6 +1139,7 @@ void UTacRefDlg::HandleGazetteerEntry(FString Entry, ESelectInfo::Type)
     const FString* Lore = GazetteerEntries.Find(Entry);
     if (!Lore) return;
     const FString SystemName = GetGazetteerSystemName(Entry);
+    GazetteerMapColumn->SetVisibility(SystemName.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::Visible);
     if (!SystemName.IsEmpty())
     {
         GazetteerMapTitle->SetText(FText::FromString(SystemName.ToUpper()));

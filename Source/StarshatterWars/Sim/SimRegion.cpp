@@ -17,6 +17,7 @@
 */
 
 #include "SimRegion.h"
+#include "Mission.h"
 #include "AsteroidFieldLayout.h"
 #include "Sim.h"
 #include "MissionEvent.h"
@@ -1354,9 +1355,10 @@ SimRegion::DockShips()
                         if (Instruction* Objective = Element->GetObjective(Index))
                             if (Objective->GetStatus() <= INSTRUCTION_STATUS::ACTIVE) Objective->Evaluate(ship);
                 if (sim) sim->NotifyPlayerDocked();
-                if (UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr)
-                    if (UGameInstance* GI = World->GetGameInstance())
-                        if (auto* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetGameMode(EGameMode::PLAN);
+                if (!sim || !sim->GetMission() || !sim->GetMission()->IsFreeFlight())
+                    if (UWorld* World = GEngine ? GEngine->GetCurrentPlayWorld() : nullptr)
+                        if (UGameInstance* GI = World->GetGameInstance())
+                            if (auto* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetGameMode(EGameMode::PLAN);
                 UE_LOG(LogTemp,Display,TEXT("[MissionRecovery] Parked fighter '%hs' retained until debrief is visible"),ship->GetName());
                 continue;
             }

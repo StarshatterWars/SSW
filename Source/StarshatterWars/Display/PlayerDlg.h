@@ -24,6 +24,7 @@ class STARSHATTERWARS_API UPlayerDlg : public UBaseScreen
     GENERATED_BODY()
 
 public:
+    static TSharedRef<SWidget> BuildFlightStatistics(UGameInstance* Instance);
     UPlayerDlg(const FObjectInitializer& ObjectInitializer);
 
     void InitializeDlg(UMenuScreen* InManager);

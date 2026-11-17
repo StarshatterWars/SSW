@@ -58,11 +58,13 @@ public:
     virtual void Initialize(FSubsystemCollectionBase& Collection) override;
     virtual void Deinitialize() override;
 
-    // Convenience wrapper for the one legacy file:
+    // Load the JSON catalog and rebuild the live weapon registry.
     UFUNCTION(BlueprintCallable, Category = "Starshatter|WeaponDesign")
     void LoadWeaponDesigns();
 
-    // Monolithic parse method (legacy-style):
+    static bool ImportJsonCatalog(UDataTable& Table, const FString& Path);
+
+    // Legacy importer for migration and older definitions.
     void LoadWeaponDesign(const char* Filename);
     void LoadAll(bool bFull = false);
 

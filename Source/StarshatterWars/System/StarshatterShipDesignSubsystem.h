@@ -95,9 +95,11 @@ public:
 	void LoadAll(bool bFull = false);
 	void LoadShipDesign(const char* InFilename);
 	void ResetCurrentShipArrays();
-	void LoadShipDesignTable();
+	void LoadShipDesignTable(bool bUseLegacyFallbacks = true);
+    static bool ImportJsonCatalog(UDataTable& Table, const FString& Path);
+    static void CompleteLegacyBaseCost(FName Key, FShipDesign& Row);
 	void LoadStagedShipDesignTable(const UDataTable& StagedTable);
-	void EnsureViperLaser();
+	void EnsureViperLaser(bool bUseLegacyFallbacks = true);
 
 	const FShipDesign* GetDesignRowByName(const FString& DesignName) const;
 	const FShipDesign* GetDesignRow(const FName RowName) const;

@@ -99,9 +99,11 @@ protected:
     int32 StandaloneBriefingStoryCampaignId = INDEX_NONE;
     Campaign* GetRosterCampaign();
     UFUNCTION() void ToggleTrainingOverview();
+    friend class UAgentsDlg;
+    UFUNCTION() void OpenAgents();
+    UPROPERTY(Transient) TObjectPtr<class UAgentsDlg> AgentsDialog;
     UPROPERTY(Transient) TObjectPtr<UTextBlock> TrainingOverview;
     bool bTrainingView = false;
-    Campaign* TrainingCampaign = nullptr;
     Campaign* CustomCampaign = nullptr; // Owned by legacy Campaign registry.
     int32 PendingCustomDeleteId = INDEX_NONE;
     int32 ChosenIndex = INDEX_NONE;

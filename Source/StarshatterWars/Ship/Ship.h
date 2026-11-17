@@ -386,6 +386,17 @@ public:
     double LoadMinedOre(const FString& Mineral, double Tonnes);
     double UnloadMinedOre(double Tonnes);
     double GetMinedOreTonnes() const;
+    struct FSealedCourierPackage
+    {
+        FName ContractId;
+        double Tonnes = 0.0;
+    };
+    double GetCargoUsedTonnes() const;
+    bool LoadCourierPackage(FName ContractId, double Tonnes);
+    bool HasCourierPackage(FName ContractId) const;
+    void RemoveCourierPackage(FName ContractId);
+    const FSealedCourierPackage* GetCourierPackage() const { return CourierPackage.GetPtrOrNull(); }
+
     int32 GetDockedCargoTransferQuantity() const;
     int32 TransferCargoToDock();
     EFreighterLoadStatus GetFreighterLoadStatus() const;
@@ -559,6 +570,7 @@ protected:
     char              regnum[16];
     ShipDesign*       design;
     TOptional<SSWFreightManifest::FLoad> CargoManifest;
+    TOptional<FSealedCourierPackage> CourierPackage;
     double FractionalMinedOre = 0.0;
     FVector CombatAllocation = FVector::ZeroVector;
     ShipKiller*       killer;

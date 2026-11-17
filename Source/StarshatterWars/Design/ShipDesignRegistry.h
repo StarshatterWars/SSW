@@ -39,7 +39,8 @@ public:
     //-------------------------------------------------------------
     // Registration
     //-------------------------------------------------------------
-    static void RegisterDesign(const FName& RowName, const FShipDesign& Row);
+    static void RegisterDesign(const FName& RowName, const FShipDesign& Row, bool bRecoverLegacySkins = true);
+    static void CompleteLegacySkinMetadata(const FName& RowName, TArray<FShipSkin>& Skins);
     static void RegisterDesign(const FString& Name, const FShipDesign& Row);
 
     //-------------------------------------------------------------
@@ -75,7 +76,7 @@ public:
 private:
 
     friend class FNativeHullSkinTest;
-    static ShipDesign* ConvertToLegacyDesign(const FName& RowName, const FShipDesign& Row);
+    static ShipDesign* ConvertToLegacyDesign(const FName& RowName, const FShipDesign& Row, bool bRecoverLegacySkins = true);
     static void CopyStringToAnsi(char* Dest, int32 DestSize, const FString& Source);
     static void ResetShipComponents(ShipDesign* Legacy);
 

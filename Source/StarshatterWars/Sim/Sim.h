@@ -21,7 +21,7 @@
 
 #include "GameStructs_products.h"
 #include "ContractAI.h"
-#include "GameStructs_Contracts.h"
+#include "ContractTransactions.h"
 #include "MiningAI.h"
 #include "Types.h"
 #include "Delegates/Delegate.h"
@@ -186,6 +186,7 @@ public:
     FProjectileAdded OnProjectileAdded;
     FShipRetired OnShipRetired;
     Mission* GetMission() { return mission; }
+    void ResolveAgentAssignment(bool bSucceeded);
     const FSSWProductionStock* GetProductionStock(const FSSWProductionFacility& Facility);
     struct FActiveHaul
     {
@@ -195,6 +196,13 @@ public:
         bool bDelivering = false;
     };
     TArray<FActiveHaul> GetActiveHauls();
+    enum class ETrainingContractAction : uint8 { Accept, Bid, Deliver, Claim };
+    const TMap<FName, FContractTransaction>& GetTrainingContracts();
+    int64 GetTrainingContractBalance() const;
+    FText ExecuteTrainingContract(FName ContractId, ETrainingContractAction Action, int64 Bid);
+    static const FName TrainingContractPilot;
+    static constexpr double TrainingDeliveryRange = 2000.0;
+
 
     List<MissionEvent>& GetEvents() { return events; }
     List<SimRegion>& GetRegions() { return regions; }
@@ -323,6 +331,9 @@ protected:
         TOptional<FVector> AsteroidDetour;
     };
     TMap<int32, FMiningRun> JanekMiningRuns;
+    FName AssignedAgentPilot;
+    FContractAccounts TrainingContractAccounts;
+    TMap<FName, FContractTransaction> TrainingContracts;
     FSSWProductionStock JanekRefinery;
     TMap<FString, double> JanekMiningStock;
     TMap<FString, double> JanusTransferStock;

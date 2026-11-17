@@ -33,6 +33,8 @@ namespace MissionUIStyle
     const FSliderStyle& OptionsSliderStyle();
     TSharedRef<SWidget> MakeOptionsSliderTrack(TSharedRef<SWidget> Slider, TAttribute<float> Value);
 
+    TSharedRef<SWidget> MakeDataPane(TSharedRef<SWidget> Content, FMargin Padding = FMargin(12));
+
     // Colors
     // -----------------------------------------------------------------
 

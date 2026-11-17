@@ -64,7 +64,7 @@ public:
     TSharedRef<SWidget> GenerateWidgetForColumn(const FName& Column) override
     {
         if (Column == "Status")
-            return SNew(STextBlock).Margin(FMargin(5, 4)).Font(MissionUIStyle::GetRowFont(13))
+            return SNew(STextBlock).Margin(FMargin(5, 4)).Font(MissionUIStyle::GetRowFont(12))
                 .Text_Lambda([Site = Facility]() { return GetProductionStatus(GetLiveStock(*Site)); });
 
         FText Label;
@@ -79,7 +79,7 @@ public:
         else if (Column == "ProcessingTime") Label = ProcessingTime;
         else if (Column == "Capacity")
             Label = FText::Format(INVTEXT("{0} t"), FText::AsNumber(Facility->CapacityTonnes));
-        return SNew(STextBlock).Margin(FMargin(5, 4)).Font(MissionUIStyle::GetRowFont(13))
+        return SNew(STextBlock).Margin(FMargin(5, 4)).Font(MissionUIStyle::GetRowFont(12))
             .Text(Label.ToUpper()).ToolTipText(Label).OverflowPolicy(ETextOverflowPolicy::Ellipsis);
     }
 
@@ -140,7 +140,7 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
     const auto Column = [&Header](FName Id, FText Label, float Weight)
     {
         Header->AddColumn(SHeaderRow::Column(Id).DefaultLabel(Label).FillWidth(Weight)
-            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).Text(Label)]);
+            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(Label.ToUpper())]);
     };
     Column("Facility", INVTEXT("FACILITY"), 2.5f);
     Column("System", INVTEXT("SYSTEM"), 1.f);
@@ -227,13 +227,11 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
     auto Browser = SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(12, 8)
         [Filters]
-        + SVerticalBox::Slot().FillHeight(0.65f)
-        [List]
-        + SVerticalBox::Slot().FillHeight(0.35f).Padding(12, 10)
+        + SVerticalBox::Slot().FillHeight(0.65f).Padding(12, 0)
+        [MissionUIStyle::MakeDataPane(List, FMargin(0))]
+        + SVerticalBox::Slot().FillHeight(0.35f).Padding(12, 8, 12, 10)
         [
-            SNew(SBorder).Padding(12).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(FLinearColor(0.075f, 0.09f, 0.11f))
-            [
+            MissionUIStyle::MakeDataPane(
             SNew(SScrollBox)
             + SScrollBox::Slot()
             [
@@ -283,12 +281,12 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                     return FText::Join(INVTEXT("\n"), Lines).ToUpper();
                 })
             ]
-            ]
+            )
         ];
     const auto FactoryColumn = [](const FText& Header, TAttribute<FText> Body)
     {
         return SNew(SBorder).Padding(14).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(FLinearColor(0.075f, 0.09f, 0.11f))
+            .BorderBackgroundColor(MissionUIStyle::PanelBG.CopyWithNewOpacity(1.0f))
             [
                 SNew(SVerticalBox)
                 + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 10)

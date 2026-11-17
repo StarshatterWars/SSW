@@ -49,6 +49,7 @@
 #include "StarshatterPlayerSubsystem.h"
 #include "StarshatterSystemDesignSubsystem.h"
 #include "CargoCatalogSubsystem.h"
+#include "AgentCatalogSubsystem.h"
 #include "StarshatterWeaponDesignSubsystem.h"
 #include "StarshatterAssetRegistrySubsystem.h"
 #include "StarshatterEnvironmentSubsystem.h"
@@ -128,6 +129,7 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
     Collection.InitializeDependency(UStarshatterShipDesignSubsystem::StaticClass());
     Collection.InitializeDependency(UStarshatterSystemDesignSubsystem::StaticClass());
     Collection.InitializeDependency(UCargoCatalogSubsystem::StaticClass());
+    Collection.InitializeDependency(UAgentCatalogSubsystem::StaticClass());
     Collection.InitializeDependency(UStarshatterWeaponDesignSubsystem::StaticClass());
     Collection.InitializeDependency(UStarshatterEnvironmentSubsystem::StaticClass());
     Collection.InitializeDependency(UStarshatterUIStyleSubsystem::StaticClass());
@@ -167,6 +169,7 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
         BootWeaponDesignLoader(Ctx);
         BootShipDesignLoader(Ctx);
         BootCargoCatalogLoader();
+        BootAgentCatalogLoader();
         BootGalaxyLoader(Ctx);
         BootCombatGroupLoader(Ctx);
         BootGameDataLoader(false);
@@ -210,6 +213,7 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
             BootShipDesignLoader(Ctx);
         }
         BootCargoCatalogLoader();
+        BootAgentCatalogLoader();
         BootGalaxyLoader(Ctx);
         BootCombatGroupLoader(Ctx);
     }
@@ -363,6 +367,8 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.ProductionPopupClass"),
         TEXT("UI.ShipStorePopupClass"),
         TEXT("UI.ContractsPopupClass"),
+        TEXT("UI.AgentsPopupClass"),
+        TEXT("UI.PlayersPopupClass"),
         TEXT("UI.MissionsPanelClass"),
         TEXT("UI.AwardPopupClass"),
 
@@ -520,6 +526,12 @@ void USSWBootSubsystem::BootCargoCatalogLoader()
         Cargo->LoadCatalog();
 }
 
+void USSWBootSubsystem::BootAgentCatalogLoader()
+{
+    if (auto* Agents = GetGameInstance()->GetSubsystem<UAgentCatalogSubsystem>())
+        Agents->LoadCatalog();
+}
+
 void USSWBootSubsystem::BootSystemDesignLoader(const FBootContext& Ctx)
 {
     if (!Ctx.SystemDesignSS)
@@ -626,6 +638,7 @@ void USSWBootSubsystem::IngestAllDesignData(bool bForceReimport)
     UE_LOG(LogSSWBoot, Log, TEXT("[INGEST] SHIPS=%d"), ShipSS->GetDesignsByName().Num());
 
     BootCargoCatalogLoader();
+    BootAgentCatalogLoader();
 
     UE_LOG(LogSSWBoot, Log, TEXT("[INGEST] END FULL DESIGN INGESTION"));
 }

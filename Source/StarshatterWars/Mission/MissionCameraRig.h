@@ -66,13 +66,9 @@ struct FMissionCameraRig
     // Launch presentation only: retain the authored deck while the fighter exits.
     FlightDeck* HeldLaunchDeck = nullptr;
     Ship* HeldLaunchPlayer = nullptr;
-    double HeldLaneOffset = 0.0;
-    FQuat HeldDeckRotation = FQuat::Identity;
+    FVector HeldLaunchEyeLocal = FVector::ZeroVector;
+    FQuat HeldLaunchRotationLocal = FQuat::Identity;
     bool bHeldDeckPoseValid = false;
-    // Preserve the pre-launch view during launch-tube traversal.
-    FQuat HeldLaunchFacing = FQuat::Identity;
-    FVector HeldLaunchEyeCorrection = FVector::ZeroVector;
-    bool bHeldLaunchFacingValid = false;
     // Deck release is a presentation hand-off, not an instantaneous camera cut.
     bool bLaunchExitBlendActive = false;
     double LaunchExitBlendElapsed = 0.0;
@@ -262,7 +258,6 @@ struct FMissionCameraRig
             if (HeldLaunchDeck != Deck || HeldLaunchPlayer != Player)
             {
                 bHeldDeckPoseValid = false;
-                bHeldLaunchFacingValid = false;
             }
             HeldLaunchDeck = Deck;
             HeldLaunchPlayer = Player;
@@ -274,7 +269,6 @@ struct FMissionCameraRig
             HeldLaunchDeck = nullptr;
             HeldLaunchPlayer = nullptr;
             bHeldDeckPoseValid = false;
-            bHeldLaunchFacingValid = false;
         }
 
         bool bLaunchDeckHold = false;
@@ -315,7 +309,6 @@ struct FMissionCameraRig
             HeldLaunchDeck = nullptr;
             HeldLaunchPlayer = nullptr;
             bHeldDeckPoseValid = false;
-            bHeldLaunchFacingValid = false;
         }
 
         const bool bDock = (Deck && (Phase < EOPSMode::LOCKED ||
@@ -364,94 +357,50 @@ struct FMissionCameraRig
             // Deck camera is in simulation space; rebase into the displayed ship frame.
             FlightDeck* ActiveDeck = bLaunchDeckHold ? HeldLaunchDeck : Deck;
             if (!ActiveDeck) return;
-            FVector CameraSimPoint = ActiveDeck->CamLoc();
-            if (ActiveDeck->IsLaunchDeck() && Player->GetCarrier())
+            const Ship* Carrier = ActiveDeck->GetCarrier();
+            USSWRuntimeSubsystem* Runtime = PC->GetGameInstance()
+                ? PC->GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>() : nullptr;
+            if (ActiveDeck->IsLaunchDeck() && Carrier && Carrier->GetRegion() && Runtime)
             {
-                // .def cam is often on the centerline. The two authored launch
-                // lanes are displaced sideways (Orion: X=+60 and X=-60).
-                // Preserve the authored camera height and fore/aft separation,
-                // but move its lateral coordinate into the fighter's actual spot.
-                const FVector Run = (ActiveDeck->EndPoint() - ActiveDeck->StartPoint()).GetSafeNormal();
-                const FVector CarrierUp = Player->GetCarrier()->GetCam().vup().GetSafeNormal();
-                const FVector Right = FVector::CrossProduct(Run, CarrierUp).GetSafeNormal();
-                if (!Right.IsNearlyZero())
+                // Use the launch-bay chase pose in the same rendered frame as the fighter.
+                const auto& CarrierBasis = Carrier->GetCam();
+                const FVector CarrierPosition = Carrier->GetLocation();
+                FVector Origin, ForwardPoint, UpPoint;
+                Runtime->GetCarrierVisualPoint(Carrier, CarrierPosition, Origin);
+                Runtime->GetCarrierVisualPoint(Carrier, CarrierPosition + CarrierBasis.vpn(), ForwardPoint);
+                Runtime->GetCarrierVisualPoint(Carrier, CarrierPosition + CarrierBasis.vup(), UpPoint);
+                const FVector CarrierUp = (UpPoint - Origin).GetSafeNormal();
+                const FQuat CarrierRotation = Aim(ForwardPoint - Origin, CarrierUp, ShipRotation);
+                const FTransform CarrierFrame(CarrierRotation, Origin);
+                if (!bLaunchDeckHold || !bHeldDeckPoseValid)
                 {
-                    if (!bLaunchDeckHold)
-                        HeldLaneOffset = FVector::DotProduct(Player->GetLocation() - CameraSimPoint, Right);
-                    CameraSimPoint += Right * HeldLaneOffset;
-                }
-            }
-            // Keep the camera stationed INSIDE the carrier's launch bay.
-            // Its authored .def cam position, adjusted only for the occupied lane,
-            // stays carrier-relative while the fighter travels through the tube.
-            // Do not move this viewpoint along the catapult or behind the fighter.
-            const FVector Offset = CameraSimPoint - Player->GetLocation();
-            const auto& Basis = Player->GetCam();
-            Eye = Pose.TransformPosition(FVector(FVector::DotProduct(Offset, Basis.vpn()),
-                FVector::DotProduct(Offset, Basis.vrt()), FVector::DotProduct(Offset, Basis.vup())));
-            if (UGameInstance* GI = PC->GetGameInstance())
-                if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
-                    Runtime->GetCarrierVisualPoint(Player->GetCarrier(), CameraSimPoint, Eye);
-
-            if (ActiveDeck->IsLaunchDeck() && Player->GetCarrier())
-            {
-                // The camera must see the rendered fighter, not only point out
-                // of the bay. Both the carrier frame and the player visual can
-                // differ from the raw simulation coordinate frame.
-                FVector StartUE = FVector::ZeroVector;
-                FVector EndUE = FVector::ZeroVector;
-                FVector RunUE = FVector::ZeroVector;
-                if (UGameInstance* GI = PC->GetGameInstance())
-                    if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
-                        if (Runtime->GetCarrierVisualPoint(Player->GetCarrier(), Player->GetCarrier()->GetLocation(), StartUE) &&
-                            Runtime->GetCarrierVisualPoint(Player->GetCarrier(), Player->GetCarrier()->GetLocation()
-                                + Player->GetCarrier()->GetCam().vpn(), EndUE))
-                            RunUE = (EndUE - StartUE).GetSafeNormal();
-
-                if (RunUE.IsNearlyZero()) RunUE = Forward.GetSafeNormal();
-                if (RunUE.IsNearlyZero()) RunUE = FVector::ForwardVector;
-
-                // Move the camera farther back INSIDE the launch bay without
-                // recomputing its already-correct forward-looking rotation.
-                // Carrier camera vpn() is the legacy forward/tube axis;
-                // using it avoids the diagonal departure-waypoint offset.
-                const double RearwardCameraOffset = FMath::Max(160.0, Radius * 3.0);
-                constexpr double CameraHeightAboveAuthored = 0.0;
-                const FVector CarrierForward = Player->GetCarrier()->GetCam().vpn().GetSafeNormal();
-                const FVector CarrierUp = Player->GetCarrier()->GetCam().vup().GetSafeNormal();
-                // Stay behind the fighter, but move UP along the carrier's own
-                // vertical axis rather than down toward the launch-bay floor.
-                const FVector RearCameraSimPoint = CameraSimPoint
-                    - CarrierForward * RearwardCameraOffset
-                    + CarrierUp * CameraHeightAboveAuthored;
-                if (UGameInstance* GI = PC->GetGameInstance())
-                {
-                    if (USSWRuntimeSubsystem* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>())
-                    {
-                        FVector RearEye = Eye;
-                        if (Runtime->GetCarrierVisualPoint(Player->GetCarrier(), RearCameraSimPoint, RearEye))
-                            Eye = RearEye;
-                    }
-                }
-                // Aim toward the displayed fighter from the final eye position.
-                const FVector Target = Visual->GetActorLocation()
-                    + RunUE * FMath::Min(Radius * 0.22, 60.0);
-                if (Phase == EOPSMode::ALERT || !bHeldLaunchFacingValid)
-                {
-                    const FVector FramedEye = Target - RunUE * (Radius * 1.5) + Up * (Radius * 0.5);
-                    HeldLaunchEyeCorrection = FramedEye - Eye;
-                    Rotation = Aim(RunUE, Up, Rotation);
-                    HeldLaunchFacing = Rotation;
-                    bHeldLaunchFacingValid = true;
+                    const FBox FighterBounds = FocusActor == Visual ? LocalBounds : MissionTargetLocalBounds(Visual);
+                    const double FighterRadius = FMath::Max(10.0, FighterBounds.GetExtent().Size() * Pose.GetScale3D().GetAbsMax());
+                    const FVector Target = FighterBounds.IsValid ? Pose.TransformPosition(FighterBounds.GetCenter()) : Pose.GetLocation();
+                    const FVector Chase = Visual->ChasePoint
+                        ? Visual->ChasePoint->GetComponentLocation() - Pose.GetLocation() : FVector::ZeroVector;
+                    const double Back = FMath::Max(FMath::Abs(FVector::DotProduct(Chase, Forward)), FighterRadius * 3.0);
+                    const double Height = FMath::Max(FMath::Abs(FVector::DotProduct(Chase, Up)), FighterRadius * 1.25);
+                    Eye = Target - Forward * Back + Up * Height;
+                    Rotation = Aim(Target - Eye, CarrierUp, ShipRotation);
+                    HeldLaunchEyeLocal = CarrierFrame.InverseTransformPositionNoScale(Eye);
+                    HeldLaunchRotationLocal = CarrierRotation.Inverse() * Rotation;
+                    bHeldDeckPoseValid = true;
                 }
                 else
                 {
-                    Rotation = HeldLaunchFacing;
+                    Eye = CarrierFrame.TransformPositionNoScale(HeldLaunchEyeLocal);
+                    Rotation = CarrierRotation * HeldLaunchRotationLocal;
                 }
-                Eye += HeldLaunchEyeCorrection;
             }
             else
             {
+                const FVector CameraSimPoint = ActiveDeck->CamLoc();
+                const FVector Offset = CameraSimPoint - Player->GetLocation();
+                const auto& Basis = Player->GetCam();
+                Eye = Pose.TransformPositionNoScale(FVector(FVector::DotProduct(Offset, Basis.vpn()),
+                    FVector::DotProduct(Offset, Basis.vrt()), FVector::DotProduct(Offset, Basis.vup())));
+                if (Carrier && Runtime) Runtime->GetCarrierVisualPoint(Carrier, CameraSimPoint, Eye);
                 Rotation = Aim(Bridge - Eye, Up, Rotation);
             }
         }

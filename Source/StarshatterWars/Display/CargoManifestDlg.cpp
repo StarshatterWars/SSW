@@ -1,4 +1,5 @@
 #include "CargoManifestDlg.h"
+#include "Algo/AllOf.h"
 #include "MissionUIStyle.h"
 #include "Ship.h"
 #include "ShipDesign.h"
@@ -67,7 +68,7 @@ namespace
                 const double Credits = Column == "Value" ? Item->Value : Item->TotalValue;
                 Text = Credits >= 0 ? FText::Format(INVTEXT("{0} cr"), FText::AsNumber(Credits)) : INVTEXT("-");
             }
-            return SNew(STextBlock).Margin(FMargin(6, 4)).Font(MissionUIStyle::GetRowFont(13)).Text(Text.ToUpper());
+            return SNew(STextBlock).Margin(FMargin(6, 4)).Font(MissionUIStyle::GetRowFont(12)).Text(Text.ToUpper());
         }
 
     private:
@@ -109,23 +110,45 @@ namespace
         void Refresh()
         {
             const Ship* Pilot = CargoShip();
-            FS_Cargo Row;
-            const bool bHasCargo = Pilot && Catalog.IsValid() && Catalog->DescribeCargo(*Pilot, Row);
-            const bool SameItem = LastShip == Pilot && bHasCargo && !Rows.IsEmpty() &&
-                Rows[0]->Name == Row.Name && Rows[0]->DisplayName == Row.DisplayName &&
-                Rows[0]->Unit == Row.Unit && Rows[0]->Rarity == Row.Rarity && Rows[0]->Type == Row.Type && Rows[0]->Size == Row.Size;
-            if (SameItem && Rows[0]->Quantity == Row.Quantity && Rows[0]->Value == Row.Value &&
-                Rows[0]->bIllicit == Row.bIllicit) return;
-            if (!bHasCargo && Rows.IsEmpty()) return;
+            TArray<FS_Cargo> Current;
+            FS_Cargo Freight;
+            if (Pilot && Catalog.IsValid() && Catalog->DescribeCargo(*Pilot, Freight))
+                Current.Add(MoveTemp(Freight));
+            if (const auto* Package = Pilot ? Pilot->GetCourierPackage() : nullptr)
+            {
+                auto& Row = Current.AddDefaulted_GetRef();
+                Row.Name = TEXT("Sealed Courier Package/") + Package->ContractId.ToString();
+                Row.DisplayName = TEXT("Sealed Courier Package");
+                Row.Unit = TEXT("crate");
+                Row.Size = Package->Tonnes;
+                Row.Quantity = 1;
+            }
 
-            LastShip = Pilot;
+            if (LastShip == Pilot && Current.Num() == Rows.Num() &&
+                Algo::AllOf(Current, [this](const FS_Cargo& Item)
+                {
+                    return Rows.ContainsByPredicate([&Item](const FCargoItem& Row)
+                    {
+                        return Item.Name == Row->Name && Item.DisplayName == Row->DisplayName &&
+                            Item.Unit == Row->Unit && Item.Rarity == Row->Rarity && Item.Type == Row->Type &&
+                            Item.Size == Row->Size && Item.Quantity == Row->Quantity &&
+                            Item.Value == Row->Value && Item.bIllicit == Row->bIllicit;
+                    });
+                }))
+                return;
+
             auto View = List.Pin();
-            const bool Reselect = SameItem && View && View->IsItemSelected(Rows[0]);
+            const auto Previous = View && LastShip == Pilot ? View->GetSelectedItems() : TArray<FCargoItem>{};
             if (View) View->ClearSelection();
+            LastShip = Pilot;
             Rows.Reset();
-            if (bHasCargo) Rows.Add(MakeShared<FS_Cargo>(MoveTemp(Row)));
+            for (auto& Item : Current)
+                Rows.Add(MakeShared<FS_Cargo>(MoveTemp(Item)));
             Sort();
-            if (Reselect) View->SetSelection(Rows[0]);
+            if (!Previous.IsEmpty())
+                if (const auto* Match = Rows.FindByPredicate([&Previous](const FCargoItem& Item)
+                    { return Item->Name == Previous[0]->Name; }))
+                    View->SetSelection(*Match);
         }
     };
 
@@ -150,7 +173,7 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
                 Table->SortMode = Mode;
                 Table->Sort();
             })
-            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).Text(Label.ToUpper())]);
+            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(Label.ToUpper())]);
     };
     AddColumn("Name", INVTEXT("Name"), 2.f);
     AddColumn("Type", INVTEXT("Type"), 1.4f);
@@ -179,8 +202,9 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
     {
         const auto View = Table->List.Pin();
         const auto* Load = CurrentLoad();
-        return View && Load && CargoShip() == Table->LastShip && !Table->Rows.IsEmpty() &&
-            Table->Rows[0]->Name == Load->Item && View->IsItemSelected(Table->Rows[0]);
+        if (!View || !Load || CargoShip() != Table->LastShip) return false;
+        const auto Selected = View->GetSelectedItems();
+        return !Selected.IsEmpty() && Selected[0]->Name == Load->Item;
     };
     const auto Font = MissionUIStyle::GetRowFont(13);
     return SNew(SVerticalBox)
@@ -201,14 +225,15 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
                 const Ship* Pilot = CargoShip();
                 if (!Pilot || !Pilot->Design()) return FText::GetEmpty();
                 const auto& Capacity = Pilot->Design()->CargoCapacity;
-                const FText Mass = FText::Format(INVTEXT("CARGO CAPACITY  {0} t"), FText::AsNumber(Capacity.Tonnes));
+                const FText Mass = FText::Format(INVTEXT("CARGO  {0} / {1} t"), FText::AsNumber(Pilot->GetCargoUsedTonnes()),
+                    FText::AsNumber(Capacity.Tonnes));
                 return Capacity.PassengerBerths > 0
                     ? FText::Format(INVTEXT("{0}    PASSENGER BERTHS  {1}"), Mass, FText::AsNumber(Capacity.PassengerBerths))
                     : Mass;
             })
         ]
         + SVerticalBox::Slot().FillHeight(1).Padding(20, 0)
-        [ List ]
+        [MissionUIStyle::MakeDataPane(List, FMargin(0))]
         + SVerticalBox::Slot().AutoHeight().Padding(20, 4)
         [
             SNew(STextBlock).Font(Font)

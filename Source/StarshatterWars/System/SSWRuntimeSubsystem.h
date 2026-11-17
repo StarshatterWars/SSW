@@ -128,7 +128,7 @@ private:
 public:
     FVector GetVisualSpawnLocationForRuntimeShip(Ship* RuntimeShip) const;
     FVector GetVisualLocationForRegion(SimRegion* Region, const FVector& SimPoint) const;
-    bool GetCarrierVisualPoint(Ship* Carrier, const FVector& SimPoint, FVector& OutPoint) const;
+    bool GetCarrierVisualPoint(const Ship* Carrier, const FVector& SimPoint, FVector& OutPoint) const;
     void BeginMissionPresentation(ASystemSceneBuilder* Builder);
     void EndMissionPresentation();
     void SetSelectedJumpRoute(const TArray<FString>& Route) { SelectedJumpRoute = Route; }

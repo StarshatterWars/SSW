@@ -55,7 +55,7 @@ public:
         else if (Column == "Empire") Label = Entry->Empire;
         else if (Column == "Price") Label = FText::AsNumber(Entry->Credits);
 
-        return SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).Margin(FMargin(8, 4))
+        return SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Margin(FMargin(8, 4))
             .Text(Label.ToUpper()).ToolTipText(Label.ToUpper()).OverflowPolicy(ETextOverflowPolicy::Ellipsis)
             .Justification(Column == "Price" ? ETextJustify::Right : ETextJustify::Left);
     }
@@ -236,7 +236,7 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
             + SHorizontalBox::Slot().AutoWidth()
             [SNew(SButton).Text(INVTEXT("Components")).OnClicked_Lambda([SelectTab]() { return SelectTab(1); })]
         ]
-        + SVerticalBox::Slot().FillHeight(1.f).Padding(8, 4)[Tabs]
+        + SVerticalBox::Slot().FillHeight(1.f).Padding(8, 4)[MissionUIStyle::MakeDataPane(Tabs, FMargin(0))]
         + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
         [
             SNew(SHorizontalBox)
@@ -248,7 +248,9 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
             [SNew(SButton).IsEnabled(false).Text(INVTEXT("Insure Current Ship"))]
         ]
         + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
-        [SNew(STextBlock).Text(INVTEXT("Full coverage includes the hull and all installed components."))]
-        + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
-        [SNew(STextBlock).Text(INVTEXT("Cash-purchased ships include lifetime full coverage."))];
+        [
+            MissionUIStyle::MakeDataPane(
+                SNew(STextBlock).AutoWrapText(true)
+                .Text(INVTEXT("Full coverage includes the hull and all installed components.\nCash-purchased ships include lifetime full coverage.")))
+        ];
 }

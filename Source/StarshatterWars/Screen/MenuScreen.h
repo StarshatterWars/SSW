@@ -80,6 +80,8 @@ public:
     // ------------------------------------------------------------
 
     void ShowMenuDlg();
+    void StartFreeFlight();
+    bool OpenQueuedAssignment(int32 MissionId, bool bFromFreeFlight);
     void ShowCampaignSelectDlg();
     void ShowMissionSelectDlg(); // Entry: four-way mission driver
     void ShowSingleMissionDlg(); // Built-in single mission roster
@@ -352,6 +354,7 @@ protected:
     bool bRequestVideoChange = false;
     UPROPERTY(Transient)
     TWeakObjectPtr<UBaseScreen> MissionBriefingCaller;
+    bool bReturnToFreeFlight = false;
     bool bBriefingCallerWasStandalone = false;
     Mission* PendingStandaloneMission = nullptr;
     Campaign* PendingStandaloneRepository = nullptr;

@@ -21,6 +21,14 @@
 #include "MissionEditorDlg.h"
 #include "MissionElementDlg.h"
 #include "MissionBriefingDlg.h"
+#include "AgentCatalogSubsystem.h"
+#include "Campaign.h"
+#include "Mission.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "PlayerCharacter.h"
+#include "SSWGameInstance.h"
+#include "SSWRuntimeSubsystem.h"
 #include "MissionDebriefDlg.h"
 #include "MissionEventDlg.h"
 #include "MissionEditorNavDlg.h"
@@ -269,7 +277,7 @@ void UMenuScreen::Setup()
 
     EnsureDialog<ULoadDlg>(LoadDlgClass, LoadDlg);
     EnsureDialog<UCmpLoadDlg>(CmpLoadDlgClass, CmpLoadDlg);
-    EnsureDialog<UTacRefDlg>(TacRefDlgClass, TacRefDlg);
+
 
     ShowMenuDlg();
 }
@@ -448,6 +456,7 @@ void UMenuScreen::Hide()
 
 void UMenuScreen::ShowMenuDlg()
 {
+    bReturnToFreeFlight = false;
     HideAll();
 
     if (!MenuDlgClass)
@@ -639,6 +648,56 @@ void UMenuScreen::HideCmpnScreen()
     HideDialog(CmpnScreen);
 }
 
+void UMenuScreen::StartFreeFlight()
+{
+    auto* Game = Cast<USSWGameInstance>(GetGameInstance());
+    Campaign* Repository = Game ? Game->GetAgentTrainingCampaign() : nullptr;
+    if (!Repository) return;
+
+    if (!Game->FreeFlightMission)
+    {
+        const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Campaigns/01/Scenes/FreeFlight.def");
+        FString Definition;
+        if (FFileHelper::LoadFileToString(Definition, *Path))
+        {
+            auto Model = MakeShared<Mission>(Mission::FreeFlightId);
+            if (Model->ParseMission(TCHAR_TO_UTF8(*Definition)) && Model->GetPlayer())
+                Game->FreeFlightMission = MoveTemp(Model);
+        }
+        if (!Game->FreeFlightMission)
+        {
+            UE_LOG(LogTemp, Error, TEXT("Free Mode could not load %s"), *Path);
+            return;
+        }
+    }
+
+    if (auto* Runtime = Game->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetGameMode(EGameMode::PREP);
+    ShowStandaloneMissionDlg(Game->FreeFlightMission.Get(), Repository);
+    if (CurrentDialog == MissionBriefingDlg && MissionBriefingDlg)
+        MissionBriefingDlg->OnCommit();
+}
+
+bool UMenuScreen::OpenQueuedAssignment(int32 MissionId, bool bFromFreeFlight)
+{
+    auto* Game = Cast<USSWGameInstance>(GetGameInstance());
+    auto* Catalog = Game ? Game->GetSubsystem<UAgentCatalogSubsystem>() : nullptr;
+    const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
+    if (!Catalog || !Pilot) return false;
+
+    const auto* Queued = Game->GetTrainingAgent().Find(AgentAI::PilotKey(*Pilot));
+    if (!Queued || Queued->MissionId != MissionId || Queued->State != AgentAI::EState::Accepted ||
+        !Catalog->CanAccept(MissionId, Queued->Issuer)) return false;
+
+    Mission* Model = Catalog->GetMission(MissionId);
+    Campaign* Repository = Catalog->GetRepository(MissionId);
+    if (!Model || !Repository) return false;
+
+    bReturnToFreeFlight = bFromFreeFlight;
+    if (auto* Runtime = Game->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetGameMode(EGameMode::PREP);
+    ShowStandaloneMissionDlg(Model, Repository);
+    return true;
+}
+
 void UMenuScreen::ShowStandaloneMissionDlg(Mission* InMission, Campaign* InRepository)
 {
     if (!InMission || !InRepository)
@@ -758,6 +817,12 @@ void UMenuScreen::ShowMissionDebriefDlg(Campaign* TrainingCampaign)
 
 void UMenuScreen::ReturnFromMissionBriefing()
 {
+    if (bReturnToFreeFlight)
+    {
+        bReturnToFreeFlight = false;
+        StartFreeFlight();
+        return;
+    }
     UBaseScreen* Caller = MissionBriefingCaller.Get();
     MissionBriefingCaller.Reset();
     if (Caller && (Caller == CmpnScreen || Caller == CmdDlg))

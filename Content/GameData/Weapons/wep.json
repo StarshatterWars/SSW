@@ -1,0 +1,13010 @@
+[
+	{
+		"Row": "Alpha Cannon",
+		"Type": 1,
+		"Kind": "Primary",
+		"Name": "Alpha Cannon",
+		"Group": "GUNS",
+		"Description": "The ALPHA CANNON is the high-energy particle weapon in use on most Hegemony fighter craft. Analysts believe that this weapon is nearing end-of-life phase out, but remains in service because it is cheap and reliable.  The Alpha Cannon tends to be low in effective damage and penetration, but makes up for those limitations with a high refire rate.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": true,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 983295,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 20,
+		"RefireDelay": 0.30000001192092896,
+		"SalvoDelay": 0,
+		"Charge": 5,
+		"MinCharge": 5,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 150,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 12,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 6000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 0,
+		"MaxRange": 12000,
+		"MaxTrack": 36000,
+		"GraphicType": 3,
+		"Width": 2,
+		"Length": 80,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 100,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0.5,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Alpha_Beauty",
+		"Bitmap": "shot0",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "AlphaBolt",
+		"Trail": "",
+		"Flash": "flash0",
+		"Flare": "",
+		"Sound": "Shot1",
+		"SoundMinDistance": 100,
+		"SoundMaxDistance": 15000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.029999999329447746,
+		"AimAzMax": 0.029999999329447746,
+		"AimAzMin": -0.029999999329447746,
+		"AimAzRest": 0,
+		"AimElMax": 0.029999999329447746,
+		"AimElMin": -0.029999999329447746,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Delta Cannon",
+		"Type": 2,
+		"Kind": "Primary",
+		"Name": "Delta Cannon",
+		"Group": "GUNS",
+		"Description": "The DELTA CANNON is the current generation standard high-energy particle weapon in use on most Alliance fighters.  Notorious for reliablity problems in its early years of service, the Delta Cannon is now considered one of the most potent and effective small energy weapons ever fielded by Force:Space.  The Delta Cannon has improved focus and high bolt velocity that contribute to its accuracy at ranges up to 10 km.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": true,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 983295,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 20,
+		"RefireDelay": 0.25,
+		"SalvoDelay": 0,
+		"Charge": 5,
+		"MinCharge": 5,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 200,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 20,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 8000,
+		"Life": 1.6000000238418579,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 0,
+		"MaxRange": 12800,
+		"MaxTrack": 38400,
+		"GraphicType": 3,
+		"Width": 2,
+		"Length": 80,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 100,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0.5,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Delta_Beauty",
+		"Bitmap": "shot1",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "DeltaBolt",
+		"Trail": "",
+		"Flash": "flash1",
+		"Flare": "",
+		"Sound": "Zap8",
+		"SoundMinDistance": 100,
+		"SoundMaxDistance": 15000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.029999999329447746,
+		"AimAzMax": 0.029999999329447746,
+		"AimAzMin": -0.029999999329447746,
+		"AimAzRest": 0,
+		"AimElMax": 0.029999999329447746,
+		"AimElMin": -0.029999999329447746,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Heavy Cannon",
+		"Type": 3,
+		"Kind": "Primary",
+		"Name": "Heavy Cannon",
+		"Group": "GUNS",
+		"Description": "The HEAVY ENERGY CANNON has recently been fitted on the F/A-38D Thunderbolt series of attack fighters.  The Heavy is a slimmed down version of the retired 'Chain Lightning' cannon used on early model LCAs for mine sweeping and antiship warfare.  This is the first time a weapon of this caliber has been fitted on a single seat fighter.  The Heavy is too slow and unweildy to be effective against maneuvering fighters, but the high damage potential makes this weapon a first-rate ship killer.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": true,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 30,
+		"RefireDelay": 0.30000001192092896,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 10,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 300,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 15,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 7000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 0,
+		"MaxRange": 14000,
+		"MaxTrack": 42000,
+		"GraphicType": 3,
+		"Width": 3,
+		"Length": 70,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 100,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0.5,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Heavy_Beauty",
+		"Bitmap": "shot4",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "HeavyBolt",
+		"Trail": "",
+		"Flash": "flash4",
+		"Flare": "",
+		"Sound": "blockade_cannon",
+		"SoundMinDistance": 500,
+		"SoundMaxDistance": 17000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.029999999329447746,
+		"AimAzMax": 0.029999999329447746,
+		"AimAzMin": -0.029999999329447746,
+		"AimAzRest": 0,
+		"AimElMax": 0.029999999329447746,
+		"AimElMin": -0.029999999329447746,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Fighter Turret",
+		"Type": 4,
+		"Kind": "Primary",
+		"Name": "Fighter Turret",
+		"Group": "TURRET",
+		"Description": "This automated FIGHTER TURRET provides rear quarter protection for the F/A-38D Thunderbolt series of attack fighters.  The turret is tied into the Alliance sensor network and will automatically engage any threat that comes within its range.  Even though it is not the most accurate platform in the fleet, the Fighter Turret is an effective deterrent to any fighters attempting a tail chase on the 'Bolt.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 1,
+		"MuzzlePoints": [
+			{
+				"X": -0.21667000651359558,
+				"Y": -0.88883000612258911,
+				"Z": 21.582000732421875
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 25,
+		"RefireDelay": 0.15000000596046448,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 10,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 10,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 8000,
+		"Life": 1.6000000238418579,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 3000,
+		"MaxRange": 12500,
+		"MaxTrack": 25000,
+		"GraphicType": 3,
+		"Width": 2,
+		"Length": 40,
+		"Scale": 0.2199999988079071,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0.5,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Turret1_Beauty",
+		"Bitmap": "shot1.pcx",
+		"Turret": "FighterTurret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "FighterBolt",
+		"Trail": "",
+		"Flash": "flash1.pcx",
+		"Flare": "",
+		"Sound": "Zap8",
+		"SoundMinDistance": 1000,
+		"SoundMaxDistance": 15000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.75,
+		"AimAzMax": 0.75,
+		"AimAzMin": -0.75,
+		"AimAzRest": 0,
+		"AimElMax": 0.5,
+		"AimElMin": -0.5,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "LCA Turret",
+		"Type": 5,
+		"Kind": "Primary",
+		"Name": "LCA Turret",
+		"Group": "TURRET",
+		"Description": "",
+		"bSecret": true,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 16.964000701904297,
+				"Y": -0.074799999594688416,
+				"Z": 143.70500183105469
+			},
+			{
+				"X": -17.093999862670898,
+				"Y": -0.074799999594688416,
+				"Z": 143.70500183105469
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 80,
+		"RefireDelay": 0.18000000715255737,
+		"SalvoDelay": 0,
+		"Charge": 15,
+		"MinCharge": 10,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 15,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 8000,
+		"Life": 1.6000000238418579,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 3000,
+		"MaxRange": 12500,
+		"MaxTrack": 25000,
+		"GraphicType": 3,
+		"Width": 2,
+		"Length": 30,
+		"Scale": 0.11999999731779099,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0.5,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "",
+		"Bitmap": "shot4.pcx",
+		"Turret": "LCATurretGuns",
+		"TurretBase": "LCATurretBase",
+		"Model": "",
+		"Projectile": "LCABolt",
+		"Trail": "",
+		"Flash": "flash4.pcx",
+		"Flare": "",
+		"Sound": "Zap8",
+		"SoundMinDistance": 1000,
+		"SoundMaxDistance": 15000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1.5,
+		"AimAzMax": 1.5,
+		"AimAzMin": -1.5,
+		"AimAzRest": 0,
+		"AimElMax": 0.80000001192092896,
+		"AimElMin": 0,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Archer",
+		"Type": 6,
+		"Kind": "Missile",
+		"Name": "Archer",
+		"Group": "SRM",
+		"Description": "The ARCHER SRM is the standard Hegemony anti-fighter munition.  Although not very fast, the Archer is very maneuverable, which makes it deadly accurate in short range engagements.  The Archer's main weakness is its low-quality seeker head.  The Archer can be defeated by releasing a decoy and performing a break turn at low power.  Each Archer hardpoint carries two weapons.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 2,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 983295,
+		"bVisibleStores": true,
+		"NStores": 2,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": -1,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 1,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 10,
+		"RefireDelay": 1,
+		"SalvoDelay": 2,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 1,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0.5,
+		"CarryResist": 2,
+		"Damage": 1000,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 200,
+		"Integrity": 100,
+		"Speed": 5000,
+		"Life": 10,
+		"Mass": 0.5,
+		"Drag": 2,
+		"Thrust": 3000,
+		"RollRate": 1,
+		"PitchRate": 4,
+		"YawRate": 4,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 5000,
+		"MaxRange": 20000,
+		"MaxTrack": 60000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.11999999731779099,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 0.25,
+		"TrailLength": 0,
+		"TrailWidth": 1.5,
+		"TrailDim": 7,
+		"Beauty": "Javelin_Beauty",
+		"Bitmap": "",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "archer",
+		"Projectile": "",
+		"Trail": "smoke.pcx",
+		"Flash": "",
+		"Flare": "drive.pcx",
+		"Sound": "missile",
+		"SoundMinDistance": 1000,
+		"SoundMaxDistance": 15000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 1,
+		"AimElMin": -1,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Javelin",
+		"Type": 7,
+		"Kind": "Missile",
+		"Name": "Javelin",
+		"Group": "SRM",
+		"Description": "The JAVELIN SRM is the standard Alliance short range anti-fighter munition.  The Javelin is quite similar to the Hegemony Archer SRM, although it is carries more fuel and has an increased effective range as a result.  Unfortunately, it is not much faster than the Archer, and enemy fighters can still defeat the shot with a decoy if given sufficient warning.  The Javelin is best employed at short ranges from low aspect to minimize the enemy's chance of escape.  Each Javelin hardpoint carries three weapons.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 2,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 983295,
+		"bVisibleStores": true,
+		"NStores": 3,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": -1,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 1,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": -1,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 10,
+		"RefireDelay": 1,
+		"SalvoDelay": 2,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 2,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0.54000002145767212,
+		"CarryResist": 2,
+		"Damage": 1200,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 200,
+		"Integrity": 100,
+		"Speed": 5000,
+		"Life": 10,
+		"Mass": 0.5,
+		"Drag": 2,
+		"Thrust": 3300,
+		"RollRate": 1,
+		"PitchRate": 4,
+		"YawRate": 4,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 5000,
+		"MaxRange": 25000,
+		"MaxTrack": 60000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.15000000596046448,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 0.25,
+		"TrailLength": 0,
+		"TrailWidth": 2,
+		"TrailDim": 7,
+		"Beauty": "Javelin_Beauty.pcx",
+		"Bitmap": "",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "javelin",
+		"Projectile": "",
+		"Trail": "smoke.pcx",
+		"Flash": "",
+		"Flare": "drive.pcx",
+		"Sound": "missile",
+		"SoundMinDistance": 1000,
+		"SoundMaxDistance": 15000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 1,
+		"AimElMin": -1,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Vector",
+		"Type": 8,
+		"Kind": "Missile",
+		"Name": "Vector",
+		"Group": "MRM",
+		"Description": "The VECTOR MRM is a medium-range general purpose guided munition.  The Vector is a high-speed weapon that is suitable for engaging small to medium-size maneuvering targets at ranges from 15 to 35 km.  Hegemony forces field an almost identical munition known as the Longbow.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 2,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 3,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 983295,
+		"bVisibleStores": true,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 10,
+		"RefireDelay": 1,
+		"SalvoDelay": 2,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 1,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0.60000002384185791,
+		"CarryResist": 2,
+		"Damage": 1200,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 250,
+		"Integrity": 100,
+		"Speed": 5000,
+		"Life": 15,
+		"Mass": 0.5,
+		"Drag": 2,
+		"Thrust": 8000,
+		"RollRate": 1,
+		"PitchRate": 4,
+		"YawRate": 4,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 10000,
+		"MaxRange": 40000,
+		"MaxTrack": 80000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.15000000596046448,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 0.25,
+		"TrailLength": 0,
+		"TrailWidth": 2,
+		"TrailDim": 6,
+		"Beauty": "Vector_Beauty.pcx",
+		"Bitmap": "",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "vector",
+		"Projectile": "",
+		"Trail": "smoke.pcx",
+		"Flash": "",
+		"Flare": "drive.pcx",
+		"Sound": "missile",
+		"SoundMinDistance": 1000,
+		"SoundMaxDistance": 15000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 1,
+		"AimElMin": -1,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Hammer",
+		"Type": 9,
+		"Kind": "Missile",
+		"Name": "Hammer",
+		"Group": "AGM",
+		"Description": "The HAMMER AGM is a medium-range passive-guided air to ground munition.  The Hammer is a low-speed but very powerful weapon that is suitable for engaging hardened ground targets at ranges up to 50 km.  Recommended procedure is to employ the Hammer from its maximum range to avoid subjecting your fighter to ground fire.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 3,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": -65536,
+		"bVisibleStores": true,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 10,
+		"RefireDelay": 1,
+		"SalvoDelay": 2,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 1,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 2.1029999256134033,
+		"CarryResist": 3,
+		"Damage": 5000,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 5000,
+		"Life": 20,
+		"Mass": 2,
+		"Drag": 2,
+		"Thrust": 10000,
+		"RollRate": 1,
+		"PitchRate": 2,
+		"YawRate": 2,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 10000,
+		"MaxRange": 50000,
+		"MaxTrack": 90000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.15000000596046448,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 0.25,
+		"TrailLength": 0,
+		"TrailWidth": 2.5,
+		"TrailDim": 5,
+		"Beauty": "Hammer_Beauty.pcx",
+		"Bitmap": "",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "hammer",
+		"Projectile": "",
+		"Trail": "smoke.pcx",
+		"Flash": "",
+		"Flare": "drive.pcx",
+		"Sound": "missile",
+		"SoundMinDistance": 1000,
+		"SoundMaxDistance": 15000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 1,
+		"AimElMin": -1,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Harpoon",
+		"Type": 10,
+		"Kind": "Missile",
+		"Name": "Harpoon",
+		"Group": "ASM",
+		"Description": "The HARPOON ASM is a long-range passive-guided antiship munition.  The Harpoon is a high-speed weapon that is suitable for engaging small to medium-size starships at ranges up to 50 km.  The Harpoon is not easily spoofed or intercepted and has excellent shield penetration capabilities.  Recommended procedure is to employ this weapon from its maximum range to avoid subjecting your fighter to enemy PDB fire. Hegemony forces field a similar fighter-launched antiship munition known as the HORN.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 3,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048560,
+		"bVisibleStores": true,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 10,
+		"RefireDelay": 1,
+		"SalvoDelay": 1,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 1,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 1.2549999952316284,
+		"CarryResist": 2,
+		"Damage": 5000,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 10,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 5000,
+		"Life": 20,
+		"Mass": 1,
+		"Drag": 2,
+		"Thrust": 10000,
+		"RollRate": 1,
+		"PitchRate": 3,
+		"YawRate": 3,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 10000,
+		"MaxRange": 50000,
+		"MaxTrack": 90000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.15000000596046448,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 0.25,
+		"TrailLength": 0,
+		"TrailWidth": 2,
+		"TrailDim": 5,
+		"Beauty": "Vector_Beauty.pcx",
+		"Bitmap": "",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "harpoon",
+		"Projectile": "",
+		"Trail": "smoke.pcx",
+		"Flash": "",
+		"Flare": "drive.pcx",
+		"Sound": "Missile1",
+		"SoundMinDistance": 1000,
+		"SoundMaxDistance": 15000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 1,
+		"AimElMin": -1,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Rockets",
+		"Type": 11,
+		"Kind": "Missile",
+		"Name": "Rockets",
+		"Group": "RKS",
+		"Description": "Each fighter-based ROCKET POD holds twelve guided submunitions that may be employed against a wide variety of spaceborne and ground-based targets.  Rockets are fired from the pod in salvos of four each time press the firing stud.  Rockets are most effective against stationary or slow moving targets, and are often used in mine-sweeping missions.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": false,
+		"bSyncro": false,
+		"Value": 2,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": -1,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 10,
+		"RefireDelay": 0.34999999403953552,
+		"SalvoDelay": 0,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 12,
+		"RippleCount": 4,
+		"Capacity": 100,
+		"CarryMass": 0.80000001192092896,
+		"CarryResist": 0.30000001192092896,
+		"Damage": 1000,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 100,
+		"Integrity": 100,
+		"Speed": 5000,
+		"Life": 8,
+		"Mass": 0.20000000298023224,
+		"Drag": 2,
+		"Thrust": 2000,
+		"RollRate": 0.5,
+		"PitchRate": 0.5,
+		"YawRate": 0.5,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 5000,
+		"MaxRange": 25000,
+		"MaxTrack": 60000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.15000000596046448,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 0.25,
+		"TrailLength": 0,
+		"TrailWidth": 1,
+		"TrailDim": 8,
+		"Beauty": "Rocket_Beauty.pcx",
+		"Bitmap": "",
+		"Turret": "RocketLauncherGuns",
+		"TurretBase": "",
+		"Model": "rocket",
+		"Projectile": "",
+		"Trail": "smoke",
+		"Flash": "",
+		"Flare": "drive.pcx",
+		"Sound": "missile2",
+		"SoundMinDistance": 1000,
+		"SoundMaxDistance": 10000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0,
+		"AimAzMax": 0,
+		"AimAzMin": -0,
+		"AimAzRest": 0,
+		"AimElMax": 0,
+		"AimElMin": -0,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 300
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Recon Pod",
+		"Type": 12,
+		"Kind": "Missile",
+		"Name": "Recon Pod",
+		"Group": "CAM",
+		"Description": "The wing-mounted RECON POD is a multi-frequency sensor package that may be used to capture detailed information about an enemy ship, station, or ground unit.  The Recon Pod will perform two detailed scans in rapid succession each time you depress the firing stud.  The Pod contains storage for ten scans, so you can only fire it five times before returning to base.  Of course, the Recon Pod does no damage to enemy targets.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": false,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": -1,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 10,
+		"RefireDelay": 0.34999999403953552,
+		"SalvoDelay": 0,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 10,
+		"RippleCount": 2,
+		"Capacity": 100,
+		"CarryMass": 1.1000000238418579,
+		"CarryResist": 1,
+		"Damage": -1,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 100,
+		"Integrity": 100,
+		"Speed": 30000,
+		"Life": 1.5,
+		"Mass": 0.20000000298023224,
+		"Drag": 2,
+		"Thrust": 4000,
+		"RollRate": 1,
+		"PitchRate": 1,
+		"YawRate": 1,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 5000,
+		"MaxRange": 30000,
+		"MaxTrack": 60000,
+		"GraphicType": 0,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.15000000596046448,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Recon_Beauty.pcx",
+		"Bitmap": "",
+		"Turret": "ReconTurret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "",
+		"Trail": "",
+		"Flash": "",
+		"Flare": "",
+		"Sound": "click",
+		"SoundMinDistance": 1000,
+		"SoundMaxDistance": 4000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0,
+		"AimAzMax": 0,
+		"AimAzMin": -0,
+		"AimAzRest": 0,
+		"AimElMax": 0,
+		"AimElMin": -0,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Fighter Decoy",
+		"Type": 13,
+		"Kind": "Drone",
+		"Name": "Fighter Decoy",
+		"Group": "DECOY",
+		"Description": "The FIGHTER DECOY is a general-purpose missile countermeasure that is designed to mimic the radient energy signature of your fighter's engine.  Anti-fighter missiles will generally guide on the closest, strongest return that their sensors can detect.  When your Sensor Warning Receiver notifies you of an inbound threat, you should release a decoy and disengage your drive augmenter (afterburner) to evade the missile.  The Fighter Decoy does no damage to enemy targets.",
+		"bSecret": false,
+		"bDrone": true,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": false,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 2,
+		"bProbe": false,
+		"TargetType": 0,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 1,
+		"RefireDelay": 1,
+		"SalvoDelay": 0,
+		"Charge": 0,
+		"MinCharge": 0,
+		"Ammo": 10,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0.10000000149011612,
+		"CarryResist": 0,
+		"Damage": 0,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 300,
+		"Life": 5,
+		"Mass": 0.5,
+		"Drag": 0.10000000149011612,
+		"Thrust": 150,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 0,
+		"MaxRange": 1500,
+		"MaxTrack": 4500,
+		"GraphicType": 2,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.25,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 1.2999999523162842,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Decoy_Beauty.pcx",
+		"Bitmap": "drive.pcx",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "",
+		"Trail": "",
+		"Flash": "",
+		"Flare": "shot7.pcx",
+		"Sound": "decoy",
+		"SoundMinDistance": 1000,
+		"SoundMaxDistance": 10000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0,
+		"AimAzMax": 1.5,
+		"AimAzMin": -1.5,
+		"AimAzRest": 0,
+		"AimElMax": 1.5,
+		"AimElMin": -1.5,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Blockade Cannon",
+		"Type": 14,
+		"Kind": "Primary",
+		"Name": "Blockade Cannon",
+		"Group": "PDB",
+		"Description": "The BLOCKADE CANNON is an energy bolt turret that is usually mounted on space mines.  The Blockade Cannon is designed to engage civilian shipping, but it is also quite effective against fighter and attack craft.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 3,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 4,
+		"MuzzlePoints": [
+			{
+				"X": 80.899246215820312,
+				"Y": -4.6467499732971191,
+				"Z": 64.124000549316406
+			},
+			{
+				"X": 80.899246215820312,
+				"Y": 7.6989998817443848,
+				"Z": 64.124000549316406
+			},
+			{
+				"X": -80.829002380371094,
+				"Y": -4.6467499732971191,
+				"Z": 64.124000549316406
+			},
+			{
+				"X": -80.829002380371094,
+				"Y": 7.6989998817443848,
+				"Z": 64.124000549316406
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 20,
+		"RefireDelay": 0.20000000298023224,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 10,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 2000,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 50,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 10,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 7500,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 4000,
+		"MaxRange": 15000,
+		"MaxTrack": 30000,
+		"GraphicType": 3,
+		"Width": 8,
+		"Length": 100,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 1,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Blockade_Beauty.pcx",
+		"Bitmap": "shot0",
+		"Turret": "BlockadeCannonTurret",
+		"TurretBase": "BlockadeTurretBase",
+		"Model": "",
+		"Projectile": "BlockadeBolt",
+		"Trail": "",
+		"Flash": "flash0",
+		"Flare": "",
+		"Sound": "blockade_cannon",
+		"SoundMinDistance": 3000,
+		"SoundMaxDistance": 30000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 3.1500000953674316,
+		"AimAzMax": 3.1500000953674316,
+		"AimAzMin": -3.1500000953674316,
+		"AimAzRest": 0,
+		"AimElMax": 1,
+		"AimElMin": -1,
+		"AimElRest": 0,
+		"SlewRate": 0.10000000149011612,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Vulcan Cannon",
+		"Type": 15,
+		"Kind": "Primary",
+		"Name": "Vulcan Cannon",
+		"Group": "VULCAN",
+		"Description": "The VULCAN CANNON is a rapid-fire energy bolt weapon that is generally deployed on LCA-class attack craft.  The Vulcan can engage targets ranging from small fighters to medium-size starships and ground units.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": -1,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 15,
+		"RefireDelay": 0.079999998211860657,
+		"SalvoDelay": 0,
+		"Charge": 5,
+		"MinCharge": 5,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 10,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 25000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 15000,
+		"MaxRange": 50000,
+		"MaxTrack": 150000,
+		"GraphicType": 3,
+		"Width": 5,
+		"Length": 120,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0.20000000298023224,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Vulcan_Beauty.pcx",
+		"Bitmap": "shot2",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "VulcanBolt",
+		"Trail": "",
+		"Flash": "flash2.pcx",
+		"Flare": "",
+		"Sound": "shot3",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.05000000074505806,
+		"AimAzMax": 0.05000000074505806,
+		"AimAzMin": -0.05000000074505806,
+		"AimAzRest": 0,
+		"AimElMax": 0.05000000074505806,
+		"AimElMin": -0.05000000074505806,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Zolon Cannon",
+		"Type": 16,
+		"Kind": "Primary",
+		"Name": "Zolon Cannon",
+		"Group": "GUNS",
+		"Description": "",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": true,
+		"Value": 2,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 30,
+		"RefireDelay": 0.33000001311302185,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 10,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 1000,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 150,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 7500,
+		"Life": 2.5,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 0,
+		"MaxRange": 18750,
+		"MaxTrack": 56250,
+		"GraphicType": 3,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.75,
+		"ExplosionScale": 0,
+		"Light": 150,
+		"LightColor":
+		{
+			"B": 180,
+			"G": 255,
+			"R": 140,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "",
+		"Bitmap": "ShotZ.pcx",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "ZolonBolt",
+		"Trail": "",
+		"Flash": "",
+		"Flare": "",
+		"Sound": "shot4",
+		"SoundMinDistance": 500,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.25,
+		"AimAzMax": 0.25,
+		"AimAzMin": -0.25,
+		"AimAzRest": 0,
+		"AimElMax": 0.25,
+		"AimElMin": -0.25,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Phalanx Cannon",
+		"Type": 17,
+		"Kind": "Primary",
+		"Name": "Phalanx Cannon",
+		"Group": "PDB",
+		"Description": "The PHALANX CANNON is the standard point defense battery (PDB) for smaller Force:Space starships.  Each Phalanx mount is a freely rotating ball turret with two alternate firing barrels.  The Phalanx is deadly accurate against fighter and combat drone targets at short ranges.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 16.006380081176758,
+				"Y": -0.0421300008893013,
+				"Z": 128.00924682617188
+			},
+			{
+				"X": -16.009130477905273,
+				"Y": -0.0421300008893013,
+				"Z": 128.00924682617188
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 25,
+		"RefireDelay": 0.10000000149011612,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 5,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 200,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 20,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 20000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 35000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 20,
+		"Length": 400,
+		"Scale": 0.30000001192092896,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 1,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Phalanx_Beauty.pcx",
+		"Bitmap": "shot2",
+		"Turret": "PhalanxCannonTurret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "PhalanxBolt",
+		"Trail": "",
+		"Flash": "flash2",
+		"Flare": "",
+		"Sound": "shot3",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.5,
+		"AimElMin": -0.5,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Viking Cannon",
+		"Type": 18,
+		"Kind": "Primary",
+		"Name": "Viking Cannon",
+		"Group": "PDB",
+		"Description": "The VIKING CANNON is the standard point defense battery (PDB) for many military stations.  Each Viking mount is a freely rotating cylindrical turret with two alternate firing barrels.  The Viking is quite accurate and delivers a devastating punch against against fighter targets at short to medium ranges.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 4.7340002059936523,
+				"Y": -0.026000000536441803,
+				"Z": 64.13800048828125
+			},
+			{
+				"X": -4.9660000801086426,
+				"Y": -0.026000000536441803,
+				"Z": 64.13800048828125
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 25,
+		"RefireDelay": 0.10000000149011612,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 5,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 200,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 25,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 23000,
+		"Life": 3,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 40000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 20,
+		"Length": 400,
+		"Scale": 5,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 1,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Viking_Beauty.pcx",
+		"Bitmap": "shot2",
+		"Turret": "VikingCannonTurret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "VikingBolt",
+		"Trail": "",
+		"Flash": "flash2.pcx",
+		"Flare": "",
+		"Sound": "shot3",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.5,
+		"AimElMin": -0.5,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Ursa Cannon",
+		"Type": 19,
+		"Kind": "Primary",
+		"Name": "Ursa Cannon",
+		"Group": "PDB",
+		"Description": "The URSA CANNON is an older point defense battery (PDB) system in use on some Hegemony and Independent Worlds frigate-class starships.  The Ursa Cannon has only half the rate of fire of the Alliance's Phalanx system, but its high-speed bolts make in an effective offensive and defensive gun.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 1,
+		"MuzzlePoints": [
+			{
+				"X": -0.086379997432231903,
+				"Y": 0.24938000738620758,
+				"Z": 61.201999664306641
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 20,
+		"RefireDelay": 0.20000000298023224,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 5,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 20,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 35000,
+		"Life": 1,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 35000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 20,
+		"Length": 150,
+		"Scale": 2,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 1,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Ursa_Beauty.pcx",
+		"Bitmap": "shot2",
+		"Turret": "UrsaCannonTurret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "UrsaBolt",
+		"Trail": "",
+		"Flash": "flash2",
+		"Flare": "",
+		"Sound": "shot3",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.69999998807907104,
+		"AimAzMax": 0.05000000074505806,
+		"AimAzMin": -0.05000000074505806,
+		"AimAzRest": 0,
+		"AimElMax": 0.69999998807907104,
+		"AimElMin": -0.69999998807907104,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Orca Cannon",
+		"Type": 20,
+		"Kind": "Primary",
+		"Name": "Orca Cannon",
+		"Group": "PDB",
+		"Description": "The ORCA CANNON is the standard point defense battery (PDB) for Hegemony and Independent Worlds starships.  Each Orca mount is an articulated deck platform turret with two alternate firing barrels.  The Orca is deadly accurate against fighter and combat drone targets at short ranges, but lacks the speed and rate of fire of the Alliance Phalanx PDB system.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 3,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 4.7340002059936523,
+				"Y": 11.392999649047852,
+				"Z": 72.621002197265625
+			},
+			{
+				"X": -4.9660000801086426,
+				"Y": 11.392999649047852,
+				"Z": 72.621002197265625
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 20,
+		"RefireDelay": 0.20000000298023224,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 10,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 1000,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 10,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 18000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 4000,
+		"MaxRange": 28000,
+		"MaxTrack": 50000,
+		"GraphicType": 3,
+		"Width": 10,
+		"Length": 120,
+		"Scale": 2,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 1.5,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Orca_Beauty.pcx",
+		"Bitmap": "shot0",
+		"Turret": "OrcaCannonTurret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "OrcaBolt",
+		"Trail": "",
+		"Flash": "flash0",
+		"Flare": "",
+		"Sound": "Shot2",
+		"SoundMinDistance": 3000,
+		"SoundMaxDistance": 30000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.80000001192092896,
+		"AimElMin": -0.10000000149011612,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Orca Inverted",
+		"Type": 21,
+		"Kind": "Primary",
+		"Name": "Orca Inverted",
+		"Group": "PDB",
+		"Description": "",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 3,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 4.9361300468444824,
+				"Y": -11.387999534606934,
+				"Z": 72.621002197265625
+			},
+			{
+				"X": -4.7638697624206543,
+				"Y": -11.387999534606934,
+				"Z": 72.621002197265625
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 20,
+		"RefireDelay": 0.20000000298023224,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 10,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 1000,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 10,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 18000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 4000,
+		"MaxRange": 28000,
+		"MaxTrack": 50000,
+		"GraphicType": 3,
+		"Width": 10,
+		"Length": 120,
+		"Scale": 2,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 1.5,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Orca_Beauty.pcx",
+		"Bitmap": "shot0",
+		"Turret": "OrcaInvertedTurret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "OrcaInvertedBolt",
+		"Trail": "",
+		"Flash": "flash0",
+		"Flare": "",
+		"Sound": "Shot2",
+		"SoundMinDistance": 3000,
+		"SoundMaxDistance": 30000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.10000000149011612,
+		"AimElMin": -0.80000001192092896,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Orca 2 Cannon",
+		"Type": 22,
+		"Kind": "Primary",
+		"Name": "Orca 2 Cannon",
+		"Group": "PDB",
+		"Description": "The ORCA 2 CANNON is the big brother of the standard Orca PDB.  Outwardly similar to the standard Orca, this heavy duty gun is mainly used defending Hegemony stations.  Each Orca 2 mount is an articulated deck platform turret with two alternate firing barrels.  Slower and less accurate than the standard Orca mount, this high-powered weapon packs quite a wallop when it does manage to hit the target.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 3,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 29.903860092163086,
+				"Y": 0.63028997182846069,
+				"Z": 189.83799743652344
+			},
+			{
+				"X": -29.903860092163086,
+				"Y": 0.63028997182846069,
+				"Z": 189.83799743652344
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 20,
+		"RefireDelay": 0.20000000298023224,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 10,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 1000,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 30,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 10000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 4000,
+		"MaxRange": 20000,
+		"MaxTrack": 50000,
+		"GraphicType": 3,
+		"Width": 15,
+		"Length": 150,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 1.5,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Orca_Beauty.pcx",
+		"Bitmap": "shot0",
+		"Turret": "Orca2CannonTurret",
+		"TurretBase": "Orca2TurretBase",
+		"Model": "",
+		"Projectile": "Orca2Bolt",
+		"Trail": "",
+		"Flash": "Orca/flash0.pcx",
+		"Flare": "",
+		"Sound": "Shot2",
+		"SoundMinDistance": 3000,
+		"SoundMaxDistance": 30000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.80000001192092896,
+		"AimElMin": -0.10000000149011612,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Orca 2 Inverted",
+		"Type": 23,
+		"Kind": "Primary",
+		"Name": "Orca 2 Inverted",
+		"Group": "PDB",
+		"Description": "",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 3,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 29.903860092163086,
+				"Y": 0.63028997182846069,
+				"Z": 189.83799743652344
+			},
+			{
+				"X": -29.903860092163086,
+				"Y": 0.63028997182846069,
+				"Z": 189.83799743652344
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 20,
+		"RefireDelay": 0.20000000298023224,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 10,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 1000,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 7,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 10000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 4000,
+		"MaxRange": 20000,
+		"MaxTrack": 50000,
+		"GraphicType": 3,
+		"Width": 15,
+		"Length": 150,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 1.5,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Orca_Beauty.pcx",
+		"Bitmap": "shot0",
+		"Turret": "Orca2CannonTurretInverted",
+		"TurretBase": "Orca2InvertedTurretBase",
+		"Model": "",
+		"Projectile": "Orca2InvertedBolt",
+		"Trail": "",
+		"Flash": "flash0",
+		"Flare": "",
+		"Sound": "Shot2",
+		"SoundMinDistance": 3000,
+		"SoundMaxDistance": 30000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.10000000149011612,
+		"AimElMin": -0.80000001192092896,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Vanguard",
+		"Type": 24,
+		"Kind": "Primary",
+		"Name": "Vanguard",
+		"Group": "GUNS",
+		"Description": "The VANGUARD CANNON is the standard point defense battery (PDB) for Force:Space cruisers and carriers.  Each Vanguard mount is an articulated deck platform turret with two alternate firing barrels.  The Vanguard is more powerful than the Phalanx system used on smaller starships, but not quite as accurate.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 3,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 7.2357501983642578,
+				"Y": -1.2719999551773071,
+				"Z": 62.166999816894531
+			},
+			{
+				"X": -7.2357501983642578,
+				"Y": -1.2719999551773071,
+				"Z": 62.166999816894531
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 20,
+		"RefireDelay": 0.15000000596046448,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 10,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 1000,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 25,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 15000,
+		"Life": 3,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 5000,
+		"MaxRange": 45000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 3,
+		"Length": 60,
+		"Scale": 1.2000000476837158,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 1,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Vanguard_Beauty",
+		"Bitmap": "shot1",
+		"Turret": "VanguardTurret",
+		"TurretBase": "VanguardTurretBase",
+		"Model": "",
+		"Projectile": "VanguardBolt",
+		"Trail": "",
+		"Flash": "flash1",
+		"Flare": "",
+		"Sound": "Shot2",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1.2000000476837158,
+		"AimAzMax": 1.2000000476837158,
+		"AimAzMin": -1.2000000476837158,
+		"AimAzRest": 0,
+		"AimElMax": 0.80000001192092896,
+		"AimElMin": -0.10000000149011612,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Helicon",
+		"Type": 25,
+		"Kind": "Primary",
+		"Name": "Helicon",
+		"Group": "PDB",
+		"Description": "",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 1,
+		"MuzzlePoints": [
+			{
+				"X": 0.29567000269889832,
+				"Y": 9.7198896408081055,
+				"Z": 131.72900390625
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 25,
+		"RefireDelay": 0.10000000149011612,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 5,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 200,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 20,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 20000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 35000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 4,
+		"Length": 45,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 0,
+			"G": 45,
+			"R": 114,
+			"A": 255
+		},
+		"FlashScale": 0.20000000298023224,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Helicon_Beauty",
+		"Bitmap": "Gauss_Bolt",
+		"Turret": "HeliconTurret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "HeliconBolt",
+		"Trail": "",
+		"Flash": "Gauss_Flash",
+		"Flare": "",
+		"Sound": "Gauss_Sound",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.80000001192092896,
+		"AimElMin": -0.10000000149011612,
+		"AimElRest": 0,
+		"SlewRate": 0.75,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Light-PDB",
+		"Type": 26,
+		"Kind": "Primary",
+		"Name": "Light-PDB",
+		"Group": "PDB",
+		"Description": "",
+		"bSecret": true,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 1,
+		"MuzzlePoints": [
+			{
+				"X": -0.014619999565184116,
+				"Y": 0.10937999933958054,
+				"Z": 66.575996398925781
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 25,
+		"RefireDelay": 0.10000000149011612,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 5,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 200,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 20,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 20000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 35000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 4,
+		"Length": 45,
+		"Scale": 1.5,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 0,
+			"G": 45,
+			"R": 114,
+			"A": 255
+		},
+		"FlashScale": 0.20000000298023224,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "",
+		"Bitmap": "Gauss_Bolt",
+		"Turret": "Light_PDBTurret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "LightPDBBolt",
+		"Trail": "",
+		"Flash": "Gauss_Flash",
+		"Flare": "",
+		"Sound": "Gauss_Sound",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.80000001192092896,
+		"AimElMin": -0.10000000149011612,
+		"AimElRest": 0,
+		"SlewRate": 0.75,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Rail-5",
+		"Type": 27,
+		"Kind": "Primary",
+		"Name": "Rail-5",
+		"Group": "RAIL",
+		"Description": "",
+		"bSecret": true,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 4.7340002059936523,
+				"Y": 11.392999649047852,
+				"Z": 72.621002197265625
+			},
+			{
+				"X": -4.9660000801086426,
+				"Y": 11.392999649047852,
+				"Z": 72.621002197265625
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 25,
+		"RefireDelay": 0.10000000149011612,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 5,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 200,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 20,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 15000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 35000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 10,
+		"Length": 120,
+		"Scale": 2,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 0,
+			"G": 45,
+			"R": 114,
+			"A": 255
+		},
+		"FlashScale": 0.30000001192092896,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "",
+		"Bitmap": "Rail_Bolt",
+		"Turret": "Rail_5Turret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "Rail5Bolt",
+		"Trail": "",
+		"Flash": "Rail_Flash",
+		"Flare": "",
+		"Sound": "Rail_Sound",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.80000001192092896,
+		"AimElMin": -0.10000000149011612,
+		"AimElRest": 0,
+		"SlewRate": 0.75,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Rail-12",
+		"Type": 28,
+		"Kind": "Primary",
+		"Name": "Rail-12",
+		"Group": "RAIL",
+		"Description": "",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 4.7340002059936523,
+				"Y": 11.392999649047852,
+				"Z": 72.621002197265625
+			},
+			{
+				"X": -4.9660000801086426,
+				"Y": 11.392999649047852,
+				"Z": 72.621002197265625
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 25,
+		"RefireDelay": 0.10000000149011612,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 5,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 200,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 20,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 15000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 35000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 15,
+		"Length": 150,
+		"Scale": 3,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 0,
+			"G": 45,
+			"R": 114,
+			"A": 255
+		},
+		"FlashScale": 1.5,
+		"FlareScale": 0.029999999329447746,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Rail12_Beauty",
+		"Bitmap": "Rail_Bolt",
+		"Turret": "Rail_12Turret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "Rail12Bolt",
+		"Trail": "",
+		"Flash": "Rail_Flash",
+		"Flare": "Rail_Flare",
+		"Sound": "Rail_Sound",
+		"SoundMinDistance": 3000,
+		"SoundMaxDistance": 30000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.80000001192092896,
+		"AimElMin": -0.10000000149011612,
+		"AimElRest": 0,
+		"SlewRate": 0.75,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Rail-12 Inverted",
+		"Type": 29,
+		"Kind": "Primary",
+		"Name": "Rail-12 Inverted",
+		"Group": "RAIL",
+		"Description": "",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 4.9361300468444824,
+				"Y": -11.387999534606934,
+				"Z": 72.621002197265625
+			},
+			{
+				"X": -4.7638697624206543,
+				"Y": -11.387999534606934,
+				"Z": 72.621002197265625
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 25,
+		"RefireDelay": 0.10000000149011612,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 5,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 200,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 20,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 15000,
+		"Life": 2,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 35000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 15,
+		"Length": 150,
+		"Scale": 3,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 0,
+			"G": 45,
+			"R": 114,
+			"A": 255
+		},
+		"FlashScale": 1.5,
+		"FlareScale": 0.029999999329447746,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "",
+		"Bitmap": "Rail_Bolt",
+		"Turret": "Rail_12TurretInverted",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "Rail12InvertedBolt",
+		"Trail": "",
+		"Flash": "Rail_Flash",
+		"Flare": "Rail_Flare",
+		"Sound": "Rail_Sound",
+		"SoundMinDistance": 3000,
+		"SoundMaxDistance": 30000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.80000001192092896,
+		"AimElMin": -0.10000000149011612,
+		"AimElRest": 0,
+		"SlewRate": 0.75,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Rail-15",
+		"Type": 30,
+		"Kind": "Primary",
+		"Name": "Rail-15",
+		"Group": "RAIL",
+		"Description": "",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": true,
+		"Value": 5,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 65520,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 3.4684998989105225,
+				"Y": 10.307250022888184,
+				"Z": 96.514999389648438
+			},
+			{
+				"X": -9.6975002288818359,
+				"Y": 10.393500328063965,
+				"Z": 96.514999389648438
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 0,
+		"RefireDelay": 4,
+		"SalvoDelay": 0,
+		"Charge": 1,
+		"MinCharge": 0.80000001192092896,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 2000,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 150,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 10000,
+		"Life": 4.375,
+		"Mass": 7,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 1000,
+		"MaxRange": 35000,
+		"MaxTrack": 55000,
+		"GraphicType": 3,
+		"Width": 18,
+		"Length": 170,
+		"Scale": 4,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 0,
+			"G": 45,
+			"R": 114,
+			"A": 255
+		},
+		"FlashScale": 1.8999999761581421,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Rail15_Beauty",
+		"Bitmap": "Rail_Bolt",
+		"Turret": "Rail_15Turret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "Rail15Bolt",
+		"Trail": "",
+		"Flash": "Rail_Flash",
+		"Flare": "",
+		"Sound": "Rail_Sound",
+		"SoundMinDistance": 3000,
+		"SoundMaxDistance": 30000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1.5,
+		"AimAzMax": 1.5,
+		"AimAzMin": -1.5,
+		"AimAzRest": 0,
+		"AimElMax": 1.5,
+		"AimElMin": -1.5,
+		"AimElRest": 0,
+		"SlewRate": 1,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Mag-18",
+		"Type": 31,
+		"Kind": "Primary",
+		"Name": "Mag-18",
+		"Group": "MAG",
+		"Description": "",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": true,
+		"Value": 5,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 65520,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 1,
+		"MuzzlePoints": [
+			{
+				"X": 0.54750001430511475,
+				"Y": 11.356040000915527,
+				"Z": 83.646072387695312
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 0,
+		"RefireDelay": 2,
+		"SalvoDelay": 0,
+		"Charge": 1,
+		"MinCharge": 0.89999997615814209,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 1000,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 220,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 6000,
+		"Life": 7.5,
+		"Mass": 12,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 1000,
+		"MaxRange": 40000,
+		"MaxTrack": 60000,
+		"GraphicType": 3,
+		"Width": 50,
+		"Length": 230,
+		"Scale": 4,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 0,
+			"G": 10,
+			"R": 100,
+			"A": 255
+		},
+		"FlashScale": 3,
+		"FlareScale": 0.80000001192092896,
+		"TrailLength": 0,
+		"TrailWidth": 6,
+		"TrailDim": 0,
+		"Beauty": "Mag18_Beauty",
+		"Bitmap": "Mag_Bolt",
+		"Turret": "Mag_18Turret",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "Mag18Bolt",
+		"Trail": "Mag_Trail",
+		"Flash": "Mag_Flash",
+		"Flare": "Mag_Flare",
+		"Sound": "Mag_Sound",
+		"SoundMinDistance": 3000,
+		"SoundMaxDistance": 30000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1.5,
+		"AimAzMax": 1.5,
+		"AimAzMin": -1.5,
+		"AimAzRest": 0,
+		"AimElMax": 1.5,
+		"AimElMin": -1.5,
+		"AimElRest": 0,
+		"SlewRate": 1,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Rostov",
+		"Type": 32,
+		"Kind": "Drone",
+		"Name": "Rostov",
+		"Group": "ROSTOV",
+		"Description": "",
+		"bSecret": false,
+		"bDrone": true,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 5,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 65520,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 10,
+		"RefireDelay": 5,
+		"SalvoDelay": 0,
+		"Charge": 1,
+		"MinCharge": 0.89999997615814209,
+		"Ammo": 40,
+		"RippleCount": 1,
+		"Capacity": 1,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 9000,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 100,
+		"Integrity": 50,
+		"Speed": 6000,
+		"Life": 10,
+		"Mass": 10,
+		"Drag": 0,
+		"Thrust": 23000,
+		"RollRate": 5,
+		"PitchRate": 5,
+		"YawRate": 5,
+		"RollDrag": 1,
+		"PitchDrag": 1,
+		"YawDrag": 1,
+		"MinRange": 1000,
+		"MaxRange": 40000,
+		"MaxTrack": 60000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 4,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 0,
+			"G": 100,
+			"R": 160,
+			"A": 255
+		},
+		"FlashScale": 2,
+		"FlareScale": 1.5,
+		"TrailLength": 0,
+		"TrailWidth": 20,
+		"TrailDim": 0,
+		"Beauty": "Rostov_Beauty",
+		"Bitmap": "",
+		"Turret": "RostovTurret",
+		"TurretBase": "",
+		"Model": "MISSILE",
+		"Projectile": "",
+		"Trail": "Rostov_Trail",
+		"Flash": "Rostov_Flash",
+		"Flare": "Rostov_Flare",
+		"Sound": "Rostov_Sound",
+		"SoundMinDistance": 3000,
+		"SoundMaxDistance": 30000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 0,
+		"AimAzMin": 0,
+		"AimAzRest": 0,
+		"AimElMax": 1,
+		"AimElMin": -1,
+		"AimElRest": 0,
+		"SlewRate": 1,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 6000
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Rostov-Starboard",
+		"Type": 33,
+		"Kind": "Drone",
+		"Name": "Rostov-Starboard",
+		"Group": "ROSTOV",
+		"Description": "",
+		"bSecret": true,
+		"bDrone": true,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 5,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 65520,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 10,
+		"RefireDelay": 5,
+		"SalvoDelay": 0,
+		"Charge": 1,
+		"MinCharge": 0.89999997615814209,
+		"Ammo": 40,
+		"RippleCount": 1,
+		"Capacity": 1,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 9000,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 100,
+		"Integrity": 50,
+		"Speed": 6000,
+		"Life": 10,
+		"Mass": 10,
+		"Drag": 0,
+		"Thrust": 25000,
+		"RollRate": 5,
+		"PitchRate": 5,
+		"YawRate": 5,
+		"RollDrag": 1,
+		"PitchDrag": 1,
+		"YawDrag": 1,
+		"MinRange": 1000,
+		"MaxRange": 40000,
+		"MaxTrack": 60000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 4,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 0,
+			"G": 100,
+			"R": 160,
+			"A": 255
+		},
+		"FlashScale": 2,
+		"FlareScale": 1.5,
+		"TrailLength": 0,
+		"TrailWidth": 20,
+		"TrailDim": 0,
+		"Beauty": "",
+		"Bitmap": "",
+		"Turret": "Rostov_StarboardTurret",
+		"TurretBase": "",
+		"Model": "MISSILE",
+		"Projectile": "",
+		"Trail": "Rostov_Trail",
+		"Flash": "Rostov_Flash",
+		"Flare": "Rostov_Flare",
+		"Sound": "Rostov_Sound",
+		"SoundMinDistance": 3000,
+		"SoundMaxDistance": 30000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 0,
+		"AimAzMin": 0,
+		"AimAzRest": 0,
+		"AimElMax": 1,
+		"AimElMin": -1,
+		"AimElRest": 0,
+		"SlewRate": 1,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 6000
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Plasma Cannon",
+		"Type": 34,
+		"Kind": "Primary",
+		"Name": "Plasma Cannon",
+		"Group": "CANNON",
+		"Description": "The PLASMA CANNON is used as the primary antiship gun on Alliance Frigates.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048560,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 15,
+		"RefireDelay": 0.15000000596046448,
+		"SalvoDelay": 0,
+		"Charge": 10,
+		"MinCharge": 5,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 30,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 15000,
+		"Life": 5,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 40000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Decoy_Beauty.pcx",
+		"Bitmap": "shot7",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "PlasmaBolt",
+		"Trail": "",
+		"Flash": "",
+		"Flare": "",
+		"Sound": "shot4",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.5,
+		"AimElMin": -0.5,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "XRay Laser",
+		"Type": 35,
+		"Kind": "Beam",
+		"Name": "XRay Laser",
+		"Group": "XRAY",
+		"Description": "XRAY LASER batteries are the most common primary beam weapons used by destroyer and light cruiser class starships in the Blue Drift region.  These weapons deliver a tremendous amount of destructive energy each second the beams are in contact with the hull armor of their target.  However, the coherent x-rays are easily scattered by standard gravitational deflector shields, giving them a low shield penetration factor.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": true,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 10,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048560,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 100,
+		"RefireDelay": 0,
+		"SalvoDelay": 0,
+		"Charge": 1000,
+		"MinCharge": 500,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 1000,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 3,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 300000000,
+		"Life": 1.5,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 50000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 20,
+		"Length": 300000000,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 1.75,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "XRay_Beauty.pcx",
+		"Bitmap": "shot9",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "XRayBeam",
+		"Trail": "",
+		"Flash": "flash9",
+		"Flare": "",
+		"Sound": "beam2",
+		"SoundMinDistance": 10000,
+		"SoundMaxDistance": 50000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.17499999701976776,
+		"AimAzMax": 0.17499999701976776,
+		"AimAzMin": -0.17499999701976776,
+		"AimAzRest": 0,
+		"AimElMax": 0.17499999701976776,
+		"AimElMin": -0.17499999701976776,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0.15000000596046448,
+		"SpreadEl": 0.15000000596046448,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Gamma Laser",
+		"Type": 36,
+		"Kind": "Beam",
+		"Name": "Gamma Laser",
+		"Group": "GRASER",
+		"Description": "GAMMA RAY LASER batteries are the most powerful primary beam weapons in service in the Blue Drift region.  Used mainly by heavy cruiser class starships, these weapons are more than twice as powerful as the X-Ray Laser batteries used on lighter starships.  Like their smaller cousins, Gamma Ray Lasers have poor shield penetration, but they still pack enough punch to make an effective weapon against heavy starships and orbital stations.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": true,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 15,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048560,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 100,
+		"RefireDelay": 0,
+		"SalvoDelay": 0,
+		"Charge": 1500,
+		"MinCharge": 500,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 1500,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 4,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 300000000,
+		"Life": 3,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 50000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 25,
+		"Length": 300000000,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 2,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Gamma_Beauty.pcx",
+		"Bitmap": "ShotGamma",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "GammaBeam",
+		"Trail": "",
+		"Flash": "FlashGamma",
+		"Flare": "",
+		"Sound": "Beam3",
+		"SoundMinDistance": 10000,
+		"SoundMaxDistance": 50000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.17499999701976776,
+		"AimAzMax": 0.17499999701976776,
+		"AimAzMin": -0.17499999701976776,
+		"AimAzRest": 0,
+		"AimElMax": 0.17499999701976776,
+		"AimElMin": -0.17499999701976776,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0.10000000149011612,
+		"SpreadEl": 0.10000000149011612,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Graser Turret",
+		"Type": 37,
+		"Kind": "Beam",
+		"Name": "Graser Turret",
+		"Group": "GRASER",
+		"Description": "GAMMA RAY LASER TURRETS are often mounted on Hegemony military stations for defense against starship assault.  These weapons are essentially turret-mounted versions of the Gamma Ray Lasers used on heavy starships.  Backed by the powerful reactors of a military station, Gamma Ray Laser Turrets have the endurance to wear down enemy starships even through the scattering effect of their gravitational deflector shields.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": true,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 15,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048560,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 1,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": -0,
+				"Z": 88.98699951171875
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 100,
+		"RefireDelay": 0,
+		"SalvoDelay": 0,
+		"Charge": 1500,
+		"MinCharge": 500,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 1500,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 6,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 300000000,
+		"Life": 3,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 50000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 50,
+		"Length": 300000000,
+		"Scale": 2,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 2,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "GraserTurret_Beauty.pcx",
+		"Bitmap": "ShotGamma",
+		"Turret": "GraserTurret",
+		"TurretBase": "GraserTurretBase",
+		"Model": "",
+		"Projectile": "GraserBeam",
+		"Trail": "",
+		"Flash": "FlashGamma",
+		"Flare": "",
+		"Sound": "Beam3",
+		"SoundMinDistance": 10000,
+		"SoundMaxDistance": 50000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 0.64999997615814209,
+		"AimElMin": -0.079999998211860657,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0.10000000149011612,
+		"SpreadEl": 0.10000000149011612,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Zolon Laser",
+		"Type": 38,
+		"Kind": "Beam",
+		"Name": "Zolon Laser",
+		"Group": "LASER",
+		"Description": "",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": true,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 15,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048560,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 150,
+		"RefireDelay": 0,
+		"SalvoDelay": 0,
+		"Charge": 1500,
+		"MinCharge": 500,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 1500,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 30,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 300000000,
+		"Life": 3,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 50000,
+		"MaxTrack": 100000,
+		"GraphicType": 3,
+		"Width": 25,
+		"Length": 300000000,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 2,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "",
+		"Bitmap": "ShotZBeam",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "ZolonBeam",
+		"Trail": "",
+		"Flash": "FlashZBeam",
+		"Flare": "",
+		"Sound": "Beam3",
+		"SoundMinDistance": 10000,
+		"SoundMaxDistance": 50000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.17499999701976776,
+		"AimAzMax": 0.17499999701976776,
+		"AimAzMin": -0.17499999701976776,
+		"AimAzRest": 0,
+		"AimElMax": 0.17499999701976776,
+		"AimElMin": -0.17499999701976776,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0.10000000149011612,
+		"SpreadEl": 0.10000000149011612,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "AAA Cannon",
+		"Type": 39,
+		"Kind": "Primary",
+		"Name": "AAA Cannon",
+		"Group": "AAA",
+		"Description": "The ANTI AIRCRAFT ARTILLERY (AAA) CANNON is an autonomous ground-based energy bolt system optimized for area defense against hostile airborne targets.  This variant has two alternate firing barrels mounted on an upright turret with built-in multifrequency sensor.  It can engage fighters and attack craft at ranges up to 50 km.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 2,
+		"MuzzlePoints": [
+			{
+				"X": 12.715000152587891,
+				"Y": -0.065200001001358032,
+				"Z": 111.20500183105469
+			},
+			{
+				"X": -12.82859992980957,
+				"Y": -0.065200001001358032,
+				"Z": 111.20500183105469
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 20,
+		"RefireDelay": 0.20000000298023224,
+		"SalvoDelay": 0,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 50,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 30000,
+		"Life": 3,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 50000,
+		"MaxTrack": 150000,
+		"GraphicType": 3,
+		"Width": 32,
+		"Length": 800,
+		"Scale": 2,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 1,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Ground/AAA2_Beauty.pcx",
+		"Bitmap": "shot2",
+		"Turret": "AAACannonGuns",
+		"TurretBase": "AAATurretBase",
+		"Model": "",
+		"Projectile": "AAABolt",
+		"Trail": "",
+		"Flash": "flash2",
+		"Flare": "",
+		"Sound": "shot3",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 3.1500000953674316,
+		"AimAzMax": 3.1500000953674316,
+		"AimAzMin": -3.1500000953674316,
+		"AimAzRest": 0,
+		"AimElMax": 0.75,
+		"AimElMin": -0.75,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Quad AAA",
+		"Type": 40,
+		"Kind": "Primary",
+		"Name": "Quad AAA",
+		"Group": "AAA",
+		"Description": "The ANTI AIRCRAFT ARTILLERY (AAA) CANNON is an autonomous ground-based energy bolt system optimized for area defense against hostile airborne targets.  This variant has four sequenced barrels for increased firing speed and coverage.  It can engage fighters and attack craft at ranges up to 50 km.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 4,
+		"MuzzlePoints": [
+			{
+				"X": 29.45050048828125,
+				"Y": -9.0464000701904297,
+				"Z": 66.561996459960938
+			},
+			{
+				"X": 29.45050048828125,
+				"Y": 9.3304004669189453,
+				"Z": 66.561996459960938
+			},
+			{
+				"X": -29.45050048828125,
+				"Y": -9.0464000701904297,
+				"Z": 66.561996459960938
+			},
+			{
+				"X": -29.45050048828125,
+				"Y": 9.3304004669189453,
+				"Z": 66.561996459960938
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 20,
+		"RefireDelay": 0.10000000149011612,
+		"SalvoDelay": 0,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 25,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 30000,
+		"Life": 3,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 10000,
+		"MaxRange": 50000,
+		"MaxTrack": 150000,
+		"GraphicType": 3,
+		"Width": 32,
+		"Length": 500,
+		"Scale": 2,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 1,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "AAA4_Beauty",
+		"Bitmap": "shot2",
+		"Turret": "QuadAAAGuns",
+		"TurretBase": "QuadAAATurretBase",
+		"Model": "",
+		"Projectile": "QuadAAABolt",
+		"Trail": "",
+		"Flash": "flash2",
+		"Flare": "",
+		"Sound": "shot3",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 3.1500000953674316,
+		"AimAzMax": 3.1500000953674316,
+		"AimAzMin": -3.1500000953674316,
+		"AimAzRest": 0,
+		"AimElMax": 0.75,
+		"AimElMin": -0.75,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "SAM-1",
+		"Type": 41,
+		"Kind": "Missile",
+		"Name": "SAM-1",
+		"Group": "SAM",
+		"Description": "The SURFACE-TO-AIR MISSILE (SAM) BATTERY is an autonomous ground-launched guided missile system designed for area defense against a variety of airborne targets.  Each SAM Battery carries eight missiles on an upright turret with integrated sensor array.  It can engage fighters and attack craft at ranges up to 20 km.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 2,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 4,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 15,
+		"bVisibleStores": true,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 10,
+		"RefireDelay": 5,
+		"SalvoDelay": 0,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 1,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0.5,
+		"CarryResist": 2,
+		"Damage": 2500,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 5000,
+		"Life": 10,
+		"Mass": 0.5,
+		"Drag": 2,
+		"Thrust": 3000,
+		"RollRate": 1,
+		"PitchRate": 3,
+		"YawRate": 3,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 5000,
+		"MaxRange": 20000,
+		"MaxTrack": 60000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 2,
+		"ExplosionScale": 0,
+		"Light": 200,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 0.25,
+		"TrailLength": 0,
+		"TrailWidth": 5,
+		"TrailDim": 6,
+		"Beauty": "SAM_Beauty",
+		"Bitmap": "",
+		"Turret": "SAM_1Turret",
+		"TurretBase": "SAM1TurretBase",
+		"Model": "sam",
+		"Projectile": "",
+		"Trail": "smoke",
+		"Flash": "",
+		"Flare": "drive",
+		"Sound": "Missile1",
+		"SoundMinDistance": 1000,
+		"SoundMaxDistance": 15000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 3.1500000953674316,
+		"AimAzMax": 3.1500000953674316,
+		"AimAzMin": -3.1500000953674316,
+		"AimAzRest": 0,
+		"AimElMax": 0.5,
+		"AimElMin": -0.5,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Mk7 Interceptor",
+		"Type": 42,
+		"Kind": "Missile",
+		"Name": "Mk7 Interceptor",
+		"Group": "MK7",
+		"Description": "The MARK VII INTERCEPTOR is a ship-launched antifighter weapon that is also effective at engaging enemy combat drones and missiles.  The Mark VII also has some limited effectiveness against starship targets.  The Mark VII is commonly deployed on frigates tasked with fleet defense, as well as heavier cruiser class starships.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 2,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 2,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048575,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 10,
+		"RefireDelay": 1,
+		"SalvoDelay": 5,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 20,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 750,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 5000,
+		"Life": 10,
+		"Mass": 0.5,
+		"Drag": 2,
+		"Thrust": 15000,
+		"RollRate": 1,
+		"PitchRate": 2,
+		"YawRate": 2,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 5000,
+		"MaxRange": 50000,
+		"MaxTrack": 90000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.10000000149011612,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 1,
+		"TrailLength": 0,
+		"TrailWidth": 2,
+		"TrailDim": 6,
+		"Beauty": "Mk7_Beauty",
+		"Bitmap": "",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "Mk7",
+		"Projectile": "",
+		"Trail": "smoke",
+		"Flash": "",
+		"Flare": "shot6",
+		"Sound": "Mk7",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 1,
+		"AimAzMax": 1,
+		"AimAzMin": -1,
+		"AimAzRest": 0,
+		"AimElMax": 1,
+		"AimElMin": -1,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 200
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Fusion Torpedo",
+		"Type": 43,
+		"Kind": "Drone",
+		"Name": "Fusion Torpedo",
+		"Group": "TORP",
+		"Description": "The FUSION TORPEDO is the standard issue guided long range antiship munition in use on most Force:Space destroyer and destroyer-escort class vessels.  Fusion Torpedoes pack a large amount of destructive power in a small package, but low speed and acceleration make them easy targets for PDB and Interceptor fire.  Employing them at point blank range can mitigate this effect.",
+		"bSecret": false,
+		"bDrone": true,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 2,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 4,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 65520,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 1,
+		"RefireDelay": 25,
+		"SalvoDelay": 0,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 20,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 2.5,
+		"CarryResist": 0,
+		"Damage": 20000,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 3000,
+		"Life": 60,
+		"Mass": 3,
+		"Drag": 1.5,
+		"Thrust": 60000,
+		"RollRate": 1,
+		"PitchRate": 1,
+		"YawRate": 1,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 40000,
+		"MaxRange": 100000,
+		"MaxTrack": 150000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.5,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 1.25,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Fusion_Beauty.pcx",
+		"Bitmap": "",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "FusionTorp",
+		"Projectile": "",
+		"Trail": "",
+		"Flash": "",
+		"Flare": "drive",
+		"Sound": "Torpedo",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.80000001192092896,
+		"AimAzMax": 0.80000001192092896,
+		"AimAzMin": -0.80000001192092896,
+		"AimAzRest": 0,
+		"AimElMax": 0.40000000596046448,
+		"AimElMin": -0.40000000596046448,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 750
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Nike",
+		"Type": 44,
+		"Kind": "Drone",
+		"Name": "Nike",
+		"Group": "NIKE",
+		"Description": "The NIKE high-speed antiship missile is commonly used on light cruiser class starships.  The Nike is considerably faster than the smaller Fusion Torpedo, and also has better shield penetration capabilities.",
+		"bSecret": false,
+		"bDrone": true,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 2,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 5,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048560,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 1,
+		"RefireDelay": 5,
+		"SalvoDelay": 15,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 16,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 2.5,
+		"CarryResist": 0,
+		"Damage": 25000,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 10,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 5000,
+		"Life": 60,
+		"Mass": 3,
+		"Drag": 1.2000000476837158,
+		"Thrust": 70000,
+		"RollRate": 1,
+		"PitchRate": 2,
+		"YawRate": 2,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 20000,
+		"MaxRange": 100000,
+		"MaxTrack": 150000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.5,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 1.25,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Nike_Beauty.pcx",
+		"Bitmap": "",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "Nike",
+		"Projectile": "",
+		"Trail": "",
+		"Flash": "",
+		"Flare": "drive",
+		"Sound": "Nike",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.80000001192092896,
+		"AimAzMax": 0.80000001192092896,
+		"AimAzMin": -0.80000001192092896,
+		"AimAzRest": 0,
+		"AimElMax": 0.40000000596046448,
+		"AimElMin": -0.40000000596046448,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 750
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Athena1",
+		"Type": 45,
+		"Kind": "Drone",
+		"Name": "Athena1",
+		"Group": "ATHENA",
+		"Description": "The ATHENA is the elder sister of the Nike Antiship Missile.  Compared to the Nike, the Athena has a more advanced drive sytstem and greater acceleration.  Mounted only on heavy cruiser starship types, this Athena variant is designed for starboard missile tubes.",
+		"bSecret": false,
+		"bDrone": true,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 2,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 6,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048560,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 1,
+		"RefireDelay": 4,
+		"SalvoDelay": 16,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 12,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 2.5,
+		"CarryResist": 0,
+		"Damage": 25000,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 10,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 5000,
+		"Life": 60,
+		"Mass": 3,
+		"Drag": 1.1000000238418579,
+		"Thrust": 90000,
+		"RollRate": 1,
+		"PitchRate": 2,
+		"YawRate": 2,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 20000,
+		"MaxRange": 100000,
+		"MaxTrack": 150000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.5,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 1.25,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Nike_Beauty.pcx",
+		"Bitmap": "",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "Nike",
+		"Projectile": "",
+		"Trail": "",
+		"Flash": "",
+		"Flare": "drive",
+		"Sound": "Nike",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.80000001192092896,
+		"AimAzMax": 0.80000001192092896,
+		"AimAzMin": -0.80000001192092896,
+		"AimAzRest": 0,
+		"AimElMax": 0.40000000596046448,
+		"AimElMin": -0.40000000596046448,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 500,
+			"Y": 0,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Athena2",
+		"Type": 46,
+		"Kind": "Drone",
+		"Name": "Athena2",
+		"Group": "ATHENA",
+		"Description": "The ATHENA is the elder sister of the Nike Antiship Missile.  Compared to the Nike, the Athena has a more advanced drive sytstem and greater acceleration.  Mounted only on heavy cruiser starship types, this Athena variant is designed for port side missile tubes.",
+		"bSecret": false,
+		"bDrone": true,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 2,
+		"bSelfAiming": true,
+		"bSyncro": false,
+		"Value": 6,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 1048560,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 1,
+		"RefireDelay": 4,
+		"SalvoDelay": 16,
+		"Charge": 1,
+		"MinCharge": 1,
+		"Ammo": 12,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 2.5,
+		"CarryResist": 0,
+		"Damage": 25000,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 10,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 5000,
+		"Life": 60,
+		"Mass": 3,
+		"Drag": 1.1000000238418579,
+		"Thrust": 90000,
+		"RollRate": 1,
+		"PitchRate": 2,
+		"YawRate": 2,
+		"RollDrag": 4,
+		"PitchDrag": 4,
+		"YawDrag": 4,
+		"MinRange": 20000,
+		"MaxRange": 100000,
+		"MaxTrack": 150000,
+		"GraphicType": 1,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 0.5,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 1.25,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Nike_Beauty.pcx",
+		"Bitmap": "",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "Nike",
+		"Projectile": "",
+		"Trail": "",
+		"Flash": "",
+		"Flare": "drive",
+		"Sound": "Nike",
+		"SoundMinDistance": 2000,
+		"SoundMaxDistance": 20000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0.80000001192092896,
+		"AimAzMax": 0.80000001192092896,
+		"AimAzMin": -0.80000001192092896,
+		"AimAzRest": 0,
+		"AimElMax": 0.40000000596046448,
+		"AimElMin": -0.40000000596046448,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": -500,
+			"Y": 0,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Sensor Drone",
+		"Type": 47,
+		"Kind": "Drone",
+		"Name": "Sensor Drone",
+		"Group": "DRONE",
+		"Description": "The starship SENSOR DRONE is a multi-frequency active sensor probe that may be used to detect enemy ships far beyond the range of onboard ship sensors.  As long as it is active, the Sensor Drone will detect any contact that comes within 50 km of its position.  Of course, the Sensor Drone does no damage to enemy targets.",
+		"bSecret": false,
+		"bDrone": true,
+		"bPrimary": false,
+		"bBeam": false,
+		"bFlak": false,
+		"Guided": 0,
+		"bSelfAiming": false,
+		"bSyncro": false,
+		"Value": 1,
+		"DecoyType": 0,
+		"bProbe": true,
+		"TargetType": 0,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 1,
+		"RefireDelay": 10,
+		"SalvoDelay": 0,
+		"Charge": 0,
+		"MinCharge": 0,
+		"Ammo": 4,
+		"RippleCount": 0,
+		"Capacity": 100,
+		"CarryMass": 0.5,
+		"CarryResist": 0,
+		"Damage": 0,
+		"MiningTonnesPerSecond": 0,
+		"DamageType": 0,
+		"Penetration": 5,
+		"LethalRadius": 50000,
+		"Integrity": 100,
+		"Speed": 200,
+		"Life": 60,
+		"Mass": 0.5,
+		"Drag": 0.20000000298023224,
+		"Thrust": 700,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 0,
+		"MaxRange": 12000,
+		"MaxTrack": 36000,
+		"GraphicType": 0,
+		"Width": 0,
+		"Length": 0,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 1,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "Probe_Beauty.pcx",
+		"Bitmap": "",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "",
+		"Trail": "",
+		"Flash": "",
+		"Flare": "drive.pcx",
+		"Sound": "probe",
+		"SoundMinDistance": 1000,
+		"SoundMaxDistance": 10000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0,
+		"AimAzMax": 1.5,
+		"AimAzMin": -1.5,
+		"AimAzRest": 0,
+		"AimElMax": 1.5,
+		"AimElMin": -1.5,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0,
+		"SpreadEl": 0,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 100
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	},
+	{
+		"Row": "Mining Laser",
+		"Type": 48,
+		"Kind": "Beam",
+		"Name": "Mining Laser",
+		"Group": "MINING",
+		"Description": "Industrial beam for asteroid extraction. Ship and station damage is disabled.",
+		"bSecret": false,
+		"bDrone": false,
+		"bPrimary": true,
+		"bBeam": true,
+		"bFlak": false,
+		"Guided": 1,
+		"bSelfAiming": false,
+		"bSyncro": false,
+		"Value": 0,
+		"DecoyType": 0,
+		"bProbe": false,
+		"TargetType": 0,
+		"bVisibleStores": false,
+		"NStores": 0,
+		"NBarrels": 0,
+		"MuzzlePoints": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"Attachments": [
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			},
+			{
+				"X": 0,
+				"Y": 0,
+				"Z": 0
+			}
+		],
+		"RechargeRate": 100,
+		"RefireDelay": 0.20000000298023224,
+		"SalvoDelay": 0,
+		"Charge": 1000,
+		"MinCharge": 100,
+		"Ammo": -1,
+		"RippleCount": 0,
+		"Capacity": 1000,
+		"CarryMass": 0,
+		"CarryResist": 0,
+		"Damage": 0,
+		"MiningTonnesPerSecond": 0.25,
+		"DamageType": 0,
+		"Penetration": 1,
+		"LethalRadius": 500,
+		"Integrity": 100,
+		"Speed": 300000000,
+		"Life": 1.5,
+		"Mass": 0,
+		"Drag": 0,
+		"Thrust": 0,
+		"RollRate": 0,
+		"PitchRate": 0,
+		"YawRate": 0,
+		"RollDrag": 0,
+		"PitchDrag": 0,
+		"YawDrag": 0,
+		"MinRange": 0,
+		"MaxRange": 2500,
+		"MaxTrack": 2500,
+		"GraphicType": 3,
+		"Width": 5,
+		"Length": 2500,
+		"Scale": 1,
+		"ExplosionScale": 0,
+		"Light": 0,
+		"LightColor":
+		{
+			"B": 255,
+			"G": 255,
+			"R": 255,
+			"A": 255
+		},
+		"FlashScale": 0,
+		"FlareScale": 0,
+		"TrailLength": 0,
+		"TrailWidth": 0,
+		"TrailDim": 0,
+		"Beauty": "",
+		"Bitmap": "",
+		"Turret": "",
+		"TurretBase": "",
+		"Model": "",
+		"Projectile": "MiningBeam",
+		"Trail": "",
+		"Flash": "",
+		"Flare": "",
+		"Sound": "",
+		"SoundMinDistance": 1,
+		"SoundMaxDistance": 100000,
+		"AnimFrames": [],
+		"AnimLength": 0,
+		"FiringCone": 0,
+		"AimAzMax": 1.5,
+		"AimAzMin": -1.5,
+		"AimAzRest": 0,
+		"AimElMax": 1.5,
+		"AimElMin": -1.5,
+		"AimElRest": 0,
+		"SlewRate": 1.0471975803375244,
+		"TurretAxis": 0,
+		"SpreadAz": 0.15000000596046448,
+		"SpreadEl": 0.15000000596046448,
+		"DetRange": 0,
+		"DetCount": 0,
+		"DetSpread": 0.39269909262657166,
+		"DetChild": "",
+		"Eject":
+		{
+			"X": 0,
+			"Y": -100,
+			"Z": 0
+		},
+		"SourceFile": "D:/SSW/Content/GameData/Weapons/Wep.def"
+	}
+]

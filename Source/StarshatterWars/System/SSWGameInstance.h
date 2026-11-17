@@ -64,6 +64,7 @@
 
 #include "TimerSubsystem.h"
 #include "MenuScreen.h"
+#include "AgentAI.h"
 // =========================================================================
 // Generated
 // =========================================================================
@@ -117,6 +118,15 @@ public:
 
 
 	virtual void OnStart() override;
+	AgentAI& GetTrainingAgent() { return TrainingAgent; }
+	class Campaign* GetAgentTrainingCampaign();
+	TSharedPtr<class Mission> FreeFlightMission;
+
+private:
+	AgentAI TrainingAgent;
+	TSharedPtr<class Campaign> AgentTrainingCampaign;
+
+public:
 
 	// =====================================================================
 	// Paths / Project

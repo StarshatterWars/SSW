@@ -2,11 +2,14 @@
    Uses legacy Single Missions campaign and original PREP-mode handoff.
    The existing MissionSelectDlg is intentionally not modified. */
 #include "SingleMissionDlg.h"
+#include "AgentsDlg.h"
+#include "StarshatterAssetRegistrySubsystem.h"
 #include "SSWMissionMods.h"
 #include "Misc/Crc.h"
 #include "MissionRankRules.h"
 #include "MissionCompletionStatus.h"
 #include "SSWGameInstance.h"
+#include "PlayerCharacter.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
@@ -41,6 +44,8 @@
 #include "MenuScreen.h"
 #include "StarshatterUIStyleSubsystem.h"
 #include "MissionUIStyle.h"
+
+
 
 static bool StoryComesBefore(const FS_CampaignMission& A, const FS_CampaignMission& B)
 {
@@ -121,7 +126,6 @@ USingleMissionDlg::USingleMissionDlg(const FObjectInitializer& ObjectInitializer
 
 USingleMissionDlg::~USingleMissionDlg()
 {
-    delete TrainingCampaign;
     for (Mission* OwnedModel : StandaloneBriefingModels)
         delete OwnedModel;
     StandaloneBriefingModels.Reset();
@@ -283,6 +287,9 @@ void USingleMissionDlg::BuildSingleMissionScreen()
         TrainingOverview = MakeLabel(TEXT(""), 15, SingleMissionColors::Primary, true);
         TrainingOverview->SetVisibility(ESlateVisibility::Collapsed);
         LeftContent->AddChildToVerticalBox(TrainingOverview)->SetPadding(FMargin(0, 0, 0, 12));
+        auto* AgentsButton = MakeActionButton(TEXT("AGENTS"));
+        AgentsButton->OnClicked.AddUniqueDynamic(this, &USingleMissionDlg::OpenAgents);
+        LeftContent->AddChildToVerticalBox(AgentsButton)->SetPadding(FMargin(0, 0, 0, 12));
     }
     LeftContent->AddChildToVerticalBox(MakeLabel(TEXT("MISSIONS"), 18, SingleMissionColors::Accent));
     MissionCountLabel = MakeLabel(TEXT(""), 13, SingleMissionColors::Muted);
@@ -393,12 +400,29 @@ Campaign* USingleMissionDlg::GetRosterCampaign()
         return Active && !Active->IsTraining() ? Active : nullptr;
     }
 
-    if (!TrainingCampaign)
-        if (UGameInstance* GI = GetGameInstance())
-            if (auto* Data = GI->GetSubsystem<UStarshatterGameDataSubsystem>())
-                if (const FS_Campaign* Row = Data->GetCampaignByIndex1Based(Campaign::TRAINING_CAMPAIGN))
-                    TrainingCampaign = Campaign::CreateFromData(*Row);
-    return TrainingCampaign;
+    if (auto* Instance = Cast<USSWGameInstance>(GetGameInstance()))
+        return Instance->GetAgentTrainingCampaign();
+    return nullptr;
+}
+
+void USingleMissionDlg::OpenAgents()
+{
+    if (!bTrainingView || !GetOwningPlayer()) return;
+    if (!AgentsDialog)
+    {
+        UClass* Class = UAgentsDlg::StaticClass();
+        if (auto* Instance = GetGameInstance())
+            if (auto* Assets = Instance->GetSubsystem<UStarshatterAssetRegistrySubsystem>())
+                if (UClass* Registered = Assets->GetWidgetClass(TEXT("UI.AgentsPopupClass")).Get();
+                    Registered && Registered->IsChildOf(Class))
+                    Class = Registered;
+        AgentsDialog = CreateWidget<UAgentsDlg>(GetOwningPlayer(), Class);
+        if (!AgentsDialog) return;
+        AgentsDialog->SetMenuManager(manager);
+    }
+    AgentsDialog->UseStandaloneFrame();
+    if (!AgentsDialog->IsInViewport()) AgentsDialog->AddToViewport(210);
+    AgentsDialog->SetKeyboardFocus();
 }
 
 void USingleMissionDlg::ToggleTrainingOverview()

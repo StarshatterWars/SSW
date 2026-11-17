@@ -25,6 +25,26 @@
 #include "ShaderCompiler.h"
 #include "ContentStreaming.h"
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGazetteerJsonTest, "Starshatter.Gazetteer.JsonLore",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+
+bool FGazetteerJsonTest::RunTest(const FString&)
+{
+    TArray<FString> Titles;
+    TMap<FString, FString> Entries;
+    UTacRefDlg::LoadGazetteer(Titles, Entries);
+    if (!TestEqual(TEXT("All lore entries load"), Titles.Num(), 44)) return false;
+    TestEqual(TEXT("Every title has a unique entry"), Entries.Num(), Titles.Num());
+    TestEqual(TEXT("Field guide remains first"), Titles[0], FString(TEXT("Field Guide — The Blue Drift")));
+    TestTrue(TEXT("Rich text survives JSON ingestion"), Entries.FindChecked(Titles[0]).Contains(TEXT("<HUD_Muted>FORCE:INTEL")));
+    TestTrue(TEXT("Lore paragraph breaks survive JSON ingestion"), Entries.FindChecked(Titles[0]).Contains(TEXT("\n\n")));
+    const FString Vesta(TEXT("World — Vesta (Silessia)"));
+    TestTrue(TEXT("Vesta is still in the catalogue"), Entries.Contains(Vesta));
+    TestEqual(TEXT("World links still identify the same star system"),
+        UTacRefDlg::GetGazetteerSystemName(Vesta), FString(TEXT("Silessia")));
+    return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FModernReferenceScreensTest,"Starshatter.Menu.LogbookAndTacticalReference",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FModernReferenceScreensTest::RunTest(const FString& Parameters)
 {
@@ -55,6 +75,15 @@ bool FModernReferenceScreensTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Authored ship table retained"),Reference->ShipDesignTable==Table);
     TestTrue(TEXT("Original fighter button and delegates retained"),Reference->FighterButton==Fighter && Fighter->OnClicked.IsBound());
     TestNotNull(TEXT("Weapon artwork host available"),Reference->WeaponBeauty);
+    Reference->HandleGazetteerClicked();
+    TestEqual(TEXT("Gazetteer has three icon buttons"), Reference->GazetteerSectionButtons.Num(), 3);
+    TestEqual(TEXT("Systems are selected first"), Reference->GazetteerSelector->GetSelectedOption(), FString(TEXT("System — Janus")));
+    Reference->HandleGazetteerFactions();
+    TestEqual(TEXT("Factions and field guide have their own list"), Reference->GazetteerSelector->GetOptionCount(), 6);
+    TestTrue(TEXT("Lore without a system hides the map"), Reference->GazetteerMapColumn->GetVisibility() == ESlateVisibility::Collapsed);
+    Reference->HandleGazetteerFigures();
+    TestEqual(TEXT("Figures have their own list"), Reference->GazetteerSelector->GetOptionCount(), 10);
+    Reference->SetGazetteerVisible(false);
     Reference->ActiveCategory=EShipCategory::CapitalShip;
     Reference->bPopulatingReference=true;Reference->PopulateShipDropdown();Reference->bPopulatingReference=false;
     TestEqual(TEXT("Filtered row IDs match dropdown options"),Reference->ShipRowNames.Num(),Reference->ShipCombo->GetOptionCount());

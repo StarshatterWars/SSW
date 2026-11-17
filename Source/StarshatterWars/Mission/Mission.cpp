@@ -839,9 +839,12 @@ Mission::ParseMission(const char* block)
 
 					Galaxy* galaxyx = Galaxy::GetInstance();
 
-					if (galaxyx) {
-						SetStarSystem(galaxyx->GetSystem(sysname));
-					}
+					if (!system.length())
+						SetSystem(sysname);
+
+					if (galaxyx)
+						if (auto* Resolved = galaxyx->GetSystem(sysname))
+							SetStarSystem(Resolved);
 				}
 
 				else if (defname == "degrees")
