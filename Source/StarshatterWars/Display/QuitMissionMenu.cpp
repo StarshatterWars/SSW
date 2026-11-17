@@ -91,10 +91,12 @@ void UQuitMissionMenu::BuildGeneratedContent()
         const bool bControls = FCString::Strcmp(Name, TEXT("ControlsBtn")) == 0;
         MissionUIStyle::ApplyActionButtonStyle(Button, bDestructive ? TEXT("Red") : (bControls ? TEXT("Blue") : TEXT("Green")));
     };
-    MakeButton(AcceptBtn, TEXT("AcceptBtn"), TEXT("1.   ACCEPT MISSION RESULTS"));
-    MakeButton(AbortBtn, TEXT("AbortBtn"), TEXT("2.   ABORT MISSION"));
-    MakeButton(ResumeBtn, TEXT("ResumeBtn"), TEXT("3.   RESUME MISSION"));
-    MakeButton(ControlsBtn, TEXT("ControlsBtn"), TEXT("4.   CONTROL SETUP"));
+    MakeButton(AcceptBtn, TEXT("AcceptBtn"), TEXT("ACCEPT MISSION RESULTS"));
+    MakeButton(AbortBtn, TEXT("AbortBtn"), TEXT("ABORT MISSION"));
+    MakeButton(ResumeBtn, TEXT("ResumeBtn"), TEXT("RESUME MISSION"));
+    if (ControlsBtn) ControlsBtn->SetVisibility(ESlateVisibility::Collapsed);
+    else if (UWidget* Controls = WidgetTree->FindWidget(TEXT("ControlsBtn")))
+        Controls->SetVisibility(ESlateVisibility::Collapsed);
     UHorizontalBox* Footer = Cast<UHorizontalBox>(WidgetTree->FindWidget(TEXT("QuitFooter")));
     if (!Footer) Footer = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("QuitFooter"));
 
@@ -150,7 +152,6 @@ void UQuitMissionMenu::NativeConstruct()
     if (AcceptBtn) { AcceptBtn->OnClicked.RemoveAll(this); AcceptBtn->OnClicked.AddDynamic(this, &UQuitMissionMenu::AcceptMission); }
     if (AbortBtn) { AbortBtn->OnClicked.RemoveAll(this); AbortBtn->OnClicked.AddDynamic(this, &UQuitMissionMenu::AbortMission); }
     if (ResumeBtn) { ResumeBtn->OnClicked.RemoveAll(this); ResumeBtn->OnClicked.AddDynamic(this, &UQuitMissionMenu::ResumeMission); }
-    if (ControlsBtn) { ControlsBtn->OnClicked.RemoveAll(this); ControlsBtn->OnClicked.AddDynamic(this, &UQuitMissionMenu::OpenControls); }
     if (ExitWindowsBtn) { ExitWindowsBtn->OnClicked.RemoveAll(this); ExitWindowsBtn->OnClicked.AddDynamic(this, &UQuitMissionMenu::ExitToWindows); }
     if (MainMenuBtn) MainMenuBtn->OnClicked.AddUniqueDynamic(this, &UQuitMissionMenu::ExitToMainMenu);
     SetStatusMessage(StatusMessage);
@@ -189,15 +190,14 @@ FReply UQuitMissionMenu::HandleLocalMenuKey(const FKeyEvent& Event)
     if (!IsDialogInputEnabled() || (GetVisibility() == ESlateVisibility::Hidden || GetVisibility() == ESlateVisibility::Collapsed) || !GetIsEnabled()) return FReply::Unhandled();
     const FKey Key = Event.GetKey();
     const bool bMenuKey = Key == EKeys::Escape || Key == EKeys::One || Key == EKeys::Two ||
-        Key == EKeys::Three || Key == EKeys::Four || Key == EKeys::Five ||
+        Key == EKeys::Three || Key == EKeys::Five ||
         Key == EKeys::NumPadOne || Key == EKeys::NumPadTwo || Key == EKeys::NumPadThree ||
-        Key == EKeys::NumPadFour || Key == EKeys::NumPadFive;
+        Key == EKeys::NumPadFive;
     if (!bMenuKey) return FReply::Unhandled();
     if (!Event.IsRepeat())
     {
         if (Key == EKeys::One || Key == EKeys::NumPadOne) AcceptMission();
         else if (Key == EKeys::Two || Key == EKeys::NumPadTwo) AbortMission();
-        else if (Key == EKeys::Four || Key == EKeys::NumPadFour) OpenControls();
         else if (Key == EKeys::Five || Key == EKeys::NumPadFive) ExitToWindows();
         else ResumeMission();
     }

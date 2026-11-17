@@ -65,8 +65,12 @@ bool FJanusProductionTest::RunTest(const FString&)
     double Available = 4.0;
     TestTrue(TEXT("First contract reserves available stock"), First.Reserve(TEXT("ore"), Available, 4.0));
     TestFalse(TEXT("Second contract cannot book reserved stock"), Second.Reserve(TEXT("ore"), Available, 1.0));
+    const FGuid FirstContractId = First.GetId();
+    TestTrue(TEXT("A reservation assigns a stable contract ID"), FirstContractId.IsValid());
     First.CommitPickup(1.0);
+    TestEqual(TEXT("Partial pickup preserves the contract ID"), First.GetId(), FirstContractId);
     First.Release(Available);
+    TestFalse(TEXT("Release clears the contract ID"), First.GetId().IsValid());
     TestEqual(TEXT("Cancellation restores only the portion still at pickup"), Available, 3.0);
     // Run real inventory transfers through the same handlers as T1.
     SimRegion Sector(nullptr, "Janek", 0);

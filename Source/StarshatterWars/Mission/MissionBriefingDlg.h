@@ -161,6 +161,10 @@ protected:
     UPROPERTY(Transient) TObjectPtr<class UShipStoreDlg> ShipStoreWidget;
     void ToggleShipStore();
     void CloseShipStore();
+    TSharedPtr<SWidget> ContractsPopup;
+    UPROPERTY(Transient) TObjectPtr<class UContractsDlg> ContractsWidget;
+    void ToggleContracts();
+    void CloseContracts();
     TSharedPtr<SWidget> MarketplacePopup;
     UPROPERTY(Transient) TObjectPtr<class UMarketplaceDlg> MarketplaceWidget;
     bool CanOpenMarketplace() const;

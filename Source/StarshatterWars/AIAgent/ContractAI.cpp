@@ -2,10 +2,11 @@
 
 bool ContractAI::Reserve(const FString& Item, double& Available, double Requested)
 {
-    if (ReservedTonnes > 0 || Item.IsEmpty() || !FMath::IsFinite(Available) ||
+    if (ContractId.IsValid() || Item.IsEmpty() || !FMath::IsFinite(Available) ||
         !FMath::IsFinite(Requested) || Available <= 0 || Requested <= 0)
         return false;
 
+    ContractId = FGuid::NewGuid();
     CargoItem = Item;
     ReservedTonnes = FMath::Min(Available, Requested);
     Available -= ReservedTonnes;

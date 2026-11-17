@@ -21,6 +21,7 @@
 
 #include "GameStructs_products.h"
 #include "ContractAI.h"
+#include "GameStructs_Contracts.h"
 #include "MiningAI.h"
 #include "Types.h"
 #include "Delegates/Delegate.h"
@@ -186,6 +187,15 @@ public:
     FShipRetired OnShipRetired;
     Mission* GetMission() { return mission; }
     const FSSWProductionStock* GetProductionStock(const FSSWProductionFacility& Facility);
+    struct FActiveHaul
+    {
+        FGuid Id;
+        FSSWContractTerms Terms;
+        int32 Jumps = INDEX_NONE;
+        bool bDelivering = false;
+    };
+    TArray<FActiveHaul> GetActiveHauls();
+
     List<MissionEvent>& GetEvents() { return events; }
     List<SimRegion>& GetRegions() { return regions; }
 

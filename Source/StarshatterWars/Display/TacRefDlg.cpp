@@ -349,7 +349,7 @@ void UTacRefDlg::SelectShipByIndex(int32 Index)
     }
 }
 
-void UTacRefDlg::BuildShipTexts(const FShipDesign& Dsn, FString& OutCaption, FString& OutStats, FString& OutDesc) const
+void UTacRefDlg::BuildShipTexts(const FShipDesign& Dsn, FString& OutCaption, FString& OutStats, FString& OutDesc)
 {
     OutCaption = Dsn.Abrv.IsEmpty()
         ? Dsn.DisplayName
@@ -901,6 +901,23 @@ void UTacRefDlg::BuildGazetteer(UVerticalBox& Body)
     GazetteerText->SetDefaultTextStyle(BodyStyle);
     GazetteerScroll->AddChild(GazetteerText);
 
+    TArray<FString> Titles;
+    LoadGazetteer(Titles, GazetteerEntries);
+    for (const FString& LoreTitle : Titles) Entries->AddOption(LoreTitle);
+    Entries->OnSelectionChanged.AddUniqueDynamic(this, &UTacRefDlg::HandleGazetteerEntry);
+    if (Entries->GetOptionCount() > 0)
+    {
+        const int32 Janus = Entries->FindOptionIndex(TEXT("System — Janus"));
+        Entries->SetSelectedIndex(Janus != INDEX_NONE ? Janus : 0);
+        HandleGazetteerEntry(Entries->GetSelectedOption(), ESelectInfo::Direct);
+    }
+    else GazetteerText->SetText(FText::FromString(TEXT("Gazetteer data unavailable.")));
+}
+
+void UTacRefDlg::LoadGazetteer(TArray<FString>& Titles, TMap<FString, FString>& Entries)
+{
+    Titles.Reset();
+    Entries.Reset();
     FString Source;
     FFileHelper::LoadFileToString(Source, *(FPaths::ProjectContentDir() / TEXT("GameData/Lore/BlueDrift.txt")));
     TArray<FString> Lines;
@@ -911,23 +928,15 @@ void UTacRefDlg::BuildGazetteer(UVerticalBox& Body)
         if (Line.StartsWith(TEXT("@@ ")))
         {
             Entry = Line.RightChop(3).TrimStartAndEnd();
-            if (Entry.IsEmpty() || GazetteerEntries.Contains(Entry)) { Entry.Reset(); continue; }
-            Entries->AddOption(Entry);
-            GazetteerEntries.Add(Entry);
+            if (Entry.IsEmpty() || Entries.Contains(Entry)) { Entry.Reset(); continue; }
+            Titles.Add(Entry);
+            Entries.Add(Entry);
         }
         else if (!Entry.IsEmpty())
         {
-            GazetteerEntries.FindChecked(Entry) += Line + TEXT("\n");
+            Entries.FindChecked(Entry) += Line + TEXT("\n");
         }
     }
-    Entries->OnSelectionChanged.AddUniqueDynamic(this, &UTacRefDlg::HandleGazetteerEntry);
-    if (Entries->GetOptionCount() > 0)
-    {
-        const int32 Janus = Entries->FindOptionIndex(TEXT("System — Janus"));
-        Entries->SetSelectedIndex(Janus != INDEX_NONE ? Janus : 0);
-        HandleGazetteerEntry(Entries->GetSelectedOption(), ESelectInfo::Direct);
-    }
-    else GazetteerText->SetText(FText::FromString(TEXT("Gazetteer data unavailable.")));
 }
 
 void UTacRefDlg::StyleReferenceCombo(UComboBoxString& Combo)
@@ -965,10 +974,8 @@ void UTacRefDlg::HandleGazetteerClicked()
     SetGazetteerVisible(true);
 }
 
-void UTacRefDlg::HandleGazetteerEntry(FString Entry, ESelectInfo::Type)
+FString UTacRefDlg::GetGazetteerSystemName(const FString& Entry)
 {
-    const FString* Lore = GazetteerEntries.Find(Entry);
-    if (!Lore) return;
     FString SystemName;
     if (Entry.StartsWith(TEXT("System — ")))
         SystemName = Entry.RightChop(9);
@@ -978,6 +985,12 @@ void UTacRefDlg::HandleGazetteerEntry(FString Entry, ESelectInfo::Type)
         if (Entry.FindLastChar(TEXT('('), OpenParen))
             SystemName = Entry.Mid(OpenParen + 1, Entry.Len() - OpenParen - 2);
     }
+    return SystemName;
+}
+
+FString UTacRefDlg::BuildGazetteerDetails(const FString& Entry, const UGameInstance* Instance)
+{
+    const FString SystemName = GetGazetteerSystemName(Entry);
     FString Details = FString::Printf(TEXT("<HUD_Label>%s</>\n\n"), *Entry.ToUpper());
     const auto AddFact = [&](const TCHAR* Label, const FString& Value)
     {
@@ -986,9 +999,6 @@ void UTacRefDlg::HandleGazetteerEntry(FString Entry, ESelectInfo::Type)
     };
     if (!SystemName.IsEmpty())
     {
-        GazetteerMapTitle->SetText(FText::FromString(SystemName.ToUpper()));
-        if (GazetteerMap) GazetteerMap->SetViewedSystemName(SystemName);
-        const auto* Instance = GetGameInstance();
         const auto* Env = Instance ? Instance->GetSubsystem<UStarshatterEnvironmentSubsystem>() : nullptr;
         if (const FS_Galaxy* System = Env ? Env->FindGalaxyByName(SystemName) : nullptr)
         {
@@ -1033,6 +1043,20 @@ void UTacRefDlg::HandleGazetteerEntry(FString Entry, ESelectInfo::Type)
             Details += TEXT("\n");
         }
     }
+    return Details;
+}
+
+void UTacRefDlg::HandleGazetteerEntry(FString Entry, ESelectInfo::Type)
+{
+    const FString* Lore = GazetteerEntries.Find(Entry);
+    if (!Lore) return;
+    const FString SystemName = GetGazetteerSystemName(Entry);
+    if (!SystemName.IsEmpty())
+    {
+        GazetteerMapTitle->SetText(FText::FromString(SystemName.ToUpper()));
+        if (GazetteerMap) GazetteerMap->SetViewedSystemName(SystemName);
+    }
+    const FString Details = BuildGazetteerDetails(Entry, GetGameInstance());
     GazetteerText->SetText(FText::FromString(Details + Lore->TrimStartAndEnd()));
     GazetteerScroll->ScrollToStart();
 }

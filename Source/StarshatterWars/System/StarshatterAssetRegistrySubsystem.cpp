@@ -870,6 +870,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.ContractsPopupClass
+    if (!Cache.Contains(TEXT("UI.ContractsPopupClass")))
+    {
+        if (!Settings->ContractsPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->ContractsPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.ContractsPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.ContractsPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            UE_LOG(LogStarshatterAssetRegistry, Warning,
+                TEXT("[ASSETS] ContractsPopupClass is not set in Project Settings"));
+        }
+    }
+
     // UI.CustomMissionScreenClass
     if (!Cache.Contains(TEXT("UI.CustomMissionScreenClass")))
     {

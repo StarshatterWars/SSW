@@ -61,6 +61,11 @@ class STARSHATTERWARS_API UTacRefDlg : public UBaseScreen
     GENERATED_BODY()
 
 public:
+    static void BuildWeaponTexts(const WeaponDesign& Design, FString& Caption, FString& Stats, FString& Description);
+    static FString GetGazetteerSystemName(const FString& Entry);
+    static FString BuildGazetteerDetails(const FString& Entry, const UGameInstance* Instance);
+    static void LoadGazetteer(TArray<FString>& Titles, TMap<FString, FString>& Entries);
+    static void BuildShipTexts(const FShipDesign& Design, FString& Caption, FString& Stats, FString& Description);
     UTacRefDlg(const FObjectInitializer& ObjectInitializer);
 
     // Menu manager hookup (matches your existing pattern)
@@ -187,13 +192,11 @@ protected:
     bool bPopulatingReference = false;
     void PopulateWeaponDropdown();
     void SelectWeaponByIndex(int32 Index);
-    static void BuildWeaponTexts(const WeaponDesign& Design, FString& Caption, FString& Stats, FString& Description);
     UPROPERTY(meta=(BindWidgetOptional)) UImage* WeaponBeauty = nullptr;
     void PopulateShipDropdown();
     bool PassesCategoryFilter(const FShipDesign& Row) const;
 
     void SelectShipByIndex(int32 Index);
-    void BuildShipTexts(const FShipDesign& Dsn, FString& OutCaption, FString& OutStats, FString& OutDesc) const;
 
 protected:
     UPROPERTY(Transient)

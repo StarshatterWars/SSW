@@ -2583,6 +2583,51 @@ void Sim::AssignNetworkObjectId(SimObject& Object)
         Object.SetObjID(NextNetworkObjectId++);
 }
 
+TArray<Sim::FActiveHaul> Sim::GetActiveHauls()
+{
+    TArray<FActiveHaul> Hauls;
+    const auto* Environment = UStarshatterEnvironmentSubsystem::Get();
+    for (const int32 Index : {1, 2})
+    {
+        const FMiningRun* Run = JanekMiningRuns.Find(Index);
+        if (!Run || Run->Contract.GetItem().IsEmpty())
+            continue;
+
+        const bool bFinishedGoods = Index == 2;
+        Ship* Freighter = FindShip(bFinishedGoods ? "Janek Mining Freighter 2" : "Janek Mining Freighter 1");
+        Ship* Pickup = FindShip(bFinishedGoods ? "Janek Orbital Materials Works" : "Janek Mining Station");
+        Ship* Destination = FindShip(bFinishedGoods ? "Janus Transfer Station" : "Janek Orbital Materials Works");
+        if (!Freighter || Freighter->IsDead() || Freighter->IsDying() || !Pickup || !Destination)
+            continue;
+
+        FActiveHaul& Haul = Hauls.AddDefaulted_GetRef();
+        Haul.Id = Run->Contract.GetId();
+        FSSWContractTerms& Terms = Haul.Terms;
+        Terms.Type = ESSWContractType::Courier;
+        Terms.bPrivate = true;
+        Terms.AssignedToId = FName(UTF8_TO_TCHAR(Freighter->GetName()));
+        Terms.PickupStationId = FName(UTF8_TO_TCHAR(Pickup->GetName()));
+        Terms.DestinationStationId = FName(UTF8_TO_TCHAR(Destination->GetName()));
+        Terms.PickupDivisionId = bFinishedGoods ? TEXT("Finished Goods Storage") : TEXT("Ore Storage");
+        Terms.Title = bFinishedGoods ? TEXT("Concentrate delivery") : TEXT("Refinery ore delivery");
+        Terms.Description = bFinishedGoods ? TEXT("Haul refinery output to the system transfer station.")
+                                           : TEXT("Haul mined ore from the mining station to the refinery.");
+        const double Tonnes = Run->bDelivering ? Run->LoadedTonnes :
+            Freighter->GetMinedOreTonnes() + Run->Contract.GetReservedTonnes();
+        FSSWContractItem& Cargo = Terms.OfferedItems.AddDefaulted_GetRef();
+        Cargo.ItemId = FName(*Run->Contract.GetItem());
+        Cargo.Quantity = Tonnes;
+        Cargo.Unit = TEXT("t");
+        Haul.bDelivering = Run->bDelivering;
+        if (Environment && Pickup->GetRegion() && Destination->GetRegion())
+        {
+            Haul.Jumps = TransportAI::FindJumpRoute(Pickup->GetRegion()->GetSystem(),
+                Destination->GetRegion()->GetSystem(), Environment->GetRuntimeStarSystems()).Num() - 1;
+        }
+    }
+    return Hauls;
+}
+
 const FSSWProductionStock* Sim::GetProductionStock(const FSSWProductionFacility& Facility)
 {
     if (!mission || mission->GetIdentity() != 101 || !active_region ||

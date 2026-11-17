@@ -6,6 +6,9 @@
 #include "Mission.h"
 #include "MissionUIStyle.h"
 #include "Sim.h"
+#include "SimRegion.h"
+#include "Styling/CoreStyle.h"
+#include "Widgets/Layout/SBorder.h"
 #include "StarSystem.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "Widgets/Input/SSearchBox.h"
@@ -103,6 +106,7 @@ namespace
         FString Producer;
         int32 ProducerStock = 0;
         int32 ProducerJumps = MAX_int32;
+        int32 PurchaseJumps() const { return Available > 0 ? 0 : ProducerJumps; }
         double Price = 0;
         bool bLocalProduction = false;
         bool bRestricted = false;
@@ -149,7 +153,7 @@ namespace
             else if (Column == "Producer")
                 Text = Offer->Producer.IsEmpty() ? INVTEXT("—") : FText::FromString(Offer->Producer);
             else if (Column == "Jumps")
-                Text = Offer->Producer.IsEmpty() ? INVTEXT("—") : FText::AsNumber(Offer->ProducerJumps);
+                Text = Offer->PurchaseJumps() == MAX_int32 ? INVTEXT("—") : FText::AsNumber(Offer->PurchaseJumps());
             else if (Column == "ProducerStock")
                 Text = Offer->Producer.IsEmpty() ? INVTEXT("—") : FText::AsNumber(Offer->ProducerStock);
             else if (Column == "Rarity") Text = StaticEnum<ESSWAsteroidRarity>()->GetDisplayNameTextByValue(int64(Offer->Goods.Rarity));
@@ -197,7 +201,7 @@ namespace
             {
                 const auto& A = *(SortMode == EColumnSortMode::Descending ? Right : Left);
                 const auto& B = *(SortMode == EColumnSortMode::Descending ? Left : Right);
-                if (SortColumn == "Jumps" && A.ProducerJumps != B.ProducerJumps) return A.ProducerJumps < B.ProducerJumps;
+                if (SortColumn == "Jumps" && A.PurchaseJumps() != B.PurchaseJumps()) return A.PurchaseJumps() < B.PurchaseJumps();
                 if (SortColumn == "ProducerStock" && A.ProducerStock != B.ProducerStock) return A.ProducerStock < B.ProducerStock;
                 if (SortColumn == "Available" && A.Available != B.Available) return A.Available < B.Available;
                 if (SortColumn == "Demand" && A.Demand != B.Demand) return A.Demand < B.Demand;
@@ -228,7 +232,9 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
     Sim* Simulation = Sim::GetSim();
     const Mission* CurrentMission = Simulation ? Simulation->GetMission() : nullptr;
     FString System;
-    if (CurrentMission)
+    if (SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr)
+        if (Region->GetSystem()) System = ANSI_TO_TCHAR(Region->GetSystem()->GetName());
+    if (System.IsEmpty() && CurrentMission)
     {
         if (const char* Name = CurrentMission->GetSystem())
             System = FString(UTF8_TO_TCHAR(Name)).TrimStartAndEnd();
@@ -344,8 +350,10 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
     AddColumn("Unit", INVTEXT("Unit"), 1.f);
     AddColumn("Cost", INVTEXT("Cost / unit"), 1.3f);
 
+    const auto Selected = MakeShared<FOfferPtr>();
     auto List = SNew(SListView<FOfferPtr>).ListItemsSource(&Table->Rows).HeaderRow(Header)
         .SelectionMode(ESelectionMode::Single)
+        .OnSelectionChanged_Lambda([Selected](FOfferPtr Offer, ESelectInfo::Type) { *Selected = MoveTemp(Offer); })
         .OnGenerateRow_Lambda([Table](FOfferPtr Offer, const TSharedRef<STableViewBase>& Owner)
             -> TSharedRef<ITableRow>
         {
@@ -363,8 +371,34 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
         [
             SNew(SSearchBox)
             .HintText(INVTEXT("Search item names, or type * to show all"))
-            .OnTextChanged_Lambda([Table](const FText& Search) { Table->Filter(Search); })
+            .OnTextChanged_Lambda([Table, Selected](const FText& Search)
+            {
+                if (auto View = Table->List.Pin()) View->ClearSelection();
+                Selected->Reset();
+                Table->Filter(Search);
+            })
         ]
-        + SVerticalBox::Slot().FillHeight(1).Padding(20, 0, 20, 18)
-        [ List ];
+        + SVerticalBox::Slot().FillHeight(0.7f).Padding(20, 0, 20, 8)
+        [List]
+        + SVerticalBox::Slot().FillHeight(0.3f).Padding(20, 0, 20, 18)
+        [
+            SNew(SBorder).Padding(12).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
+            .BorderBackgroundColor(FLinearColor(0.075f, 0.09f, 0.11f))
+            [
+                SNew(STextBlock).Font(MissionUIStyle::GetRowFont(14)).AutoWrapText(true)
+                .Text_Lambda([Selected]()
+                {
+                    if (!*Selected) return INVTEXT("Select an item to view market details.");
+                    const auto& Offer = **Selected;
+                    const FText Source = Offer.Producer.IsEmpty() ? INVTEXT("No reachable producer with stock") :
+                        FText::Format(INVTEXT("{0} · {1} jumps · {2} {3} in stock"),
+                            FText::FromString(Offer.Producer), FText::AsNumber(Offer.ProducerJumps),
+                            FText::AsNumber(Offer.ProducerStock), FText::FromString(Offer.Unit()));
+                    return FText::Format(INVTEXT("{0}\n{1}\n{2} · {3} {4} available locally\n{5}"),
+                        FText::FromString(Offer.DisplayName()).ToUpper(), FText::FromString(Offer.Goods.Description),
+                        Offer.Goods.bIllicit ? INVTEXT("ILLICIT") : INVTEXT("LEGAL"),
+                        FText::AsNumber(Offer.Available), FText::FromString(Offer.Unit()), Source);
+                })
+            ]
+        ];
 }

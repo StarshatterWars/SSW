@@ -1,12 +1,15 @@
 #pragma once
 
 #include "ShipDesignRegistry.h"
+#include "TacRefDlg.h"
 #include "WeaponDesignRegistry.h"
 #include "MissionUIStyle.h"
 #include "ShipSystemIcon.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/SNullWidget.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/SCompoundWidget.h"
 #include "Widgets/Text/STextBlock.h"
@@ -15,14 +18,29 @@ class SFlightReferencePanel : public SCompoundWidget
 {
 public:
     SLATE_BEGIN_ARGS(SFlightReferencePanel) {}
+        SLATE_ARGUMENT(TSharedPtr<SWidget>, PreviewWidget)
+        SLATE_ARGUMENT(TSharedPtr<SWidget>, GazetteerMap)
+        SLATE_ARGUMENT(UGameInstance*, GameInstance)
+        SLATE_ARGUMENT(TFunction<void(const FString&)>, UpdateGazetteerMap)
+        SLATE_ARGUMENT(TFunction<void(const FShipDesign*)>, UpdatePreview)
     SLATE_END_ARGS()
 
-    void Construct(const FArguments&)
+    void Construct(const FArguments& Args)
     {
+        UpdatePreview = Args._UpdatePreview;
+        UpdateGazetteerMap = Args._UpdateGazetteerMap;
         for (const auto& [Key, Design] : ShipDesignRegistry::GetAll())
         {
             if (Design.Secret || Design.Hidden) continue;
-            const FString Name = Design.DisplayName.IsEmpty() ? Key.ToString() : Design.DisplayName;
+            FString Name, Stats, Description;
+            UTacRefDlg::BuildShipTexts(Design, Name, Stats, Description);
+            if (Name.TrimStartAndEnd().IsEmpty()) Name = Key.ToString();
+            for (const TCHAR* MarkupTag : {TEXT("<HUD_Section>"), TEXT("<HUD_Label>"), TEXT("<HUD_Value>"),
+                TEXT("<HUD_Indent>"), TEXT("<HUD_Muted>"), TEXT("<Default>"), TEXT("</>")})
+            {
+                Stats.ReplaceInline(MarkupTag, TEXT(""));
+                Description.ReplaceInline(MarkupTag, TEXT(""));
+            }
             const TCHAR* Type;
             EShipSystemIcon Icon;
             switch (Design.Category)
@@ -38,18 +56,31 @@ public:
             }
             Catalog.Add(MakeShared<FEntry>(
                 Icon, FString::Printf(TEXT("%s: %s"), Type, *Name),
-                FString::Printf(TEXT("%s\nSpeed limit  %.0f m/s\nRepair teams  %d\nCargo capacity  %.2f t"),
-                    *Design.ShipClass, Design.Vlimit, Design.RepairTeams, Design.CargoCapacity.Tonnes),
-                Design.Description));
+                MoveTemp(Stats), MoveTemp(Description), Key));
         }
         for (const auto& [Key, Design] : WeaponDesignRegistry::GetAll())
         {
             if (Design.bSecret) continue;
-            const FString Name = Design.Name.IsEmpty() ? Key.ToString() : Design.Name;
-            Catalog.Add(MakeShared<FEntry>(
-                EShipSystemIcon::Weapon, TEXT("Weapon · ") + Name,
-                FString::Printf(TEXT("Range  %.0f m\nProjectile speed  %.0f m/s"), Design.MaxRange, Design.Speed),
-                Design.Description));
+            FString Name = Design.Name.IsEmpty() ? Key.ToString() : Design.Name;
+            FString Stats;
+            FString Description = Design.Description;
+            if (const auto* Legacy = WeaponDesignRegistry::FindLegacy(TCHAR_TO_UTF8(*Key.ToString())))
+                UTacRefDlg::BuildWeaponTexts(*Legacy, Name, Stats, Description);
+            if (Stats.IsEmpty())
+                Stats = FString::Printf(TEXT("Range  %.0f m\nProjectile speed  %.0f m/s"), Design.MaxRange, Design.Speed);
+            Catalog.Add(MakeShared<FEntry>(EShipSystemIcon::Weapon, TEXT("Weapon · ") + Name,
+                MoveTemp(Stats), MoveTemp(Description)));
+        }
+        TArray<FString> LoreTitles;
+        TMap<FString, FString> Lore;
+        UTacRefDlg::LoadGazetteer(LoreTitles, Lore);
+        for (const FString& Title : LoreTitles)
+        {
+            FString Body = UTacRefDlg::BuildGazetteerDetails(Title, Args._GameInstance) + Lore.FindChecked(Title);
+            for (const TCHAR* Markup : {TEXT("<HUD_Section>"), TEXT("<HUD_Label>"), TEXT("<HUD_Value>"),
+                TEXT("<HUD_Indent>"), TEXT("<HUD_Muted>"), TEXT("<Default>"), TEXT("</>")})
+                Body.ReplaceInline(Markup, TEXT(""));
+            Catalog.Add(MakeShared<FEntry>(EShipSystemIcon::Gazetteer, Title, FString(), MoveTemp(Body)));
         }
         Catalog.Sort([](const auto& A, const auto& B) { return A->Name < B->Name; });
         SelectCategory(EShipSystemIcon::Ship);
@@ -78,6 +109,7 @@ public:
         AddFilter(EShipSystemIcon::Station, INVTEXT("Stations and platforms"));
         AddFilter(EShipSystemIcon::Building, INVTEXT("Buildings"));
         AddFilter(EShipSystemIcon::Weapon, INVTEXT("Weapons"));
+        AddFilter(EShipSystemIcon::Gazetteer, INVTEXT("Gazetteer"));
 
         ChildSlot.Padding(20, 16)
         [
@@ -92,7 +124,7 @@ public:
                     return SNew(STextBlock).Text(Entry ? FText::FromString(Entry->Name) : FText::GetEmpty())
                         .ColorAndOpacity(FLinearColor::White).Font(MissionUIStyle::GetRowFont(16));
                 })
-                .OnSelectionChanged_Lambda([this](TSharedPtr<FEntry> Entry, ESelectInfo::Type) { Selected = Entry; })
+                .OnSelectionChanged_Lambda([this](TSharedPtr<FEntry> Entry, ESelectInfo::Type) { SetEntry(MoveTemp(Entry)); })
                 [
                     SNew(STextBlock).Font(MissionUIStyle::GetRowFont(17)).ColorAndOpacity(FLinearColor::White)
                     .Text_Lambda([this]() { return Selected ? FText::FromString(Selected->Name) : INVTEXT("No entries in this category"); })
@@ -100,6 +132,22 @@ public:
             ]
             + SVerticalBox::Slot().FillHeight(1)
             [
+                SNew(SHorizontalBox)
+                + SHorizontalBox::Slot().FillWidth(1).Padding(0, 0, 12, 0)
+                [
+                    SNew(SBox).Visibility_Lambda([this]() { return Selected && !Selected->DesignKey.IsNone()
+                        ? EVisibility::Visible : EVisibility::Collapsed; })
+                    [Args._PreviewWidget.IsValid() ? Args._PreviewWidget.ToSharedRef() : SNullWidget::NullWidget]
+                ]
+                + SHorizontalBox::Slot().FillWidth(1).Padding(0, 0, 12, 0)
+                [
+                    SNew(SBox).Clipping(EWidgetClipping::ClipToBounds)
+                    .Visibility_Lambda([this]() { return Selected && Selected->Category == EShipSystemIcon::Gazetteer &&
+                        !UTacRefDlg::GetGazetteerSystemName(Selected->Name).IsEmpty() ? EVisibility::Visible : EVisibility::Collapsed; })
+                    [Args._GazetteerMap.IsValid() ? Args._GazetteerMap.ToSharedRef() : SNullWidget::NullWidget]
+                ]
+                + SHorizontalBox::Slot().FillWidth(1)
+                [
                 SNew(SScrollBox)
                 + SScrollBox::Slot().Padding(0, 0, 12, 16)
                 [
@@ -110,6 +158,7 @@ public:
                 [
                     SNew(STextBlock).Font(MissionUIStyle::GetRowFont(17)).AutoWrapText(true)
                     .Text_Lambda([this]() { return Selected ? FText::FromString(Selected->Description) : FText::GetEmpty(); })
+                ]
                 ]
             ]
         ];
@@ -122,6 +171,7 @@ private:
         FString Name;
         FString Stats;
         FString Description;
+        FName DesignKey;
     };
     void SelectCategory(EShipSystemIcon Category)
     {
@@ -138,9 +188,21 @@ private:
             Picker->RefreshOptions();
             if (First) Picker->SetSelectedItem(First);
         }
-        Selected = First;
+        SetEntry(First);
     }
 
+    void SetEntry(TSharedPtr<FEntry> Entry)
+    {
+        if (Selected == Entry) return;
+        Selected = MoveTemp(Entry);
+        if (UpdateGazetteerMap && Selected && Selected->Category == EShipSystemIcon::Gazetteer)
+            UpdateGazetteerMap(UTacRefDlg::GetGazetteerSystemName(Selected->Name));
+        if (UpdatePreview)
+            UpdatePreview(Selected && !Selected->DesignKey.IsNone() ? ShipDesignRegistry::Find(Selected->DesignKey) : nullptr);
+    }
+
+    TFunction<void(const FShipDesign*)> UpdatePreview;
+    TFunction<void(const FString&)> UpdateGazetteerMap;
     EShipSystemIcon ActiveCategory = EShipSystemIcon::Ship;
     TArray<TSharedPtr<FEntry>> Catalog;
     TArray<TSharedPtr<FEntry>> Entries;

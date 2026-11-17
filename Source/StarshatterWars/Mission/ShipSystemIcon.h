@@ -5,7 +5,7 @@
 #include "SimSystem.h"
 #include "Widgets/SLeafWidget.h"
 
-enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore };
+enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore, Contracts, Gazetteer };
 
 class SShipSystemIcon : public SLeafWidget
 {
@@ -82,6 +82,16 @@ public:
         case EShipSystemIcon::MediumRangeMissile: Line({{11,1},{15,6},{15,16},{7,16},{7,6},{11,1}}); Line({{7,11},{3,18},{7,16}}); Line({{15,11},{19,18},{15,16}}); Line({{8,20},{14,20}}); break;
         case EShipSystemIcon::Refresh: Line({{18,8},{15,4},{9,3},{4,7},{3,12},{6,17},{11,19},{16,17},{19,13}}); Line({{18,3},{18,8},{13,8}}); break;
         case EShipSystemIcon::Abort: Line({{5,5},{17,5},{17,17},{5,17},{5,5}}); Line({{8,8},{14,14}}); Line({{14,8},{8,14}}); break;
+        case EShipSystemIcon::Gazetteer:
+            Line({{8,4},{12,5},{15,8},{15,13},{12,17},{8,18},{4,17},{1,13},{1,9},{4,5},{8,4}});
+            Line({{18,1},{21,2},{22,5},{20,7},{17,7},{16,4},{18,1}});
+            break;
+        case EShipSystemIcon::Contracts:
+            Line({{4,2},{13,2},{18,7},{18,20},{4,20},{4,2}});
+            Line({{13,2},{13,7},{18,7}});
+            Line({{7,9},{11,9}});
+            Line({{7,14},{10,17},{15,12}});
+            break;
         case EShipSystemIcon::ShipStore:
             Line({{7,5},{3,5},{3,19},{19,19},{19,5},{15,5}});
             Line({{6,12},{9,9},{14,9},{17,12},{14,15},{9,15},{6,12}});
