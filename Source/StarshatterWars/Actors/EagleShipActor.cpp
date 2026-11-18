@@ -7,7 +7,7 @@ AEagleShipActor::AEagleShipActor()
 
     // Native default only: preserve BP and placed-instance scale during construction.
     SetActorScale3D(FVector(0.250000f));
-    bPropulsionPortsInModelUnits = true;
+    bPropulsionPortsInModelUnits = false;
     ThrusterPortHullName = TEXT("Eagle");
     // Hull surface positions in actor axes, ordered as the DEF's RCS ports.
     HullThrusterPortPositions = {

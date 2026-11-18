@@ -1,0 +1,12 @@
+{
+  "Scene": "01-News-Start",
+  "FrameRate": 30,
+  "Duration": 89.5161939971149,
+  "render_inputs_sha256": "0d845550119937e5d210742ba952c20690c481bdff53125b5d8cbcea29bc62d1",
+  "campaign": 2,
+  "source_def": "D:\\SSW\\Content\\GameData\\Campaigns\\02\\Scenes\\01-News-Start.def",
+  "source_sha256": "a89df6de94474c4a9f46f28fe39bae279c5b806aa138530607518f0ddb9b4cb6",
+  "mp4_sha256": "d78ffed66f7539e618c700b2bab3f4534ea03e0a66ee23a8933c724a7edf500d",
+  "captured_frames": 2657,
+  "render_directory": "D:\\SSW\\Saved\\CutsceneRenders\\Campaign02\\01-News-Start\\20261118_183147"
+}

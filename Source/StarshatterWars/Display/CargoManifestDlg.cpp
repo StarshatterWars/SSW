@@ -13,6 +13,7 @@
 #include "Widgets/Views/STableRow.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SCheckBox.h"
+#include "Widgets/Input/SSpinBox.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
@@ -83,6 +84,19 @@ namespace
         const Ship* LastShip = nullptr;
         FString Compartment;
         FText ServiceMessage;
+        TWeakObjectPtr<UGameInstance> Instance;
+        FString SelectedName;
+        double Quantity=1,Maximum=0,InputMaximum=0;
+
+        void UpdateLimits()
+        {
+            Maximum=InputMaximum=0;
+            auto View=List.Pin();const auto Selected=View?View->GetSelectedItems():TArray<FCargoItem>{};
+            if(Selected.IsEmpty())return;
+            FText Reason;const FName Item(*Selected[0]->Name);
+            Maximum=FStationServices::CargoTransferLimit(Instance.Get(),Item,Compartment.IsEmpty(),Compartment.IsEmpty()?TEXT("Player Storage"):*Compartment,Reason);
+            if(Compartment.IsEmpty())InputMaximum=FStationServices::CargoTransferLimit(Instance.Get(),Item,true,TEXT("Player Input"),Reason);
+        }
 
         void Sort()
         {
@@ -109,6 +123,7 @@ namespace
 
         void Refresh()
         {
+            UpdateLimits();
             const Ship* Pilot = CargoShip();
             TArray<FS_Cargo> Current;
             if (auto* Craft = CargoShip())
@@ -167,6 +182,7 @@ namespace
                 if (const auto* Match = Rows.FindByPredicate([&Previous](const FCargoItem& Item)
                     { return Item->Name == Previous[0]->Name; }))
                     View->SetSelection(*Match);
+            UpdateLimits();
         }
     };
 
@@ -175,6 +191,7 @@ namespace
 TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
 {
     const auto Table = MakeShared<FCargoTable>();
+    Table->Instance=GetGameInstance();
     if (UGameInstance* Instance = GetGameInstance())
         Table->Catalog = Instance->GetSubsystem<UCargoCatalogSubsystem>();
     auto Header = SNew(SHeaderRow);
@@ -204,6 +221,12 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
     AddColumn("TotalValue", INVTEXT("Total value"), 1.f);
     auto List = SNew(SListView<FCargoItem>).ListItemsSource(&Table->Rows).HeaderRow(Header)
         .SelectionMode(ESelectionMode::Single)
+        .OnSelectionChanged_Lambda([Table](FCargoItem Item,ESelectInfo::Type)
+        {
+            if(Item && Table->SelectedName!=Item->Name)
+            {Table->SelectedName=Item->Name;Table->Quantity=FMath::Min(1.0,Item->Quantity);}
+            Table->UpdateLimits();
+        })
         .OnGenerateRow_Lambda([Table](FCargoItem Item, const TSharedRef<STableViewBase>& Owner)
             -> TSharedRef<ITableRow>
         {
@@ -250,6 +273,22 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
             .Visibility_Lambda([Table]() { return Table->Rows.IsEmpty() ? EVisibility::Visible : EVisibility::Collapsed; })
             .Text(INVTEXT("CARGO HOLD EMPTY"))
         ]
+        + SVerticalBox::Slot().AutoHeight().Padding(20,8,20,0)
+        [SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0,0,10,0)
+            [SNew(STextBlock).Font(Font).Text(INVTEXT("QUANTITY"))]
+            + SHorizontalBox::Slot().AutoWidth()
+            [SNew(SBox).WidthOverride(130)[SNew(SSpinBox<double>).MinValue(.001).MaxValue(1.e12)
+                .MinFractionalDigits(0).MaxFractionalDigits(3).Delta(.1)
+                .Value_Lambda([Table](){return Table->Quantity;})
+                .OnValueChanged_Lambda([Table](double Value){Table->Quantity=Value;})
+                .ToolTipText(INVTEXT("Quantity to transfer. Finished goods require whole units; tonnes may be fractional."))]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(6,0)
+            [SNew(SButton).ToolTipText(INVTEXT("Use the maximum transferable quantity"))
+                .IsEnabled_Lambda([Table](){return Table->Maximum>UE_SMALL_NUMBER;})
+                .OnClicked_Lambda([Table](){Table->Quantity=Table->Maximum;return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Up)]]
+            + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)
+            [SNew(STextBlock).Font(Font).Text_Lambda([Table](){return FText::Format(INVTEXT("MAXIMUM  {0}"),FText::AsNumber(Table->Maximum));})]]
         + SVerticalBox::Slot().AutoHeight().Padding(20,8)
         [SNew(STextBlock).Font(Font).Text_Lambda([Table]() { return Table->ServiceMessage; })]
         + SVerticalBox::Slot().AutoHeight().Padding(20)
@@ -274,21 +313,21 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
             [SNew(STextBlock).Font(Font).Text_Lambda([Table]() { return FText::FromString(Table->Compartment.IsEmpty() ? TEXT("SHIP CARGO") : Table->Compartment.ToUpper()); })]
             + SHorizontalBox::Slot().AutoWidth().Padding(2)
             [SNew(SButton).ToolTipText(INVTEXT("Transfer selected cargo: ship to local storage, or selected station inventory to ship"))
-                .IsEnabled_Lambda([](){return FStationServices::IsDocked();})
+                .IsEnabled_Lambda([Table](){return FStationServices::IsDocked() && Table->Quantity>0 && Table->Quantity<=Table->Maximum+1.e-9;})
                 .OnClicked_Lambda([Table, WeakInstance = TWeakObjectPtr<UGameInstance>(GetGameInstance())]()
                 {
                     if (auto View = Table->List.Pin(); View && !View->GetSelectedItems().IsEmpty())
                         FStationServices::MoveCargo(WeakInstance.Get(), FName(*View->GetSelectedItems()[0]->Name), Table->Compartment.IsEmpty(),
-                            Table->Compartment.IsEmpty() ? TEXT("Player Storage") : *Table->Compartment, Table->ServiceMessage);
+                            Table->Compartment.IsEmpty() ? TEXT("Player Storage") : *Table->Compartment, Table->Quantity, Table->ServiceMessage);
                     Table->Refresh(); return FReply::Handled();
                 })[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Replace)]]
             + SHorizontalBox::Slot().AutoWidth().Padding(2)
             [SNew(SButton).ToolTipText(INVTEXT("Supply selected ship cargo to this facility input inventory"))
-                .IsEnabled_Lambda([Table](){return Table->Compartment.IsEmpty() && FStationServices::HasIndustry();})
+                .IsEnabled_Lambda([Table](){return Table->Compartment.IsEmpty() && FStationServices::HasIndustry() && Table->Quantity>0 && Table->Quantity<=Table->InputMaximum+1.e-9;})
                 .OnClicked_Lambda([Table, WeakInstance = TWeakObjectPtr<UGameInstance>(GetGameInstance())]()
                 {
                     if (auto View = Table->List.Pin(); View && !View->GetSelectedItems().IsEmpty())
-                        FStationServices::MoveCargo(WeakInstance.Get(), FName(*View->GetSelectedItems()[0]->Name), true, TEXT("Player Input"), Table->ServiceMessage);
+                        FStationServices::MoveCargo(WeakInstance.Get(), FName(*View->GetSelectedItems()[0]->Name), true, TEXT("Player Input"), Table->Quantity, Table->ServiceMessage);
                     Table->Refresh(); return FReply::Handled();
                 })[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Production)]]
             + SHorizontalBox::Slot().AutoWidth().Padding(2)

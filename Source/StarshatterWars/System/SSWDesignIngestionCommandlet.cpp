@@ -20,6 +20,10 @@
 #include "StarshatterEnvironmentSubsystem.h"
 #include "SSWCombatGroupSubsystem.h"
 #include "ShipVisualCatalog.h"
+#include "ShipActor.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "AssetCompilingManager.h"
 #include "FreightManifest.h"
 #include "Farcaster.h"
 #include "FlightDeck.h"
@@ -364,6 +368,85 @@ USSWDesignIngestionCommandlet::USSWDesignIngestionCommandlet()
 int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
 {
 #if WITH_EDITOR
+    if(FParse::Param(*Params,TEXT("PreparePropulsionMeshes")))
+    {
+        auto* Catalog=NewObject<UDataTable>();
+        if(!UStarshatterShipDesignSubsystem::ImportJsonCatalog(*Catalog,FPaths::ProjectContentDir()/TEXT("GameData/Ships/ships.json")))return 1;
+        TMap<UStaticMesh*,bool> Required;int32 Updated=0,Retained=0;
+        for(const auto& Entry:ShipVisualCatalog::Entries())
+        {
+            auto* Class=ShipVisualCatalog::Resolve(Entry.Definition,Entry.Model);
+            auto* Actor=Class?Cast<AShipActor>(Class->GetDefaultObject()):nullptr;
+            UStaticMesh* Mesh=Actor && Actor->HullMesh?Actor->HullMesh->GetStaticMesh():nullptr;
+            if(!Mesh || !Mesh->GetOutermost()->GetName().StartsWith(TEXT("/Game/")))continue;
+            const auto* Row=Catalog->FindRow<FShipDesign>(FName(Entry.Definition),TEXT("Propulsion CPU geometry"),false);
+            if(!Row)Row=Catalog->FindRow<FShipDesign>(FName(Entry.Design),TEXT("Propulsion CPU geometry"),false);
+            const bool Needed=Row && ((Actor->bEnableMainEngineEmitters && Row->Drive.ContainsByPredicate([](const auto& Drive){return !Drive.Ports.IsEmpty();})) ||
+                (Actor->bEnableThrusterEmitters && Row->Thruster.ContainsByPredicate([](const auto& Thruster){return !Thruster.Ports.IsEmpty();})));
+            Required.FindOrAdd(Mesh)|=Needed;
+        }
+        for(const auto& Pair:Required)
+        {
+            UStaticMesh* Mesh=Pair.Key;const bool Needed=Pair.Value;if(Needed)++Retained;
+            if(Mesh->bAllowCPUAccess==Needed)continue;
+            const FString Filename=FPackageName::LongPackageNameToFilename(Mesh->GetOutermost()->GetName(),FPackageName::GetAssetPackageExtension());
+            const FString Backup=FPaths::ProjectDir()/TEXT("Backup/FleetHullPortCPU")/(Mesh->GetOutermost()->GetName().RightChop(6)+FPackageName::GetAssetPackageExtension());
+            // Restore only flags changed by this migration; preserve pre-existing CPU readers.
+            if(!Needed && !IFileManager::Get().FileExists(*Backup))continue;
+            IFileManager::Get().MakeDirectory(*FPaths::GetPath(Backup),true);
+            if(!IFileManager::Get().FileExists(*Backup) && IFileManager::Get().Copy(*Backup,*Filename)!=COPY_OK)return 1;
+            Mesh->Modify();Mesh->bAllowCPUAccess=Needed;Mesh->PostEditChange();FAssetCompilingManager::Get().FinishAllCompilation();Mesh->GetOutermost()->MarkPackageDirty();
+            FSavePackageArgs Args;Args.TopLevelFlags=RF_Public|RF_Standalone;Args.SaveFlags=SAVE_NoError;
+            if(!UPackage::SavePackage(Mesh->GetOutermost(),Mesh,*Filename,Args))return 1;
+            ++Updated;
+        }
+        UE_LOG(LogTemp,Display,TEXT("Propulsion mesh preparation: %d powered hull meshes retained, %d flags saved"),Retained,Updated);return 0;
+    }
+    if (FParse::Param(*Params, TEXT("SyncPropulsionFromDefinitions")))
+    {
+        const FString Directory=FPaths::ProjectContentDir()/TEXT("GameData/Ships");
+        auto* Catalog=NewObject<UDataTable>();
+        if(!UStarshatterShipDesignSubsystem::ImportJsonCatalog(*Catalog,Directory/TEXT("ships.json")))return 1;
+        auto* Parser=NewObject<UStarshatterShipDesignSubsystem>(NewObject<UGameInstance>());
+        auto* Parsed=NewObject<UDataTable>();Parsed->RowStruct=FShipDesign::StaticStruct();Parser->ShipDesignDataTable=Parsed;
+        TMap<FName,FShipDesign> Sources;
+        TArray<FString> Files;IFileManager::Get().FindFiles(Files,*(Directory/TEXT("*.def")),true,false);
+        for(const auto& File:Files)
+        {
+            Parsed->EmptyTable();Parser->LoadShipDesign(TCHAR_TO_UTF8(*(Directory/File)));
+            for(const auto& Pair:Parsed->GetRowMap())
+            {
+                const auto& Row=*reinterpret_cast<const FShipDesign*>(Pair.Value);
+                Sources.Add(Pair.Key,Row);Sources.Add(FName(*FPaths::GetBaseFilename(File)),Row);
+            }
+        }
+        int32 Updated=0;
+        for(const auto& Pair:Catalog->GetRowMap())
+        {
+            auto& Row=*reinterpret_cast<FShipDesign*>(Pair.Value);
+            const bool HasPorts=Row.Drive.ContainsByPredicate([](const FShipDrive& Drive){return !Drive.Ports.IsEmpty();}) ||
+                Row.Thruster.ContainsByPredicate([](const auto& Thruster){return !Thruster.Ports.IsEmpty();});
+            if(!HasPorts)continue;
+            const auto* Source=Sources.Find(Pair.Key);
+            if(!Source || Source->Model!=Row.Model)
+            {
+                UE_LOG(LogTemp,Error,TEXT("Propulsion migration has no matching DEF model for %s"),*Pair.Key.ToString());return 1;
+            }
+            if(Row.Drive.Num()>Source->Drive.Num() || Row.Thruster.Num()>Source->Thruster.Num())
+            {UE_LOG(LogTemp,Error,TEXT("Propulsion system count mismatch for %s"),*Pair.Key.ToString());return 1;}
+            for(int32 I=0;I<Source->Drive.Num();++I)
+                if(Row.Drive.IsValidIndex(I)){Row.Drive[I].Ports=Source->Drive[I].Ports;Row.Drive[I].Type=Source->Drive[I].Type;}else Row.Drive.Add(Source->Drive[I]);
+            for(int32 I=0;I<Source->Thruster.Num();++I)
+                if(Row.Thruster.IsValidIndex(I)){Row.Thruster[I].Ports=Source->Thruster[I].Ports;Row.Thruster[I].Type=Source->Thruster[I].Type;}else Row.Thruster.Add(Source->Thruster[I]);
+            if(Row.Navlight.IsEmpty() && !Source->Navlight.IsEmpty())Row.Navlight=Source->Navlight;
+            ++Updated;
+        }
+        FString Json;
+        if(!DesignTableJson::Export(*Catalog,Json) || !FFileHelper::SaveStringToFile(Json,*(Directory/TEXT("ships.json")),FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))return 1;
+        if(!SaveOutputTable(*Catalog,TEXT("DT_ShipDesign"),false))return 1;
+        UE_LOG(LogTemp,Display,TEXT("Propulsion catalog synchronized: %d rows; other ship data preserved"),Updated);
+        return 0;
+    }
     if (FParse::Param(*Params, TEXT("ExportShipJson")))
     {
         auto* Legacy = NewObject<UDataTable>();

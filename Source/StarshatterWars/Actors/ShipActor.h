@@ -78,6 +78,8 @@ struct FRuntimeThrusterFX
     FRotator Rotation = FRotator::ZeroRotator;
 
     float PortScale = 1.0f;
+    float FlareScale = 1.0f;
+    float TrailScale = 1.0f;
     float AudioMultiplier = 1.0f;
     float PresentedBurn = -1.0f;
     float PresentedPortScale = -1.0f;
@@ -552,7 +554,7 @@ public:
     bool bPropulsionPortsInModelUnits = false;
     FName ThrusterPortHullName;
     TArray<FVector> HullThrusterPortPositions;
-    FVector FitEmitterToHull(const FVector& LocalPosition, const FVector& LocalOutward) const;
+    FVector FitEmitterToHull(const FVector& LocalPosition, const FVector& LocalOutward);
     FVector RuntimeEmitterLocalPosition(const FVector& ImportedPosition, bool bInModelUnits = false) const;
     void BuildMainEnginesFromRuntime();
     void BuildMainEngineEffects(const Drive* MainDrive);

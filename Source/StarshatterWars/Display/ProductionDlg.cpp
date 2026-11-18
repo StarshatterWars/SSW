@@ -1,5 +1,7 @@
-#include "ProductionDlg.h"
+﻿#include "ProductionDlg.h"
 #include "BlueprintsDlg.h"
+#include "IndustryJobsPanel.h"
+#include "Widgets/SNullWidget.h"
 #include "ShipSystemIcon.h"
 #include "ReprocessingAI.h"
 
@@ -380,7 +382,8 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
     Screens->AddSlot()[Browser];
     Screens->AddSlot()[Factory];
     BlueprintBrowser = CreateWidget<UBlueprintsDlg>(GetOwningPlayer());
-    if (BlueprintBrowser) Screens->AddSlot()[BlueprintBrowser->TakeWidget()];
+    Screens->AddSlot()[BlueprintBrowser ? BlueprintBrowser->TakeWidget() : SNullWidget::NullWidget];
+    Screens->AddSlot()[MakePlayerIndustryJobsPanel(GetGameInstance())];
     return SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(8)
         [SNew(SHorizontalBox)
@@ -391,6 +394,10 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
             + SHorizontalBox::Slot().AutoWidth()
             [SNew(SButton).ToolTipText(INVTEXT("NPC blueprint catalogue and your blueprint library"))
                 .OnClicked_Lambda([Weak=TWeakPtr<SWidgetSwitcher>(Screens)]() { if (auto View=Weak.Pin(); View && View->GetNumWidgets()>2) View->SetActiveWidgetIndex(2); return FReply::Handled(); })
-                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Reference)]]]
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Reference)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(6,0,0,0)
+            [SNew(SButton).ToolTipText(INVTEXT("Your manufacturing jobs, progress and cancellation"))
+                .OnClicked_Lambda([Weak=TWeakPtr<SWidgetSwitcher>(Screens)]() { if(auto View=Weak.Pin())View->SetActiveWidgetIndex(3);return FReply::Handled(); })
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::MissionPackage)]]]
         + SVerticalBox::Slot().FillHeight(1)[Screens];
 }

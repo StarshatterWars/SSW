@@ -1,4 +1,4 @@
-#include "GameStructs_economy.h"
+﻿#include "GameStructs_economy.h"
 
 namespace
 {
@@ -193,6 +193,48 @@ FGuid FEconomyLedger::QueueBlueprintJob(FEconomyState& State, FName Owner, FName
     if (Id.IsValid()) { State.Jobs.Last().Blueprint = Blueprint; State.Jobs.Last().Runs = Runs; }
     return Id;
 }
+bool FEconomyLedger::CanStartJob(const FEconomyState& State, const FIndustryJob& Job, bool Operational, FText& Reason, bool CheckFacilitySlot)
+{
+    if (Job.State == EIndustryJobState::Completed || Job.State == EIndustryJobState::Cancelled)
+    { Reason = INVTEXT("This job has finished."); return false; }
+    if (!Operational) { Reason = INVTEXT("Facility is offline or unavailable."); return false; }
+    if (Job.State == EIndustryJobState::Running) { Reason = INVTEXT("Production in progress; output is delivered automatically."); return true; }
+    if (CheckFacilitySlot && State.Jobs.ContainsByPredicate([&Job](const auto& Other) { return Other.Id != Job.Id && Other.Facility == Job.Facility && Other.State == EIndustryJobState::Running; }))
+    { Reason = INVTEXT("Waiting for the facility's current job to finish."); return false; }
+    const auto* In = State.Inventories.Find(Job.Input); const auto* Out = State.Inventories.Find(Job.Output);
+    if (!HasAccess(In, Job.Owner) || !HasAccess(Out, Job.Owner) || Job.Input == Job.Output)
+    { Reason = INVTEXT("The job's input or output inventory is unavailable to its owner."); return false; }
+    if (!ValidateAmounts(Job.Materials) || !ValidateAmounts(Job.Products) || !Positive(Job.Duration))
+    { Reason = INVTEXT("The job has invalid material, product or time data."); return false; }
+    if (Job.Blueprint.IsValid())
+    {
+        const auto* BP = State.Blueprints.Find(Job.Blueprint);
+        if (!BP || BP->Owner != Job.Owner || BP->Recipe != Job.Recipe ||
+            (Job.Owner == Pilot() && (!State.BlueprintReceipts.Contains(Job.Blueprint) || !State.CommittedTransactions.Contains(State.BlueprintReceipts.FindRef(Job.Blueprint)))))
+        { Reason = INVTEXT("The required blueprint is unavailable."); return false; }
+        if (!BP->bOriginal && BP->RunsRemaining < Job.Runs)
+        { Reason = INVTEXT("The blueprint copy has insufficient remaining runs."); return false; }
+    }
+    for (const auto& Material : Job.Materials)
+    {
+        const auto* Stack = In->Items.FindByPredicate([&](const auto& Entry) { return Entry.Type == Material.Item; });
+        const double Free = Available(State, Job.Input, Material.Item);
+        if (!Stack || !FMath::IsNearlyEqual(Stack->UnitTonnes, Material.UnitTonnes) || Free + UE_SMALL_NUMBER < Material.Quantity)
+        { Reason = FText::Format(INVTEXT("INPUT: {0} — {1} required, {2} unreserved."), FText::FromName(Material.Item), FText::AsNumber(Material.Quantity), FText::AsNumber(Free)); return false; }
+    }
+    double OutputMass = 0;
+    for (const auto& Product : Job.Products)
+    {
+        OutputMass += Product.Quantity * Product.UnitTonnes;
+        const auto* Stack = Out->Items.FindByPredicate([&](const auto& Entry) { return Entry.Type == Product.Item; });
+        if (Stack && !FMath::IsNearlyEqual(Stack->UnitTonnes, Product.UnitTonnes))
+        { Reason = INVTEXT("The output inventory contains an incompatible product stack."); return false; }
+    }
+    const double FreeSpace = Out->CapacityTonnes - Used(*Out);
+    if (!FMath::IsFinite(OutputMass) || OutputMass > FreeSpace + UE_SMALL_NUMBER)
+    { Reason = FText::Format(INVTEXT("OUTPUT STORAGE: {0} t required, {1} t free."), FText::AsNumber(OutputMass), FText::AsNumber(FMath::Max(0.0, FreeSpace))); return false; }
+    Reason = INVTEXT("Ready to install. Materials are consumed when production begins; output is delivered automatically."); return true;
+}
 bool FEconomyLedger::CancelJob(FEconomyState& State, FName Owner, FGuid Id)
 {
     auto* Job = State.Jobs.FindByPredicate([Id](const auto& Entry) { return Entry.Id == Id; });
@@ -200,8 +242,9 @@ bool FEconomyLedger::CancelJob(FEconomyState& State, FName Owner, FGuid Id)
     if (Job->State == EIndustryJobState::Running)
     {
         // Inputs have been consumed. Cancellation releases output space, never manufactures a refund.
-        auto& Out = State.Inventories.FindChecked(Job->Output);
-        for (const auto& Product : Job->Products) Out.ReservedOutputTonnes = FMath::Max(0.0, Out.ReservedOutputTonnes - Product.Quantity * Product.UnitTonnes);
+        auto* Out = State.Inventories.Find(Job->Output);
+        if (!Out || Out->Owner != Owner) return false;
+        for (const auto& Product : Job->Products) Out->ReservedOutputTonnes = FMath::Max(0.0, Out->ReservedOutputTonnes - Product.Quantity * Product.UnitTonnes);
     }
     Job->State = EIndustryJobState::Cancelled; return true;
 }
@@ -215,29 +258,13 @@ int32 FEconomyLedger::AdvanceJobs(FEconomyState& State, double Seconds, TFunctio
         if (Job.State == EIndustryJobState::Completed || Job.State == EIndustryJobState::Cancelled || !Operational(Job.Facility)) continue;
         if (Job.State != EIndustryJobState::Running)
         {
-            const bool Busy = State.Jobs.ContainsByPredicate([&Job](const auto& Other)
-                { return Other.Id != Job.Id && Other.Facility == Job.Facility && Other.State == EIndustryJobState::Running; });
-            if (Busy) continue;
+            FText Reason;
+            if (!CanStartJob(State, Job, true, Reason)) { Job.State = EIndustryJobState::Blocked; continue; }
             auto* In = State.Inventories.Find(Job.Input); auto* Out = State.Inventories.Find(Job.Output);
-            bool Ready = HasAccess(In, Job.Owner) && HasAccess(Out, Job.Owner);
             auto* BP = Job.Blueprint.IsValid() ? State.Blueprints.Find(Job.Blueprint) : nullptr;
-            if (Job.Blueprint.IsValid()) Ready &= BP && BP->Owner == Job.Owner && BP->Recipe == Job.Recipe &&
-                (BP->bOriginal || BP->RunsRemaining >= Job.Runs);
             double OutputMass = 0;
-            for (const auto& Material : Job.Materials)
-            {
-                const auto* Stack = In ? Find(*In, Material.Item) : nullptr;
-                Ready &= Stack && FMath::IsNearlyEqual(Stack->UnitTonnes, Material.UnitTonnes) && Available(State, Job.Input, Material.Item) >= Material.Quantity;
-            }
-            for (const auto& Product : Job.Products)
-            {
-                OutputMass += Product.Quantity * Product.UnitTonnes;
-                const auto* Stack = Out ? Find(*Out, Product.Item) : nullptr;
-                Ready &= !Stack || FMath::IsNearlyEqual(Stack->UnitTonnes, Product.UnitTonnes);
-            }
-            Ready &= Out && Used(*Out) + OutputMass <= Out->CapacityTonnes;
-            if (!Ready) { Job.State = EIndustryJobState::Blocked; continue; }
-            for (const auto& Material : Job.Materials) Find(*In, Material.Item)->Quantity -= Material.Quantity;
+            for (const auto& Product : Job.Products) OutputMass += Product.Quantity * Product.UnitTonnes;
+            for (const auto& Material : Job.Materials) Find(*In, Material.Item)->Quantity = FMath::Max(0.0, Find(*In, Material.Item)->Quantity - Material.Quantity);
             if (BP && !BP->bOriginal) BP->RunsRemaining -= Job.Runs;
             for (const auto& Product : Job.Products)
                 if (!Find(*Out, Product.Item))

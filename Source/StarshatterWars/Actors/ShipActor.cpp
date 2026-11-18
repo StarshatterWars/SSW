@@ -22,6 +22,7 @@
 */
 
 #include "ShipActor.h"
+#include "NativeShipGeometry.h"
 #include "CollisionQueryParams.h"
 #include "Engine/HitResult.h"
 
@@ -2264,35 +2265,21 @@ void AShipActor::BuildNavLightsFromRuntime()
 
 }
 
-FVector AShipActor::FitEmitterToHull(const FVector& LocalPosition, const FVector& LocalOutward) const
+FVector AShipActor::FitEmitterToHull(const FVector& LocalPosition, const FVector& LocalOutward)
 {
     if (!HullMesh || !HullMesh->GetStaticMesh() || !VFXRoot || LocalOutward.IsNearlyZero())
         return LocalPosition;
-
-    const FTransform& Frame = VFXRoot->GetComponentTransform();
-    const FVector Position = Frame.TransformPosition(LocalPosition);
-    const FVector Outward = Frame.TransformVector(LocalOutward).GetSafeNormal();
-    const double Radius = HullMesh->Bounds.SphereRadius;
-    if (Outward.IsNearlyZero() || Radius <= UE_SMALL_NUMBER)
-        return LocalPosition;
-
-    // Search only around the authored mount and along the exhaust axis.
-    // Keep authored placements when the hull has no usable complex collision,
-    // or when the nearest hit belongs to a distant part of the ship.
-    const double SearchDistance = Radius * 0.12;
-    FHitResult Hit;
-    const FCollisionQueryParams Params(SCENE_QUERY_STAT(ShipEmitterMount), true);
-    const ECollisionEnabled::Type Collision = HullMesh->GetCollisionEnabled();
-    if (Collision == ECollisionEnabled::NoCollision)
-        HullMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-    const bool bHit = HullMesh->LineTraceComponent(Hit, Position + Outward * SearchDistance,
-        Position - Outward * SearchDistance, Params);
-    if (Collision == ECollisionEnabled::NoCollision)
-        HullMesh->SetCollisionEnabled(Collision);
-    if (!bHit || FVector::DotProduct(Hit.ImpactNormal, Outward) <= 0.05)
-        return LocalPosition;
-
-    return Frame.InverseTransformPosition(Hit.ImpactPoint + Outward * FMath::Max(0.01, Radius * 0.0001));
+    const FTransform& Frame=VFXRoot->GetComponentTransform();
+    const FVector Position=Frame.TransformPosition(LocalPosition);
+    const FVector Outward=Frame.TransformVector(LocalOutward).GetSafeNormal();
+    const double Radius=HullMesh->Bounds.SphereRadius;
+    if(Outward.IsNearlyZero() || Radius<=UE_SMALL_NUMBER)return LocalPosition;
+    // Query the same cooked triangles used by the simulation. This also works
+    // for collision-disabled preview/cutscene hulls, without changing physics state.
+    if(!NativeGeometry)NativeGeometry=MakeShared<FNativeShipGeometry>();
+    FVector Hit;
+    if(!NativeGeometry->ProjectHullPort(*this,Position,Outward,Radius*.30,Hit))return LocalPosition;
+    return Frame.InverseTransformPosition(Hit+Outward*FMath::Max(.01,Radius*.0001));
 }
 
 FVector AShipActor::RuntimeEmitterLocalPosition(const FVector& ImportedPosition, bool bInModelUnits) const
@@ -2378,6 +2365,7 @@ void AShipActor::ConfigurePropulsionAssets(const Drive* MainDrive)
 void AShipActor::BuildMainEngineEffects(const Drive* MainDrive)
 {
     ClearRuntimeMainEngines();
+    if (!bEnableMainEngineEmitters) return;
 
     if (!MainDrive)
     {
@@ -2877,6 +2865,7 @@ void AShipActor::BuildThrustersFromRuntime()
 void AShipActor::BuildThrusterEffects(const Thruster* RuntimeThruster)
 {
     ClearRuntimeThrusters();
+    if (!bEnableThrusterEmitters) return;
 
     if (!RuntimeThruster)
     {
@@ -2911,7 +2900,7 @@ void AShipActor::BuildThrusterEffects(const Thruster* RuntimeThruster)
         FX.Rotation = Port->Rotation;
         // These original DEFs specify exhaust direction by port key, without
         // explicit rotation fields. Derive the visual orientation only.
-        if (bLegacyEmitterCoordinates && Port->Rotation.IsNearlyZero())
+        if (Port->Rotation.IsNearlyZero())
         {
             switch (Port->Direction)
             {
@@ -2919,12 +2908,14 @@ void AShipActor::BuildThrusterEffects(const Thruster* RuntimeThruster)
             case EThrusterPortDir::AFT: FX.Rotation = FRotator(0,180,0); break;
             case EThrusterPortDir::TOP: FX.Rotation = FRotator(90,0,0); break;
             case EThrusterPortDir::BOTTOM: FX.Rotation = FRotator(-90,0,0); break;
-            case EThrusterPortDir::LEFT: FX.Rotation = FRotator(0,90,0); break;
-            case EThrusterPortDir::RIGHT: FX.Rotation = FRotator(0,-90,0); break;
+            case EThrusterPortDir::LEFT: FX.Rotation = FRotator(0,-90,0); break;
+            case EThrusterPortDir::RIGHT: FX.Rotation = FRotator(0,90,0); break;
             default: break;
             }
         }
         FX.PortScale = Port->PortScale;
+        FX.FlareScale = Port->FlareScale > 0 ? Port->FlareScale : Port->PortScale;
+        FX.TrailScale = Port->TrailScale > 0 ? Port->TrailScale : Port->PortScale;
         FX.AudioMultiplier = Port->AudioMultiplier;
         FX.RuntimePortIndex = PortIndex;
 
@@ -2934,7 +2925,7 @@ void AShipActor::BuildThrusterEffects(const Thruster* RuntimeThruster)
         if (NozzleMesh)
         {
             const FRotator ExhaustRotation = ConvertLegacyPortRotation(FX.Rotation);
-            const float Diameter = FMath::Clamp(Port->PortScale * 0.06f, 0.035f, 0.14f);
+            const float Diameter = FMath::Clamp(FMath::Max(FX.FlareScale,FX.TrailScale) * 0.06f, 0.035f, 0.14f);
             FX.Nozzle = NewObject<UStaticMeshComponent>(this,
                 MakeUniqueObjectName(this, UStaticMeshComponent::StaticClass(), TEXT("ThrusterNozzle")), RF_Transient);
             FX.Nozzle->SetupAttachment(VFXRoot);
@@ -3072,14 +3063,14 @@ void AShipActor::PresentThrusterEffects(float DriveBurn, const Thruster* Runtime
     {
         const int32 RuntimePortIndex = Entry.RuntimePortIndex;
         FRuntimeThrusterFX* FX = &Entry;
-        const bool bMainEngine = Entry.Direction == EThrusterPortDir::AFT;
+        // Main-drive exhaust has separate emitters; aft RCS jets are maneuvering ports too.
         const float Burn = RuntimeThruster
             ? FMath::Clamp(RuntimeThruster->GetThrusterBurn(RuntimePortIndex), 0.0f, 1.0f)
             : (PortBurns.IsValidIndex(RuntimePortIndex) ? PortBurns[RuntimePortIndex] / 255.0f : 0.0f);
 
         // Thruster::ExecTrans already resolves the Fire mask into Port->Burn.
         // Applying another directional test here suppressed rotational jets.
-        const float VisualBurn = bMainEngine ? FMath::Max(Burn, DriveBurn) : (bCullManeuveringJets ? 0.0f : Burn);
+        const float VisualBurn = bCullManeuveringJets ? 0.0f : Burn;
         const float DeadZone = 0.01f;
         const float VisualBurnFiltered = VisualBurn <= DeadZone ? 0.0f
             : FMath::Sqrt(FMath::GetMappedRangeValueClamped(
@@ -3106,14 +3097,14 @@ void AShipActor::PresentThrusterEffects(float DriveBurn, const Thruster* Runtime
 
         // The port scale already makes these plumes smaller than the main drive.
         // Keep the exhaust proportions readable after the hull's import scale.
-        const float Length = FMath::Lerp(0.35f, bMainEngine ? 2.0f : 1.5f, VisualBurnFiltered);
-        const float Width = FMath::Lerp(0.30f, bMainEngine ? 0.65f : 0.50f, VisualBurnFiltered);
-        const FVector RuntimeScale = bActive
-            ? FVector(Length, Width, Width) * FinalPortScale : FVector::ZeroVector;
+        const float Length = FMath::Lerp(0.35f, 1.5f, VisualBurnFiltered);
+        const float Width = FMath::Lerp(0.30f, 0.50f, VisualBurnFiltered);
+        const FVector PlumeShape(Length, Width, Width);
 
         if (FX->Flare)
         {
-            FX->Flare->SetRelativeScale3D(RuntimeScale);
+            const FVector EffectScale=bActive?PlumeShape*FX->FlareScale:FVector::ZeroVector;
+            FX->Flare->SetRelativeScale3D(EffectScale);
             FX->Flare->SetVisibility(bActive, true);
             FX->Flare->SetHiddenInGame(!bActive, true);
 
@@ -3124,11 +3115,11 @@ void AShipActor::PresentThrusterEffects(float DriveBurn, const Thruster* Runtime
 
             FX->Flare->SetFloatParameter(
                 TEXT("Length"),
-                RuntimeScale.X);
+                EffectScale.X);
 
             FX->Flare->SetFloatParameter(
                 TEXT("Width"),
-                RuntimeScale.Y);
+                EffectScale.Y);
 
             if (bActive)
             {
@@ -3145,7 +3136,8 @@ void AShipActor::PresentThrusterEffects(float DriveBurn, const Thruster* Runtime
 
         if (FX->Trail)
         {
-            FX->Trail->SetRelativeScale3D(RuntimeScale);
+            const FVector EffectScale=bActive?PlumeShape*FX->TrailScale:FVector::ZeroVector;
+            FX->Trail->SetRelativeScale3D(EffectScale);
             FX->Trail->SetVisibility(bActive, true);
             FX->Trail->SetHiddenInGame(!bActive, true);
 
@@ -3156,11 +3148,11 @@ void AShipActor::PresentThrusterEffects(float DriveBurn, const Thruster* Runtime
 
             FX->Trail->SetFloatParameter(
                 TEXT("Length"),
-                RuntimeScale.X);
+                EffectScale.X);
 
             FX->Trail->SetFloatParameter(
                 TEXT("Width"),
-                RuntimeScale.Y);
+                EffectScale.Y);
 
             if (bActive)
             {

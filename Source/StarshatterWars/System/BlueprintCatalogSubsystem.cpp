@@ -1,8 +1,9 @@
-#include "BlueprintCatalogSubsystem.h"
+﻿#include "BlueprintCatalogSubsystem.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "EconomyRuntime.h"
 #include "ManufacturingAI.h"
+#include "ReprocessingAI.h"
 #include "StationServices.h"
 #include "Ship.h"
 #include "Sim.h"
@@ -59,6 +60,7 @@ bool UBlueprintCatalogSubsystem::CanPurchase(FName Recipe, bool Original, FText&
     if (!Offer) { Reason = INVTEXT("Blueprint offer unavailable."); return false; }
     if (!DockedNPC()) { Reason = INVTEXT("Dock at an NPC base to purchase blueprints."); return false; }
     const auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if (!Players) { Reason = INVTEXT("Player data is unavailable."); return false; }
     const auto& Pilot = Players->GetPlayerInfo();
     const int64 Balance = Pilot.Economy.Wallets.FindRef(FEconomyLedger::Pilot()) + (Pilot.Economy.bLegacyWalletMigrated ? 0 : Pilot.InsuranceCredits);
     if (Balance < (Original ? Offer->OriginalPrice : Offer->CopyPrice)) { Reason = INVTEXT("Insufficient credits for this blueprint."); return false; }
@@ -74,28 +76,113 @@ bool UBlueprintCatalogSubsystem::Purchase(FName Recipe, bool Original, FText& Re
     { Players->GetMutablePlayerInfo() = Before; Reason = INVTEXT("Could not save the blueprint purchase. No credits were charged."); return false; }
     Reason = INVTEXT("Blueprint purchased from the NPC publisher and added to your library."); return true;
 }
-FGuid UBlueprintCatalogSubsystem::BeginPlayerJob(const FSSWProductionFacility& Site, FGuid Blueprint, int32 Runs, FText& Reason)
+bool UBlueprintCatalogSubsystem::QuotePlayerJob(const FEconomyState& State, const FSSWProductionFacility& Site,
+    const FSSWProductionRecipe& Recipe, FGuid Blueprint, int32 Runs, FPlayerIndustryQuote& Quote, FText& Reason)
 {
-    auto* Simulation = Sim::GetSim(); auto* Craft = Simulation ? Simulation->GetPlayerShip() : nullptr;
-    if (!DockedNPC() || !Craft || !Craft->GetCarrier() || Site.Facility != UTF8_TO_TCHAR(Craft->GetCarrier()->GetName()))
-    { Reason = INVTEXT("Dock at this production facility to install a job."); return {}; }
-    auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>(); auto& State = Players->GetEconomy();
-    const auto Before = State;
+    Quote = {};
     const auto* BP = State.Blueprints.Find(Blueprint);
-    if (!BP || BP->Owner != FEconomyLedger::Pilot() || BP->Recipe != Site.Recipe || !State.BlueprintReceipts.Contains(Blueprint))
-    { Reason = INVTEXT("Purchase the correct blueprint from an NPC publisher first."); return {}; }
+    if (!BP || BP->Owner != FEconomyLedger::Pilot() || BP->Recipe != Site.Recipe ||
+        !State.BlueprintReceipts.Contains(Blueprint) || !State.CommittedTransactions.Contains(State.BlueprintReceipts.FindRef(Blueprint)))
+    { Reason = INVTEXT("Purchase the correct blueprint from an NPC publisher first."); return false; }
+    if (Runs <= 0 || Runs > 1000000) { Reason = INVTEXT("Choose between 1 and 1,000,000 runs."); return false; }
+    if (!BP->bOriginal && BP->RunsRemaining < Runs) { Reason = INVTEXT("The blueprint copy has insufficient remaining runs."); return false; }
+    if (!FMath::IsFinite(BP->MaterialEfficiency) || BP->MaterialEfficiency < 0 || BP->MaterialEfficiency > .1 ||
+        !FMath::IsFinite(BP->TimeEfficiency) || BP->TimeEfficiency < 0 || BP->TimeEfficiency > .2)
+    { Reason = INVTEXT("The blueprint has invalid efficiency data."); return false; }
+    if (!ReprocessingAI::Calculate(Recipe).bValid) { Reason = INVTEXT("The facility recipe is invalid."); return false; }
+    Quote.Input = FEconomyRuntime::Warehouse(Site.System, Site.Facility, TEXT("Player Input"));
+    Quote.Output = FEconomyRuntime::Warehouse(Site.System, Site.Facility, TEXT("Player Output"));
+    // A preflight needs this facility's inventories/license, not a copy of the entire galaxy economy.
+    FEconomyState Candidate;
+    if (const auto* Inventory = State.Inventories.Find(Quote.Input)) Candidate.Inventories.Add(Quote.Input, *Inventory);
+    if (const auto* Inventory = State.Inventories.Find(Quote.Output)) Candidate.Inventories.Add(Quote.Output, *Inventory);
+    Candidate.Blueprints.Add(Blueprint, *BP);
+    Candidate.BlueprintReceipts.Add(Blueprint, State.BlueprintReceipts.FindRef(Blueprint));
+    Candidate.CommittedTransactions.Add(State.BlueprintReceipts.FindRef(Blueprint));
+    for (const auto& Pair : State.Reservations)
+        if (Pair.Value.Inventory == Quote.Input) Candidate.Reservations.Add(Pair.Key, Pair.Value);
+    for (const auto& Job : State.Jobs)
+        if (Job.Blueprint == Blueprint && Job.State != EIndustryJobState::Completed && Job.State != EIndustryJobState::Cancelled) Candidate.Jobs.Add(Job);
+    if (!FEconomyLedger::CreateInventory(Candidate, Quote.Input, FEconomyLedger::Pilot(), FName(*Site.System), Site.CapacityTonnes) ||
+        !FEconomyLedger::CreateInventory(Candidate, Quote.Output, FEconomyLedger::Pilot(), FName(*Site.System), Site.CapacityTonnes))
+    { Reason = INVTEXT("The facility input or output inventory is unavailable."); return false; }
+    TArray<FCommodityAmount> Materials = Recipe.Inputs, Products;
+    const double Factor = Runs * (1.0 - BP->MaterialEfficiency);
+    if (Materials.IsEmpty())
+    {
+        double Needed = Recipe.InputTonnes * Factor;
+        const auto& Inventory = Candidate.Inventories.FindChecked(Quote.Input);
+        for (const auto& Stack : Inventory.Items)
+        {
+            const bool Accepted = Recipe.Minerals.ContainsByPredicate([&](ESSWMineral Mineral)
+            { return DataTableUtils::MakeValidName(StaticEnum<ESSWMineral>()->GetNameStringByValue(static_cast<int64>(Mineral))) == Stack.Type; });
+            if (!Accepted || Stack.UnitTonnes != 1) continue;
+            const double Amount = FMath::Min(Needed, FEconomyLedger::Available(Candidate, Quote.Input, Stack.Type));
+            if (Amount <= 0) continue;
+            FCommodityAmount Material; Material.Item = Stack.Type; Material.Quantity = Amount / Factor;
+            Materials.Add(Material); Needed -= Amount;
+            if (Needed <= UE_SMALL_NUMBER) break;
+        }
+        if (Needed > UE_SMALL_NUMBER) { Reason = FText::Format(INVTEXT("Deliver {0} more tonnes of accepted, unreserved ore to Player Input."), FText::AsNumber(Needed)); return false; }
+    }
+    FCommodityAmount Product;
+    Product.Item = DataTableUtils::MakeValidName(Recipe.CargoItem.IsEmpty() ? Recipe.OutputDisplayName : Recipe.CargoItem);
+    Product.Quantity = Recipe.OutputQuantity > 0 ? Recipe.OutputQuantity : Recipe.OutputTonnes;
+    Product.UnitTonnes = Product.Quantity > 0 ? Recipe.OutputTonnes / Product.Quantity : 0;
+    Products.Add(Product);
+    const FGuid Id = FEconomyLedger::QueueBlueprintJob(Candidate, FEconomyLedger::Pilot(), FName(*Site.Facility), Quote.Input, Quote.Output,
+        Blueprint, Runs, Materials, Products, Recipe.SecondsPerBatch);
+    if (!Id.IsValid()) { Reason = INVTEXT("The blueprint is busy or its recipe and inventories are incompatible."); return false; }
+    const auto& Job = Candidate.Jobs.Last();
+    Quote.Materials = Job.Materials; Quote.Products = Job.Products; Quote.Duration = Job.Duration;
+    if (!FEconomyLedger::CanStartJob(Candidate, Job, true, Reason, false)) return false;
+    if (State.Jobs.ContainsByPredicate([&Site](const auto& Existing) { return Existing.Facility == FName(*Site.Facility) && Existing.State == EIndustryJobState::Running; }))
+        Reason = INVTEXT("Ready to queue. This facility is busy; your job will start when its current batch finishes.");
+    return true;
+}
+bool UBlueprintCatalogSubsystem::CanBeginPlayerJob(const FSSWProductionFacility& Site, FGuid Blueprint, int32 Runs,
+    FPlayerIndustryQuote& Quote, FText& Reason) const
+{
+    const auto* Local = FStationServices::Facility();
+    if (!DockedNPC() || !Local || Local->Facility != Site.Facility || Local->System != Site.System || Local->Recipe != Site.Recipe)
+    { Reason = INVTEXT("Dock at this production facility to install a job."); return false; }
+    const auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
     const auto* Table = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionRecipes.DT_ProductionRecipes"));
     const auto* Recipe = Table ? Table->FindRow<FSSWProductionRecipe>(Site.Recipe, TEXT("Player industry"), false) : nullptr;
-    if (!Recipe) return {};
-    const FName Input = FEconomyRuntime::Warehouse(Site.System, Site.Facility, TEXT("Player Input"));
-    const FName Output = FEconomyRuntime::Warehouse(Site.System, Site.Facility, TEXT("Player Output"));
-    FEconomyLedger::CreateInventory(State, Input, FEconomyLedger::Pilot(), FName(*Site.System), Site.CapacityTonnes);
-    FEconomyLedger::CreateInventory(State, Output, FEconomyLedger::Pilot(), FName(*Site.System), Site.CapacityTonnes);
-    TArray<FCommodityAmount> Materials, Products;
-    if (!ManufacturingAI::BuildBatch(State, Input, *Recipe, Materials, Products))
-    { Reason = INVTEXT("Deliver every required material to the facility input inventory first."); return {}; }
-    const FGuid Id = FEconomyLedger::QueueBlueprintJob(State, FEconomyLedger::Pilot(), FName(*Site.Facility), Input, Output, Blueprint, Runs, Materials, Products, Recipe->SecondsPerBatch);
-    if (!Id.IsValid()) { Reason = INVTEXT("Blueprint is busy or has insufficient licensed runs."); return {}; }
-    if (!Players->SaveActivePlayerProgress()) { State = Before; Reason = INVTEXT("Could not save the job. No materials were consumed."); return {}; }
-    Reason = INVTEXT("Manufacturing job installed."); return Id;
+    if (!Players || !Recipe) { Reason = INVTEXT("Player industry data is unavailable."); return false; }
+    return QuotePlayerJob(Players->GetPlayerInfo().Economy, Site, *Recipe, Blueprint, Runs, Quote, Reason);
+}
+FGuid UBlueprintCatalogSubsystem::BeginPlayerJob(const FSSWProductionFacility& Site, FGuid Blueprint, int32 Runs, FText& Reason)
+{
+    FPlayerIndustryQuote Quote;
+    if (!CanBeginPlayerJob(Site, Blueprint, Runs, Quote, Reason)) return {};
+    auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    const auto Before = Players->GetPlayerInfo(); auto& State = Players->GetEconomy();
+    FEconomyLedger::CreateInventory(State, Quote.Input, FEconomyLedger::Pilot(), FName(*Site.System), Site.CapacityTonnes);
+    FEconomyLedger::CreateInventory(State, Quote.Output, FEconomyLedger::Pilot(), FName(*Site.System), Site.CapacityTonnes);
+    // QueueBlueprintJob applies efficiency and runs once. Recover per-run nominal inputs from the validated preview.
+    const auto& BP = State.Blueprints.FindChecked(Blueprint);
+    auto Materials = Quote.Materials; auto Products = Quote.Products;
+    const double MaterialFactor = Runs * (1.0 - BP.MaterialEfficiency);
+    const double TimeFactor = Runs * (1.0 - BP.TimeEfficiency);
+    for (auto& Amount : Materials) Amount.Quantity /= MaterialFactor;
+    for (auto& Amount : Products) Amount.Quantity /= Runs;
+    const FGuid Id = FEconomyLedger::QueueBlueprintJob(State, FEconomyLedger::Pilot(), FName(*Site.Facility), Quote.Input, Quote.Output,
+        Blueprint, Runs, Materials, Products, Quote.Duration / TimeFactor);
+    if (!Id.IsValid() || !Players->SaveActivePlayerProgress())
+    { Players->GetMutablePlayerInfo() = Before; Reason = INVTEXT("Could not save the job. No materials or licensed runs were consumed."); return {}; }
+    Reason = INVTEXT("Manufacturing job installed. Output is delivered automatically."); return Id;
+}
+bool UBlueprintCatalogSubsystem::CancelPlayerJob(FGuid Id, FText& Reason)
+{
+    auto* Simulation = Sim::GetSim(); const auto* Craft = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if (!DockedNPC() || !Players || !Craft || !Craft->GetCarrier()) { Reason = INVTEXT("Dock at the job's facility to cancel it."); return false; }
+    const auto Before = Players->GetPlayerInfo(); auto& State = Players->GetEconomy();
+    const auto* Job = State.Jobs.FindByPredicate([Id](const auto& Entry) { return Entry.Id == Id; });
+    if (!Job || Job->Owner != FEconomyLedger::Pilot() || Job->Facility != FName(UTF8_TO_TCHAR(Craft->GetCarrier()->GetName())))
+    { Players->GetMutablePlayerInfo() = Before; Reason = INVTEXT("Select your own job at this docked facility."); return false; }
+    if (!FEconomyLedger::CancelJob(State, FEconomyLedger::Pilot(), Id) || !Players->SaveActivePlayerProgress())
+    { Players->GetMutablePlayerInfo() = Before; Reason = INVTEXT("The job could not be cancelled and saved."); return false; }
+    Reason = INVTEXT("Job cancelled. Materials and licensed runs already consumed by a running job are not refunded."); return true;
 }

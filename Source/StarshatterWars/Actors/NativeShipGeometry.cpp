@@ -112,3 +112,33 @@ int32 FNativeShipGeometry::Overlap(const AShipActor& Actor,const Camera& Frame,F
     if(!A || !B) return -1;
     return MeshCollision::Overlap(*A,PartPose(Actor,*Actor.HullMesh,Frame),*B,PartPose(OtherActor,*OtherActor.HullMesh,OtherFrame))?1:0;
 }
+
+TSharedPtr<SimModel> FNativeShipGeometry::PortModel(UStaticMesh* Mesh)
+{
+    if(!Mesh)return {};
+    if(auto* Cached=PortModels.Find(Mesh))return *Cached;
+    TSharedPtr<SimModel> Result;
+    const auto* Render=Mesh->GetRenderData();
+    if(Render && Render->LODResources.Num() && (GIsEditor || Mesh->bAllowCPUAccess))
+    {
+        const auto& LOD=Render->LODResources[0];TArray<FVector> Vertices;TArray<int32> Indices;
+        for(uint32 I=0;I<LOD.VertexBuffers.PositionVertexBuffer.GetNumVertices();++I)
+            Vertices.Add(FVector(LOD.VertexBuffers.PositionVertexBuffer.VertexPosition(I)));
+        for(int32 I=0;I<LOD.IndexBuffer.GetNumIndices();++I)Indices.Add(LOD.IndexBuffer.GetIndex(I));
+        if(!Vertices.IsEmpty() && !Indices.IsEmpty()){Result=MakeShared<SimModel>();AddFaces(*Result,Vertices,Indices);}
+    }
+    PortModels.Add(Mesh,Result);return Result;
+}
+bool FNativeShipGeometry::ProjectHullPort(const AShipActor& Actor,const FVector& Position,const FVector& Outward,double Distance,FVector& Hit)
+{
+    auto Data=Actor.HullMesh?PortModel(Actor.HullMesh->GetStaticMesh()):TSharedPtr<SimModel>();
+    if(!Data || Outward.IsNearlyZero() || Distance<=0)return false;
+    Poly* Polygon=nullptr;
+    const FTransform Pose=Actor.HullMesh->GetComponentTransform();
+    FVector LocalHit;
+    // Preserve the world-distance ray parameter under uniform/non-uniform hull scale.
+    if(!MeshCollision::Ray(*Data,FTransform::Identity,Pose.InverseTransformPosition(Position+Outward*Distance),
+        Pose.InverseTransformVector(-Outward),Distance*2,true,LocalHit,Polygon))return false;
+    Hit=Pose.TransformPosition(LocalHit);
+    return FVector::Distance(Hit,Position)<=Distance+.01;
+}

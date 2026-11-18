@@ -36,15 +36,30 @@ def encoder(explicit):
         raise SystemExit("Supply --ffmpeg PATH or install imageio-ffmpeg into Tools/Cutscenes/_deps") from exc
 
 
+def select_video_encoder(ffmpeg, requested):
+    hardware = ["-c:v", "h264_nvenc", "-preset", "p7", "-tune", "hq", "-rc", "vbr", "-cq", "18", "-b:v", "0", "-spatial-aq", "1", "-temporal-aq", "1"]
+    if requested != "cpu":
+        probe = subprocess.run([ffmpeg, "-hide_banner", "-loglevel", "error", "-f", "lavfi", "-i", "color=black:s=1920x1080:r=30", "-frames:v", "1", *hardware, "-f", "null", "-"], capture_output=True, text=True, timeout=20)
+        if probe.returncode == 0:
+            return "h264_nvenc", hardware
+        if requested == "nvenc":
+            raise SystemExit("NVIDIA video encoding could not initialize: " + probe.stderr[:500])
+        print("NVIDIA video encoding unavailable; using CPU encoder.", flush=True)
+    return "libx264", ["-c:v", "libx264", "-preset", "fast", "-crf", "18"]
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--campaign", type=int, default=1)
     parser.add_argument("--scene", default="Intro")
     parser.add_argument("--all", action="store_true")
+    parser.add_argument("--skip-existing", action="store_true", help="Resume only exports from this renderer build and unchanged scene definition")
+    parser.add_argument("--continue-on-error", action="store_true", help="Finish other scenes and report all failures")
     parser.add_argument("--list", action="store_true")
     parser.add_argument("--visible", action="store_true", help="Show the separate renderer window for debugging")
     parser.add_argument("--editor", default=r"C:\Program Files\Epic Games\UE_5.7\Engine\Binaries\Win64\UnrealEditor.exe")
     parser.add_argument("--ffmpeg")
+    parser.add_argument("--video-encoder", choices=["auto", "cpu", "nvenc"], default="auto")
     parser.add_argument("--fps", type=int, choices=range(24, 61), default=30)
     parser.add_argument("--timeout", type=int, default=600)
     args = parser.parse_args()
@@ -57,49 +72,81 @@ def main():
     if not chosen:
         raise SystemExit("Scene not found; use --list")
     ffmpeg = encoder(args.ffmpeg)
+    args.selected_encoder, args.encoder_options = select_video_encoder(ffmpeg, args.video_encoder)
+    print("Video encoder: " + args.selected_encoder, flush=True)
+    module = ROOT / "Binaries/Win64/UnrealEditor-StarshatterWars.dll"
+    build_hash = hashlib.sha256(module.read_bytes() + (ROOT / "Content/GameData/Ships/ships.json").read_bytes()).hexdigest()
+    results = []
+    summary = ROOT / "Saved/CutsceneRenders/export-summary.json"
     for number, scene, source in chosen:
-        safe = re.sub(r'[^\w. -]', '_', scene)
-        run = ROOT / "Saved/CutsceneRenders" / f"Campaign{number:02d}" / safe / time.strftime("%Y%m%d_%H%M%S")
-        run.mkdir(parents=True, exist_ok=False)
-        command = [args.editor, str(ROOT / "StarshatterWars.uproject"), "-game", "-windowed", "-ResX=1920", "-ResY=1080", "-ForceRes", "-nosplash", "-DisableAllScreenMessages", "-SSWLogging", f"-SSWRenderScene={scene}", f"-SSWRenderCampaign={number}", f"-SSWRenderOutput={run.as_posix()}", f"-SSWRenderFPS={args.fps}", f"-UserDir={(run / 'Profile').as_posix()}/", "-ini:Engine:[OnlineSubsystem]:DefaultPlatformService=NULL", "-ini:Game:[/Script/StarshatterWars.SSWDiagnosticsSettings]:bRequirePlatformSignIn=False", f"-abslog={(run / 'render.log').as_posix()}"]
-        if not args.visible:
-            command.append("-RenderOffscreen")
-        print(f"Recording Campaign {number:02d} / {scene}", flush=True)
-        with (run / "process.log").open("w", encoding="utf-8") as output:
-            subprocess.run(command, stdout=output, stderr=subprocess.STDOUT, timeout=args.timeout, check=True)
-        metadata_path = run / "capture.json"
-        if not metadata_path.is_file():
-            raise SystemExit(f"Renderer did not complete the original scene. Check {run / 'render.log'}")
-        metadata = json.loads(metadata_path.read_text(encoding="utf-8-sig"))
-        frames = sorted(run.glob("frame_*.png"))
-        audio = run / "audio.wav"
-        if len(frames) < args.fps or not audio.is_file() or audio.stat().st_size <= 44:
-            raise SystemExit(f"Incomplete picture/audio capture: {run}")
-        duration = float(metadata["Duration"])
-        rate = int(metadata["FrameRate"])
-        frame_numbers = [int(re.search(r'(\d+)\.png$', f.name)[1]) for f in frames]
-        # Real-time capture may skip frame numbers. Preserve those elapsed times rather than speeding up the scene.
-        lines = ["ffconcat version 1.0"]
-        for index, frame in enumerate(frames):
-            start = frame_numbers[index] / rate
-            end = frame_numbers[index + 1] / rate if index + 1 < len(frames) else duration
-            if start >= duration:
-                break
-            filename = frame.as_posix().replace("'", "'\\''")
-            lines += [f"file '{filename}'", f"duration {max(1/rate, end-start):.9f}"]
-        lines.append(f"file '{frames[-1].as_posix()}'")
-        playlist = run / "frames.ffconcat"
-        playlist.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        destination = ROOT / "Content/Movies" / f"Campaign{number:02d}" / (safe + ".mp4")
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        temporary = run / "encoded.mp4"
-        subprocess.run([ffmpeg, "-hide_banner", "-loglevel", "warning", "-y", "-f", "concat", "-safe", "0", "-i", str(playlist), "-i", str(audio), "-map", "0:v:0", "-map", "1:a:0", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-r", str(rate), "-fps_mode", "cfr", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-t", str(duration), str(temporary)], check=True)
-        subprocess.run([ffmpeg, "-hide_banner", "-loglevel", "error", "-i", str(temporary), "-f", "null", "-"], check=True)
-        temporary.replace(destination)
-        metadata.update({"campaign": number, "source_def": str(source), "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(), "mp4_sha256": hashlib.sha256(destination.read_bytes()).hexdigest(), "captured_frames": len(frames), "render_directory": str(run)})
-        destination.with_suffix(".render.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
-        print(f"Exported {destination} ({duration:.2f}s, {len(frames)} frames)", flush=True)
+        destination = ROOT / "Content/Movies" / f"Campaign{number:02d}" / (re.sub(r'[^\w. -]', '_', scene) + ".mp4")
+        stamp = destination.with_suffix(".render.json")
+        if args.skip_existing and destination.is_file() and stamp.is_file():
+            record = json.loads(stamp.read_text(encoding="utf-8-sig"))
+            if record.get("render_inputs_sha256") == build_hash and record.get("source_sha256") == hashlib.sha256(source.read_bytes()).hexdigest() and record.get("mp4_sha256") == hashlib.sha256(destination.read_bytes()).hexdigest():
+                print(f"Verified existing Campaign {number:02d} / {scene}", flush=True)
+                results.append({"campaign":number,"scene":scene,"status":"verified-existing"})
+                continue
+        try:
+            render_scene(args, ffmpeg, number, scene, source, build_hash)
+            results.append({"campaign":number,"scene":scene,"status":"exported"})
+        except (Exception, SystemExit) as error:
+            results.append({"campaign":number,"scene":scene,"status":"failed","error":str(error)})
+            print(f"FAILED Campaign {number:02d} / {scene}: {error}", flush=True)
+            if not args.continue_on_error:
+                summary.parent.mkdir(parents=True,exist_ok=True)
+                summary.write_text(json.dumps(results,indent=2),encoding="utf-8")
+                raise
+        summary.parent.mkdir(parents=True,exist_ok=True)
+        summary.write_text(json.dumps(results,indent=2),encoding="utf-8")
+    summary.parent.mkdir(parents=True,exist_ok=True)
+    summary.write_text(json.dumps(results,indent=2),encoding="utf-8")
+    if any(item["status"]=="failed" for item in results):
+        raise SystemExit("Some scenes failed; see Saved/CutsceneRenders/export-summary.json")
 
+
+def render_scene(args, ffmpeg, number, scene, source, build_hash):
+    safe = re.sub(r'[^\w. -]', '_', scene)
+    run = ROOT / "Saved/CutsceneRenders" / f"Campaign{number:02d}" / safe / time.strftime("%Y%m%d_%H%M%S")
+    run.mkdir(parents=True, exist_ok=False)
+    command = [args.editor, str(ROOT / "StarshatterWars.uproject"), "-game", "-windowed", "-ResX=1920", "-ResY=1080", "-ForceRes", "-nosplash", "-DisableAllScreenMessages", "-SSWLogging", f"-SSWRenderScene={scene}", f"-SSWRenderCampaign={number}", f"-SSWRenderOutput={run.as_posix()}", f"-SSWRenderFPS={args.fps}", f"-UserDir={(run / 'Profile').as_posix()}/", "-ini:Engine:[OnlineSubsystem]:DefaultPlatformService=NULL", "-ini:Game:[/Script/StarshatterWars.SSWDiagnosticsSettings]:bRequirePlatformSignIn=False", f"-abslog={(run / 'render.log').as_posix()}"]
+    if not args.visible:
+        command.append("-RenderOffscreen")
+    print(f"Recording Campaign {number:02d} / {scene}", flush=True)
+    with (run / "process.log").open("w", encoding="utf-8") as output:
+        subprocess.run(command, stdout=output, stderr=subprocess.STDOUT, timeout=args.timeout, check=True)
+    metadata_path = run / "capture.json"
+    if not metadata_path.is_file():
+        raise SystemExit(f"Renderer did not complete the original scene. Check {run / 'render.log'}")
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8-sig"))
+    frames = sorted(run.glob("frame_*.png"))
+    audio = run / "audio.wav"
+    if len(frames) < args.fps or not audio.is_file() or audio.stat().st_size <= 44:
+        raise SystemExit(f"Incomplete picture/audio capture: {run}")
+    duration = float(metadata["Duration"])
+    rate = int(metadata["FrameRate"])
+    frame_numbers = [int(re.search(r'(\d+)\.png$', f.name)[1]) for f in frames]
+    # Real-time capture may skip frame numbers. Preserve those elapsed times rather than speeding up the scene.
+    lines = ["ffconcat version 1.0"]
+    for index, frame in enumerate(frames):
+        start = frame_numbers[index] / rate
+        end = frame_numbers[index + 1] / rate if index + 1 < len(frames) else duration
+        if start >= duration:
+            break
+        filename = frame.as_posix().replace("'", "'\\''")
+        lines += [f"file '{filename}'", f"duration {max(1/rate, end-start):.9f}"]
+    lines.append(f"file '{frames[-1].as_posix()}'")
+    playlist = run / "frames.ffconcat"
+    playlist.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    destination = ROOT / "Content/Movies" / f"Campaign{number:02d}" / (safe + ".mp4")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = run / "encoded.mp4"
+    subprocess.run([ffmpeg, "-hide_banner", "-loglevel", "warning", "-y", "-f", "concat", "-safe", "0", "-i", str(playlist), "-i", str(audio), "-map", "0:v:0", "-map", "1:a:0", *args.encoder_options, "-pix_fmt", "yuv420p", "-r", str(rate), "-fps_mode", "cfr", "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-t", str(duration), "-stats_period", "2", "-progress", str(run / "encode-progress.txt"), str(temporary)], check=True)
+    subprocess.run([ffmpeg, "-hide_banner", "-loglevel", "error", "-i", str(temporary), "-f", "null", "-"], check=True)
+    temporary.replace(destination)
+    metadata.update({"video_encoder": args.selected_encoder, "render_inputs_sha256": build_hash, "campaign": number, "source_def": str(source), "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(), "mp4_sha256": hashlib.sha256(destination.read_bytes()).hexdigest(), "captured_frames": len(frames), "render_directory": str(run)})
+    destination.with_suffix(".render.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+    print(f"Exported {destination} ({duration:.2f}s, {len(frames)} frames)", flush=True)
 
 if __name__ == "__main__":
     main()

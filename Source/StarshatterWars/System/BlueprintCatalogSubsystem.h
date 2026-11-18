@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "GameStructs_economy.h"
 #include "GameStructs_products.h"
@@ -14,6 +14,13 @@ struct FBlueprintOffer
     UPROPERTY(EditAnywhere, BlueprintReadOnly) int64 CopyPrice = 0;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) int32 CopyRuns = 10;
 };
+// Read-only installation preview; amounts already include runs and blueprint efficiencies.
+struct FPlayerIndustryQuote
+{
+    FName Input, Output;
+    TArray<FCommodityAmount> Materials, Products;
+    double Duration = 0;
+};
 UCLASS()
 class STARSHATTERWARS_API UBlueprintCatalogSubsystem : public UGameInstanceSubsystem
 {
@@ -24,6 +31,9 @@ public:
     const TMap<FName, FBlueprintOffer>& GetOffers() const { return Offers; }
     bool CanPurchase(FName Recipe, bool bOriginal, FText& Reason) const;
     bool Purchase(FName Recipe, bool bOriginal, FText& Reason);
+    bool CanBeginPlayerJob(const FSSWProductionFacility&, FGuid Blueprint, int32 Runs, FPlayerIndustryQuote&, FText& Reason) const;
+    static bool QuotePlayerJob(const FEconomyState&, const FSSWProductionFacility&, const FSSWProductionRecipe&, FGuid Blueprint, int32 Runs, FPlayerIndustryQuote&, FText& Reason);
+    bool CancelPlayerJob(FGuid Job, FText& Reason);
     FGuid BeginPlayerJob(const FSSWProductionFacility&, FGuid Blueprint, int32 Runs, FText& Reason);
     static FGuid PurchaseLicense(FEconomyState&, const FBlueprintOffer&, bool bOriginal);
 private:

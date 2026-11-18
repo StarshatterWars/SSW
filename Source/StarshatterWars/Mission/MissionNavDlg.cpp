@@ -669,7 +669,7 @@ FString UMissionNavDlg::BuildGalaxySystemDetailText(const FString& InSystemName)
     const TArray<FString> Route =
         FindShortestGalaxyRoute(CurrentMissionSystemName, InSystemName);
 
-    const int32 JumpCount = Route.Num() > 0 ? Route.Num() - 1 : 0;
+    const FString JumpCount = Route.IsEmpty() ? TEXT("UNREACHABLE") : FString::FromInt(Route.Num() - 1);
     const FString IffText = FString::Printf(TEXT("%d"), FoundSystem->GetAffiliation());
 
     const TArray<FString> LinkedNames = GetRuntimeLinkedSystemNames(FoundSystem);
@@ -683,14 +683,14 @@ FString UMissionNavDlg::BuildGalaxySystemDetailText(const FString& InSystemName)
     const FVector SystemLoc = FoundSystem->GetLocation();
 
     return FString::Printf(
-        TEXT("%s\n\nTYPE: STAR SYSTEM\nIFF: %s\nLOCATION: X %.0f  Y %.0f  Z %.0f\nLINKS: %d\nJUMPS FROM MISSION: %d\nCONNECTED TO: %s\nRADIUS: %.0f"),
+        TEXT("%s\n\nTYPE: STAR SYSTEM\nIFF: %s\nLOCATION: X %.0f  Y %.0f  Z %.0f\nLINKS: %d\nJUMPS FROM MISSION: %s\nCONNECTED TO: %s\nRADIUS: %.0f"),
         ANSI_TO_TCHAR(FoundSystem->GetName()),
         *IffText,
         SystemLoc.X,
         SystemLoc.Y,
         SystemLoc.Z,
         LinkedNames.Num(),
-        JumpCount,
+        *JumpCount,
         *LinkText,
         FoundSystem->GetRadius());
 }

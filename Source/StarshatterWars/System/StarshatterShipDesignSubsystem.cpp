@@ -1008,35 +1008,13 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		return;
 	}
 
-    // These visual actors remove the imported design scale before applying
-    // their hull transform. Normalize their FX ports consistently at import.
-    // Apply that scale in the normal startup parse as well as editor imports:
-    // RuntimeEmitterLocalPosition removes it before applying the hull transform.
-    // Keep every other system location, ship scale, and design unchanged.
-    if (ShipName.Equals(TEXT("Falcon"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("Zodiac"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("IM3500"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("IM2800"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("IM1906"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("IM1912"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("Transport"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("QShip"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("Avenger"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("Cobra"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("Intruder"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("Jackal"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("Raptor"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("Razor"), ESearchCase::IgnoreCase) ||
-        ShipName.Equals(TEXT("Viper"), ESearchCase::IgnoreCase))
-    {
-        const float PortScale = LocalScale > 0.f ? LocalScale : 1.f;
-        for (auto& Drive : NewShipDesign.Drive)
-            for (auto& Port : Drive.Ports)
-                Port.Location *= PortScale;
-        for (auto& Thruster : NewShipDesign.Thruster)
-            for (auto& Port : Thruster.Ports)
-                Port.Location *= PortScale;
-    }
+    // Propulsion ports use scaled ship-local coordinates in every catalog row.
+    // Presentation removes this scale once, then applies the actual hull hierarchy.
+    const float PortScale = LocalScale > 0.f ? LocalScale : 1.f;
+    for (auto& Drive : NewShipDesign.Drive)
+        for (auto& Port : Drive.Ports) Port.Location *= PortScale;
+    for (auto& Thruster : NewShipDesign.Thruster)
+        for (auto& Port : Thruster.Ports) Port.Location *= PortScale;
 
 	const FName CleanRowName(*ShipName);
 

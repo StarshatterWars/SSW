@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "CoreMinimal.h"
 #include "GameStructs_contractstate.h"
 #include "GameStructs_economy.generated.h"
@@ -135,6 +135,8 @@ public:
     static FGuid GrantBlueprint(FEconomyState&, FName Owner, FName Recipe, bool bOriginal, int32 Runs, double MaterialEfficiency = 0, double TimeEfficiency = 0);
     static FGuid QueueBlueprintJob(FEconomyState&, FName Owner, FName Facility, FName Input, FName Output,
         FGuid Blueprint, int32 Runs, const TArray<FCommodityAmount>& Materials, const TArray<FCommodityAmount>& Products, double Duration);
+    // Shared read-only preflight for installation, job UI and authoritative processing.
+    static bool CanStartJob(const FEconomyState&, const FIndustryJob&, bool bOperational, FText& Reason, bool bCheckFacilitySlot = true);
     static bool CancelJob(FEconomyState&, FName Owner, FGuid Id);
     static int32 AdvanceJobs(FEconomyState&, double Seconds, TFunctionRef<bool(FName)> Operational);
     static double SystemQuantity(const FEconomyState&, FName System, FName Item);

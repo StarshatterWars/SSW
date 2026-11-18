@@ -80,6 +80,7 @@ public:
     void DebugDump(const FString& Tag = TEXT("")) const;
 
 private:
+    bool RecoverPlayerProgress() const;
     UPlayerSaveIndexGame* ReadPlayerIndex(bool bImportLegacy) const;
     bool WritePlayerIndex(UPlayerSaveIndexGame* Index) const;
     bool IsManagedPlayerSlot(const FString& SavedSlot) const;

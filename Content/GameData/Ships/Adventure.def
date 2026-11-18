@@ -70,11 +70,30 @@ drive: {
 }
 
 thruster: {
+   type: Plasma,
+
    design:           Thruster,
 
    loc:              (0, 0, 128),
    size:             24,
    hull_factor:      0.3
+
+   port_fore: { name: "RCS_fore_01", loc:(93.5987,28.5094,763.9987), rotation:(0,0,0), fire:0x0044, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_fore: { name: "RCS_fore_02", loc:(-92.5776,28.5094,763.9987), rotation:(0,0,0), fire:0x0084, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_aft: { name: "RCS_aft_03", loc:(83.6817,63.5423,-948.8919), rotation:(0,0,180), fire:0x0288, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_aft: { name: "RCS_aft_04", loc:(-83.4142,63.4832,-948.8162), rotation:(0,0,180), fire:0x0248, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_left: { name: "RCS_left_05", loc:(239.7189,13.2144,-334.3773), rotation:(0,0,-90), fire:0x0441, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_left: { name: "RCS_left_06", loc:(281.1620,23.7319,146.0923), rotation:(0,0,-90), fire:0x0481, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_right: { name: "RCS_right_07", loc:(-203.4902,13.2144,-334.2441), rotation:(0,0,90), fire:0x0882, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_right: { name: "RCS_right_08", loc:(-280.1409,23.7319,146.0923), rotation:(0,0,90), fire:0x0842, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_top: { name: "RCS_top_09", loc:(62.4996,45.0075,-394.6633), rotation:(0,90,0), fire:0x0510, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_top: { name: "RCS_top_10", loc:(-61.4785,45.0075,-394.6633), rotation:(0,90,0), fire:0x0910, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_top: { name: "RCS_top_11", loc:(58.7146,159.4162,206.1763), rotation:(0,90,0), fire:0x0610, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_top: { name: "RCS_top_12", loc:(-57.6934,159.4163,206.1763), rotation:(0,90,0), fire:0x0A10, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_bottom: { name: "RCS_bottom_13", loc:(61.2650,-35.9478,-394.6634), rotation:(0,-90,0), fire:0x0A20, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_bottom: { name: "RCS_bottom_14", loc:(-60.2439,-35.9478,-394.6634), rotation:(0,-90,0), fire:0x0620, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_bottom: { name: "RCS_bottom_15", loc:(49.0222,-101.3397,199.1841), rotation:(0,-90,0), fire:0x0920, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
+   port_bottom: { name: "RCS_bottom_16", loc:(-48.0011,-101.3397,199.1841), rotation:(0,-90,0), fire:0x0520, scale:0.18, flare_scale:0.18, trail_scale:0.18 }
 }
 
 quantum: {

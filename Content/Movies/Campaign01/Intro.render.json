@@ -1,11 +1,12 @@
 {
   "Scene": "Intro",
   "FrameRate": 30,
-  "Duration": 100.00479750707746,
+  "Duration": 100.02225979417562,
+  "render_inputs_sha256": "0d845550119937e5d210742ba952c20690c481bdff53125b5d8cbcea29bc62d1",
   "campaign": 1,
   "source_def": "D:\\SSW\\Content\\GameData\\Campaigns\\01\\Scenes\\Intro.def",
   "source_sha256": "4f311d6fe51756c238d8dd20c62ca409ea98b8084a97135be4c82dd546cbfa31",
-  "mp4_sha256": "4005ed3cf6dffccd7efafc7610546e34218e339cfd9af3992fb31b3d494303f6",
-  "captured_frames": 2832,
-  "render_directory": "D:\\SSW\\Saved\\CutsceneRenders\\Campaign01\\Intro\\20261118_170744"
+  "mp4_sha256": "a99b8898bbd090c762e56a0cbefcdfd56ed884684d209d642787c6e0768676fc",
+  "captured_frames": 2923,
+  "render_directory": "D:\\SSW\\Saved\\CutsceneRenders\\Campaign01\\Intro\\20261118_182728"
 }

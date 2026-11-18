@@ -54,7 +54,7 @@ drive:      {
    type:    Stealth
    thrust:  20,
    augmenter: 50,
-   port:    ( 0, 0, -155),
+   port:    ( 0, 0, -55),
 
    loc:     (0, 0, -130),
    size:    16,

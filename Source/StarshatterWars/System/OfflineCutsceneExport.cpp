@@ -79,7 +79,7 @@ void OfflineCutsceneExport::Begin(UWorld* World,const FString& Scene)
     Capture->Initialize(Engine->SceneViewport);Capture->StartCapture();
     // Image capture normally mutes the app. This export records the master submix alongside it.
     FApp::SetVolumeMultiplier(1);FApp::SetUnfocusedVolumeMultiplier(1);
-    UAudioMixerBlueprintLibrary::StartRecordingOutput(World,1800);
+    UAudioMixerBlueprintLibrary::StartRecordingOutput(World,180);
     GEngine->Exec(World,*FString::Printf(TEXT("t.MaxFPS %d"),FrameRate));
     Capture->OnCaptureFinished().AddLambda([]()
     {

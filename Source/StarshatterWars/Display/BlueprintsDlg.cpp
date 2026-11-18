@@ -1,4 +1,4 @@
-#include "BlueprintsDlg.h"
+﻿#include "BlueprintsDlg.h"
 #include "BlueprintCatalogSubsystem.h"
 #include "MissionUIStyle.h"
 #include "ShipSystemIcon.h"
@@ -7,6 +7,9 @@
 #include "Engine/GameInstance.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Input/SSearchBox.h"
+#include "Widgets/Input/SSpinBox.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Views/SHeaderRow.h"
@@ -53,7 +56,13 @@ struct FBlueprintTable
     FOffer Selected;
     FString Search;
     FName Column = TEXT("Name"); bool Descending = false;
-    FText Feedback;
+    FText Feedback, Preflight;
+    FPlayerIndustryQuote Quote;
+    FGuid License;
+    int32 Runs = 1;
+    bool CanInstall = false;
+    double LastPreflight = 0;
+
     void Refresh()
     {
         Visible.Reset(); for (const auto& Row : All) if (Search.IsEmpty() || Search == TEXT("*") || Row->DisplayName.Contains(Search)) Visible.Add(Row);
@@ -68,7 +77,46 @@ struct FBlueprintTable
         });
         if (auto View = List.Pin()) View->RequestListRefresh();
     }
-};
+ };
+void RefreshPreflight(const TWeakObjectPtr<UBlueprintCatalogSubsystem>& Catalog, const TSharedPtr<FBlueprintTable>& Model)
+{
+    const double Now = FPlatformTime::Seconds();
+    if (Model->LastPreflight > 0 && Now - Model->LastPreflight < .5) return;
+    Model->LastPreflight = Now; Model->CanInstall = false; Model->License = {}; Model->Quote = {};
+    const auto* Site = FStationServices::Facility(); const auto* Simulation = Sim::GetSim();
+    if (!Catalog.IsValid() || !Model->Selected || !Site || !Simulation)
+    { Model->Preflight = INVTEXT("Select a blueprint and dock at its production facility to install a job."); return; }
+    if (Site->Recipe != Model->Selected->Recipe)
+    { Model->Preflight = INVTEXT("This facility does not manufacture the selected recipe."); return; }
+    const FBlueprintInstance* Selected = nullptr;
+    for (const auto& Pair : Simulation->ReadEconomy().Blueprints)
+    {
+        const auto& BP = Pair.Value;
+        if (BP.Owner != FEconomyLedger::Pilot() || BP.Recipe != Site->Recipe || (!BP.bOriginal && BP.RunsRemaining < Model->Runs) ||
+            Simulation->ReadEconomy().Jobs.ContainsByPredicate([&](const auto& Job) { return Job.Blueprint == Pair.Key &&
+                Job.State != EIndustryJobState::Completed && Job.State != EIndustryJobState::Cancelled; })) continue;
+        if (!Selected || (BP.bOriginal && !Selected->bOriginal) || (BP.bOriginal == Selected->bOriginal &&
+            (BP.RunsRemaining < Selected->RunsRemaining || (BP.RunsRemaining == Selected->RunsRemaining && BP.Id.ToString() < Selected->Id.ToString()))))
+            Selected = &BP;
+    }
+    if (!Selected) { Model->Preflight = INVTEXT("Purchase an available original or copy with enough licensed runs first."); return; }
+    Model->License = Selected->Id;
+    Model->CanInstall = Catalog->CanBeginPlayerJob(*Site, Model->License, Model->Runs, Model->Quote, Model->Preflight);
+}
+FText DescribeQuote(const TSharedPtr<FBlueprintTable>& Model)
+{
+    TArray<FText> Lines; Lines.Add(Model->Preflight);
+    if (!Model->Quote.Materials.IsEmpty())
+    {
+        Lines.Add(FText::Format(INVTEXT("{0} RUNS | {1} S TOTAL | INPUT: {2} | OUTPUT: {3}"), FText::AsNumber(Model->Runs),
+            FText::AsNumber(Model->Quote.Duration), FText::FromName(Model->Quote.Input), FText::FromName(Model->Quote.Output)));
+        for (const auto& Amount : Model->Quote.Materials)
+            Lines.Add(FText::Format(INVTEXT("INPUT  {0}: {1} ({2} T)"), FText::FromName(Amount.Item), FText::AsNumber(Amount.Quantity), FText::AsNumber(Amount.Quantity * Amount.UnitTonnes)));
+        for (const auto& Amount : Model->Quote.Products)
+            Lines.Add(FText::Format(INVTEXT("OUTPUT  {0}: {1} ({2} T)"), FText::FromName(Amount.Item), FText::AsNumber(Amount.Quantity), FText::AsNumber(Amount.Quantity * Amount.UnitTonnes)));
+    }
+    return FText::Join(INVTEXT("\n"), Lines).ToUpper();
+}
 }
 TSharedRef<SWidget> UBlueprintsDlg::RebuildWidget()
 {
@@ -82,7 +130,7 @@ TSharedRef<SWidget> UBlueprintsDlg::RebuildWidget()
             .OnSort_Lambda([Model](EColumnSortPriority::Type,const FName& Column,EColumnSortMode::Type Mode) { Model->Column=Column; Model->Descending=Mode==EColumnSortMode::Descending; Model->Refresh(); }));
     auto List=SNew(SListView<FOffer>).ListItemsSource(&Model->Visible).HeaderRow(Header).SelectionMode(ESelectionMode::Single)
         .OnGenerateRow_Lambda([](FOffer Item,const TSharedRef<STableViewBase>& Owner) { return SNew(SBlueprintRow,Owner).Item(Item); })
-        .OnSelectionChanged_Lambda([Model](FOffer Item,ESelectInfo::Type) { Model->Selected=Item; Model->Feedback=FText::GetEmpty(); });
+        .OnSelectionChanged_Lambda([Model](FOffer Item,ESelectInfo::Type) { Model->Selected=Item; Model->Feedback=FText::GetEmpty(); Model->LastPreflight=0; });
     Model->List=List;
     auto Buttons=SNew(SHorizontalBox);
     for (bool Original : {true,false})
@@ -91,31 +139,30 @@ TSharedRef<SWidget> UBlueprintsDlg::RebuildWidget()
             .IsEnabled_Lambda([Weak,Model,Original]() { FText Reason; return Weak.IsValid() && Model->Selected && Weak->CanPurchase(Model->Selected->Recipe,Original,Reason); })
             .OnClicked_Lambda([Weak,Model,Original]() { if (Weak.IsValid() && Model->Selected) Weak->Purchase(Model->Selected->Recipe,Original,Model->Feedback); Model->Refresh(); return FReply::Handled(); })
             [SNew(SShipSystemIcon).Icon(Original ? EShipSystemIcon::Reference : EShipSystemIcon::Replace)]];
+    Buttons->AddSlot().AutoWidth().VAlign(VAlign_Center).Padding(8,0)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(INVTEXT("RUNS"))];
+    Buttons->AddSlot().AutoWidth().Padding(4,0)
+        [SNew(SSpinBox<int32>).MinValue(1).MaxValue(1000000).MinDesiredWidth(96).Font(MissionUIStyle::GetRowFont(12))
+            .Value_Lambda([Model]() { return Model->Runs; })
+            .OnValueChanged_Lambda([Model](int32 Value) { Model->Runs=Value; Model->LastPreflight=0; })];
     Buttons->AddSlot().AutoWidth().Padding(6,0)
-    [SNew(SButton).ToolTipText(INVTEXT("Start one batch using an owned blueprint at this docked production facility"))
-        .IsEnabled_Lambda([Model]() { const auto* Site = FStationServices::Facility(); return Site && Model->Selected && Site->Recipe == Model->Selected->Recipe; })
+    [SNew(SButton).ToolTipText_Lambda([Weak,Model]() { RefreshPreflight(Weak,Model); return Model->Preflight; })
+        .IsEnabled_Lambda([Weak,Model]() { RefreshPreflight(Weak,Model); return Model->CanInstall; })
         .OnClicked_Lambda([Weak,Model]()
         {
-            const auto* Site = FStationServices::Facility(); auto* Simulation = Sim::GetSim();
-            if (!Weak.IsValid() || !Site || !Simulation || !Model->Selected || Site->Recipe != Model->Selected->Recipe) return FReply::Handled();
-            FGuid License;
-            for (const auto& Pair : Simulation->ReadEconomy().Blueprints)
-                if (Pair.Value.Owner == FEconomyLedger::Pilot() && Pair.Value.Recipe == Site->Recipe &&
-                    (Pair.Value.bOriginal || Pair.Value.RunsRemaining > 0) &&
-                    !Simulation->ReadEconomy().Jobs.ContainsByPredicate([&](const auto& Job) { return Job.Blueprint == Pair.Key &&
-                        Job.State != EIndustryJobState::Completed && Job.State != EIndustryJobState::Cancelled; }))
-                { License = Pair.Key; break; }
-            if (!License.IsValid()) Model->Feedback = INVTEXT("Purchase an available blueprint original or copy first.");
-            else Weak->BeginPlayerJob(*Site, License, 1, Model->Feedback);
-            Model->Refresh(); return FReply::Handled();
+            Model->LastPreflight=0; RefreshPreflight(Weak,Model);
+            const auto* Site=FStationServices::Facility();
+            if (Weak.IsValid() && Site && Model->CanInstall) Weak->BeginPlayerJob(*Site,Model->License,Model->Runs,Model->Feedback);
+            Model->LastPreflight=0; Model->Refresh(); return FReply::Handled();
         })[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Production)]];
     return SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(8)[SNew(SSearchBox).HintText(INVTEXT("Search NPC blueprints"))
             .OnTextChanged_Lambda([Model](const FText& Search) { Model->Search=Search.ToString().TrimStartAndEnd(); Model->Refresh(); })]
         + SVerticalBox::Slot().FillHeight(1).Padding(8)[MissionUIStyle::MakeDataPane(List)]
-        + SVerticalBox::Slot().AutoHeight().Padding(8)[SNew(STextBlock).AutoWrapText(true).Text_Lambda([Weak,Model]()
-            { if (!Model->Selected) return INVTEXT("Select a blueprint. A purchased original or copy is required for player manufacturing. NPC facilities own separate licenses.");
-              FText Reason; if (Weak.IsValid()) Weak->CanPurchase(Model->Selected->Recipe,true,Reason); return Reason; })]
+        + SVerticalBox::Slot().AutoHeight().Padding(8)
+        [MissionUIStyle::MakeDataPane(SNew(SBox).MaxDesiredHeight(170)
+            [SNew(SScrollBox)+SScrollBox::Slot()
+                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([Weak,Model]()
+                    { RefreshPreflight(Weak,Model); return DescribeQuote(Model); })]])]
         + SVerticalBox::Slot().AutoHeight().Padding(8)[SNew(SHorizontalBox)
             + SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).AutoWrapText(true).Text_Lambda([Model]() { return Model->Feedback; })]
             + SHorizontalBox::Slot().AutoWidth()[Buttons]];

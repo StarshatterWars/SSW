@@ -2,6 +2,11 @@
 #include "Misc/AutomationTest.h"
 #include "Misc/ScopeExit.h"
 #include "Misc/Paths.h"
+#include "Misc/FileHelper.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
+#include "HAL/FileManager.h"
+#include "StaticMeshResources.h"
 #include "Engine/World.h"
 #include "Engine/DataTable.h"
 #include "Engine/GameInstance.h"
@@ -62,6 +67,9 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
     const bool bUseBootDesigns = IsRunningGame();
     if (bUseBootDesigns)
         TestEqual(TEXT("Boot version shown by main menu"), Game::VersionInfo, FString(TEXT("6.0 Alpha 3")));
+    auto* LiveCatalog=NewObject<UDataTable>();
+    if(!UStarshatterShipDesignSubsystem::ImportJsonCatalog(*LiveCatalog,FPaths::ProjectContentDir()/TEXT("GameData/Ships/ships.json")))
+        return false;
     int32 Checked=0;
     int32 MountShips=0;
     int32 MountedTurrets=0;
@@ -107,6 +115,21 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
                 TestEqual(TEXT("Falcon fragment lifetime"), Debris[0].Life, 1.8f);
             }
         }
+        const auto* LiveRow=LiveCatalog->FindRow<FShipDesign>(FName(Entry.Definition),TEXT("Live propulsion"),false);
+        if(!LiveRow || LiveRow->Model!=Row->Model)LiveRow=LiveCatalog->FindRow<FShipDesign>(DesignKey,TEXT("Live propulsion"),false);
+        if(!TestNotNull(FString(Entry.Definition)+TEXT(" live JSON row"),LiveRow))continue;
+        auto CheckPorts=[&](const auto& Authored,const auto& Live)
+        {
+            TestEqual(FString(Entry.Definition)+TEXT(" live system count"),Live.Num(),Authored.Num());
+            for(int32 I=0;I<FMath::Min(Authored.Num(),Live.Num());++I)
+            {
+                TestEqual(FString(Entry.Definition)+TEXT(" live port count"),Live[I].Ports.Num(),Authored[I].Ports.Num());
+                for(int32 J=0;J<FMath::Min(Authored[I].Ports.Num(),Live[I].Ports.Num());++J)
+                    TestTrue(FString(Entry.Definition)+TEXT(" JSON port matches scaled DEF"),Live[I].Ports[J].Location.Equals(Authored[I].Ports[J].Location,.005));
+            }
+        };
+        CheckPorts(Row->Drive,LiveRow->Drive);CheckPorts(Row->Thruster,LiveRow->Thruster);
+        Row=LiveRow;
         const FName Key(Entry.Definition);ShipDesignRegistry::RegisterDesign(Key,*Row);
         auto* Design=ShipDesignRegistry::FindLegacy(Key);if(!TestNotNull(FString(Entry.Definition)+TEXT(" runtime design"),Design))continue;
         Ship Runtime(TCHAR_TO_ANSI(Entry.Definition),"",Design,1,0,nullptr,false);
@@ -149,6 +172,45 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
         }
         auto* Actor=World->SpawnActor<AShipActor>(Class);if(!TestNotNull(FString(Entry.Definition)+TEXT(" actor"),Actor))continue;
         Actor->BindRuntimeShip(&Runtime);
+
+        // Export actual rendered hull vertices and propulsion components for geometry review.
+        if (FParse::Param(FCommandLine::Get(),TEXT("AuditPropulsionGeometry")) && Actor->HullMesh && Actor->HullMesh->GetStaticMesh())
+        {
+            const auto* Render=Actor->HullMesh->GetStaticMesh()->GetRenderData();
+            if(Render && Render->LODResources.Num())
+            {
+                const FString Dir=FPaths::ProjectSavedDir()/TEXT("Analysis/FleetPropulsion");
+                IFileManager::Get().MakeDirectory(*Dir,true);
+                const auto& LOD=Render->LODResources[0];
+                FString MeshText,Ports=TEXT("component,x,y,z,dx,dy,dz,sx,sy,sz,distance\n");
+                TArray<FVector> Vertices;
+                for(uint32 I=0;I<LOD.VertexBuffers.PositionVertexBuffer.GetNumVertices();++I)
+                {
+                    const FVector V=Actor->HullMesh->GetComponentTransform().TransformPosition(FVector(LOD.VertexBuffers.PositionVertexBuffer.VertexPosition(I)));
+                    Vertices.Add(V);MeshText+=FString::Printf(TEXT("v %.6f %.6f %.6f\n"),V.X,V.Y,V.Z);
+                }
+                for(int32 I=0;I+2<LOD.IndexBuffer.GetNumIndices();I+=3)
+                    MeshText+=FString::Printf(TEXT("f %u %u %u\n"),LOD.IndexBuffer.GetIndex(I)+1,LOD.IndexBuffer.GetIndex(I+1)+1,LOD.IndexBuffer.GetIndex(I+2)+1);
+                TArray<USceneComponent*> Parts;Actor->GetComponents(Parts);
+                for(auto* Part:Parts)
+                {
+                    const FString Name=Part->GetName();
+                    if(!Name.StartsWith(TEXT("RuntimeMainEnginePoint_")) && !Name.StartsWith(TEXT("ThrusterNozzle")))continue;
+                    const FVector Pos=Part->GetComponentLocation(),DirV=Part->GetForwardVector(),Scale=Part->GetComponentScale();
+                    double Distance=MAX_dbl;
+                    for(int32 I=0;I+2<LOD.IndexBuffer.GetNumIndices();I+=3)
+                    {
+                        const FVector Closest=FMath::ClosestPointOnTriangleToPoint(Pos,Vertices[LOD.IndexBuffer.GetIndex(I)],Vertices[LOD.IndexBuffer.GetIndex(I+1)],Vertices[LOD.IndexBuffer.GetIndex(I+2)]);
+                        Distance=FMath::Min(Distance,FVector::Distance(Pos,Closest));
+                    }
+                    if(Name.StartsWith(TEXT("RuntimeMainEnginePoint_")) && Kind!=TEXT("hulk"))
+                        TestTrue(FString(Entry.Definition)+TEXT(" engine outlet is attached to actual hull triangles"),Distance<FMath::Max(.1,Actor->HullMesh->Bounds.SphereRadius*.02));
+                    Ports+=FString::Printf(TEXT("%s,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n"),*Name,Pos.X,Pos.Y,Pos.Z,DirV.X,DirV.Y,DirV.Z,Scale.X,Scale.Y,Scale.Z,Distance);
+                }
+                FFileHelper::SaveStringToFile(MeshText,*(Dir/(FString(Entry.Definition)+TEXT(".obj"))));
+                FFileHelper::SaveStringToFile(Ports,*(Dir/(FString(Entry.Definition)+TEXT(".csv"))));
+            }
+        }
         ON_SCOPE_EXIT {Actor->BindRuntimeShip(nullptr);Actor->Destroy();};
         ++MountShips;
         for (int32 Index = 0; Index < Actor->NativeWeaponHardpoints.Num(); ++Index)
@@ -260,7 +322,7 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
         }
         int32 ExpectedLights=0;for(const auto& Nav:Row->Navlight)ExpectedLights+=Nav.Beacons.Num();
         const auto* Drive=Runtime.GetMainDrive();const auto* RCS=Runtime.GetThruster();
-        TestEqual(FString(Entry.Definition)+TEXT(" engine count"),Engines,Drive?Drive->NumPorts():0);
+        TestEqual(FString(Entry.Definition)+TEXT(" engine count"),Engines,Drive && Actor->bEnableMainEngineEmitters?Drive->NumPorts():0);
         TestEqual(FString(Entry.Definition)+TEXT(" light count"),Lights,ExpectedLights);
         int32 VisibleBulbs = 0;
         for (const auto& Bulb : Actor->NavLightBulbMeshes)
@@ -334,6 +396,8 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
                             Trail->GetRelativeScale3D().Y >= 0.3 * Effects[LateralPort].PortScale);
                     }
                     TestEqual(TEXT("An unfired fore jet stays idle"), Effects[0].PresentedBurn, 0.0f);
+                    for(int32 I=0;I<Effects.Num();++I)
+                        if(Burns[I]==0)TestEqual(TEXT("Main throttle cannot light an unfired maneuvering jet"),Effects[I].PresentedBurn,0.f);
                 }
                 TestTrue(TEXT("Client displays exhaust at low main throttle"),
                     Proxy->RuntimeMainEngineEmitters.ContainsByPredicate([](const UNiagaraComponent* Engine)
@@ -371,6 +435,15 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
             }
             Viewer->SetDisplayMesh(nullptr);
             Viewer->Destroy();
+        }
+        if(ShipKey==TEXT("Adventure") || ShipKey==TEXT("Marauder") || ShipKey==TEXT("Cutlass"))
+            if(TestNotNull(ShipKey+TEXT(" maneuvering system"),RCS))TestEqual(ShipKey+TEXT(" complete maneuvering port set"),RCS->GetNumThrusters(),16);
+        if(ShipKey==TEXT("Orion") && RCS)
+        {
+            TArray<uint8> Burns;Burns.Init(255,RCS->GetNumThrusters());Actor->UpdateSnapshotPropulsion(.1f,1,1,Burns);
+            for(int32 I=0;I<Actor->RuntimeThrusterFX.Num();++I)
+                if(const auto* Trail=Actor->RuntimeThrusterFX[I].Trail)
+                    TestTrue(TEXT("Carrier jets use individual plume size instead of system size"),FMath::IsNearlyEqual(Trail->GetRelativeScale3D().Y,double(RCS->GetPort(I)->TrailScale)*.5,1.e-4));
         }
         AddInfo(FString::Printf(TEXT("%s: main=%d rcsFX=%d nav=%d"),Entry.Definition,Engines,Thrusters,Lights));
     }

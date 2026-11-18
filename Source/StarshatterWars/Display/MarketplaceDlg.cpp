@@ -1,5 +1,7 @@
 #include "MarketplaceDlg.h"
 #include "ShipSystemIcon.h"
+#include "StationServices.h"
+#include "EconomyRuntime.h"
 
 #include "CargoCatalogSubsystem.h"
 #include "Engine/GameInstance.h"
@@ -19,6 +21,8 @@
 #include "Serialization/JsonSerializer.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Input/SCheckBox.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SSpinBox.h"
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Views/SHeaderRow.h"
@@ -102,10 +106,10 @@ namespace
     {
         FString Name;
         FS_CargoCatalogRow Goods;
-        int32 Available = 0;
+        double Available = 0;
         int32 Demand = 0;
         FString Producer;
-        int32 ProducerStock = 0;
+        double ProducerStock = 0;
         int32 ProducerJumps = MAX_int32;
         int32 PurchaseJumps() const { return Available > 0 ? 0 : ProducerJumps; }
         double Price = 0;
@@ -184,6 +188,58 @@ namespace
         TWeakPtr<SListView<FOfferPtr>> List;
         FName SortColumn = "Item";
         EColumnSortMode::Type SortMode = EColumnSortMode::Ascending;
+        TWeakObjectPtr<UGameInstance> Instance;
+        FString System;
+        FOfferPtr Selected;
+        double Quantity=1;
+        FStationMarketQuote BuyQuote,SellQuote;
+        FGuid BuyReceipt=FGuid::NewGuid(),SellReceipt=FGuid::NewGuid();
+        FText ServiceMessage;
+        double NextTradeAt=0;
+
+        void UpdateQuotes()
+        {
+            BuyQuote=FStationMarketQuote{};SellQuote=FStationMarketQuote{};
+            if(!Selected)return;
+            FStationServices::QuoteMarket(Instance.Get(),FName(*Selected->Name),Quantity,true,BuyQuote);
+            FStationServices::QuoteMarket(Instance.Get(),FName(*Selected->Name),Quantity,false,SellQuote);
+        }
+        void ChangeOrder()
+        {BuyReceipt=FGuid::NewGuid();SellReceipt=FGuid::NewGuid();ServiceMessage=FText::GetEmpty();UpdateQuotes();}
+        void RefreshLive()
+        {
+            const auto* Simulation=Sim::GetSim();
+            if(Simulation)
+            {
+                const auto& State=Simulation->ReadEconomy();
+                const FName Local=FEconomyRuntime::Warehouse(System,TEXT("NPC Market"),TEXT("Stock"));
+                for(auto& Offer:Offers)
+                {
+                    Offer->Available=Offer->bRestricted?0:FEconomyLedger::Available(State,Local,FName(*Offer->Name));
+                    const double Pressure=double(Offer->Demand)/FMath::Max(1.0,Offer->Available);
+                    Offer->Price=Offer->Goods.Value*FMath::Clamp(.8+Pressure,.85,3.0);
+                    if(!Offer->Producer.IsEmpty() && Offer->Goods.Size>0)
+                        Offer->ProducerStock=FEconomyLedger::SystemQuantity(State,FName(*Offer->Producer),FName(*Offer->Name))/Offer->Goods.Size;
+                }
+            }
+            UpdateQuotes();Sort();
+        }
+        bool CanTrade(bool Buy) const
+        {
+            const auto* Simulation=Sim::GetSim();const FGuid Receipt=Buy?BuyReceipt:SellReceipt;
+            return FPlatformTime::Seconds()>=NextTradeAt && Selected && (Buy?BuyQuote.bAllowed:SellQuote.bAllowed) && Simulation && !Simulation->ReadEconomy().CommittedTransactions.Contains(Receipt);
+        }
+        void Trade(bool Buy)
+        {
+            if(!CanTrade(Buy))return;
+            const auto Quote=Buy?BuyQuote:SellQuote;
+            if(FStationServices::TradeMarket(Instance.Get(),FName(*Selected->Name),Quantity,Buy,Quote.TotalCredits,Buy?BuyReceipt:SellReceipt,ServiceMessage))
+            {
+                BuyReceipt=FGuid::NewGuid();SellReceipt=FGuid::NewGuid();
+                NextTradeAt=FPlatformTime::Seconds()+.35;
+            }
+            RefreshLive();
+        }
 
         void Filter(const FText& Search)
         {
@@ -234,6 +290,7 @@ namespace
 TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
 {
     const auto Table = MakeShared<FMarketTable>();
+    Table->Instance=GetGameInstance();
     Sim* Simulation = Sim::GetSim();
     const Mission* CurrentMission = Simulation ? Simulation->GetMission() : nullptr;
     FString System;
@@ -246,6 +303,7 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
         if (System.IsEmpty() && CurrentMission->GetStarSystem())
             System = ANSI_TO_TCHAR(CurrentMission->GetStarSystem()->GetName());
     }
+    Table->System=System;
     const auto Markets = LoadSystemMarkets();
     const int32 LocalIndex = Markets.IndexOfByPredicate([&System](const FSystemMarket& Market)
     {
@@ -269,7 +327,7 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                 Offer->bRestricted = ExclusiveIndex != INDEX_NONE
                     ? LocalIndex != ExclusiveIndex : Goods.bIllicit && !Markets[LocalIndex].bIllicitTrade;
                 const int32 BaseStock = FMath::Max(1, FMath::Min(Goods.PreviewQuantity,
-                    160 >> static_cast<uint8>(Goods.Rarity)));
+                    160 >> FMath::Clamp(int32(Goods.Rarity),0,7)));
                 TArray<int32> Stock, Demand, Production;
                 const auto* Simulation = Sim::GetSim();
                 const auto* Economy = Simulation ? &Simulation->ReadEconomy() : nullptr;
@@ -286,7 +344,7 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                 Offer->Available = Stock[LocalIndex];
                 Offer->Demand = Demand[LocalIndex];
                 Offer->bLocalProduction = Production[LocalIndex] > 0;
-                const double Pressure = double(Offer->Demand) / FMath::Max(1, Offer->Available);
+                const double Pressure = double(Offer->Demand) / FMath::Max(1.0, Offer->Available);
                 Offer->Price = Goods.Value * FMath::Clamp(0.8 + Pressure, 0.85, 3.0);
                 for (int32 Index = 0; Index < Markets.Num(); ++Index)
                 {
@@ -321,7 +379,7 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
     };
     AddColumn("Item", INVTEXT("Item"), 2.f);
     AddColumn("Description", INVTEXT("Description"), 4.f);
-    AddColumn("Available", INVTEXT("Quantity"), 1.1f);
+    AddColumn("Available", INVTEXT("NPC stock"), 1.1f);
     AddColumn("Demand", INVTEXT("Demand / hr"), 1.2f);
     AddColumn("Producer", INVTEXT("Nearest producer"), 2.f);
     AddColumn("Jumps", INVTEXT("Jumps"), 0.8f);
@@ -335,13 +393,17 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
     const auto Selected = MakeShared<FOfferPtr>();
     auto List = SNew(SListView<FOfferPtr>).ListItemsSource(&Table->Rows).HeaderRow(Header)
         .SelectionMode(ESelectionMode::Single)
-        .OnSelectionChanged_Lambda([Selected](FOfferPtr Offer, ESelectInfo::Type) { *Selected = MoveTemp(Offer); })
+        .OnSelectionChanged_Lambda([Selected,Table](FOfferPtr Offer,ESelectInfo::Type)
+        { *Selected=Offer;Table->Selected=MoveTemp(Offer);Table->Quantity=1;Table->ChangeOrder(); })
         .OnGenerateRow_Lambda([Table](FOfferPtr Offer, const TSharedRef<STableViewBase>& Owner)
             -> TSharedRef<ITableRow>
         {
             return SNew(SMarketRow, Owner).Offer(Offer);
         });
     Table->List = List;
+    Table->RefreshLive();
+    List->RegisterActiveTimer(.5f,FWidgetActiveTimerDelegate::CreateLambda([Table](double,float)
+    {Table->RefreshLive();return EActiveTimerReturnType::Continue;}));
     return SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(20, 18, 20, 10)
         [
@@ -356,32 +418,56 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
             .OnTextChanged_Lambda([Table, Selected](const FText& Search)
             {
                 if (auto View = Table->List.Pin()) View->ClearSelection();
-                Selected->Reset();
+                Selected->Reset();Table->Selected.Reset();Table->ChangeOrder();
                 Table->Filter(Search);
             })
         ]
-        + SVerticalBox::Slot().FillHeight(0.7f).Padding(20, 0, 20, 8)
+        + SVerticalBox::Slot().FillHeight(0.65f).Padding(20, 0, 20, 8)
         [MissionUIStyle::MakeDataPane(List, FMargin(0))]
-        + SVerticalBox::Slot().FillHeight(0.3f).Padding(20, 0, 20, 18)
+        + SVerticalBox::Slot().FillHeight(0.35f).Padding(20, 0, 20, 18)
         [
             MissionUIStyle::MakeDataPane(
-                SNew(SScrollBox)
-                + SScrollBox::Slot()
-                [
-                SNew(STextBlock).Font(MissionUIStyle::GetRowFont(14)).AutoWrapText(true)
-                .Text_Lambda([Selected]()
-                {
-                    if (!*Selected) return INVTEXT("Select an item to view market details.");
-                    const auto& Offer = **Selected;
-                    const FText Source = Offer.Producer.IsEmpty() ? INVTEXT("No reachable producer with stock") :
-                        FText::Format(INVTEXT("{0} Â· {1} jumps Â· {2} {3} in stock"),
-                            FText::FromString(Offer.Producer), FText::AsNumber(Offer.ProducerJumps),
-                            FText::AsNumber(Offer.ProducerStock), FText::FromString(Offer.Unit()));
-                    return FText::Format(INVTEXT("{0}\n{1}\n{2} Â· {3} {4} available locally\n{5}"),
-                        FText::FromString(Offer.DisplayName()).ToUpper(), FText::FromString(Offer.Goods.Description),
-                        Offer.Goods.bIllicit ? INVTEXT("ILLICIT") : INVTEXT("LEGAL"),
-                        FText::AsNumber(Offer.Available), FText::FromString(Offer.Unit()), Source);
-                })
-                ])
+                SNew(SVerticalBox)
+                + SVerticalBox::Slot().FillHeight(1)
+                [SNew(SScrollBox) + SScrollBox::Slot()
+                    [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true)
+                        .Text_Lambda([Selected]()
+                        {
+                            if(!*Selected)return INVTEXT("SELECT AN ITEM TO VIEW MARKET DETAILS. TRADING REQUIRES DOCKING.");
+                            const auto& Offer=**Selected;
+                            const FText Source=Offer.Producer.IsEmpty()?INVTEXT("NO REACHABLE PRODUCER WITH STOCK"):
+                                FText::Format(INVTEXT("{0} · {1} JUMPS · {2} {3} IN STOCK"),FText::FromString(Offer.Producer).ToUpper(),
+                                    FText::AsNumber(Offer.ProducerJumps),FText::AsNumber(Offer.ProducerStock),FText::FromString(Offer.Unit()).ToUpper());
+                            return FText::Format(INVTEXT("{0}\n{1}\n{2} · {3} {4} LOCAL NPC STOCK\n{5}"),
+                                FText::FromString(Offer.DisplayName()).ToUpper(),FText::FromString(Offer.Goods.Description),
+                                Offer.Goods.bIllicit?INVTEXT("ILLICIT"):INVTEXT("LEGAL"),FText::AsNumber(Offer.Available),FText::FromString(Offer.Unit()).ToUpper(),Source);
+                        })]]
+                + SVerticalBox::Slot().AutoHeight().Padding(0,8)
+                [SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0,0,8,0)
+                    [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(INVTEXT("QUANTITY"))]
+                    + SHorizontalBox::Slot().AutoWidth()
+                    [SNew(SBox).WidthOverride(130)[SNew(SSpinBox<double>).MinValue(.001).MaxValue(1.e12)
+                        .MinFractionalDigits(0).MaxFractionalDigits(3).Delta(.1)
+                        .Value_Lambda([Table](){return Table->Quantity;})
+                        .OnValueChanged_Lambda([Table](double Value){Table->Quantity=Value;Table->ChangeOrder();})
+                        .ToolTipText(INVTEXT("Quantity to buy or sell. Goods use whole units; tonnes may be fractional."))]]
+                    + SHorizontalBox::Slot().AutoWidth().Padding(6,0)
+                    [SNew(SButton).ToolTipText(INVTEXT("Buy the quoted quantity into ship cargo"))
+                        .IsEnabled_Lambda([Table](){return Table->CanTrade(true);})
+                        .OnClicked_Lambda([Table](){Table->Trade(true);return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Down)]]
+                    + SHorizontalBox::Slot().AutoWidth().Padding(6,0)
+                    [SNew(SButton).ToolTipText(INVTEXT("Sell the quoted quantity from ship cargo"))
+                        .IsEnabled_Lambda([Table](){return Table->CanTrade(false);})
+                        .OnClicked_Lambda([Table](){Table->Trade(false);return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Up)]]
+                    + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center).Padding(8,0)
+                    [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true)
+                        .Text_Lambda([](){const auto* Simulation=Sim::GetSim();return FText::Format(INVTEXT("BALANCE  {0} CR"),FText::AsNumber(Simulation?Simulation->ReadEconomy().Wallets.FindRef(FEconomyLedger::Pilot()):0));})]]
+                + SVerticalBox::Slot().AutoHeight()
+                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([Table]()
+                {return Table->Selected?FText::Format(INVTEXT("{0}  |  MAX {1}\n{2}  |  MAX {3}"),Table->BuyQuote.Reason,FText::AsNumber(Table->BuyQuote.Maximum),Table->SellQuote.Reason,FText::AsNumber(Table->SellQuote.Maximum)):FText::GetEmpty();})]
+                + SVerticalBox::Slot().AutoHeight().Padding(0,4)
+                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([Table](){return Table->ServiceMessage;})]
+            )
         ];
 }

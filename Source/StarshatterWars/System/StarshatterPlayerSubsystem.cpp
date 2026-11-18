@@ -1,5 +1,6 @@
 #include "StarshatterPlayerSubsystem.h"
 #include "PlayerCharacter.h"
+#include "PlayerProgressSaveTransaction.h"
 #include "SSWGameInstance.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -9,6 +10,18 @@ DEFINE_LOG_CATEGORY_STATIC(LogStarshatterPlayerSubsystem, Log, All);
 
 namespace
 {
+    class FPlayerSlotIO final : public IPlayerProgressSlotIO
+    {
+    public:
+        explicit FPlayerSlotIO(int32 InUser) : User(InUser) {}
+        bool Exists(const FString& Slot) override { return UGameplayStatics::DoesSaveGameExist(Slot, User); }
+        bool Read(const FString& Slot, TArray<uint8>& Data) override { return UGameplayStatics::LoadDataFromSlot(Data, Slot, User); }
+        bool Write(const FString& Slot, const TArray<uint8>& Data) override { return UGameplayStatics::SaveDataToSlot(Data, Slot, User); }
+        bool Remove(const FString& Slot) override { return UGameplayStatics::DeleteGameInSlot(Slot, User); }
+    private:
+        int32 User;
+    };
+
     void FillDefaultChatMacros(FS_PlayerGameInfo& Pilot)
     {
         const TCHAR* const Defaults[] = {
@@ -108,8 +121,17 @@ FEconomyState& UStarshatterPlayerSubsystem::GetEconomy()
     return State;
 }
 
+bool UStarshatterPlayerSubsystem::RecoverPlayerProgress() const
+{
+    FPlayerSlotIO IO(UserIndex);
+    if (PlayerProgressSaveTransaction::Recover(IO, SlotName)) return true;
+    UE_LOG(LogStarshatterPlayerSubsystem, Error, TEXT("Player progress recovery pending or invalid; load/save blocked. Slot=%s"), *SlotName);
+    return false;
+}
+
 bool UStarshatterPlayerSubsystem::LoadPlayer()
 {
+    if (!RecoverPlayerProgress()) { bLoaded = false; return false; }
     bHadExistingSave = UGameplayStatics::DoesSaveGameExist(SlotName, UserIndex);
 
     UE_LOG(LogStarshatterPlayerSubsystem, Log, TEXT("[PlayerSubsystem] LoadPlayer. Slot=%s UserIndex=%d Exists=%s"),
@@ -189,6 +211,7 @@ bool UStarshatterPlayerSubsystem::LoadPlayer()
 
 bool UStarshatterPlayerSubsystem::SavePlayer(bool bForce)
 {
+    if (!RecoverPlayerProgress()) return false;
     if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) PlayerInfo.AgentJournalJson = Game->GetPersistentTrainingAgent().SaveJournal();
     if (!bForce && !bDirty)
         return true;
@@ -216,10 +239,31 @@ bool UStarshatterPlayerSubsystem::SavePlayer(bool bForce)
 
 bool UStarshatterPlayerSubsystem::SaveActivePlayerProgress()
 {
-    if (!SavePlayer(true)) return false;
-    const FString ActiveSlot = GetActiveSavedPlayerSlot();
-    return ActiveSlot.IsEmpty() || ActiveSlot.StartsWith(TEXT("SV_")) ||
-        (IsManagedPlayerSlot(ActiveSlot) && SaveGameInternal(ActiveSlot, UserIndex, PlayerInfo, CURRENT_SAVE_VERSION));
+    if (!RecoverPlayerProgress()) return false;
+    // Preserve ownership: autosave only the active mutable profile, never SV_ snapshots.
+    auto* Index = ReadPlayerIndex(false);
+    if (!Index) return false;
+    const FString ActiveSlot = Index->ActiveSlot;
+    if (ActiveSlot.IsEmpty() || (ActiveSlot.StartsWith(TEXT("SV_")) && IsManagedPlayerSlot(ActiveSlot)))
+        return SavePlayer(true);
+    if (!PlayerProgressSaveTransaction::IsMutableProfile(SlotName, ActiveSlot) ||
+        !Index->Players.ContainsByPredicate([&](const auto& Entry) { return Entry.Slot == ActiveSlot; })) return false;
+    if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) PlayerInfo.AgentJournalJson = Game->GetPersistentTrainingAgent().SaveJournal();
+    auto* Save = NewObject<UPlayerSaveGame>();
+    Save->SaveVersion = CURRENT_SAVE_VERSION;
+    Save->PlayerInfo = PlayerInfo;
+    TArray<uint8> Candidate;
+    if (!UGameplayStatics::SaveGameToMemory(Save, Candidate)) return false;
+    FPlayerSlotIO IO(UserIndex);
+    if (!PlayerProgressSaveTransaction::Save(IO, SlotName, ActiveSlot, Candidate))
+    {
+        bDirty = true;
+        return false;
+    }
+    bHadExistingSave = true;
+    bLoaded = true;
+    bDirty = false;
+    return true;
 }
 
 bool UStarshatterPlayerSubsystem::SaveGameInternal(
@@ -361,16 +405,19 @@ bool UStarshatterPlayerSubsystem::WritePlayerIndex(UPlayerSaveIndexGame* Index) 
 }
 TArray<FPlayerSaveSlotInfo> UStarshatterPlayerSubsystem::GetSavedPlayers() const
 {
+    if (!RecoverPlayerProgress()) return {};
     if(auto* Index=ReadPlayerIndex(true)) return Index->Players;
     return {};
 }
 FString UStarshatterPlayerSubsystem::GetActiveSavedPlayerSlot() const
 {
+    if (!RecoverPlayerProgress()) return FString();
     if(auto* Index=ReadPlayerIndex(false)) return Index->ActiveSlot;
     return FString();
 }
 bool UStarshatterPlayerSubsystem::SavePlayerAs(const FString& DisplayName,const FString& ExistingSlot, bool bTimestampedSnapshot)
 {
+    if (!RecoverPlayerProgress()) return false;
     const FString Name=DisplayName.TrimStartAndEnd();if(Name.IsEmpty()) return false;
     auto* Index=ReadPlayerIndex(false);if(!Index) return false;
     int32 Position=INDEX_NONE;
@@ -415,6 +462,7 @@ bool UStarshatterPlayerSubsystem::SavePlayerAs(const FString& DisplayName,const 
 }
 bool UStarshatterPlayerSubsystem::LoadSavedPlayer(const FString& SavedSlot)
 {
+    if (!RecoverPlayerProgress()) return false;
     auto* Index=ReadPlayerIndex(false);
     if(!Index || !IsManagedPlayerSlot(SavedSlot) || !Index->Players.ContainsByPredicate([&](const auto& Entry){return Entry.Slot==SavedSlot;})) return false;
     FS_PlayerGameInfo Loaded;int32 Version=0;
@@ -430,6 +478,7 @@ bool UStarshatterPlayerSubsystem::LoadSavedPlayer(const FString& SavedSlot)
 }
 bool UStarshatterPlayerSubsystem::DeleteSavedPlayer(const FString& SavedSlot)
 {
+    if (!RecoverPlayerProgress()) return false;
     auto* Index=ReadPlayerIndex(false);if(!Index || !IsManagedPlayerSlot(SavedSlot)) return false;
     const int32 Position=Index->Players.IndexOfByPredicate([&](const auto& Entry){return Entry.Slot==SavedSlot;});
     if(Position==INDEX_NONE) return false;
