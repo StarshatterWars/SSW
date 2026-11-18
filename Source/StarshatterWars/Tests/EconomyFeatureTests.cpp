@@ -41,6 +41,8 @@ bool FSkillBooksTest::RunTest(const FString&)
     TestTrue(TEXT("Book grants full skill immediately"),Learned.FindChecked(Frigate->Name).bComplete);
     TestEqual(TEXT("No level-training timer starts"),Learned.FindChecked(Frigate->Name).TrainingFinishesUtc,0LL);
     TestEqual(TEXT("Book costs SSW credits"),State.Wallets.FindRef(FEconomyLedger::Pilot()),1000000LL-Frigate->BookPrice);
+    TestEqual(TEXT("Wallet identifies the purchased skill"),State.Journal.Last().Item,Frigate->Name);
+    TestEqual(TEXT("Skill receipt links the learned entitlement"),State.Journal.Last().Reference,Learned.FindChecked(Frigate->Name).Id);
     TestFalse(TEXT("Already learned book cannot charge twice"),FSkillRules::Purchase(State,Learned,*Frigate,3,TEXT("Terellian"),101,Reason));
     TestEqual(TEXT("Hull requires its own skill"),USkillsSubsystem::RequiredHullSkill(static_cast<uint32>(CLASSIFICATION::FRIGATE)),FName(TEXT("frigate_operations")));
     auto* Save=NewObject<UPlayerSaveGame>(); Save->PlayerInfo.Skills=Learned; Save->PlayerInfo.Economy=State; TArray<uint8> Bytes;
@@ -48,6 +50,7 @@ bool FSkillBooksTest::RunTest(const FString&)
     const auto* Loaded=Cast<UPlayerSaveGame>(UGameplayStatics::LoadGameFromMemory(Bytes));
     if (!TestNotNull(TEXT("Reload pilot skills"),Loaded)) return false;
     TestTrue(TEXT("Completed skill survives reload"),Loaded->PlayerInfo.Skills.FindChecked(Frigate->Name).bComplete);
+    TestEqual(TEXT("Skill purchase identity survives reload"),Loaded->PlayerInfo.Economy.Journal.Last().Item,Frigate->Name);
     return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBlueprintRightsTest,"Starshatter.Economy.PurchasedBlueprintRights",EAutomationTestFlags_ApplicationContextMask|EAutomationTestFlags::EngineFilter)
@@ -66,6 +69,8 @@ bool FBlueprintRightsTest::RunTest(const FString&)
     const auto Copy=UBlueprintCatalogSubsystem::PurchaseLicense(State,Offer,false);
     TestTrue(TEXT("NPC copy purchase creates entitlement"),Copy.IsValid());
     TestEqual(TEXT("NPC copy charged once"),State.Wallets.FindRef(Pilot),9900LL);
+    TestEqual(TEXT("Blueprint wallet entry identifies its recipe"),State.Journal.Last().Item,Offer.Recipe);
+    TestEqual(TEXT("Blueprint wallet entry links the purchased license"),State.Journal.Last().Reference,Copy);
     const auto Job=FEconomyLedger::QueueBlueprintJob(State,Pilot,TEXT("Refinery"),TEXT("Input"),TEXT("Output"),Copy,2,{Ore},{Product},10);
     TestTrue(TEXT("Purchased blueprint installs job"),Job.IsValid());
     TestFalse(TEXT("One blueprint cannot install simultaneous jobs"),FEconomyLedger::QueueBlueprintJob(State,Pilot,TEXT("Refinery"),TEXT("Input"),TEXT("Output"),Copy,1,{Ore},{Product},10).IsValid());
@@ -77,6 +82,7 @@ bool FBlueprintRightsTest::RunTest(const FString&)
     if (!TestNotNull(TEXT("Reload blueprint entitlement"),Loaded)) return false;
     State=Loaded->PlayerInfo.Economy;
     TestTrue(TEXT("Purchase receipt survives"),State.BlueprintReceipts.Contains(Copy));
+    TestEqual(TEXT("Blueprint wallet identity survives reload"),State.Journal.Last().Reference,Copy);
     TestEqual(TEXT("Resume completed batch"),FEconomyLedger::AdvanceJobs(State,19,[](FName){return true;}),1);
     TestEqual(TEXT("Two runs create exact output"),FEconomyLedger::Quantity(State,TEXT("Output"),Product.Item),4.0);
     TestFalse(TEXT("Exhausted copy cannot build"),FEconomyLedger::QueueBlueprintJob(State,Pilot,TEXT("Refinery"),TEXT("Input"),TEXT("Output"),Copy,1,{Ore},{Product},10).IsValid());

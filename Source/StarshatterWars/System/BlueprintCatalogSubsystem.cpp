@@ -1,5 +1,6 @@
 ﻿#include "BlueprintCatalogSubsystem.h"
 #include "StarshatterPlayerSubsystem.h"
+#include "TransactionAI.h"
 #include "Engine/GameInstance.h"
 #include "EconomyRuntime.h"
 #include "ManufacturingAI.h"
@@ -52,6 +53,8 @@ FGuid UBlueprintCatalogSubsystem::PurchaseLicense(FEconomyState& State, const FB
     const FGuid Receipt = FGuid::NewGuid();
     if (!FEconomyLedger::Pay(State, FEconomyLedger::Pilot(), TEXT("NPC blueprint publisher"), Cost, Receipt, TEXT("Blueprint purchase"))) return {};
     const FGuid Blueprint = FEconomyLedger::GrantBlueprint(State, FEconomyLedger::Pilot(), Offer.Recipe, Original, Offer.CopyRuns);
+    auto& PurchaseReceipt = State.Journal.Last(); PurchaseReceipt.Item = Offer.Recipe; PurchaseReceipt.Quantity = 1;
+    PurchaseReceipt.UnitPrice = double(Cost); PurchaseReceipt.Reference = Blueprint;
     State.BlueprintReceipts.Add(Blueprint, Receipt); return Blueprint;
 }
 bool UBlueprintCatalogSubsystem::CanPurchase(FName Recipe, bool Original, FText& Reason) const
@@ -62,7 +65,7 @@ bool UBlueprintCatalogSubsystem::CanPurchase(FName Recipe, bool Original, FText&
     const auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
     if (!Players) { Reason = INVTEXT("Player data is unavailable."); return false; }
     const auto& Pilot = Players->GetPlayerInfo();
-    const int64 Balance = Pilot.Economy.Wallets.FindRef(FEconomyLedger::Pilot()) + (Pilot.Economy.bLegacyWalletMigrated ? 0 : Pilot.InsuranceCredits);
+    const int64 Balance = TransactionAI::BalanceIncludingLegacy(Pilot.Economy, Pilot.InsuranceCredits);
     if (Balance < (Original ? Offer->OriginalPrice : Offer->CopyPrice)) { Reason = INVTEXT("Insufficient credits for this blueprint."); return false; }
     Reason = INVTEXT("Originals allow unlimited runs. Copies have a limited number of runs."); return true;
 }

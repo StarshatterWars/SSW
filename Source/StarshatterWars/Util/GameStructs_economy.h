@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "GameStructs_contractstate.h"
 #include "MiningCrystalTypes.h"
+#include "MiningDroneTypes.h"
 #include "GameStructs_economy.generated.h"
 
 UENUM()
@@ -160,6 +161,7 @@ struct FEconomyState
     UPROPERTY(SaveGame) TMap<FGuid, FMarketOrder> MarketOrders;
     UPROPERTY(SaveGame) int64 NextMarketSequence = 0;
     UPROPERTY(SaveGame) TMap<FName, FMiningCrystalEquipment> MiningOptics;
+    UPROPERTY(SaveGame) TMap<FName, FMiningDroneFleetState> MiningDrones;
     UPROPERTY(SaveGame) bool bLegacyWalletMigrated = false;
 };
 

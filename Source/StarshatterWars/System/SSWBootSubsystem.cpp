@@ -50,6 +50,8 @@
 #include "StarshatterSystemDesignSubsystem.h"
 #include "CargoCatalogSubsystem.h"
 #include "AgentCatalogSubsystem.h"
+#include "GuildCatalogSubsystem.h"
+#include "MiningDroneSubsystem.h"
 #include "StarshatterWeaponDesignSubsystem.h"
 #include "StarshatterAssetRegistrySubsystem.h"
 #include "StarshatterEnvironmentSubsystem.h"
@@ -378,6 +380,8 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.AwardPopupClass"),
         TEXT("UI.ModEditorClass"),
         TEXT("UI.TransactionPopupClass"),
+        TEXT("UI.GuildsPopupClass"),
+        TEXT("UI.MiningDronesPopupClass"),
 
         TEXT("UI.Theme.MenuButton.Normal"),
         TEXT("UI.Theme.MenuButton.Hover"),
@@ -537,6 +541,10 @@ void USSWBootSubsystem::BootAgentCatalogLoader()
 {
     if (auto* Agents = GetGameInstance()->GetSubsystem<UAgentCatalogSubsystem>())
         Agents->LoadCatalog();
+    if (auto* Guilds = GetGameInstance()->GetSubsystem<UGuildCatalogSubsystem>())
+        Guilds->LoadCatalog();
+    if (auto* Drones = GetGameInstance()->GetSubsystem<UMiningDroneSubsystem>())
+        Drones->LoadCatalog();
 }
 
 void USSWBootSubsystem::BootSystemDesignLoader(const FBootContext& Ctx)

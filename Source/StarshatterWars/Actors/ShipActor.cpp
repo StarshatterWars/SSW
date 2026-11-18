@@ -2439,8 +2439,15 @@ void AShipActor::BuildMainEngineEffects(const Drive* MainDrive)
             }
             Emitter->SetAsset(Exhaust);
             Emitter->SetRelativeLocation(FVector::ZeroVector);
+            // Legacy capital flare values (often 5..8) sized billboard sprites.
+            // Applying them directly to the complete Niagara flame multiplies
+            // its width, length and particle lights again after hull scaling.
+            // Orion's 1.15 port factor is the existing Niagara reference size.
+            const float AuthoredPortScale=MainDrive->GetPortScale(i);
+            const float VisualPortScale=Cast<AFighterActor>(this) ? AuthoredPortScale :
+                (FMath::IsFinite(AuthoredPortScale) && AuthoredPortScale>0 ? FMath::Min(AuthoredPortScale,1.15f) : 1.f);
             Emitter->SetRelativeScale3D(
-                MainEngineEmitterRelativeScale * MainDrive->GetPortScale(i));
+                MainEngineEmitterRelativeScale * VisualPortScale);
 
             Emitter->SetAutoActivate(false);
             Emitter->Deactivate();

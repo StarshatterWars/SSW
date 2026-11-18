@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -13,6 +13,7 @@
 */
 
 #include "Sim.h"
+#include "SplashDamageRules.h"
 #include "RadioView.h"
 #include "PlayerFlightAccess.h"
 #include "AcceptanceAI.h"
@@ -54,6 +55,7 @@
 #include "Debris.h"
 #include "Asteroid.h"
 #include "MiningAI.h"
+#include "TrafficAI.h"
 #include "TransportAI.h"
 #include "ProductionAI.h"
 #include "Drive.h"
@@ -2715,7 +2717,7 @@ const TMap<FName, FContractTransaction>& Sim::GetTrainingContracts()
         Stock.Add(Parts, 1);
         auto& PilotAccount = TrainingContractAccounts.Add(TrainingContractPilot);
         PilotAccount.Credits = Economy.Wallets.FindRef(TrainingContractPilot);
-        if (!Economy.InitializedMarkets.Contains(TEXT("Training pilot grant")))
+        if (!Economy.InitializedMarkets.Contains(TEXT("Career starting grant")) && !Economy.InitializedMarkets.Contains(TEXT("Training pilot grant")))
         { PilotAccount.Credits += FMath::Min(10000LL, MAX_int64 - PilotAccount.Credits); Economy.InitializedMarkets.Add(TEXT("Training pilot grant")); }
         PilotAccount.StationStock.FindOrAdd(Terminal).Add(Parts, 1);
 
@@ -2937,126 +2939,11 @@ const FSSWProductionStock* Sim::GetProductionStock(const FSSWProductionFacility&
 
 void Sim::TickIndustry(double Seconds)
 {
-    if (!FMath::IsFinite(Seconds) || Seconds <= 0) return;
-    MarketSeconds += Seconds;
-    if (MarketSeconds>=1.0)
-    {
-        MarketSeconds=0;
-        auto& State=GetEconomy();
-        if (!State.MarketOrders.IsEmpty())
-        {
-            const auto Before=State;
-            const int32 Fills=FEconomyLedger::AdvanceMarketOrders(State,FDateTime::UtcNow().ToUnixTimestamp());
-            bool Changed=Fills>0;
-            if(!Changed)for(const auto& Pair:State.MarketOrders)
-                if(const auto* Old=Before.MarketOrders.Find(Pair.Key);!Old || Old->State!=Pair.Value.State){Changed=true;break;}
-            if (Changed && !IsNetworked())
-            {
-                if (Ship* Craft=GetPlayerShip()) Craft->ApplyCargoInventoryToManifest();
-                if (auto* World=NetworkWorld.Get())
-                    if (auto* Instance=World->GetGameInstance())
-                        if (auto* Players=Instance->GetSubsystem<UStarshatterPlayerSubsystem>();Players && !Players->SaveActivePlayerProgress())
-                        { State=Before; if (Ship* Craft=GetPlayerShip()) Craft->ApplyCargoInventoryToManifest(); UE_LOG(LogTemp,Warning,TEXT("[Market] Matching save failed; orders and balances restored for retry.")); }
-            }
-        }
-    }
-    IndustrySeconds += Seconds;
-    if (IndustrySeconds < 0.25) return;
-    const double Step = IndustrySeconds; IndustrySeconds = 0;
-    if (!TrainingContracts.IsEmpty()) GetTrainingContracts();
-    static TWeakObjectPtr<UDataTable> Facilities, Recipes;
-    if (!Facilities.IsValid()) Facilities = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionFacilities.DT_ProductionFacilities"));
-    if (!Recipes.IsValid()) Recipes = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionRecipes.DT_ProductionRecipes"));
-    if (!Facilities.IsValid() || !Recipes.IsValid()) return;
-    auto& Economy = GetEconomy();
-    ProductionViews.Reset();
-    for (const auto& Row : Facilities->GetRowMap())
-    {
-        const auto& Facility = *reinterpret_cast<const FSSWProductionFacility*>(Row.Value);
-        Ship* Station = FindShip(TCHAR_TO_UTF8(*Facility.Facility), TCHAR_TO_UTF8(*Facility.Region));
-        if (!Station || !Station->Design() || !Station->GetRegion() || !Station->GetRegion()->GetSystem() ||
-            !Facility.System.Equals(UTF8_TO_TCHAR(Station->GetRegion()->GetSystem()->GetName()), ESearchCase::IgnoreCase)) continue;
-        const auto* Recipe = Recipes->FindRow<FSSWProductionRecipe>(Facility.Recipe, TEXT("Live industry"), false);
-        if (!Recipe) continue;
-        const double Capacity = Facility.CapacityTonnes > 0 ? Facility.CapacityTonnes : Station->Design()->CargoCapacity.Tonnes;
-        const FName Input = FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("Input"));
-        const FName Output = FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("Output"));
-        FEconomyRuntime::EnsureWarehouse(Economy, Input, FName(*Facility.System), Capacity);
-        FEconomyRuntime::EnsureWarehouse(Economy, Output, FName(*Facility.System), Capacity, true);
-        ManufacturingAI::AdvanceLive(Economy, FName(*Facility.Facility), Input, Output, Facility.Recipe, *Recipe,
-            !Station->IsDead() && !Station->IsDying(), Step);
-        ProductionViews.Add(FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("View")),
-            ManufacturingAI::Describe(Economy, FName(*Facility.Facility), Input, Output));
-    }
+    TrafficAI::TickLegacyIndustry(*this,Seconds);
 }
 
-void
-Sim::ExecFrame(double DeltaSeconds)
+void Sim::TickLegacyJanusActors(double DeltaSeconds)
 {
-    if (PreparedSceneGate.Blocks(mission)) return;
-    if (!HasSimulationAuthority()) return;
-    if (auto* World = NetworkWorld.Get())
-        if (auto* Instance = World->GetGameInstance())
-            if (auto* Catalog = Instance->GetSubsystem<UCargoCatalogSubsystem>())
-                FEconomyRuntime::InitializeMarkets(GetEconomy(), *Catalog);
-    UE_LOG(LogTemp, VeryVerbose,
-		TEXT("[Sim::ExecFrame] Seconds=%.4f GameTime=%u Regions=%d"),
-		DeltaSeconds,
-		Game::GetGameTime(),
-		regions.size());
-
-	if (first_frame) {
-		first_frame = false;
-	}
-
-	if (regions.isEmpty()) {
-		active_region = nullptr;
-		rgn_queue.clear();
-		jumplist.destroy();
-		scene->Collect();
-		return;
-	}
-
-    // Keep the staged fighter idle until the player selects Launch.
-    if (PendingLaunchPlayer && !bPlayerLaunchRequested &&
-        !PendingLaunchPlayer->IsDead() &&
-        PendingLaunchPlayer->GetFlightPhase() == EOPSMode::ALERT)
-    {
-        PendingLaunchPlayer->SetThrottle(0);
-    }
-
-    // Keep staged wingmen visible in their assigned slots while waiting.
-    // Spawn/binding may complete later in this frame.
-    for (Ship* Wingman : DeferredPlayerWingmen)
-        SetStagedWingmanVisualHidden(Wingman, false);
-
-	ListIter<SimElement> ElementIter = elements;
-	while (++ElementIter)
-		if (!ElementIter->IsSquadron())
-			ElementIter->ExecFrame(DeltaSeconds);
-
-	ListIter<SimRegion> RegionIter = regions;
-	while (++RegionIter)
-		if (RegionIter.value() != active_region && RegionIter->GetNumShips() && !rgn_queue.contains(RegionIter.value()))
-			rgn_queue.append(RegionIter.value());
-
-	// Execute one current inactive region. Validate ownership before dereferencing
-	// queued raw pointers; entries can become obsolete across mission teardown.
-	while (rgn_queue.size())
-	{
-		SimRegion* ExecRegion = rgn_queue.removeIndex(0);
-		if (!ExecRegion || !regions.contains(ExecRegion))
-			continue;
-		if (ExecRegion == active_region || ExecRegion->GetNumShips() == 0)
-			continue;
-		ExecRegion->ExecFrame(DeltaSeconds);
-		break;
-	}
-
-	if (active_region)
-		active_region->ExecFrame(DeltaSeconds);
-
-    TickIndustry(DeltaSeconds);
     if (mission && mission->GetIdentity() == 101 && active_region &&
         FCStringAnsi::Stricmp(mission->GetSystem(), "Janus") == 0)
     {
@@ -3356,6 +3243,131 @@ Sim::ExecFrame(double DeltaSeconds)
             }
         }
     }
+}
+
+void Sim::TickIndustrialActors(double Seconds)
+{
+    if (!FMath::IsFinite(Seconds) || Seconds <= 0) return;
+    MarketSeconds += Seconds;
+    if (MarketSeconds>=1.0)
+    {
+        MarketSeconds=0;
+        auto& State=GetEconomy();
+        if (!State.MarketOrders.IsEmpty())
+        {
+            const auto Before=State;
+            const int32 Fills=FEconomyLedger::AdvanceMarketOrders(State,FDateTime::UtcNow().ToUnixTimestamp());
+            bool Changed=Fills>0;
+            if(!Changed)for(const auto& Pair:State.MarketOrders)
+                if(const auto* Old=Before.MarketOrders.Find(Pair.Key);!Old || Old->State!=Pair.Value.State){Changed=true;break;}
+            if (Changed && !IsNetworked())
+            {
+                if (Ship* Craft=GetPlayerShip()) Craft->ApplyCargoInventoryToManifest();
+                if (auto* World=NetworkWorld.Get())
+                    if (auto* Instance=World->GetGameInstance())
+                        if (auto* Players=Instance->GetSubsystem<UStarshatterPlayerSubsystem>();Players && !Players->SaveActivePlayerProgress())
+                        { State=Before; if (Ship* Craft=GetPlayerShip()) Craft->ApplyCargoInventoryToManifest(); UE_LOG(LogTemp,Warning,TEXT("[Market] Matching save failed; orders and balances restored for retry.")); }
+            }
+        }
+    }
+    IndustrySeconds += Seconds;
+    if (IndustrySeconds < 0.25) return;
+    const double Step = IndustrySeconds; IndustrySeconds = 0;
+    if (!TrainingContracts.IsEmpty()) GetTrainingContracts();
+    static TWeakObjectPtr<UDataTable> Facilities, Recipes;
+    if (!Facilities.IsValid()) Facilities = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionFacilities.DT_ProductionFacilities"));
+    if (!Recipes.IsValid()) Recipes = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionRecipes.DT_ProductionRecipes"));
+    if (!Facilities.IsValid() || !Recipes.IsValid()) return;
+    auto& Economy = GetEconomy();
+    ProductionViews.Reset();
+    for (const auto& Row : Facilities->GetRowMap())
+    {
+        const auto& Facility = *reinterpret_cast<const FSSWProductionFacility*>(Row.Value);
+        Ship* Station = FindShip(TCHAR_TO_UTF8(*Facility.Facility), TCHAR_TO_UTF8(*Facility.Region));
+        if (!Station || !Station->Design() || !Station->GetRegion() || !Station->GetRegion()->GetSystem() ||
+            !Facility.System.Equals(UTF8_TO_TCHAR(Station->GetRegion()->GetSystem()->GetName()), ESearchCase::IgnoreCase)) continue;
+        const auto* Recipe = Recipes->FindRow<FSSWProductionRecipe>(Facility.Recipe, TEXT("Live industry"), false);
+        if (!Recipe) continue;
+        const double Capacity = Facility.CapacityTonnes > 0 ? Facility.CapacityTonnes : Station->Design()->CargoCapacity.Tonnes;
+        const FName Input = FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("Input"));
+        const FName Output = FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("Output"));
+        FEconomyRuntime::EnsureWarehouse(Economy, Input, FName(*Facility.System), Capacity);
+        FEconomyRuntime::EnsureWarehouse(Economy, Output, FName(*Facility.System), Capacity, true);
+        ManufacturingAI::AdvanceLive(Economy, FName(*Facility.Facility), Input, Output, Facility.Recipe, *Recipe,
+            !Station->IsDead() && !Station->IsDying(), Step);
+        ProductionViews.Add(FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("View")),
+            ManufacturingAI::Describe(Economy, FName(*Facility.Facility), Input, Output));
+    }
+}
+
+void
+Sim::ExecFrame(double DeltaSeconds)
+{
+    if (PreparedSceneGate.Blocks(mission)) return;
+    if (!HasSimulationAuthority()) return;
+    if (auto* World = NetworkWorld.Get())
+        if (auto* Instance = World->GetGameInstance())
+            if (auto* Catalog = Instance->GetSubsystem<UCargoCatalogSubsystem>())
+                FEconomyRuntime::InitializeMarkets(GetEconomy(), *Catalog);
+    UE_LOG(LogTemp, VeryVerbose,
+		TEXT("[Sim::ExecFrame] Seconds=%.4f GameTime=%u Regions=%d"),
+		DeltaSeconds,
+		Game::GetGameTime(),
+		regions.size());
+
+	if (first_frame) {
+		first_frame = false;
+	}
+
+	if (regions.isEmpty()) {
+		active_region = nullptr;
+		rgn_queue.clear();
+		jumplist.destroy();
+		scene->Collect();
+		return;
+	}
+
+    // Keep the staged fighter idle until the player selects Launch.
+    if (PendingLaunchPlayer && !bPlayerLaunchRequested &&
+        !PendingLaunchPlayer->IsDead() &&
+        PendingLaunchPlayer->GetFlightPhase() == EOPSMode::ALERT)
+    {
+        PendingLaunchPlayer->SetThrottle(0);
+    }
+
+    // Keep staged wingmen visible in their assigned slots while waiting.
+    // Spawn/binding may complete later in this frame.
+    for (Ship* Wingman : DeferredPlayerWingmen)
+        SetStagedWingmanVisualHidden(Wingman, false);
+
+	ListIter<SimElement> ElementIter = elements;
+	while (++ElementIter)
+		if (!ElementIter->IsSquadron())
+			ElementIter->ExecFrame(DeltaSeconds);
+
+	ListIter<SimRegion> RegionIter = regions;
+	while (++RegionIter)
+		if (RegionIter.value() != active_region && RegionIter->GetNumShips() && !rgn_queue.contains(RegionIter.value()))
+			rgn_queue.append(RegionIter.value());
+
+	// Execute one current inactive region. Validate ownership before dereferencing
+	// queued raw pointers; entries can become obsolete across mission teardown.
+	while (rgn_queue.size())
+	{
+		SimRegion* ExecRegion = rgn_queue.removeIndex(0);
+		if (!ExecRegion || !regions.contains(ExecRegion))
+			continue;
+		if (ExecRegion == active_region || ExecRegion->GetNumShips() == 0)
+			continue;
+		ExecRegion->ExecFrame(DeltaSeconds);
+		break;
+	}
+
+	if (active_region)
+		active_region->ExecFrame(DeltaSeconds);
+
+    TickIndustry(DeltaSeconds);
+
 
     // The wingmen must not begin a launch countdown until the player's
     // fighter has physically departed. QUEUED/LOCKED is not enough.
@@ -3743,6 +3755,14 @@ Sim::ResolveSplashList()
 			if (!splash->rgn)
 				continue;
 
+            if (!SplashDamageRules::Valid(splash->damage,splash->range,splash->loc))
+            {
+                UE_LOG(LogTemp,Error,TEXT("[NativeSplash][INVALID] Owner='%hs' Damage=%.17g Range=%.17g Location=%s"),
+                    static_cast<const char*>(splash->owner_name),splash->damage,splash->range,*splash->loc.ToString());
+                continue;
+            }
+            UE_LOG(LogTemp,Display,TEXT("[NativeSplash] Owner='%hs' Damage=%.17g Range=%.17g Location=%s Ships=%d"),
+                static_cast<const char*>(splash->owner_name),splash->damage,splash->range,*splash->loc.ToString(),splash->rgn->GetShips().size());
 			// damage ships:
 			ListIter<Ship> s_iter = splash->rgn->GetShips();
 			while (++s_iter) {
@@ -3751,8 +3771,11 @@ Sim::ResolveSplashList()
 				const double distance = (ship->GetLocation() - splash->loc).Size();
 
 				if (distance > 1 && distance < splash->range) {
-					const double damage = splash->damage * (1 - distance / splash->range);
+					const double damage = SplashDamageRules::AtDistance(splash->damage,splash->range,distance);
+                    const double BeforeIntegrity=ship->GetIntegrity();
 					ship->InflictDamage(damage);
+                    UE_LOG(LogTemp,Display,TEXT("[NativeSplash][Victim] Owner='%hs' Victim='%hs' Distance=%.17g Damage=%.17g Integrity=%.17g->%.17g Position=%s"),
+                        static_cast<const char*>(splash->owner_name),ship->GetName(),distance,damage,BeforeIntegrity,ship->GetIntegrity(),*ship->GetLocation().ToString());
 
 					const int ship_destroyed = (!ship->InTransition() && ship->GetIntegrity() < 1.0f);
 
@@ -3827,7 +3850,7 @@ Sim::ResolveSplashList()
 				const double distance = (drone->GetLocation() - splash->loc).Size();
 
 				if (distance > 1 && distance < splash->range) {
-					const double damage = splash->damage * (1 - distance / splash->range);
+					const double damage = SplashDamageRules::AtDistance(splash->damage,splash->range,distance);
 					drone->InflictDamage(damage);
 
 					const int destroyed = (drone->GetIntegrity() < 1.0f);

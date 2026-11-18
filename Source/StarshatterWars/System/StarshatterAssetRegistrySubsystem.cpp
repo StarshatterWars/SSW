@@ -1018,6 +1018,13 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
     }
 
 
+    if (!Cache.Contains(TEXT("UI.MiningDronesPopupClass")))
+        Cache.Add(TEXT("UI.MiningDronesPopupClass"),TSoftObjectPtr<UObject>(Settings->MiningDronesPopupClass.IsNull()
+            ? FSoftObjectPath(TEXT("/Script/StarshatterWars.MiningDronesDlg")) : Settings->MiningDronesPopupClass.ToSoftObjectPath()));
+    if (!Cache.Contains(TEXT("UI.GuildsPopupClass")))
+        Cache.Add(TEXT("UI.GuildsPopupClass"),TSoftObjectPtr<UObject>(Settings->GuildsPopupClass.IsNull()
+            ? FSoftObjectPath(TEXT("/Script/StarshatterWars.GuildsDlg")) : Settings->GuildsPopupClass.ToSoftObjectPath()));
+
     // UI.TransactionPopupClass
     if (!Cache.Contains(TEXT("UI.TransactionPopupClass")))
     {

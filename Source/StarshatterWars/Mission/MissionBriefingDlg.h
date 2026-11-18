@@ -172,6 +172,14 @@ protected:
     UPROPERTY(Transient) TObjectPtr<class UTransactionDlg> TransactionWidget;
     void ToggleWallet();
     void CloseWallet();
+    TSharedPtr<SWidget> GuildsPopup;
+    UPROPERTY(Transient) TObjectPtr<class UGuildsDlg> GuildsWidget;
+    void ToggleGuilds();
+    void CloseGuilds();
+    TSharedPtr<SWidget> MiningDronesPopup;
+    UPROPERTY(Transient) TObjectPtr<class UMiningDronesDlg> MiningDronesWidget;
+    void ToggleMiningDrones();
+    void CloseMiningDrones();
     UPROPERTY(Transient) TObjectPtr<class UFlightLogbookDlg> PlayersWidget;
     void TogglePlayers();
     void ClosePlayers();

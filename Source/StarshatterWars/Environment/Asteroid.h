@@ -33,6 +33,7 @@ public:
     int GetContactId() const { return ContactId; }
     float GetIntegrityFraction() const { return GetIntegrity() / InitialIntegrity; }
     double ExtractOre(double Tonnes);
+    double ReturnExtractedOre(double Tonnes); // Authoritative failed-transaction rollback only.
     const FSSWAsteroidResource& GetResource() const { return Resource; }
 	static void Initialize();
 	static void Close();
@@ -41,5 +42,6 @@ private:
     int ContactId=0;
     float InitialIntegrity=1.0f;
     FSSWAsteroidResource Resource;
+    double InitialResourceTonnes=0;
 };
 

@@ -1,6 +1,7 @@
 #include "ShipInsuranceSubsystem.h"
 #include "TransactionAI.h"
 #include "OwnedHullCondition.h"
+#include "PlayerHullLoss.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "ShipDesignRegistry.h"
@@ -263,6 +264,8 @@ bool UShipInsuranceSubsystem::PurchasePolicy(FGuid Hull, EShipInsuranceTier Tier
     { Result = INVTEXT("Insufficient credits for this premium."); return false; }
     const auto Previous = Pilot;
     if (!FEconomyLedger::Pay(Players->GetEconomy(), FEconomyLedger::Pilot(), TEXT("Insurance fund"), Offer.Premium, FGuid::NewGuid(), TEXT("Insurance premium"))) return false;
+    auto& PremiumReceipt = Players->GetEconomy().Journal.Last(); PremiumReceipt.Item = Entry->Design;
+    PremiumReceipt.Quantity = 1; PremiumReceipt.UnitPrice = double(Offer.Premium); PremiumReceipt.Reference = Hull;
     Entry->Insurance.Tier = Tier;
     Entry->Insurance.StartsUtc = Now;
     Entry->Insurance.ExpiresUtc = Now + PolicySeconds;
@@ -303,8 +306,10 @@ bool UShipInsuranceSubsystem::SettleLoss(FGuid Hull, FText& Result)
     }
     if (!FEconomyLedger::Pay(Economy, TEXT("Insurance fund"), FEconomyLedger::Pilot(), Payout, Hull, TEXT("Insurance claim")))
     { Pilot = Previous; Result = INVTEXT("The claim could not be paid. No policy or wallet changes were kept."); return false; }
-    Entry->bLost = true;
-    Entry->Insurance.bSettled = true;
+    auto& ClaimReceipt = Economy.Journal.Last(); ClaimReceipt.Item = Entry->Design; ClaimReceipt.Quantity = 1;
+    ClaimReceipt.UnitPrice = double(Payout); ClaimReceipt.Reference = Hull;
+    if(!FPlayerHullLoss::Finalize(Pilot,Hull))
+    { Pilot=Previous;Result=INVTEXT("The lost hull could not be finalized. No claim or cargo changes were kept.");return false; }
     if (!Players->SaveActivePlayerProgress())
     { Pilot = Previous; return false; }
     Result = FText::Format(INVTEXT("Insurance paid {0} credits."), FText::AsNumber(Payout));
@@ -423,6 +428,8 @@ bool UShipInsuranceSubsystem::FitComponent(FGuid Hull, int32 Slot, int32 Level, 
     if (!FEconomyLedger::Pay(Players->GetEconomy(), FEconomyLedger::Pilot(), TEXT("Shipyard"), Price, FGuid::NewGuid(), TEXT("Component refit"))) return false;
     Entry->Components[Slot].Level = Level;
     Entry->Components[Slot].ItemId = FGuid::NewGuid();
+    auto& RefitReceipt = Players->GetEconomy().Journal.Last(); RefitReceipt.Item = FName(*Variant->Name);
+    RefitReceipt.Quantity = 1; RefitReceipt.UnitPrice = double(Price); RefitReceipt.Reference = Entry->Components[Slot].ItemId;
     Entry->Components[Slot].bHasCondition=true;
     Entry->Components[Slot].ConditionPercent=100;
     Entry->Components[Slot].ConditionStatus=static_cast<int32>(SYSTEM_STATUS::NOMINAL);

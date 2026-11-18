@@ -1,0 +1,442 @@
+[
+  {
+    "Name": "Terellian_PilotGuild",
+    "DisplayName": "Alliance Pilots Guild",
+    "Description": "Alliance professional charter for pilot operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Pilot",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "RequiredSkills": [],
+    "StarterShip": "Falcon",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Terellian_MinerGuild",
+    "DisplayName": "Alliance Mining Cooperative",
+    "Description": "Alliance professional charter for miner operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Miner",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "RequiredSkills": [
+      "mining_operations"
+    ],
+    "StarterShip": "Prospector",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Terellian_IndustrialistGuild",
+    "DisplayName": "Alliance Industrial Assembly",
+    "Description": "Alliance professional charter for industrialist operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Industrialist",
+    "Empire": "Terellian",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "production_management"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Terellian_TraderGuild",
+    "DisplayName": "Alliance Trade Exchange",
+    "Description": "Alliance professional charter for trader operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Trader",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "RequiredSkills": [
+      "trade"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Terellian_HaulerGuild",
+    "DisplayName": "Alliance Freight Guild",
+    "Description": "Alliance professional charter for hauler operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Hauler",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "RequiredSkills": [
+      "navigation"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Terellian_ExplorerGuild",
+    "DisplayName": "Alliance Survey Society",
+    "Description": "Alliance professional charter for explorer operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Explorer",
+    "Empire": "Terellian",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "sensor_operations"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Terellian_SecurityGuild",
+    "DisplayName": "Alliance Security Association",
+    "Description": "Alliance professional charter for security operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Security",
+    "Empire": "Terellian",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "gunnery"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Terellian_OrganizationCharter",
+    "DisplayName": "Alliance Organization Charter",
+    "Description": "Create or join a Alliance player organization in the shared local guild directory. Recruitment officers review applications and invitations; leaders delegate roles and transfer command. This charter does not provide online guild synchronization or shared banking.",
+    "Kind": "PlayerOrganization",
+    "Career": "Pilot",
+    "Empire": "Terellian",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "navigation"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Marakan_PilotGuild",
+    "DisplayName": "Hegemony Pilots Guild",
+    "Description": "Hegemony professional charter for pilot operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Pilot",
+    "Empire": "Marakan",
+    "MinimumRank": 0,
+    "RequiredSkills": [],
+    "StarterShip": "Viper",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Marakan_MinerGuild",
+    "DisplayName": "Hegemony Mining Cooperative",
+    "Description": "Hegemony professional charter for miner operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Miner",
+    "Empire": "Marakan",
+    "MinimumRank": 0,
+    "RequiredSkills": [
+      "mining_operations"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Marakan_IndustrialistGuild",
+    "DisplayName": "Hegemony Industrial Assembly",
+    "Description": "Hegemony professional charter for industrialist operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Industrialist",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "production_management"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Marakan_TraderGuild",
+    "DisplayName": "Hegemony Trade Exchange",
+    "Description": "Hegemony professional charter for trader operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Trader",
+    "Empire": "Marakan",
+    "MinimumRank": 0,
+    "RequiredSkills": [
+      "trade"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Marakan_HaulerGuild",
+    "DisplayName": "Hegemony Freight Guild",
+    "Description": "Hegemony professional charter for hauler operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Hauler",
+    "Empire": "Marakan",
+    "MinimumRank": 0,
+    "RequiredSkills": [
+      "navigation"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Marakan_ExplorerGuild",
+    "DisplayName": "Hegemony Survey Society",
+    "Description": "Hegemony professional charter for explorer operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Explorer",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "sensor_operations"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Marakan_SecurityGuild",
+    "DisplayName": "Hegemony Security Association",
+    "Description": "Hegemony professional charter for security operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "gunnery"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Marakan_OrganizationCharter",
+    "DisplayName": "Hegemony Organization Charter",
+    "Description": "Create or join a Hegemony player organization in the shared local guild directory. Recruitment officers review applications and invitations; leaders delegate roles and transfer command. This charter does not provide online guild synchronization or shared banking.",
+    "Kind": "PlayerOrganization",
+    "Career": "Pilot",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "navigation"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Dantari_PilotGuild",
+    "DisplayName": "Dantari Pilots Guild",
+    "Description": "Dantari professional charter for pilot operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Pilot",
+    "Empire": "Dantari",
+    "MinimumRank": 0,
+    "RequiredSkills": [],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Dantari_MinerGuild",
+    "DisplayName": "Dantari Mining Cooperative",
+    "Description": "Dantari professional charter for miner operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Miner",
+    "Empire": "Dantari",
+    "MinimumRank": 0,
+    "RequiredSkills": [
+      "mining_operations"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Dantari_IndustrialistGuild",
+    "DisplayName": "Dantari Industrial Assembly",
+    "Description": "Dantari professional charter for industrialist operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Industrialist",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "production_management"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Dantari_TraderGuild",
+    "DisplayName": "Dantari Trade Exchange",
+    "Description": "Dantari professional charter for trader operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Trader",
+    "Empire": "Dantari",
+    "MinimumRank": 0,
+    "RequiredSkills": [
+      "trade"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Dantari_HaulerGuild",
+    "DisplayName": "Dantari Freight Guild",
+    "Description": "Dantari professional charter for hauler operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Hauler",
+    "Empire": "Dantari",
+    "MinimumRank": 0,
+    "RequiredSkills": [
+      "navigation"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Dantari_ExplorerGuild",
+    "DisplayName": "Dantari Survey Society",
+    "Description": "Dantari professional charter for explorer operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Explorer",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "sensor_operations"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Dantari_SecurityGuild",
+    "DisplayName": "Dantari Security Association",
+    "Description": "Dantari professional charter for security operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Security",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "gunnery"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Dantari_OrganizationCharter",
+    "DisplayName": "Dantari Organization Charter",
+    "Description": "Create or join a Dantari player organization in the shared local guild directory. Recruitment officers review applications and invitations; leaders delegate roles and transfer command. This charter does not provide online guild synchronization or shared banking.",
+    "Kind": "PlayerOrganization",
+    "Career": "Pilot",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "navigation"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Solus_PilotGuild",
+    "DisplayName": "Solus Pilots Guild",
+    "Description": "Solus professional charter for pilot operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Pilot",
+    "Empire": "Solus",
+    "MinimumRank": 0,
+    "RequiredSkills": [],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Solus_MinerGuild",
+    "DisplayName": "Solus Mining Cooperative",
+    "Description": "Solus professional charter for miner operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Miner",
+    "Empire": "Solus",
+    "MinimumRank": 0,
+    "RequiredSkills": [
+      "mining_operations"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Solus_IndustrialistGuild",
+    "DisplayName": "Solus Industrial Assembly",
+    "Description": "Solus professional charter for industrialist operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Industrialist",
+    "Empire": "Solus",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "production_management"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Solus_TraderGuild",
+    "DisplayName": "Solus Trade Exchange",
+    "Description": "Solus professional charter for trader operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Trader",
+    "Empire": "Solus",
+    "MinimumRank": 0,
+    "RequiredSkills": [
+      "trade"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Solus_HaulerGuild",
+    "DisplayName": "Solus Freight Guild",
+    "Description": "Solus professional charter for hauler operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Hauler",
+    "Empire": "Solus",
+    "MinimumRank": 0,
+    "RequiredSkills": [
+      "navigation"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Solus_ExplorerGuild",
+    "DisplayName": "Solus Survey Society",
+    "Description": "Solus professional charter for explorer operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Explorer",
+    "Empire": "Solus",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "sensor_operations"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Solus_SecurityGuild",
+    "DisplayName": "Solus Security Association",
+    "Description": "Solus professional charter for security operations. The Janus liaison supports initial guild services at Janek. Membership follows hard empire boundaries, rank qualifications and the listed skill requirements. Career membership does not replace military mission assignments.",
+    "Kind": "Career",
+    "Career": "Security",
+    "Empire": "Solus",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "gunnery"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  },
+  {
+    "Name": "Solus_OrganizationCharter",
+    "DisplayName": "Solus Organization Charter",
+    "Description": "Create or join a Solus player organization in the shared local guild directory. Recruitment officers review applications and invitations; leaders delegate roles and transfer command. This charter does not provide online guild synchronization or shared banking.",
+    "Kind": "PlayerOrganization",
+    "Career": "Pilot",
+    "Empire": "Solus",
+    "MinimumRank": 1,
+    "RequiredSkills": [
+      "navigation"
+    ],
+    "StarterShip": "None",
+    "bPublicRecruitment": true
+  }
+]

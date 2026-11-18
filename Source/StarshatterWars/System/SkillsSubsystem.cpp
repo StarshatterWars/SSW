@@ -1,5 +1,6 @@
 #include "SkillsSubsystem.h"
 #include "StarshatterPlayerSubsystem.h"
+#include "TransactionAI.h"
 #include "Engine/GameInstance.h"
 #include "GameStructs.h"
 #include "PlayerCharacter.h"
@@ -33,6 +34,8 @@ bool FSkillRules::Purchase(FEconomyState& State, TMap<FName, FSkillProgress>& Le
     const FGuid Id = FGuid::NewGuid();
     if (!FEconomyLedger::Pay(State, FEconomyLedger::Pilot(), TEXT("Skill book publisher"), Skill.BookPrice, Id, TEXT("Skill book")))
     { Reason = INVTEXT("Insufficient credits for this skill book."); return false; }
+    auto& Receipt = State.Journal.Last(); Receipt.Item = Skill.Name; Receipt.Quantity = 1;
+    Receipt.UnitPrice = double(Skill.BookPrice); Receipt.Reference = Id;
     FSkillProgress Progress; Progress.Id = Id; Progress.bComplete = true; Progress.LearnedUtc = Now;
     // No timer or level progression runs in this version. bComplete satisfies all levels.
     Learned.Add(Skill.Name, Progress);
@@ -132,7 +135,7 @@ bool USkillsSubsystem::CanPurchaseBook(FName Id, FText& Reason) const
     const FName Empire(*StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(static_cast<int64>(Pilot->GetEmpire())));
     if (!FSkillRules::CanPurchase(*Definition, Players->GetPlayerInfo().Skills, Pilot->GetRank(), Empire, Reason)) return false;
     const auto& Economy = Players->GetPlayerInfo().Economy;
-    const int64 Balance = Economy.Wallets.FindRef(FEconomyLedger::Pilot()) + (Economy.bLegacyWalletMigrated ? 0 : Players->GetPlayerInfo().InsuranceCredits);
+    const int64 Balance = TransactionAI::BalanceIncludingLegacy(Economy, Players->GetPlayerInfo().InsuranceCredits);
     if (Balance < Definition->BookPrice) { Reason = INVTEXT("Insufficient credits for this skill book."); return false; }
     return true;
 }

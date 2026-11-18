@@ -1,0 +1,8 @@
+{
+  "ActiveShipBudget": 4,
+  "MaximumJourneys": 96,
+  "ScheduleSeconds": 8,
+  "AbstractHopSeconds": 90,
+  "TransferTonnesPerSecond": 1,
+  "Notes": "Native TrafficAI authority owns scheduling and real stock reservations. Atmospheric sectors remain abstract until safe flight anchors exist. No traffic during cinematics, offline movie export or pause. Existing authored mission ships are never adopted as ambient traffic."
+}

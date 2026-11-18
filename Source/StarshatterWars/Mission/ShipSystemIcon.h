@@ -5,7 +5,7 @@
 #include "SimSystem.h"
 #include "Widgets/SLeafWidget.h"
 
-enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore, Contracts, Gazetteer, PlanetMoon, Agent, Accept, Audio, Keyboard, Display, SettingsGear, Hangar, Insurance, Loadout, Skills, Mineral, Electronics, Medical, Liquid, Passengers, MissionPackage, Intel, Back, Joystick, Play, Awards, Wallet };
+enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore, Contracts, Gazetteer, PlanetMoon, Agent, Accept, Audio, Keyboard, Display, SettingsGear, Hangar, Insurance, Loadout, Skills, Mineral, Electronics, Medical, Liquid, Passengers, MissionPackage, Intel, Back, Joystick, Play, Awards, Wallet, Guilds, MiningDrone };
 
 class SShipSystemIcon : public SLeafWidget
 {
@@ -69,6 +69,7 @@ public:
         };
         switch (Symbol)
         {
+        case EShipSystemIcon::MiningDrone: Line({{7,7},{15,7},{15,15},{7,15},{7,7}}); Line({{2,2},{7,7},{2,7},{2,2},{7,2},{7,7}}); Line({{20,2},{15,7},{20,7},{20,2},{15,2},{15,7}}); Line({{2,20},{7,15},{2,15},{2,20},{7,20},{7,15}}); Line({{20,20},{15,15},{20,15},{20,20},{15,20},{15,15}}); break;
         case EShipSystemIcon::Awards: Line({{5,2},{10,2},{12,8},{7,10},{5,2}}); Line({{12,2},{17,2},{15,10},{10,8},{12,2}}); Line({{7,9},{15,9},{18,15},{15,21},{7,21},{4,15},{7,9}}); Line({{11,12},{12,14},{15,15},{12,16},{11,19},{10,16},{7,15},{10,14},{11,12}}); break;
         case EShipSystemIcon::Play: Line({{6,3},{19,11},{6,19},{6,3}}); break;
         case EShipSystemIcon::Joystick: Line({{3,16},{19,16},{20,20},{2,20},{3,16}}); Line({{11,16},{11,8},{8,5},{8,2},{13,2},{15,5},{13,8},{11,8}}); break;
@@ -184,6 +185,14 @@ public:
         case EShipSystemIcon::Marketplace:
             Line({{4,9},{18,9},{19,20},{3,20},{4,9}});
             Line({{8,11},{8,5},{10,3},{12,3},{14,5},{14,11}});
+            break;
+        case EShipSystemIcon::Guilds:
+            Line({{8,6},{9,3},{13,3},{14,6},{12,8},{10,8},{8,6}});
+            Line({{6,20},{6,14},{8,11},{14,11},{16,14},{16,20}});
+            Line({{2,9},{3,7},{5,7},{6,9},{5,11},{3,11},{2,9}});
+            Line({{1,19},{1,15},{3,13},{5,13}});
+            Line({{16,9},{17,7},{19,7},{20,9},{19,11},{17,11},{16,9}});
+            Line({{17,13},{19,13},{21,15},{21,19}});
             break;
         case EShipSystemIcon::Wallet:
             Line({{3,5},{19,5},{19,9}});Line({{19,15},{19,20},{3,20},{3,5}});

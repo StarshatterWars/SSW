@@ -27,6 +27,7 @@ class STARSHATTERWARS_API TransactionAI
 public:
     static TArray<FTransactionEntry> Query(const FEconomyState&, const FTransactionQuery&);
     static int64 Balance(const FEconomyState&, FName Owner = FEconomyLedger::Pilot());
+    static int64 BalanceIncludingLegacy(const FEconomyState&, int64 LegacyCredits);
     // Adapter for legacy contract accounts: log an already-calculated balance once, never pay twice.
     static bool ReconcileExternalBalance(FEconomyState&, FName Owner, int64 NewBalance, FName Reason,
         FName Counterparty = FName(TEXT("Contract escrow")), EWalletTransactionCategory Category = EWalletTransactionCategory::Contract, FGuid Reference = FGuid());

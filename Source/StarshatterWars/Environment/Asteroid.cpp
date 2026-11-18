@@ -126,6 +126,7 @@ Asteroid::Asteroid(int t, const FVector& pos, double m, TOptional<ESSWAsteroidTy
     // Only the imported library supplies asteroid geometry and raw bounds.
     radius=library_radii[MeshVariant];
     // Scale breakup resistance with rock size, independently of collision mass.
+    InitialResourceTonnes = Resource.AmountTonnes;
     InitialIntegrity = integrity = static_cast<float>(FMath::Clamp(radius * 8.0, 500.0, 20000.0));
 	life = -1;
 }
@@ -134,9 +135,18 @@ Asteroid::Asteroid(int t, const FVector& pos, double m, TOptional<ESSWAsteroidTy
 
 double Asteroid::ExtractOre(double Tonnes)
 {
+    if (!FMath::IsFinite(Tonnes) || Tonnes <= 0) return 0;
     const double Extracted = FMath::Clamp(Tonnes, 0.0, Resource.AmountTonnes);
     Resource.AmountTonnes -= Extracted;
     return Extracted;
+}
+
+double Asteroid::ReturnExtractedOre(double Tonnes)
+{
+    if (!FMath::IsFinite(Tonnes) || Tonnes <= 0) return 0;
+    const double Restored = FMath::Min(Tonnes, FMath::Max(0.0, InitialResourceTonnes - Resource.AmountTonnes));
+    Resource.AmountTonnes += Restored;
+    return Restored;
 }
 
 void

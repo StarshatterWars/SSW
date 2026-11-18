@@ -16,6 +16,10 @@ TSharedRef<SWidget> UFlightLogbookDlg::BuildPanelContent(UGameInstance* Instance
         [
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot().AutoWidth().Padding(0,0,6,0)
+            [SNew(SButton).ToolTipText(INVTEXT("Guilds — careers and player organizations"))
+                .OnClicked_Lambda([Open = OnOpenGuilds]() { Open.ExecuteIfBound(); return FReply::Handled(); })
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Guilds)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(0,0,6,0)
             [SNew(SButton).ToolTipText(INVTEXT("Wallet — balance and transactions"))
                 .OnClicked_Lambda([Open = OnOpenWallet]() { Open.ExecuteIfBound(); return FReply::Handled(); })
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Wallet)]]

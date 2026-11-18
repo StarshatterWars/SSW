@@ -85,6 +85,10 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FWalletBoundaryTest,"Starshatter.Economy.Transa
 bool FWalletBoundaryTest::RunTest(const FString&)
 {
     FEconomyState State;State.Wallets.Add(TEXT("Pilot"),1000);State.Wallets.Add(TEXT("Full"),MAX_int64);State.Wallets.Add(TEXT("Invalid"),-1);
+    TestEqual(TEXT("Legacy quote balance saturates without signed overflow"),TransactionAI::BalanceIncludingLegacy(State,MAX_int64),MAX_int64);
+    TestEqual(TEXT("Invalid negative legacy amount never lowers spendable quote"),TransactionAI::BalanceIncludingLegacy(State,-1),1000LL);
+    State.bLegacyWalletMigrated=true;
+    TestEqual(TEXT("Already migrated credits cannot be counted twice"),TransactionAI::BalanceIncludingLegacy(State,50000),1000LL);
     TestFalse(TEXT("Same-party transfer cannot create a false receipt"),FEconomyLedger::Pay(State,TEXT("Pilot"),TEXT("Pilot"),5,FGuid::NewGuid(),TEXT("Test")));
     TestFalse(TEXT("Recipient overflow rejected before sender debit"),FEconomyLedger::Pay(State,TEXT("Pilot"),TEXT("Full"),1,FGuid::NewGuid(),TEXT("Test")));
     TestFalse(TEXT("Negative recipient wallet rejected atomically"),FEconomyLedger::Pay(State,TEXT("Pilot"),TEXT("Invalid"),5,FGuid::NewGuid(),TEXT("Test")));

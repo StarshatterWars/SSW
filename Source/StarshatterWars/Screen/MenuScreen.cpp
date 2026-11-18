@@ -13,6 +13,7 @@
 #include "Sim.h"
 #include "Ship.h"
 #include "ShipDesign.h"
+#include "FreeFlightHullRules.h"
 #include "ExitDlg.h"
 #include "ConfirmDlg.h"
 #include "FirstTimeDlg.h"
@@ -724,6 +725,8 @@ void UMenuScreen::StartFreeFlight()
         }
     }
 
+    if(auto* Players=Game->GetSubsystem<UStarshatterPlayerSubsystem>())
+        FreeFlightHullRules::Apply(*Game->FreeFlightMission,Players->GetPlayerInfo());
     if (auto* Runtime = Game->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetGameMode(EGameMode::PREP);
     ShowStandaloneMissionDlg(Game->FreeFlightMission.Get(), Repository);
     if (CurrentDialog == MissionBriefingDlg && MissionBriefingDlg)

@@ -3,6 +3,7 @@
 #include "Engine/GameInstance.h"
 #include "MissionUIStyle.h"
 #include "ShipSystemIcon.h"
+#include "Misc/DateTime.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
@@ -56,7 +57,42 @@ TSharedRef<SWidget> UInsuranceDlg::RebuildWidget()
     const auto Weak = TWeakObjectPtr<UShipInsuranceSubsystem>(Service);
     return SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(12)
-        [SNew(STextBlock).Text(FText::FromString(Ship->Name).ToUpper()).Font(MissionUIStyle::GetHeaderFont(18))]
+        [SNew(STextBlock).Text(FText::FromString(Ship->Name).ToUpper()).Font(MissionUIStyle::GetHeaderFont(16))]
+        + SVerticalBox::Slot().AutoHeight().Padding(12,0,12,8)
+        [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).AutoWrapText(true)
+            .Text_Lambda([Weak,Id=Hull]()
+            {
+                const auto* Entry=Weak.IsValid()?Weak->FindShip(Id):nullptr;
+                return Entry ? FText::FromString(FString::Printf(TEXT("%s  |  %s"),
+                    *Entry->Design.ToString(),Entry->Location.IsEmpty()?TEXT("LOCATION UNKNOWN"):*Entry->Location)).ToUpper()
+                    : INVTEXT("HULL UNAVAILABLE");
+            })
+            .ToolTipText(FText::FromString(FString::Printf(TEXT("HULL ID: %s"),*Hull.ToString())))]
+        + SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)
+        [MissionUIStyle::MakeDataPane(SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true)
+            .Text_Lambda([Weak,Id=Hull]()
+            {
+                const auto* Entry=Weak.IsValid()?Weak->FindShip(Id):nullptr;
+                if(!Entry)return INVTEXT("POLICY UNAVAILABLE");
+                if(Entry->bAssigned)return INVTEXT("MISSION LOANER - PERSONAL INSURANCE DOES NOT APPLY");
+                if(Entry->bLost)return INVTEXT("HULL LOST - NO ACTIVE COVERAGE");
+                const auto Tier=UShipInsuranceSubsystem::EffectiveTier(*Entry,FDateTime::UtcNow().ToUnixTimestamp());
+                if(Tier==EShipInsuranceTier::Lifetime)
+                    return INVTEXT("CURRENT COVERAGE: LIFETIME FULL COVER - NO EXPIRY");
+                const int64 Expiry=Entry->Insurance.ExpiresUtc;
+                if(Tier==EShipInsuranceTier::Uninsured)
+                {
+                    if(Entry->Insurance.bSettled)return INVTEXT("CURRENT COVERAGE: UNINSURED - PREVIOUS POLICY SETTLED");
+                    if(Expiry>0 && Expiry<=253402300799LL)
+                        return FText::FromString(TEXT("CURRENT COVERAGE: UNINSURED - PREVIOUS POLICY EXPIRED ")+
+                            FDateTime::FromUnixTimestamp(Expiry).ToString(TEXT("%Y-%m-%d %H:%M GMT")));
+                    return INVTEXT("CURRENT COVERAGE: UNINSURED");
+                }
+                const FString Ends=Expiry>0 && Expiry<=253402300799LL
+                    ? FDateTime::FromUnixTimestamp(Expiry).ToString(TEXT("%Y-%m-%d %H:%M GMT")) : TEXT("NOT RECORDED");
+                return FText::FromString(FString::Printf(TEXT("CURRENT COVERAGE: %s  |  EXPIRES: %s"),
+                    *UShipInsuranceSubsystem::TierName(Tier),*Ends)).ToUpper();
+            }))]
         + SVerticalBox::Slot().FillHeight(1)
         [MissionUIStyle::MakeDataPane(SNew(SScrollBox) + SScrollBox::Slot()[Table])]
         + SVerticalBox::Slot().AutoHeight().Padding(12)
@@ -73,7 +109,7 @@ TSharedRef<SWidget> UInsuranceDlg::RebuildWidget()
             ]
             + SHorizontalBox::Slot().AutoWidth()
             [
-                SNew(SButton).ToolTipText(INVTEXT("Buy insurance â€” docked service"))
+                SNew(SButton).ToolTipText(INVTEXT("Buy insurance - docked service"))
                 .IsEnabled_Lambda([Weak, Selected, Id = Hull]()
                 {
                     auto* Insurance = Weak.Get();

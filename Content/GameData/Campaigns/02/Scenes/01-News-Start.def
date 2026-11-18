@@ -183,6 +183,11 @@ element: {
    playable:  false
    region:    "Trellis"
    loc:       (185e3, -280e3, 0)
+   head:      180
+
+   // A real patrol order drives the engines; velocity never fabricates thrust.
+   navpt: { cmd: Vector, loc: (185e3, -360e3, 0), speed: 180, rgn: "Trellis" }
+   navpt: { cmd: Vector, loc: (165e3, -400e3, 0), speed: 180, rgn: "Trellis" }
 }
 
 element: {
@@ -198,6 +203,11 @@ element: {
    playable:  false
    region:    "Trellis"
    loc:       (187e3, -281e3, 0)
+   head:      180
+
+   // A real patrol order drives the engines; velocity never fabricates thrust.
+   navpt: { cmd: Vector, loc: (187e3, -361e3, 0), speed: 180, rgn: "Trellis" }
+   navpt: { cmd: Vector, loc: (167e3, -401e3, 0), speed: 180, rgn: "Trellis" }
 }
 
 element: {
@@ -222,8 +232,8 @@ event: { type: BeginScene, time: 0, message: "Operation Highland Briefing" }
 event: { type: Camera, time: 0.01,                param: 3,  target: "body:Solus",  vec: (0,0,1e7)           }
 event: { type: Camera, time: 0.01,                param: 5,                         vec: (0.12, 0.01, 0.02)  }
 
-event: { type: Hold, param: 20, event_ship: Kitts }
-event: { type: Hold, param: 20, event_ship: Lovo }
+event: { type: Hold, param: 4, event_ship: Kitts }
+event: { type: Hold, param: 4, event_ship: Lovo }
 
 event: { type: Display, time: 0, image: "News",  fade: (1, 4, 1)  }
 
@@ -246,7 +256,9 @@ event: { type: Message, time: 9.00,
 event: { type: Message, time: 12.56,
          caption: "to the Force outpost\nin the nearby Janek system." }
 
-event: { type: Camera, time:  20.00, param: (6, 20),  target: "Kitts" }
+// Wider full-hull view of the destroyer and its frigate escort.
+event: { type: Camera, time: 20.00, param: 3, target: "Kitts", vec: (2.5, 0.28, 9e3) }
+event: { type: Camera, time: 20.00, param: 5, vec: (0.035, 0.003, 0) }
 event: { type: Display, time: 20.00, message: "Dantari Separatists" }
 event: { type: Display, time: 20.00, message: "Destroyer Squadron 'Kitts'" }
 

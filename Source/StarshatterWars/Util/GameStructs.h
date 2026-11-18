@@ -24,6 +24,8 @@
 #include "GameStructs_insurance.h"
 #include "GameStructs_economy.h"
 #include "GameStructs_skills.h"
+#include "GameStructs_guilds.h"
+#include "GameStructs_traffic.h"
 #include "GameStructs.generated.h"
 UENUM(BlueprintType)
 enum class ECargoType : uint8
@@ -1403,6 +1405,10 @@ struct FS_PlayerGameInfo : public FTableRowBase
     UPROPERTY(BlueprintReadWrite, SaveGame) TArray<FPlayerHangarShip> HangarShips;
     UPROPERTY(BlueprintReadWrite, SaveGame) FGuid AssignedHangarHull;
     UPROPERTY(BlueprintReadWrite, SaveGame) FGuid SelectedHangarHull;
+    UPROPERTY(BlueprintReadWrite, SaveGame) FName HomeSystem = TEXT("Janus");
+    UPROPERTY(BlueprintReadWrite, SaveGame) FName HomeRegion = TEXT("Janek");
+    UPROPERTY(SaveGame) FGuildState Guilds;
+    UPROPERTY(SaveGame) FGalaxyTrafficState Traffic;
     UPROPERTY(BlueprintReadWrite, SaveGame) int64 InsuranceCredits = 0; // Legacy save migration only.
     UPROPERTY(SaveGame) FEconomyState Economy;
     UPROPERTY(SaveGame) FString AgentJournalJson;

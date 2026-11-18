@@ -278,7 +278,7 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
     AddRow(15.35, 2.4, TEXT("Delete End PageDown"));
     AddRow(16.35, 4.4, TEXT("Up"));
     AddRow(15.35, 5.4, TEXT("Left Down Right"));
-    Settings->AddSlot().AutoHeight().Padding(0, 0, 0, 10)
+    Settings->AddSlot().AutoHeight().Padding(16, 0, 0, 10)
     [
         SNew(SKeyboardScrollBox).Orientation(Orient_Horizontal)
             .Clipping(EWidgetClipping::ClipToBounds)

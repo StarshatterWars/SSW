@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright © 2025–2026. All Rights Reserved.
 
@@ -289,7 +289,10 @@ protected:
     FPreparedSceneGate PreparedSceneGate;
     TWeakObjectPtr<UWorld> NetworkWorld;
     uint32 NextNetworkObjectId = 1;
+    friend class TrafficAI;
     void TickIndustry(double Seconds);
+    void TickIndustrialActors(double Seconds);
+    void TickLegacyJanusActors(double DeltaSeconds);
     void CreateRegions();
     void CreateElements(const char* SpawnName = nullptr);
     void CopyEvents();

@@ -13,6 +13,7 @@ public:
     FSimpleDelegate OnOpenSkills;
     FSimpleDelegate OnOpenAwards;
     FSimpleDelegate OnOpenWallet;
+    FSimpleDelegate OnOpenGuilds;
     TSharedRef<SWidget> BuildPanelContent(UGameInstance* Instance) const;
 
 protected:

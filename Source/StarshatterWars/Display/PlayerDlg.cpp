@@ -1073,6 +1073,8 @@ TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
 
     AddSection(INVTEXT("Pilot overview"));
     AddStat(INVTEXT("Callsign"), Display(Pilot.Callsign));
+    AddStat(INVTEXT("Home system"),Display(Pilot.HomeSystem.IsNone()?TEXT("Janus"):Pilot.HomeSystem.ToString()));
+    AddStat(INVTEXT("Home sector"),Display(Pilot.HomeRegion.IsNone()?TEXT("Janek"):Pilot.HomeRegion.ToString()));
     AddStat(INVTEXT("Faction"), EmpireEnum->IsValidEnumValue(Pilot.Empire)
         ? EmpireEnum->GetDisplayNameTextByValue(Pilot.Empire) : INVTEXT("Unassigned"));
     const TWeakObjectPtr<UGameInstance> WeakInstance(Instance);

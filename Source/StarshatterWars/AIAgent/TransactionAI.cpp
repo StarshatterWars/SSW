@@ -6,6 +6,13 @@ int64 TransactionAI::Balance(const FEconomyState& State, FName Owner)
     return State.Wallets.FindRef(Owner);
 }
 
+int64 TransactionAI::BalanceIncludingLegacy(const FEconomyState& State, int64 LegacyCredits)
+{
+    const int64 Current = FMath::Max(0LL, Balance(State));
+    const int64 Pending = State.bLegacyWalletMigrated ? 0 : FMath::Max(0LL, LegacyCredits);
+    return Current + FMath::Min(MAX_int64 - Current, Pending);
+}
+
 TArray<FTransactionEntry> TransactionAI::Query(const FEconomyState& State, const FTransactionQuery& Filter)
 {
     TArray<FTransactionEntry> Result;
