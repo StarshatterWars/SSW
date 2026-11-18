@@ -20,6 +20,7 @@
 
 #include "MissionPackageLVElement.h"
 #include "MissionListLayout.h"
+#include "MissionUIStyle.h"
 
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
@@ -196,6 +197,7 @@ void UMissionPackageLVElement::ApplyColumnLayout()
     if (RowSizeBox)
     {
         RowSizeBox->SetHeightOverride(MissionListLayout::RowHeight);
+        RowSizeBox->SetWidthOverride(MissionListLayout::PackageMarkerCol+MissionListLayout::PackageNameCol+MissionListLayout::PackageRoleCol+MissionListLayout::PackageTextCol);
     }
 
     if (MarkerSizeBox)
@@ -223,21 +225,25 @@ void UMissionPackageLVElement::ApplyTextRules()
 {
     if (MarkerText)
     {
+        MarkerText->SetFont(MissionUIStyle::GetRowFont(13));
         MarkerText->SetAutoWrapText(false);
     }
 
     if (ElementNameText)
     {
+        ElementNameText->SetFont(MissionUIStyle::GetRowFont(13));
         ElementNameText->SetAutoWrapText(false);
     }
 
     if (RoleText)
     {
+        RoleText->SetFont(MissionUIStyle::GetRowFont(13));
         RoleText->SetAutoWrapText(false);
     }
 
     if (PackageText)
     {
+        PackageText->SetFont(MissionUIStyle::GetRowFont(13));
         PackageText->SetAutoWrapText(false);
     }
 }

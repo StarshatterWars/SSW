@@ -1096,6 +1096,12 @@ bool Ship::ApplyDockedLoadout(const TArray<int32>& Stations)
             (Stations[Index] >= 0 && !design->hardpoints[Index]->GetWeaponDesign(Stations[Index])))
             return false;
     }
+    RebuildRuntimeLoadout(Stations);
+    return true;
+}
+
+void Ship::RebuildRuntimeLoadout(const TArray<int32>& Stations)
+{
     // Weapon groups own their weapons; systems and reactor client lists only reference them.
     TArray<Weapon*> OldWeapons;
     for (int GroupIndex = 0; GroupIndex < weapons.size(); ++GroupIndex)
@@ -1121,7 +1127,15 @@ bool Ship::ApplyDockedLoadout(const TArray<int32>& Stations)
     loadout = Stations.IsEmpty() ? nullptr : new int[Stations.Num()];
     for (int32 Index = 0; Index < Stations.Num(); ++Index) loadout[Index] = Stations[Index];
     InitializeRuntimeWeaponsFromDesign();
-    return true;
+    // Restoring a hangar loadout can happen after the visual actor is bound.
+    // Mounts reference the replaced Weapon objects and must be rebound before
+    // the next turret/store update, including the insurance BeginMission path.
+    if (auto* Actor = GetNativePresentation())
+    {
+        Actor->BindRuntimeWeaponsToMounts();
+        Actor->ConfigureRuntimeTurretBases();
+        Actor->RebuildTurretActors();
+    }
 }
 
 void Ship::InitializeRuntimeWeaponsFromDesign()

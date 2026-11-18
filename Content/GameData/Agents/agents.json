@@ -11,8 +11,17 @@
     "Empire": "Terellian",
     "MinimumRank": 0,
     "Level": 1,
-    "Description": "Third Fleet flight instructor for Operation Live Fire.",
-    "MissionIds": []
+    "Description": "Welcome to Operation Live Fire. I am Lt. Mara Venn, your Third Fleet instructor aboard Archon. Begin with space flight, target practice, atmospheric flight and ground strike. As your rank and command skills develop, return for frigate training, advanced destroyer combat and carrier operations. Each lesson shows its prerequisites below.",
+    "MissionIds": [
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "SolusPatrol",
@@ -28,8 +37,11 @@
     "Level": 1,
     "Description": "Coordinates orbital patrols and investigates threats to local shipping. Posted to Solus to coordinate Alliance operations with the local authorities.",
     "MissionIds": [
-      8
-    ]
+      8,
+      3,
+      11
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "TelmeraLiaison",
@@ -45,8 +57,10 @@
     "Level": 2,
     "Description": "Arranges escorts for visiting diplomatic personnel. Posted to Solus to coordinate Alliance operations with the local authorities.",
     "MissionIds": [
-      3
-    ]
+      3,
+      12
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "ParagonWatch",
@@ -62,8 +76,10 @@
     "Level": 2,
     "Description": "Handles patrol and interception assignments for Paragon traffic.",
     "MissionIds": [
-      9
-    ]
+      9,
+      13
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "LorisWatch",
@@ -78,7 +94,10 @@
     "MinimumRank": 0,
     "Level": 2,
     "Description": "Issues sector defense assignments from the Loris transfer hub.",
-    "MissionIds": []
+    "MissionIds": [
+      14
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "JanekTraffic",
@@ -93,7 +112,10 @@
     "MinimumRank": 0,
     "Level": 1,
     "Description": "Clears orbital traffic and coordinates rescue calls near Janek.",
-    "MissionIds": []
+    "MissionIds": [
+      15
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "JanekMaterials",
@@ -108,7 +130,10 @@
     "MinimumRank": 1,
     "Level": 2,
     "Description": "Coordinates access to refinery logistics and ore convoys.",
-    "MissionIds": []
+    "MissionIds": [
+      16
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "JanekFleet",
@@ -120,10 +145,18 @@
     "Station": "Archon",
     "Class": "Security",
     "Empire": "Terellian",
-    "MinimumRank": 5,
+    "MinimumRank": 0,
     "Level": 4,
-    "Description": "Oversees Third Fleet sorties from the carrier Archon.",
-    "MissionIds": []
+    "Description": "Introduces Third Fleet campaign orders aboard Archon. New operations unlock through flight-school graduation and completion of preceding campaign sections. Individual assignments retain their own command-rank requirements.",
+    "MissionIds": [
+      17
+    ],
+    "CampaignIds": [
+      2,
+      3,
+      4,
+      5
+    ]
   },
   {
     "Name": "JarnellWatch",
@@ -138,7 +171,10 @@
     "MinimumRank": 0,
     "Level": 1,
     "Description": "Monitors merchant arrivals and outer belt traffic.",
-    "MissionIds": []
+    "MissionIds": [
+      18
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "JarnellEnvoy",
@@ -153,7 +189,10 @@
     "MinimumRank": 3,
     "Level": 3,
     "Description": "Liaises between freight operators and the Alliance authorities.",
-    "MissionIds": []
+    "MissionIds": [
+      19
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "BorovaPatrol",
@@ -168,7 +207,11 @@
     "MinimumRank": 1,
     "Level": 2,
     "Description": "Keeps watch over the approach to the transfer station.",
-    "MissionIds": []
+    "MissionIds": [
+      7,
+      20
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "BorovaCommand",
@@ -183,7 +226,10 @@
     "MinimumRank": 7,
     "Level": 5,
     "Description": "Coordinates senior fleet operations around Borova.",
-    "MissionIds": []
+    "MissionIds": [
+      21
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "AthenarWatch",
@@ -198,7 +244,10 @@
     "MinimumRank": 0,
     "Level": 1,
     "Description": "Tracks shipping transits and missing merchant reports.",
-    "MissionIds": []
+    "MissionIds": [
+      22
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "AthenarEnvoy",
@@ -213,7 +262,10 @@
     "MinimumRank": 5,
     "Level": 4,
     "Description": "Handles sensitive civilian movements through Athenar.",
-    "MissionIds": []
+    "MissionIds": [
+      23
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "ParagonCommand",
@@ -229,8 +281,10 @@
     "Level": 4,
     "Description": "Directs fleet coordination for the Paragon approaches.",
     "MissionIds": [
-      9
-    ]
+      9,
+      24
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "ThraleWatch",
@@ -245,7 +299,10 @@
     "MinimumRank": 1,
     "Level": 2,
     "Description": "Manages convoy traffic above Thrale.",
-    "MissionIds": []
+    "MissionIds": [
+      25
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "ThraleLiaison",
@@ -260,7 +317,10 @@
     "MinimumRank": 3,
     "Level": 3,
     "Description": "Handles visiting delegations and flight clearances.",
-    "MissionIds": []
+    "MissionIds": [
+      26
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "SolusEnvoy",
@@ -275,7 +335,10 @@
     "MinimumRank": 3,
     "Level": 3,
     "Description": "Represents the independent authorities in talks with freight operators.",
-    "MissionIds": []
+    "MissionIds": [
+      27
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "TrellisWatch",
@@ -290,7 +353,10 @@
     "MinimumRank": 0,
     "Level": 1,
     "Description": "Coordinates dock traffic and responds to distress calls near Trellis.",
-    "MissionIds": []
+    "MissionIds": [
+      28
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "KalonLiaison",
@@ -305,7 +371,10 @@
     "MinimumRank": 1,
     "Level": 2,
     "Description": "Coordinates refinery cargo clearances and escort requests.",
-    "MissionIds": []
+    "MissionIds": [
+      29
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "HaicheWatch",
@@ -320,7 +389,10 @@
     "MinimumRank": 3,
     "Level": 3,
     "Description": "Monitors orbital approaches on behalf of the Protectorate.",
-    "MissionIds": []
+    "MissionIds": [
+      30
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "HaicheEnvoy",
@@ -335,7 +407,10 @@
     "MinimumRank": 5,
     "Level": 4,
     "Description": "Coordinates visits and regulated transits through Haiche.",
-    "MissionIds": []
+    "MissionIds": [
+      31
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "SilessiaWatch",
@@ -350,7 +425,10 @@
     "MinimumRank": 1,
     "Level": 2,
     "Description": "Handles civilian distress and shipping reports.",
-    "MissionIds": []
+    "MissionIds": [
+      32
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "SilessiaEnvoy",
@@ -365,7 +443,10 @@
     "MinimumRank": 7,
     "Level": 5,
     "Description": "Handles high-level Confederacy security coordination.",
-    "MissionIds": []
+    "MissionIds": [
+      33
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "MarakWatch",
@@ -380,7 +461,10 @@
     "MinimumRank": 0,
     "Level": 1,
     "Description": "Coordinates local transfer station patrols.",
-    "MissionIds": []
+    "MissionIds": [
+      34
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "MarakCommand",
@@ -395,7 +479,10 @@
     "MinimumRank": 7,
     "Level": 5,
     "Description": "Issues senior orders on the Hegemony command channel.",
-    "MissionIds": []
+    "MissionIds": [
+      35
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "GarrisonWatch",
@@ -410,7 +497,10 @@
     "MinimumRank": 1,
     "Level": 2,
     "Description": "Tracks freight inspections and approach clearance.",
-    "MissionIds": []
+    "MissionIds": [
+      36
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "LorisCommand",
@@ -425,7 +515,10 @@
     "MinimumRank": 5,
     "Level": 4,
     "Description": "Coordinates Hegemony fleet readiness across Loris.",
-    "MissionIds": []
+    "MissionIds": [
+      37
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "RenserWatch",
@@ -440,7 +533,10 @@
     "MinimumRank": 3,
     "Level": 3,
     "Description": "Tracks passage through Renser and reports threats to Hegemony shipping.",
-    "MissionIds": []
+    "MissionIds": [
+      38
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "AramWatch",
@@ -455,7 +551,10 @@
     "MinimumRank": 1,
     "Level": 2,
     "Description": "Oversees inbound traffic at Aram.",
-    "MissionIds": []
+    "MissionIds": [
+      39
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "KolchevWatch",
@@ -470,7 +569,10 @@
     "MinimumRank": 0,
     "Level": 1,
     "Description": "Monitors the outbound convoys from Kolchev.",
-    "MissionIds": []
+    "MissionIds": [
+      40
+    ],
+    "CampaignIds": []
   },
   {
     "Name": "AdantarWatch",
@@ -485,7 +587,8 @@
     "MinimumRank": 3,
     "Level": 3,
     "Description": "Coordinates squadron coverage around Adantar.",
-    "MissionIds": []
+    "MissionIds": [],
+    "CampaignIds": []
   },
   {
     "Name": "TarsusWatch",
@@ -500,7 +603,8 @@
     "MinimumRank": 1,
     "Level": 2,
     "Description": "Oversees fleet and civilian transfers at Tarsus.",
-    "MissionIds": []
+    "MissionIds": [],
+    "CampaignIds": []
   },
   {
     "Name": "NergalWatch",
@@ -515,7 +619,8 @@
     "MinimumRank": 0,
     "Level": 1,
     "Description": "Patrol contact for the Nephrys transfer hub at Nergal.",
-    "MissionIds": []
+    "MissionIds": [],
+    "CampaignIds": []
   },
   {
     "Name": "RadixCommand",
@@ -530,7 +635,8 @@
     "MinimumRank": 5,
     "Level": 4,
     "Description": "Coordinates fleet movements and clearance in Radix.",
-    "MissionIds": []
+    "MissionIds": [],
+    "CampaignIds": []
   },
   {
     "Name": "RamekEnvoy",
@@ -545,7 +651,8 @@
     "MinimumRank": 3,
     "Level": 3,
     "Description": "Processes freight movements through the transfer station at Ramek.",
-    "MissionIds": []
+    "MissionIds": [],
+    "CampaignIds": []
   },
   {
     "Name": "VolanteWatch",
@@ -560,7 +667,8 @@
     "MinimumRank": 7,
     "Level": 5,
     "Description": "Oversees Hegemony security at the Volante transfer hub.",
-    "MissionIds": []
+    "MissionIds": [],
+    "CampaignIds": []
   },
   {
     "Name": "FortTalasWatch",
@@ -575,7 +683,8 @@
     "MinimumRank": 0,
     "Level": 1,
     "Description": "Coordinates patrols from the Dantari position at Fort Talas.",
-    "MissionIds": []
+    "MissionIds": [],
+    "CampaignIds": []
   },
   {
     "Name": "JalahCell",
@@ -590,7 +699,8 @@
     "MinimumRank": 3,
     "Level": 3,
     "Description": "Arranges resupply through trusted traffic at Jalah.",
-    "MissionIds": []
+    "MissionIds": [],
+    "CampaignIds": []
   },
   {
     "Name": "FoothillCommand",
@@ -605,6 +715,115 @@
     "MinimumRank": 7,
     "Level": 5,
     "Description": "Operates the restricted Dantari command link from Foothill.",
-    "MissionIds": []
+    "MissionIds": [],
+    "CampaignIds": []
+  },
+  {
+    "Name": "OstaraExpedition",
+    "DisplayName": "Lt. Ilan Marr",
+    "Division": "Expeditionary Operations",
+    "System": "Ostara",
+    "Planet": "Aram",
+    "Region": "Aram",
+    "Station": "Aram Fleet Liaison",
+    "Class": "Security",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "Level": 2,
+    "Description": "Alliance expeditionary liaison for assignments originating in Ostara.",
+    "MissionIds": [
+      1
+    ],
+    "CampaignIds": []
+  },
+  {
+    "Name": "LorisExpedition",
+    "DisplayName": "Lt. Anya Drell",
+    "Division": "Expeditionary Operations",
+    "System": "Loris",
+    "Planet": "Loris",
+    "Region": "Loris",
+    "Station": "Loris Fleet Liaison",
+    "Class": "Security",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "Level": 2,
+    "Description": "Alliance expeditionary liaison for assignments originating in Loris.",
+    "MissionIds": [
+      2
+    ],
+    "CampaignIds": []
+  },
+  {
+    "Name": "HaicheExpedition",
+    "DisplayName": "Lt. Rian Vale",
+    "Division": "Expeditionary Operations",
+    "System": "Haiche",
+    "Planet": "Haiche",
+    "Region": "Haiche",
+    "Station": "Haiche Fleet Liaison",
+    "Class": "Security",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "Level": 2,
+    "Description": "Alliance expeditionary liaison for assignments originating in Haiche.",
+    "MissionIds": [
+      4
+    ],
+    "CampaignIds": []
+  },
+  {
+    "Name": "RenserExpedition",
+    "DisplayName": "Lt. Dara Kel",
+    "Division": "Expeditionary Operations",
+    "System": "Renser",
+    "Planet": "Lornas",
+    "Region": "Lornas",
+    "Station": "Lornas Fleet Liaison",
+    "Class": "Security",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "Level": 2,
+    "Description": "Alliance expeditionary liaison for assignments originating in Renser.",
+    "MissionIds": [
+      5
+    ],
+    "CampaignIds": []
+  },
+  {
+    "Name": "RadixExpedition",
+    "DisplayName": "Lt. Tomas Sen",
+    "Division": "Expeditionary Operations",
+    "System": "Radix",
+    "Planet": "Shadow Canyon",
+    "Region": "Shadow Canyon",
+    "Station": "Shadow Canyon Fleet Liaison",
+    "Class": "Security",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "Level": 2,
+    "Description": "Alliance expeditionary liaison for assignments originating in Radix.",
+    "MissionIds": [
+      6
+    ],
+    "CampaignIds": []
+  },
+  {
+    "Name": "KoriusExpedition",
+    "DisplayName": "Lt. Mira Hald",
+    "Division": "Expeditionary Operations",
+    "System": "Korius",
+    "Planet": "Korius",
+    "Region": "Korius",
+    "Station": "Korius Fleet Liaison",
+    "Class": "Security",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "Level": 2,
+    "Description": "Alliance expeditionary liaison for assignments originating in Korius.",
+    "MissionIds": [
+      10
+    ],
+    "CampaignIds": []
   }
 ]

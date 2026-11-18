@@ -14,6 +14,7 @@
 
 #include "Sim.h"
 #include "AcceptanceAI.h"
+#include "AgentCatalogSubsystem.h"
 #include "ContractLedger.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "CargoCatalogSubsystem.h"
@@ -403,8 +404,11 @@ Sim::CommitMission()
 {
     // Commit is also called when aborting. Persist only a completed campaign
     // assignment, and use mission ownership to exclude standalone missions.
+    const auto* RuntimeContext = GetSSWRuntimeSubsystem();
+    const auto* GameContext = RuntimeContext ? Cast<USSWGameInstance>(RuntimeContext->GetGameInstance()) : nullptr;
+    const bool bTrainingTest = GameContext && GameContext->IsTrainingTestSession();
     Campaign* ActiveCampaign = Campaign::GetCampaign();
-    if (mission && mission->IsComplete() && ActiveCampaign &&
+    if (!bTrainingTest && mission && mission->IsComplete() && ActiveCampaign &&
         ActiveCampaign->OwnsMission(mission) &&
         !ActiveCampaign->IsCutsceneMission(mission->GetIdentity()))
     {
@@ -462,7 +466,7 @@ Sim::CommitMission()
 
 			CombatGroup* group = s->GetCombatGroup();
 
-			if (group) {
+			if (group && !bTrainingTest) {
 				Combatant* c = group->GetCombatant();
 
 				if (c)
@@ -475,7 +479,7 @@ Sim::CommitMission()
 				group->SetPoints(group->GetPoints() + s->GetPoints());
 			}
 
-			if (s->IsPlayer()) {
+			if (s->IsPlayer() && !bTrainingTest) {
 				PlayerCharacter* p = PlayerCharacter::GetCurrentPlayer();
 				p->ProcessStats(s, start_time);
 
@@ -510,9 +514,10 @@ void Sim::UnloadMission()
     {
         if (auto* Runtime = GetSSWRuntimeSubsystem())
             if (auto* Instance = Cast<USSWGameInstance>(Runtime->GetGameInstance()))
-                Instance->GetTrainingAgent().Interrupt(AssignedAgentPilot, mission->GetIdentity());
+                Instance->GetTrainingAgent().Interrupt(AssignedAgentPilot, AssignedAgentMissionId);
     }
     AssignedAgentPilot = NAME_None;
+    AssignedAgentMissionId = INDEX_NONE;
     bPlayerDocked = false;
     DeferredPlayerWingmen.Reset();
     for (auto& Run : JanekMiningRuns) Run.Value.Contract.Release(GetEconomy());
@@ -952,15 +957,24 @@ Sim::ExecMission()
 		mission->GetMissionType() ==
 		(int)EMissionType::TRAINING);
 
-    if (!IsNetworked() && (mission->GetMissionType() == int(EMissionType::TRAINING) ||
-        mission->IsRegionalAgentMission()) && GetPlayerShip())
+    if (!IsNetworked() && GetPlayerShip())
         if (auto* Runtime = GetSSWRuntimeSubsystem())
             if (auto* Instance = Cast<USSWGameInstance>(Runtime->GetGameInstance()))
                 if (const auto* Pilot = PlayerCharacter::GetCurrentPlayer())
                 {
                     const FName PilotId = AgentAI::PilotKey(*Pilot);
-                    if (Instance->GetTrainingAgent().Start(PilotId, mission->GetIdentity()))
-                        AssignedAgentPilot = PilotId;
+                    const auto* Queued = Instance->GetTrainingAgent().Find(PilotId);
+                    auto* Catalog = Instance->GetSubsystem<UAgentCatalogSubsystem>();
+                    if (Queued && Catalog && Catalog->CanAccept(Queued->MissionId, Queued->Issuer) &&
+                        Catalog->GetMission(Queued->MissionId) == mission)
+                    {
+                        const int32 JournalId = Queued->MissionId;
+                        if (Instance->GetTrainingAgent().Start(PilotId, JournalId))
+                        {
+                            AssignedAgentPilot = PilotId;
+                            AssignedAgentMissionId = JournalId;
+                        }
+                    }
                 }
 
 	UE_LOG(LogTemp, Warning,
@@ -2618,7 +2632,7 @@ void Sim::ResolveAgentAssignment(bool bSucceeded)
     if (!mission || AssignedAgentPilot.IsNone()) return;
     if (auto* Runtime = GetSSWRuntimeSubsystem())
         if (auto* Instance = Cast<USSWGameInstance>(Runtime->GetGameInstance()))
-            if (Instance->GetTrainingAgent().Resolve(AssignedAgentPilot, mission->GetIdentity(), bSucceeded))
+            if (Instance->GetTrainingAgent().Resolve(AssignedAgentPilot, AssignedAgentMissionId, bSucceeded))
                 AssignedAgentPilot = NAME_None;
 }
 

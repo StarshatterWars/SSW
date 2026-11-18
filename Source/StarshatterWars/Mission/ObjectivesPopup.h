@@ -12,6 +12,8 @@
 #include "Sim.h"
 #include "Ship.h"
 #include "Mission.h"
+#include "MissionBriefingContent.h"
+#include "MissionUIStyle.h"
 #include "SimElement.h"
 #include "Instruction.h"
 
@@ -27,13 +29,13 @@ public:
     void Construct(const FArguments& Args) {
         Active=Args._IsMissionActive; Close=Args._OnClose;
         auto Content=SNew(SVerticalBox)
-          +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,18)
+          +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,10)
            [SNew(STextBlock).Text_Lambda([this](){return FText::FromString(Title);})
-            .ColorAndOpacity(Blue()).Font(FCoreStyle::GetDefaultFontStyle("Bold",22))]
+            .ColorAndOpacity(Blue()).Font(MissionUIStyle::GetHeaderFont(16))]
           +SVerticalBox::Slot().FillHeight(1)
            [SNew(SScrollBox)+SScrollBox::Slot()
             [SNew(STextBlock).Text_Lambda([this](){return FText::FromString(Body);})
-             .AutoWrapText(true).ColorAndOpacity(Blue()).Font(FCoreStyle::GetDefaultFontStyle("Regular",17))]]
+             .AutoWrapText(true).ColorAndOpacity(Blue()).Font(MissionUIStyle::GetRowFont(13))]]
           +SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Right).Padding(0,12,0,0)
            [SNew(SButton).Visibility(Args._Embedded ? EVisibility::Collapsed : EVisibility::Visible).OnClicked_Lambda([this](){Close.ExecuteIfBound();return FReply::Handled();})
             [SNew(STextBlock).Text(FText::FromString(TEXT("Close")))]];
@@ -76,7 +78,7 @@ private:
         auto* P=Simulation?Simulation->GetPlayerShip():nullptr;
         if(!M)return;
         Title=String(M->GetName());
-        Body=TEXT("OBJECTIVES\n")+String(M->GetObjective())+TEXT("\n\nSITUATION\n")+String(M->GetSituation());
+        Body=MissionBriefingContent::Build(*M);
         auto* Element=P?P->GetElement():nullptr;
         if(!Element)return;
         // Legacy HUDView::DrawInstructions uses the current player element.

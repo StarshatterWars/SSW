@@ -1,0 +1,27 @@
+MISSION
+name: "Aram: Convoy Shield"
+type: ESCORT_FREIGHT
+system: "Ostara"
+region: "Aram"
+start: "01/09:00:00"
+degrees: true
+sitrep: "Lt. Vesh Kar assigns this sortie from Ostara Transfer Station. Cover a loaded transport in Aram. Defeat the attacking raiders while keeping the transport intact."
+objective: "Cover a loaded transport in Aram. Defeat the attacking raiders while keeping the transport intact. Return safely to base."
+ship: { name: Home, design: Dragon, count: 1, iff: 1, region: "Aram", loc: (0,0,0), command_ai: 0, }
+element: { name: Squadron, design: "Raptor", count: 2, carrier: Home, iff: 1, region: "Aram", }
+element: { name: Player, design: "Raptor", squadron: Squadron, player: 1, alert: true, count: 2, iff: 1, region: "Aram", mission: ESCORT_FREIGHT,
+ loadout: { ship: -1, name: "ACM Medium Range" },
+ loc: (1000,2000,0),
+ objective: { cmd: assault, tgt: Raiders },
+ objective: { cmd: defend, tgt: Hauler },
+ navpt: { cmd: vector, loc: (10000,2000,0), speed: 400 },
+ navpt: { cmd: patrol, loc: (44000,5000,0), speed: 400 },
+ navpt: { cmd: vector, loc: (3000,2000,0), speed: 300 },
+}
+element: { name: Hauler, design: IM1912, count: 1, iff: 1, region: "Aram", loc: (6000,2000,0), mission: patrol, navpt: { cmd: vector, loc: (35000,5000,0), speed: 80 }, }
+
+element: { name: Raiders, design: Razor, count: 3, iff: 2, region: "Aram", loc: (44000,6000,0), mission: assault, intel: known, loadout: { ship: -1, name: "ACM Medium Range" },
+ objective: { cmd: assault, tgt: Hauler },
+}
+event: { id: 1, event: Message, event_message: "Cover a loaded transport in Aram. Defeat the attacking raiders while keeping the transport intact.", event_ship: Home, trigger: Time, trigger_param: 5, }
+event: { id: 50, event: Message, event_message: "Hostile flight destroyed. Return to base.", event_ship: Home, trigger: Destroyed, trigger_ship: Raiders, delay: 2, }

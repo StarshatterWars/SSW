@@ -6,6 +6,7 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
+#include "Widgets/SNullWidget.h"
 #include "Widgets/Text/STextBlock.h"
 
 void UMissionsDlg::SetDetails(FText InTitle, FText InBrief, FSimpleDelegate InAccept, FSimpleDelegate InDecline, FSimpleDelegate InClose)
@@ -25,15 +26,20 @@ TSharedRef<SWidget> UMissionsDlg::RebuildWidget()
         [
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot().FillWidth(1)
-            [SNew(STextBlock).Text(Title).Font(MissionUIStyle::GetHeaderFont(17)).AutoWrapText(true)]
+            [SNew(STextBlock).Text(Title).Font(MissionUIStyle::GetHeaderFont(16)).AutoWrapText(true)]
             + SHorizontalBox::Slot().AutoWidth()
             [SNew(SButton).ContentPadding(FMargin(8)).HAlign(HAlign_Center).VAlign(VAlign_Center).ToolTipText(INVTEXT("Close panel")).ButtonColorAndOpacity(FLinearColor(.55f, .09f, .07f))
                 .OnClicked_Lambda([Action = Close]() { Action.ExecuteIfBound(); return FReply::Handled(); })
                 [SNew(SPanelCloseIcon)]]
         ]
         + SVerticalBox::Slot().FillHeight(1)
-        [SNew(SScrollBox) + SScrollBox::Slot()
-            [SNew(STextBlock).Text(Brief).Font(MissionUIStyle::GetRowFont(14)).AutoWrapText(true)]]
+        [SNew(SVerticalBox)
+            + SVerticalBox::Slot().FillHeight(Supplement.IsValid() ? .35f : 1.f)
+                .Padding(0, 0, 0, Supplement.IsValid() ? 12 : 0)
+            [SNew(SScrollBox) + SScrollBox::Slot()
+                [SNew(STextBlock).Text(Brief).Font(MissionUIStyle::GetRowFont(13)).AutoWrapText(true)]]
+            + SVerticalBox::Slot().FillHeight(Supplement.IsValid() ? .65f : 0.f)
+            [Supplement.IsValid() ? Supplement.ToSharedRef() : SNullWidget::NullWidget]]
         + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Right).Padding(0, 10, 0, 0)
         [
             SNew(SHorizontalBox)
@@ -47,5 +53,12 @@ TSharedRef<SWidget> UMissionsDlg::RebuildWidget()
                 .Visibility(Accept.IsBound() ? EVisibility::Visible : EVisibility::Collapsed)
                 .OnClicked_Lambda([Action = Accept]() { Action.ExecuteIfBound(); return FReply::Handled(); })
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Accept)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(12, 0, 0, 0)
+            [SNew(SButton).ContentPadding(FMargin(16,8)).ButtonColorAndOpacity(FLinearColor(.05f,.28f,.38f))
+                .Visibility(StartMission.IsBound() ? EVisibility::Visible : EVisibility::Collapsed)
+                .IsEnabled_Lambda([this](){ return CanStartMission.IsBound() && CanStartMission.Execute(); })
+                .ToolTipText(INVTEXT("Start this mission"))
+                .OnClicked_Lambda([Action=StartMission](){ Action.ExecuteIfBound(); return FReply::Handled(); })
+                [SNew(STextBlock).Text(INVTEXT("START MISSION")).Font(MissionUIStyle::GetRowFont(14))]]
         ]);
 }

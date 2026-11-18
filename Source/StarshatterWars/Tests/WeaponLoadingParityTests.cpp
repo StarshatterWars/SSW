@@ -12,6 +12,9 @@
 #include "ShipLoad.h"
 #include "HardPoint.h"
 #include "Power.h"
+#include "FalconShipActor.h"
+#include "ShipWeaponMountComponent.h"
+#include "Engine/World.h"
 #include "FighterHUDDetails.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FWeaponLoadingParityTest,"Starshatter.Weapons.LoadingParity",
@@ -79,6 +82,29 @@ bool FWeaponLoadingParityTest::RunTest(const FString&)
         TestTrue(TEXT("Clean loadout keeps Delta primary"),Clean.GetPrimary() && Clean.GetPrimary()->IsPrimary());
         TestEqual(TEXT("Explicit empty stations are not refilled from defaults"),Clean.GetWeapons().size(),1);
         TestNull(TEXT("Clean loadout has no secondary missile group"),Clean.GetSecondaryGroup());
+    }
+    // Regression: insurance restores the saved loadout after presentation binds.
+    {
+        const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
+        auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+        if(!TestNotNull(TEXT("Loadout preview world"),World))return false;
+        ON_SCOPE_EXIT { World->DestroyWorld(false); };
+        Ship Fighter("Restored loadout","",Design,1,0,Load->GetLoad(),false);
+        Fighter.SetFlightPhase(EOPSMode::ALERT);
+        auto* Actor=World->SpawnActor<AFalconShipActor>();
+        Actor->BindRuntimeShip(&Fighter);
+        const TArray<int32> Empty={-1,-1,-1,-1};
+        Fighter.RebuildRuntimeLoadout(Empty);
+        TSet<Weapon*> Live;
+        for(int G=0;G<Fighter.GetWeapons().size();++G)
+            for(int W=0;W<Fighter.GetWeapons()[G]->NumWeapons();++W)Live.Add(Fighter.GetWeapons()[G]->GetWeapon(W));
+        bool bValid=true;
+        for(const auto& Component:Actor->NativeWeaponHardpoints)
+            if(auto* Mount=Cast<UShipWeaponMountComponent>(Component.Get()))
+                if(Mount->RuntimeWeapon)bValid &= Live.Contains(Mount->RuntimeWeapon);
+        TestTrue(TEXT("Every visual mount refers to the replacement inventory"),bValid);
+        if(bValid)Actor->UpdateTurretActors();
+        Actor->BindRuntimeShip(nullptr);
     }
     // Two-reactor fixture proves fixed guns use their source index, not reactor zero.
     {

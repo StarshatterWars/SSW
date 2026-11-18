@@ -1,6 +1,6 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright © 2025-2026. All Rights Reserved.
+    Copyright Â© 2025-2026. All Rights Reserved.
 
     SUBSYSTEM:    Stars.exe
     FILE:         Campaign.h
@@ -222,6 +222,7 @@ public:
 
     static void          Initialize();
     static void          Close();
+    static void          ClearSelection();
     static Campaign*     GetCampaign();
     static List<Campaign>& GetAllCampaigns();
     static int           GetLastCampaignId();

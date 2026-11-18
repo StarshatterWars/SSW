@@ -33,6 +33,7 @@ struct FS_AgentCatalogRow : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadOnly) int32 Level = 1;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FString Description;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<int32> MissionIds;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<int32> CampaignIds;
 
     bool ServesEmpire(EEMPIRE_NAME PilotEmpire) const
     {
@@ -52,9 +53,18 @@ public:
     bool CanContact(FName Id) const;
     TArray<int32> GetEligibleMissions(FName AgentId) const;
     bool CanAccept(int32 MissionId, FName AgentId) const;
+    bool CanReplayTrainingTest(int32 MissionId,FName AgentId) const;
     FText GetMissionTitle(int32 MissionId) const;
     Mission* GetMission(int32 MissionId);
     Campaign* GetRepository(int32 MissionId);
+    FText GetAssignmentStatus(FName AgentId) const;
+    FText GetTrainingRequirement(int32 MissionId) const;
+    FText GetCampaignOrders(FName AgentId) const;
+    FText GetCampaignTitle(int32 CampaignId) const;
+    bool CanActivateCampaign(FName AgentId, int32 CampaignId) const;
+    bool ActivateCampaign(FName AgentId, int32 CampaignId);
+    bool AssignTrainingOperation(FName AgentId, bool bRequireAcceptedMission = true);
+    FText GetCurrentOperationName() const;
 
 private:
     const FS_CampaignMission* FindScenario(int32 Id) const;

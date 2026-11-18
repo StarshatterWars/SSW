@@ -4,6 +4,8 @@
 #include "CampaignSave.h"
 #include "Kismet/GameplayStatics.h"
 #include "MissionDebriefDlg.h"
+#include "Components/WidgetSwitcher.h"
+#include "Components/CanvasPanelSlot.h"
 #include "Mission.h"
 #include "SimEvent.h"
 #include "SimElement.h"
@@ -90,6 +92,13 @@ bool FMissionDebriefUiTest::RunTest(const FString&)
     auto* Screen=NewObject<UMissionDebriefDlg>(World,Class); Screen->Initialize();
     auto Widget=Screen->TakeWidget(); Widget->SlatePrepass();
     TestTrue(TEXT("Modern debrief built"),Screen->bModernUiBuilt);
+    TestNotNull(TEXT("Debrief is a bounded floating frame"),Screen->FloatingFrame.Get());
+    TestEqual(TEXT("Debrief splits summary, objectives and event log"),Screen->DebriefPages->GetNumWidgets(),3);
+    Screen->ShowEventsPage(); TestEqual(TEXT("Event detail tab works"),Screen->DebriefPages->GetActiveWidgetIndex(),2);
+    Screen->ShowSummaryPage();
+    if(auto* Slot=Cast<UCanvasPanelSlot>(Screen->FloatingFrame->Slot))
+        TestTrue(TEXT("Debrief defaults to a compact frame"),Slot->GetSize().Equals(FVector2D(960,650)));
+
     bool Statistics=false;
     Screen->WidgetTree->ForEachWidget([&](UWidget* W){if(auto* T=Cast<UTextBlock>(W))Statistics|=T->GetText().ToString()==TEXT("STATISTICS");});
     TestTrue(TEXT("Statistics heading uses correct spelling"),Statistics);

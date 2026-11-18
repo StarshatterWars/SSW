@@ -1,0 +1,38 @@
+MISSION
+scene: "JanekTest"
+name: "Janek Test Environment"
+type: "Patrol"
+system: "Janus"
+region: "Janek"
+id: 900002
+objective: "Speak to Lt. Mara Venn in Agents to begin Operation Live Fire."
+sitrep: "Welcome aboard Archon in Janek orbit. Your flight instructor offers four Operation Live Fire lessons, from basic space flight to ground strike."
+start: "01/09:23:00"
+ship: {
+ name: Archon
+ design: Orion
+ loc: (0, 0, 0)
+ count: 1
+ iff: 1
+ command_ai: 0
+ region: "Janek"
+}
+element: {
+ name: Stallions
+ design: Falcon
+ count: 1
+ carrier: Archon
+ iff: 1
+ loadout: { ship: -1, name: "ACM Medium Range" }
+ region: "Janek"
+}
+element: {
+ name: Delta
+ design: Falcon
+ squadron: Stallions
+ player: 1
+ alert: true
+ count: 1
+ iff: 1
+ region: "Janek"
+}

@@ -28,7 +28,7 @@ const AgentAI::FAssignment* AgentAI::FindOffer(FName Pilot, FName Issuer) const
     return PilotOffers ? PilotOffers->Find(Issuer) : nullptr;
 }
 
-const AgentAI::FAssignment* AgentAI::Request(FName Pilot, TConstArrayView<int32> EligibleMissions, FName Issuer)
+const AgentAI::FAssignment* AgentAI::Request(FName Pilot, TConstArrayView<int32> EligibleMissions, FName Issuer, bool bRetryDeclined)
 {
     if (Pilot.IsNone()) return nullptr;
     auto& PilotOffers = Offers.FindOrAdd(Pilot);
@@ -43,7 +43,7 @@ const AgentAI::FAssignment* AgentAI::Request(FName Pilot, TConstArrayView<int32>
     {
         if (Id <= 0 || Completed.FindRef(Pilot).Contains(Id) || (Next != INDEX_NONE && Id >= Next)) continue;
         if (Outcome && Outcome->MissionId == Id &&
-            (Outcome->State == EState::Declined || Outcome->State == EState::Completed)) continue;
+            ((!bRetryDeclined && Outcome->State == EState::Declined) || Outcome->State == EState::Completed)) continue;
         if (Queue.ContainsByPredicate([Id](const FAssignment& Item) { return Item.MissionId == Id; })) continue;
         bool bAlreadyOffered = false;
         for (const auto& Offer : PilotOffers)
@@ -53,6 +53,13 @@ const AgentAI::FAssignment* AgentAI::Request(FName Pilot, TConstArrayView<int32>
     }
     if (Next == INDEX_NONE) return nullptr;
     return &PilotOffers.Add(Issuer, FAssignment{Next, EState::Offered, Issuer, FDateTime::UtcNow().ToUnixTimestamp() + 3600});
+}
+
+bool AgentAI::QueueTestReplay(FName Pilot,int32 MissionId,FName Issuer)
+{
+    if(MissionId<101 || MissionId>107 || Pilot.IsNone() || !IsCompleted(Pilot,MissionId) || !GetQueue(Pilot).IsEmpty())return false;
+    FAssignment Replay{MissionId,EState::Accepted,Issuer};Replay.bTestReplay=true;
+    Queues.FindOrAdd(Pilot).Add(Replay);return true;
 }
 
 bool AgentAI::Transition(FName Pilot, int32 MissionId, EState From, EState To)
@@ -106,7 +113,7 @@ bool AgentAI::Resolve(FName Pilot, int32 MissionId, bool bSucceeded)
 {
     const auto Outcome = bSucceeded ? EState::Completed : EState::Failed;
     if (!Transition(Pilot, MissionId, EState::InProgress, Outcome)) return false;
-    if (bSucceeded) Completed.FindOrAdd(Pilot).Add(MissionId);
+    if (bSucceeded && !Queues.FindChecked(Pilot)[0].bTestReplay) Completed.FindOrAdd(Pilot).Add(MissionId);
     LastOutcome.Add(Pilot, Queues.FindChecked(Pilot)[0]);
     Queues.FindChecked(Pilot).RemoveAt(0);
     return true;
@@ -124,6 +131,7 @@ FString AgentAI::SaveJournal() const
     {
         auto Object = MakeShared<FJsonObject>();
         Object->SetStringField(TEXT("Pilot"), Pilot.ToString()); Object->SetStringField(TEXT("Kind"), Kind);
+        Object->SetBoolField(TEXT("TestReplay"),Item.bTestReplay);
         Object->SetStringField(TEXT("Issuer"), Item.Issuer.ToString()); Object->SetNumberField(TEXT("Mission"), Item.MissionId);
         Object->SetNumberField(TEXT("State"), static_cast<int32>(Item.State)); Object->SetNumberField(TEXT("Expiry"), Item.ExpiresUtc);
         Entries.Add(MakeShared<FJsonValueObject>(Object));
@@ -150,6 +158,7 @@ bool AgentAI::RestoreJournal(const FString& Json)
             !(*Object)->TryGetNumberField(TEXT("State"), State) || State < 0 || State > static_cast<int32>(EState::Declined) ||
             !(*Object)->TryGetNumberField(TEXT("Expiry"), Expiry) || !FMath::IsFinite(Expiry) || Expiry < 0 || Expiry > 1.e12) return false;
         FAssignment Item{Mission, static_cast<EState>(State), FName(*Issuer), static_cast<int64>(Expiry)};
+        (*Object)->TryGetBoolField(TEXT("TestReplay"),Item.bTestReplay);
         const FName Id(*Pilot);
         if (Kind == TEXT("Offer") && Item.State == EState::Offered) Restored.Offers.FindOrAdd(Id).Add(Item.Issuer, Item);
         else if (Kind == TEXT("Queue") && (Item.State == EState::Accepted || Item.State == EState::InProgress))

@@ -23,7 +23,8 @@ protected:
     void ReleaseSlateResources(bool bReleaseChildren) override;
 
 private:
-    void RequestMission();
+    void RequestMission(bool bCampaign = false);
+    void StartMission(int32 MissionId);
     void OpenDetails(int32 MissionId, bool bOffer);
     void CloseDetails();
 

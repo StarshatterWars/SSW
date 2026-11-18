@@ -9,4 +9,8 @@ class STARSHATTERWARS_API UMissionObjectivesDlg : public UMissionsDlg
 public:
     void SetMissionBriefing(const Mission&,FText InTitle,FText Agent,FText AssignmentStatus,
         FSimpleDelegate OnAccept,FSimpleDelegate OnDecline,FSimpleDelegate OnClose);
+protected:
+    virtual void NativeDestruct() override;
+private:
+    UPROPERTY(Transient) TObjectPtr<class UShipBriefingPreview> Rehearsal;
 };

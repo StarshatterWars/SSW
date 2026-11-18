@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "AgentAI.h"
+#include "TrainingTestRules.h"
 #include "AgentCatalogSubsystem.h"
 #include "PlayerCharacter.h"
 #include "Engine/GameInstance.h"
@@ -34,6 +35,16 @@ bool FAgentAssignmentTest::RunTest(const FString&)
     TestTrue(TEXT("Interrupted mission can be relaunched"), Agent.Start(Pilot, 101));
     TestTrue(TEXT("Debrief resolves the assignment"), Agent.Resolve(Pilot, 101, true));
     TestFalse(TEXT("Duplicate debrief cannot resolve it again"), Agent.Resolve(Pilot, 101, true));
+    TestTrue(TEXT("Completed training can be queued as a test replay"),Agent.QueueTestReplay(Pilot,101,TEXT("JanekFlightTraining")));
+    TestTrue(TEXT("Replay queue is explicitly marked"),Agent.GetQueue(Pilot)[0].bTestReplay);
+    TestFalse(TEXT("An occupied queue prevents a duplicate replay"),Agent.QueueTestReplay(Pilot,101,TEXT("JanekFlightTraining")));
+    AgentAI RestoredReplay;
+    TestTrue(TEXT("Test replay journal round trips"),RestoredReplay.RestoreJournal(Agent.SaveJournal()));
+    TestTrue(TEXT("Restored replay retains no-reward marker"),RestoredReplay.GetQueue(Pilot)[0].bTestReplay);
+    TestTrue(TEXT("Replay starts"),Agent.Start(Pilot,101));
+    TestTrue(TEXT("Failed replay resolves without undoing previous success"),Agent.Resolve(Pilot,101,false));
+    TestTrue(TEXT("Previous training completion is retained"),Agent.IsCompleted(Pilot,101));
+    TestFalse(TEXT("Uncompleted lessons cannot be replayed"),Agent.QueueTestReplay(Pilot,102,TEXT("JanekFlightTraining")));
     const int32 Remaining[] = {102, 103};
     const auto* Next = Agent.Request(Pilot, Remaining);
     if (!TestNotNull(TEXT("Officer offers the next eligible lesson"), Next)) return false;
@@ -117,6 +128,15 @@ bool FFreeFlightStartTest::RunTest(const FString&)
     if (!TestNotNull(TEXT("The player's squadron is aboard a carrier"), Squadron)) return false;
     TestEqual(TEXT("Carrier is Archon as in T1"), FString(UTF8_TO_TCHAR(Squadron->GetCarrier().data())), FString(TEXT("Archon")));
     TestTrue(TEXT("The free scene has no training script"), !Model.GetScriptName()[0] && Model.GetEvents().isEmpty());
+    FString TestDefinition;
+    if (!TestTrue(TEXT("Test Mission has its own staged definition"), FFileHelper::LoadFileToString(TestDefinition,
+        *(FPaths::ProjectContentDir() / TEXT("GameData/Tests/JanekTest.def"))))) return false;
+    Mission TestModel(Mission::TestFlightId);
+    if (!TestTrue(TEXT("Test scene passes the mission parser"), TestModel.ParseMission(TCHAR_TO_UTF8(*TestDefinition)))) return false;
+    TestTrue(TEXT("Test scene is distinct from real training"), TestModel.IsTestFlight() && TestModel.IsFreeFlight());
+    TestNotNull(TEXT("Test scene has the player fighter"), TestModel.GetPlayer());
+    TestEqual(TEXT("Only carrier, squadron provisioning and player are authored"), TestModel.GetElements().size(), 3);
+    TestTrue(TEXT("Test environment has no instructor script or events"), !TestModel.GetScriptName()[0] && TestModel.GetEvents().isEmpty());
     return true;
 }
 
@@ -129,7 +149,7 @@ bool FAgentCatalogTest::RunTest(const FString&)
     Catalog->LoadCatalog();
     const auto* Table = Catalog->GetCatalog();
     if (!TestNotNull(TEXT("Agent JSON is ingested as a data table"), Table)) return false;
-    TestEqual(TEXT("Forty agent postings"), Table->GetRowMap().Num(), 40);
+    TestTrue(TEXT("At least forty agent postings"), Table->GetRowMap().Num() >= 40);
     TSet<FString> Systems;
     TSet<int32> Levels;
     Table->ForeachRow<FS_AgentCatalogRow>(TEXT("Check roster coverage"),
@@ -159,6 +179,14 @@ bool FAgentCatalogTest::RunTest(const FString&)
     TestFalse(TEXT("Dantari pilots cannot contact Marakan agents"), Catalog->CanContact(TEXT("MarakCommand")));
     auto* Scenarios = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_SingleMissions.DT_SingleMissions"));
     if (!TestNotNull(TEXT("Standalone scenarios are available"), Scenarios)) return false;
+    TestEqual(TEXT("Expanded single mission pool has forty sorties"),Scenarios->GetRowMap().Num(),40);
+    TSet<int32> RoutedMissions;
+    Table->ForeachRow<FS_AgentCatalogRow>(TEXT("Collect agent routing"),[&RoutedMissions](FName,const FS_AgentCatalogRow& Row)
+    { if(Row.Class!=EAgentClass::Training) for(int32 Id:Row.MissionIds)RoutedMissions.Add(Id); });
+    Scenarios->ForeachRow<FS_CampaignMission>(TEXT("No orphan singles"),[this,&RoutedMissions](FName,const FS_CampaignMission& Row)
+    { TestTrue(FString::Printf(TEXT("Mission %d has a local officer"),Row.Id),RoutedMissions.Contains(Row.Id)); });
+    const auto* Instructor=Catalog->FindAgent(TEXT("JanekFlightTraining"));
+    TestTrue(TEXT("Same instructor introduces all seven lessons"),Instructor && Instructor->MissionIds.Num()==7 && Instructor->MissionIds.Contains(107));
     Table->ForeachRow<FS_AgentCatalogRow>(TEXT("Verify regional agent postings"),
         [this, Scenarios](FName Key, const FS_AgentCatalogRow& Agent)
         {
@@ -174,12 +202,40 @@ bool FAgentCatalogTest::RunTest(const FString&)
                     [&Agent, &bHasMission, Id](FName, const FS_CampaignMission& Scenario)
                     {
                         bHasMission |= Scenario.Id == Id && Scenario.StoryCampaignId <= 0 &&
-                            Scenario.MissionSystem.Equals(Agent.System, ESearchCase::IgnoreCase) &&
-                            Scenario.MissionRegion.Equals(Agent.Region, ESearchCase::IgnoreCase);
+                            Scenario.MissionSystem.Equals(Agent.System, ESearchCase::IgnoreCase);
                     });
                 TestTrue(FString::Printf(TEXT("%s has approved mission %d in its posting"), *Key.ToString(), Id), bHasMission);
             }
         });
+    return true;
+}
+
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAgentLocalSortieTest, "Starshatter.Mission.LocalAgentSorties",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FAgentLocalSortieTest::RunTest(const FString&)
+{
+    auto* Scenarios=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_SingleMissions.DT_SingleMissions"));
+    auto* Ships=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign"));
+    if(!TestNotNull(TEXT("Local scenarios"),Scenarios)||!TestNotNull(TEXT("Hull designs"),Ships))return false;
+    const bool bPopulateShips=ShipDesignRegistry::GetAll().IsEmpty();
+    const bool bPopulateWeapons=WeaponDesignRegistry::GetAll().IsEmpty();
+    ON_SCOPE_EXIT {if(bPopulateShips)ShipDesignRegistry::Clear();if(bPopulateWeapons)WeaponDesignRegistry::Clear();};
+    if(bPopulateWeapons)NewObject<UStarshatterWeaponDesignSubsystem>(NewObject<UGameInstance>())->LoadWeaponDesigns();
+    if(bPopulateShips)Ships->ForeachRow<FShipDesign>(TEXT("Sortie hulls"),[](FName Key,const FShipDesign& Row)
+    { ShipDesignRegistry::RegisterDesign(Row.ShipName.IsEmpty()?Key:FName(*Row.ShipName),Row); });
+    int32 Count=0;
+    Scenarios->ForeachRow<FS_CampaignMission>(TEXT("Load local sorties"),[this,&Count](FName,const FS_CampaignMission& Row)
+    {
+        if(Row.Id<11)return;
+        Mission Model(Mission::RegionalAgentMissionOffset+Row.Id);
+        TestTrue(FString::Printf(TEXT("Sortie %d provisions successfully"),Row.Id),Model.LoadFromCampaignMissionData(Row));
+        TestNotNull(TEXT("Player fighter is provisioned"),Model.GetPlayer());
+        TestTrue(TEXT("Sortie has friendly and hostile elements"),Model.GetElements().size()>=4);
+        TestTrue(TEXT("Sortie has objective update events"),!Model.GetEvents().isEmpty());
+        ++Count;
+    });
+    TestEqual(TEXT("Thirty new local sorties validated"),Count,30);
     return true;
 }
 

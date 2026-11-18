@@ -81,6 +81,7 @@ public:
 
     void ShowMenuDlg();
     void StartFreeFlight();
+    void StartTestMission(bool bResume = false);
     bool OpenQueuedAssignment(int32 MissionId, bool bFromFreeFlight);
     void ShowCampaignSelectDlg();
     void ShowMissionSelectDlg(); // Entry: four-way mission driver
@@ -99,6 +100,7 @@ public:
     void ShowCmpnScreen();
     void HideCmpnScreen();
 
+    bool bSkipMissionPreparation = false;
     void ShowMissionDlg();
     void ShowStandaloneMissionDlg(Mission* InMission, Campaign* InRepository);
     void ReturnFromMissionBriefing();

@@ -1,0 +1,11 @@
+{
+  "Scene": "Intro",
+  "FrameRate": 30,
+  "Duration": 100.00479750707746,
+  "campaign": 1,
+  "source_def": "D:\\SSW\\Content\\GameData\\Campaigns\\01\\Scenes\\Intro.def",
+  "source_sha256": "4f311d6fe51756c238d8dd20c62ca409ea98b8084a97135be4c82dd546cbfa31",
+  "mp4_sha256": "4005ed3cf6dffccd7efafc7610546e34218e339cfd9af3992fb31b3d494303f6",
+  "captured_frames": 2832,
+  "render_directory": "D:\\SSW\\Saved\\CutsceneRenders\\Campaign01\\Intro\\20261118_170744"
+}

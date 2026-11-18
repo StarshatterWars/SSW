@@ -22,6 +22,7 @@
 =============================================================================*/
 
 #include "PlayerDlg.h"
+#include "AgentCatalogSubsystem.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SBorder.h"
 #include "Styling/CoreStyle.h"
@@ -58,6 +59,8 @@
 #include "CombatGroup.h"
 #include "PlayerCharacter.h"
 #include "Sim.h"
+#include "TimerSubsystem.h"
+#include "SSWGameInstance.h"
 #include "Ship.h"
 #include "SimRegion.h"
 #include "Mission.h"
@@ -1044,10 +1047,10 @@ TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
     const auto AddSection = [&Rows](FText SectionTitle)
     {
         Rows->AddSlot().AutoHeight().Padding(0, 12, 0, 4)
-            [SNew(STextBlock).Text(SectionTitle).Font(MissionUIStyle::GetHeaderFont(15))
+            [SNew(STextBlock).Text(SectionTitle).Font(MissionUIStyle::GetHeaderFont(14))
                 .ColorAndOpacity(FLinearColor(.46f, .77f, .9f))];
     };
-    const auto AddStat = [&Rows](FText Label, FText Value)
+    const auto AddStat = [&Rows](FText Label, TAttribute<FText> Value)
     {
         Rows->AddSlot().AutoHeight().Padding(0, 1)
         [
@@ -1056,9 +1059,9 @@ TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
             [
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot().FillWidth(.45f).Padding(0, 0, 10, 0)
-            [SNew(STextBlock).Text(Label).Font(MissionUIStyle::GetRowFont(14)).AutoWrapText(true)]
+            [SNew(STextBlock).Text(Label).Font(MissionUIStyle::GetRowFont(13)).AutoWrapText(true)]
             + SHorizontalBox::Slot().FillWidth(.55f)
-            [SNew(STextBlock).Text(Value).Font(MissionUIStyle::GetRowFont(14))
+            [SNew(STextBlock).Text(Value).Font(MissionUIStyle::GetRowFont(13))
                 .Justification(ETextJustify::Right).AutoWrapText(true)]
             ]
         ];
@@ -1072,7 +1075,35 @@ TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
     AddStat(INVTEXT("Callsign"), Display(Pilot.Callsign));
     AddStat(INVTEXT("Faction"), EmpireEnum->IsValidEnumValue(Pilot.Empire)
         ? EmpireEnum->GetDisplayNameTextByValue(Pilot.Empire) : INVTEXT("Unassigned"));
-    AddStat(INVTEXT("Unit"), Display(Unit));
+    const TWeakObjectPtr<UGameInstance> WeakInstance(Instance);
+    AddStat(INVTEXT("Universe time (GMT)"), TAttribute<FText>::CreateLambda([WeakInstance]()
+    {
+        const auto* Timer = WeakInstance.IsValid() ? WeakInstance->GetSubsystem<UTimerSubsystem>() : nullptr;
+        return Timer && Timer->GetUniverseTimeSeconds() > 0
+            ? FText::FromString(Timer->GetUniverseDateTimeString() + TEXT(" GMT")) : INVTEXT("Clock unavailable");
+    }));
+    AddStat(INVTEXT("Campaign elapsed"), TAttribute<FText>::CreateLambda([WeakInstance]()
+    {
+        const auto* Game = WeakInstance.IsValid() ? Cast<USSWGameInstance>(WeakInstance.Get()) : nullptr;
+        return Game && Game->GetSubsystem<UTimerSubsystem>()
+            ? FText::FromString(Game->GetCampaignTPlusString()) : INVTEXT("No active campaign clock");
+    }));
+    AddStat(INVTEXT("Current group"), TAttribute<FText>::CreateLambda([Fallback=Unit,Display]()
+    {
+        auto* Active = Campaign::GetCampaign();
+        auto* Group = Active ? Active->GetPlayerGroup() : nullptr;
+        return Display(Group ? FString(UTF8_TO_TCHAR(Group->GetDescription())) : Fallback);
+    }));
+    AddStat(INVTEXT("Campaign"), TAttribute<FText>::CreateLambda([WeakInstance]()
+    {
+        const auto* Catalog=WeakInstance.IsValid()?WeakInstance->GetSubsystem<UAgentCatalogSubsystem>():nullptr;
+        return Catalog?Catalog->GetCurrentOperationName():INVTEXT("Unassigned");
+    }));
+    AddStat(INVTEXT("Team score"), TAttribute<FText>::CreateLambda([]()
+    {
+        auto* Active = Campaign::GetCampaign();
+        return FText::AsNumber(Active ? Active->GetPlayerTeamScore() : 0);
+    }));
     if (!Pilot.Squadron.IsEmpty() && Pilot.Squadron != Unit) AddStat(INVTEXT("Squadron"), Display(Pilot.Squadron));
     if (Pilot.CreateTime > 0)
         AddStat(INVTEXT("Service began"), FText::FromString(UFormattingUtils::FormatDateFromUnixSeconds(Pilot.CreateTime)));
@@ -1113,7 +1144,7 @@ TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
             FMedalInfo Medal;
             if ((Medals & Flag) && Data->GetMedalInfoByFlag(Flag, Medal) && !Medal.Name.IsEmpty())
                 Rows->AddSlot().AutoHeight().Padding(0, 3)
-                    [SNew(STextBlock).Text(Display(Medal.Name)).Font(MissionUIStyle::GetRowFont(14))];
+                    [SNew(STextBlock).Text(Display(Medal.Name)).Font(MissionUIStyle::GetRowFont(13))];
         }
 
     if (!Pilot.CompletedMissions.IsEmpty())
@@ -1152,7 +1183,7 @@ TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
         + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 12)
         [
             SNew(STextBlock).Text(Display(Pilot.GetRankedDisplayName()))
-            .Font(MissionUIStyle::GetHeaderFont(24)).AutoWrapText(true)
+            .Font(MissionUIStyle::GetHeaderFont(18)).AutoWrapText(true)
         ]
         + SVerticalBox::Slot().FillHeight(1)
         [

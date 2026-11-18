@@ -102,24 +102,6 @@ UStarshatterPlayerSubsystem* UFirstTimeDlg::GetPlayerSubsystem() const
 
 void UFirstTimeDlg::PopulateDefaultsIfNeeded()
 {
-    // Play Style
-    if (PlayStyleCombo)
-    {
-        if (PlayStyleCombo->GetOptionCount() == 0)
-        {
-            PlayStyleCombo->ClearOptions();
-            PlayStyleCombo->AddOption(TEXT("Arcade Style"));
-            PlayStyleCombo->AddOption(TEXT("Standard Model"));
-        }
-
-        if (PlayStyleCombo->GetSelectedIndex() < 0)
-            PlayStyleCombo->SetSelectedIndex(0);
-    }
-    else
-    {
-        UE_LOG(LogFirstTimeDlg, Warning, TEXT("PlayStyleCombo is NULL (BindWidget mismatch)."));
-    }
-
     if (NameEdit)
     {
         const auto* GameInstance = Cast<USSWGameInstance>(GetGameInstance());
@@ -215,41 +197,34 @@ void UFirstTimeDlg::ApplyUiToPlayerInfo(FS_PlayerGameInfo& Info) const
         Info.Empire = static_cast<int32>(EmpireEnum);
     }
 
-    // -----------------------------
-    // Play Style -> PlayerInfo options
-    // -----------------------------
-    int32 PlayStyleIndex = 0;
-    if (PlayStyleCombo)
-    {
-        PlayStyleIndex = PlayStyleCombo->GetSelectedIndex();
-        if (PlayStyleIndex < 0) PlayStyleIndex = 0;
-    }
+    // First-run default; all flight settings remain changeable in Options.
+    Info.FlightModel = 2;
+    Info.LandingMode = 1;
+    Info.HudMode = 0;
+    Info.GunSightMode = true;
 
-    if (PlayStyleIndex == 0)
-    {
-        // ARCADE
-        Info.FlightModel = 2;
-        Info.LandingMode = 1;
-        Info.HudMode = 0;
-        Info.GunSightMode = true;
-    }
-    else
-    {
-        // STANDARD
-        Info.FlightModel = 0;
-        Info.LandingMode = 0;
-        Info.HudMode = 0;
-        Info.GunSightMode = false;
-    }
-
+    Info.Campaign=0;Info.CampaignRowName=NAME_None;
     Info.Rank = 0;
     Info.bStartedAsEnsign = false;
+}
+
+// Keep keyboard activation separate from BaseScreen's legacy Apply/Cancel styling.
+void UFirstTimeDlg::HandleAccept()
+{
+    if (AcceptBtn && AcceptBtn->GetIsEnabled())
+        AcceptBtn->OnClicked.Broadcast();
+}
+
+void UFirstTimeDlg::HandleCancel()
+{
+    if (CancelBtn && CancelBtn->GetIsEnabled())
+        CancelBtn->OnClicked.Broadcast();
 }
 
 void UFirstTimeDlg::OnCancelClicked()
 {
     UE_LOG(LogFirstTimeDlg, Log, TEXT("First-run setup canceled. Exiting to Windows."));
-    UKismetSystemLibrary::QuitGame(this, nullptr, EQuitPreference::Quit, true);
+    UKismetSystemLibrary::QuitGame(this, GetOwningPlayer(), EQuitPreference::Quit, true);
 }
 
 void UFirstTimeDlg::OnAcceptClicked()
@@ -271,11 +246,10 @@ void UFirstTimeDlg::OnAcceptClicked()
     ApplyUiToPlayerInfo(Info);
     EnsureMinimalFirstRunDefaults(Info);
 
-    Info.Campaign = Campaign::TRAINING_CAMPAIGN;
+    Info.Campaign = 0;
+    Info.CampaignRowName = NAME_None;
     auto* GI = Cast<USSWGameInstance>(GetGameInstance());
-    const auto* Data = GI ? GI->GetSubsystem<UStarshatterGameDataSubsystem>() : nullptr;
-    const FS_Campaign* InitialCampaign = Data ? Data->GetCampaignByIndex1Based(Info.Campaign) : nullptr;
-    Info.CampaignRowName = InitialCampaign ? InitialCampaign->RowName : NAME_None;
+    if(GI)GI->ClearCampaignAssignment();
 
     const bool bOk = PlayerSS->SavePlayer(true);
     PlayerSS->DebugDump(TEXT(" AFTER SavePlayer(true)"));
@@ -352,15 +326,15 @@ void UFirstTimeDlg::BuildModernDialog()
     CallsignEdit=WidgetTree->ConstructWidget<UEditableTextBox>(UEditableTextBox::StaticClass(),TEXT("ModernCallsignEdit"));
     for(auto* Edit:{NameEdit.Get(),CallsignEdit.Get()}){auto Style=Edit->GetWidgetStyle();Style.SetFont(MissionUIStyle::GetRowFont(16));
         Style.SetForegroundColor(FLinearColor::White);Style.SetBackgroundColor(FLinearColor(0.025f,0.045f,0.065f));Style.SetPadding(FMargin(10,5));Edit->SetWidgetStyle(Style);}
-    EmpireCombo=WidgetTree->ConstructWidget<UComboBoxString>();PlayStyleCombo=WidgetTree->ConstructWidget<UComboBoxString>();
-    for(auto* Combo:{EmpireCombo.Get(),PlayStyleCombo.Get()}){Combo->Font=MissionUIStyle::GetRowFont(15);Combo->ForegroundColor=FSlateColor(FLinearColor::White);
+    EmpireCombo=WidgetTree->ConstructWidget<UComboBoxString>();PlayStyleCombo=nullptr;
+    for(auto* Combo:{EmpireCombo.Get()}){Combo->Font=MissionUIStyle::GetRowFont(15);Combo->ForegroundColor=FSlateColor(FLinearColor::White);
         auto ComboStyle=Combo->GetWidgetStyle();
         ComboStyle.ComboButtonStyle.ButtonStyle.Normal.TintColor=FSlateColor(FLinearColor(0.025f,0.045f,0.065f));
         ComboStyle.ComboButtonStyle.ButtonStyle.Hovered.TintColor=FSlateColor(FLinearColor(0.08f,0.16f,0.22f));
         ComboStyle.ComboButtonStyle.ButtonStyle.Pressed.TintColor=FSlateColor(FLinearColor(0.08f,0.16f,0.22f));
         Combo->SetWidgetStyle(ComboStyle);}
     EmpireCombo->OnSelectionChanged.AddUniqueDynamic(this,&UFirstTimeDlg::OnEmpireLogoChanged);
-    Row(TEXT("Pilot name"),NameEdit);Row(TEXT("Callsign"),CallsignEdit);Row(TEXT("Empire"),EmpireCombo);Row(TEXT("Flight model"),PlayStyleCombo);
+    Row(TEXT("Pilot name"),NameEdit);Row(TEXT("Callsign"),CallsignEdit);Row(TEXT("Empire"),EmpireCombo);
     auto* Actions=WidgetTree->ConstructWidget<UHorizontalBox>();
     auto Action=[&](TObjectPtr<UButton>& Button,const TCHAR* Color,const TCHAR* Icon,const TCHAR* Tooltip){
         auto* Box=WidgetTree->ConstructWidget<USizeBox>();Box->SetWidthOverride(72);Box->SetHeightOverride(48);

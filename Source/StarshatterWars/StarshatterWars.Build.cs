@@ -22,6 +22,7 @@ public class StarshatterWars : ModuleRules
             "SlateCore",
             "UMG",
             "MediaAssets",
+            "AudioMixer",
             "CommonUI",
             "CoreOnline",
             "OnlineSubsystem",
@@ -53,6 +54,7 @@ public class StarshatterWars : ModuleRules
         if (Target.Type == TargetType.Editor)
         {
             PrivateDependencyModuleNames.Add("WorldScapeEditor");
+            PrivateDependencyModuleNames.Add("MovieSceneCapture");
         }
 
         // Vorbis rules token exists in UE 5.6:

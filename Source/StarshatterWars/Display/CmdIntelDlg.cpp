@@ -1,3 +1,6 @@
+#include "RecordedCutsceneDlg.h"
+#include "StarshatterGameDataSubsystem.h"
+#include "CampaignSave.h"
 // +----------------------------------------------------------------------+
 // | UCmdIntelDlg                                                         |
 // +----------------------------------------------------------------------+
@@ -17,6 +20,8 @@
 #include "Components/Border.h"
 #include "Components/SizeBox.h"
 #include "Components/WidgetSwitcherSlot.h"
+#include "Components/WidgetSwitcher.h"
+#include "FlightPanelStyle.h"
 #include "Blueprint/WidgetTree.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Texture2D.h"
@@ -24,6 +29,8 @@
 #include "IntelListObject.h"
 #include "IntelLVElement.h"
 #include "MissionUIStyle.h"
+#include "ShipSystemIcon.h"
+#include "Components/NativeWidgetHost.h"
 #include "CmpnScreen.h"
 #include "Campaign.h"
 #include "CombatEvent.h"
@@ -99,6 +106,7 @@ void UCmdIntelDlg::NativeConstruct()
 
 		IntelList->OnItemSelectionChanged().RemoveAll(this);
 		IntelList->OnItemSelectionChanged().AddUObject(this, &UCmdIntelDlg::OnNewsSelectionChanged);
+        if (bReportSubpanels) IntelList->OnItemClicked().AddUObject(this, &UCmdIntelDlg::OnNewsSelectionChanged);
 	}
 	else
 	{
@@ -168,7 +176,7 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
 		Text->SetColorAndOpacity(FSlateColor(Color));
 		Text->SetAutoWrapText(true);
 		FSlateFontInfo Font = Text->GetFont();
-		Font.Size = Size;
+		Font = MissionUIStyle::GetRowFont(FMath::Min(Size,16));
 		Text->SetFont(Font);
 		return Text;
 	};
@@ -211,7 +219,7 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
 
 	UBorder* RightOutline = WidgetTree->ConstructWidget<UBorder>();
 	RightOutline->SetPadding(FMargin(2.f));
-	RightOutline->SetBrushColor(FLinearColor(0.72f, 0.72f, 0.72f, 1.f));
+	RightOutline->SetBrushColor(FlightPanelStyle::DividerColor());
 	UBorder* RightCard = WidgetTree->ConstructWidget<UBorder>();
 	RightCard->SetPadding(FMargin(16.f));
 	RightCard->SetBrushColor(FLinearColor(0.08f, 0.08f, 0.08, 0.96f));
@@ -227,16 +235,16 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
 	}
 	RightContents->AddChildToVerticalBox(MakeText(TEXT("REPORT"), 18, FLinearColor(0.95f, 0.97f, 1.f)))->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
 	if (!IntelNameText) IntelNameText = MakeText(TEXT("SELECT A REPORT"), 22, FLinearColor(0.95f, 0.97f, 1.f));
-	if (!IntelSourceText) IntelSourceText = MakeText(TEXT(""), 15, FLinearColor(0.71f, 0.81f, 0.88f));
-	if (!IntelLocationText) IntelLocationText = MakeText(TEXT(""), 15, FLinearColor(0.71f, 0.81f, 0.88f));
-	if (!IntelDateText) IntelDateText = MakeText(TEXT(""), 15, FLinearColor(0.71f, 0.81f, 0.88f));
-	if (!IntelMessageText) IntelMessageText = MakeText(TEXT(""), 15, FLinearColor(0.95f, 0.97f, 1.f));
+	if (!IntelSourceText) IntelSourceText = MakeText(TEXT(""), 13, FLinearColor(0.71f, 0.81f, 0.88f));
+	if (!IntelLocationText) IntelLocationText = MakeText(TEXT(""), 13, FLinearColor(0.71f, 0.81f, 0.88f));
+	if (!IntelDateText) IntelDateText = MakeText(TEXT(""), 13, FLinearColor(0.71f, 0.81f, 0.88f));
+	if (!IntelMessageText) IntelMessageText = MakeText(TEXT(""), 13, FLinearColor(0.95f, 0.97f, 1.f));
 	if (!IntelImage) IntelImage = WidgetTree->ConstructWidget<UImage>();
 	IntelImage->SetVisibility(ESlateVisibility::Collapsed);
 
 	UHorizontalBox* TopRow = WidgetTree->ConstructWidget<UHorizontalBox>();
 	USizeBox* InfoColumn = WidgetTree->ConstructWidget<USizeBox>();
-	InfoColumn->SetWidthOverride(280.f);
+	InfoColumn->SetWidthOverride(180.f);
 	UVerticalBox* Info = WidgetTree->ConstructWidget<UVerticalBox>();
 	Info->AddChildToVerticalBox(IntelNameText)->SetPadding(FMargin(0.f, 0.f, 0.f, 8.f));
 	Info->AddChildToVerticalBox(IntelSourceText);
@@ -251,9 +259,9 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
 	}
 
 	USizeBox* ImageBox = WidgetTree->ConstructWidget<USizeBox>();
-	ImageBox->SetWidthOverride(256.f);
-	ImageBox->SetHeightOverride(256.f);
-	IntelImage->SetDesiredSizeOverride(FVector2D(256.f, 256.f));
+	ImageBox->SetWidthOverride(160.f);
+	ImageBox->SetHeightOverride(160.f);
+	IntelImage->SetDesiredSizeOverride(FVector2D(160.f, 160.f));
 	ImageBox->SetContent(IntelImage);
 	if (UHorizontalBoxSlot* ImageSlot = TopRow->AddChildToHorizontalBox(ImageBox))
 	{
@@ -268,11 +276,59 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
 		TopSlot->SetPadding(FMargin(0.f, 0.f, 0.f, 12.f));
 	}
     RightContents->AddChildToVerticalBox(IntelMessageText);
+    if (!AudioButton)
+    {
+        AudioButton = WidgetTree->ConstructWidget<UButton>();
+        auto* Icon = WidgetTree->ConstructWidget<UNativeWidgetHost>();
+        Icon->SetContent(SNew(SShipSystemIcon).Icon(EShipSystemIcon::Audio));
+        AudioButton->SetContent(Icon);
+        AudioButton->SetToolTipText(INVTEXT("Play report audio"));
+        AudioButton->SetVisibility(ESlateVisibility::Collapsed);
+    }
     if (AudioButton)
     {
         AudioButton->RemoveFromParent();
         MissionUIStyle::ApplyActionButtonStyle(AudioButton, TEXT("Blue"));
         RightContents->AddChildToVerticalBox(AudioButton)->SetPadding(FMargin(0.f, 16.f, 0.f, 0.f));
+    }
+    if (bReportSubpanels)
+    {
+        ReplayButton=WidgetTree->ConstructWidget<UButton>();
+        auto* ReplayLabel=WidgetTree->ConstructWidget<UTextBlock>();ReplayLabel->SetText(INVTEXT("\u25B6"));ReplayLabel->SetFont(MissionUIStyle::GetHeaderFont(16));
+        ReplayButton->SetContent(ReplayLabel);ReplayButton->SetToolTipText(INVTEXT("Replay this cutscene in a window"));
+        ReplayButton->OnClicked.AddUniqueDynamic(this,&UCmdIntelDlg::OnReplayClicked);
+        ReplayButton->SetVisibility(ESlateVisibility::Collapsed);
+        RightContents->AddChildToVerticalBox(ReplayButton);
+        LeftOutline->RemoveFromParent();
+        RightOutline->RemoveFromParent();
+        Columns->SetVisibility(ESlateVisibility::Collapsed);
+        LeftCard->SetBrush(FlightPanelStyle::Window()); LeftCard->SetBrushColor(FLinearColor::White);
+        RightCard->SetBrush(FlightPanelStyle::Window()); RightCard->SetBrushColor(FLinearColor::White);
+        ReportPages = WidgetTree->ConstructWidget<UWidgetSwitcher>();
+        auto* PageSlot = Root->AddChildToCanvas(ReportPages);
+        PageSlot->SetAnchors(FAnchors(0,0,1,1)); PageSlot->SetOffsets(FMargin(8)); PageSlot->SetZOrder(10);
+        ReportPages->AddChild(LeftOutline);
+        auto* DetailPage = WidgetTree->ConstructWidget<UVerticalBox>();
+        auto* DetailHeader = WidgetTree->ConstructWidget<UHorizontalBox>();
+        auto* Back = WidgetTree->ConstructWidget<UButton>();
+        auto* BackIcon = WidgetTree->ConstructWidget<UNativeWidgetHost>();
+        BackIcon->SetContent(SNew(SShipSystemIcon).Icon(EShipSystemIcon::Back));
+        Back->SetContent(BackIcon); Back->SetToolTipText(INVTEXT("Back to intel reports"));
+        Back->OnClicked.AddUniqueDynamic(this,&UCmdIntelDlg::BackToIntelList);
+        DetailHeader->AddChildToHorizontalBox(Back)->SetPadding(FMargin(0,0,10,0));
+        DetailHeader->AddChildToHorizontalBox(MakeText(TEXT("INTEL DETAILS"),16,FLinearColor(.88f,.96f,1.f)));
+        DetailPage->AddChildToVerticalBox(DetailHeader)->SetPadding(FMargin(0,0,0,8));
+        DetailPage->AddChildToVerticalBox(RightOutline)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+        ReportPages->AddChild(DetailPage);
+        ReplayPage=WidgetTree->ConstructWidget<UVerticalBox>();
+        auto* Close=WidgetTree->ConstructWidget<UButton>();auto* CloseLabel=WidgetTree->ConstructWidget<UTextBlock>();
+        CloseLabel->SetText(INVTEXT("\u00D7"));CloseLabel->SetFont(MissionUIStyle::GetHeaderFont(18));Close->SetContent(CloseLabel);
+        MissionUIStyle::ApplyActionButtonStyle(Close,TEXT("Red"));Close->SetToolTipText(INVTEXT("Close cutscene replay"));
+        Close->OnClicked.AddUniqueDynamic(this,&UCmdIntelDlg::CloseReplay);
+        ReplayPage->AddChildToVerticalBox(Close)->SetHorizontalAlignment(HAlign_Right);
+        ReportPages->AddChild(ReplayPage);
+
+        ReportPages->SetActiveWidgetIndex(0);
     }
 }
 
@@ -368,9 +424,37 @@ void UCmdIntelDlg::ExecFrame()
 // | RebuildNewsListIfCampaignChanged                                     |
 // +----------------------------------------------------------------------+
 
+void UCmdIntelDlg::EnsureTrainingIntroduction(Campaign* Story)
+{
+    // Training is agent-driven now; it no longer visits the Operations screen
+    // that used to publish the campaign-start event. Keep its introduction in Intel.
+    if (Story && Story->GetCampaignId() == 1)
+    {
+        CombatEvent* Introduction = nullptr;
+        for (int32 Index=0; Index<Story->GetEvents().size(); ++Index)
+        {
+            auto* Entry=Story->GetEvents()[Index];
+            if (Entry && FString(UTF8_TO_TCHAR(Entry->SceneFile())).Equals(TEXT("Intro"),ESearchCase::IgnoreCase))
+            { Introduction=Entry; break; }
+        }
+        if (!Introduction)
+        {
+            Introduction = new CombatEvent(Story,ECombatEventType::NONE,0,1,ECombatEventSource::NONE,"Janus");
+            Introduction->SetSceneFile("Intro");
+            Story->GetEvents().append(Introduction);
+        }
+        Introduction->SetTitle("Operation Live Fire");
+        Introduction->SetInformation("Third Fleet is conducting live-fire exercises in the Janus system. "
+            "Report to Lieutenant Mara Venn for your training assignments. Initial lessons cover space flight, "
+            "combat, atmospheric operations and recovery; later assignments introduce capital ships as your rank and qualifications advance. "
+            "The original Training Introduction is retained with this report.");
+    }
+}
+
 void UCmdIntelDlg::RebuildNewsListIfCampaignChanged()
 {
 	Campaign* Current = Campaign::GetCampaign();
+    if(auto* Game=Cast<USSWGameInstance>(GetGameInstance());Game && Game->IsTrainingTestSession())Current=Game->GetAgentTrainingCampaign();
 	if (!Current)
     {
         CampaignPtr = nullptr;
@@ -380,6 +464,7 @@ void UCmdIntelDlg::RebuildNewsListIfCampaignChanged()
         return;
     }
 
+    EnsureTrainingIntroduction(Current);
 	const double CurrentUpdateTime = Current->GetUpdateTime();
 
 	if (CampaignPtr != Current || UpdateTime != CurrentUpdateTime ||
@@ -402,6 +487,7 @@ void UCmdIntelDlg::RebuildNewsListIfCampaignChanged()
 
 void UCmdIntelDlg::AppendNewEventsIfAny()
 {
+    TGuardValue<bool> RefreshGuard(bRefreshingIntelList,true);
 	if (!CampaignPtr || !IntelList)
 		return;
 
@@ -525,6 +611,7 @@ CombatEvent* UCmdIntelDlg::GetSelectedEvent(int32& OutSelectedIndex) const
 
 void UCmdIntelDlg::OnNewsSelectionChanged(UObject* Item)
 {
+    if (bReportSubpanels && bRefreshingIntelList) return;
 	UE_LOG(LogTemp, Warning, TEXT("[CmdIntelDlg] SelectionChanged fired"));
 
 	if (!Item)
@@ -542,6 +629,7 @@ void UCmdIntelDlg::OnNewsSelectionChanged(UObject* Item)
 	}
 
 	SetSelectedIntelData(IntelItem);
+    if (ReportPages) ReportPages->SetActiveWidgetIndex(1);
 
 	IntelItem->NewsVisited = true;
 	if (IntelItem->EventPtr)
@@ -564,6 +652,24 @@ void UCmdIntelDlg::OnNewsSelectionChanged(UObject* Item)
 
 void UCmdIntelDlg::SetSelectedIntelData(UIntelListObject* Item)
 {
+    if (ReplayButton)
+    {
+        bool bSeen=false;
+        CombatEvent* Entry=Item?Item->EventPtr:nullptr;
+        if (Entry && Entry->SceneFile() && *Entry->SceneFile())
+        {
+            const auto* GI=Cast<USSWGameInstance>(GetGameInstance());
+            const auto* Save=GI?GI->CampaignSave:nullptr;
+            bSeen=(Save && CampaignPtr && Save->CampaignIndex==CampaignPtr->GetCampaignId())
+                ? Save->HasPlayedScene(UTF8_TO_TCHAR(Entry->SceneFile())) : false;
+            // The training introduction is available as the training archive's first entry.
+            bSeen |= CampaignPtr && CampaignPtr->GetCampaignId()==1;
+        }
+        ReplayButton->SetVisibility(Entry && Entry->SceneFile() && *Entry->SceneFile()?ESlateVisibility::Visible:ESlateVisibility::Collapsed);
+        ReplayButton->SetIsEnabled(bSeen);
+        ReplayButton->SetToolTipText(bSeen?INVTEXT("Replay this cutscene in a window"):INVTEXT("Available after the first viewing"));
+    }
+
 	if (!Item)
 		return;
 
@@ -819,6 +925,7 @@ FSlateBrush UCmdIntelDlg::CreateBrushFromTexture(UTexture2D* Texture, FVector2D 
 
 void UCmdIntelDlg::AutoSelectFirstItemIfNeeded()
 {
+    if (bReportSubpanels) return;
 	if (!IntelList || IntelList->GetNumItems() <= 0)
 	{
 		return;
@@ -874,4 +981,34 @@ void UCmdIntelDlg::RefreshIntelData()
 {
 	RebuildNewsListIfCampaignChanged();
 	AppendNewEventsIfAny();
+}
+void UCmdIntelDlg::BackToIntelList()
+{
+    CloseReplay();
+    if (ReportPages) ReportPages->SetActiveWidgetIndex(0);
+}
+
+void UCmdIntelDlg::OnReplayClicked()
+{
+    int32 Index=INDEX_NONE;CombatEvent* Entry=GetSelectedEvent(Index);
+    if(!Entry || !ReplayPage || !ReplayButton || !ReplayButton->GetIsEnabled())return;
+    auto* Data=GetGameInstance()?GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>():nullptr;
+    const int32 Number=CampaignPtr?CampaignPtr->GetCampaignId():1;
+    const FS_Campaign* Story=Data?Data->GetCampaignByIndex1Based(Number):nullptr;
+    if(!Story)return;
+    for(const auto& Scene:Story->Missions)
+        if(Scene.Scene.Equals(UTF8_TO_TCHAR(Entry->SceneFile()),ESearchCase::IgnoreCase))
+        {
+            CloseReplay();
+            ReplayPanel=CreateWidget<URecordedCutsceneDlg>(GetOwningPlayer());
+            if(!ReplayPanel)return;
+            ReplayPage->AddChildToVerticalBox(ReplayPanel)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+            ReplayPanel->TakeWidget();ReplayPanel->LoadMovie(URecordedCutsceneDlg::MoviePath(Number,Scene.Scene));
+            ReportPages->SetActiveWidgetIndex(2);return;
+        }
+}
+void UCmdIntelDlg::CloseReplay()
+{
+    if(ReplayPanel){ReplayPanel->RemoveFromParent();ReplayPanel=nullptr;}
+    if(ReportPages && ReportPages->GetActiveWidgetIndex()==2)ReportPages->SetActiveWidgetIndex(1);
 }

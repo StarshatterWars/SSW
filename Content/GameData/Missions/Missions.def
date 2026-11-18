@@ -135,3 +135,124 @@ mission: {
    region:  Korius,
    script:  "10-Angels.def"
 }
+
+// Local agent assignments.
+mission: {
+ id: 11, name: "Solus: Silent Watch", type: PATROL, desc: "Investigate raiders disrupting the Solus approach lanes. Destroy the hostile patrol before it reaches local shipping.", objective: "Investigate raiders disrupting the Solus approach lanes. Destroy the hostile patrol before it reaches local shipping.", start: "01/09:00:00", system: "Solus", region: "Solus", script: "11-AgentSortie.def"
+}
+
+mission: {
+ id: 12, name: "Telmera: Convoy Shield", type: ESCORT_FREIGHT, desc: "Cover a loaded transport in Telmera. Defeat the attacking raiders while keeping the transport intact.", objective: "Cover a loaded transport in Telmera. Defeat the attacking raiders while keeping the transport intact.", start: "01/09:00:00", system: "Solus", region: "Telmera", script: "12-AgentSortie.def"
+}
+
+mission: {
+ id: 13, name: "Paragon: Broken Spear", type: INTERCEPT, desc: "Intercept a pirate strike flight assembling near Paragon. Destroy the flight before it can attack the local traffic corridor.", objective: "Intercept a pirate strike flight assembling near Paragon. Destroy the flight before it can attack the local traffic corridor.", start: "01/09:00:00", system: "Paragon", region: "Paragon", script: "13-AgentSortie.def"
+}
+
+mission: {
+ id: 14, name: "Loris: Silent Watch", type: PATROL, desc: "Investigate raiders disrupting the Loris approach lanes. Destroy the hostile patrol before it reaches local shipping.", objective: "Investigate raiders disrupting the Loris approach lanes. Destroy the hostile patrol before it reaches local shipping.", start: "01/09:00:00", system: "Loris", region: "Loris", script: "14-AgentSortie.def"
+}
+
+mission: {
+ id: 15, name: "Janek: Convoy Shield", type: ESCORT_FREIGHT, desc: "Cover a loaded transport in Janek. Defeat the attacking raiders while keeping the transport intact.", objective: "Cover a loaded transport in Janek. Defeat the attacking raiders while keeping the transport intact.", start: "01/09:00:00", system: "Janus", region: "Janek", script: "15-AgentSortie.def"
+}
+
+mission: {
+ id: 16, name: "Janek: Broken Spear", type: INTERCEPT, desc: "Intercept a pirate strike flight assembling near Janek. Destroy the flight before it can attack the local traffic corridor.", objective: "Intercept a pirate strike flight assembling near Janek. Destroy the flight before it can attack the local traffic corridor.", start: "01/09:00:00", system: "Janus", region: "Janek", script: "16-AgentSortie.def"
+}
+
+mission: {
+ id: 17, name: "Janek: Silent Watch", type: PATROL, desc: "Investigate raiders disrupting the Janek approach lanes. Destroy the hostile patrol before it reaches local shipping.", objective: "Investigate raiders disrupting the Janek approach lanes. Destroy the hostile patrol before it reaches local shipping.", start: "01/09:00:00", system: "Janus", region: "Janek", script: "17-AgentSortie.def"
+}
+
+mission: {
+ id: 18, name: "Jarnell: Convoy Shield", type: ESCORT_FREIGHT, desc: "Cover a loaded transport in Jarnell. Defeat the attacking raiders while keeping the transport intact.", objective: "Cover a loaded transport in Jarnell. Defeat the attacking raiders while keeping the transport intact.", start: "01/09:00:00", system: "Jarnell", region: "Jarnell", script: "18-AgentSortie.def"
+}
+
+mission: {
+ id: 19, name: "Jarnell: Broken Spear", type: INTERCEPT, desc: "Intercept a pirate strike flight assembling near Jarnell. Destroy the flight before it can attack the local traffic corridor.", objective: "Intercept a pirate strike flight assembling near Jarnell. Destroy the flight before it can attack the local traffic corridor.", start: "01/09:00:00", system: "Jarnell", region: "Jarnell", script: "19-AgentSortie.def"
+}
+
+mission: {
+ id: 20, name: "Borova: Silent Watch", type: PATROL, desc: "Investigate raiders disrupting the Borova approach lanes. Destroy the hostile patrol before it reaches local shipping.", objective: "Investigate raiders disrupting the Borova approach lanes. Destroy the hostile patrol before it reaches local shipping.", start: "01/09:00:00", system: "Borova", region: "Borova", script: "20-AgentSortie.def"
+}
+
+mission: {
+ id: 21, name: "Borova: Convoy Shield", type: ESCORT_FREIGHT, desc: "Cover a loaded transport in Borova. Defeat the attacking raiders while keeping the transport intact.", objective: "Cover a loaded transport in Borova. Defeat the attacking raiders while keeping the transport intact.", start: "01/09:00:00", system: "Borova", region: "Borova", script: "21-AgentSortie.def"
+}
+
+mission: {
+ id: 22, name: "Athenar: Broken Spear", type: INTERCEPT, desc: "Intercept a pirate strike flight assembling near Athenar. Destroy the flight before it can attack the local traffic corridor.", objective: "Intercept a pirate strike flight assembling near Athenar. Destroy the flight before it can attack the local traffic corridor.", start: "01/09:00:00", system: "Athenar", region: "Athenar", script: "22-AgentSortie.def"
+}
+
+mission: {
+ id: 23, name: "Athenar: Silent Watch", type: PATROL, desc: "Investigate raiders disrupting the Athenar approach lanes. Destroy the hostile patrol before it reaches local shipping.", objective: "Investigate raiders disrupting the Athenar approach lanes. Destroy the hostile patrol before it reaches local shipping.", start: "01/09:00:00", system: "Athenar", region: "Athenar", script: "23-AgentSortie.def"
+}
+
+mission: {
+ id: 24, name: "Paragon: Convoy Shield", type: ESCORT_FREIGHT, desc: "Cover a loaded transport in Paragon. Defeat the attacking raiders while keeping the transport intact.", objective: "Cover a loaded transport in Paragon. Defeat the attacking raiders while keeping the transport intact.", start: "01/09:00:00", system: "Paragon", region: "Paragon", script: "24-AgentSortie.def"
+}
+
+mission: {
+ id: 25, name: "Thrale: Broken Spear", type: INTERCEPT, desc: "Intercept a pirate strike flight assembling near Thrale. Destroy the flight before it can attack the local traffic corridor.", objective: "Intercept a pirate strike flight assembling near Thrale. Destroy the flight before it can attack the local traffic corridor.", start: "01/09:00:00", system: "Thralis", region: "Thrale", script: "25-AgentSortie.def"
+}
+
+mission: {
+ id: 26, name: "Thrale: Silent Watch", type: PATROL, desc: "Investigate raiders disrupting the Thrale approach lanes. Destroy the hostile patrol before it reaches local shipping.", objective: "Investigate raiders disrupting the Thrale approach lanes. Destroy the hostile patrol before it reaches local shipping.", start: "01/09:00:00", system: "Thralis", region: "Thrale", script: "26-AgentSortie.def"
+}
+
+mission: {
+ id: 27, name: "Solus: Convoy Shield", type: ESCORT_FREIGHT, desc: "Cover a loaded transport in Solus. Defeat the attacking raiders while keeping the transport intact.", objective: "Cover a loaded transport in Solus. Defeat the attacking raiders while keeping the transport intact.", start: "01/09:00:00", system: "Solus", region: "Solus", script: "27-AgentSortie.def"
+}
+
+mission: {
+ id: 28, name: "Trellis: Broken Spear", type: INTERCEPT, desc: "Intercept a pirate strike flight assembling near Trellis. Destroy the flight before it can attack the local traffic corridor.", objective: "Intercept a pirate strike flight assembling near Trellis. Destroy the flight before it can attack the local traffic corridor.", start: "01/09:00:00", system: "Solus", region: "Trellis", script: "28-AgentSortie.def"
+}
+
+mission: {
+ id: 29, name: "Kalon: Silent Watch", type: PATROL, desc: "Investigate raiders disrupting the Kalon approach lanes. Destroy the hostile patrol before it reaches local shipping.", objective: "Investigate raiders disrupting the Kalon approach lanes. Destroy the hostile patrol before it reaches local shipping.", start: "01/09:00:00", system: "Solus", region: "Kalon", script: "29-AgentSortie.def"
+}
+
+mission: {
+ id: 30, name: "Haiche: Convoy Shield", type: ESCORT_FREIGHT, desc: "Cover a loaded transport in Haiche. Defeat the attacking raiders while keeping the transport intact.", objective: "Cover a loaded transport in Haiche. Defeat the attacking raiders while keeping the transport intact.", start: "01/09:00:00", system: "Haiche", region: "Haiche", script: "30-AgentSortie.def"
+}
+
+mission: {
+ id: 31, name: "Haiche: Broken Spear", type: INTERCEPT, desc: "Intercept a pirate strike flight assembling near Haiche. Destroy the flight before it can attack the local traffic corridor.", objective: "Intercept a pirate strike flight assembling near Haiche. Destroy the flight before it can attack the local traffic corridor.", start: "01/09:00:00", system: "Haiche", region: "Haiche", script: "31-AgentSortie.def"
+}
+
+mission: {
+ id: 32, name: "Silessia: Silent Watch", type: PATROL, desc: "Investigate raiders disrupting the Silessia approach lanes. Destroy the hostile patrol before it reaches local shipping.", objective: "Investigate raiders disrupting the Silessia approach lanes. Destroy the hostile patrol before it reaches local shipping.", start: "01/09:00:00", system: "Silessia", region: "Silessia", script: "32-AgentSortie.def"
+}
+
+mission: {
+ id: 33, name: "Silessia: Convoy Shield", type: ESCORT_FREIGHT, desc: "Cover a loaded transport in Silessia. Defeat the attacking raiders while keeping the transport intact.", objective: "Cover a loaded transport in Silessia. Defeat the attacking raiders while keeping the transport intact.", start: "01/09:00:00", system: "Silessia", region: "Silessia", script: "33-AgentSortie.def"
+}
+
+mission: {
+ id: 34, name: "Marak: Broken Spear", type: INTERCEPT, desc: "Intercept a pirate strike flight assembling near Marak. Destroy the flight before it can attack the local traffic corridor.", objective: "Intercept a pirate strike flight assembling near Marak. Destroy the flight before it can attack the local traffic corridor.", start: "01/09:00:00", system: "Marak", region: "Marak", script: "34-AgentSortie.def"
+}
+
+mission: {
+ id: 35, name: "Marak: Silent Watch", type: PATROL, desc: "Investigate raiders disrupting the Marak approach lanes. Destroy the hostile patrol before it reaches local shipping.", objective: "Investigate raiders disrupting the Marak approach lanes. Destroy the hostile patrol before it reaches local shipping.", start: "01/09:00:00", system: "Marak", region: "Marak", script: "35-AgentSortie.def"
+}
+
+mission: {
+ id: 36, name: "Garrison: Convoy Shield", type: ESCORT_FREIGHT, desc: "Cover a loaded transport in Garrison. Defeat the attacking raiders while keeping the transport intact.", objective: "Cover a loaded transport in Garrison. Defeat the attacking raiders while keeping the transport intact.", start: "01/09:00:00", system: "Garrison", region: "Garrison", script: "36-AgentSortie.def"
+}
+
+mission: {
+ id: 37, name: "Loris: Broken Spear", type: INTERCEPT, desc: "Intercept a pirate strike flight assembling near Loris. Destroy the flight before it can attack the local traffic corridor.", objective: "Intercept a pirate strike flight assembling near Loris. Destroy the flight before it can attack the local traffic corridor.", start: "01/09:00:00", system: "Loris", region: "Loris", script: "37-AgentSortie.def"
+}
+
+mission: {
+ id: 38, name: "Renser: Silent Watch", type: PATROL, desc: "Investigate raiders disrupting the Renser approach lanes. Destroy the hostile patrol before it reaches local shipping.", objective: "Investigate raiders disrupting the Renser approach lanes. Destroy the hostile patrol before it reaches local shipping.", start: "01/09:00:00", system: "Renser", region: "Renser", script: "38-AgentSortie.def"
+}
+
+mission: {
+ id: 39, name: "Aram: Convoy Shield", type: ESCORT_FREIGHT, desc: "Cover a loaded transport in Aram. Defeat the attacking raiders while keeping the transport intact.", objective: "Cover a loaded transport in Aram. Defeat the attacking raiders while keeping the transport intact.", start: "01/09:00:00", system: "Ostara", region: "Aram", script: "39-AgentSortie.def"
+}
+
+mission: {
+ id: 40, name: "Kolchev: Broken Spear", type: INTERCEPT, desc: "Intercept a pirate strike flight assembling near Kolchev. Destroy the flight before it can attack the local traffic corridor.", objective: "Intercept a pirate strike flight assembling near Kolchev. Destroy the flight before it can attack the local traffic corridor.", start: "01/09:00:00", system: "Kolchev", region: "Kolchev", script: "40-AgentSortie.def"
+}

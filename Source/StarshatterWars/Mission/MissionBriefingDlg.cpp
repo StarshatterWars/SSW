@@ -91,6 +91,7 @@
 #include "TimerSubsystem.h"
 #include "SimEvent.h"
 #include "FlightTacticalReferenceDlg.h"
+#include "CmdIntelDlg.h"
 #include "StarshatterAssetRegistrySubsystem.h"
 #include "LiveOptionsDlg.h"
 #include "CargoManifestDlg.h"
@@ -1798,6 +1799,7 @@ void UMissionBriefingDlg::RevealMissionSunWhenCameraReady()
         MissionSceneCover.Reset();
     }
     World->GetTimerManager().ClearTimer(MissionSunRevealTimer);
+
 }
 
 namespace
@@ -1953,22 +1955,24 @@ void UMissionBriefingDlg::InstallFlightPanelToolbar()
             ]
         ];
     };
-    AddButton(TEXT("Camera"), EShipSystemIcon::Camera, &UMissionBriefingDlg::ToggleFlightCameraPanel, nullptr, true);
     AddButton(TEXT("Agents"), EShipSystemIcon::Agent, &UMissionBriefingDlg::ToggleAgents, &UMissionBriefingDlg::AgentsPopup);
+    AddButton(TEXT("Camera"), EShipSystemIcon::Camera, &UMissionBriefingDlg::ToggleFlightCameraPanel, nullptr, true);
     AddButton(TEXT("Cargo Manifest"), EShipSystemIcon::Cargo, &UMissionBriefingDlg::ToggleCargoManifest, &UMissionBriefingDlg::CargoManifestPopup);
     AddButton(TEXT("Contacts"), EShipSystemIcon::Sensor, &UMissionBriefingDlg::ToggleContactsPanel, &UMissionBriefingDlg::ContactsPopup);
     AddButton(TEXT("Contracts"), EShipSystemIcon::Contracts, &UMissionBriefingDlg::ToggleContracts, &UMissionBriefingDlg::ContractsPopup);
     AddButton(TEXT("Engineering"), EShipSystemIcon::Reactor, &UMissionBriefingDlg::ToggleEngineering, &UMissionBriefingDlg::EngineeringPopup);
     AddButton(TEXT("Flight Ops"), EShipSystemIcon::Deck, &UMissionBriefingDlg::ToggleFlightOpsPopup, &UMissionBriefingDlg::FlightOpsPopup);
+    AddButton(TEXT("Intel"), EShipSystemIcon::Intel, &UMissionBriefingDlg::ToggleIntelPopup, &UMissionBriefingDlg::IntelPopup);
     AddButton(TEXT("Marketplace"), EShipSystemIcon::Marketplace, &UMissionBriefingDlg::ToggleMarketplace, &UMissionBriefingDlg::MarketplacePopup);
+    AddButton(TEXT("Mission"), EShipSystemIcon::Reference, &UMissionBriefingDlg::ToggleMissionPopup, &UMissionBriefingDlg::MissionPopup);
     AddButton(TEXT("Navigation"), EShipSystemIcon::Navigation, &UMissionBriefingDlg::ToggleNavigationPopup, &UMissionBriefingDlg::NavigationPopup);
     AddButton(TEXT("Objectives"), EShipSystemIcon::Computer, &UMissionBriefingDlg::ToggleObjectivesPopup, &UMissionBriefingDlg::ObjectivesPopup);
     AddButton(TEXT("Options"), EShipSystemIcon::Options, &UMissionBriefingDlg::ToggleLiveOptions, &UMissionBriefingDlg::LiveOptionsPopup);
-    AddButton(TEXT("Production Facilities"), EShipSystemIcon::Production, &UMissionBriefingDlg::ToggleProduction, &UMissionBriefingDlg::ProductionPopup);
-    AddButton(TEXT("Ship Store"), EShipSystemIcon::ShipStore, &UMissionBriefingDlg::ToggleShipStore, &UMissionBriefingDlg::ShipStorePopup);
     AddButton(TEXT("Player Logbook"), EShipSystemIcon::Gazetteer, &UMissionBriefingDlg::TogglePlayers, &UMissionBriefingDlg::PlayersPopup);
+    AddButton(TEXT("Production Facilities"), EShipSystemIcon::Production, &UMissionBriefingDlg::ToggleProduction, &UMissionBriefingDlg::ProductionPopup);
     AddButton(TEXT("Quantum"), EShipSystemIcon::Jump, &UMissionBriefingDlg::ToggleQuantumTravel, &UMissionBriefingDlg::QuantumPopup);
     AddButton(TEXT("Radio"), EShipSystemIcon::Radio, &UMissionBriefingDlg::ToggleFighterRadio, nullptr, true);
+    AddButton(TEXT("Ship Store"), EShipSystemIcon::ShipStore, &UMissionBriefingDlg::ToggleShipStore, &UMissionBriefingDlg::ShipStorePopup);
     AddButton(TEXT("Tactical Reference"), EShipSystemIcon::Reference, &UMissionBriefingDlg::ToggleFlightReference, &UMissionBriefingDlg::ReferencePopup);
     AddButton(TEXT("Weapons"), EShipSystemIcon::Weapon, &UMissionBriefingDlg::ToggleFighterWeaponsPanel, &UMissionBriefingDlg::WeaponsPopup);
     AddButton(TEXT("Mission exit menu"), EShipSystemIcon::Exit, &UMissionBriefingDlg::ToggleMissionMenu, nullptr);
@@ -2102,7 +2106,7 @@ void UMissionBriefingDlg::UpdateFlightPanelInput(TSharedPtr<SWidget> Focus)
     APlayerController* PC = GetOwningPlayer();
     if (!PC) return;
     const bool bHasPanels = EngineeringPopup || WeaponsPopup || NavigationPopup || QuantumPopup ||
-        ObjectivesPopup || FlightOpsPopup || ContactsPopup || ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup;
+        IntelPopup || MissionPopup || ObjectivesPopup || FlightOpsPopup || ContactsPopup || ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup;
     if (!bHasPanels && !bFlightPanelInput) return;
 
     if (!bFlightPanelInput) bFlightPanelPreviousCursor = PC->bShowMouseCursor;
@@ -2735,6 +2739,8 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     CloseNavigationPopup();
     NavMapAction=nullptr;
     CloseFlightOpsPopup();
+    CloseIntelPopup();
+    CloseMissionPopup();
     CloseObjectivesPopup();
     ObjectivesPanelAction=nullptr;
     CloseFlightReference();
@@ -2842,7 +2848,7 @@ void UMissionBriefingDlg::NextMissionTarget()
         return;
     }
     if (!bLiveMissionStarted || MissionSceneCover.IsValid() || ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup ||
-        EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() ||
+        EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() ||
         FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || !GetWorld() || GetWorld()->IsPaused())
         return;
@@ -2900,7 +2906,7 @@ void UMissionBriefingDlg::NextMissionTarget()
 }
 void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
 {
-    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || !IsValid(MissionPreviewCamera)) return;
     Sim* Simulation = Sim::GetSim();
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
@@ -3036,7 +3042,7 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
 bool UMissionBriefingDlg::CanUseFighterHUD() const
 {
     return bLiveMissionStarted && !bMissionCompleteHandedOff
-        && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() && !ReferencePopup && !LiveOptionsPopup && !CargoManifestPopup && !MarketplacePopup && !ProductionPopup && !ShipStorePopup && !AgentsPopup && !PlayersPopup && !HangarPopup && !InsurancePopup && !LoadoutsPopup && !FittingPopup && !ContractsPopup &&
+        && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !IntelPopup.IsValid() && !MissionPopup.IsValid() && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() && !ReferencePopup && !LiveOptionsPopup && !CargoManifestPopup && !MarketplacePopup && !ProductionPopup && !ShipStorePopup && !AgentsPopup && !PlayersPopup && !HangarPopup && !InsurancePopup && !LoadoutsPopup && !FittingPopup && !ContractsPopup &&
         !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
 }
 
@@ -3095,7 +3101,7 @@ void UMissionBriefingDlg::ToggleFighterCautionPanel()
 
 void UMissionBriefingDlg::ToggleFighterHUD()
 {
-    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
     APlayerController* PC = GetOwningPlayer();
     if (PC && StarshatterInputBindings::IsModifierDown(PC, TEXT("Shift")))
@@ -3127,6 +3133,8 @@ void UMissionBriefingDlg::OnTargetZoom(const FInputActionValue& Value)
 
 void UMissionBriefingDlg::ToggleMissionMenu()
 {
+    CloseIntelPopup();
+    CloseMissionPopup();
     CloseFlightReference();
     CloseCargoManifest();
     CloseMarketplace();
@@ -3297,6 +3305,7 @@ bool UMissionBriefingDlg::StartLiveMission()
     Simulation->OnMissionUnloading.AddUObject(this, &UMissionBriefingDlg::HandleSimulationUnloading);
     Simulation->LoadMission(MissionPtr, false);
     bLiveMissionStarted = true;
+    bTestAgentIntroduced = false;
     bPrimaryObjectivesAnnounced = false;
     bMissionCompleteHandedOff = false;
     Simulation->ExecMission();
@@ -3305,7 +3314,7 @@ bool UMissionBriefingDlg::StartLiveMission()
     {
         auto* Instance = Cast<USSWGameInstance>(GetGameInstance());
         const auto* Timer = GetGameInstance()->GetSubsystem<UTimerSubsystem>();
-        if (Instance && Timer && Instance->CampaignSave &&
+        if (Instance && !Instance->IsTrainingTestSession() && Timer && Instance->CampaignSave &&
             Instance->CampaignSave->CampaignIndex == CampaignPtr->GetCampaignId())
         {
             const uint64 AuthoredStart = static_cast<uint64>(FMath::Max(0, MissionPtr->GetStart()));
@@ -3323,7 +3332,8 @@ bool UMissionBriefingDlg::StartLiveMission()
 void UMissionBriefingDlg::OnCommit()
 {
     if (CampaignPtr && (!bStandaloneMission || CampaignPtr->IsTraining()) && MissionPtr &&
-        !MissionPtr->IsFreeFlight() && !CampaignPtr->IsMissionRankUnlocked(MissionPtr->GetIdentity()))
+        !MissionPtr->IsFreeFlight() &&
+        !CampaignPtr->IsMissionRankUnlocked(MissionPtr->GetIdentity()))
     {
         if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 6.f, FColor::Yellow, CampaignPtr->MissionRankRequirement(MissionPtr->GetIdentity()));
         return;
@@ -3810,11 +3820,19 @@ void UMissionBriefingDlg::ToggleMissionCameraView()
 
 void UMissionBriefingDlg::UpdateMissionTargetCamera()
 {
+    if (bLiveMissionStarted && MissionPtr && MissionPtr->IsTestFlight() && !bTestAgentIntroduced &&
+        !MissionSceneCover.IsValid() && CanOpenFlightPanel() && FlightPanelCanvas)
+    {
+        if (!AgentsPopup) ToggleAgents();
+        bTestAgentIntroduced = AgentsPopup != nullptr;
+        if (bTestAgentIntroduced) UE_LOG(LogTemp, Display, TEXT("[Agents] Janek instructor introduction displayed"));
+    }
+
     UWorld* World = GetWorld();
     APlayerController* PC = GetOwningPlayer();
     if (!World || !PC || !bLiveMissionStarted || bMissionCompleteHandedOff
         || (Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) || !IsValid(MissionPreviewCamera)) return;
-    if (ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
+    if (ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
@@ -4372,6 +4390,54 @@ void UMissionBriefingDlg::CloseEngineering()
     EngineeringPanelWidget = nullptr;
 }
 
+void UMissionBriefingDlg::ToggleIntelPopup()
+{
+    if (IntelPopup) { CloseIntelPopup(); return; }
+    if (!CanOpenFlightPanel() || !FlightPanelCanvas) return;
+    ClearMissionRotationInput();
+    IntelWidget = CreateWidget<UCmdIntelDlg>(GetOwningPlayer(), UCmdIntelDlg::StaticClass());
+    if (!IntelWidget) return;
+    IntelWidget->UseReportSubpanels();
+    AddFloatingPanel(IntelPopup, IntelWidget->TakeWidget(), TEXT("Intel & News"), 4,
+        FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseIntelPopup));
+    IntelWidget->ShowIntelDlg();
+}
+
+void UMissionBriefingDlg::CloseIntelPopup()
+{
+    if (!IntelPopup) return;
+    RemoveFloatingPanel(IntelPopup);
+    if (IntelWidget) IntelWidget->RemoveFromParent();
+    IntelWidget = nullptr;
+}
+
+void UMissionBriefingDlg::ToggleMissionPopup()
+{
+    if (MissionPopup) { CloseMissionPopup(); return; }
+    if (!CanOpenFlightPanel() || !FlightPanelCanvas) return;
+    APlayerController* PC=GetOwningPlayer();
+    if (!PC) return;
+    ClearMissionRotationInput();
+    if (MissionCameraRig) MissionCameraRig->LookX=MissionCameraRig->LookY=MissionCameraRig->RangeInput=0;
+    UClass* PanelClass = LoadClass<UObjectivesDlg>(nullptr,
+        TEXT("/Game/Screens/inGame/WBP_Objectives.WBP_Objectives_C"));
+    MissionPanelWidget = CreateWidget<UObjectivesDlg>(PC, PanelClass ? PanelClass : UObjectivesDlg::StaticClass());
+    if (!MissionPanelWidget) return;
+    MissionPanelWidget->SetMissionContext(this, true);
+    MissionPanelWidget->OnPanelClosed = FSimpleDelegate::CreateWeakLambda(this, [this]() { CloseMissionPopup(); });
+    MissionPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
+    MissionPanelWidget->SetVisibility(ESlateVisibility::Visible);
+    AddFloatingPanel(MissionPopup, MissionPanelWidget->TakeWidget(), TEXT("Mission"), 5, FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseMissionPopup));
+}
+
+void UMissionBriefingDlg::CloseMissionPopup()
+{
+    if (!MissionPopup) return;
+    RemoveFloatingPanel(MissionPopup);
+    if (MissionPanelWidget) MissionPanelWidget->RemoveFromParent();
+    MissionPanelWidget = nullptr;
+}
+
 void UMissionBriefingDlg::ToggleObjectivesPopup()
 {
     if (ObjectivesPopup) { CloseObjectivesPopup(); return; }
@@ -4384,10 +4450,11 @@ void UMissionBriefingDlg::ToggleObjectivesPopup()
         TEXT("/Game/Screens/inGame/WBP_Objectives.WBP_Objectives_C"));
     ObjectivesPanelWidget = CreateWidget<UObjectivesDlg>(PC, PanelClass ? PanelClass : UObjectivesDlg::StaticClass());
     if (!ObjectivesPanelWidget) return;
+    ObjectivesPanelWidget->SetMissionContext(this);
     ObjectivesPanelWidget->OnPanelClosed = FSimpleDelegate::CreateWeakLambda(this, [this]() { CloseObjectivesPopup(); });
     ObjectivesPanelWidget->OnExitMenuRequested = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleMissionMenu);
     ObjectivesPanelWidget->SetVisibility(ESlateVisibility::Visible);
-    AddFloatingPanel(ObjectivesPopup, ObjectivesPanelWidget->TakeWidget(), TEXT("Mission Objectives"), 5, FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseObjectivesPopup));
+    AddFloatingPanel(ObjectivesPopup, ObjectivesPanelWidget->TakeWidget(), TEXT("Objectives"), 5, FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseObjectivesPopup));
 }
 
 void UMissionBriefingDlg::CloseObjectivesPopup()

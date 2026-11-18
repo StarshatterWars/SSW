@@ -5,7 +5,7 @@
 #include "SimSystem.h"
 #include "Widgets/SLeafWidget.h"
 
-enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore, Contracts, Gazetteer, PlanetMoon, Agent, Accept, Audio, Keyboard, Display, SettingsGear, Hangar, Insurance, Loadout, Skills, Mineral, Electronics, Medical, Liquid, Passengers };
+enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore, Contracts, Gazetteer, PlanetMoon, Agent, Accept, Audio, Keyboard, Display, SettingsGear, Hangar, Insurance, Loadout, Skills, Mineral, Electronics, Medical, Liquid, Passengers, MissionPackage, Intel, Back, Joystick };
 
 class SShipSystemIcon : public SLeafWidget
 {
@@ -69,6 +69,10 @@ public:
         };
         switch (Symbol)
         {
+        case EShipSystemIcon::Joystick: Line({{3,16},{19,16},{20,20},{2,20},{3,16}}); Line({{11,16},{11,8},{8,5},{8,2},{13,2},{15,5},{13,8},{11,8}}); break;
+        case EShipSystemIcon::Back: Line({{12,3},{4,11},{12,19}}); Line({{4,11},{20,11}}); break;
+        case EShipSystemIcon::Intel: Line({{3,3},{19,3},{19,19},{3,19},{3,3}}); Line({{6,6},{10,6},{10,10},{6,10},{6,6}}); Line({{13,6},{16,6}}); Line({{13,9},{16,9}}); Line({{6,13},{16,13}}); Line({{6,16},{16,16}}); break;
+        case EShipSystemIcon::MissionPackage: Line({{2,4},{8,4},{8,9},{2,9},{2,4}}); Line({{14,4},{20,4},{20,9},{14,9},{14,4}}); Line({{8,15},{14,15},{14,20},{8,20},{8,15}}); Line({{5,10},{5,12},{17,12},{17,10}}); Line({{11,12},{11,15}}); break;
         case EShipSystemIcon::Mineral: Line({{4,7},{12,2},{20,8},{17,18},{7,21},{2,14},{4,7},{13,10},{12,2}}); Line({{13,10},{17,18}}); Line({{13,10},{7,21}}); break;
         case EShipSystemIcon::Electronics: Line({{5,5},{17,5},{17,17},{5,17},{5,5}}); Line({{8,1},{8,5}}); Line({{14,1},{14,5}}); Line({{8,17},{8,21}}); Line({{14,17},{14,21}}); Line({{1,8},{5,8}}); Line({{17,14},{21,14}}); Line({{9,9},{13,9},{13,13},{9,13},{9,9}}); break;
         case EShipSystemIcon::Medical: Line({{8,3},{14,3},{14,8},{20,8},{20,14},{14,14},{14,20},{8,20},{8,14},{2,14},{2,8},{8,8},{8,3}}); break;

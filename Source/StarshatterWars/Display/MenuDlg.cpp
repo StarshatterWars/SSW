@@ -64,7 +64,6 @@
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
 #include "StarshatterPlayerSubsystem.h"
-#include "CampaignPresentationRules.h"
 #include "StarshatterUIStyleSubsystem.h"
 #include "TimerSubsystem.h"
 #include "CampaignSave.h"
@@ -132,7 +131,7 @@ void UMenuDlg::BuildModernMenu()
     Label(TEXT("MAIN MENU"),13,Cyan,1100,130,500,28);
     Label(TEXT("OPERATIONS"),30,White,1100,162,664,48,true);
     auto NewButton=[this](const TCHAR* Name){return WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(),Name);};
-    BtnStart=Start?Start:NewButton(TEXT("BtnStart"));BtnCampaign=NewButton(TEXT("BtnCampaign"));BtnMission=NewButton(TEXT("BtnMission"));
+    BtnStart=Start?Start:NewButton(TEXT("BtnStart"));BtnCampaign=nullptr;BtnMission=NewButton(TEXT("BtnMission"));
     if (BtnPlayer) BtnPlayer->SetVisibility(ESlateVisibility::Collapsed);
     BtnPlayer=nullptr;BtnMulti=NewButton(TEXT("BtnMulti"));BtnOptions=NewButton(TEXT("BtnOptions"));
     if (Tactical) Tactical->SetVisibility(ESlateVisibility::Collapsed);
@@ -144,23 +143,23 @@ void UMenuDlg::BuildModernMenu()
         Label(Heading,Primary?26:18,White,X+LabelInset,Y+(Primary?24:18),W-LabelInset-32,36,true);
         Label(Subtitle,11,Muted,X+LabelInset,Y+(Primary?70:58),W-LabelInset-32,26);
     };
-    Card(BtnStart,TEXT("CONTINUE"),TEXT("Return to your active campaign"),1100,234,664,116,true);
-    Card(BtnCampaign,TEXT("CAMPAIGNS"),TEXT("Choose your operation"),1100,376,324,104);
-    Card(BtnMission,TEXT("MISSIONS"),TEXT("Campaign, single and custom"),1440,376,324,104);
-    Card(BtnMulti,TEXT("MULTIPLAYER"),TEXT("Create or join a session"),1100,498,324,104);
-    BtnFreeMode = NewButton(TEXT("BtnFreeMode"));
-    Card(BtnFreeMode,TEXT("FREE MODE"),TEXT("Start aboard Orion in Janek orbit"),1440,498,324,104);
+    Card(BtnStart,TEXT("START GAME"),TEXT("Enter Janek orbit and receive missions from your agent"),1100,234,664,116,true);
+    Card(BtnMission,TEXT("MISSIONS"),TEXT("Mission browser and custom missions"),1100,376,664,104);
+    Card(BtnMulti,TEXT("MULTIPLAYER"),TEXT("Create or join a session"),1100,498,664,104);
+    BtnFreeMode = nullptr;
+    BtnTestMission = nullptr;
     Place(BtnOptions, 1696, 126, 68, 48);
     BtnOptions->SetToolTipText(INVTEXT("Options"));
-    auto* Gear = WidgetTree->ConstructWidget<UNativeWidgetHost>();
-    Gear->SetContent(SNew(SShipSystemIcon).Icon(EShipSystemIcon::SettingsGear));
+    auto* Gear = WidgetTree->ConstructWidget<UImage>();
+    Gear->SetBrushFromTexture(LoadObject<UTexture2D>(nullptr,TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Gear_256x256.T_Gear_256x256")),false);
+    Gear->SetColorAndOpacity(FLinearColor(.65f,.9f,1.f));
     Gear->SetVisibility(ESlateVisibility::HitTestInvisible);
     auto* GearSize = WidgetTree->ConstructWidget<USizeBox>();
     GearSize->SetWidthOverride(32);
     GearSize->SetHeightOverride(32);
     GearSize->SetContent(Gear);
     BtnOptions->SetContent(GearSize);
-    Card(BtnQuit,TEXT("EXIT TO WINDOWS"),TEXT("Close Starshatter Wars"),1100,635,664,96);
+    Card(BtnQuit,TEXT("EXIT TO WINDOWS"),TEXT("Close Starshatter Wars"),1100,624,664,96);
     // Compact, persistent campaign/pilot context; no opaque full-width slab.
     Label(TEXT("ACTIVE CAMPAIGN"),12,Cyan,104,930,560,25);
     CampaignIdentityText=Label(TEXT("NO ACTIVE CAMPAIGN"),19,White,104,960,580,32);
@@ -258,6 +257,9 @@ void UMenuDlg::RefreshClockLabels()
 
     if (CampaignTimeText)
     {
+        const auto* Players=GI?GI->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+        if(Players && Players->GetPlayerInfo().Campaign<=0)
+        {CampaignTimeText->SetText(INVTEXT("UNASSIGNED"));return;}
         uint64 TPlusSeconds = Timer->GetCampaignTPlusSeconds();
         UCampaignSave* Save = Timer->GetCampaignSave();
         if (!Save)
@@ -283,7 +285,7 @@ void UMenuDlg::NativeOnInitialized()
     Super::NativeOnInitialized();
 
     // Static strings (only need to set once)
-    AltStart = TEXT("Start a new game, or resume your current game");
+    AltStart = TEXT("Enter the Janek environment and receive missions from your agent");
     AltCampaign = TEXT("Start a new dynamic campaign, or load a saved game");
     AltMission = TEXT("Play or create a scripted mission exercise");
     AltMulti = TEXT("Start or join a multiplayer scenario");
@@ -340,7 +342,7 @@ void UMenuDlg::NativeConstruct()
 
     const TArray<UButton*> MenuButtons = {
         BtnStart, BtnCampaign, BtnMission, BtnMulti,
-        BtnPlayer, BtnOptions, BtnFreeMode, BtnTac, BtnQuit
+        BtnPlayer, BtnOptions, BtnFreeMode, BtnTestMission, BtnTac, BtnQuit
     };
     for (UButton* StyledButton : MenuButtons)
     {
@@ -479,6 +481,7 @@ void UMenuDlg::BindUMGDelegates()
     if (BtnOptions)  BtnOptions->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnOptions);
 
     if (BtnFreeMode) BtnFreeMode->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnFreeMode);
+    if (BtnTestMission) BtnTestMission->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnTestMission);
     if (BtnTac)      BtnTac->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnTacReference);
     if (BtnQuit)     BtnQuit->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnQuit);
 
@@ -559,39 +562,9 @@ void UMenuDlg::ExecFrame(double DeltaTime)
 void UMenuDlg::OnStart()
 {
     ClearDescription();
-    UE_LOG(LogMenuDlg, Log, TEXT("[MainMenu] Continue: restoring campaign and opening Operations Missions"));
-
-    // Continue is a campaign action, not an unconditional switch to PLAY mode.
-    // Restore the saved campaign before Operations rebuilds its live mission list.
-    USSWGameInstance* SSWGI = Cast<USSWGameInstance>(GetGameInstance());
-    if (SSWGI)
-    {
-        SSWGI->RestoreSavedActiveCampaign();
-    }
-
-    Campaign* ActiveCampaign = Campaign::GetCampaign();
-    if (!ActiveCampaign)
-    {
-        UE_LOG(LogMenuDlg, Warning,
-            TEXT("[MainMenu] Continue: no active campaign; opening Campaign Selection"));
-        if (Manager) Manager->ShowCampaignSelectDlg();
-        return;
-    }
-
-    UE_LOG(LogMenuDlg, Log,
-        TEXT("[MainMenu] Continue: campaign=%d missions=%d"),
-        ActiveCampaign->GetCampaignId(), ActiveCampaign->GetMissionList().size());
-
-    if (Manager)
-    {
-        // Authoritative Operations roster: UCmdMissionsDlg reads the active
-        // Campaign::GetMissionList() and filters player-selectable missions.
-        Manager->ShowOperationsMissionsDlg();
-    }
-    else
-    {
-        UE_LOG(LogMenuDlg, Error, TEXT("[MainMenu] Continue: MenuScreen manager unavailable"));
-    }
+    UE_LOG(LogMenuDlg, Log, TEXT("[MainMenu] Start Game: entering pilot starting location in Janek"));
+    if (auto* Menu = GetMenuManager()) Menu->StartFreeFlight();
+    else UE_LOG(LogMenuDlg, Error, TEXT("[MainMenu] Start Game: MenuScreen manager unavailable"));
 }
 
 void UMenuDlg::OnCampaign()
@@ -767,6 +740,10 @@ void UMenuDlg::OnFreeMode()
 {
     if (auto* Menu = GetMenuManager()) Menu->StartFreeFlight();
 }
+void UMenuDlg::OnTestMission()
+{
+    if (auto* Menu = GetMenuManager()) Menu->StartTestMission();
+}
 
 void UMenuDlg::SetDescription(const FString& Text)
 {
@@ -784,6 +761,7 @@ void UMenuDlg::EnableMenuButtons(bool bEnable)
 {
     SetButtonEnabled(BtnStart, bEnable);
     SetButtonEnabled(BtnFreeMode, bEnable);
+    SetButtonEnabled(BtnTestMission, bEnable);
     SetButtonEnabled(BtnCampaign, bEnable);
     SetButtonEnabled(BtnMission, bEnable);
     SetButtonEnabled(BtnPlayer, bEnable);
@@ -810,16 +788,16 @@ void UMenuDlg::ApplyMenuGating()
     // Default: enable everything (except multiplayer rule inside EnableMenuButtons)
     EnableMenuButtons(true);
 
-    // NO CAMPAIGN SELECTED:
-    // Enable: Campaign, Mission, Options, Tac, Quit
-    // Disable: Start; multiplayer remains independently available
+    // New pilots can enter Janek before accepting a campaign from an agent.
     if (!bHasCampaignSelected)
     {
         EnableMenuButtons(false);
 
+        SetButtonEnabled(BtnStart, true);
         SetButtonEnabled(BtnPlayer, true);
         SetButtonEnabled(BtnMission, true);
         SetButtonEnabled(BtnFreeMode, true);
+        SetButtonEnabled(BtnTestMission, true);
 
         SetButtonEnabled(BtnOptions, true);
 
@@ -830,11 +808,4 @@ void UMenuDlg::ApplyMenuGating()
         SetButtonEnabled(BtnMulti, true);
     }
 
-    const UGameInstance* GI = GetGameInstance();
-    const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
-    const bool bCampaignUnlocked = Players && CampaignPresentationRules::CanSelectCampaign(Players->GetPlayerInfo());
-    SetButtonEnabled(BtnCampaign, bCampaignUnlocked);
-    if (BtnCampaign)
-        BtnCampaign->SetToolTipText(FText::FromString(bCampaignUnlocked
-            ? TEXT("Choose your operation") : TEXT("Complete Flight School or start as an Ensign to unlock campaigns")));
 }

@@ -51,11 +51,8 @@ static bool IsVisiblePackageElement(const Mission* MissionPtr, const MissionElem
     if (!MissionPtr || !Elem || !Design)
         return false;
 
-    const Campaign* ActiveCampaign = Campaign::GetCampaign();
-    const bool bTrainingCampaign = ActiveCampaign && ActiveCampaign->GetCampaignId() == 1;
-
     int32 FriendlyIFF = MissionPtr->GetTeam();
-    if (bTrainingCampaign && FriendlyIFF == 0)
+    if (FriendlyIFF == 0)
     {
         // In T1.def the mission-level team is omitted (defaults to zero),
         // but the player flight and its allies have iff: 1.
@@ -66,7 +63,7 @@ static bool IsVisiblePackageElement(const Mission* MissionPtr, const MissionElem
     const FString MissionRegion = FString(ANSI_TO_TCHAR(MissionPtr->GetRegion())).TrimStartAndEnd();
     const FString ElementRegion = FString(ANSI_TO_TCHAR(Elem->GetRegion())).TrimStartAndEnd();
     const bool bRegionMatches = ElementRegion.Equals(MissionRegion, ESearchCase::IgnoreCase) ||
-        (bTrainingCampaign && ElementRegion.IsEmpty() && !MissionRegion.IsEmpty());
+        (ElementRegion.IsEmpty() && !MissionRegion.IsEmpty());
 
     // IsSquadron() excludes carrier-based hangar inventory; preserve that
     // original rule for every campaign. Deployed flights such as Delta remain.
@@ -115,7 +112,7 @@ void UMissionPackageDlg::BuildPackageLayout()
         Bar->SetPadding(FMargin(12.f, 8.f));
         UTextBlock* Label = WidgetTree->ConstructWidget<UTextBlock>();
         Label->SetText(HeadingText);
-        Label->SetFont(MissionUIStyle::GetHeaderFont(22));
+        Label->SetFont(MissionUIStyle::GetHeaderFont(15));
         Label->SetColorAndOpacity(FSlateColor(FLinearColor(0.95f, 0.97f, 1.f)));
         Bar->SetContent(Label);
         return Bar;
@@ -139,7 +136,7 @@ void UMissionPackageDlg::BuildPackageLayout()
     {
         if (!*Threat) *Threat = WidgetTree->ConstructWidget<UTextBlock>();
         (*Threat)->RemoveFromParent();
-        (*Threat)->SetFont(MissionUIStyle::GetInfoValueFont(18));
+        (*Threat)->SetFont(MissionUIStyle::GetRowFont(13));
         (*Threat)->SetColorAndOpacity(FSlateColor(FLinearColor(0.88f, 0.93f, 0.98f)));
         (*Threat)->SetAutoWrapText(true);
         ThreatScroll->AddChild(*Threat);
@@ -148,7 +145,7 @@ void UMissionPackageDlg::BuildPackageLayout()
     if (MissionRosterLabel)
     {
         MissionRosterLabel->RemoveFromParent();
-        MissionRosterLabel->SetFont(MissionUIStyle::GetInfoValueFont(16));
+        MissionRosterLabel->SetFont(MissionUIStyle::GetRowFont(12));
         MissionRosterLabel->SetAutoWrapText(true);
         Summary->AddChildToVerticalBox(MissionRosterLabel);
     }
@@ -669,11 +666,12 @@ UWidget* UMissionPackageDlg::MakeHeaderCell(const FString& Text, float Width) co
     Label->SetText(FText::FromString(Text));
     Label->SetJustification(ETextJustify::Left);
     Label->SetAutoWrapText(false);
+    Label->SetFont(MissionUIStyle::GetRowFont(13));
 
     if (MissionRosterLabel)
     {
         FSlateFontInfo FontInfo = MissionRosterLabel->GetFont();
-        FontInfo.Size = 16;
+        FontInfo.Size = 13;
         Label->SetFont(FontInfo);
         Label->SetColorAndOpacity(MissionRosterLabel->GetColorAndOpacity());
         Label->SetShadowOffset(MissionRosterLabel->GetShadowOffset());

@@ -336,6 +336,7 @@ protected:
     };
     TMap<int32, FMiningRun> JanekMiningRuns;
     FName AssignedAgentPilot;
+    int32 AssignedAgentMissionId = INDEX_NONE;
     FContractAccounts TrainingContractAccounts;
     TMap<FName, FContractTransaction> TrainingContracts;
     TMap<FName, FSSWProductionStock> ProductionViews;

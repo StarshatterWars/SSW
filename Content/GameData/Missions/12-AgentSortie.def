@@ -1,0 +1,27 @@
+MISSION
+name: "Telmera: Convoy Shield"
+type: ESCORT_FREIGHT
+system: "Solus"
+region: "Telmera"
+start: "01/09:00:00"
+degrees: true
+sitrep: "Liaison Arun Veck assigns this sortie from Telmera Starport. Cover a loaded transport in Telmera. Defeat the attacking raiders while keeping the transport intact."
+objective: "Cover a loaded transport in Telmera. Defeat the attacking raiders while keeping the transport intact. Return safely to base."
+ship: { name: Home, design: Orion, count: 1, iff: 1, region: "Telmera", loc: (0,0,0), command_ai: 0, }
+element: { name: Squadron, design: "Falcon", count: 2, carrier: Home, iff: 1, region: "Telmera", }
+element: { name: Player, design: "Falcon", squadron: Squadron, player: 1, alert: true, count: 2, iff: 1, region: "Telmera", mission: ESCORT_FREIGHT,
+ loadout: { ship: -1, name: "ACM Medium Range" },
+ loc: (1000,2000,0),
+ objective: { cmd: assault, tgt: Raiders },
+ objective: { cmd: defend, tgt: Hauler },
+ navpt: { cmd: vector, loc: (10000,2000,0), speed: 400 },
+ navpt: { cmd: patrol, loc: (36000,5000,0), speed: 400 },
+ navpt: { cmd: vector, loc: (3000,2000,0), speed: 300 },
+}
+element: { name: Hauler, design: IM1912, count: 1, iff: 1, region: "Telmera", loc: (6000,2000,0), mission: patrol, navpt: { cmd: vector, loc: (35000,5000,0), speed: 80 }, }
+
+element: { name: Raiders, design: Razor, count: 2, iff: 2, region: "Telmera", loc: (36000,6000,0), mission: assault, intel: known, loadout: { ship: -1, name: "ACM Medium Range" },
+ objective: { cmd: assault, tgt: Hauler },
+}
+event: { id: 1, event: Message, event_message: "Cover a loaded transport in Telmera. Defeat the attacking raiders while keeping the transport intact.", event_ship: Home, trigger: Time, trigger_param: 5, }
+event: { id: 50, event: Message, event_message: "Hostile flight destroyed. Return to base.", event_ship: Home, trigger: Destroyed, trigger_ship: Raiders, delay: 2, }

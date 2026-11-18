@@ -21,13 +21,16 @@ public:
         EState State = EState::None;
         FName Issuer;
         int64 ExpiresUtc = 0;
+        bool bTestReplay = false;
     };
 
     const FAssignment* Find(FName Pilot) const;
     const FAssignment* FindOffer(FName Pilot, FName Issuer = NAME_None) const;
     TConstArrayView<FAssignment> GetQueue(FName Pilot) const;
-    const FAssignment* Request(FName Pilot, TConstArrayView<int32> EligibleMissions, FName Issuer = NAME_None);
+    const FAssignment* Request(FName Pilot, TConstArrayView<int32> EligibleMissions, FName Issuer = NAME_None, bool bRetryDeclined = false);
+    bool IsCompleted(FName Pilot, int32 MissionId) const { const auto* History = Completed.Find(Pilot); return History && History->Contains(MissionId); }
     bool Accept(FName Pilot, int32 MissionId);
+    bool QueueTestReplay(FName Pilot,int32 MissionId,FName Issuer);
     bool Decline(FName Pilot, int32 MissionId);
     bool Start(FName Pilot, int32 MissionId);
     bool Resolve(FName Pilot, int32 MissionId, bool bSucceeded);

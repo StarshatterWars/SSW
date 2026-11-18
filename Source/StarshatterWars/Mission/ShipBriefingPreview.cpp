@@ -318,22 +318,23 @@ TSharedRef<SWidget> UShipBriefingPreview::RebuildWidget()
         Message->SetHorizontalAlignment(HAlign_Center);
         Message->SetVerticalAlignment(VAlign_Center);
         RouteCaption = WidgetTree->ConstructWidget<UTextBlock>();
-        RouteCaption->SetFont(MissionUIStyle::GetInfoValueFont(16));
+        RouteCaption->SetFont(MissionUIStyle::GetInfoValueFont(bExternalPlaybackControls ? 12 : 16));
         RouteCaption->SetColorAndOpacity(FSlateColor(FLinearColor(.55f, .9f, 1.f)));
         RouteCaption->SetVisibility(ESlateVisibility::Collapsed);
         UOverlaySlot* CaptionSlot = Overlay->AddChildToOverlay(RouteCaption);
         CaptionSlot->SetPadding(FMargin(14.f));
         CaptionSlot->SetHorizontalAlignment(HAlign_Left);
         CaptionSlot->SetVerticalAlignment(VAlign_Bottom);
-        CaptionSlot->SetPadding(FMargin(14.f, 14.f, 14.f, 62.f));
+        CaptionSlot->SetPadding(FMargin(14.f, 14.f, 14.f, bExternalPlaybackControls ? 12.f : 62.f));
         RouteCaption->SetAutoWrapText(true);
+        RouteCaption->SetWrapTextAt(bExternalPlaybackControls ? 280.f : 0.f);
 
         EventPopup = WidgetTree->ConstructWidget<UBorder>();
         EventPopup->SetBrushColor(MissionUIStyle::PanelBG);
         EventPopup->SetPadding(FMargin(18.f, 10.f));
         EventPopup->SetVisibility(ESlateVisibility::Collapsed);
         EventPopupText = WidgetTree->ConstructWidget<UTextBlock>();
-        EventPopupText->SetFont(MissionUIStyle::GetInfoValueFont(18));
+        EventPopupText->SetFont(MissionUIStyle::GetInfoValueFont(bExternalPlaybackControls ? 14 : 18));
         EventPopupText->SetColorAndOpacity(FSlateColor(FLinearColor::White));
         EventPopupText->SetWrapTextAt(540.f);
         EventPopup->SetContent(EventPopupText);
@@ -578,12 +579,12 @@ bool UShipBriefingPreview::SetMissionScene(Mission* MissionDef)
         RouteChecklist->ClearChildren();
         auto* Title = WidgetTree->ConstructWidget<UTextBlock>();
         Title->SetText(NSLOCTEXT("MissionRehearsal", "RouteObjectives", "ROUTE OBJECTIVES"));
-        Title->SetFont(MissionUIStyle::GetHeaderFont(14));
+        Title->SetFont(MissionUIStyle::GetHeaderFont(bExternalPlaybackControls ? 12 : 14));
         RouteChecklist->AddChildToVerticalBox(Title);
         for (const FString& Label : RouteLabels)
         {
             auto* Row = WidgetTree->ConstructWidget<UTextBlock>();
-            Row->SetFont(MissionUIStyle::GetInfoValueFont(14));
+            Row->SetFont(MissionUIStyle::GetInfoValueFont(bExternalPlaybackControls ? 11 : 14));
             RouteChecklist->AddChildToVerticalBox(Row);
         }
     }
@@ -852,7 +853,7 @@ void UShipBriefingPreview::UpdateVisual()
     const bool bHasTimeline = RehearsalDuration > 0.0;
     if (RouteCaption) RouteCaption->SetVisibility(bMissionScene && RouteShip.IsValid()
         ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
-    if (PlaybackControls) PlaybackControls->SetVisibility(bMissionScene && RouteShip.IsValid() && bHasTimeline
+    if (PlaybackControls) PlaybackControls->SetVisibility(!bExternalPlaybackControls && bMissionScene && RouteShip.IsValid() && bHasTimeline
         ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
     LastCaptionSecond = INDEX_NONE;
     if (bMissionScene && bHasTimeline) UpdateRehearsal();

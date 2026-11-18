@@ -132,6 +132,7 @@ protected:
     bool bClosingMissionPreview = false;
     bool StartLiveMission();
     bool bLiveMissionStarted = false;
+    bool bTestAgentIntroduced = false;
     bool bPrimaryObjectivesAnnounced = false;
     bool bMissionCompleteHandedOff = false;
     bool EnableMissionMenuInput();
@@ -223,6 +224,14 @@ protected:
     UPROPERTY(Transient) TObjectPtr<UInputAction> ObjectivesPanelAction;
     TSharedPtr<SWidget> ObjectivesPopup;
     UPROPERTY(Transient) TObjectPtr<UObjectivesDlg> ObjectivesPanelWidget;
+    TSharedPtr<SWidget> IntelPopup;
+    UPROPERTY(Transient) TObjectPtr<class UCmdIntelDlg> IntelWidget;
+    void ToggleIntelPopup();
+    void CloseIntelPopup();
+    TSharedPtr<SWidget> MissionPopup;
+    UPROPERTY(Transient) TObjectPtr<UObjectivesDlg> MissionPanelWidget;
+    void ToggleMissionPopup();
+    void CloseMissionPopup();
     UPROPERTY(Transient) TObjectPtr<UFlightOpsDlg> FlightOpsPanelWidget;
     UPROPERTY(Transient) TObjectPtr<UInputAction> FlightOpsPanelAction;
     TSharedPtr<SWidget> FlightOpsPopup;

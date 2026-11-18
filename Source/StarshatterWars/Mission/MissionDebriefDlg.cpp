@@ -56,6 +56,13 @@
 #include "Components/SizeBox.h"
 #include "Components/Image.h"
 #include "Components/ButtonSlot.h"
+#include "Components/ScaleBox.h"
+#include "Components/ScrollBox.h"
+#include "Components/WidgetSwitcher.h"
+#include "Components/NativeWidgetHost.h"
+#include "ShipSystemIcon.h"
+#include "PanelCloseIcon.h"
+#include "FlightPanelStyle.h"
 
 namespace
 {
@@ -96,7 +103,7 @@ void UDebriefRowWidget::EnsureRow()
     for (int32 I=0; I<4; ++I)
     {
         auto* Column=WidgetTree->ConstructWidget<UTextBlock>();
-        Column->SetFont(MissionUIStyle::GetLimerickFont(14));
+        Column->SetFont(MissionUIStyle::GetRowFont(12));
         Column->SetColorAndOpacity(FSlateColor(FLinearColor::White));
         Column->SetAutoWrapText(true);
         auto* LayoutSlot=Row->AddChildToHorizontalBox(Column);
@@ -131,109 +138,111 @@ void UDebriefRowWidget::NativeOnListItemObjectSet(UObject* ListItemObject)
 void UMissionDebriefDlg::EnsureUi()
 {
     if (bModernUiBuilt) return;
-    UVerticalBox* Box = EnsureAutoVerticalBoxWithOffsets(FMargin(24.f));
-    if (!Box || !WidgetTree) return;
-    // Cover the legacy Blueprint layout without replacing an already-built Slate root.
-    if (RootCanvas)
+    auto* Box = EnsureAutoVerticalBoxWithOffsets(FMargin(0));
+    if (!Box || !WidgetTree || !RootCanvas) return;
+    for (UWidget* Child : RootCanvas->GetAllChildren())
+        if (Child != Box) Child->SetVisibility(ESlateVisibility::Collapsed);
+    Box->RemoveFromParent(); Box->ClearChildren();
+    auto Label = [this](const TCHAR* Text,int32 Size,bool bHeader=false)
     {
-        for (UWidget* Child : RootCanvas->GetAllChildren())
-            if (Child != Box) Child->SetVisibility(ESlateVisibility::Collapsed);
-
-        auto* Background = WidgetTree->ConstructWidget<UBorder>();
-        Background->SetBrush(*FCoreStyle::Get().GetBrush("WhiteBrush"));
-        Background->SetBrushColor(FLinearColor(0.10f, 0.11f, 0.12f, 1.f));
-        Background->SetVisibility(ESlateVisibility::HitTestInvisible);
-        auto* BackgroundSlot = RootCanvas->AddChildToCanvas(Background);
-        BackgroundSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
-        BackgroundSlot->SetOffsets(FMargin(0.f));
-        BackgroundSlot->SetZOrder(-1);
-    }
-    Box->ClearChildren();
-    auto Label = [this](const TCHAR* Text, int32 Size, bool Header=false)
-    {
-        auto* W = WidgetTree->ConstructWidget<UTextBlock>();
-        W->SetText(FText::FromString(Text));
-        W->SetFont(Header ? MissionUIStyle::GetHeaderFont(Size) : MissionUIStyle::GetLimerickFont(Size));
-        W->SetColorAndOpacity(FSlateColor(MissionUIStyle::InfoValueText));
-        return W;
+        auto* W=WidgetTree->ConstructWidget<UTextBlock>(); W->SetText(FText::FromString(Text));
+        W->SetFont(bHeader?MissionUIStyle::GetHeaderFont(Size):MissionUIStyle::GetRowFont(Size));
+        W->SetColorAndOpacity(FSlateColor(MissionUIStyle::InfoValueText)); W->SetAutoWrapText(true); return W;
     };
-    auto Panel = [this](UWidget* Content)
+    auto* Frame=WidgetTree->ConstructWidget<UBorder>(); Frame->SetBrush(FlightPanelStyle::Window());
+    Frame->SetBrushColor(FLinearColor::White); Frame->SetPadding(FMargin(12)); Frame->SetContent(Box);
+    auto* Fit=WidgetTree->ConstructWidget<UScaleBox>(); Fit->SetStretch(EStretch::ScaleToFit); Fit->SetStretchDirection(EStretchDirection::DownOnly);
+    auto* Size=WidgetTree->ConstructWidget<USizeBox>(); Size->SetWidthOverride(960); Size->SetHeightOverride(650); Size->SetContent(Frame); Fit->SetContent(Size);
+    FloatingFrame=Fit;
+    auto* FloatSlot=RootCanvas->AddChildToCanvas(Fit); FloatSlot->SetAnchors(FAnchors(.5f)); FloatSlot->SetAlignment(FVector2D(.5));
+    FloatSlot->SetPosition(FVector2D::ZeroVector); FloatSlot->SetSize(FVector2D(960,650));
+    auto* Header=WidgetTree->ConstructWidget<UHorizontalBox>();
+    Header->AddChildToHorizontalBox(Label(TEXT("AFTER ACTION"),16,true))->SetSize(DebriefFill(1));
+    CloseButtonWidget=WidgetTree->ConstructWidget<UButton>(); Header->AddChildToHorizontalBox(CloseButtonWidget);
+    DragTitleBar=WidgetTree->ConstructWidget<UBorder>(); DragTitleBar->SetBrush(FlightPanelStyle::TitleBar());
+    DragTitleBar->SetBrushColor(FLinearColor::White); DragTitleBar->SetPadding(FMargin(10,6)); DragTitleBar->SetContent(Header);
+    Box->AddChildToVerticalBox(DragTitleBar)->SetPadding(FMargin(0,0,0,10));
+    MissionNameWidget=Label(TEXT(""),18,true); Box->AddChildToVerticalBox(MissionNameWidget)->SetPadding(FMargin(0,0,0,6));
+    auto* Meta=WidgetTree->ConstructWidget<UHorizontalBox>();
+    for(auto Pair:{TPair<const TCHAR*,TObjectPtr<UTextBlock>*>(TEXT("SYSTEM "),&MissionSystemWidget),
+        {TEXT("SECTOR "),&MissionSectorWidget},{TEXT("START "),&MissionTimeStartWidget}})
     {
-        auto* B = WidgetTree->ConstructWidget<UBorder>();
-        B->SetBrushColor(MissionUIStyle::PanelBG);
-        B->SetPadding(FMargin(16.f,12.f)); B->SetContent(Content); return B;
-    };
-    auto* Header = WidgetTree->ConstructWidget<UHorizontalBox>();
-    auto* Caption = Label(TEXT("MISSION DEBRIEFING"),28,true);
-    Header->AddChildToHorizontalBox(Caption)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    CloseButtonWidget = WidgetTree->ConstructWidget<UButton>();
-    Header->AddChildToHorizontalBox(CloseButtonWidget)->SetVerticalAlignment(VAlign_Center);
-    Box->AddChildToVerticalBox(Panel(Header))->SetPadding(FMargin(0,0,0,12));
-    auto* Info = WidgetTree->ConstructWidget<UVerticalBox>();
-    MissionNameWidget = Label(TEXT(""),24,true); Info->AddChildToVerticalBox(MissionNameWidget);
-    auto* Meta = WidgetTree->ConstructWidget<UHorizontalBox>();
-    for (auto Pair : {TPair<const TCHAR*,TObjectPtr<UTextBlock>*>(TEXT("SYSTEM: "),&MissionSystemWidget),
-        {TEXT("SECTOR: "),&MissionSectorWidget},{TEXT("START: "),&MissionTimeStartWidget}})
-    {
-        Meta->AddChildToHorizontalBox(Label(Pair.Key,14))->SetPadding(FMargin(0,6,6,6));
-        *Pair.Value = Label(TEXT(""),14);
-        Meta->AddChildToHorizontalBox(*Pair.Value)->SetPadding(FMargin(0,6,30,6));
+        Meta->AddChildToHorizontalBox(Label(Pair.Key,12)); *Pair.Value=Label(TEXT(""),12);
+        Meta->AddChildToHorizontalBox(*Pair.Value)->SetPadding(FMargin(0,0,18,0));
     }
-    Info->AddChildToVerticalBox(Meta);
-    auto* ResultRow = WidgetTree->ConstructWidget<UHorizontalBox>();
-    OutcomeWidget = Label(TEXT(""),22,true);
-    ResultRow->AddChildToHorizontalBox(OutcomeWidget)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    MissionScoreWidget = Label(TEXT(""),20);
-    ResultRow->AddChildToHorizontalBox(MissionScoreWidget);
-    Info->AddChildToVerticalBox(ResultRow);
-    EvidenceWidget = Label(TEXT(""),14); EvidenceWidget->SetAutoWrapText(true);
-    Info->AddChildToVerticalBox(EvidenceWidget)->SetPadding(FMargin(0,4,0,6));
-    ObjectivesWidget = WidgetTree->ConstructWidget<URichTextBlock>();
-    FTextBlockStyle TextStyle; TextStyle.SetFont(MissionUIStyle::GetLimerickFont(14));
-    TextStyle.SetColorAndOpacity(FSlateColor(FLinearColor::White));
-    ObjectivesWidget->SetDefaultTextStyle(TextStyle); ObjectivesWidget->SetAutoWrapText(true);
-    Info->AddChildToVerticalBox(Label(TEXT("OBJECTIVES"),16,true));
-    Info->AddChildToVerticalBox(ObjectivesWidget);
-    SituationWidget = nullptr; // Mission situation is already covered in briefing.
-    Box->AddChildToVerticalBox(Panel(Info))->SetPadding(FMargin(0,0,0,12));
-    auto* Body = WidgetTree->ConstructWidget<UHorizontalBox>();
-    auto* Left = WidgetTree->ConstructWidget<UVerticalBox>();
-    auto* Right = WidgetTree->ConstructWidget<UVerticalBox>();
-    auto AddList = [this,Label](UVerticalBox* Parent,const TCHAR* Caption,const TCHAR* Columns,float Weight)
+    Box->AddChildToVerticalBox(Meta)->SetPadding(FMargin(0,0,0,8));
+    auto* Result=WidgetTree->ConstructWidget<UHorizontalBox>(); OutcomeWidget=Label(TEXT(""),15,true);
+    Result->AddChildToHorizontalBox(OutcomeWidget)->SetSize(DebriefFill(1)); MissionScoreWidget=Label(TEXT(""),14); Result->AddChildToHorizontalBox(MissionScoreWidget);
+    Box->AddChildToVerticalBox(Result)->SetPadding(FMargin(0,0,0,6));
+    EvidenceWidget=Label(TEXT(""),12); Box->AddChildToVerticalBox(EvidenceWidget)->SetPadding(FMargin(0,0,0,10));
+    auto* Tabs=WidgetTree->ConstructWidget<UHorizontalBox>();
+    auto Tab=[this,Tabs](EShipSystemIcon Icon,const FText& Tooltip)
     {
-        Parent->AddChildToVerticalBox(Label(Caption,18,true))->SetPadding(FMargin(0,0,0,6));
-        const FString Heading(Columns);
-        TArray<FString> Captions;
-        if (Heading.StartsWith(TEXT("PKG"))) Captions={TEXT("PKG"),TEXT("CALLSIGN"),TEXT("ROLE"),TEXT("TYPE")};
-        else if (Heading.StartsWith(TEXT("STATISTIC"))) Captions={TEXT("STATISTICS"),TEXT("VALUE")};
-        else Captions={TEXT("TIME"),TEXT("EVENT"),TEXT("TARGET / DETAILS")};
-        const float Weights[3][4]={{0.65f,0.35f,0,0},{0.16f,0.46f,0.38f,0},{0.1f,0.35f,0.3f,0.25f}};
+        auto* Button=WidgetTree->ConstructWidget<UButton>(); auto* Host=WidgetTree->ConstructWidget<UNativeWidgetHost>();
+        Host->SetContent(SNew(SShipSystemIcon).Icon(Icon)); Button->SetContent(Host); Button->SetToolTipText(Tooltip);
+        Tabs->AddChildToHorizontalBox(Button)->SetPadding(FMargin(0,0,8,0)); return Button;
+    };
+    Tab(EShipSystemIcon::Ship,INVTEXT("Summary and unit statistics"))->OnClicked.AddUniqueDynamic(this,&UMissionDebriefDlg::ShowSummaryPage);
+    Tab(EShipSystemIcon::Computer,INVTEXT("Mission objectives"))->OnClicked.AddUniqueDynamic(this,&UMissionDebriefDlg::ShowObjectivesPage);
+    Tab(EShipSystemIcon::Intel,INVTEXT("Detailed mission event log"))->OnClicked.AddUniqueDynamic(this,&UMissionDebriefDlg::ShowEventsPage);
+    Box->AddChildToVerticalBox(Tabs)->SetPadding(FMargin(0,0,0,10));
+    DebriefPages=WidgetTree->ConstructWidget<UWidgetSwitcher>();
+    Box->AddChildToVerticalBox(DebriefPages)->SetSize(DebriefFill(1));
+    auto AddList=[this,Label](UVerticalBox* Parent,const TCHAR* Caption,TArray<FString> Captions)
+    {
+        Parent->AddChildToVerticalBox(Label(Caption,14,true))->SetPadding(FMargin(0,0,0,6));
+        const float Weights[3][4]={{.65f,.35f,0,0},{.16f,.46f,.38f,0},{.1f,.35f,.3f,.25f}};
         auto* Headings=WidgetTree->ConstructWidget<UHorizontalBox>();
-        for (int32 I=0; I<Captions.Num(); ++I)
+        for(int32 I=0;I<Captions.Num();++I)
         {
-            auto* HeadingSlot=Headings->AddChildToHorizontalBox(Label(*Captions[I],12));
-            HeadingSlot->SetSize(DebriefFill(Weights[Captions.Num()-2][I]));
-            HeadingSlot->SetPadding(FMargin(6,0));
+            auto* Slot=Headings->AddChildToHorizontalBox(Label(*Captions[I],12)); Slot->SetSize(DebriefFill(Weights[Captions.Num()-2][I])); Slot->SetPadding(FMargin(6,0));
         }
         Parent->AddChildToVerticalBox(Headings)->SetPadding(FMargin(0,0,0,6));
-        auto* List = WidgetTree->ConstructWidget<UDebriefListView>();
-        UClass* RowClass=LoadClass<UDebriefRowWidget>(nullptr,TEXT("/Game/Screens/Mission/Rows/WBP_DebriefRow.WBP_DebriefRow_C"));
-        List->SetEntry(RowClass ? RowClass : UDebriefRowWidget::StaticClass());
-        auto* LayoutSlot = Parent->AddChildToVerticalBox(List);
-        LayoutSlot->SetSize(DebriefFill(Weight)); LayoutSlot->SetPadding(FMargin(0,0,0,12));
-        return List;
+        auto* List=WidgetTree->ConstructWidget<UDebriefListView>();
+        UClass* Row=LoadClass<UDebriefRowWidget>(nullptr,TEXT("/Game/Screens/Mission/Rows/WBP_DebriefRow.WBP_DebriefRow_C"));
+        List->SetEntry(Row?Row:UDebriefRowWidget::StaticClass()); Parent->AddChildToVerticalBox(List)->SetSize(DebriefFill(1)); return List;
     };
-    UnitListWidget=AddList(Left,TEXT("ACTIVE UNITS"),TEXT("PKG     CALLSIGN                  ROLE                  TYPE"),0.4f);
-    SummaryListWidget=AddList(Left,TEXT("MISSION SUMMARY"),TEXT("STATISTICS                                     VALUE"),0.6f);
-    EventListWidget=AddList(Right,TEXT("MISSION LOG"),TEXT("TIME               EVENT                                      TARGET / DETAILS"),1.f);
-    auto* LSlot=Body->AddChildToHorizontalBox(Panel(Left)); LSlot->SetSize(DebriefFill(0.48f)); LSlot->SetPadding(FMargin(0,0,12,0));
-    Body->AddChildToHorizontalBox(Panel(Right))->SetSize(DebriefFill(0.52f));
-    Box->AddChildToVerticalBox(Body)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    bModernUiBuilt=true;
-    BindFormWidgets();
-    CloseButtonWidget->OnClicked.AddUniqueDynamic(this,&UMissionDebriefDlg::OnCloseClicked);
-    UnitListWidget->OnItemSelectionChanged().RemoveAll(this);
+    auto* Summary=WidgetTree->ConstructWidget<UHorizontalBox>(); auto* Units=WidgetTree->ConstructWidget<UVerticalBox>(); auto* Stats=WidgetTree->ConstructWidget<UVerticalBox>();
+    Summary->AddChildToHorizontalBox(Units)->SetSize(DebriefFill(.52f)); auto* StatsSlot=Summary->AddChildToHorizontalBox(Stats); StatsSlot->SetSize(DebriefFill(.48f)); StatsSlot->SetPadding(FMargin(12,0,0,0));
+    UnitListWidget=AddList(Units,TEXT("UNITS"),{TEXT("PKG"),TEXT("CALLSIGN"),TEXT("ROLE"),TEXT("TYPE")});
+    SummaryListWidget=AddList(Stats,TEXT("SUMMARY"),{TEXT("STATISTICS"),TEXT("VALUE")}); DebriefPages->AddChild(Summary);
+    auto* ObjectivePage=WidgetTree->ConstructWidget<UScrollBox>(); ObjectivesWidget=WidgetTree->ConstructWidget<URichTextBlock>();
+    FTextBlockStyle Style; Style.SetFont(MissionUIStyle::GetRowFont(13)); Style.SetColorAndOpacity(FSlateColor(MissionUIStyle::InfoValueText));
+    ObjectivesWidget->SetDefaultTextStyle(Style); ObjectivesWidget->SetAutoWrapText(true); ObjectivePage->AddChild(ObjectivesWidget); DebriefPages->AddChild(ObjectivePage);
+    auto* Events=WidgetTree->ConstructWidget<UVerticalBox>(); EventListWidget=AddList(Events,TEXT("MISSION LOG"),{TEXT("TIME"),TEXT("EVENT"),TEXT("TARGET / DETAILS")}); DebriefPages->AddChild(Events);
+    SituationWidget=nullptr; DebriefPages->SetActiveWidgetIndex(0); bModernUiBuilt=true;
+    BindFormWidgets(); CloseButtonWidget->OnClicked.AddUniqueDynamic(this,&UMissionDebriefDlg::OnCloseClicked);
     UnitListWidget->OnItemSelectionChanged().AddUObject(this,&UMissionDebriefDlg::OnUnitSelectionChanged);
+}
+
+void UMissionDebriefDlg::ShowSummaryPage(){if(DebriefPages)DebriefPages->SetActiveWidgetIndex(0);}
+void UMissionDebriefDlg::ShowObjectivesPage(){if(DebriefPages)DebriefPages->SetActiveWidgetIndex(1);}
+void UMissionDebriefDlg::ShowEventsPage(){if(DebriefPages)DebriefPages->SetActiveWidgetIndex(2);}
+
+FReply UMissionDebriefDlg::NativeOnMouseButtonDown(const FGeometry& Geometry,const FPointerEvent& Event)
+{
+    if(Event.GetEffectingButton()==EKeys::LeftMouseButton && DragTitleBar && DragTitleBar->GetCachedGeometry().IsUnderLocation(Event.GetScreenSpacePosition()))
+    {bDraggingDebrief=true;return FReply::Handled().CaptureMouse(TakeWidget());}
+    return Super::NativeOnMouseButtonDown(Geometry,Event);
+}
+FReply UMissionDebriefDlg::NativeOnMouseMove(const FGeometry& Geometry,const FPointerEvent& Event)
+{
+    if(bDraggingDebrief && RootCanvas && FloatingFrame)
+    {
+        const auto& View=RootCanvas->GetCachedGeometry(); const FVector2D Size=View.GetLocalSize();
+        DebriefDragOffset += View.AbsoluteToLocal(Event.GetScreenSpacePosition())-View.AbsoluteToLocal(Event.GetLastScreenSpacePosition());
+        const FVector2D Panel=FloatingFrame->GetCachedGeometry().GetLocalSize();
+        const FVector2D Limit=FVector2D(FMath::Max(0.0,(Size.X-Panel.X)*.5),FMath::Max(0.0,(Size.Y-Panel.Y)*.5));
+        DebriefDragOffset.X=FMath::Clamp(DebriefDragOffset.X,-Limit.X,Limit.X); DebriefDragOffset.Y=FMath::Clamp(DebriefDragOffset.Y,-Limit.Y,Limit.Y);
+        if(auto* FrameSlot=Cast<UCanvasPanelSlot>(FloatingFrame->Slot))FrameSlot->SetPosition(DebriefDragOffset);
+        return FReply::Handled();
+    }
+    return Super::NativeOnMouseMove(Geometry,Event);
+}
+FReply UMissionDebriefDlg::NativeOnMouseButtonUp(const FGeometry& Geometry,const FPointerEvent& Event)
+{
+    if(bDraggingDebrief){bDraggingDebrief=false;return FReply::Handled().ReleaseMouseCapture();}
+    return Super::NativeOnMouseButtonUp(Geometry,Event);
 }
 
 UMissionDebriefDlg::UMissionDebriefDlg(const FObjectInitializer& ObjectInitializer)
@@ -266,6 +275,12 @@ void UMissionDebriefDlg::NativeDestruct()
 void UMissionDebriefDlg::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 {
     Super::NativeTick(MyGeometry, InDeltaTime);
+    if(RootCanvas && FloatingFrame)
+        if(auto* FrameSlot=Cast<UCanvasPanelSlot>(FloatingFrame->Slot))
+        {
+            const FVector2D View=RootCanvas->GetCachedGeometry().GetLocalSize();
+            if(View.X>48 && View.Y>48) FrameSlot->SetSize(FVector2D(FMath::Min(960.0,View.X-48),FMath::Min(650.0,View.Y-48)));
+        }
 
     if (bIsShown)
     {
@@ -296,31 +311,13 @@ void UMissionDebriefDlg::BindFormWidgets()
     if (CloseButtonWidget)
     {
         BindButton(1, CloseButtonWidget);
-        MissionUIStyle::ApplyActionButtonStyle(CloseButtonWidget,TEXT("Green"));
-        CloseButtonWidget->SetToolTipText(NSLOCTEXT("MissionDebrief","Accept","Accept debrief and return"));
-        if (WidgetTree && (!CloseButtonWidget->GetContent()
-            || CloseButtonWidget->GetContent()->GetFName() != TEXT("DebriefAcceptIconBox")))
+        MissionUIStyle::ApplyActionButtonStyle(CloseButtonWidget,TEXT("Red"));
+        CloseButtonWidget->SetToolTipText(INVTEXT("Accept debrief and return"));
+        if(WidgetTree && !CloseButtonWidget->GetContent())
         {
-            USizeBox* IconBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(),TEXT("DebriefAcceptIconBox"));
-            IconBox->SetWidthOverride(40.f);
-            IconBox->SetHeightOverride(40.f);
-            UImage* Icon = WidgetTree->ConstructWidget<UImage>();
-            MissionUIStyle::SetActionIcon(Icon,
-                TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Check_256x256.T_Check_256x256"),FLinearColor::White);
-            IconBox->SetContent(Icon);
-            CloseButtonWidget->SetContent(IconBox);
-            if (UButtonSlot* IconSlot = Cast<UButtonSlot>(IconBox->Slot))
-            {
-                IconSlot->SetHorizontalAlignment(HAlign_Center);
-                IconSlot->SetVerticalAlignment(VAlign_Center);
-                IconSlot->SetPadding(FMargin(8.f));
-            }
+            auto* Icon=WidgetTree->ConstructWidget<UTextBlock>(); Icon->SetText(INVTEXT("\u00D7")); Icon->SetFont(MissionUIStyle::GetHeaderFont(18)); Icon->SetColorAndOpacity(FSlateColor(FLinearColor::White)); CloseButtonWidget->SetContent(Icon);
         }
-        if (UVerticalBoxSlot* ButtonSlot = Cast<UVerticalBoxSlot>(CloseButtonWidget->Slot))
-        {
-            ButtonSlot->SetHorizontalAlignment(HAlign_Right);
-            ButtonSlot->SetPadding(FMargin(0.f,8.f,0.f,0.f));
-        }
+
     }
 
     if (UnitListWidget)         BindList(320, UnitListWidget);
@@ -737,16 +734,18 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
     if (SimPtr->GetMission() == MissionPtr) SimPtr->ResolveAgentAssignment(DebriefResult.bSuccess);
     const bool bStoryMission = MissionPtr->IsStoryMission();
     // Snapshot before CommitMission clears ShipStats. Save evidence and score separately.
-    if (auto* GI=Cast<USSWGameInstance>(GetGameInstance()))
+    if (auto* GI=Cast<USSWGameInstance>(GetGameInstance()); GI && !GI->IsTrainingTestSession())
     {
         const bool bRegionalAssignment = MissionPtr->IsRegionalAgentMission();
+        const bool bTrainingAssignment = MissionPtr->GetMissionType()==int(EMissionType::TRAINING) &&
+            MissionPtr->GetIdentity()>=101 && MissionPtr->GetIdentity()<=107;
         const bool bRecordCampaignMission = CampaignPtr && (bStoryMission || CampaignPtr->OwnsMission(MissionPtr))
             && !CampaignPtr->IsCutsceneMission(MissionPtr->GetIdentity());
-        if (DebriefResult.bSuccess && (bRecordCampaignMission || bRegionalAssignment))
+        if (DebriefResult.bSuccess && (bRecordCampaignMission || bRegionalAssignment || bTrainingAssignment))
             if (auto* Players=GI->GetSubsystem<UStarshatterPlayerSubsystem>())
             {
                 auto& Info=Players->GetMutablePlayerInfo();
-                const int32 CampaignId = bRegionalAssignment ? Campaign::SINGLE_MISSIONS : CampaignPtr->GetCampaignId();
+                const int32 CampaignId = bRegionalAssignment ? Campaign::SINGLE_MISSIONS : bTrainingAssignment ? Campaign::TRAINING_CAMPAIGN : CampaignPtr->GetCampaignId();
                 const bool bFirstCompletion = Info.MarkMissionCompleted(CampaignId, MissionPtr->GetIdentity());
                 if (bStoryMission && bFirstCompletion)
                 {
@@ -820,7 +819,7 @@ void UMissionDebriefDlg::OnCloseClicked()
     LocalSim->UnloadMission();
 
     PlayerCharacter* PlayerObj = PlayerCharacter::GetCurrentPlayer();
-    if (PlayerObj && PlayerObj->ShowAward())
+    if (PlayerObj && !(Cast<USSWGameInstance>(GetGameInstance()) && Cast<USSWGameInstance>(GetGameInstance())->IsTrainingTestSession()) && PlayerObj->ShowAward())
     {
         if (Manager && Manager->GetAwardDlg())
         {

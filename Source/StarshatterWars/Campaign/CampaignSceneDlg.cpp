@@ -1,4 +1,5 @@
 #include "CampaignSceneDlg.h"
+#include "OfflineCutsceneExport.h"
 #include "ShipVisualCatalog.h"
 #include "CampaignPresentationRules.h"
 #include "AudioRouting.h"
@@ -764,6 +765,7 @@ void UCampaignSceneDlg::BeginSceneByName(const FString& InSceneName, float InDur
     // Populate time-zero image, title, and display events BEFORE the owning
     // campaign screen removes its loading cover. The first NativeTick is too
     // late and previously exposed a blank frame.
+    OfflineCutsceneExport::Begin(GetWorld(),InSceneName);
     ProcessPendingEvents(0.0f);
     Show();
 
@@ -1868,6 +1870,11 @@ void UCampaignSceneDlg::FinishCutscene()
         return;
     }
 
+    if(OfflineCutsceneExport::IsRequested())
+    {
+        bSceneRunning=false;bCutsceneTransitionStarted=true;
+        OfflineCutsceneExport::Finish(GetWorld());return;
+    }
     if (bSceneRunning && Manager) Manager->CompleteActiveScene();
     for (TActorIterator<ACampaignSceneActor> It(GetWorld()); It; ++It)
         It->SetScenePlaybackEnabled(false);

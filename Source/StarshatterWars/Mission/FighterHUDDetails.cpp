@@ -1281,8 +1281,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     }
     if (bHasTarget)
     {
-        const double ExtraRowHeight = !TargetMineral.IsEmpty() || !TargetCargo.IsEmpty() ? 20.0 : 0.0;
-        const FVector2D P(Size.X-408*Scale,Size.Y-(192+ExtraRowHeight)*Scale);
+        // Fixed 220 x 215 frame, matching the adjacent sensor in every target mode.
+        const FVector2D P(Size.X-430*Scale,Size.Y-210*Scale);
         const auto* PanelBrush = FCoreStyle::Get().GetBrush("WhiteBrush");
         auto PanelFill = [&](FVector2D Offset, FVector2D Extent, FLinearColor Color)
         {
@@ -1290,10 +1290,10 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
                 G.ToPaintGeometry(FVector2f(Extent * Scale), FSlateLayoutTransform(FVector2f(P + Offset * Scale))),
                 PanelBrush, ESlateDrawEffect::None, Color);
         };
-        PanelFill(FVector2D(-8, -5), FVector2D(192, 197 + ExtraRowHeight), FLinearColor(.016f,.036f,.052f,.91f));
-        PanelFill(FVector2D(-8, -5), FVector2D(2, 22), TargetDisplayColor);
+        PanelFill(FVector2D(-22, -5), FVector2D(220, 215), FLinearColor(.016f,.036f,.052f,.91f));
+        PanelFill(FVector2D(-22, -5), FVector2D(2, 22), TargetDisplayColor);
         PanelFill(FVector2D(0, 19), FVector2D(176, 1), FLinearColor(.15f,.27f,.34f,.7f));
-        PanelFill(FVector2D(-8, 166 + ExtraRowHeight), FVector2D(192, 26), FLinearColor(.035f,.07f,.095f,.95f));
+        PanelFill(FVector2D(-22, 186), FVector2D(220, 24), FLinearColor(.035f,.07f,.095f,.95f));
         FString WaypointFirst, WaypointSecond;
         auto TargetText = [&](FVector2D Position, const FString& Label, FLinearColor Color)
         { ShipText(Position, Label.ToUpper(), Color, 9); };
@@ -1309,8 +1309,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             NameMeasure->Measure(TargetName.ToUpper(),NameFont).X > 176*Scale &&
             TargetName.Split(TEXT(" - "), &WaypointFirst, &WaypointSecond);
         if (WrapWaypoint) {
-            TargetText(P-FVector2D(0,16)*Scale,WaypointFirst.TrimStartAndEnd(),TargetDisplayColor);
-            TargetText(P,WaypointSecond.TrimStartAndEnd(),TargetDisplayColor);
+            TargetText(P,WaypointFirst.TrimStartAndEnd(),TargetDisplayColor);
+            TargetText(P+FVector2D(0,10)*Scale,WaypointSecond.TrimStartAndEnd(),TargetDisplayColor);
         }
         else TargetText(P,TargetName,TargetDisplayColor);
         if(TargetMFDPreview && TargetMFDPreview->IsReady())
@@ -1334,7 +1334,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
         if (!TargetCargo.IsEmpty())
             TargetText(P+FVector2D(0,172)*Scale,TargetCargo,TargetDisplayColor);
-        const FVector2D ReadoutPosition = P + FVector2D(0, 172 + ExtraRowHeight) * Scale;
+        const FVector2D ReadoutPosition = P + FVector2D(0, 192) * Scale;
         TargetText(ReadoutPosition, TargetRange >= 0 ? UFormattingUtils::FormatDistance(TargetRange * 1000.0)
             : TEXT("RANGE --"), TargetDisplayColor);
         if (TargetSpeed >= 0)

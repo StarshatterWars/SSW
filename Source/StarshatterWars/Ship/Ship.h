@@ -733,5 +733,7 @@ public:
     void ApplyLeaderFormation(double seconds);
 
 private:
+    friend class FWeaponLoadingParityTest;
+    void RebuildRuntimeLoadout(const TArray<int32>& Stations);
     FVector formation_offset = FVector::ZeroVector;
 };

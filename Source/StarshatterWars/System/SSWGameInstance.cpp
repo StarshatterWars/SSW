@@ -171,6 +171,17 @@ void USSWGameInstance::Print(const FString& A, const FString& B)
 }
 
 
+void USSWGameInstance::ClearCampaignAssignment()
+{
+    Campaign::ClearSelection();
+    SelectedCampaignIndex=0;SelectedCampaignRowName=NAME_None;SelectedCampaignDisplayName.Empty();CampaignSave=nullptr;
+    if(auto* Data=GetSubsystem<UStarshatterGameDataSubsystem>())
+    {
+        Data->CampaignIndex=INDEX_NONE;Data->SelectedCampaignRowName=NAME_None;Data->SetActiveCampaign(FS_Campaign{});
+    }
+    if(auto* Timer=GetSubsystem<UTimerSubsystem>())Timer->SetCampaignSave(nullptr);
+}
+
 bool USSWGameInstance::RestoreSavedActiveCampaign()
 {
     // Idempotent: menu construction and the Missions driver may both request restoration.
@@ -187,6 +198,7 @@ bool USSWGameInstance::RestoreSavedActiveCampaign()
 
     if (!PlayerSS->HadExistingSaveOnLoad())
     {
+        ClearCampaignAssignment();
         UE_LOG(LogTemp, Log, TEXT("[CampaignRestore] No existing player save; campaign not selected"));
         return false;
     }
@@ -194,7 +206,10 @@ bool USSWGameInstance::RestoreSavedActiveCampaign()
     const FS_PlayerGameInfo& SavedPlayer = PlayerSS->GetPlayerInfo();
     const int32 SavedIndex = SavedPlayer.Campaign; // 1-based, as stored by CampaignSelectDlg
     if (SavedIndex <= 0)
+    {
+        ClearCampaignAssignment();
         return false;
+    }
 
     // LoadAll belongs to the normal EGameMode::INIT pipeline. Never invoke it here.
     if (!DataSS->IsLoaded())
@@ -1615,6 +1630,7 @@ UCampaignSave* USSWGameInstance::CreateNewCampaignSave(int32 CampaignIndex, FNam
 
 UCampaignSave* USSWGameInstance::LoadOrCreateSelectedCampaignSave()
 {
+    if(SelectedCampaignIndex<=0 || SelectedCampaignRowName.IsNone())return nullptr;
 	return LoadOrCreateCampaignSave(SelectedCampaignIndex, SelectedCampaignRowName, SelectedCampaignDisplayName);
 }
 
@@ -1624,7 +1640,8 @@ void USSWGameInstance::EnsureCampaignSaveLoaded()
 	if (CampaignSave)
 		return;
 
-	int32 UiIndex = PlayerInfo.Campaign;
+    if(PlayerInfo.Campaign<=0){ClearCampaignAssignment();return;}
+	int32 UiIndex = PlayerInfo.Campaign-1;
 	if (UiIndex < 0)
 	{
 		UiIndex = 0;

@@ -1,3 +1,7 @@
+#include "CreditsContent.h"
+#include "MissionUIStyle.h"
+#include "Widgets/Layout/SScrollBox.h"
+#include "Widgets/Text/STextBlock.h"
 #include "FlightTacticalReferenceDlg.h"
 #include "ForcesDlg.h"
 #include "ShipSystemIcon.h"
@@ -36,7 +40,9 @@ TSharedRef<SWidget> UFlightTacticalReferenceDlg::RebuildWidget()
             }
         });
     Forces=CreateWidget<UForcesDlg>(GetOwningPlayer());
-    auto Pages=SNew(SWidgetSwitcher)+SWidgetSwitcher::Slot()[Reference]+SWidgetSwitcher::Slot()[Forces ? Forces->TakeWidget() : SNullWidget::NullWidget];
+    auto Credits=MissionUIStyle::MakeDataPane(SNew(SScrollBox)+SScrollBox::Slot()
+        [SNew(STextBlock).Text(FText::FromString(CreditsContent::Load())).Font(MissionUIStyle::GetRowFont(13)).AutoWrapText(true)]);
+    auto Pages=SNew(SWidgetSwitcher)+SWidgetSwitcher::Slot()[Reference]+SWidgetSwitcher::Slot()[Forces ? Forces->TakeWidget() : SNullWidget::NullWidget]+SWidgetSwitcher::Slot()[Credits];
     return SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(8)
         [SNew(SHorizontalBox)
@@ -48,6 +54,11 @@ TSharedRef<SWidget> UFlightTacticalReferenceDlg::RebuildWidget()
             [SNew(SButton).ToolTipText(INVTEXT("Forces — sector, system and neighboring-system reports"))
                 .OnClicked_Lambda([Weak=TWeakPtr<SWidgetSwitcher>(Pages),Preview=TWeakObjectPtr<UShipBriefingPreview>(Preview)]()
                     {if(auto View=Weak.Pin())View->SetActiveWidgetIndex(1);if(Preview.IsValid())Preview->SetPreviewActive(false);return FReply::Handled();})
-                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Ship)]]]
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Ship)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(6,0,0,0)
+            [SNew(SButton).ToolTipText(INVTEXT("Credits"))
+                .OnClicked_Lambda([Weak=TWeakPtr<SWidgetSwitcher>(Pages),Preview=TWeakObjectPtr<UShipBriefingPreview>(Preview)]()
+                    {if(auto View=Weak.Pin())View->SetActiveWidgetIndex(2);if(Preview.IsValid())Preview->SetPreviewActive(false);return FReply::Handled();})
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Agent)]]]
         + SVerticalBox::Slot().FillHeight(1)[Pages];
 }

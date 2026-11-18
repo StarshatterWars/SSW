@@ -1,3 +1,15 @@
+#include <type_traits>
+#include "VideoDlg.h"
+#include "GameOptionsDlg.h"
+#include "JoyDlg.h"
+#include "Blueprint/WidgetTree.h"
+#include "Components/TextBlock.h"
+#include "Components/Button.h"
+#include "Components/ComboBoxString.h"
+#include "Components/Slider.h"
+#include "Components/CanvasPanelSlot.h"
+#include "Components/ScrollBox.h"
+#include "Widgets/Input/SSpinBox.h"
 #include "LiveOptionsDlg.h"
 #include "MissionUIStyle.h"
 #include "ShipSystemIcon.h"
@@ -71,7 +83,6 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
             Save->LoadOrCreate();
 
     const auto AudioPage = SNew(SVerticalBox);
-    const auto VideoPage = SNew(SVerticalBox);
     const auto KeyboardPage = SNew(SVerticalBox);
     auto Settings = AudioPage;
     const auto AddSection = [&Settings](EShipSystemIcon Icon, FText Label)
@@ -139,55 +150,6 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
         .IsChecked_Lambda([Controls]() { return Controls->GetControlsConfig().bMouseInvert ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
         .OnCheckStateChanged_Lambda([Controls](ECheckBoxState State) { Controls->SetMouseInvert(State == ECheckBoxState::Checked); })
         [SNew(STextBlock).Text(INVTEXT("Invert mouse pitch")).Font(MissionUIStyle::GetRowFont(17))]
-    ];
-    Settings = VideoPage;
-    AddSection(EShipSystemIcon::Display, INVTEXT("VIDEO AND HUD"));
-    if (auto* Video = GEngine ? GEngine->GetGameUserSettings() : nullptr)
-    {
-        Settings->AddSlot().AutoHeight().Padding(0, 8)
-        [
-            SNew(SCheckBox)
-            .IsChecked_Lambda([Video]() { return Video->IsVSyncEnabled() ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
-            .OnCheckStateChanged_Lambda([Video](ECheckBoxState State)
-            {
-                Video->SetVSyncEnabled(State == ECheckBoxState::Checked);
-                Video->ApplyNonResolutionSettings();
-                Video->SaveSettings();
-            })
-            [SNew(STextBlock).Text(INVTEXT("Vertical sync")).Font(MissionUIStyle::GetRowFont(17))]
-        ];
-    }
-
-    Settings->AddSlot().AutoHeight().Padding(0, 8)
-    [
-        SNew(SHorizontalBox)
-        + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)
-        [SNew(STextBlock).Text(INVTEXT("HUD palette")).Font(MissionUIStyle::GetRowFont(17))]
-        + SHorizontalBox::Slot().AutoWidth()
-        [
-            SNew(SButton).ToolTipText(INVTEXT("Cycle HUD colors"))
-            .OnClicked_Lambda([]()
-            {
-                const int Color = (HUDView::DefaultColorSet() + 1) % 4;
-                HUDView::SetDefaultColorSet(Color);
-                if (auto* Hud = HUDView::GetInstance()) Hud->SetHUDColorSet(Color);
-                if (auto* Pilot = PlayerCharacter::GetCurrentPlayer()) Pilot->SetHUDColor(Color);
-                return FReply::Handled();
-            })
-            [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Refresh)]
-        ]
-    ];
-    Settings->AddSlot().AutoHeight().Padding(0, 8)
-    [
-        SNew(SCheckBox)
-        .IsChecked_Lambda([]() { return HUDView::GetGunsight() ? ECheckBoxState::Checked : ECheckBoxState::Unchecked; })
-        .OnCheckStateChanged_Lambda([](ECheckBoxState State)
-        {
-            const bool bEnabled = State == ECheckBoxState::Checked;
-            HUDView::SetGunsight(bEnabled);
-            if (auto* Pilot = PlayerCharacter::GetCurrentPlayer()) Pilot->SetGunsight(bEnabled);
-        })
-        [SNew(STextBlock).Text(INVTEXT("Gunsight")).Font(MissionUIStyle::GetRowFont(17))]
     ];
     Settings = KeyboardPage;
     AddSection(EShipSystemIcon::Keyboard, INVTEXT("KEY BINDINGS"));
@@ -338,18 +300,65 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
             + SHorizontalBox::Slot().FillWidth(1)
             [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(14)).Text(FText::FromString(Binding.Value))]
         ];
+    const auto StylePage=[this](UUserWidget* Page)
+    {
+        if(!Page || !Page->WidgetTree)return;
+        Page->WidgetTree->ForEachWidget([this](UWidget* Widget)
+        {
+            const FString Name=Widget->GetName();
+            if(auto* Text=Cast<UTextBlock>(Widget)){Text->SetFont(MissionUIStyle::GetRowFont(13));Text->SetColorAndOpacity(FSlateColor(FLinearColor::White));}
+            if(auto* Button=Cast<UButton>(Widget))
+            {
+                if(Name.Contains(TEXT("TabButton")) || Name.Contains(TEXT("Title")))Button->SetVisibility(ESlateVisibility::Collapsed);
+                else MissionUIStyle::ApplyActionButtonStyle(Button,TEXT("Blue"));
+            }
+            if(auto* Slider=Cast<USlider>(Widget)){Slider->SetWidgetStyle(MissionUIStyle::OptionsSliderStyle());Slider->SetSliderHandleColor(FLinearColor(.25f,.9f,1.f));}
+        });
+    };
+    const auto CreatePage=[this,&StylePage](const TCHAR* Path,auto& Destination)->TSharedRef<SWidget>
+    {
+        using PageType=std::remove_pointer_t<decltype(Destination.Get())>;
+        UClass* Class=LoadClass<PageType>(nullptr,Path);
+        Destination=Class?CreateWidget<PageType>(GetOwningPlayer(),Class):nullptr;
+        if(!Destination)return SNew(STextBlock).Text(INVTEXT("Settings page unavailable"));
+        Destination->SetDialogInputEnabled(false);
+        auto Widget=Destination->TakeWidget();StylePage(Destination);return Widget;
+    };
+    const auto VideoContent=CreatePage(TEXT("/Game/Screens/Options/WBP_VideoDlg.WBP_VideoDlg_C"),FullVideo);
+    const auto GameplayContent=CreatePage(TEXT("/Game/Screens/Options/WBP_GameDlg.WBP_GameDlg_C"),FullGameplay);
+    const auto JoystickContent=CreatePage(TEXT("/Game/Screens/Options/WBP_JoystickDlg.WBP_JoystickDlg_C"),Joystick);
+    auto JoystickPage=SNew(SVerticalBox);
+    Settings=JoystickPage;AddSection(EShipSystemIcon::Joystick,INVTEXT("JOYSTICK"));
+    Settings->AddSlot().AutoHeight().Padding(0,8)[SNew(SHorizontalBox)
+        + SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).Text(INVTEXT("Joystick index")).Font(MissionUIStyle::GetRowFont(14))]
+        + SHorizontalBox::Slot().AutoWidth()[SNew(SSpinBox<int32>).MinValue(0).MaxValue(15)
+            .Value_Lambda([Controls](){return Controls->GetControlsConfig().JoystickIndex;})
+            .OnValueCommitted_Lambda([this,Controls](int32 Value,ETextCommit::Type){Controls->SetJoystickIndex(Value);Controls->ApplyToRuntimeControls(this);})]];
+    AddSlider(INVTEXT("Joystick sensitivity"),TAttribute<float>::CreateLambda([Controls](){return Controls->GetControlsConfig().JoystickSensitivity/10.f;}),
+        FOnFloatValueChanged::CreateWeakLambda(this,[this,Controls](float Value){Controls->SetJoystickSensitivity(FMath::RoundToInt(Value*10));Controls->ApplyToRuntimeControls(this);}));
+    Settings->AddSlot().FillHeight(1)[JoystickContent];
     const auto Pages = SNew(SWidgetSwitcher)
         + SWidgetSwitcher::Slot()[SNew(SScrollBox) + SScrollBox::Slot()[AudioPage]]
-        + SWidgetSwitcher::Slot()[SNew(SScrollBox) + SScrollBox::Slot()[VideoPage]]
-        + SWidgetSwitcher::Slot()[SNew(SScrollBox) + SScrollBox::Slot()[KeyboardPage]];
+        + SWidgetSwitcher::Slot()[VideoContent]
+        + SWidgetSwitcher::Slot()[SNew(SScrollBox) + SScrollBox::Slot()[KeyboardPage]]
+        + SWidgetSwitcher::Slot()[GameplayContent]
+        + SWidgetSwitcher::Slot()[JoystickPage];
     const auto Tabs = SNew(SHorizontalBox);
-    const TArray<EShipSystemIcon> Icons = {EShipSystemIcon::Audio, EShipSystemIcon::Display, EShipSystemIcon::Keyboard};
-    const TArray<FText> Labels = {INVTEXT("Audio"), INVTEXT("Video and HUD"), INVTEXT("Keyboard and flight controls")};
+    const TArray<EShipSystemIcon> Icons = {EShipSystemIcon::Audio, EShipSystemIcon::Display, EShipSystemIcon::Keyboard, EShipSystemIcon::SettingsGear, EShipSystemIcon::Joystick};
+    const TArray<FText> Labels = {INVTEXT("Audio"), INVTEXT("Video and HUD"), INVTEXT("Keyboard and flight controls"), INVTEXT("Gameplay"), INVTEXT("Joystick")};
     for (int32 Index = 0; Index < Icons.Num(); ++Index)
         Tabs->AddSlot().AutoWidth().Padding(0,0,8,0)
         [SNew(SButton).ContentPadding(FMargin(14,8)).ToolTipText(Labels[Index])
             .ButtonColorAndOpacity_Lambda([Pages,Index]() { return Pages->GetActiveWidgetIndex() == Index ? FLinearColor(.12f,.42f,.55f) : FLinearColor(.12f,.18f,.23f); })
-            .OnClicked_Lambda([Pages,Index]() { Pages->SetActiveWidgetIndex(Index); return FReply::Handled(); })
+            .OnClicked_Lambda([this,Pages,Index,StylePage]()
+            {
+                if(Joystick && Pages->GetActiveWidgetIndex()==4 && Index!=4){Joystick->Apply();Joystick->Cancel();}
+                Pages->SetActiveWidgetIndex(Index);
+                if(Index==1 && FullVideo){FullVideo->Show();StylePage(FullVideo);}
+                if(Index==3 && FullGameplay){FullGameplay->Show();StylePage(FullGameplay);}
+                if(Index==4 && Joystick){Joystick->Show();StylePage(Joystick);}
+                return FReply::Handled();
+            })
             [SNew(SShipSystemIcon).Icon(Icons[Index])]];
     return SNew(SBox).Padding(24)
         [SNew(SVerticalBox)
@@ -359,6 +368,9 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
 
 void ULiveOptionsDlg::SaveSettings()
 {
+    if(FullVideo)FullVideo->Apply();
+    if(FullGameplay)FullGameplay->Apply();
+    if(Joystick)Joystick->Apply();
     PlayerCharacter::Save();
     UStarshatterAudioSettings::Get()->Save();
     UStarshatterControlsSettings::Get()->Save();

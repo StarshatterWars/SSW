@@ -1,3 +1,4 @@
+#include "CreditsContent.h"
 /*=============================================================================
     Project:        Starshatter Wars
     Studio:         Fractal Dev Studios
@@ -523,19 +524,7 @@ void UOptionsScreen::BuildCreditsPage()
 void UOptionsScreen::ReloadCredits()
 {
     if (!CreditsText) return;
-    FString Text;
-    const TArray<FString> Paths = {
-        FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data/credits.txt")),
-        FPaths::Combine(FPaths::ProjectDir(), TEXT("Data/credits.txt"))
-    };
-    for (const FString& Path : Paths)
-        if (FPaths::FileExists(Path) && FFileHelper::LoadFileToString(Text, *Path)) break;
-    if (Text.IsEmpty())
-    {
-        Text = TEXT("STARSHATTER WARS\n\nFractal Dev Studios\n\nCredits unavailable: add credits.txt under Content/Data or Data.");
-        UE_LOG(LogOptionsScreen, Warning, TEXT("[OptionsCredits] credits.txt not found"));
-    }
-    CreditsText->SetText(FText::FromString(Text));
+    CreditsText->SetText(FText::FromString(CreditsContent::Load()));
     if (CreditsScroll) CreditsScroll->ScrollToStart();
 }
 

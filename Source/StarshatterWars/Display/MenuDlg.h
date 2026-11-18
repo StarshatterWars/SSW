@@ -79,6 +79,7 @@ protected:
     UPROPERTY(meta = (BindWidgetOptional))
     TObjectPtr<UButton> BtnStart;
     UPROPERTY(Transient) TObjectPtr<UButton> BtnFreeMode;
+    UPROPERTY(Transient) TObjectPtr<UButton> BtnTestMission;
 
     UPROPERTY(meta = (BindWidgetOptional))
     TObjectPtr<UButton> BtnCampaign;
@@ -161,6 +162,7 @@ protected:
 
     UFUNCTION() void OnStart();
     UFUNCTION() void OnFreeMode();
+    UFUNCTION() void OnTestMission();
     UFUNCTION() void OnCampaign();
     UFUNCTION() void OnMission();
     UFUNCTION() void OnPlayer();

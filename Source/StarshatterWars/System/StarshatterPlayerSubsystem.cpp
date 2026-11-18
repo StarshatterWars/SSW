@@ -76,7 +76,7 @@ bool UStarshatterPlayerSubsystem::DoesSaveExistNow() const
 void UStarshatterPlayerSubsystem::ResetToDefaults()
 {
     PlayerInfo = FS_PlayerGameInfo();
-    if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->GetTrainingAgent().RestoreJournal(TEXT(""));
+    if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->GetPersistentTrainingAgent().RestoreJournal(TEXT(""));
     FillDefaultChatMacros(PlayerInfo);
     PlayerInfo.CreateTime = FDateTime::UtcNow().ToUnixTimestamp();
     bDirty = true;
@@ -163,7 +163,7 @@ bool UStarshatterPlayerSubsystem::LoadPlayer()
             bDirty = false;
         }
 
-        if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->GetTrainingAgent().RestoreJournal(PlayerInfo.AgentJournalJson);
+        if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->GetPersistentTrainingAgent().RestoreJournal(PlayerInfo.AgentJournalJson);
         PlayerCharacter::Initialize();
         PlayerCharacter::SetWorldContext(GetGameInstance());
         PlayerCharacter::GetCurrentPlayer()->FromPlayerInfo(PlayerInfo);
@@ -189,7 +189,7 @@ bool UStarshatterPlayerSubsystem::LoadPlayer()
 
 bool UStarshatterPlayerSubsystem::SavePlayer(bool bForce)
 {
-    if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) PlayerInfo.AgentJournalJson = Game->GetTrainingAgent().SaveJournal();
+    if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) PlayerInfo.AgentJournalJson = Game->GetPersistentTrainingAgent().SaveJournal();
     if (!bForce && !bDirty)
         return true;
 
@@ -241,7 +241,7 @@ bool UStarshatterPlayerSubsystem::SaveGameInternal(
     SaveObject->PlayerInfo = InPlayerData;
     if (&InPlayerData == &PlayerInfo)
         if (const auto* Game = Cast<USSWGameInstance>(GetGameInstance()))
-            SaveObject->PlayerInfo.AgentJournalJson = const_cast<USSWGameInstance*>(Game)->GetTrainingAgent().SaveJournal();
+            SaveObject->PlayerInfo.AgentJournalJson = const_cast<USSWGameInstance*>(Game)->GetPersistentTrainingAgent().SaveJournal();
 
     const bool bOk = UGameplayStatics::SaveGameToSlot(SaveObject, InSlotName, InUserIndex);
     if (!bOk)
@@ -423,7 +423,7 @@ bool UStarshatterPlayerSubsystem::LoadSavedPlayer(const FString& SavedSlot)
     // Commit only a successfully decoded profile. A missing/corrupt selection leaves the pilot intact.
     if(!SaveGameInternal(SlotName,UserIndex,Loaded,CURRENT_SAVE_VERSION)) return false;
     PlayerInfo=MoveTemp(Loaded);bLoaded=true;bDirty=false;bHadExistingSave=true;
-    if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->GetTrainingAgent().RestoreJournal(PlayerInfo.AgentJournalJson);
+    if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->GetPersistentTrainingAgent().RestoreJournal(PlayerInfo.AgentJournalJson);
     Index->ActiveSlot=SavedSlot;
     if(!WritePlayerIndex(Index)) UE_LOG(LogStarshatterPlayerSubsystem,Warning,TEXT("Player loaded, but active-save selection could not be recorded."));
     OnPlayerSaveLoaded.Broadcast(true);return true;

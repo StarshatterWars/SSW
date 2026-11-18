@@ -13,4 +13,7 @@ public:
 
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
+    UPROPERTY(Transient) TObjectPtr<class UVideoDlg> FullVideo;
+    UPROPERTY(Transient) TObjectPtr<class UGameOptionsDlg> FullGameplay;
+    UPROPERTY(Transient) TObjectPtr<class UJoyDlg> Joystick;
 };

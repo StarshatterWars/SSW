@@ -39,6 +39,10 @@ bool FFlightLogbookContentTest::RunTest(const FString&)
     TestTrue(TEXT("Panel has the pilot's callsign"), Text.Contains(TEXT("Vanguard")));
     TestTrue(TEXT("Panel displays service history"), Text.Contains(TEXT("Service record")));
     TestTrue(TEXT("Panel displays decorations"), Text.Contains(TEXT("Decorations")));
+    TestTrue(TEXT("Player panel exposes the GMT universe clock"),Text.Contains(TEXT("Universe time (GMT)")));
+    TestTrue(TEXT("Player panel exposes current command group"),Text.Contains(TEXT("Current group")));
+    TestTrue(TEXT("Player panel exposes team score"),Text.Contains(TEXT("Team score")));
+    TestTrue(TEXT("Player panel exposes campaign elapsed time"),Text.Contains(TEXT("Campaign elapsed")));
     return true;
 }
 #endif

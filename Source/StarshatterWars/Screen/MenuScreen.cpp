@@ -1,4 +1,5 @@
 #include "MenuScreen.h"
+#include "OfflineCutsceneExport.h"
 #include "PlayerCharacter.h"
 
 // UE:
@@ -22,6 +23,7 @@
 #include "MissionElementDlg.h"
 #include "MissionBriefingDlg.h"
 #include "AgentCatalogSubsystem.h"
+#include "AgentMissionRules.h"
 #include "Campaign.h"
 #include "Mission.h"
 #include "Misc/FileHelper.h"
@@ -183,6 +185,7 @@ void UMenuScreen::ShowDialog(UBaseScreen* Dialog, int32 ZOrder)
         Dialog->RemoveFromParent();
 
     Dialog->AddToViewport(ZOrder);
+    Dialog->SetMenuManager(this);
     Dialog->SetVisibility(ESlateVisibility::Visible);
     Dialog->SetDialogInputEnabled(true);
 
@@ -414,6 +417,8 @@ void UMenuScreen::Show()
     if (bIsShown)
         return;
 
+    if(OfflineCutsceneExport::TryStart(this)){bIsShown=true;return;}
+
     bool bHasSaveNow = false;
 
     if (UGameInstance* GI = GetGameInstance())
@@ -457,6 +462,7 @@ void UMenuScreen::Hide()
 void UMenuScreen::ShowMenuDlg()
 {
     bReturnToFreeFlight = false;
+    if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->EndTrainingTest();
     HideAll();
 
     if (!MenuDlgClass)
@@ -490,14 +496,8 @@ void UMenuScreen::ShowMenuDlg()
     MenuDlg->Manager = this;
 
     ++ZCounter;
-    if (MenuDlg->IsInViewport())
-        MenuDlg->RemoveFromParent();
-    MenuDlg->AddToViewport((int32)EMenuZOrder::Z_MENU_BASE);
-
-    MenuDlg->SetIsEnabled(true);
-    MenuDlg->SetIsFocusable(true);
-    MenuDlg->SetVisibility(ESlateVisibility::Visible);
-    MenuDlg->SetDialogInputEnabled(true);
+    // Restore input mode and focus as well as visibility when dismissing a modal.
+    ShowDialog(MenuDlg, (int32)EMenuZOrder::Z_MENU_BASE);
     MenuDlg->Show();
 
     CurrentDialog = MenuDlg;
@@ -650,9 +650,13 @@ void UMenuScreen::HideCmpnScreen()
 
 void UMenuScreen::StartFreeFlight()
 {
+    TGuardValue<bool> DirectLaunch(bSkipMissionPreparation, true);
     auto* Game = Cast<USSWGameInstance>(GetGameInstance());
     Campaign* Repository = Game ? Game->GetAgentTrainingCampaign() : nullptr;
     if (!Repository) return;
+
+    // Normal career entry: agent assignments and outcomes use the persistent pilot journal.
+    Game->EndTrainingTest();
 
     if (!Game->FreeFlightMission)
     {
@@ -677,8 +681,30 @@ void UMenuScreen::StartFreeFlight()
         MissionBriefingDlg->OnCommit();
 }
 
+void UMenuScreen::StartTestMission(bool bResume)
+{
+    TGuardValue<bool> DirectLaunch(bSkipMissionPreparation, true);
+    auto* Game = Cast<USSWGameInstance>(GetGameInstance());
+    Campaign* Repository = Game ? Game->GetAgentTrainingCampaign() : nullptr;
+    if (!Repository) return;
+    if (!Game->TestFlightMission)
+    {
+        FString Definition;
+        const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Tests/JanekTest.def");
+        auto Model = MakeShared<Mission>(Mission::TestFlightId);
+        if (!FFileHelper::LoadFileToString(Definition, *Path) || !Model->ParseMission(TCHAR_TO_UTF8(*Definition)) || !Model->GetPlayer())
+        { UE_LOG(LogTemp, Error, TEXT("[TestMission] Invalid Janek test environment.")); return; }
+        Game->TestFlightMission = MoveTemp(Model);
+    }
+    Game->BeginTrainingTest(bResume);
+    if (auto* Runtime = Game->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetGameMode(EGameMode::PREP);
+    ShowStandaloneMissionDlg(Game->TestFlightMission.Get(), Repository);
+    if (CurrentDialog == MissionBriefingDlg && MissionBriefingDlg) MissionBriefingDlg->OnCommit();
+}
+
 bool UMenuScreen::OpenQueuedAssignment(int32 MissionId, bool bFromFreeFlight)
 {
+    TGuardValue<bool> DirectLaunch(bSkipMissionPreparation, true);
     auto* Game = Cast<USSWGameInstance>(GetGameInstance());
     auto* Catalog = Game ? Game->GetSubsystem<UAgentCatalogSubsystem>() : nullptr;
     const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
@@ -694,7 +720,14 @@ bool UMenuScreen::OpenQueuedAssignment(int32 MissionId, bool bFromFreeFlight)
 
     bReturnToFreeFlight = bFromFreeFlight;
     if (auto* Runtime = Game->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetGameMode(EGameMode::PREP);
-    ShowStandaloneMissionDlg(Model, Repository);
+    int32 CampaignId, OriginalId;
+    if (AgentMissionRules::Decode(MissionId, CampaignId, OriginalId))
+    {
+        Repository->SetMissionId(OriginalId);
+        ShowMissionDlg();
+    }
+    else ShowStandaloneMissionDlg(Model, Repository);
+    if (CurrentDialog == MissionBriefingDlg && MissionBriefingDlg) MissionBriefingDlg->OnCommit();
     return true;
 }
 
@@ -753,32 +786,42 @@ void UMenuScreen::ShowMissionDlg()
     MissionBriefingDlg->SetMenuManager(this);
     MissionBriefingDlg->InitializeDlg(this);
 
-    if (MissionBriefingDlg->IsInViewport())
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: removing existing viewport instance"));
-        MissionBriefingDlg->RemoveFromParent();
-    }
-    if (CmpnScreen)
-    {
-        CmpnScreen->Hide();
-        CmpnScreen->SetVisibility(ESlateVisibility::Collapsed);
-    }
-
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before AddToViewport"));
-    MissionBriefingDlg->AddToViewport(700);
-
-    MissionBriefingDlg->SetVisibility(ESlateVisibility::Visible);
-    MissionBriefingDlg->SetIsEnabled(true);
-    MissionBriefingDlg->SetIsFocusable(true);
-    MissionBriefingDlg->SetDialogInputEnabled(true);
-
     CurrentDialog = MissionBriefingDlg;
-
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before ApplyUIFocus"));
-    ApplyUIFocus(PC, MissionBriefingDlg);
-
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before Show"));
-    MissionBriefingDlg->Show();
+    if (!bSkipMissionPreparation)
+    {
+        if (MissionBriefingDlg->IsInViewport())
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: removing existing viewport instance"));
+            MissionBriefingDlg->RemoveFromParent();
+        }
+        if (CmpnScreen)
+        {
+            CmpnScreen->Hide();
+            CmpnScreen->SetVisibility(ESlateVisibility::Collapsed);
+        }
+    
+        UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before AddToViewport"));
+        MissionBriefingDlg->AddToViewport(700);
+    
+        MissionBriefingDlg->SetVisibility(ESlateVisibility::Visible);
+        MissionBriefingDlg->SetIsEnabled(true);
+        MissionBriefingDlg->SetIsFocusable(true);
+        MissionBriefingDlg->SetDialogInputEnabled(true);
+    
+    
+        UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before ApplyUIFocus"));
+        ApplyUIFocus(PC, MissionBriefingDlg);
+    
+        UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before Show"));
+        MissionBriefingDlg->Show();
+    
+    }
+    else
+    {
+        // Agent assignments already have a live briefing: never expose the retired prep screen.
+        MissionBriefingDlg->SetVisibility(ESlateVisibility::Collapsed);
+        UE_LOG(LogTemp, Display, TEXT("[Agents] Starting mission directly; preparation screen hidden"));
+    }
 
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before ShowMsnDlg"));
     if (PendingStandaloneMission)
@@ -820,7 +863,8 @@ void UMenuScreen::ReturnFromMissionBriefing()
     if (bReturnToFreeFlight)
     {
         bReturnToFreeFlight = false;
-        StartFreeFlight();
+        if (auto* Game = Cast<USSWGameInstance>(GetGameInstance()); Game && Game->IsTrainingTestSession()) StartTestMission(true);
+        else StartFreeFlight();
         return;
     }
     UBaseScreen* Caller = MissionBriefingCaller.Get();

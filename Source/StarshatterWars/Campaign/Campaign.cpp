@@ -1,6 +1,6 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright © 2025-2026. All Rights Reserved.
+    Copyright Â© 2025-2026. All Rights Reserved.
 
     SUBSYSTEM:    Stars.exe
     FILE:         Campaign.cpp
@@ -247,6 +247,11 @@ Campaign::Close()
     UE_LOG(LogCampaign, Log, TEXT("Campaign::Close() - destroying all campaigns"));
     current_campaign = 0;
     campaigns.destroy();
+}
+
+void Campaign::ClearSelection()
+{
+    current_campaign = nullptr; // Keep catalog/repository ownership intact.
 }
 
 Campaign*

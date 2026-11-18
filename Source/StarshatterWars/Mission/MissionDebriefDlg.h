@@ -99,6 +99,17 @@ public:
     void DrawUnits();
     void DrawSelectedUnit(int32 StatsIndex);
     void EnsureUi();
+    UFUNCTION() void ShowSummaryPage();
+    UFUNCTION() void ShowObjectivesPage();
+    UFUNCTION() void ShowEventsPage();
+    UPROPERTY(Transient) TObjectPtr<class UWidgetSwitcher> DebriefPages;
+    UPROPERTY(Transient) TObjectPtr<class UWidget> FloatingFrame;
+    UPROPERTY(Transient) TObjectPtr<class UBorder> DragTitleBar;
+    FVector2D DebriefDragOffset = FVector2D::ZeroVector;
+    bool bDraggingDebrief = false;
+    virtual FReply NativeOnMouseButtonDown(const FGeometry&, const FPointerEvent&) override;
+    virtual FReply NativeOnMouseMove(const FGeometry&, const FPointerEvent&) override;
+    virtual FReply NativeOnMouseButtonUp(const FGeometry&, const FPointerEvent&) override;
 
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UButton> CloseButtonWidget = nullptr;
     UPROPERTY(meta = (BindWidgetOptional)) TObjectPtr<UTextBlock> MissionNameWidget = nullptr;

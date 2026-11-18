@@ -62,6 +62,7 @@ public:
 	void SetManager(UCmpnScreen* InManager);
 	void SetParentCmdDlg(UCmdDlg* InParentCmdDlg);
 	void ShowIntelDlg();
+    void UseReportSubpanels() { bReportSubpanels = true; }
 	void RefreshIntelData();
 	void OnNewsSelectionChanged(UObject* Item);
 
@@ -71,9 +72,19 @@ private:
 	void RefreshIntelRows();
 	void ExecFrame();
 	void RebuildNewsListIfCampaignChanged();
+    static void EnsureTrainingIntroduction(Campaign* Story);
 	void AppendNewEventsIfAny();
 	void AutoScrollToFirstUnreadIfNeeded();
 
+    UFUNCTION() void BackToIntelList();
+    UFUNCTION() void OnReplayClicked();
+    UFUNCTION() void CloseReplay();
+    UPROPERTY(Transient) TObjectPtr<UButton> ReplayButton;
+    UPROPERTY(Transient) TObjectPtr<class URecordedCutsceneDlg> ReplayPanel;
+    UPROPERTY(Transient) TObjectPtr<UVerticalBox> ReplayPage;
+    bool bReportSubpanels = false;
+    bool bRefreshingIntelList = false;
+    UPROPERTY(Transient) TObjectPtr<class UWidgetSwitcher> ReportPages;
 	void ClearNewsDetails();
 	void SetSelectedIntelData(UIntelListObject* Item);
 

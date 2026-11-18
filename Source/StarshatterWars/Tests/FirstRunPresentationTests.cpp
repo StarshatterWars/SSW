@@ -3,6 +3,7 @@
 #include "Misc/ScopeExit.h"
 #include "FirstTimeDlg.h"
 #include "MenuDlg.h"
+#include "MenuScreen.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "Blueprint/WidgetTree.h"
@@ -32,7 +33,17 @@ bool FFirstRunPresentationTest::RunTest(const FString& Parameters)
 {
     auto* World=UWorld::CreateWorld(EWorldType::Game,false);World->SetGameInstance(NewObject<UGameInstance>());
     ON_SCOPE_EXIT {World->DestroyWorld(false);};
-    auto* Setup=NewObject<UFirstTimeDlg>(World);Setup->Initialize();auto SetupSlate=Setup->TakeWidget();
+    UClass* SetupClass=LoadClass<UFirstTimeDlg>(nullptr,TEXT("/Game/Screens/Main/WBP_FirstTimeDlg.WBP_FirstTimeDlg_C"));
+    if(!TestNotNull(TEXT("Actual first-run Blueprint loads"),SetupClass))return false;
+    auto* Setup=NewObject<UFirstTimeDlg>(World,SetupClass);Setup->Initialize();
+    auto* Router=NewObject<UMenuScreen>(World);Setup->SetMenuManager(Router);auto SetupSlate=Setup->TakeWidget();
+    TestTrue(TEXT("First-run retains its menu router through Blueprint construction"),Setup->GetMenuManager()==Router);
+    TestTrue(TEXT("Callsign is enabled"),Setup->CallsignEdit->GetIsEnabled());
+    TestFalse(TEXT("Callsign accepts editing"),Setup->CallsignEdit->GetIsReadOnly());
+    TestTrue(TEXT("Visible callsign and stored callsign are the same widget"),Setup->WidgetTree->FindWidget(TEXT("ModernCallsignEdit"))==Setup->CallsignEdit);
+    AddInfo(FString::Printf(TEXT("Callsign text binding=%d, change binding=%d"),Setup->CallsignEdit->TextDelegate.IsBound(),Setup->CallsignEdit->OnTextChanged.IsBound()));
+    TestTrue(TEXT("Create pilot is bound after Blueprint construction"),Setup->AcceptBtn->OnClicked.IsBound());
+    TestTrue(TEXT("Exit is bound after Blueprint construction"),Setup->CancelBtn->OnClicked.IsBound());
     auto* Frame=Cast<USizeBox>(Setup->WidgetTree->FindWidget(TEXT("FirstRunFrame")));
     if(!TestNotNull(TEXT("First-run modal exists"),Frame))return false;
     TestEqual(TEXT("First-run width is 512"),Frame->GetWidthOverride(),512.f);
@@ -40,19 +51,28 @@ bool FFirstRunPresentationTest::RunTest(const FString& Parameters)
     TestNotNull(TEXT("Pilot name input"),Setup->NameEdit.Get());TestNotNull(TEXT("Callsign input"),Setup->CallsignEdit.Get());
     TestEqual(TEXT("Only Alliance and Marakan are first-run choices"),Setup->EmpireCombo->GetOptionCount(),2);
     TestEqual(TEXT("Dantari remains campaign-only"),Setup->EmpireCombo->FindOptionIndex(TEXT("Dantari Separatists")),INDEX_NONE);
-    TestEqual(TEXT("Both flight models preserved"),Setup->PlayStyleCombo->GetOptionCount(),2);
+    TestNull(TEXT("Flight model is no longer a first-run choice"),Setup->PlayStyleCombo.Get());
+    FS_PlayerGameInfo Defaults;Defaults.FlightModel=0;Setup->ApplyUiToPlayerInfo(Defaults);
+    TestEqual(TEXT("New pilots start with Arcade flight"),Defaults.FlightModel,2);
+    TestEqual(TEXT("New pilots have no campaign assignment"),Defaults.Campaign,0);
+    TestTrue(TEXT("New pilots have no selected campaign row"),Defaults.CampaignRowName.IsNone());
     TArray<UWidget*> Widgets;
     Setup->WidgetTree->GetAllWidgets(Widgets);
     const int32 ComboCount = Widgets.FilterByPredicate([](const UWidget* Widget)
     {
         return Widget->IsA<UComboBoxString>();
     }).Num();
-    TestEqual(TEXT("Only empire and flight model are selectable"), ComboCount, 2);
+    TestEqual(TEXT("Only empire is selectable on first run"), ComboCount, 1);
     Setup->NameEdit->SetText(FText::FromString(TEXT("Caloy")));Setup->CallsignEdit->SetText(FText::FromString(TEXT("Caloy")));
     auto* Menu=NewObject<UMenuDlg>(World);Menu->Initialize();auto MenuSlate=Menu->TakeWidget();
     auto* Logo=Cast<UImage>(Menu->WidgetTree->FindWidget(TEXT("SSWMenu_CircularLogo")));
     if(!TestNotNull(TEXT("Main menu circular logo widget exists"),Logo))return false;
     TestTrue(TEXT("Circular asset is actually assigned"),Logo->GetBrush().GetResourceObject() && Logo->GetBrush().GetResourceObject()->GetPathName()==TEXT("/Game/UI/Materials/M_UISSWCircularLogo.M_UISSWCircularLogo"));
+    auto* Options=Cast<UButton>(Menu->WidgetTree->FindWidget(TEXT("BtnOptions")));
+    auto* GearSize=Options?Cast<USizeBox>(Options->GetContent()):nullptr;
+    auto* Gear=GearSize?Cast<UImage>(GearSize->GetContent()):nullptr;
+    if(TestNotNull(TEXT("Main menu options has a persistent image"),Gear))
+        TestTrue(TEXT("Gear texture is assigned"),Gear->GetBrush().GetResourceObject() && Gear->GetBrush().GetResourceObject()->GetPathName().Contains(TEXT("T_Gear_256x256")));
     if (GUsingNullRHI) {
         auto VerifyAsset=[&](UButton* Button,const TCHAR* Path){
             auto* Size=Button?Cast<USizeBox>(Button->GetContent()):nullptr;

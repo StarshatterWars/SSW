@@ -1,6 +1,6 @@
 /*  Project Starshatter Wars
     Fractal Dev Studios
-    Copyright (c) 2025–2026.
+    Copyright (c) 2025â€“2026.
 
     DIALOG:      FirstTimeDlg
     FILE:        FirstTimeDlg.h
@@ -43,6 +43,8 @@ public:
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
+    virtual void HandleAccept() override;
+    virtual void HandleCancel() override;
 
     UFUNCTION()
     void OnAcceptClicked();

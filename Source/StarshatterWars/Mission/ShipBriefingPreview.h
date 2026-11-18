@@ -47,6 +47,7 @@ public:
     void SetPreviewActive(bool bActive);
     void SetReferencePreview() { bReferencePreview = true; }
     void ResetView();
+    void UseExternalPlaybackControls() { bExternalPlaybackControls=true; }
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
@@ -58,11 +59,12 @@ protected:
     virtual FReply NativeOnMouseWheel(const FGeometry& Geometry, const FPointerEvent& Event) override;
     virtual FReply NativeOnMouseButtonDoubleClick(const FGeometry& Geometry, const FPointerEvent& Event) override;
     virtual void NativeOnMouseCaptureLost(const FCaptureLostEvent& Event) override;
-private:
+public:
     UFUNCTION() void PlayRehearsal();
     UFUNCTION() void RewindRehearsal();
     UFUNCTION() void PauseRehearsal();
     UFUNCTION() void StopRehearsal();
+private:
     void UpdateRehearsal();
     void UpdateVisual();
     void UpdateCamera();
@@ -85,6 +87,7 @@ private:
     double RehearsalDuration = 0.0;
     int32 LastCaptionSecond = INDEX_NONE;
     bool bRehearsalPlaying = false;
+    bool bExternalPlaybackControls = false;
     TWeakObjectPtr<AActor> RouteShip;
     TWeakObjectPtr<AActor> PreviewVisual;
     FBox MissionBounds = FBox(ForceInit);

@@ -411,6 +411,18 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     if (FParse::Param(*Params, TEXT("WriteShipAndWeaponJsonTables")))
         return WriteShipAndWeaponJsonTables() ? 0 : 1;
 
+    if (FParse::Param(*Params, TEXT("WriteSingleMissions")))
+    {
+        auto* Context = NewObject<USSWGameInstance>();
+        auto* Data = NewObject<UStarshatterGameDataSubsystem>(Context);
+        Data->SingleMissionsDataTable = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_SingleMissions.DT_SingleMissions"));
+        if (!Data->SingleMissionsDataTable) return 1;
+        Data->SingleMissionsDataTable = DuplicateObject<UDataTable>(Data->SingleMissionsDataTable, GetTransientPackage());
+        Data->LoadSingleMissions();
+        if (Data->GetSingleMissionScenarios().Num() != 40) return 1;
+        return SaveOutputTable(*Data->SingleMissionsDataTable, TEXT("DT_SingleMissions"), false) ? 0 : 1;
+    }
+
     if (FParse::Param(*Params, TEXT("WriteCargoCatalog")))
     {
         auto* Table = NewObject<UDataTable>();

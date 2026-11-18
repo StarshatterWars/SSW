@@ -8,6 +8,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/TextBlock.h"
 #include "Components/SizeBox.h"
+#include "Components/WidgetSwitcher.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "UObject/StrongObjectPtr.h"
@@ -29,6 +30,13 @@ bool FIntelNativeReportsTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Report entry uses the native presentation implementation"), Dialog->IntelList->GetEntryWidgetClass() && Dialog->IntelList->GetEntryWidgetClass()->IsChildOf(UIntelLVElement::StaticClass()));
     auto ListSlate = Dialog->IntelList->TakeWidget();
     Dialog->SetVisibility(ESlateVisibility::Hidden); // background refresh must not consume unread events
+    Campaign Training(1,"Training fixture",true);
+    UCmdIntelDlg::EnsureTrainingIntroduction(&Training);
+    UCmdIntelDlg::EnsureTrainingIntroduction(&Training);
+    TestEqual(TEXT("Training intro is published once"),Training.GetEvents().size(),1);
+    TestEqual(TEXT("Original intro scene retained"),FString(Training.GetEvents()[0]->SceneFile()),FString(TEXT("Intro")));
+    TestFalse(TEXT("Publishing intro does not mark it viewed"),Training.GetEvents()[0]->Visited());
+    UCmdIntelDlg::EnsureTrainingIntroduction(nullptr);
     Campaign Story(2, "Intel fixture", true);
     auto* First = new CombatEvent(&Story, ECombatEventType::NONE, 0, 0, ECombatEventSource::NONE, "");
     First->SetTitle("Report one"); First->SetInformation("Preserved report body");
@@ -61,6 +69,30 @@ bool FIntelNativeReportsTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("Campaign change replaces reports with current campaign events"), Dialog->IntelList->GetNumItems(), 0);
     TestNull(TEXT("Old campaign report is no longer selected"), Dialog->IntelList->GetSelectedItem());
     TestTrue(TEXT("Old campaign report body is cleared"), Dialog->IntelMessageText->GetText().IsEmpty());
+    TStrongObjectPtr<UCmdIntelDlg> FlightDialog(NewObject<UCmdIntelDlg>(World));
+    FlightDialog->UUserWidget::Initialize();
+    FlightDialog->UseReportSubpanels();
+    auto FlightSlate = FlightDialog->TakeWidget();
+    FlightDialog->CampaignPtr = &Story;
+    auto* Unread = new CombatEvent(&Story,ECombatEventType::NONE,0,0,ECombatEventSource::NONE,"");
+    Unread->SetTitle("Unread flight report"); Unread->SetInformation("Detail body"); Story.GetEvents().append(Unread);
+    FlightDialog->AppendNewEventsIfAny();
+    if(TestNotNull(TEXT("In-flight Intel uses list and detail pages"),FlightDialog->ReportPages.Get()))
+    {
+        TestEqual(TEXT("Intel starts with the report list only"),FlightDialog->ReportPages->GetActiveWidgetIndex(),0);
+        TestFalse(TEXT("Opening Intel does not consume unread reports"),Unread->Visited());
+        auto* FlightItem = Cast<UIntelListObject>(FlightDialog->IntelList->GetItemAt(2));
+        FlightDialog->OnNewsSelectionChanged(FlightItem);
+        TestEqual(TEXT("Selecting a report opens Intel Details"),FlightDialog->ReportPages->GetActiveWidgetIndex(),1);
+        TestTrue(TEXT("Reading details marks report visited"),Unread->Visited());
+        TestEqual(TEXT("Details preserve report text"),FlightDialog->IntelMessageText->GetText().ToString(),FString(TEXT("Detail body")));
+        FlightDialog->BackToIntelList();
+        TestEqual(TEXT("Back returns to the report list"),FlightDialog->ReportPages->GetActiveWidgetIndex(),0);
+        FlightDialog->AppendNewEventsIfAny();
+        TestEqual(TEXT("Background refresh does not force details open"),FlightDialog->ReportPages->GetActiveWidgetIndex(),0);
+    }
+    TestNotNull(TEXT("Native Intel provides report audio control"),FlightDialog->AudioButton);
+    FlightDialog->CampaignPtr = nullptr;
     Dialog->CampaignPtr = nullptr;
     World->DestroyWorld(false);
     return true;

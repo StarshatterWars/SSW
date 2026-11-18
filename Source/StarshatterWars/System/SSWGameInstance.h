@@ -118,12 +118,19 @@ public:
 
 
 	virtual void OnStart() override;
-	AgentAI& GetTrainingAgent() { return TrainingAgent; }
+	AgentAI& GetTrainingAgent() { return bTrainingTestSession ? TestTrainingAgent : TrainingAgent; }
+    AgentAI& GetPersistentTrainingAgent() { return TrainingAgent; }
+    bool IsTrainingTestSession() const { return bTrainingTestSession; }
+    void BeginTrainingTest(bool bResume = false) { if (!bResume) TestTrainingAgent = AgentAI(); bTrainingTestSession = true; }
+    void EndTrainingTest() { bTrainingTestSession = false; }
+    TSharedPtr<class Mission> TestFlightMission;
 	class Campaign* GetAgentTrainingCampaign();
 	TSharedPtr<class Mission> FreeFlightMission;
 
 private:
 	AgentAI TrainingAgent;
+    AgentAI TestTrainingAgent;
+    bool bTrainingTestSession = false;
 	TSharedPtr<class Campaign> AgentTrainingCampaign;
 
 public:
@@ -190,6 +197,7 @@ public:
 
 	/** Restore the player-save campaign without overwriting live campaign progress. */
 	bool RestoreSavedActiveCampaign();
+    void ClearCampaignAssignment();
 
 	/** Rebuilds the MenuScreen shell in the newly loaded world and enters Operations. */
 	void ShowOperationsAfterLevelLoad();
@@ -529,7 +537,7 @@ public:
 	UCampaignSave* CampaignSave = nullptr;
 
 	UPROPERTY()
-	int32 SelectedCampaignIndex = 1;
+	int32 SelectedCampaignIndex = 0;
 
 	UPROPERTY()
 	FName SelectedCampaignRowName = NAME_None;

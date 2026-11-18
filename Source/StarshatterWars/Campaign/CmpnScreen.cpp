@@ -16,6 +16,7 @@
 */
 
 #include "CmpnScreen.h"
+#include "OfflineCutsceneExport.h"
 #include "SSWGameInstance.h"
 #include "CampaignSave.h"
 #include "CampaignSceneActor.h"
@@ -253,6 +254,15 @@ namespace
 
 CombatEvent* UCmpnScreen::FindFirstPendingSceneEvent() const
 {
+    if(OfflineCutsceneExport::IsRequested() && CampaignPtr)
+    {
+        FString Scene;FParse::Value(FCommandLine::Get(),TEXT("SSWRenderScene="),Scene);
+        for(ListIter<CombatEvent> Item=CampaignPtr->GetEvents();++Item;)
+            if(Item.value() && Scene.Equals(UTF8_TO_TCHAR(Item->SceneFile()),ESearchCase::IgnoreCase))return Item.value();
+        auto* Event=new CombatEvent(CampaignPtr,ECombatEventType::NONE,0,1,ECombatEventSource::NONE,"Export");
+        Event->SetSceneFile(TCHAR_TO_UTF8(*Scene));CampaignPtr->GetEvents().append(Event);return Event;
+    }
+
     if (!CampaignPtr || !CampaignPtr->IsActive() || CampaignPtr->GetEvents().isEmpty())
     {
         return nullptr;

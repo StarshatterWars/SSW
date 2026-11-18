@@ -20,6 +20,7 @@
 
 #include "MissionNavLVElement.h"
 #include "MissionListLayout.h"
+#include "MissionUIStyle.h"
 
 #include "Components/TextBlock.h"
 #include "Components/Border.h"
@@ -189,6 +190,7 @@ void UMissionNavLVElement::ApplyColumnLayout()
     if (RowSizeBox)
     {
         RowSizeBox->SetHeightOverride(MissionListLayout::RowHeight);
+        RowSizeBox->SetWidthOverride(MissionListLayout::NavCol1+MissionListLayout::NavCol2+MissionListLayout::NavCol3+MissionListLayout::NavCol4+MissionListLayout::NavCol5);
     }
 
     if (StepSizeBox)
@@ -226,6 +228,7 @@ void UMissionNavLVElement::ApplyTextRules()
                 return;
             }
 
+            Text->SetFont(MissionUIStyle::GetRowFont(13));
             Text->SetAutoWrapText(false);
             Text->SetJustification(ETextJustify::Left);
         };

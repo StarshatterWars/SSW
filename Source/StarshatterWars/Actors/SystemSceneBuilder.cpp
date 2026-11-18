@@ -2809,23 +2809,29 @@ void ASystemSceneBuilder::SpawnSkyLight()
     // Mobility (required for runtime scenes)
     SkyComp->SetMobility(EComponentMobility::Movable);
 
-    // Use captured scene (no cubemap required)
-    SkyComp->SourceType = ESkyLightSourceType::SLS_CapturedScene;
+    // A captured black starfield supplies almost no diffuse light. Use a stable
+    // neutral environment for readable hulls without brightening the sky itself.
+    UTextureCube* AmbientMap = LoadObject<UTextureCube>(nullptr,
+        TEXT("/Engine/MapTemplates/Sky/DaylightAmbientCubemap.DaylightAmbientCubemap"));
+    if (!AmbientMap) AmbientMap = LoadObject<UTextureCube>(nullptr,
+        TEXT("/Engine/EngineMaterials/DefaultCubemap.DefaultCubemap"));
+    SkyComp->SourceType = AmbientMap ? ESkyLightSourceType::SLS_SpecifiedCubemap : ESkyLightSourceType::SLS_CapturedScene;
+    SkyComp->Cubemap = AmbientMap;
 
     // Global ambient strength
     SkyComp->Intensity = 1.0f;
 
-    SkyComp->SetLightColor(FLinearColor(0.6f, 0.7f, 1.0f));
+    SkyComp->SetLightColor(FLinearColor::White);
 
     // Important for space scenes (prevents weird ground lighting)
-    SkyComp->bLowerHemisphereIsBlack = true;
+    SkyComp->bLowerHemisphereIsBlack = false;
 
     // Ensure it updates immediately
     SkyComp->RecaptureSky();
 
     UE_LOG(LogTemp, Warning,
-        TEXT("[SystemSceneBuilder] SpawnSkyLight: created intensity=%.2f"),
-        SkyComp->Intensity);
+        TEXT("[SystemSceneBuilder] SpawnSkyLight: created intensity=%.2f cubemap=%s"),
+        SkyComp->Intensity, *GetNameSafe(AmbientMap));
 }
 
 void ASystemSceneBuilder::SetTemporaryCutsceneBodyScale(

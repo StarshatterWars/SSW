@@ -2,8 +2,8 @@
 
 namespace
 {
-constexpr double Limit = 1.e15;
-bool Positive(double Value) { return FMath::IsFinite(Value) && Value > 0 && Value <= Limit; }
+constexpr double EconomyQuantityLimit = 1.e15;
+bool Positive(double Value) { return FMath::IsFinite(Value) && Value > 0 && Value <= EconomyQuantityLimit; }
 FEconomyItem* Find(FEconomyInventory& Inv, FName Item)
 { return Inv.Items.FindByPredicate([Item](const auto& Stack) { return Stack.Type == Item; }); }
 bool HasAccess(const FEconomyInventory* Inv, FName Owner) { return Inv && !Owner.IsNone() && Inv->Owner == Owner; }
@@ -28,7 +28,7 @@ bool ValidateAmounts(const TArray<FCommodityAmount>& Amounts)
 
 FEconomyInventory* FEconomyLedger::CreateInventory(FEconomyState& State, FName Key, FName Owner, FName System, double Capacity)
 {
-    if (Key.IsNone() || Owner.IsNone() || !FMath::IsFinite(Capacity) || Capacity < 0 || Capacity > Limit) return nullptr;
+    if (Key.IsNone() || Owner.IsNone() || !FMath::IsFinite(Capacity) || Capacity < 0 || Capacity > EconomyQuantityLimit) return nullptr;
     if (auto* Existing = State.Inventories.Find(Key))
         return Existing->Owner == Owner && Existing->System == System ? Existing : nullptr;
     FEconomyInventory Inv; Inv.Id = FGuid::NewGuid(); Inv.Owner = Owner; Inv.System = System; Inv.CapacityTonnes = Capacity;
@@ -89,7 +89,7 @@ bool FEconomyLedger::Deposit(FEconomyState& State, FName Inventory, FName Item, 
     if (!Inv || Item.IsNone() || !Positive(Count) || !Positive(Mass) || !Positive(Count * Mass) ||
         Used(*Inv) + Count * Mass > Inv->CapacityTonnes + UE_SMALL_NUMBER) return false;
     auto* Stack = Find(*Inv, Item);
-    if (Stack && (!FMath::IsNearlyEqual(Stack->UnitTonnes, Mass) || Stack->Quantity > Limit - Count)) return false;
+    if (Stack && (!FMath::IsNearlyEqual(Stack->UnitTonnes, Mass) || Stack->Quantity > EconomyQuantityLimit - Count)) return false;
     if (!Stack) { Stack = &Inv->Items.AddDefaulted_GetRef(); Stack->Id = FGuid::NewGuid(); Stack->Type = Item; Stack->UnitTonnes = Mass; }
     Stack->Quantity += Count; return true;
 }

@@ -11,13 +11,20 @@ class STARSHATTERWARS_API UMissionsDlg : public UBaseScreen
 public:
     void SetDetails(FText InTitle, FText InBrief, FSimpleDelegate InAccept, FSimpleDelegate InDecline, FSimpleDelegate InClose);
 
+    void SetStartMission(FSimpleDelegate Action, TDelegate<bool()> CanStart) { StartMission=MoveTemp(Action); CanStartMission=MoveTemp(CanStart); }
+
+    void SetSupplement(TSharedRef<SWidget> Content) { Supplement=Content; }
+
 protected:
     TSharedRef<SWidget> RebuildWidget() override;
 
 private:
+    TSharedPtr<SWidget> Supplement;
     FText Title;
     FText Brief;
     FSimpleDelegate Accept;
     FSimpleDelegate Decline;
     FSimpleDelegate Close;
+    FSimpleDelegate StartMission;
+    TDelegate<bool()> CanStartMission;
 };
