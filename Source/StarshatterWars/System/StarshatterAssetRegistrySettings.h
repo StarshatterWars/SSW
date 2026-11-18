@@ -291,6 +291,12 @@ public:
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> AwardPopupClass;
 
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> ModEditorClass;
+
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> TransactionPopupClass;
+
     // ------------------------------------------------------------------
 // Optional UI Theme bindings (config-backed)
 // ------------------------------------------------------------------

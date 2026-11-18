@@ -75,32 +75,48 @@ namespace
     }
 }
 
-bool SSWModFiles::Read(const FString& Path, TArray<uint8>& Bytes)
+namespace
 {
-    const FString Key = RelativeKey(FPaths::ConvertRelativePathToFull(Path));
-    const FString VirtualPath = Key.IsEmpty() && FPaths::IsRelative(Path) ? RelativeKey(Path) : Key;
-    if (VirtualPath.IsEmpty() || !GConfig) return false;
-
-    const FString Root = SSWMissionMods::Directory();
-    TArray<FString> Archives;
-    IFileManager::Get().FindFiles(Archives, *(Root / TEXT("*.dat")), true, false);
-    TArray<FString> Directories;
-    IFileManager::Get().FindFiles(Directories, *(Root / TEXT("*")), false, true);
-    Directories.Append(Archives);
-    Directories.Sort();
-    for (int32 Index = Directories.Num() - 1; Index >= 0; --Index)
+bool ReadAlternatives(const TArray<FString>& Paths, TArray<uint8>& Bytes, int32& Selected)
+{
+    if (!GConfig) return false;
+    TArray<FString> Keys;
+    for (const FString& Path:Paths)
     {
-        const FString& Pack = Directories[Index];
-        bool bEnabled = false;
-        if (!GConfig->GetBool(TEXT("Starshatter.MissionMods"), *Pack, bEnabled, GGameUserSettingsIni) || !bEnabled) continue;
-        const FString Filename = Root / Pack;
-        if (IFileManager::Get().DirectoryExists(*Filename))
+        const FString Key=RelativeKey(FPaths::ConvertRelativePathToFull(Path));
+        Keys.Add(Key.IsEmpty() && FPaths::IsRelative(Path) ? RelativeKey(Path) : Key);
+    }
+    const FString Root=SSWMissionMods::Directory();
+    TArray<FString> Archives,Directories;
+    IFileManager::Get().FindFiles(Archives,*(Root/TEXT("*.dat")),true,false);
+    IFileManager::Get().FindFiles(Directories,*(Root/TEXT("*")),false,true);
+    Directories.Append(Archives); Directories.Sort();
+    for (int32 PackIndex=Directories.Num()-1;PackIndex>=0;--PackIndex)
+    {
+        const FString& Pack=Directories[PackIndex]; bool bEnabled=false;
+        if (!GConfig->GetBool(TEXT("Starshatter.MissionMods"),*Pack,bEnabled,GGameUserSettingsIni) || !bEnabled) continue;
+        const FString Filename=Root/Pack;
+        for (int32 Index=0;Index<Keys.Num();++Index)
         {
-            const FString Loose = Filename / VirtualPath;
-            const int64 Size = IFileManager::Get().FileSize(*Loose);
-            if (Size >= 0 && Size <= MaxEntrySize && FFileHelper::LoadFileToArray(Bytes, *Loose)) return true;
+            if (Keys[Index].IsEmpty()) continue;
+            if (IFileManager::Get().DirectoryExists(*Filename))
+            {
+                const FString Loose=Filename/Keys[Index]; const int64 Size=IFileManager::Get().FileSize(*Loose);
+                if (Size>=0 && Size<=MaxEntrySize && FFileHelper::LoadFileToArray(Bytes,*Loose)) { Selected=Index; return true; }
+            }
+            else if (ReadArchive(Filename,Keys[Index],Bytes)) { Selected=Index; return true; }
         }
-        else if (ReadArchive(Filename, VirtualPath, Bytes)) return true;
     }
     return false;
+}
+}
+bool SSWModFiles::Read(const FString& Path,TArray<uint8>& Bytes)
+{
+    int32 Selected=INDEX_NONE; return ReadAlternatives({Path},Bytes,Selected);
+}
+bool SSWModFiles::ReadMission(const FString& Path,TArray<uint8>& Bytes,bool& bJson)
+{
+    int32 Selected=INDEX_NONE;
+    const bool Found=ReadAlternatives({FPaths::ChangeExtension(Path,TEXT("json")),FPaths::ChangeExtension(Path,TEXT("def"))},Bytes,Selected);
+    bJson=Found && Selected==0; return Found;
 }

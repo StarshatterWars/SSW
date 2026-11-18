@@ -3,6 +3,7 @@
 #include "StarshatterPlayerSubsystem.h"
 
 #include "AgentAI.h"
+#include "AgentJournalTransaction.h"
 #include "AgentMissionRules.h"
 #include "AgentCatalogSubsystem.h"
 #include "Widgets/Input/SComboBox.h"
@@ -27,6 +28,26 @@
 namespace
 {
     using State = AgentAI::EState;
+
+    TFunction<bool(int32)> RegionalHistory(USSWGameInstance* Game)
+    {
+        const TWeakObjectPtr<UStarshatterPlayerSubsystem> Players = Game ? Game->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+        return [Players](int32 Id)
+        {
+            return Players.IsValid() && Players->GetPlayerInfo().HasCompletedMission(Campaign::SINGLE_MISSIONS, Id);
+        };
+    }
+
+    bool CommitAgentCommand(USSWGameInstance* Game, TFunctionRef<bool()> Mutate, FText& Feedback)
+    {
+        auto* Players=Game ? Game->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+        if (!Players) { Feedback=INVTEXT("Pilot save is unavailable. No assignment was changed."); return false; }
+        const auto Result=AgentJournalTransaction::Commit(Game->GetTrainingAgent(),Players->GetMutablePlayerInfo(),Mutate,
+            [Game,Players]() { return Game->IsTrainingTestSession() || Players->SaveActivePlayerProgress(); });
+        if (Result==AgentJournalTransaction::EResult::SaveFailed)
+            Feedback=INVTEXT("Unable to save the assignment change. Your previous assignment was restored. Please retry.");
+        return Result==AgentJournalTransaction::EResult::Committed;
+    }
 
     FName PilotId()
     {
@@ -109,6 +130,11 @@ void UAgentsDlg::RefreshBoard()
                             Feedback = INVTEXT("Campaign orders accepted. Request your next assignment from this agent.");
                             RefreshBoard();
                         }
+                        else
+                        {
+                            Feedback = INVTEXT("Campaign orders could not be accepted. Check docking, rank, previous operations and save availability.");
+                            RefreshBoard();
+                        }
                         return FReply::Handled();
                     }))];
         }
@@ -150,7 +176,7 @@ void UAgentsDlg::RefreshBoard()
                 {
                     StartMission(Id);
                     return FReply::Handled();
-                }))[SNew(STextBlock).Text(INVTEXT("START MISSION")).Font(MissionUIStyle::GetRowFont(13))]]
+                }))[SNew(SHorizontalBox) + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Play)] + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(6,0)[SNew(STextBlock).Text(INVTEXT("MISSION")).Font(MissionUIStyle::GetRowFont(13))]]]
         ];
     };
 
@@ -200,19 +226,22 @@ void UAgentsDlg::OpenDetails(int32 MissionId, bool bOffer)
             auto* Instance = Cast<USSWGameInstance>(GetGameInstance());
             auto* Catalog = Instance ? Instance->GetSubsystem<UAgentCatalogSubsystem>() : nullptr;
             if (!Catalog) return;
+            const auto* Players=Instance->GetSubsystem<UStarshatterPlayerSubsystem>();
+            const bool bLesson=MissionId>=101 && MissionId<=107;
+            if (bLesson && !Instance->IsTrainingTestSession() && (!Players || Players->GetPlayerInfo().Campaign==0))
+            {
+                Feedback=INVTEXT("Accept Operation Live Fire before accepting a training lesson.");
+                CloseDetails(); RefreshBoard(); return;
+            }
             const bool bReplay=Catalog->CanReplayTrainingTest(MissionId,Issuer);
-            const bool bAccepted=bReplay?Instance->GetTrainingAgent().QueueTestReplay(PilotId(),MissionId,Issuer)
-                :(Catalog->CanAccept(MissionId,Issuer) && Instance->GetTrainingAgent().Accept(PilotId(),MissionId));
-            if(!bAccepted)
+            Feedback=INVTEXT("This offer expired or is no longer available. Request a new assignment.");
+            const bool bAccepted=CommitAgentCommand(Instance,[&]()
             {
-                Feedback=INVTEXT("This offer expired or is no longer available. Request a new assignment.");
-                CloseDetails();RefreshBoard();return;
-            }
-            if(MissionId>=101 && MissionId<=107 && !Catalog->AssignTrainingOperation(Issuer))
-            {
-                Feedback=INVTEXT("Mission accepted, but the operation assignment could not be saved. Please retry before launch.");
-            }
-            if (auto* Players = Instance->GetSubsystem<UStarshatterPlayerSubsystem>()) Players->SavePlayer(true);
+                return bReplay ? Instance->GetTrainingAgent().QueueTestReplay(PilotId(),MissionId,Issuer)
+                    : Catalog->CanAccept(MissionId,Issuer) && Instance->GetTrainingAgent().Accept(PilotId(),MissionId,RegionalHistory(Instance));
+            },Feedback);
+            if (!bAccepted) { CloseDetails(); RefreshBoard(); return; }
+            Feedback=FText::GetEmpty();
             CloseDetails();
             RefreshBoard();
             OpenDetails(MissionId, false);
@@ -224,7 +253,11 @@ void UAgentsDlg::OpenDetails(int32 MissionId, bool bOffer)
         Decline = FSimpleDelegate::CreateWeakLambda(this, [this, MissionId]()
         {
             if (auto* Instance = Cast<USSWGameInstance>(GetGameInstance()))
-                Instance->GetTrainingAgent().Decline(PilotId(), MissionId);
+            {
+                Feedback=INVTEXT("This assignment can no longer be declined.");
+                if (CommitAgentCommand(Instance,[&]() { return Instance->GetTrainingAgent().Decline(PilotId(), MissionId); },Feedback))
+                    Feedback=INVTEXT("Assignment declined.");
+            }
             CloseDetails();
             RefreshBoard();
         });
@@ -262,11 +295,17 @@ void UAgentsDlg::RequestMission(bool bCampaign)
     if (!Catalog || !Catalog->CanContact(SelectedAgent)) return;
     auto Eligible = Catalog->GetEligibleMissions(SelectedAgent);
     Eligible.RemoveAll([bCampaign](int32 Id){return (Id >= AgentMissionRules::CampaignBase) != bCampaign;});
-    const auto* Offer = Game->GetTrainingAgent().Request(PilotId(), Eligible, SelectedAgent, true);
-    Feedback = Offer ? FText::GetEmpty() : INVTEXT("No assignments are available for this agent and rank.");
+    int32 OfferId=INDEX_NONE;
+    Feedback=INVTEXT("No assignments are available for this agent and rank.");
+    const bool Saved=CommitAgentCommand(Game,[&]()
+    {
+        const auto* Offer=Game->GetTrainingAgent().Request(PilotId(),Eligible,SelectedAgent,true,RegionalHistory(Game));
+        if (Offer) OfferId=Offer->MissionId;
+        return Offer!=nullptr;
+    },Feedback);
+    if (Saved) Feedback=FText::GetEmpty();
     RefreshBoard();
-    if (auto* Players = Game->GetSubsystem<UStarshatterPlayerSubsystem>()) Players->SavePlayer(true);
-    if (Offer) OpenDetails(Offer->MissionId, true);
+    if (Saved && OfferId!=INDEX_NONE) OpenDetails(OfferId,true);
 }
 
 TSharedRef<SWidget> UAgentsDlg::RebuildWidget()
@@ -325,7 +364,7 @@ TSharedRef<SWidget> UAgentsDlg::RebuildWidget()
                         CloseDetails();
                         if (auto* Game = Cast<USSWGameInstance>(GetGameInstance()); Game && SelectedAgent == TEXT("JanekFlightTraining"))
                             if (auto* Catalog = Game->GetSubsystem<UAgentCatalogSubsystem>())
-                                Game->GetTrainingAgent().Request(PilotId(), Catalog->GetEligibleMissions(SelectedAgent), SelectedAgent, true);
+                                CommitAgentCommand(Game,[&]() { return Game->GetTrainingAgent().Request(PilotId(),Catalog->GetEligibleMissions(SelectedAgent),SelectedAgent,true,RegionalHistory(Game))!=nullptr; },Feedback);
                         RefreshBoard();
                     })
                     [SNew(STextBlock).Text_Lambda([this, AgentLabel]() { return AgentLabel(SelectedAgent); })
@@ -359,7 +398,7 @@ TSharedRef<SWidget> UAgentsDlg::RebuildWidget()
     if (auto* Game = Cast<USSWGameInstance>(GetGameInstance()); Game && Catalog && SelectedAgent == TEXT("JanekFlightTraining"))
     {
         const auto Eligible = Catalog->GetEligibleMissions(SelectedAgent);
-        Game->GetTrainingAgent().Request(PilotId(), Eligible, SelectedAgent, true);
+        CommitAgentCommand(Game,[&]() { return Game->GetTrainingAgent().Request(PilotId(),Eligible,SelectedAgent,true,RegionalHistory(Game))!=nullptr; },Feedback);
     }
     RefreshBoard();
     if (!bStandaloneFrame) return Content;

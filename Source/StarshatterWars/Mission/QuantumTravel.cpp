@@ -99,7 +99,7 @@ namespace QuantumTravel
             if (Destination && Destination->GetRegion())
                 Row.Destination = FString::Printf(TEXT("%hs / %hs"), Destination->GetRegion()->GetSystem() ? Destination->GetRegion()->GetSystem()->GetName() : "--", Destination->GetRegion()->GetName());
             else Row.Destination = TEXT("Link unavailable");
-            Row.Ready = Destination && Destination->GetFarcaster() && !Destination->IsDead() && !Destination->IsDying() && Drive->IsPowerOn() && Drive->GetStatus() == SYSTEM_STATUS::NOMINAL && Drive->GetEnergy() >= Drive->GetCapacity() && Drive->ActiveState() == QuantumDrive::ACTIVE_READY;
+            Row.Ready = Drive->HasValidApproach() && Destination && Destination->GetFarcaster() && !Destination->IsDead() && !Destination->IsDying() && Drive->IsPowerOn() && Drive->GetStatus() == SYSTEM_STATUS::NOMINAL && Drive->GetEnergy() >= Drive->GetCapacity() && Drive->ActiveState() == QuantumDrive::ACTIVE_READY;
             Result.Add(MoveTemp(Row));
         }
         Result.Sort([](const FGate& A, const FGate& B){ return A.RangeKm < B.RangeKm; });
@@ -111,7 +111,12 @@ namespace QuantumTravel
         Ship* Gate = Pilot->GetRegion()->FindShip(TCHAR_TO_UTF8(*GateName));
         if (!Gate || !Gate->GetFarcaster() || Gate->IsDead() || Gate->IsDying()) { Message = TEXT("Farcaster is no longer available."); return false; }
         Pilot->SetTarget(Gate);
-        Message = TEXT("Gate targeted. Fly within 1 km of the operational gate to transit; no onboard quantum drive is required.");
+        if (!Gate->GetFarcaster()->HasValidApproach())
+        {
+            Message = TEXT("Gate targeted, but its approach lane is unavailable.");
+            return true;
+        }
+        Message = TEXT("Gate targeted. Follow its approach lane within 1 km, facing and moving through the gate to transit. No onboard quantum drive is required.");
         return true;
     }
     FVector FarcasterMapLocation(const FVector& SimLocation) { return OtherHand(SimLocation); }

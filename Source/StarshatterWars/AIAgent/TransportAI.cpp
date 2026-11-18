@@ -8,6 +8,7 @@
 #include "Ship.h"
 #include "SimRegion.h"
 #include "StarSystem.h"
+#include "Sim.h"
 
 TransportAI::TransportAI(Ship* InShip)
     : NavAI(InShip)
@@ -65,7 +66,8 @@ Farcaster* FindNextGate(SimRegion& Origin, SimRegion& Destination)
             Farcaster* Gate = GateShip->GetFarcaster();
             const Ship* Exit = Gate ? Gate->GetDest() : nullptr;
             SimRegion* Next = Exit && !Exit->IsDead() && !Exit->IsDying() ? Exit->GetRegion() : nullptr;
-            if (!Next || FirstGate.Contains(Next)) continue;
+            if (!Gate || !Gate->HasValidApproach() || !Exit || !Exit->GetFarcaster() ||
+                !Next || FirstGate.Contains(Next)) continue;
             if (Next == &Destination) return First ? First : Gate;
 
             FirstGate.Add(Next, First ? First : Gate);
@@ -78,15 +80,21 @@ Farcaster* FindNextGate(SimRegion& Origin, SimRegion& Destination)
 
 bool TransportAI::FlyToRegion(Ship& Freighter, SimRegion& Destination, double Seconds)
 {
+    if(auto* Simulation=Sim::GetSim();Simulation && !Simulation->HasSimulationAuthority())return false;
+    if(Freighter.IsDead() || Freighter.IsDying())return false;
+    if(!FMath::IsFinite(Seconds) || Seconds<0)
+    { Freighter.StopScriptedMotion();return false; }
     SimRegion* Origin = Freighter.GetRegion();
-    if (Freighter.GetWarpFactor() > 1.0) return false;
-    if (Origin == &Destination) return true;
-    if (!Origin || Seconds <= 0.0) return false;
+    if (Freighter.GetWarpFactor() > 1.0)
+    { Freighter.SetScriptedContactSpeed(Freighter.GetVelocity().Size());return false; }
+    if(Seconds==0)return Origin==&Destination;
+    if (Origin == &Destination) {Freighter.StopScriptedMotion();return true;}
+    if (!Origin) {Freighter.StopScriptedMotion();return false;}
 
     Farcaster* Gate = FindNextGate(*Origin, Destination);
     if (!Gate)
     {
-        Freighter.SetVelocity(FVector::ZeroVector);
+        Freighter.StopScriptedMotion();
         return false;
     }
 
@@ -97,6 +105,8 @@ bool TransportAI::FlyToRegion(Ship& Freighter, SimRegion& Destination, double Se
     const FVector Target = Approach.Equals(Gate->ApproachPoint(0)) ? Approach : Entry;
     const FVector Offset = Target - Position;
     const double Distance = Offset.Size();
+    if(Position.ContainsNaN() || Target.ContainsNaN() || !FMath::IsFinite(Distance))
+    { Freighter.StopScriptedMotion();return false; }
     const FVector Heading = Distance > 1.0 ? Offset.GetSafeNormal() : Axis;
     Camera Frame = Freighter.GetCam();
     const FVector Forward = Frame.vpn().GetSafeNormal();
@@ -122,7 +132,8 @@ bool TransportAI::FlyToRegion(Ship& Freighter, SimRegion& Destination, double Se
         // Farcaster detects aligned forward motion on the next simulation update.
         Freighter.SetVelocity(Axis * 50.0);
         if (!Gate->CanEnter(Freighter))
-            Freighter.SetVelocity(FVector::ZeroVector);
+            Freighter.StopScriptedMotion();
+        else Freighter.SetScriptedContactSpeed(Freighter.GetVelocity().Size());
     }
     return false;
 }

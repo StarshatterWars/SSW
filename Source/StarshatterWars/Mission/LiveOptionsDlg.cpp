@@ -1,3 +1,5 @@
+#include "LiveOptionsDlg.h"
+#include "Widgets/Input/SComboBox.h"
 #include <type_traits>
 #include "VideoDlg.h"
 #include "GameOptionsDlg.h"
@@ -10,7 +12,6 @@
 #include "Components/CanvasPanelSlot.h"
 #include "Components/ScrollBox.h"
 #include "Widgets/Input/SSpinBox.h"
-#include "LiveOptionsDlg.h"
 #include "MissionUIStyle.h"
 #include "ShipSystemIcon.h"
 #include "PlayerCharacter.h"
@@ -204,7 +205,7 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
         + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 12, 0)
         [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(14)).Text(INVTEXT("Keyboard zoom"))]
         + SHorizontalBox::Slot().FillWidth(1.0f)
-        [SNew(SSlider).Value(*KeyboardZoom).OnValueChanged_Lambda([KeyboardZoom](float Value) { *KeyboardZoom = Value; })]
+        [MissionUIStyle::MakeOptionsSliderTrack(SNew(SSlider).Style(&MissionUIStyle::OptionsSliderStyle()).IndentHandle(false).Value_Lambda([KeyboardZoom](){return *KeyboardZoom;}).OnValueChanged_Lambda([KeyboardZoom](float Value) { *KeyboardZoom = Value; }),TAttribute<float>::CreateLambda([KeyboardZoom](){return *KeyboardZoom;}))]
     ];
     auto Keyboard = SNew(SConstraintCanvas);
     // US Windows layout without the numeric keypad. Positions and widths are measured in key units.
@@ -312,7 +313,7 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
                 if(Name.Contains(TEXT("TabButton")) || Name.Contains(TEXT("Title")))Button->SetVisibility(ESlateVisibility::Collapsed);
                 else MissionUIStyle::ApplyActionButtonStyle(Button,TEXT("Blue"));
             }
-            if(auto* Slider=Cast<USlider>(Widget)){Slider->SetWidgetStyle(MissionUIStyle::OptionsSliderStyle());Slider->SetSliderHandleColor(FLinearColor(.25f,.9f,1.f));}
+            if(auto* Slider=Cast<USlider>(Widget)){Slider->SetWidgetStyle(MissionUIStyle::StandaloneSliderStyle());Slider->SetIndentHandle(false);Slider->SetSliderBarColor(FLinearColor(.14f,.8f,.95f));Slider->SetSliderHandleColor(FLinearColor(.25f,.9f,1.f));}
         });
     };
     const auto CreatePage=[this,&StylePage](const TCHAR* Path,auto& Destination)->TSharedRef<SWidget>
@@ -326,6 +327,24 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
     };
     const auto VideoContent=CreatePage(TEXT("/Game/Screens/Options/WBP_VideoDlg.WBP_VideoDlg_C"),FullVideo);
     const auto GameplayContent=CreatePage(TEXT("/Game/Screens/Options/WBP_GameDlg.WBP_GameDlg_C"),FullGameplay);
+    const auto Schemes=MakeShared<TArray<TSharedPtr<FString>>>();
+    Schemes->Add(MakeShared<FString>(TEXT("ARCADE"))); Schemes->Add(MakeShared<FString>(TEXT("FLIGHT SIM"))); Schemes->Add(MakeShared<FString>(TEXT("HYBRID")));
+    const auto GameplayPage=SNew(SVerticalBox)
+        + SVerticalBox::Slot().AutoHeight().Padding(0,0,0,10)
+        [SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(14)).Text(INVTEXT("FLIGHT CONTROL SCHEME"))]
+            + SHorizontalBox::Slot().FillWidth(1)
+            [SNew(SComboBox<TSharedPtr<FString>>).OptionsSource(&Schemes.Get())
+                .InitiallySelectedItem((*Schemes)[FMath::Clamp(int32(Controls->GetControlsConfig().ControlModel),0,2)])
+                .OnGenerateWidget_Lambda([](TSharedPtr<FString> Item){return SNew(STextBlock).Text(FText::FromString(*Item));})
+                .OnSelectionChanged_Lambda([this,Controls,Schemes](TSharedPtr<FString> Item,ESelectInfo::Type)
+                {
+                    const int32 Index=Schemes->Find(Item); if (Index==INDEX_NONE) return;
+                    Controls->SetControlModelEnum(static_cast<EStarshatterControlModel>(Index));
+                    Controls->ApplyToRuntimeControls(this);
+                })
+                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).Text_Lambda([Controls,Schemes](){return FText::FromString(*(*Schemes)[FMath::Clamp(int32(Controls->GetControlsConfig().ControlModel),0,2)]);})]]]
+        + SVerticalBox::Slot().FillHeight(1)[GameplayContent];
     const auto JoystickContent=CreatePage(TEXT("/Game/Screens/Options/WBP_JoystickDlg.WBP_JoystickDlg_C"),Joystick);
     auto JoystickPage=SNew(SVerticalBox);
     Settings=JoystickPage;AddSection(EShipSystemIcon::Joystick,INVTEXT("JOYSTICK"));
@@ -341,7 +360,7 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
         + SWidgetSwitcher::Slot()[SNew(SScrollBox) + SScrollBox::Slot()[AudioPage]]
         + SWidgetSwitcher::Slot()[VideoContent]
         + SWidgetSwitcher::Slot()[SNew(SScrollBox) + SScrollBox::Slot()[KeyboardPage]]
-        + SWidgetSwitcher::Slot()[GameplayContent]
+        + SWidgetSwitcher::Slot()[GameplayPage]
         + SWidgetSwitcher::Slot()[JoystickPage];
     const auto Tabs = SNew(SHorizontalBox);
     const TArray<EShipSystemIcon> Icons = {EShipSystemIcon::Audio, EShipSystemIcon::Display, EShipSystemIcon::Keyboard, EShipSystemIcon::SettingsGear, EShipSystemIcon::Joystick};

@@ -290,6 +290,9 @@ event: { type: Message, time: 46.55,
 event: { type: Message, time: 49.49,
          caption: "of the outer worlds\nof Trellis and Jalah." }
 
+// This location card must show the observatory, not hold the preceding Jalah shot.
+event: { type: Camera, time: 52.55, param: 3, target: "Tal Vesta Stellar Observatory", vec: (0,0,2e3) }
+event: { type: Camera, time: 52.55, param: 5, vec: (-0.13,0.01,0.02) }
 event: { type: Display, time: 52.55, message: "Meridian Sector" }
 event: { type: Display, time: 52.55, message: "Tal Vesta Stellar Observatory" }
 
@@ -302,6 +305,9 @@ event: { type: Message, time: 56.50,
 event: { type: Camera, time: 60.50, param: 3,  target: "Trellis-Solus", vec: (0,0,2e3)   }
 event: { type: Camera, time: 60.50, param: 5,  vec: (-0.13, 0.01, 0.02) }
 
+event: { type: Display, time: 60.50, message: "Trellis Sector" }
+event: { type: Display, time: 60.50, message: "Trellis-Solus Farcaster" }
+
 event: { type: Message, time: 60.50,
          caption: "The Separatist blockade of the Trellis Farcaster\nhas also taken a toll" }
 
@@ -311,11 +317,16 @@ event: { type: Message, time: 63.85,
 event: { type: Camera, time: 68.50, param: 3, target: "body:Meridian", vec: (60,0,1e5) }
 event: { type: Camera, time: 68.50, param: 5, vec: (0.14,0.01,0.02) }
 
+event: { type: Display, time: 68.50, message: "Meridian" }
+
 event: { type: Message, time: 68.50,
          caption: "Several Terellian companies maintain\nmajor offices on the capital world itself," }
 
 event: { type: Camera,  time:  72.55, param: 3,  target: "Tal Vesta Stellar Observatory",   vec: (0,0,2e3) }
 event: { type: Camera, time: 72.55,   param: 5,  vec: (-0.13, 0.01, 0.02) }
+
+event: { type: Display, time: 72.55, message: "Meridian Sector" }
+event: { type: Display, time: 72.55, message: "Tal Vesta Stellar Observatory" }
 
 event: { type: Message, time: 72.55,
          caption: "and Tal Vesta University runs a stellar observatory\nnear the planet Meridian." }
@@ -325,6 +336,9 @@ event: { type: Message, time: 77.50,
 
 event: { type: Message, time: 81.53,
          caption: "So far they have been unable to convince\nthe Dantari Separatists" }
+
+event: { type: Display, time: 85.50, message: "Solus System" }
+event: { type: Display, time: 85.50, message: "Capitol" }
 
 event: { type: Message, time: 85.50,
          caption: "to grant them safe passage\nback to the main Alliance systems." }

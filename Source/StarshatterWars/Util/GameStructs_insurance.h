@@ -30,6 +30,26 @@ struct FHangarComponent
     UPROPERTY(BlueprintReadOnly, SaveGame) FString SystemName;
     UPROPERTY(BlueprintReadOnly, SaveGame) FName Component;
     UPROPERTY(BlueprintReadOnly, SaveGame) int32 Level = 3;
+    UPROPERTY(BlueprintReadOnly, SaveGame) bool bHasCondition = false;
+    UPROPERTY(BlueprintReadOnly, SaveGame) float ConditionPercent = 100;
+    UPROPERTY(BlueprintReadOnly, SaveGame) int32 ConditionStatus = 0;
+    UPROPERTY(BlueprintReadOnly, SaveGame) float MaintenanceSeconds = 0;
+    UPROPERTY(BlueprintReadOnly, SaveGame) int32 SpareCount = 0;
+    UPROPERTY(BlueprintReadOnly, SaveGame) int32 JerryCount = 0;
+};
+
+USTRUCT(BlueprintType)
+struct FHangarSystemCondition
+{
+    GENERATED_BODY()
+    UPROPERTY(SaveGame) int32 SystemIndex = INDEX_NONE;
+    UPROPERTY(SaveGame) FName SystemName;
+    UPROPERTY(SaveGame) float Availability = 1;
+    UPROPERTY(SaveGame) float Safety = 1;
+    UPROPERTY(SaveGame) float Stability = 1;
+    UPROPERTY(SaveGame) float SafetyOverload = 0;
+    UPROPERTY(SaveGame) float NetAvailability = -1;
+    UPROPERTY(SaveGame) int32 Status = 0;
 };
 
 USTRUCT(BlueprintType)
@@ -46,6 +66,10 @@ struct FPlayerHangarShip
     UPROPERTY(BlueprintReadOnly, SaveGame) bool bAssigned = false;
     UPROPERTY(BlueprintReadOnly, SaveGame) bool bLost = false;
     UPROPERTY(BlueprintReadOnly, SaveGame) FShipInsurancePolicy Insurance;
+    UPROPERTY(BlueprintReadOnly, SaveGame) bool bHasCondition = false;
+    UPROPERTY(BlueprintReadOnly, SaveGame) float HullCondition = 1;
+    UPROPERTY(SaveGame) TArray<FHangarSystemCondition> SystemConditions;
+    UPROPERTY(SaveGame) TArray<int32> RepairQueue;
     UPROPERTY(BlueprintReadOnly, SaveGame) TArray<FHangarComponent> Components;
     UPROPERTY(BlueprintReadOnly, SaveGame) TArray<int32> LoadoutStations;
     UPROPERTY(BlueprintReadOnly, SaveGame) FString LoadoutName;

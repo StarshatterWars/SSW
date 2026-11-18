@@ -50,8 +50,8 @@ TSharedRef<SWidget> UShipFitDlg::RebuildWidget()
                     if (!Entry || !Entry->Components.IsValidIndex(Index)) return FText::GetEmpty();
                     const auto& Item = Entry->Components[Index];
                     static const TCHAR* Levels[] = {TEXT("I"), TEXT("II"), TEXT("III"), TEXT("IV"), TEXT("V")};
-                    return FText::FromString(FString::Printf(TEXT("%s  /  %s  [%s]"), *Item.SystemName,
-                        *Item.Component.ToString(), Levels[FMath::Clamp(Item.Level, 1, 5) - 1])).ToUpper();
+                    return FText::FromString(FString::Printf(TEXT("%s  /  %s  [%s]  |  %.0f%%"), *Item.SystemName,
+                        *Item.Component.ToString(), Levels[FMath::Clamp(Item.Level, 1, 5) - 1], Item.bHasCondition?Item.ConditionPercent:100.f)).ToUpper();
                 })
             ]
         ];

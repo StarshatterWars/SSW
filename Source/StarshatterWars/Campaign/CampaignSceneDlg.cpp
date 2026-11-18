@@ -832,13 +832,20 @@ void UCampaignSceneDlg::ExecuteDisplayEvent(const FS_MissionEvent& Event)
         PanelHoldTime = FMath::Max(0.0f, Event.EventFade.Y);
         PanelFadeOutTime = FMath::Max(0.0f, Event.EventFade.Z);
         bPanelActive = (PanelTexture != nullptr);
+        if (bPanelActive && (PanelToken.Equals(TEXT("Black"),ESearchCase::IgnoreCase) || PanelToken.Equals(TEXT("StarshatterWars"),ESearchCase::IgnoreCase)))
+        {
+            if(HeaderText)HeaderText->SetText(FText::GetEmpty());
+            if(MessageTitleText)MessageTitleText->SetText(FText::GetEmpty());
+            if(MessageSubtitleText)MessageSubtitleText->SetText(FText::GetEmpty());
+            if(CaptionTextBottom)CaptionTextBottom->SetText(FText::GetEmpty());
+        }
 
         // The opening DISPLAY image is the first visible cutscene frame.
         // Its authored fade-in previously started at opacity zero, exposing
         // a black screen directly after dismissing the loading overlay.
         // Start this one opening image fully visible; leave all later image
         // fades and every narration/camera event time unchanged.
-        if (bPanelActive && Event.EventTime <= KINDA_SMALL_NUMBER)
+        if (bPanelActive && !CampaignPresentationRules::HasRuntimeSceneTrigger(Event) && Event.EventTime <= KINDA_SMALL_NUMBER)
         {
             PanelStartTime -= PanelFadeInTime;
             if (ScenePanelImage) ScenePanelImage->SetOpacity(1.0f);

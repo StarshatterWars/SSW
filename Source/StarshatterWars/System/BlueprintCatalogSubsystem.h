@@ -19,7 +19,11 @@ struct FPlayerIndustryQuote
 {
     FName Input, Output;
     TArray<FCommodityAmount> Materials, Products;
+    TArray<FCommodityAmount> NominalMaterials, NominalProducts;
+    double NominalDuration = 0;
     double Duration = 0;
+    int64 InstallationFee = 0;
+    FName ServiceProfile;
 };
 UCLASS()
 class STARSHATTERWARS_API UBlueprintCatalogSubsystem : public UGameInstanceSubsystem

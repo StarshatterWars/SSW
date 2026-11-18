@@ -59,6 +59,6 @@ TSharedRef<SWidget> UMissionsDlg::RebuildWidget()
                 .IsEnabled_Lambda([this](){ return CanStartMission.IsBound() && CanStartMission.Execute(); })
                 .ToolTipText(INVTEXT("Start this mission"))
                 .OnClicked_Lambda([Action=StartMission](){ Action.ExecuteIfBound(); return FReply::Handled(); })
-                [SNew(STextBlock).Text(INVTEXT("START MISSION")).Font(MissionUIStyle::GetRowFont(14))]]
+                [SNew(SHorizontalBox) + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Play)] + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(6,0)[SNew(STextBlock).Text(INVTEXT("MISSION")).Font(MissionUIStyle::GetRowFont(14))]]]
         ]);
 }

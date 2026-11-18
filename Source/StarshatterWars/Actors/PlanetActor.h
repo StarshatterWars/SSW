@@ -77,6 +77,9 @@ public:
     UFUNCTION(BlueprintCallable, Category = "Planet")
     void SetAxialRotationEnabled(bool bEnabled);
 
+    // Absolute simulation phase: affects visual mesh only, never surface/region anchors.
+    void SetAxialRotationPhaseRadians(double PhaseRadians);
+
     UFUNCTION(BlueprintPure, Category = "Planet")
     UStaticMeshComponent* GetPlanetMeshComponent() const { return PlanetMesh; }
 
@@ -145,4 +148,7 @@ protected:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Planet|Rotation")
     float AxialRotationDegreesPerSecond = 0.0f;
+
+    FQuat AxialBaseRotation = FQuat::Identity;
+    bool bHasAxialBaseRotation = false;
 };

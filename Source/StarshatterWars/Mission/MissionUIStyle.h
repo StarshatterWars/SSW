@@ -31,6 +31,7 @@ namespace MissionUIStyle
     void SetActionIcon(UImage* Image, const TCHAR* TexturePath, const FLinearColor& Color);
     UTexture2D* LoadCampaignArt(int32 CampaignId);
     const FSliderStyle& OptionsSliderStyle();
+    const FSliderStyle& StandaloneSliderStyle();
     TSharedRef<SWidget> MakeOptionsSliderTrack(TSharedRef<SWidget> Slider, TAttribute<float> Value);
 
     TSharedRef<SWidget> MakeDataPane(TSharedRef<SWidget> Content, FMargin Padding = FMargin(12));

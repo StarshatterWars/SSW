@@ -1,4 +1,5 @@
 #include "QuitView.h"
+#include "MenuScreen.h"
 #include "Engine/Texture2D.h"
 #include "MissionUIStyle.h"
 #include "QuitMissionMenu.h"
@@ -185,7 +186,8 @@ void QuitView::ShowMenu()
             .ButtonStyle(&PauseButtonStyles[Index])
             .ButtonColorAndOpacity(FLinearColor::White)
             .ContentPadding(FMargin(4, 8))
-            .ToolTipText(Action == MainMenu ? NSLOCTEXT("QuitMissionMenu", "MainMenuTooltip", "Return to Main Menu and discard mission results") : Action == ExitWindows ? NSLOCTEXT("QuitMissionMenu", "ExitTooltip", "Exit to Windows") : FText::GetEmpty())
+            .IsEnabled_Lambda([Action]() { return Action!=MainMenu || UMenuScreen::CanOpenMainMenu(); })
+            .ToolTipText(Action == MainMenu && !UMenuScreen::CanOpenMainMenu() ? INVTEXT("Dock before returning to the main menu.") : Action == MainMenu ? NSLOCTEXT("QuitMissionMenu", "MainMenuTooltip", "Return to Main Menu and discard mission results") : Action == ExitWindows ? NSLOCTEXT("QuitMissionMenu", "ExitTooltip", "Exit to Windows") : FText::GetEmpty())
             .HAlign(bIcon ? HAlign_Center : HAlign_Left)
             .OnClicked_Lambda([this, Action]() { ExecuteAction(Action); return FReply::Handled(); })
             [Label];
@@ -257,6 +259,12 @@ bool QuitView::OnKeyDown(int32 Key, bool bRepeat)
 void QuitView::ExecuteAction(uintptr_t Action)
 {
     if (!bMenuShown || Action < Accept || Action > MainMenu) return;
+    if (Action==MainMenu && !UMenuScreen::CanOpenMainMenu())
+    {
+        Rejection=TEXT("Dock before returning to the main menu.");
+        if (auto* Widget=MenuWidget.Get()) Widget->SetStatusMessage(FText::FromString(Rejection));
+        return;
+    }
     if (Action == Accept && !CanAccept())
     {
         if (UQuitMissionMenu* Widget = MenuWidget.Get()) Widget->SetStatusMessage(FText::FromString(Rejection));

@@ -18,6 +18,7 @@
 */
 
 #pragma once
+#include "PreparedSceneGate.h"
 
 #include "GameStructs_products.h"
 #include "GameStructs_economy.h"
@@ -278,11 +279,14 @@ public:
     void ProcessEventTrigger(int type, int event_id = 0, const char* ship = nullptr, int param = 0);
 
     double MissionClock() const;
+    void PrepareCutscenePlayback(const Mission* PreparedMission);
     void BeginPreparedCutscenePlayback(const Mission* PreparedMission);
+    bool NeedsTrainingLaunchClearance() const;
     uint32 StartTime() const { return start_time; }
 
 protected:
     bool FindReadyPlayerLaunchSlot(Ship* Player, Hangar*& CarrierHangar, int& Squadron, int& Slot);
+    FPreparedSceneGate PreparedSceneGate;
     TWeakObjectPtr<UWorld> NetworkWorld;
     uint32 NextNetworkObjectId = 1;
     void TickIndustry(double Seconds);
@@ -341,6 +345,7 @@ protected:
     TMap<FName, FContractTransaction> TrainingContracts;
     TMap<FName, FSSWProductionStock> ProductionViews;
     double IndustrySeconds = 0;
+    double MarketSeconds = 0;
     FEconomyState LocalEconomy;
     FSSWProductionStock JanekRefinery;
     Ship* DeferredLaunchPlayer = nullptr;

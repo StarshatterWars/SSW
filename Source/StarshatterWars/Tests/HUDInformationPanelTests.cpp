@@ -57,6 +57,11 @@ bool FHUDInformationPanelTest::RunTest(const FString& Parameters)
         TArray64<uint8> PNG;FImageUtils::PNGCompressImageArray(1280,720,Pixels,PNG);const FString Folder=FPaths::ProjectSavedDir()/TEXT("Automation/FirstRunAndLogo");IFileManager::Get().MakeDirectory(*Folder,true);
         TestTrue(TEXT("Instruction HUD capture saved"),FFileHelper::SaveArrayToFile(PNG,*(Folder/TEXT("HUDInformation.png"))));
     }
+    HUD->bShowInformation=false;HUD->bShowCaution=true;
+    RadioView::Message("NO MISSION ASSIGNED. CLEARANCE DECLINED.",2);HUD->UpdateInformationMessages();
+    TestTrue(TEXT("Clearance refusal opens Information panel"),HUD->bShowInformation);
+    TestFalse(TEXT("Clearance refusal replaces caution panel"),HUD->bShowCaution);
+    TestTrue(TEXT("Exact clearance message reaches visible information rows"),HUD->InformationCaptions.Contains(TEXT("NO MISSION ASSIGNED. CLEARANCE DECLINED.")));
     RadioView::ClearMessages();HUD->UpdateInformationMessages();TestEqual(TEXT("Expired/cleared messages leave no stale rows"),HUD->InformationRows->GetChildren()->Num(),0);
     return true;
 }

@@ -1,4 +1,5 @@
 #include "QuitMissionMenu.h"
+#include "MenuScreen.h"
 #include "MissionUIStyle.h"
 #include "Components/Button.h"
 #include "Components/Image.h"
@@ -123,6 +124,8 @@ void UQuitMissionMenu::BuildGeneratedContent()
     MakeIconButton(MainMenuBtn, TEXT("MainMenuBtn"),
         TEXT("/Game/SciFiUIComponents/Textures/Icons4/T_ICON_Menu.T_ICON_Menu"),
         NSLOCTEXT("QuitMissionMenu", "MainMenuTooltip", "Return to Main Menu and discard mission results"));
+    MainMenuBtn->SetIsEnabled(UMenuScreen::CanOpenMainMenu());
+    if (!UMenuScreen::CanOpenMainMenu()) MainMenuBtn->SetToolTipText(INVTEXT("Dock before returning to the main menu."));
     MakeIconButton(ExitWindowsBtn, TEXT("ExitWindowsBtn"),
         TEXT("/Game/SciFiUIComponents/Textures/Icons4/T_Icon_Exit1.T_Icon_Exit1"),
         NSLOCTEXT("QuitMissionMenu", "ExitTooltip", "Exit to Windows"));
@@ -172,7 +175,11 @@ void UQuitMissionMenu::AbortMission() { OnActionRequested.ExecuteIfBound(EMissio
 void UQuitMissionMenu::ResumeMission() { OnActionRequested.ExecuteIfBound(EMissionQuitAction::Resume); }
 void UQuitMissionMenu::OpenControls() { OnActionRequested.ExecuteIfBound(EMissionQuitAction::Controls); }
 void UQuitMissionMenu::ExitToWindows() { OnActionRequested.ExecuteIfBound(EMissionQuitAction::ExitWindows); }
-void UQuitMissionMenu::ExitToMainMenu() { OnActionRequested.ExecuteIfBound(EMissionQuitAction::MainMenu); }
+void UQuitMissionMenu::ExitToMainMenu()
+{
+    if (!UMenuScreen::CanOpenMainMenu()) { SetStatusMessage(INVTEXT("Dock before returning to the main menu.")); return; }
+    OnActionRequested.ExecuteIfBound(EMissionQuitAction::MainMenu);
+}
 void UQuitMissionMenu::HandleAccept() { ResumeMission(); }
 void UQuitMissionMenu::HandleCancel() { ResumeMission(); }
 void UQuitMissionMenu::SetStatusMessage(const FText& Message)

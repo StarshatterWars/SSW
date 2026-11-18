@@ -1,3 +1,4 @@
+#include "CmdIntelDlg.h"
 #include "RecordedCutsceneDlg.h"
 #include "StarshatterGameDataSubsystem.h"
 #include "CampaignSave.h"
@@ -5,7 +6,6 @@
 // | UCmdIntelDlg                                                         |
 // +----------------------------------------------------------------------+
 
-#include "CmdIntelDlg.h"
 
 #include "Components/Button.h"
 #include "Components/Image.h"

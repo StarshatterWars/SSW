@@ -1,3 +1,4 @@
+#include "MissionObjectivesDlg.h"
 #include "ShipBriefingPreview.h"
 #include "MissionUIStyle.h"
 #include "Widgets/SBoxPanel.h"
@@ -6,7 +7,6 @@
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Text/STextBlock.h"
 #include "FlightPanelStyle.h"
-#include "MissionObjectivesDlg.h"
 #include "Mission.h"
 #include "MissionBriefingContent.h"
 void UMissionObjectivesDlg::SetMissionBriefing(const Mission& Mission,FText InTitle,FText Agent,FText Status,

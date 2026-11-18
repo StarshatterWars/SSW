@@ -37,7 +37,7 @@ element: {
    playable:  false
    region:    "Borova"
    loc:       (0, 0, 0)
-   navpt:     { cmd: Vector, loc: (0, -80e3, 0), speed: 500 }
+   // Carrier holds station for real shuttle recovery before departure.
 }
 
 element: {
@@ -108,7 +108,7 @@ element: {
    squadron:  "Lifters"
    commander: "Archon"
    mission:   "Transport"
-   head:      -30
+   head:      0
 
    intel:     "Secret"
    count:     1
@@ -116,15 +116,18 @@ element: {
    iff:       1
    playable:  false
    region:    "Borova"
-   loc:       (15e3, 29e3, 0)
+   loc:       (1220, 8500, 0)
 
-   navpt:     { cmd: Vector, loc: (7e3, 17e3, 0), speed: 500 }
-   navpt:     { cmd: RTB,    loc: (4e3,  9e3, 0), speed: 350 }
+   navpt:     { cmd: Vector, loc: (1220, 6500, 0), speed: 100 }
+   navpt:     { cmd: RTB,    loc: (1220, 5000, 0), speed: 100 }
 }
 
-// All presentation events use explicit scene-relative times. The intro must
-// finish even when the shuttle's simulated docking sequence cannot complete.
+// Narration keeps its authored timing. The shuttle holds for the opening
+// exposition, then flies a route within its 250 m/s envelope to a stationary
+// carrier. Departure and closing cards wait for the actual simulation dock event;
+// no actor is teleported and no flight phase is forced.
 event: { type: BeginScene, time: 0, message: "Training Introduction" }
+event: { type: Hold, time: 0, param: 50, event_ship: "Proteus" }
 event: { type: Camera, time: 0.01, param: 3, target: "Proteus", vec: (1,0.25,600) }
 event: { type: Camera, time: 0.01, param: 5, vec: (0.06,0,0) }
 event: { type: Display, time: 1, message: "Training Shuttle 'Proteus'" }
@@ -156,12 +159,19 @@ event: { type: Camera, time: 78, param: 3, target: "Simmons", vec: (2,0.25,3500)
 event: { type: Camera, time: 78, param: 5, vec: (0.05,0,0) }
 event: { type: Display, time: 78, message: "DD/E-687 'Simmons'" }
 
-event: { type: Jump, time: 80, event_ship: "Simmons", target: "Tulkas" }
-event: { type: Jump, time: 82, event_ship: "Gerson", target: "Tulkas" }
-event: { type: Jump, time: 83, event_ship: "Stalwart", target: "Tulkas" }
-event: { type: Jump, time: 84, event_ship: "Archon", target: "Tulkas" }
-event: { type: Display, time: 85, image: "Black", fade: (1,15,1), rect: (0,0,0,0) }
-event: { type: Display, time: 86, image: "StarshatterWars", fade: (1,11,1), rect: (0,0,0,0) }
-event: { type: EndScene, time: 100, message: "Training Introduction End" }
+// Show the approach until capture; change focus before the recovered shuttle
+// is retired by the normal hangar path.
+event: { type: Camera, time: 85, param: 3, target: "Archon", vec: (2,0.15,6000) }
+event: { type: Camera, time: 85, param: 5, vec: (-0.05,0,0) }
+event: { type: Camera, trigger: Dock, trigger_ship: "Proteus", param: 3, target: "Archon", vec: (2,0.3,6000) }
+event: { type: Camera, trigger: Dock, trigger_ship: "Proteus", param: 5, vec: (0.05,0,0) }
+
+event: { type: Jump, trigger: Dock, trigger_ship: "Proteus", delay: 1, event_ship: "Simmons", target: "Tulkas" }
+event: { type: Jump, trigger: Dock, trigger_ship: "Proteus", delay: 3, event_ship: "Gerson", target: "Tulkas" }
+event: { type: Jump, trigger: Dock, trigger_ship: "Proteus", delay: 4, event_ship: "Stalwart", target: "Tulkas" }
+event: { type: Jump, trigger: Dock, trigger_ship: "Proteus", delay: 5, event_ship: "Archon", target: "Tulkas" }
+event: { type: Display, trigger: Dock, trigger_ship: "Proteus", delay: 6, image: "Black", fade: (1,15,1), rect: (0,0,0,0) }
+event: { type: Display, trigger: Dock, trigger_ship: "Proteus", delay: 7, image: "StarshatterWars", fade: (1,11,1), rect: (0,0,0,0) }
+event: { type: EndScene, trigger: Dock, trigger_ship: "Proteus", delay: 21, message: "Training Introduction End" }
 event: { type: Exit }
 // EOF

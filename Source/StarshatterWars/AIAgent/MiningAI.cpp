@@ -11,6 +11,14 @@ MiningAI::MiningAI(Ship* InShip)
 {
 }
 
+FVector MiningAI::BeamEndpoint(const FVector& Muzzle,const FVector& DepositCenter,double MaxRange)
+{
+    if(Muzzle.ContainsNaN() || DepositCenter.ContainsNaN() || !FMath::IsFinite(MaxRange) || MaxRange<=0)return Muzzle;
+    const FVector Delta=DepositCenter-Muzzle;
+    const double Distance=Delta.Size();
+    return Distance>UE_SMALL_NUMBER?Muzzle+Delta*(FMath::Min(Distance,MaxRange)/Distance):Muzzle;
+}
+
 MiningAI::ScanResult MiningAI::ScanAsteroids(SimRegion& Region, const FVector& Origin, double Range, ScanTier Tier)
 {
     ScanResult Scan;

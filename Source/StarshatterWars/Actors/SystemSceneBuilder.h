@@ -9,6 +9,7 @@ class USceneComponent;
 class UStarshatterEnvironmentSubsystem;
 class StarSystem;
 class OrbitalBody;
+class UStaticMeshComponent;
 class Orbital;
 class OrbitalRegion;
 class ACameraActor;
@@ -292,6 +293,9 @@ protected:
         AActor* BodyActor,
         float BodyVisualRadiusUnits,
         bool bIsMoon);
+
+    void RefreshRuntimeBodyRotations();
+    TMap<TWeakObjectPtr<UStaticMeshComponent>, FQuat> GasCoreBaseRotations;
 
     void TrackRuntimeBody(
         const FString& BodyName,

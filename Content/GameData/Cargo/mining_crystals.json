@@ -1,0 +1,150 @@
+[
+  {
+    "Id": "StandardFocus",
+    "DisplayName": "Standard Focusing Lattice",
+    "Description": "Universal industrial optics. Maintains the normal Mining Laser extraction rate; suitable for every identified mineral.",
+    "Universal": true,
+    "Minerals": [],
+    "YieldMultiplier": 1,
+    "Color": [
+      0.35,
+      3.2,
+      2.4
+    ],
+    "PulseHz": 1.2,
+    "WidthScale": 1
+  },
+  {
+    "Id": "FerriteFocus",
+    "DisplayName": "Ferrite Resonance Crystal",
+    "Description": "Ore-specific optics for iron and nickel-bearing deposits. Explicitly fitted compatible crystals improve beam coupling by eight percent. Unfitted mining retains its normal rate.",
+    "Universal": false,
+    "Minerals": [
+      "Magnetite",
+      "Hematite",
+      "Kamacite",
+      "Taenite",
+      "Troilite",
+      "Pentlandite",
+      "Pyrite"
+    ],
+    "YieldMultiplier": 1.08,
+    "Color": [
+      3.1,
+      1.4,
+      0.28
+    ],
+    "PulseHz": 1.05,
+    "WidthScale": 1.08
+  },
+  {
+    "Id": "SilicateFocus",
+    "DisplayName": "Silicate Phase Crystal",
+    "Description": "A blue focusing lattice tuned to silicate and industrial oxide ores. Compatible extraction gains eight percent when explicitly fitted.",
+    "Universal": false,
+    "Minerals": [
+      "Olivine",
+      "Pyroxene",
+      "Plagioclase",
+      "Quartz",
+      "Ilmenite",
+      "Rutile",
+      "Chromite",
+      "Spinel",
+      "Zircon",
+      "Apatite",
+      "Merrillite"
+    ],
+    "YieldMultiplier": 1.08,
+    "Color": [
+      0.3,
+      1.5,
+      3.5
+    ],
+    "PulseHz": 1.4,
+    "WidthScale": 0.95
+  },
+  {
+    "Id": "CarbonFocus",
+    "DisplayName": "Carbon Bond Crystal",
+    "Description": "Amber phase optics tuned for carbon-rich and hydrated minerals. Explicit fitting improves compatible extraction by six percent.",
+    "Universal": false,
+    "Minerals": [
+      "Graphite",
+      "Diamond",
+      "Serpentine",
+      "Saponite",
+      "Calcite",
+      "Dolomite"
+    ],
+    "YieldMultiplier": 1.06,
+    "Color": [
+      2.5,
+      0.65,
+      0.18
+    ],
+    "PulseHz": 0.85,
+    "WidthScale": 1.05
+  },
+  {
+    "Id": "TraceMetalFocus",
+    "DisplayName": "Trace-Metal Assay Crystal",
+    "Description": "A violet focusing lattice for difficult trace-metal ores. Explicit fitting improves compatible extraction by six percent.",
+    "Universal": false,
+    "Minerals": [
+      "Cassiterite",
+      "Chalcopyrite",
+      "Sphalerite",
+      "Galena",
+      "Cobaltite",
+      "Scheelite",
+      "Wolframite",
+      "Monazite",
+      "Uraninite",
+      "Schreibersite"
+    ],
+    "YieldMultiplier": 1.06,
+    "Color": [
+      1.7,
+      0.45,
+      3
+    ],
+    "PulseHz": 1.6,
+    "WidthScale": 0.9
+  },
+  {
+    "Id": "CryogenicFocus",
+    "DisplayName": "Cryogenic Focusing Crystal",
+    "Description": "Cold-blue optics tuned to water ice. Explicit fitting improves ice extraction by five percent without changing weapon power or cargo intake limits.",
+    "Universal": false,
+    "Minerals": [
+      "WaterIce"
+    ],
+    "YieldMultiplier": 1.05,
+    "Color": [
+      0.5,
+      2.1,
+      3.4
+    ],
+    "PulseHz": 0.6,
+    "WidthScale": 1.15
+  },
+  {
+    "Id": "ExoticFocus",
+    "DisplayName": "Exotic Resonance Crystal",
+    "Description": "A controlled violet-white lattice for dilithium and quantium-40 deposits. Explicit fitting improves compatible extraction by five percent. These are SSW industrial settings, not a combat enhancement.",
+    "Universal": false,
+    "Minerals": [
+      "Dilithium",
+      "Quantium40"
+    ],
+    "YieldMultiplier": 1.05,
+    "Color": [
+      2.7,
+      0.9,
+      3.8
+    ],
+    "PulseHz": 1.8,
+    "WidthScale": 0.85
+  }
+]

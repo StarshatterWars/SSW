@@ -63,6 +63,11 @@ public:
     bool IsReleasingFromRack() const { return RackReleaseRemaining > 0.0; }
 	const Ship* Owner()        const { return owner; }
     double MiningStepSeconds() const { return BeamDamageSeconds; }
+    void SetMiningContact(bool bContact, FName Mineral = NAME_None) { bMiningContact=bContact; MiningContactMineral=bContact?Mineral:NAME_None; }
+    bool HasMiningContact() const { return bMiningContact; }
+    FName GetMiningContactMineral() const { return MiningContactMineral; }
+    FName GetMiningCrystal() const { return MiningCrystal; }
+    bool SetMiningCrystal(FName Crystal);
 	double             Damage()       const;
 	int                ShotType()     const { return type; }
 	virtual SimObject* GetTarget()    const;
@@ -120,6 +125,8 @@ protected:
 	const Ship* owner;
     double BeamDamageSeconds=0; // Actual simulation step; Game::FrameTime is a port stub.
     const Weapon* source_weapon = nullptr; // Non-owning presentation identity only.
+    FName MiningCrystal, MiningContactMineral;
+    bool bMiningContact = false;
     double RackReleaseRemaining = 0.0;
     Ship* BoltAssistTarget = nullptr;
     void SteerAssistedBolt(double Seconds);

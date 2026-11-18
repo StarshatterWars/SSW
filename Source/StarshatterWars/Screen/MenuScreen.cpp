@@ -8,6 +8,11 @@
 
 // Dialogs:
 #include "MenuDlg.h"
+#include "ModEditorDlg.h"
+#include "StationServices.h"
+#include "Sim.h"
+#include "Ship.h"
+#include "ShipDesign.h"
 #include "ExitDlg.h"
 #include "ConfirmDlg.h"
 #include "FirstTimeDlg.h"
@@ -220,6 +225,8 @@ void UMenuScreen::HideDialog(UBaseScreen* Dialog)
 void UMenuScreen::HideAll()
 {
     HideDialog(MenuDlg);
+    if(ModEditorDlg)ModEditorDlg->EndEditingSession();
+    HideDialog(ModEditorDlg);
     HideDialog(ExitDlg);
     HideDialog(ConfirmDlg);
 
@@ -300,6 +307,7 @@ void UMenuScreen::TearDown()
         };
 
     Destroy(reinterpret_cast<UBaseScreen*&>(MenuDlg));
+    Destroy(reinterpret_cast<UBaseScreen*&>(ModEditorDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(ExitDlg));
     Destroy(reinterpret_cast<UBaseScreen*&>(ConfirmDlg));
 
@@ -459,8 +467,49 @@ void UMenuScreen::Hide()
     bIsShown = false;
 }
 
+bool UMenuScreen::HasLivePlayerSession()
+{
+    auto* Simulation=Sim::GetSim();const auto* Pilot=Simulation?Simulation->GetPlayerShip():nullptr;
+    if(!Simulation || !Simulation->GetMission() || !Pilot)return false;
+    // Menu/cutscene camera hosts are presentation objects, not a flying pilot.
+    return !Pilot->Design() || FCStringAnsi::Stricmp(Pilot->Design()->name,"CameraPod")!=0;
+}
+bool UMenuScreen::CanOpenMainMenu()
+{
+    const auto* Simulation=Sim::GetSim();
+    return MenuAccessForState(HasLivePlayerSession(),FStationServices::IsDocked(),Simulation && Simulation->IsNetworked());
+}
+void UMenuScreen::ShowModEditorDlg()
+{
+    if(!CanOpenMainMenu())return;
+    APlayerController* PC=GetOwningPlayer();if(!PC)return;
+    bModMissionToolsActive=false;bReturnToCustomMissionsAfterEditor=false;
+    HideAll();
+    if(!ModEditorDlg)
+    {
+        UClass* Class=UModEditorDlg::StaticClass();
+        if(auto* GI=GetGameInstance())if(auto* Assets=GI->GetSubsystem<UStarshatterAssetRegistrySubsystem>())
+            if(auto Registered=Assets->GetWidgetClass(TEXT("UI.ModEditorPopupClass"),false);Registered && Registered->IsChildOf(UModEditorDlg::StaticClass()))Class=Registered.Get();
+        ModEditorDlg=CreateWidget<UModEditorDlg>(PC,Class);
+    }
+    if(!ModEditorDlg)return;
+    if(ModEditorDlg->IsInViewport())ModEditorDlg->RemoveFromParent();
+    if(!ModEditorDlg->BeginEditingSession())return;
+    ModEditorDlg->SetMenuManager(this);ShowDialog(ModEditorDlg,300);
+    ApplyUIFocus(PC,ModEditorDlg);
+}
+void UMenuScreen::OpenModMissionTools()
+{
+    // Legacy map/editor tools manipulate the menu preview simulation. Never
+    // give them a live docked mission, even though source editing is safe there.
+    if(!CanOpenMainMenu() || HasLivePlayerSession())return;
+    bModMissionToolsActive=true;ShowCustomMissionDlg();
+}
 void UMenuScreen::ShowMenuDlg()
 {
+    if(!CanOpenMainMenu())
+    {UE_LOG(LogTemp,Display,TEXT("[MenuAccess] Main menu requires docking; multiplayer pilots must resign first."));return;}
+    if(bModMissionToolsActive){bModMissionToolsActive=false;ShowModEditorDlg();return;}
     bReturnToFreeFlight = false;
     if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->EndTrainingTest();
     HideAll();
@@ -897,6 +946,7 @@ void UMenuScreen::ReturnFromMissionBriefing()
 
 void UMenuScreen::ShowMissionSelectDlg()
 {
+    if(bModMissionToolsActive){ShowCustomMissionDlg();return;}
     APlayerController* PC = GetOwningPlayer();
     if (!PC) { UE_LOG(LogTemp, Error, TEXT("[MissionsDriver] Missing player controller")); return; }
     if (!MissionsPanelDriver)
@@ -1004,15 +1054,8 @@ void UMenuScreen::ShowSingleMissionDlg()
 
 void UMenuScreen::ShowCustomMissionDlg()
 {
-    const UGameInstance* GI = GetGameInstance();
-    const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
-    if (!Players || !CampaignPresentationRules::CanSelectCampaign(Players->GetPlayerInfo()))
-    {
-        ShowMissionSelectDlg();
-        return;
-    }
-    if (MissionsPanelDriver && MissionsPanelDriver->IsInViewport()) { MissionsPanelDriver->ShowCustomMode(); return; }
-
+    if(!bModMissionToolsActive){ShowModEditorDlg();return;}
+    if(!CanOpenMainMenu() || HasLivePlayerSession())return;
     APlayerController* PC = GetOwningPlayer();
     if (!PC) return;
 

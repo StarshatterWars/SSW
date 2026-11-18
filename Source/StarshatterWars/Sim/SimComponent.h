@@ -58,6 +58,7 @@ public:
 
 class SimComponent
 {
+    friend class FOwnedHullCondition;
 public:
 	static const char* TYPENAME() { return "SimComponent"; }
 

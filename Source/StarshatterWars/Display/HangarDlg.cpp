@@ -26,7 +26,7 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
     const auto Selected = MakeShared<FGuid>();
     const auto Feedback = MakeShared<FText>();
     const auto Header = SNew(SHorizontalBox);
-    for (const TCHAR* Label : {TEXT("SHIP / FIGHTER"), TEXT("DESIGN"), TEXT("LOCATION"), TEXT("COVERAGE")})
+    for (const TCHAR* Label : {TEXT("SHIP / FIGHTER"), TEXT("DESIGN"), TEXT("LOCATION"), TEXT("COVERAGE"), TEXT("HULL")})
         Header->AddSlot().FillWidth(1).Padding(8, 5)
             [SNew(STextBlock).Text(FText::FromString(Label)).Font(MissionUIStyle::GetRowFont(12))];
     Header->AddSlot().AutoWidth()[SNew(SBox).WidthOverride(176)];
@@ -49,6 +49,15 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
                     if (Entry->bLost) return INVTEXT("LOST");
                     return FText::FromString(UShipInsuranceSubsystem::TierName(
                         UShipInsuranceSubsystem::EffectiveTier(*Entry, FDateTime::UtcNow().ToUnixTimestamp()))).ToUpper();
+                })];
+        Line->AddSlot().FillWidth(1).Padding(8,6)
+            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12))
+                .Text_Lambda([Weak=TWeakObjectPtr<UShipInsuranceSubsystem>(Insurance),Id=Hull.HullId]()
+                {
+                    const auto* Entry=Weak.IsValid()?Weak->FindShip(Id):nullptr;
+                    if (!Entry)return FText::GetEmpty();
+                    if (Entry->bAssigned)return INVTEXT("LOANER");
+                    return FText::FromString(FString::Printf(TEXT("%.0f%%"),100.f*(Entry->bHasCondition?Entry->HullCondition:1.f)));
                 })];
         const auto* Design = ShipDesignRegistry::Find(Hull.Design);
         const bool bFighter = Design && Design->Category == EShipCategory::Fighter;

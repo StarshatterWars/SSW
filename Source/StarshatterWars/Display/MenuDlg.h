@@ -52,6 +52,16 @@ protected:
 
     // Use for per-show refresh / gating re-eval
     virtual void NativeConstruct() override;
+    virtual void NativeDestruct() override;
+    void StartAttractVideo();
+    void StopAttractVideo();
+    void ApplyModernActionStyles();
+    UFUNCTION() void OnAttractOpened(FString Url);
+    UFUNCTION() void OnAttractFailed(FString Url);
+    UPROPERTY(Transient) TObjectPtr<class UMediaPlayer> AttractPlayer;
+    UPROPERTY(Transient) TObjectPtr<class UMediaTexture> AttractTexture;
+    UPROPERTY(Transient) TObjectPtr<UImage> AttractPicture;
+    bool bAttractOpenRequested=false;
     virtual TSharedRef<SWidget> RebuildWidget() override;
     void BuildModernMenu();
     void RefreshIdentityLabels();
@@ -61,6 +71,8 @@ protected:
 
 public:
     void Show() override;
+    virtual void Hide() override;
+    virtual void SetVisibility(ESlateVisibility InVisibility) override;
     virtual void ExecFrame(double DeltaTime) override;
 
     void RefreshFromPlayerState();
@@ -93,7 +105,7 @@ protected:
     UPROPERTY(meta = (BindWidgetOptional))
     TObjectPtr<UButton> BtnMulti;
 
-    // SINGLE entry point for all settings (OptionsScreen hub):
+    // Deprecated Blueprint binding; removed from the main menu at runtime:
     UPROPERTY(meta = (BindWidgetOptional))
     TObjectPtr<UButton> BtnOptions;
 

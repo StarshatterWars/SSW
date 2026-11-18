@@ -36,6 +36,7 @@
 #include "Game.h"
 #include "Bolt.h"
 #include "BeamWeaponActor.h"
+#include "MiningCrystalCatalog.h"
 #include "Sprite.h"
 #include "Solid.h"
 #include "SimLight.h"
@@ -47,6 +48,13 @@
 // +--------------------------------------------------------------------+
 
 DEFINE_LOG_CATEGORY_STATIC(LogStarshatterSimShot, Log, All);
+
+bool SimShot::SetMiningCrystal(FName Crystal)
+{
+    if(!design || !design->IsMiningLaser() || (Sim::GetSim() && !Sim::GetSim()->HasSimulationAuthority()))return false;
+    if(!Crystal.IsNone() && !FMiningCrystalCatalog::Get().Find(Crystal))return false;
+    MiningCrystal=Crystal;return true;
+}
 
 // Helper: Starshatter-style random in [Min, Max], inclusive-ish.
 // (Replaces Random.h / Random(...) from legacy code.)

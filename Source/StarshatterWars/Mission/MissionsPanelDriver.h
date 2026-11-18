@@ -29,12 +29,11 @@ protected:
     void BuildDriverLayout();
     void RefreshTabStyles();
 private:
-    enum class EMissionsNavigationMode : uint8 { None, Campaign, Training, Single, Custom, Story };
+    enum class EMissionsNavigationMode : uint8 { None, Campaign, Training, Single, Story };
     EMissionsNavigationMode ActiveMode = EMissionsNavigationMode::None;
     UPROPERTY(Transient) TObjectPtr<UButton> TrainingTab = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> CampaignTab = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> SingleTab = nullptr;
-    UPROPERTY(Transient) TObjectPtr<UButton> CustomTab = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> StoryTab = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> MenuTab = nullptr;
     UPROPERTY(Transient) TObjectPtr<UButton> BriefingTab = nullptr;
@@ -56,7 +55,6 @@ private:
     UPROPERTY(Transient) TObjectPtr<UUserWidget> TrainingChild = nullptr;
     UPROPERTY(Transient) TObjectPtr<UUserWidget> CampaignChild = nullptr;
     UPROPERTY(Transient) TObjectPtr<UUserWidget> SingleChild = nullptr;
-    UPROPERTY(Transient) TObjectPtr<UUserWidget> CustomChild = nullptr;
     UPROPERTY(Transient) TObjectPtr<UUserWidget> StoryChild = nullptr;
     void SelectChild(UUserWidget* Child, const TCHAR* Title);
     void HideChildHeader(UUserWidget* Child);

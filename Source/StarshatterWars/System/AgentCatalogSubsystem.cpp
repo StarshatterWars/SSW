@@ -7,8 +7,12 @@
 #include "TimerSubsystem.h"
 
 #include "Campaign.h"
+#include "CampaignSave.h"
+#include "CampaignStoryRules.h"
 #include "Mission.h"
 #include "MissionInfo.h"
+#include "CombatGroup.h"
+#include "CombatAction.h"
 #include "MissionRankRules.h"
 #include "PlayerCharacter.h"
 #include "Misc/FileHelper.h"
@@ -93,21 +97,23 @@ TArray<int32> UAgentCatalogSubsystem::GetEligibleMissions(FName AgentId) const
 
     // Orders and dynamic assignments remain owned by the active SSW campaign.
     if (!Game->IsTrainingTestSession())
-        if (auto* Active = Campaign::GetCampaign(); Active && Active->IsActive() && Agent->CampaignIds.Contains(Active->GetCampaignId()))
+        if (auto* Active = Campaign::GetCampaign(); Active && Active->IsActive() && IsCampaignIssuer(AgentId, Active->GetCampaignId()))
         {
-            const auto& Missions = Active->GetMissionList();
-            for (int32 Index = 0; Index < Missions.size(); ++Index)
+            TArray<MissionInfo*> Missions;
+            for (int32 Index=0; Index<Active->GetMissionList().size(); ++Index) Missions.Add(Active->GetMissionList()[Index]);
+            for (int32 Index=0; Index<Active->GetStoryMissionList().size(); ++Index) Missions.Add(Active->GetStoryMissionList()[Index]);
+            for (int32 Index = 0; Index < Missions.Num(); ++Index)
             {
                 const auto* Info = Missions[Index];
-                if (!Info || Info->is_cutscene || Active->IsCutsceneMission(Info->id) ||
-                    Info->DisplayType != EMissionDisplayType::PlayerMission ||
-                    (Active->IsDynamic() && Info->Source != EMissionSource::Dynamic) ||
-                    (Info->mission && Info->mission->IsComplete()) || Info->exec_once < 0 ||
-                    Active->GetTime() < Info->start_after || Active->GetTime() > Info->start_before ||
-                    Pilot->GetRank() < Info->min_rank || (Info->max_rank > 0 && Pilot->GetRank() > Info->max_rank) ||
-                    (Players && Players->GetPlayerInfo().HasCompletedMission(Active->GetCampaignId(), Info->id))) continue;
+                if (!Info || Active->IsCutsceneMission(Info->id) || !IsStoryUnlocked(*Active, Info->id)) continue;
+                const auto* Action = Info->action_id ? Active->FindAction(Info->action_id) : nullptr;
+                const auto* Group = Active->GetPlayerGroup();
+                if (!CanOfferCampaignMission(*Agent, Active->GetCampaignId(), *Info, Active->GetTime(), Pilot->GetRank(),
+                    Group ? FString(UTF8_TO_TCHAR(Group->GetRegion().data())) : FString(),
+                    Players && Players->GetPlayerInfo().HasCompletedMission(Active->GetCampaignId(), Info->id),
+                    !Info->action_id || (Action && Action->Status() == Info->action_status))) continue;
                 const int32 Id = AgentMissionRules::Encode(Active->GetCampaignId(), Info->id);
-                if (Id != INDEX_NONE) Eligible.Add(Id);
+                if (Id != INDEX_NONE) Eligible.AddUnique(Id);
                 if (Active->IsSequential()) break;
             }
         }
@@ -121,6 +127,8 @@ TArray<int32> UAgentCatalogSubsystem::GetEligibleMissions(FName AgentId) const
                 !MissionRankRules::Unlocked(MissionRankRules::Required(Scenario))) continue;
 
             const int32 Id = Mission::RegionalAgentMissionOffset + Scenario.Id;
+            if (!Game->GetTrainingAgent().ArcRequirement(Key, Id,
+                [Players](int32 PreviousId) { return Players && Players->GetPlayerInfo().HasCompletedMission(Campaign::SINGLE_MISSIONS, PreviousId); }).IsEmpty()) continue;
             if (!Players || !Players->GetPlayerInfo().HasCompletedMission(Campaign::SINGLE_MISSIONS, Id))
                 Eligible.AddUnique(Id);
         }
@@ -148,6 +156,12 @@ bool UAgentCatalogSubsystem::CanAccept(int32 MissionId, FName AgentId) const
     const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
     const auto* Agent = FindAgent(AgentId);
     if (!Game || !Pilot || !Agent || Pilot->GetRank() < Agent->MinimumRank) return false;
+    if (FindScenario(MissionId))
+    {
+        const auto* Players = Game->GetSubsystem<UStarshatterPlayerSubsystem>();
+        if (!Game->GetTrainingAgent().ArcRequirement(AgentAI::PilotKey(*Pilot), MissionId,
+            [Players](int32 Id) { return Players && Players->GetPlayerInfo().HasCompletedMission(Campaign::SINGLE_MISSIONS, Id); }).IsEmpty()) return false;
+    }
     if (FTrainingTestRules::IsLesson(MissionId))
     {
         const FName Skill = FTrainingTestRules::RequiredSkill(MissionId);
@@ -163,11 +177,16 @@ bool UAgentCatalogSubsystem::CanAccept(int32 MissionId, FName AgentId) const
         if (AgentMissionRules::Decode(MissionId, CampaignId, OriginalId))
         {
             auto* Active = Campaign::GetCampaign();
-            if (!Active || Active->GetCampaignId() != CampaignId || !Active->IsActive() || !Agent->CampaignIds.Contains(CampaignId)) return false;
+            if (!Active || Active->GetCampaignId() != CampaignId || !Active->IsActive() || !IsCampaignIssuer(AgentId, CampaignId)) return false;
             const auto* Info = Active->GetMissionInfo(OriginalId);
-            return Info && !Info->is_cutscene && !Active->IsCutsceneMission(OriginalId) && Info->exec_once >= 0 &&
-                (!Info->mission || !Info->mission->IsComplete()) && Active->GetTime() >= Info->start_after && Active->GetTime() <= Info->start_before &&
-                Pilot->GetRank() >= Info->min_rank && (!Info->max_rank || Pilot->GetRank() <= Info->max_rank);
+            if (!Info || Active->IsCutsceneMission(OriginalId) || !IsStoryUnlocked(*Active, OriginalId)) return false;
+            const auto* Action = Info->action_id ? Active->FindAction(Info->action_id) : nullptr;
+            const auto* Group = Active->GetPlayerGroup();
+            const auto* Players = Game->GetSubsystem<UStarshatterPlayerSubsystem>();
+            return CanOfferCampaignMission(*Agent, CampaignId, *Info, Active->GetTime(), Pilot->GetRank(),
+                Group ? FString(UTF8_TO_TCHAR(Group->GetRegion().data())) : FString(),
+                Players && Players->GetPlayerInfo().HasCompletedMission(CampaignId, OriginalId),
+                !Info->action_id || (Action && Action->Status() == Info->action_status));
         }
     }
     return GetEligibleMissions(AgentId).Contains(MissionId);
@@ -243,7 +262,19 @@ FText UAgentCatalogSubsystem::GetAssignmentStatus(FName AgentId) const
     auto* Game = Cast<USSWGameInstance>(GetGameInstance());
     const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
     if (!Agent || !Game || !Pilot) return FText::GetEmpty();
-    if (Agent->Class != EAgentClass::Training) return INVTEXT("Request local work or review your campaign orders.");
+    if (Agent->Class != EAgentClass::Training)
+    {
+        TArray<FString> Status;
+        Status.Add(TEXT("Request local work or review your campaign orders."));
+        const auto* Players = Game->GetSubsystem<UStarshatterPlayerSubsystem>();
+        for (int32 OriginalId : Agent->MissionIds)
+        {
+            const FText Arc = Game->GetTrainingAgent().ArcStatus(AgentAI::PilotKey(*Pilot), Mission::RegionalAgentMissionOffset + OriginalId,
+                [Players](int32 Id) { return Players && Players->GetPlayerInfo().HasCompletedMission(Campaign::SINGLE_MISSIONS, Id); });
+            if (!Arc.IsEmpty()) Status.AddUnique(Arc.ToString());
+        }
+        return FText::FromString(FString::Join(Status,TEXT("\n\n")));
+    }
     return INVTEXT("OPERATION LIVE FIRE | Complete each lesson in sequence. Advanced command lessons require the appropriate rank and hull-command skill.");
 }
 
@@ -289,9 +320,45 @@ FText UAgentCatalogSubsystem::GetCampaignOrders(FName AgentId) const
 {
     const auto* Agent = FindAgent(AgentId);
     const auto* Active = Campaign::GetCampaign();
-    if (!Agent || !Active || !Agent->CampaignIds.Contains(Active->GetCampaignId())) return FText::GetEmpty();
+    if (!Agent || !Active || !IsCampaignIssuer(AgentId, Active->GetCampaignId())) return FText::GetEmpty();
     return FText::FromString(FString::Printf(TEXT("%s\n\n%s\n\n%s"), UTF8_TO_TCHAR(Active->GetName()),
         UTF8_TO_TCHAR(Active->Situation()), UTF8_TO_TCHAR(Active->Orders())));
+}
+
+bool UAgentCatalogSubsystem::IsStoryUnlocked(const Campaign& Active, int32 MissionId) const
+{
+    const auto* Row=Active.FindStoryMissionData(MissionId);
+    if (!Row) return true; // Existing generated/story mission gates stay unchanged.
+    const auto* Game=Cast<USSWGameInstance>(GetGameInstance());
+    const auto* Save=Game ? Game->CampaignSave : nullptr;
+    return CampaignStoryRules::IsUnlocked(*Row,Active.GetCampaignId(),Save &&
+        Save->CampaignIndex==Active.GetCampaignId() && !Save->CompletedMissionIds.Contains(MissionId) && Save->HasPlayedScene(Row->StoryUnlockScene));
+}
+
+bool UAgentCatalogSubsystem::IsCampaignIssuer(FName AgentId, int32 CampaignId) const
+{
+    const auto* Agent = FindAgent(AgentId);
+    const auto* Data = GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>();
+    const auto* Row = Data ? Data->GetCampaignByIndex1Based(CampaignId) : nullptr;
+    return Agent && Row && Agent->CampaignIds.Contains(CampaignId) && IsCampaignOrigin(*Agent, *Row);
+}
+
+bool UAgentCatalogSubsystem::IsCampaignOrigin(const FS_AgentCatalogRow& Agent, const FS_Campaign& Row)
+{
+    return !Row.System.IsEmpty() && !Row.Region.IsEmpty() &&
+        Agent.System.Equals(Row.System, ESearchCase::IgnoreCase) && Agent.Region.Equals(Row.Region, ESearchCase::IgnoreCase);
+}
+
+bool UAgentCatalogSubsystem::CanOfferCampaignMission(const FS_AgentCatalogRow& Agent, int32 CampaignId,
+    const MissionInfo& Info, double CampaignTime, int32 Rank, const FString& GroupRegion, bool bCompleted, bool bActionSatisfied)
+{
+    // Query the campaign's live generated list without consuming exec_once or generating new missions.
+    return Agent.CampaignIds.Contains(CampaignId) && AgentMissionRules::Encode(CampaignId, Info.id) != INDEX_NONE &&
+        !Info.is_cutscene && Info.DisplayType == EMissionDisplayType::PlayerMission && Info.Source != EMissionSource::Cutscene &&
+        (!Info.mission || !Info.mission->IsComplete()) && Info.exec_once >= 0 && !bCompleted && bActionSatisfied &&
+        CampaignTime >= Info.start_after && CampaignTime <= Info.start_before && Rank >= Agent.MinimumRank &&
+        Rank >= Info.min_rank && (Info.max_rank <= 0 || Rank <= Info.max_rank) &&
+        (!Info.region.length() || GroupRegion.Equals(UTF8_TO_TCHAR(Info.region.data()), ESearchCase::IgnoreCase));
 }
 
 bool UAgentCatalogSubsystem::CanActivateCampaign(FName AgentId, int32 Id) const
@@ -305,7 +372,7 @@ bool UAgentCatalogSubsystem::CanActivateCampaign(FName AgentId, int32 Id) const
     auto* Simulation = Sim::GetSim();
     if (Simulation && Simulation->GetMission() && (!Simulation->GetMission()->IsFreeFlight() || !Simulation->HasPlayerDocked())) return false;
     const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
-    return Players && Pilot && Pilot->GetRank() >= Agent->MinimumRank && Row && Row->bAvailable &&
+    return Players && Pilot && Pilot->GetRank() >= Agent->MinimumRank && Row && Row->bAvailable && IsCampaignOrigin(*Agent, *Row) &&
         CampaignPresentationRules::CanSelectCampaign(Players->GetPlayerInfo()) &&
         CampaignPresentationRules::IsCampaignUnlocked(Id, Players->GetPlayerInfo()) &&
         (!Campaign::GetCampaign() || Campaign::GetCampaign()->GetCampaignId() != Id) &&
@@ -318,7 +385,25 @@ bool UAgentCatalogSubsystem::ActivateCampaign(FName AgentId, int32 Id)
     auto* Game = CastChecked<USSWGameInstance>(GetGameInstance());
     auto* Data = Game->GetSubsystem<UStarshatterGameDataSubsystem>();
     const auto* Row = Data->GetCampaignByIndex1Based(Id);
-    if (!Row || !Campaign::SelectFromData(*Row)) return false;
+    auto* Players = Game->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if (!Row || !Players) return false;
+    const FS_PlayerGameInfo PreviousPlayer = Players->GetPlayerInfo();
+    auto& PendingPlayer = Players->GetMutablePlayerInfo();
+    PendingPlayer.Campaign = Id;
+    PendingPlayer.CampaignRowName = Row->RowName;
+    if (!Players->SaveActivePlayerProgress())
+    {
+        Players->GetMutablePlayerInfo() = PreviousPlayer;
+        UE_LOG(LogTemp, Warning, TEXT("[Agents] Campaign acceptance could not save; prior operation retained."));
+        return false;
+    }
+    if (!Campaign::SelectFromData(*Row))
+    {
+        Players->GetMutablePlayerInfo() = PreviousPlayer;
+        if (!Players->SaveActivePlayerProgress())
+            UE_LOG(LogTemp, Error, TEXT("[Agents] Could not restore saved campaign after activation failure."));
+        return false;
+    }
     Campaign::GetCampaign()->Start();
     Data->SetActiveCampaign(*Row);
     Data->CampaignIndex = Id - 1;
@@ -327,12 +412,8 @@ bool UAgentCatalogSubsystem::ActivateCampaign(FName AgentId, int32 Id)
     Game->SelectedCampaignIndex = Id;
     Game->SelectedCampaignRowName = Row->RowName;
     Game->SelectedCampaignDisplayName = Row->Name;
-    auto* Players = Game->GetSubsystem<UStarshatterPlayerSubsystem>();
-    Players->GetMutablePlayerInfo().Campaign = Id;
-    Players->GetMutablePlayerInfo().CampaignRowName = Row->RowName;
     Game->LoadOrCreateSelectedCampaignSave();
     if (auto* Timer = Game->GetSubsystem<UTimerSubsystem>()) Timer->SetCampaignSave(Game->CampaignSave);
-    Players->SavePlayer(true);
     UE_LOG(LogTemp, Display, TEXT("[Agents] Campaign %d introduced by %s"), Id, *AgentId.ToString());
     return true;
 }
@@ -358,20 +439,31 @@ bool UAgentCatalogSubsystem::AssignTrainingOperation(FName AgentId, bool bRequir
     if(Players->GetPlayerInfo().Campaign>Campaign::TRAINING_CAMPAIGN)return bRequireAcceptedMission;
     const auto* Row=Data->GetCampaignByIndex1Based(Campaign::TRAINING_CAMPAIGN);
     if(!Row)return false;
+    const FS_PlayerGameInfo Before=Players->GetPlayerInfo();
+    auto& Info=Players->GetMutablePlayerInfo(); Info.Campaign=Campaign::TRAINING_CAMPAIGN; Info.CampaignRowName=Row->RowName;
+    // Save the durable assignment before changing runtime campaign ownership.
+    if (!Players->SaveActivePlayerProgress())
+    {
+        Players->GetMutablePlayerInfo()=Before;
+        return false;
+    }
     if(!Campaign::GetCampaign() || Campaign::GetCampaign()->GetCampaignId()!=Campaign::TRAINING_CAMPAIGN)
     {
-        if(!Campaign::SelectFromData(*Row))return false;
+        if(!Campaign::SelectFromData(*Row))
+        {
+            Players->GetMutablePlayerInfo()=Before;
+            if(!Players->SaveActivePlayerProgress()) UE_LOG(LogTemp,Error,TEXT("[Agents] Training activation failed; prior assignment could not be resaved."));
+            return false;
+        }
         Campaign::GetCampaign()->Start();
     }
     Data->SetActiveCampaign(*Row);Data->CampaignIndex=Campaign::TRAINING_CAMPAIGN-1;
     Data->SelectedCampaignRowName=Row->RowName;Data->BuildCombatRosterFromDataTables();
     Game->SelectedCampaignIndex=Campaign::TRAINING_CAMPAIGN;Game->SelectedCampaignRowName=Row->RowName;Game->SelectedCampaignDisplayName=Row->Name;
-    auto& Info=Players->GetMutablePlayerInfo();Info.Campaign=Campaign::TRAINING_CAMPAIGN;Info.CampaignRowName=Row->RowName;
     Game->LoadOrCreateSelectedCampaignSave();
     if(auto* Timer=Game->GetSubsystem<UTimerSubsystem>())Timer->SetCampaignSave(Game->CampaignSave);
-    const bool Saved=Players->SavePlayer(true);
-    UE_LOG(LogTemp,Display,TEXT("[Agents] Pilot assigned to Operation Live Fire; saved=%d"),Saved);
-    return Saved;
+    UE_LOG(LogTemp,Display,TEXT("[Agents] Pilot assigned to Operation Live Fire; saved=1"));
+    return true;
 }
 
 FText UAgentCatalogSubsystem::GetCurrentOperationName() const

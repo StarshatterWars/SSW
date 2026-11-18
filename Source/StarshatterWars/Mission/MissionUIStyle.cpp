@@ -68,6 +68,17 @@ namespace MissionUIStyle
         return Style;
     }
 
+    const FSliderStyle& StandaloneSliderStyle()
+    {
+        static const FSliderStyle Style=[]()
+        {
+            FSliderStyle Result=OptionsSliderStyle();
+            const FSlateRoundedBoxBrush Bar(FLinearColor::White,4.f);
+            return Result.SetNormalBarImage(Bar).SetHoveredBarImage(Bar).SetDisabledBarImage(Bar).SetBarThickness(8.f);
+        }();
+        return Style;
+    }
+
     TSharedRef<SWidget> MakeOptionsSliderTrack(TSharedRef<SWidget> Slider, TAttribute<float> Value)
     {
         static const FProgressBarStyle Track = FProgressBarStyle()

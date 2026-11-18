@@ -7,6 +7,7 @@
 
 class Campaign;
 class Mission;
+class MissionInfo;
 
 UENUM(BlueprintType)
 enum class EAgentClass : uint8
@@ -62,11 +63,16 @@ public:
     FText GetCampaignOrders(FName AgentId) const;
     FText GetCampaignTitle(int32 CampaignId) const;
     bool CanActivateCampaign(FName AgentId, int32 CampaignId) const;
+    static bool IsCampaignOrigin(const FS_AgentCatalogRow& Agent, const FS_Campaign& Campaign);
+    static bool CanOfferCampaignMission(const FS_AgentCatalogRow& Agent, int32 CampaignId, const MissionInfo& Info,
+        double CampaignTime, int32 Rank, const FString& GroupRegion, bool bCompleted, bool bActionSatisfied);
     bool ActivateCampaign(FName AgentId, int32 CampaignId);
     bool AssignTrainingOperation(FName AgentId, bool bRequireAcceptedMission = true);
     FText GetCurrentOperationName() const;
 
 private:
+    bool IsCampaignIssuer(FName AgentId, int32 CampaignId) const;
+    bool IsStoryUnlocked(const Campaign& Active, int32 MissionId) const;
     const FS_CampaignMission* FindScenario(int32 Id) const;
 
     UPROPERTY(Transient) TObjectPtr<UDataTable> Catalog;

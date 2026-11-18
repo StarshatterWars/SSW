@@ -13,9 +13,12 @@
 */
 
 #include "Sim.h"
+#include "RadioView.h"
+#include "PlayerFlightAccess.h"
 #include "AcceptanceAI.h"
 #include "AgentCatalogSubsystem.h"
 #include "ContractLedger.h"
+#include "ContractSaveTransaction.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "CargoCatalogSubsystem.h"
 #include "EconomyRuntime.h"
@@ -505,6 +508,7 @@ Sim::CommitMission()
 
 void Sim::UnloadMission()
 {
+    PreparedSceneGate.Reset();
     if (bUnloadingMission) return;
     TGuardValue<bool> UnloadGuard(bUnloadingMission, true);
     const int RegionCount = regions.size();
@@ -528,6 +532,7 @@ void Sim::UnloadMission()
     GetEconomy().MiningLeases.Reset();
     ProductionViews.Reset();
     IndustrySeconds = 0;
+    MarketSeconds = 0;
     DeferredLaunchPlayer = nullptr;
     PendingLaunchPlayer = nullptr;
     bPlayerLaunchRequested = false;
@@ -2534,6 +2539,8 @@ bool Sim::IsTrainingLaunchLeaderPending()
 
 bool Sim::FindReadyPlayerLaunchSlot(Ship* Player, Hangar*& CarrierHangar, int& Squadron, int& Slot)
 {
+    if (NeedsTrainingLaunchClearance()) return false;
+
     if (!Player || Player->IsDead() || bPlayerLaunchRequested || IsTrainingLaunchLeaderPending() ||
         (PendingLaunchPlayer && PendingLaunchPlayer != Player))
         return false;
@@ -2573,6 +2580,12 @@ bool Sim::CanRequestPlayerCarrierLaunch()
 
 bool Sim::RequestPlayerCarrierLaunch()
 {
+    if (NeedsTrainingLaunchClearance())
+    {
+        RadioView::Message("NO MISSION ASSIGNED. CLEARANCE DECLINED.",2);
+        return false;
+    }
+
     Ship* Player = GetPlayerShip();
     Hangar* CarrierHangar = nullptr;
     int Squadron = -1, Slot = -1;
@@ -2669,10 +2682,27 @@ const TMap<FName, FContractTransaction>& Sim::GetTrainingContracts()
         FContractLedger::Restore(Economy, TrainingContracts, TrainingContractAccounts);
     for (auto& Account : TrainingContractAccounts)
         Account.Value.Credits = Economy.Wallets.FindRef(Account.Key);
-    ON_SCOPE_EXIT { FContractLedger::Capture(Economy, TrainingContracts, TrainingContractAccounts); };
+    Ship* ContractPlayer = GetPlayerShip();
+    if (ContractPlayer) ContractPlayer->ApplyCargoInventoryToManifest();
+    const FContractSaveSnapshot Before(Economy, TrainingContracts, TrainingContractAccounts);
+    TOptional<Ship::FSealedCourierPackage> BeforePackage;
+    if (ContractPlayer && ContractPlayer->GetCourierPackage()) BeforePackage = *ContractPlayer->GetCourierPackage();
+    const auto RestorePackage = [&]()
+    {
+        if (!ContractPlayer) return;
+        const auto* Current = ContractPlayer->GetCourierPackage();
+        if (Current && BeforePackage && Current->ContractId == BeforePackage->ContractId) return;
+        if (Current) ContractPlayer->RemoveCourierPackage(Current->ContractId);
+        if (BeforePackage) ContractPlayer->LoadCourierPackage(BeforePackage->ContractId, BeforePackage->Tonnes);
+    };
+    auto* ContractWorld = NetworkWorld.Get();
+    auto* ContractInstance = ContractWorld ? ContractWorld->GetGameInstance() : nullptr;
+    auto* Players = ContractInstance ? ContractInstance->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    bool Changed = false;
     const FDateTime Now = FDateTime::UtcNow();
     if (TrainingContracts.IsEmpty())
     {
+        Changed = true;
         const FName Depot(TEXT("Janek Logistics"));
         const FName Terminal(TEXT("Janus Transfer Station"));
         const FName Supplies(TEXT("Training Supplies"));
@@ -2680,13 +2710,13 @@ const TMap<FName, FContractTransaction>& Sim::GetTrainingContracts()
         auto& DepotAccount = TrainingContractAccounts.Add(Depot);
         DepotAccount.Credits = Economy.Wallets.FindRef(Depot);
         if (!Economy.InitializedMarkets.Contains(TEXT("Training issuer grant")))
-        { DepotAccount.Credits += 20000; Economy.InitializedMarkets.Add(TEXT("Training issuer grant")); }
+        { DepotAccount.Credits += FMath::Min(20000LL, MAX_int64 - DepotAccount.Credits); Economy.InitializedMarkets.Add(TEXT("Training issuer grant")); }
         auto& Stock = DepotAccount.StationStock.Add(Terminal);
         Stock.Add(Parts, 1);
         auto& PilotAccount = TrainingContractAccounts.Add(TrainingContractPilot);
         PilotAccount.Credits = Economy.Wallets.FindRef(TrainingContractPilot);
         if (!Economy.InitializedMarkets.Contains(TEXT("Training pilot grant")))
-        { PilotAccount.Credits += 10000; Economy.InitializedMarkets.Add(TEXT("Training pilot grant")); }
+        { PilotAccount.Credits += FMath::Min(10000LL, MAX_int64 - PilotAccount.Credits); Economy.InitializedMarkets.Add(TEXT("Training pilot grant")); }
         PilotAccount.StationStock.FindOrAdd(Terminal).Add(Parts, 1);
 
         FContractTransaction Courier;
@@ -2743,15 +2773,19 @@ const TMap<FName, FContractTransaction>& Sim::GetTrainingContracts()
             const bool Lost = !Player || Player->IsDead() || Player->IsDying() || !Player->HasCourierPackage(Entry.Key);
             if ((Lost || Now >= Contract.DeliverBy) && SettlementAI::FailCourier(Contract, TrainingContractAccounts, Contract.Acceptor, Now, true))
             {
+                Changed = true;
                 if (Ship* LivePlayer = GetPlayerShip()) LivePlayer->RemoveCourierPackage(Entry.Key);
                 UE_LOG(LogTemp, Display, TEXT("[Contracts] %s failed: %s."), *Entry.Key.ToString(), Lost ? TEXT("package lost") : TEXT("delivery deadline expired"));
             }
         }
-        SettlementAI::CloseExpired(Contract, TrainingContractAccounts, Now);
+        Changed |= SettlementAI::CloseExpired(Contract, TrainingContractAccounts, Now);
         if (Contract.State == EContractState::AwaitingClaims &&
             Contract.Issuer != TrainingContractPilot && !Contract.bSellerClaimed)
-            SettlementAI::ClaimAuction(Contract, TrainingContractAccounts, Contract.Issuer);
+            Changed |= SettlementAI::ClaimAuction(Contract, TrainingContractAccounts, Contract.Issuer);
     }
+    if (Changed && !ContractSaveTransaction::Commit(Economy, TrainingContracts, TrainingContractAccounts, Before,
+        [&]() { if (ContractPlayer) ContractPlayer->ApplyCargoInventoryToManifest(); return !Players || Players->SaveActivePlayerProgress(); }, RestorePackage))
+        UE_LOG(LogTemp, Warning, TEXT("[Contracts] Could not save lifecycle changes; contracts, cargo and wallet were restored."));
     return TrainingContracts;
 }
 
@@ -2767,12 +2801,29 @@ FText Sim::ExecuteTrainingContract(FName ContractId, ETrainingContractAction Act
     GetTrainingContracts();
     auto& Economy = GetEconomy();
     for (auto& Account : TrainingContractAccounts) Account.Value.Credits = Economy.Wallets.FindRef(Account.Key);
-    ON_SCOPE_EXIT { FContractLedger::Capture(Economy, TrainingContracts, TrainingContractAccounts); };
+    const FContractSaveSnapshot Before(Economy, TrainingContracts, TrainingContractAccounts);
+    Ship* ContractPlayer = GetPlayerShip();
+    TOptional<Ship::FSealedCourierPackage> BeforePackage;
+    if (ContractPlayer && ContractPlayer->GetCourierPackage()) BeforePackage = *ContractPlayer->GetCourierPackage();
+    const auto RestorePackage = [&]()
+    {
+        if (!ContractPlayer) return;
+        const auto* Current = ContractPlayer->GetCourierPackage();
+        if (Current && BeforePackage && Current->ContractId == BeforePackage->ContractId) return;
+        if (Current) ContractPlayer->RemoveCourierPackage(Current->ContractId);
+        if (BeforePackage) ContractPlayer->LoadCourierPackage(BeforePackage->ContractId, BeforePackage->Tonnes);
+    };
+    auto* ContractWorld = NetworkWorld.Get();
+    auto* ContractInstance = ContractWorld ? ContractWorld->GetGameInstance() : nullptr;
+    auto* Players = ContractInstance ? ContractInstance->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    bool Changed = false;
     auto* Contract = TrainingContracts.Find(ContractId);
     if (!Contract)
         return INVTEXT("Contract unavailable.");
 
     const FDateTime Now = FDateTime::UtcNow();
+    const auto RunAction = [&]() -> FText
+    {
     switch (Action)
     {
     case ETrainingContractAction::Accept:
@@ -2786,14 +2837,14 @@ FText Sim::ExecuteTrainingContract(FName ContractId, ETrainingContractAction Act
         if (!Player->LoadCourierPackage(ContractId, PackageTonnes))
             return INVTEXT("The courier package needs 0.1 t of free cargo capacity.");
         if (AcceptanceAI::Accept(*Contract, TrainingContractAccounts, TrainingContractPilot, Now))
-            return INVTEXT("Package loaded. Fly to Janus Transfer Station to deliver it.");
+        { Changed = true; return INVTEXT("Package loaded. Fly to Janus Transfer Station to deliver it."); }
         Player->RemoveCourierPackage(ContractId);
         return INVTEXT("Could not accept. Check the contract status and your collateral balance.");
     }
     case ETrainingContractAction::Bid:
         if (BiddingAI::PlaceBid(*Contract, TrainingContractAccounts, TrainingContractPilot, Bid, Now))
-            return Contract->bBuyerClaimed ? INVTEXT("Buyout complete. Goods credited at Janus Transfer Station.")
-                                          : INVTEXT("Bid placed. Credits are held until you are outbid or the auction settles.");
+        { Changed = true; return Contract->bBuyerClaimed ? INVTEXT("Buyout complete. Goods credited at Janus Transfer Station.")
+                                          : INVTEXT("Bid placed. Credits are held until you are outbid or the auction settles."); }
         return INVTEXT("Bid rejected. Check the bid amount, your balance, and the auction deadline.");
     case ETrainingContractAction::Deliver:
     {
@@ -2809,17 +2860,29 @@ FText Sim::ExecuteTrainingContract(FName ContractId, ETrainingContractAction Act
         if (SettlementAI::DeliverCourier(*Contract, TrainingContractAccounts, TrainingContractPilot, Destination))
         {
             Player->RemoveCourierPackage(ContractId);
+            Changed = true;
             return INVTEXT("Delivered. Reward and collateral credited.");
         }
         return INVTEXT("This contract cannot be delivered.");
     }
     case ETrainingContractAction::Claim:
         if (SettlementAI::ClaimAuction(*Contract, TrainingContractAccounts, TrainingContractPilot))
-            return Contract->Issuer == TrainingContractPilot ? INVTEXT("Auction payout credited.")
-                                                           : INVTEXT("Auction goods credited at Janus Transfer Station.");
+        { Changed = true; return Contract->Issuer == TrainingContractPilot ? INVTEXT("Auction payout credited.")
+                                                           : INVTEXT("Auction goods credited at Janus Transfer Station."); }
         return INVTEXT("No auction claim is available.");
     }
     return FText::GetEmpty();
+    };
+    const FText Result = RunAction();
+    if (!Changed)
+    {
+        RestorePackage(); Economy = Before.Economy; TrainingContracts = Before.Contracts; TrainingContractAccounts = Before.Accounts;
+        return Result;
+    }
+    if (!ContractSaveTransaction::Commit(Economy, TrainingContracts, TrainingContractAccounts, Before,
+        [&]() { if (ContractPlayer) ContractPlayer->ApplyCargoInventoryToManifest(); return !Players || Players->SaveActivePlayerProgress(); }, RestorePackage))
+        return INVTEXT("Could not save this contract action. Cargo, credits and the contract were restored; please try again.");
+    return Result;
 }
 
 TArray<Sim::FActiveHaul> Sim::GetActiveHauls()
@@ -2875,6 +2938,28 @@ const FSSWProductionStock* Sim::GetProductionStock(const FSSWProductionFacility&
 void Sim::TickIndustry(double Seconds)
 {
     if (!FMath::IsFinite(Seconds) || Seconds <= 0) return;
+    MarketSeconds += Seconds;
+    if (MarketSeconds>=1.0)
+    {
+        MarketSeconds=0;
+        auto& State=GetEconomy();
+        if (!State.MarketOrders.IsEmpty())
+        {
+            const auto Before=State;
+            const int32 Fills=FEconomyLedger::AdvanceMarketOrders(State,FDateTime::UtcNow().ToUnixTimestamp());
+            bool Changed=Fills>0;
+            if(!Changed)for(const auto& Pair:State.MarketOrders)
+                if(const auto* Old=Before.MarketOrders.Find(Pair.Key);!Old || Old->State!=Pair.Value.State){Changed=true;break;}
+            if (Changed && !IsNetworked())
+            {
+                if (Ship* Craft=GetPlayerShip()) Craft->ApplyCargoInventoryToManifest();
+                if (auto* World=NetworkWorld.Get())
+                    if (auto* Instance=World->GetGameInstance())
+                        if (auto* Players=Instance->GetSubsystem<UStarshatterPlayerSubsystem>();Players && !Players->SaveActivePlayerProgress())
+                        { State=Before; if (Ship* Craft=GetPlayerShip()) Craft->ApplyCargoInventoryToManifest(); UE_LOG(LogTemp,Warning,TEXT("[Market] Matching save failed; orders and balances restored for retry.")); }
+            }
+        }
+    }
     IndustrySeconds += Seconds;
     if (IndustrySeconds < 0.25) return;
     const double Step = IndustrySeconds; IndustrySeconds = 0;
@@ -2908,6 +2993,7 @@ void Sim::TickIndustry(double Seconds)
 void
 Sim::ExecFrame(double DeltaSeconds)
 {
+    if (PreparedSceneGate.Blocks(mission)) return;
     if (!HasSimulationAuthority()) return;
     if (auto* World = NetworkWorld.Get())
         if (auto* Instance = World->GetGameInstance())
@@ -3029,8 +3115,13 @@ Sim::ExecFrame(double DeltaSeconds)
                 }
                 Ship& Hauler = *ShipOnRoute;
                 SimRegion* HaulerRegion = Hauler.GetRegion();
-                if (!HaulerRegion) continue;
-                Hauler.SetScriptedContactSpeed(0);
+                if (!HaulerRegion)
+                {
+                    Run.Contract.Release(Economy);
+                    MiningAI::ReleaseClaims(Economy,Hauler.GetCargoInventoryKey());
+                    Hauler.StopScriptedMotion();continue;
+                }
+                Hauler.StopScriptedMotion();
                 const bool bShuttle = Index == 0;
                 if (bShuttle && !Hauler.IsAirborne())
                 {
@@ -3194,8 +3285,12 @@ Sim::ExecFrame(double DeltaSeconds)
                         continue;
                     if (Run.Time < Run.NextPulse) continue;
                     Run.NextPulse = Run.Time + 1.5;
-                    if (auto* Shot = CreateShot(Destination, Hauler.GetCam(), Laser, &Hauler, HaulerRegion))
-                        Shot->SetBeamPoints(Position, Destination);
+                    // The holding-position destination is not the laser target.
+                    // After MiningOffset is captured it equals Position; aiming at
+                    // it would collapse every subsequent mining pulse to zero length.
+                    const FVector BeamEnd=MiningAI::BeamEndpoint(Position,Deposit->GetLocation(),Laser->max_range);
+                    if (auto* Shot = CreateShot(Position, Hauler.GetCam(), Laser, &Hauler, HaulerRegion))
+                        Shot->SetBeamPoints(Position, BeamEnd);
                     continue;
                 }
 
@@ -4302,8 +4397,20 @@ Sim::ResolveInstructionTargets()
 		TEXT("[Sim::ResolveInstructionTargets] COMPLETE"));
 }
 
+bool Sim::NeedsTrainingLaunchClearance() const
+{
+    if (!mission || !mission->IsFreeFlight()) return false;
+    const auto* Pilot=PlayerCharacter::GetCurrentPlayer();
+    return !Pilot || !PlayerFlightAccess::CanLaunch(false,Pilot->GetRank());
+}
+void Sim::PrepareCutscenePlayback(const Mission* PreparedMission)
+{
+    if (mission && mission==PreparedMission) PreparedSceneGate.Prepare(PreparedMission);
+}
+
 void Sim::BeginPreparedCutscenePlayback(const Mission* PreparedMission)
 {
+    PreparedSceneGate.Begin(PreparedMission);
     if (mission && mission == PreparedMission)
         start_time = Game::GetGameTime();
 }

@@ -448,11 +448,39 @@ void Ship::BindCargoInventory(FGuid Hull)
     else SyncCargoInventory();
 }
 
+bool Ship::RestoreCourierPackageFromInventory(const FEconomyState& State)
+{
+    if (CourierPackage || !design || IsDead() || IsDying()) return false;
+    const auto* Inventory = State.Inventories.Find(GetCargoInventoryKey());
+    if (!Inventory || Inventory->Owner != FEconomyLedger::Pilot() ||
+        !FMath::IsFinite(design->CargoCapacity.Tonnes) || design->CargoCapacity.Tonnes <= 0 ||
+        FEconomyLedger::Used(*Inventory) > design->CargoCapacity.Tonnes + UE_SMALL_NUMBER) return false;
+    TOptional<FSealedCourierPackage> Candidate;
+    for (const auto& Stack : Inventory->Items)
+    {
+        FString ContractName = Stack.Type.ToString();
+        if (!ContractName.RemoveFromStart(TEXT("Courier/"))) continue;
+        const FName ContractId(*ContractName); const auto* Contract = State.Contracts.Find(ContractId);
+        if (!Contract || Contract->State != EContractState::InProgress || Contract->Terms.Type != ESSWContractType::Courier ||
+            Contract->Acceptor != FEconomyLedger::Pilot() || Stack.Quantity != 1 ||
+            !FMath::IsFinite(Stack.UnitTonnes) || Stack.UnitTonnes <= 0) continue;
+        if (Candidate) return false; // Never select arbitrarily from an invalid multi-package save.
+        Candidate = FSealedCourierPackage{ContractId, Stack.UnitTonnes};
+    }
+    if (!Candidate) return false;
+    CourierPackage = Candidate;
+    return true; // Presentation restored from existing stock; no item deposit or new stack ID.
+}
+
 void Ship::ApplyCargoInventoryToManifest()
 {
     auto* Simulation = Sim::GetSim();
-    if (!Simulation || !CargoManifest || CargoManifest->bPassengers) return;
-    const double Amount = FEconomyLedger::Quantity(Simulation->GetEconomy(), GetCargoInventoryKey(), DataTableUtils::MakeValidName(CargoManifest->Item));
+    if (!Simulation) return;
+    auto& State = Simulation->GetEconomy();
+    // Owned-hull binding calls this before synchronization. Restore the sealed adapter even on empty fighters.
+    if (Simulation->GetPlayerShip() == this && !Simulation->IsNetworked()) RestoreCourierPackageFromInventory(State);
+    if (!CargoManifest || CargoManifest->bPassengers) return;
+    const double Amount = FEconomyLedger::Quantity(State, GetCargoInventoryKey(), DataTableUtils::MakeValidName(CargoManifest->Item));
     CargoManifest->Quantity = FMath::FloorToInt(Amount);
     FractionalMinedOre = CargoManifest->Unit == TEXT("t") ? Amount - CargoManifest->Quantity : 0;
 }

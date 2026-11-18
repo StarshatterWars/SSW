@@ -13,7 +13,7 @@
 
     CHANGE NOTE (OPTIONS HUB)
     =========================
-    Audio/Video/Controls/Keyboard/Joystick/Mods are now managed exclusively by
+    Audio/Video/Controls/Keyboard/Joystick are managed by
     UOptionsScreen via a WidgetSwitcher. Therefore:
 
       - MenuDlg no longer binds or routes any "Video", "Controls", or "Mod" buttons.
@@ -23,6 +23,14 @@
 =============================================================================*/
 
 #include "MenuDlg.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
+#include "Dom/JsonObject.h"
+#include "MediaPlayer.h"
+#include "MediaTexture.h"
+#include "HAL/FileManager.h"
+#include "RHI.h"
+#include "Brushes/SlateRoundedBoxBrush.h"
 #include "FactionInsignia.h"
 #include "HAL/PlatformProcess.h"
 #include "Misc/FileHelper.h"
@@ -86,7 +94,15 @@ TSharedRef<SWidget> UMenuDlg::RebuildWidget()
 
 void UMenuDlg::BuildModernMenu()
 {
-    if (!WidgetTree || WidgetTree->FindWidget(TEXT("SSWMenu_ModernRoot"))) return;
+    if (!WidgetTree) return;
+    // Remove stale Blueprint controls as well as the native entry point.
+    if(auto* OldOptions=Cast<UButton>(WidgetTree->FindWidget(TEXT("BtnOptions"))))
+    {
+        OldOptions->OnClicked.Clear();OldOptions->OnHovered.Clear();OldOptions->OnUnhovered.Clear();
+        OldOptions->SetIsEnabled(false);OldOptions->SetVisibility(ESlateVisibility::Collapsed);OldOptions->RemoveFromParent();
+    }
+    BtnOptions=nullptr;
+    if (WidgetTree->FindWidget(TEXT("SSWMenu_ModernRoot"))) return;
     auto Existing=[this](const TCHAR* Name){return Cast<UButton>(WidgetTree->FindWidget(Name));};
     UButton* Start=Existing(TEXT("BtnStart"));
     UButton* Tactical=Existing(TEXT("BtnTac"));
@@ -115,51 +131,59 @@ void UMenuDlg::BuildModernMenu()
         Border->SetVisibility(ESlateVisibility::HitTestInvisible);Place(Border,X,Y,W,H);return Border;
     };
     // Quiet contrast behind navigation; the space scene stays visible at left.
-    Panel(1052,92,772,760,FLinearColor(.006f,.015f,.026f,.88f));
-    Panel(1052,92,2,760,FLinearColor(.13f,.45f,.6f,.65f));
+    Panel(1052,124,772,738,FLinearColor(.006f,.015f,.026f,.93f));
+    Panel(1052,124,2,738,FLinearColor(.13f,.45f,.6f,.5f));
     Panel(96,905,1728,1,FLinearColor(.2f,.48f,.6f,.6f));
-    Label(TEXT("FRACTAL DEV STUDIOS"),13,Muted,104,64,600,28);
-    Label(TEXT("TACTICAL AND STRATEGIC OPERATIONS SIMULATOR"),14,Cyan,104,376,750,28);
-    Label(TEXT("STARSHATTER"),64,White,96,420,960,90,true);
-    Label(TEXT("WARS"),64,White,96,499,850,124,true);
-    Panel(104,646,78,3,Cyan);
-    Label(TEXT("COMMAND YOUR SHIP. LEAD YOUR FLEET."),17,Muted,104,673,850,44);
+    Label(TEXT("FRACTAL DEV GAMES"),12,Muted,104,64,600,28);
+    Label(TEXT("STARSHATTER"),44,White,254,142,760,68,true);
+    Label(TEXT("WARS"),44,White,254,207,760,68,true);
+    Label(TEXT("COMMAND YOUR SHIP. LEAD YOUR FLEET."),15,Muted,104,832,880,36);
+    // A real, silent attract movie inside a 16:9 frame; artwork remains behind
+    // it until media opens, and survives missing/unsupported video codecs.
+    Panel(102,308,884,499,FLinearColor(.2f,.45f,.56f,.8f));
+    auto* Fallback=WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),TEXT("SSWMenu_AttractFallback"));
+    if(auto* Art=LoadObject<UTexture2D>(nullptr,TEXT("/Game/UI/Splash/SSW_OrionLaunch_1080p.SSW_OrionLaunch_1080p")))Fallback->SetBrushFromTexture(Art);
+    Fallback->SetVisibility(ESlateVisibility::HitTestInvisible);Place(Fallback,104,310,880,495);
+    AttractPicture=WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),TEXT("SSWMenu_AttractVideo"));
+    AttractPicture->SetVisibility(ESlateVisibility::Collapsed);Place(AttractPicture,104,310,880,495);
     auto* Logo=WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(),TEXT("SSWMenu_CircularLogo"));
     if(auto* Material=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/UI/Materials/M_UISSWCircularLogo.M_UISSWCircularLogo")))Logo->SetBrushFromMaterial(Material);
     else if(auto* Texture=LoadObject<UTexture2D>(nullptr,TEXT("/Game/UI/SSW_Circular.SSW_Circular")))Logo->SetBrushFromTexture(Texture);
-    Logo->SetVisibility(ESlateVisibility::HitTestInvisible);Place(Logo,104,128,214,214);
-    Label(TEXT("MAIN MENU"),13,Cyan,1100,130,500,28);
-    Label(TEXT("OPERATIONS"),30,White,1100,162,664,48,true);
+    Logo->SetVisibility(ESlateVisibility::HitTestInvisible);Place(Logo,104,144,126,126);
+    Label(TEXT("MAIN MENU"),12,Cyan,1100,174,500,26);
+    Label(TEXT("OPERATIONS"),28,White,1100,211,664,48,true);
     auto NewButton=[this](const TCHAR* Name){return WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(),Name);};
     BtnStart=Start?Start:NewButton(TEXT("BtnStart"));BtnCampaign=nullptr;BtnMission=NewButton(TEXT("BtnMission"));
     if (BtnPlayer) BtnPlayer->SetVisibility(ESlateVisibility::Collapsed);
-    BtnPlayer=nullptr;BtnMulti=NewButton(TEXT("BtnMulti"));BtnOptions=NewButton(TEXT("BtnOptions"));
+    BtnPlayer=nullptr;BtnMulti=NewButton(TEXT("BtnMulti"));BtnOptions=nullptr;
     if (Tactical) Tactical->SetVisibility(ESlateVisibility::Collapsed);
     BtnTac=nullptr;BtnQuit=Exit?Exit:NewButton(TEXT("BtnQuit"));
     auto Card=[&](UButton* Button,const TCHAR* Heading,const TCHAR* Subtitle,float X,float Y,float W,float H,bool Primary=false){
         Button->ClearChildren();Button->SetToolTipText(FText::FromString(Subtitle));Place(Button,X,Y,W,H);
         // Separate hit-test-transparent labels protect against stale BP content.
-        const float LabelInset=Button==BtnQuit?66.f:50.f;
-        Label(Heading,Primary?26:18,White,X+LabelInset,Y+(Primary?24:18),W-LabelInset-32,36,true);
-        Label(Subtitle,11,Muted,X+LabelInset,Y+(Primary?70:58),W-LabelInset-32,26);
+        const float LabelInset=Button==BtnQuit?54.f:86.f;
+        Label(Heading,Primary?24:18,Button==BtnQuit?Muted:White,X+LabelInset,Y+(Primary?27:20),W-LabelInset-28,36,true);
+        if(Subtitle[0])Label(Subtitle,12,Muted,X+LabelInset,Y+(Primary?76:61),W-LabelInset-28,26);
     };
-    Card(BtnStart,TEXT("START GAME"),TEXT("Enter Janek orbit and receive missions from your agent"),1100,234,664,116,true);
-    Card(BtnMission,TEXT("MISSIONS"),TEXT("Mission browser and custom missions"),1100,376,664,104);
-    Card(BtnMulti,TEXT("MULTIPLAYER"),TEXT("Create or join a session"),1100,498,664,104);
+    Card(BtnStart,TEXT("START GAME"),TEXT("Enter Janek orbit and receive missions from your agent"),1100,302,664,136,true);
+    Card(BtnMission,TEXT("MOD EDITOR"),TEXT("Custom missions and single-player mod packs"),1100,592,664,112);
+    Card(BtnMulti,TEXT("MULTIPLAYER"),TEXT("Create or join a session"),1100,460,664,112);
     BtnFreeMode = nullptr;
     BtnTestMission = nullptr;
-    Place(BtnOptions, 1696, 126, 68, 48);
-    BtnOptions->SetToolTipText(INVTEXT("Options"));
-    auto* Gear = WidgetTree->ConstructWidget<UImage>();
-    Gear->SetBrushFromTexture(LoadObject<UTexture2D>(nullptr,TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/T_Gear_256x256.T_Gear_256x256")),false);
-    Gear->SetColorAndOpacity(FLinearColor(.65f,.9f,1.f));
-    Gear->SetVisibility(ESlateVisibility::HitTestInvisible);
-    auto* GearSize = WidgetTree->ConstructWidget<USizeBox>();
-    GearSize->SetWidthOverride(32);
-    GearSize->SetHeightOverride(32);
-    GearSize->SetContent(Gear);
-    BtnOptions->SetContent(GearSize);
-    Card(BtnQuit,TEXT("EXIT TO WINDOWS"),TEXT("Close Starshatter Wars"),1100,624,664,96);
+    Card(BtnQuit,TEXT("EXIT TO WINDOWS"),TEXT(""),1100,750,326,66);
+    const auto AddActionIcon=[this](UButton* Button,EShipSystemIcon Icon)
+    {
+        auto* Host=WidgetTree->ConstructWidget<UNativeWidgetHost>();
+        Host->SetContent(SNew(SShipSystemIcon).Icon(Icon));
+        Host->SetVisibility(ESlateVisibility::HitTestInvisible);
+        auto* Size=WidgetTree->ConstructWidget<USizeBox>();Size->SetWidthOverride(30);Size->SetHeightOverride(30);Size->SetContent(Host);
+        Button->SetContent(Size);
+        if(auto* Slot=Cast<UButtonSlot>(Size->Slot)){Slot->SetPadding(FMargin(Button==BtnQuit?14:28,0,0,0));Slot->SetHorizontalAlignment(HAlign_Left);Slot->SetVerticalAlignment(VAlign_Center);}
+    };
+    AddActionIcon(BtnStart,EShipSystemIcon::Play);
+    AddActionIcon(BtnMission,EShipSystemIcon::SettingsGear);
+    AddActionIcon(BtnMulti,EShipSystemIcon::Ship);
+    AddActionIcon(BtnQuit,EShipSystemIcon::Exit);
     // Compact, persistent campaign/pilot context; no opaque full-width slab.
     Label(TEXT("ACTIVE CAMPAIGN"),12,Cyan,104,930,560,25);
     CampaignIdentityText=Label(TEXT("NO ACTIVE CAMPAIGN"),19,White,104,960,580,32);
@@ -172,6 +196,66 @@ void UMenuDlg::BuildModernMenu()
     DescriptionText=Label(TEXT(""),13,Muted,104,852,1650,35);
     VersionText=Label(TEXT(""),11,Muted,104,1040,700,25);
 }
+
+void UMenuDlg::ApplyModernActionStyles()
+{
+    for(UButton* Button:{BtnStart.Get(),BtnMulti.Get(),BtnMission.Get(),BtnQuit.Get()})
+    {
+        if(!Button)continue;
+        const bool Primary=Button==BtnStart,Exit=Button==BtnQuit;
+        const FLinearColor Fill=Exit?FLinearColor(.018f,.032f,.045f,.38f):Primary?FLinearColor(.035f,.20f,.25f,.95f):FLinearColor(.025f,.07f,.10f,.92f);
+        const FLinearColor Edge=Exit?FLinearColor(.16f,.24f,.28f,.4f):Primary?FLinearColor(.28f,.72f,.82f,.9f):FLinearColor(.16f,.34f,.42f,.7f);
+        FButtonStyle Style=Button->GetStyle();
+        Style.Normal=FSlateRoundedBoxBrush(Fill,5.f,Edge,1.f);
+        Style.Hovered=FSlateRoundedBoxBrush(Exit?FLinearColor(.14f,.035f,.04f,.85f):FLinearColor(.055f,.24f,.30f,.98f),5.f,Exit?FLinearColor(.6f,.2f,.2f,.85f):FLinearColor(.42f,.88f,.98f,1),1.f);
+        Style.Pressed=FSlateRoundedBoxBrush(FLinearColor(.025f,.12f,.17f,1),5.f,Edge,1.f);
+        Style.Disabled=FSlateRoundedBoxBrush(FLinearColor(.025f,.035f,.045f,.65f),5.f,FLinearColor(.1f,.14f,.17f,.5f),1.f);
+        Style.NormalPadding=Style.PressedPadding=FMargin(0);Button->SetStyle(Style);
+    }
+}
+void UMenuDlg::StartAttractVideo()
+{
+    if(GUsingNullRHI || !AttractPicture || GetVisibility()==ESlateVisibility::Collapsed || GetVisibility()==ESlateVisibility::Hidden || bAttractOpenRequested)return;
+    const FString File=FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()/TEXT("Movies/Menu/BattleAttract.mp4"));
+    if(!IFileManager::Get().FileExists(*File))return;
+    if(!AttractPlayer)
+    {
+        AttractPlayer=NewObject<UMediaPlayer>(this);AttractPlayer->PlayOnOpen=true;AttractPlayer->SetLooping(true);
+        AttractPlayer->OnMediaOpened.AddDynamic(this,&UMenuDlg::OnAttractOpened);
+        AttractPlayer->OnMediaOpenFailed.AddDynamic(this,&UMenuDlg::OnAttractFailed);
+        AttractTexture=NewObject<UMediaTexture>(this);AttractTexture->SetMediaPlayer(AttractPlayer);AttractTexture->UpdateResource();
+    }
+    // No MediaSoundComponent is created; menu music keeps its own audio routing.
+    AttractPlayer->SetNativeVolume(0.f);bAttractOpenRequested=true;
+    if(!AttractPlayer->OpenFile(File)){bAttractOpenRequested=false;AttractPicture->SetVisibility(ESlateVisibility::Collapsed);}
+}
+void UMenuDlg::StopAttractVideo()
+{
+    bAttractOpenRequested=false;
+    if(AttractPlayer)AttractPlayer->Close();
+    if(AttractPicture)AttractPicture->SetVisibility(ESlateVisibility::Collapsed);
+}
+void UMenuDlg::OnAttractOpened(FString Url)
+{
+    if(!bAttractOpenRequested || GetVisibility()==ESlateVisibility::Hidden || GetVisibility()==ESlateVisibility::Collapsed){StopAttractVideo();return;}
+    AttractPlayer->SelectTrack(EMediaPlayerTrack::Audio,INDEX_NONE);
+    AttractPlayer->SetNativeVolume(0.f);AttractPlayer->SetLooping(true);
+    AttractPicture->SetBrushResourceObject(AttractTexture);AttractPicture->SetVisibility(ESlateVisibility::HitTestInvisible);
+    AttractPlayer->Play();
+}
+void UMenuDlg::OnAttractFailed(FString Url)
+{
+    bAttractOpenRequested=false;
+    if(AttractPicture)AttractPicture->SetVisibility(ESlateVisibility::Collapsed);
+    UE_LOG(LogMenuDlg,Display,TEXT("[MainMenu] Attract movie unavailable; retaining SSW artwork."));
+}
+void UMenuDlg::SetVisibility(ESlateVisibility InVisibility)
+{
+    if(InVisibility==ESlateVisibility::Hidden || InVisibility==ESlateVisibility::Collapsed)StopAttractVideo();
+    Super::SetVisibility(InVisibility);
+}
+void UMenuDlg::Hide(){StopAttractVideo();Super::Hide();}
+void UMenuDlg::NativeDestruct(){StopAttractVideo();Super::NativeDestruct();}
 
 void UMenuDlg::RefreshIdentityLabels()
 {
@@ -287,12 +371,12 @@ void UMenuDlg::NativeOnInitialized()
     // Static strings (only need to set once)
     AltStart = TEXT("Enter the Janek environment and receive missions from your agent");
     AltCampaign = TEXT("Start a new dynamic campaign, or load a saved game");
-    AltMission = TEXT("Play or create a scripted mission exercise");
+    AltMission = TEXT("Manage mod packs and author custom missions. A live pilot must be docked.");
     AltMulti = TEXT("Start or join a multiplayer scenario");
     AltPlayer = TEXT("Manage your logbook and player preferences");
 
     // IMPORTANT: all sub-option routing is now inside OptionsScreen:
-    AltOptions = TEXT("Audio, Video, Gameplay, Control, and Mod configuration options");
+    AltOptions = TEXT("Audio, Video, Gameplay, Keyboard and Joystick options");
 
     AltTac = TEXT("View ship and weapon stats and mission roles");
     AltQuit = TEXT("Exit Starshatter and return to Windows");
@@ -306,98 +390,7 @@ void UMenuDlg::NativeConstruct()
 
     BuildModernMenu();
     BindUMGDelegates();
-    // APPLY UI THEME (OPTION A: already loaded from Project Settings during BOOT)
-    if (UGameInstance* GI = GetGameInstance())
-    {
-        if (auto* StyleSS = GI->GetSubsystem<UStarshatterUIStyleSubsystem>())
-        {
-            StyleSS->ApplyMenuButtonStyle(BtnStart);
-            StyleSS->ApplyMenuButtonStyle(BtnCampaign);
-            StyleSS->ApplyMenuButtonStyle(BtnMission);
-            StyleSS->ApplyMenuButtonStyle(BtnPlayer);
-            StyleSS->ApplyMenuButtonStyle(BtnMulti);
-            StyleSS->ApplyMenuButtonStyle(BtnOptions);
-            StyleSS->ApplyMenuButtonStyle(BtnTac);
-            StyleSS->ApplyMenuButtonStyle(BtnQuit);
-        }
-    }
-
-    // Use the exact texture assets supplied for the normal and pressed states.
-    // Hover uses the pressed variant, providing an unambiguous highlight.
-    auto LoadButtonTexture = [](const TCHAR* AssetPath) -> UTexture2D*
-    {
-        UTexture2D* Texture = LoadObject<UTexture2D>(nullptr, AssetPath);
-        if (!Texture)
-            UE_LOG(LogMenuDlg, Warning, TEXT("[MainMenu] Missing button texture: %s"), AssetPath);
-        return Texture;
-    };
-    UTexture2D* BlueNormal = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Blue_n.T_Btn02Blue_n"));
-    UTexture2D* BluePressed = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Blue_p.T_Btn02Blue_p"));
-    UTexture2D* RedNormal = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Red_n.T_Btn02Red_n"));
-    UTexture2D* RedPressed = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Red_p.T_Btn02Red_p"));
-    UTexture2D* GreenNormal = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Green_n.T_Btn02Green_n"));
-    UTexture2D* GreenPressed = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Green_p.T_Btn02Green_p"));
-    UTexture2D* CyanNormal = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Cyan_n.T_Btn02Cyan_n"));
-    UTexture2D* CyanPressed = LoadButtonTexture(TEXT("/Game/SciFiUIComponents/Textures/Button/T_Btn02Cyan_p.T_Btn02Cyan_p"));
-
-    const TArray<UButton*> MenuButtons = {
-        BtnStart, BtnCampaign, BtnMission, BtnMulti,
-        BtnPlayer, BtnOptions, BtnFreeMode, BtnTestMission, BtnTac, BtnQuit
-    };
-    for (UButton* StyledButton : MenuButtons)
-    {
-        if (!StyledButton) continue;
-        // Apply the color family even to Blueprint drop-in buttons. Their widget
-        // instances/positioning remain designer-authored; visual states use the
-        // exact game-supplied textures so an old metallic brush cannot leak through.
-        const bool bExit = StyledButton == BtnQuit;
-        const bool bTactical = StyledButton == BtnTac;
-        const bool bContinue = StyledButton == BtnStart;
-        UTexture2D* NormalTexture = bExit ? RedNormal : (bTactical ? CyanNormal : (bContinue ? GreenNormal : BlueNormal));
-        UTexture2D* PressedTexture = bExit ? RedPressed : (bTactical ? CyanPressed : (bContinue ? GreenPressed : BluePressed));
-        if (!PressedTexture) PressedTexture = NormalTexture;
-
-        FButtonStyle ButtonStyle = StyledButton->GetStyle();
-        if (NormalTexture)
-        {
-            ButtonStyle.Normal.SetResourceObject(NormalTexture);
-            ButtonStyle.Hovered.SetResourceObject(PressedTexture);
-            ButtonStyle.Pressed.SetResourceObject(PressedTexture);
-            ButtonStyle.Disabled.SetResourceObject(NormalTexture);
-            ButtonStyle.Normal.DrawAs = ESlateBrushDrawType::Image;
-            ButtonStyle.Hovered.DrawAs = ESlateBrushDrawType::Image;
-            ButtonStyle.Pressed.DrawAs = ESlateBrushDrawType::Image;
-            ButtonStyle.Disabled.DrawAs = ESlateBrushDrawType::Image;
-            // Preserve the authored texture colors; only brighten interaction states.
-            ButtonStyle.Normal.TintColor = FSlateColor(FLinearColor(.58f,.70f,.82f,.90f));
-            ButtonStyle.Hovered.TintColor = FSlateColor(FLinearColor(.95f, 1.f, 1.f, 1.f));
-            ButtonStyle.Pressed.TintColor = FSlateColor(FLinearColor::White);
-            ButtonStyle.Disabled.TintColor = FSlateColor(FLinearColor(0.45f, 0.48f, 0.50f, 0.65f));
-        }
-        else
-        {
-            // Missing assets: retain distinct, functional native UI states.
-            const FLinearColor BaseColor = bExit ? FLinearColor(0.43f, 0.10f, 0.14f, 1.f)
-                : (bTactical ? FLinearColor(0.08f, 0.36f, 0.44f, 1.f) : (bContinue ? FLinearColor(0.10f, 0.34f, 0.26f, 1.f) : FLinearColor(0.16f, 0.27f, 0.36f, 1.f)));
-            const FLinearColor HighlightColor = bExit ? FLinearColor(0.75f, 0.20f, 0.24f, 1.f)
-                : (bTactical ? FLinearColor(0.18f, 0.64f, 0.72f, 1.f) : (bContinue ? FLinearColor(0.19f, 0.57f, 0.39f, 1.f) : FLinearColor(0.30f, 0.49f, 0.62f, 1.f)));
-            ButtonStyle.Normal.DrawAs = ESlateBrushDrawType::Box;
-            ButtonStyle.Hovered.DrawAs = ESlateBrushDrawType::Box;
-            ButtonStyle.Pressed.DrawAs = ESlateBrushDrawType::Box;
-            ButtonStyle.Disabled.DrawAs = ESlateBrushDrawType::Box;
-            ButtonStyle.Normal.Margin = FMargin(0.12f);
-            ButtonStyle.Hovered.Margin = FMargin(0.12f);
-            ButtonStyle.Pressed.Margin = FMargin(0.12f);
-            ButtonStyle.Disabled.Margin = FMargin(0.12f);
-            ButtonStyle.Normal.TintColor = FSlateColor(BaseColor);
-            ButtonStyle.Hovered.TintColor = FSlateColor(HighlightColor);
-            ButtonStyle.Pressed.TintColor = FSlateColor(HighlightColor);
-            ButtonStyle.Disabled.TintColor = FSlateColor(FLinearColor(0.13f, 0.17f, 0.21f, 0.65f));
-        }
-        ButtonStyle.NormalPadding = FMargin(0.f);
-        ButtonStyle.PressedPadding = FMargin(1.f, 2.f, 0.f, 0.f);
-        StyledButton->SetStyle(ButtonStyle);
-    }
+    ApplyModernActionStyles();
     // Cache legacy singletons (fine to do here)
     Stars = Starshatter::GetInstance();
     CampaignPtr = Campaign::GetCampaign();
@@ -412,6 +405,11 @@ void UMenuDlg::NativeConstruct()
         const int32 Day = FCString::Atoi(*CompileDate.Mid(4, 2));
         const int32 Year = FCString::Atoi(*CompileDate.Right(2));
         FString Build = FString::Printf(TEXT("%02d%02d.%02d"), Year, Month, Day);
+        FString BuildRecord;
+        TSharedPtr<FJsonObject> BuildObject;
+        if (FFileHelper::LoadFileToString(BuildRecord,*(FPaths::ProjectContentDir()/TEXT("Build/build-version.json"))) &&
+            FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(BuildRecord),BuildObject) && BuildObject.IsValid())
+            BuildObject->TryGetStringField(TEXT("version"),Build);
 #if !WITH_EDITOR
         // Packaged executable: <install>/StarshatterWars/Binaries/<platform>/.
         FString InstalledBuild;
@@ -478,7 +476,6 @@ void UMenuDlg::BindUMGDelegates()
     if (BtnMulti)    BtnMulti->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnMultiplayer);
 
     // SINGLE entry point for all options:
-    if (BtnOptions)  BtnOptions->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnOptions);
 
     if (BtnFreeMode) BtnFreeMode->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnFreeMode);
     if (BtnTestMission) BtnTestMission->OnClicked.AddUniqueDynamic(this, &UMenuDlg::OnTestMission);
@@ -491,7 +488,6 @@ void UMenuDlg::BindUMGDelegates()
     if (BtnMission) { BtnMission->OnHovered.AddUniqueDynamic(this, &UMenuDlg::OnButtonEnter_Mission);   BtnMission->OnUnhovered.AddUniqueDynamic(this, &UMenuDlg::OnButtonExit_Mission); }
     if (BtnPlayer) { BtnPlayer->OnHovered.AddUniqueDynamic(this, &UMenuDlg::OnButtonEnter_Player);    BtnPlayer->OnUnhovered.AddUniqueDynamic(this, &UMenuDlg::OnButtonExit_Player); }
     if (BtnMulti) { BtnMulti->OnHovered.AddUniqueDynamic(this, &UMenuDlg::OnButtonEnter_Multi);      BtnMulti->OnUnhovered.AddUniqueDynamic(this, &UMenuDlg::OnButtonExit_Multi); }
-    if (BtnOptions) { BtnOptions->OnHovered.AddUniqueDynamic(this, &UMenuDlg::OnButtonEnter_Options);   BtnOptions->OnUnhovered.AddUniqueDynamic(this, &UMenuDlg::OnButtonExit_Options); }
     if (BtnTac) { BtnTac->OnHovered.AddUniqueDynamic(this, &UMenuDlg::OnButtonEnter_Tac);          BtnTac->OnUnhovered.AddUniqueDynamic(this, &UMenuDlg::OnButtonExit_Tac); }
     if (BtnQuit) { BtnQuit->OnHovered.AddUniqueDynamic(this, &UMenuDlg::OnButtonEnter_Quit);        BtnQuit->OnUnhovered.AddUniqueDynamic(this, &UMenuDlg::OnButtonExit_Quit); }
 
@@ -546,6 +542,7 @@ void UMenuDlg::Show()
     ApplyMenuGating();
     // Multiplayer mission selection is available independently of the legacy filesystem mode.
     if (BtnMulti) BtnMulti->SetIsEnabled(true);
+    StartAttractVideo();
 
     ClearDescription();
 }
@@ -584,7 +581,7 @@ void UMenuDlg::OnMission()
     UE_LOG(LogMenuDlg, Log, TEXT("OnMission()"));
 
     if (Manager)
-        Manager->ShowMissionSelectDlg();
+        Manager->ShowModEditorDlg();
     else
         UE_LOG(LogMenuDlg, Warning, TEXT("Manager is null in OnMission()."));
 }
@@ -667,13 +664,7 @@ void UMenuDlg::OnMultiplayer()
 
 void UMenuDlg::OnOptions()
 {
-    ClearDescription();
-    UE_LOG(LogMenuDlg, Log, TEXT("OnOptions()"));
-
-    if (Manager)
-        Manager->ShowOptionsScreen();
-    else
-        UE_LOG(LogMenuDlg, Warning, TEXT("Manager is null in OnOptions()."));
+    // Retained as a harmless Blueprint compatibility hook. Settings are in flight.
 }
 
 void UMenuDlg::OnTacReference()
@@ -806,6 +797,11 @@ void UMenuDlg::ApplyMenuGating()
 
         // Multiplayer missions do not depend on an existing campaign selection.
         SetButtonEnabled(BtnMulti, true);
+    }
+    if(BtnMission)
+    {
+        BtnMission->SetIsEnabled(UMenuScreen::CanOpenMainMenu());
+        BtnMission->SetToolTipText(UMenuScreen::CanOpenMainMenu()?INVTEXT("Mod Editor: custom missions and single-player mod packs"):INVTEXT("Mod Editor is available only while docked"));
     }
 
 }

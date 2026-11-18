@@ -147,16 +147,11 @@
     "Empire": "Terellian",
     "MinimumRank": 0,
     "Level": 4,
-    "Description": "Introduces Third Fleet campaign orders aboard Archon. New operations unlock through flight-school graduation and completion of preceding campaign sections. Individual assignments retain their own command-rank requirements.",
+    "Description": "Coordinates Third Fleet assignments around Janek aboard Archon. Campaign command officers issue new operations from their assigned origin systems.",
     "MissionIds": [
       17
     ],
-    "CampaignIds": [
-      2,
-      3,
-      4,
-      5
-    ]
+    "CampaignIds": []
   },
   {
     "Name": "JarnellWatch",
@@ -825,5 +820,60 @@
       10
     ],
     "CampaignIds": []
+  },
+  {
+    "Name": "MeridianFleetCommand",
+    "DisplayName": "Commodore Ilan Vey",
+    "Division": "Fleet Operations",
+    "System": "Solus",
+    "Planet": "Meridian",
+    "Region": "Meridian",
+    "Station": "Meridian Fleet Command",
+    "Class": "Security",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "Level": 4,
+    "Description": "Introduces the Solus operation from Meridian. Issues the active campaign story orders and generated fleet assignments, with campaign progression and command-rank requirements retained.",
+    "MissionIds": [],
+    "CampaignIds": [
+      2
+    ]
+  },
+  {
+    "Name": "BorovaFleetCommand",
+    "DisplayName": "Cmdr. Anya Pell",
+    "Division": "Fleet Operations",
+    "System": "Borova",
+    "Planet": "Borova",
+    "Region": "Borova",
+    "Station": "Borova Transfer Station",
+    "Class": "Security",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "Level": 4,
+    "Description": "Introduces the Borova operation and relays its story orders and generated assignments after the preceding campaign section is complete.",
+    "MissionIds": [],
+    "CampaignIds": [
+      3
+    ]
+  },
+  {
+    "Name": "AdonisFleetCommand",
+    "DisplayName": "Commodore Mira Sarin",
+    "Division": "Fleet Operations",
+    "System": "Jarnell",
+    "Planet": "Adonis",
+    "Region": "Adonis",
+    "Station": "Adonis Fleet Command",
+    "Class": "Security",
+    "Empire": "Terellian",
+    "MinimumRank": 0,
+    "Level": 4,
+    "Description": "Commands the Jarnell operations from Adonis. Introduces each campaign section in sequence and relays its authored story orders and generated fleet assignments.",
+    "MissionIds": [],
+    "CampaignIds": [
+      4,
+      5
+    ]
   }
 ]

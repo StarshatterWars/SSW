@@ -1,6 +1,8 @@
 
 #include "ShipMFDPreview.h"
 #include "WaypointActor.h"
+#include "ProceduralMeshComponent.h"
+#include "HAL/PlatformTime.h"
 #include "ProfilingDebugging/CpuProfilerTrace.h"
 #include "ShipBriefingPreview.h"
 #include "GameStructs_System.h"
@@ -133,7 +135,15 @@ bool FShipMFDPreview::SetWaypoint()
     const FString WaypointKey(TEXT("SSW_WaypointMarker"));
     if (Key == WaypointKey && IsReady())
     {
-        RefreshStaticCapture();
+        const double Now=FPlatformTime::Seconds();
+        if (Now>=NextStaticCaptureAt)
+        {
+            if (auto* Marker=Cast<AWaypointActor>(Visual.Get()); Marker && Marker->WaypointMarker)
+                Marker->WaypointMarker->SetRelativeRotation(FRotator(FMath::Fmod(Now*10.0,360.0),0,0));
+            StaticWarmupCaptures=1;
+            RefreshStaticCapture();
+            NextStaticCaptureAt=Now+1.0/30.0;
+        }
         return true;
     }
 

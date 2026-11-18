@@ -999,6 +999,43 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.ModEditorClass
+    if (!Cache.Contains(TEXT("UI.ModEditorClass")))
+    {
+        if (!Settings->ModEditorClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->ModEditorClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.ModEditorClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.ModEditorClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            Cache.Add(TEXT("UI.ModEditorClass"), TSoftObjectPtr<UObject>(
+                FSoftObjectPath(TEXT("/Script/StarshatterWars.ModEditorDlg"))));
+        }
+    }
+
+
+    // UI.TransactionPopupClass
+    if (!Cache.Contains(TEXT("UI.TransactionPopupClass")))
+    {
+        if (!Settings->TransactionPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->TransactionPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.TransactionPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.TransactionPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            Cache.Add(TEXT("UI.TransactionPopupClass"), TSoftObjectPtr<UObject>(
+                FSoftObjectPath(TEXT("/Script/StarshatterWars.TransactionDlg"))));
+        }
+    }
+
     // UI.CustomMissionScreenClass
     if (!Cache.Contains(TEXT("UI.CustomMissionScreenClass")))
     {

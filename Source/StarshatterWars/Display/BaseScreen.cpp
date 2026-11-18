@@ -9,6 +9,7 @@
 
 
 #include "BaseScreen.h"
+#include "MissionUIStyle.h"
 #include "AudioRouting.h"
 
 // Core:
@@ -1122,7 +1123,7 @@ void UBaseScreen::BindImage(int32 Id, UImage* Widget) { if (Widget) FormMap.Imag
 void UBaseScreen::BindEdit(int32 Id, UEditableTextBox* Widget) { if (Widget) FormMap.Edits.Add(Id, Widget); }
 void UBaseScreen::BindCombo(int32 Id, UComboBoxString* Widget) { if (Widget) FormMap.Combos.Add(Id, Widget); }
 void UBaseScreen::BindList(int32 Id, UListView* Widget) { if (Widget) FormMap.Lists.Add(Id, Widget); }
-void UBaseScreen::BindSlider(int32 Id, USlider* Widget) { if (Widget) FormMap.Sliders.Add(Id, Widget); }
+void UBaseScreen::BindSlider(int32 Id, USlider* Widget) { if (Widget) { Widget->SetWidgetStyle(MissionUIStyle::StandaloneSliderStyle()); Widget->SetIndentHandle(false); Widget->SetSliderBarColor(FLinearColor(.14f,.8f,.95f)); FormMap.Sliders.Add(Id, Widget); } }
 
 // --------------------------------------------------------------------
 // Lookup helpers

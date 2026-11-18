@@ -1,3 +1,6 @@
+#include "StarshatterGameDataSubsystem.h"
+#include "CampaignStoryRules.h"
+#include "JsonObjectConverter.h"
 /*
     Project Starshatter Wars
     Fractal Dev Games
@@ -17,7 +20,6 @@
     presence. Loading is triggered explicitly during EGameMode::INIT.
 */
 
-#include "StarshatterGameDataSubsystem.h"
 #include "SSWModFiles.h"
 #include "AwardInfoRegistry.h"
 
@@ -1497,6 +1499,7 @@ void UStarshatterGameDataSubsystem::CacheSSWInstance()
 void UStarshatterGameDataSubsystem::SetActiveCampaign(const FS_Campaign& Campaign)
 {
 	ActiveCampaign = Campaign;
+    if (StoryMissionsDataTable) MergeStoryMissionRows(ActiveCampaign,*StoryMissionsDataTable);
 }
 
 void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
@@ -2678,6 +2681,8 @@ void UStarshatterGameDataSubsystem::ReadCampaignData()
 
 		// Preserve the DataTable row name in the runtime copy
 		Campaign.RowName = RowName;
+        if (StoryMissionsDataTable) MergeStoryMissionRows(Campaign,*StoryMissionsDataTable);
+
 
 		AllCampaigns.Add(Campaign);
 		CampaignMap.Add(RowName, Campaign);
@@ -3374,6 +3379,11 @@ void UStarshatterGameDataSubsystem::LoadCutscene(FString Path)
 
 	const FString Pattern = ScenesDir / TEXT("*.def");
 	FFileManagerGeneric::Get().FindFiles(Files, *Pattern, true, false);
+    TArray<FString> JsonFiles;
+    IFileManager::Get().FindFiles(JsonFiles, *(ScenesDir / TEXT("*.json")), true, false);
+    for (const FString& JsonFile : JsonFiles) Files.AddUnique(FPaths::ChangeExtension(JsonFile,TEXT("def")));
+    Files.Sort();
+
 
 	FS_CampaignMission NewCutsceneData;
 
@@ -3383,7 +3393,28 @@ void UStarshatterGameDataSubsystem::LoadCutscene(FString Path)
 
 		// Keep legacy ParseMission signature:
 		const char* fn = TCHAR_TO_ANSI(*FullPath);
-		ParseMission(fn);
+
+        const int32 Before=MissionArray.Num();
+        {
+            TGuardValue<bool> Standalone(bParsingStandaloneMission,true);
+            ParseMission(fn);
+        }
+        if (MissionArray.Num()!=Before+1) continue;
+        auto& Parsed=MissionArray.Last();
+        const bool bCinematic=Parsed.Event.ContainsByPredicate([](const FS_MissionEvent& Event)
+            {return Event.EventType==MISSIONEVENT_TYPE::BEGIN_SCENE || Event.EventType==MISSIONEVENT_TYPE::END_SCENE;});
+        if (!bCinematic && Parsed.MissionType!=EMissionType::TRAINING)
+        {
+            // FreeFlight is a playable starting location, not an Intel replay/campaign scene.
+            MissionArray.SetNum(Before);
+            continue;
+        }
+        Parsed.DisplayType=bCinematic?EMissionDisplayType::CutsceneOnly:EMissionDisplayType::PlayerMission;
+        if (!bParsingStandaloneMission)
+        {
+            if (CutsceneDataTable) CutsceneDataTable->AddRow(FName(Parsed.MissionName),Parsed);
+            CutsceneData=Parsed;
+        }
 	}
 }
 
@@ -3441,21 +3472,22 @@ void UStarshatterGameDataSubsystem::LoadScriptedMission(FString Name)
 
 // +--------------------------------------------------------------------+
 
-bool UStarshatterGameDataSubsystem::ReadLooseMission(const FString& Filename, FS_CampaignMission& Out)
+bool UStarshatterGameDataSubsystem::ReadLooseMission(const FString& Filename, FS_CampaignMission& Out, bool bPreferJson)
 {
-    const int64 Size = IFileManager::Get().FileSize(*Filename);
+    const FString EffectivePath = bPreferJson && FPaths::FileExists(FPaths::ChangeExtension(Filename,TEXT("json"))) ? FPaths::ChangeExtension(Filename,TEXT("json")) : Filename;
+    const int64 Size = IFileManager::Get().FileSize(*EffectivePath);
     if (Size <= 0 || Size > 4 * 1024 * 1024) return false;
 
     TGuardValue<bool> Standalone(bParsingStandaloneMission, true);
     TGuardValue<TArray<FS_CampaignMission>> Missions(MissionArray, {});
     const auto Ansi = StringCast<ANSICHAR>(*Filename);
-    ParseMission(Ansi.Get());
+    ParseMission(Ansi.Get(),bPreferJson);
     if (MissionArray.Num() != 1 || MissionArray[0].Element.IsEmpty()) return false;
     Out = MoveTemp(MissionArray[0]);
     return true;
 }
 
-void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
+void UStarshatterGameDataSubsystem::ParseMission(const char* fn, bool bPreferJson)
 {
     if (bParsingStandaloneMission)
     {
@@ -3474,16 +3506,47 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn)
 
 	MissionElementArray.Empty();
 	MissionEventArray.Empty();
+    // JSON missions feed the existing campaign/table merge; malformed JSON fails closed.
+    const FString JsonPath = FPaths::ChangeExtension(MissionPath, TEXT("json"));
+    TArray<uint8> ModMissionBytes; bool bModJson=false;
+    const bool bModMission=bPreferJson && SSWModFiles::ReadMission(MissionPath,ModMissionBytes,bModJson);
+    if (bPreferJson && (bModMission ? bModJson : FPaths::FileExists(JsonPath)))
+    {
+        TArray<uint8> JsonBytes=ModMissionBytes;
+        if (!bModMission && !FFileHelper::LoadFileToArray(JsonBytes, *JsonPath)) return;
+        if (JsonBytes.Num()>4*1024*1024) return;
+        JsonBytes.Add(0);
+        const FString Json = UTF8_TO_TCHAR(reinterpret_cast<const char*>(JsonBytes.GetData()));
+        FS_CampaignMission Mission;
+        if (!FJsonObjectConverter::JsonObjectStringToUStruct(Json, &Mission, 0, 0) ||
+            Mission.MissionName.IsEmpty() || Mission.Element.IsEmpty())
+        {
+            UE_LOG(LogTemp, Error, TEXT("[MissionJson] Invalid mission %s; refusing stale DEF fallback"), *JsonPath);
+            return;
+        }
+        MissionElementArray = Mission.Element;
+        MissionEventArray = Mission.Event;
+        LastParsedMissionEventTime = 0;
+        for (const auto& Event : Mission.Event) LastParsedMissionEventTime = FMath::Max(LastParsedMissionEventTime, Event.EventTime);
+        MissionArray.Add(Mission);
+        if (!bParsingStandaloneMission)
+        {
+            if (CutsceneDataTable) CutsceneDataTable->AddRow(FName(Mission.MissionName), Mission);
+            CutsceneData = Mission;
+        }
+        return;
+    }
 
-	if (!FPaths::FileExists(MissionPath))
+
+	if (!bModMission && !FPaths::FileExists(MissionPath))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("MISSION file not found: %s"), *MissionPath);
 		return;
 	}
 
 	// Read raw bytes (preserves legacy parser expectations)
-	TArray<uint8> Bytes;
-	if (!SSWModFiles::Read(MissionPath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *MissionPath))
+	TArray<uint8> Bytes=ModMissionBytes;
+	if (!bModMission && !SSWModFiles::Read(MissionPath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *MissionPath))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to read MISSION file: %s"), *MissionPath);
 		return;
@@ -4779,7 +4842,7 @@ void UStarshatterGameDataSubsystem::ParseElement(TermStruct* Eval, const char* F
 
 // +--------------------------------------------------------------------+
 
-void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
+void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn, bool bPreferJson)
 {
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseScriptedTemplate()"));
 
@@ -4791,16 +4854,33 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 
 	// Don't name this FilePath (it collides with your class member):
 	const FString ScriptPath = ANSI_TO_TCHAR(fn);
+    const FString JsonPath = FPaths::ChangeExtension(ScriptPath, TEXT("json"));
+    TArray<uint8> ModMissionBytes; bool bModJson=false;
+    const bool bModMission=bPreferJson && SSWModFiles::ReadMission(ScriptPath,ModMissionBytes,bModJson);
+    if (bPreferJson && (bModMission ? bModJson : FPaths::FileExists(JsonPath)))
+    {
+        TArray<uint8> Bytes=ModMissionBytes;
+        if (!bModMission && !FFileHelper::LoadFileToArray(Bytes,*JsonPath)) return;
+        Bytes.Add(0);
+        FS_TemplateMission Row;
+        if (!FJsonObjectConverter::JsonObjectStringToUStruct(FString(UTF8_TO_TCHAR(reinterpret_cast<const char*>(Bytes.GetData()))),&Row,0,0) || Row.MissionName.IsEmpty())
+        { UE_LOG(LogTemp,Error,TEXT("[MissionJson] Invalid template %s"),*JsonPath); return; }
+        MissionElementArray=Row.Element; MissionEventArray=Row.Event;
+        MissionCallsignArray=Row.Callsign; MissionOptionalArray=Row.Optional; MissionAliasArray=Row.Alias;
+        ScriptedMissionArray.Add(MoveTemp(Row));
+        return;
+    }
 
-	if (!FPaths::FileExists(ScriptPath))
+
+	if (!bModMission && !FPaths::FileExists(ScriptPath))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Scripted template file not found: %s"), *ScriptPath);
 		return;
 	}
 
 	// ---- UE-native raw bytes load (preserves legacy parser expectations) ----
-	TArray<uint8> Bytes;
-	if (!SSWModFiles::Read(ScriptPath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *ScriptPath))
+	TArray<uint8> Bytes=ModMissionBytes;
+	if (!bModMission && !SSWModFiles::Read(ScriptPath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *ScriptPath))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to read scripted template file: %s"), *ScriptPath);
 		return;
@@ -5020,7 +5100,7 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn)
 
 // +--------------------------------------------------------------------+
 
-void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
+void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn, bool bPreferJson)
 {
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseMissionTemplate()"));
 
@@ -5032,8 +5112,25 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 
 	// Don't name this FilePath (it collides with your class member):
 	const FString TemplatePath = ANSI_TO_TCHAR(fn);
+    const FString JsonPath = FPaths::ChangeExtension(TemplatePath, TEXT("json"));
+    TArray<uint8> ModMissionBytes; bool bModJson=false;
+    const bool bModMission=bPreferJson && SSWModFiles::ReadMission(TemplatePath,ModMissionBytes,bModJson);
+    if (bPreferJson && (bModMission ? bModJson : FPaths::FileExists(JsonPath)))
+    {
+        TArray<uint8> Bytes=ModMissionBytes;
+        if (!bModMission && !FFileHelper::LoadFileToArray(Bytes,*JsonPath)) return;
+        Bytes.Add(0);
+        FS_TemplateMission Row;
+        if (!FJsonObjectConverter::JsonObjectStringToUStruct(FString(UTF8_TO_TCHAR(reinterpret_cast<const char*>(Bytes.GetData()))),&Row,0,0) || Row.MissionName.IsEmpty())
+        { UE_LOG(LogTemp,Error,TEXT("[MissionJson] Invalid template %s"),*JsonPath); return; }
+        MissionElementArray=Row.Element; MissionEventArray=Row.Event;
+        MissionCallsignArray=Row.Callsign; MissionOptionalArray=Row.Optional; MissionAliasArray=Row.Alias;
+        TemplateMissionArray.Add(MoveTemp(Row));
+        return;
+    }
 
-	if (!FPaths::FileExists(TemplatePath))
+
+	if (!bModMission && !FPaths::FileExists(TemplatePath))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Mission template file not found: %s"), *TemplatePath);
 		return;
@@ -5042,8 +5139,8 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn)
 	// ---------------------------------------------------------
 	// UE-native raw bytes load (preserves legacy parser behavior)
 	// ---------------------------------------------------------
-	TArray<uint8> Bytes;
-	if (!SSWModFiles::Read(TemplatePath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *TemplatePath))
+	TArray<uint8> Bytes=ModMissionBytes;
+	if (!bModMission && !SSWModFiles::Read(TemplatePath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *TemplatePath))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to read mission template file: %s"), *TemplatePath);
 		return;
@@ -8362,4 +8459,92 @@ bool UStarshatterGameDataSubsystem::RebuildCampaignOneTrainingMissions()
 #else
     return false;
 #endif
+}
+
+
+bool UStarshatterGameDataSubsystem::ConvertPlayableMissionsToJson()
+{
+    TGuardValue<bool> Standalone(bParsingStandaloneMission, true);
+    TGuardValue<TArray<FS_CampaignMission>> Missions(MissionArray, {});
+    const auto SavedElements = MissionElementArray;
+    const auto SavedEvents = MissionEventArray;
+    const double SavedTime = LastParsedMissionEventTime;
+    TArray<FString> Files;
+    IFileManager::Get().FindFilesRecursive(Files, *(FPaths::ProjectContentDir() / TEXT("GameData")), TEXT("*.def"), true, false);
+    Files.Sort();
+    int32 Converted = 0;
+    bool bSuccess = true;
+    for (const FString& Path : Files)
+    {
+        FString Header;
+        if (!FFileHelper::LoadFileToString(Header, *Path)) { bSuccess=false; break; }
+        Header.TrimStartInline();
+        if (Header.StartsWith(TEXT("MISSION_TEMPLATE")))
+        {
+            const bool bScript = Path.Contains(TEXT("/Scripts/"));
+            auto& Rows = bScript ? ScriptedMissionArray : TemplateMissionArray;
+            const auto SavedRows = Rows;
+            Rows.Reset();
+            const auto Ansi = StringCast<ANSICHAR>(*Path);
+            if (bScript) ParseScriptedTemplate(Ansi.Get(),false); else ParseMissionTemplate(Ansi.Get(),false);
+            if (Rows.Num()!=1) { Rows=SavedRows; bSuccess=false; break; }
+            const FS_TemplateMission Original=Rows[0]; FS_TemplateMission RoundTrip; FString Json;
+            if (!FJsonObjectConverter::UStructToJsonObjectString(Original,Json) ||
+                !FJsonObjectConverter::JsonObjectStringToUStruct(Json,&RoundTrip,0,0) ||
+                !FS_TemplateMission::StaticStruct()->CompareScriptStruct(&Original,&RoundTrip,0) ||
+                !FFileHelper::SaveStringToFile(Json,*FPaths::ChangeExtension(Path,TEXT("json")),FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
+            { Rows=SavedRows; bSuccess=false; break; }
+            Rows.Reset();
+            if (bScript) ParseScriptedTemplate(Ansi.Get()); else ParseMissionTemplate(Ansi.Get());
+            const bool bEqual=Rows.Num()==1 && FS_TemplateMission::StaticStruct()->CompareScriptStruct(&Original,&Rows[0],0);
+            Rows=SavedRows;
+            if (!bEqual) { bSuccess=false; break; }
+            ++Converted; continue;
+        }
+        if (!Header.StartsWith(TEXT("MISSION")) || Header.StartsWith(TEXT("MISSIONLIST"))) continue;
+        MissionArray.Reset();
+        const auto Ansi = StringCast<ANSICHAR>(*Path);
+        ParseMission(Ansi.Get(), false);
+        if (MissionArray.Num()!=1) { bSuccess=false; break; }
+        const FS_CampaignMission Original = MissionArray[0];
+        const bool bCinematic=Original.Event.ContainsByPredicate([](const FS_MissionEvent& Event)
+            {return Event.EventType==MISSIONEVENT_TYPE::BEGIN_SCENE || Event.EventType==MISSIONEVENT_TYPE::END_SCENE;});
+        if (bCinematic || Original.Element.IsEmpty()) continue;
+        FString Json;
+        FS_CampaignMission RoundTrip;
+        if (!FJsonObjectConverter::UStructToJsonObjectString(Original, Json) ||
+            !FJsonObjectConverter::JsonObjectStringToUStruct(Json, &RoundTrip, 0, 0) ||
+            !FS_CampaignMission::StaticStruct()->CompareScriptStruct(&Original, &RoundTrip, 0))
+        { UE_LOG(LogTemp,Error,TEXT("[MissionJson] Round-trip parity failed: %s"),*Path); bSuccess=false; break; }
+        const FString Output = FPaths::ChangeExtension(Path, TEXT("json"));
+        if (!FFileHelper::SaveStringToFile(Json, *Output, FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM)) { bSuccess=false; break; }
+        MissionArray.Reset();
+        ParseMission(Ansi.Get());
+        if (MissionArray.Num()!=1 || !FS_CampaignMission::StaticStruct()->CompareScriptStruct(&Original, &MissionArray[0], 0))
+        { bSuccess=false; break; }
+        ++Converted;
+    }
+    MissionElementArray=SavedElements; MissionEventArray=SavedEvents; LastParsedMissionEventTime=SavedTime;
+    UE_LOG(LogTemp,Display,TEXT("[MissionJson] %d playable missions converted; DEF/JSON parity %s; campaign and cutscene definitions retained"),Converted,bSuccess?TEXT("PASS"):TEXT("FAIL"));
+    return bSuccess && Converted>0;
+}
+
+
+int32 UStarshatterGameDataSubsystem::MergeStoryMissionRows(FS_Campaign& Campaign,const UDataTable& Stories)
+{
+    if (Stories.GetRowStruct()!=FS_CampaignMission::StaticStruct()) return 0;
+    int32 Merged=0;
+    for (const auto& Pair:Stories.GetRowMap())
+    {
+        const auto& Story=*reinterpret_cast<const FS_CampaignMission*>(Pair.Value);
+        if (!CampaignStoryRules::IsPlayable(Story,Campaign.Index+1) || Story.MissionName.IsEmpty() ||
+            Story.MissionSystem.IsEmpty() || Story.MissionRegion.IsEmpty() ||
+            !Campaign.Missions.ContainsByPredicate([&Story](const FS_CampaignMission& Scene){return Scene.Scene==Story.StoryUnlockScene;}) ||
+            Campaign.Missions.ContainsByPredicate([&Story](const FS_CampaignMission& Mission){return Mission.Id==Story.Id;})) continue;
+        const int32 Existing=Campaign.StoryMissions.IndexOfByPredicate([&Story](const FS_CampaignMission& Other){return Other.Id==Story.Id;});
+        if (Existing==INDEX_NONE) Campaign.StoryMissions.Add(Story); else Campaign.StoryMissions[Existing]=Story;
+        ++Merged;
+    }
+    Campaign.StoryMissions.Sort([](const FS_CampaignMission& A,const FS_CampaignMission& B){return A.Id<B.Id;});
+    return Merged;
 }

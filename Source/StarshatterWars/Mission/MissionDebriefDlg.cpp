@@ -12,6 +12,8 @@
 */
 
 #include "MissionDebriefDlg.h"
+#include "DebriefProgressSnapshot.h"
+#include "AgentMissionRules.h"
 
 #include "MissionPlanner.h"   // your renamed PlanScreen (do not rename)
 #include "Starshatter.h"
@@ -705,6 +707,8 @@ void UMissionDebriefDlg::DrawSelectedUnit(int32 StatsIndex)
 
 void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
 {
+    const bool WasActive=MissionPtr && MissionPtr->IsActive();
+    const bool WasComplete=MissionPtr && MissionPtr->IsComplete();
     ShipStats* Stats = PlayerShip ? ShipStats::Find(PlayerShip->GetName()) : nullptr;
     SimElement* Flight = PlayerShip ? PlayerShip->GetElement() : nullptr;
     if (!Flight && SimPtr)
@@ -731,11 +735,38 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
         if (DebriefResult.bSuccess) MissionPtr->SetComplete(true);
     }
     if (!SimPtr || !MissionPtr || (RecordedMission==MissionPtr && RecordedStartTime==SimPtr->StartTime())) return;
-    if (SimPtr->GetMission() == MissionPtr) SimPtr->ResolveAgentAssignment(DebriefResult.bSuccess);
     const bool bStoryMission = MissionPtr->IsStoryMission();
     // Snapshot before CommitMission clears ShipStats. Save evidence and score separately.
     if (auto* GI=Cast<USSWGameInstance>(GetGameInstance()); GI && !GI->IsTrainingTestSession())
     {
+        auto* ProgressPlayers=GI->GetSubsystem<UStarshatterPlayerSubsystem>();
+        if(!ProgressPlayers)return;
+        FDebriefProgressSnapshot Before(GI->GetTrainingAgent(),ProgressPlayers->GetPlayerInfo(),PlayerCharacter::GetCurrentPlayer(),GI->CampaignSave);
+        bool PlayerWritten=false;
+        const auto Failed=[&]()
+        {
+            Before.Restore(GI->GetTrainingAgent(),ProgressPlayers->GetMutablePlayerInfo(),GI->CampaignSave);
+            if(MissionPtr){MissionPtr->SetActive(WasActive);MissionPtr->SetComplete(WasComplete);}
+            if(PlayerWritten && !ProgressPlayers->SaveActivePlayerProgress())
+                UE_LOG(LogTemp,Error,TEXT("[MissionDebrief] Prior player progress could not be resaved after a later save failure."));
+            if(EvidenceWidget)EvidenceWidget->SetText(INVTEXT("Unable to save mission progress. Previous progress was restored. Close this panel to retry saving before leaving."));
+            UE_LOG(LogTemp,Warning,TEXT("[MissionDebrief] Save failed; result remains pending for retry."));
+        };
+        // Resolve the matching journal directly until persistence succeeds. Sim's assignment
+        // handle stays intact on rollback and is cleared by normal mission unload.
+        if(SimPtr->GetMission()==MissionPtr)
+            if(const auto* Pilot=PlayerCharacter::GetCurrentPlayer())
+            {
+                const FName Key=AgentAI::PilotKey(*Pilot); const auto Queue=GI->GetTrainingAgent().GetQueue(Key);
+                if(!Queue.IsEmpty() && Queue[0].State==AgentAI::EState::InProgress)
+                {
+                    int32 Owner=0,Original=0;
+                    const bool Matches=AgentMissionRules::Decode(Queue[0].MissionId,Owner,Original)
+                        ? CampaignPtr && CampaignPtr->GetCampaignId()==Owner && Original==MissionPtr->GetIdentity()
+                        : Queue[0].MissionId==MissionPtr->GetIdentity();
+                    if(Matches)GI->GetTrainingAgent().Resolve(Key,Queue[0].MissionId,DebriefResult.bSuccess);
+                }
+            }
         const bool bRegionalAssignment = MissionPtr->IsRegionalAgentMission();
         const bool bTrainingAssignment = MissionPtr->GetMissionType()==int(EMissionType::TRAINING) &&
             MissionPtr->GetIdentity()>=101 && MissionPtr->GetIdentity()<=107;
@@ -766,9 +797,14 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
                     if(auto* Pilot=PlayerCharacter::GetCurrentPlayer()){Pilot->CompleteFlightTraining();Info.Rank=Pilot->GetRank();}
                 }
                 Players->MarkDirty();
-                if (!(bStoryMission ? Players->SaveActivePlayerProgress() : Players->SavePlayer(true)))
-                    UE_LOG(LogTemp,Warning,TEXT("[MissionDebrief] Could not save player mission completion"));
+                if (!Players->SaveActivePlayerProgress()) { Failed(); return; }
+                PlayerWritten=true;
             }
+        if(!PlayerWritten)
+        {
+            if(!ProgressPlayers->SaveActivePlayerProgress()) { Failed(); return; }
+            PlayerWritten=true;
+        }
         if (UCampaignSave* Save=GI->CampaignSave; Save && CampaignPtr
             && Save->CampaignIndex==CampaignPtr->GetCampaignId() && (bStoryMission || CampaignPtr->OwnsMission(MissionPtr)))
         {
@@ -791,9 +827,15 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
                     && MissionPtr->GetMissionType()==int(EMissionType::TRAINING)) Save->bTrainingGraduate=true;
             }
             if (!GI->SaveCampaign())
-                UE_LOG(LogTemp,Warning,TEXT("[MissionDebrief] Could not save mission result for %d"),Record.MissionId);
+            {
+                Failed();
+                if(!GI->SaveCampaign())UE_LOG(LogTemp,Error,TEXT("[MissionDebrief] Prior campaign history could not be resaved."));
+                return;
+            }
         }
     }
+    else if (auto* TestGame=Cast<USSWGameInstance>(GetGameInstance()); TestGame && TestGame->IsTrainingTestSession() && SimPtr->GetMission()==MissionPtr)
+        SimPtr->ResolveAgentAssignment(DebriefResult.bSuccess);
     RecordedMission=MissionPtr; RecordedStartTime=SimPtr->StartTime();
     UE_LOG(LogTemp,Display,TEXT("[MissionDebrief] Mission=%d Outcome=%s Points=%d Evidence=%s"),
         MissionPtr->GetIdentity(),*DebriefResult.Outcome,Points,*DebriefResult.Reason);
@@ -809,6 +851,11 @@ void UMissionDebriefDlg::OnCloseClicked()
     if (!LocalSim)
         return;
 
+    if(RecordedMission!=LocalSim->GetMission() || RecordedStartTime!=LocalSim->StartTime())
+    {
+        Show();
+        if(RecordedMission!=LocalSim->GetMission() || RecordedStartTime!=LocalSim->StartTime())return;
+    }
     LocalSim->CommitMission();
     bIsShown = false;
     PlayerShip = nullptr;

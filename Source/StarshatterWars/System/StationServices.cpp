@@ -1,4 +1,5 @@
 #include "StationServices.h"
+#include "OwnedHullCondition.h"
 #include "EconomyRuntime.h"
 #include "CargoCatalogSubsystem.h"
 #include "GameStructs.h"
@@ -110,7 +111,7 @@ double FStationServices::CargoTransferLimit(const FEconomyState& State,FName Sou
     if(!From || From->Owner!=FEconomyLedger::Pilot() || (To && To->Owner!=FEconomyLedger::Pilot()))return 0;
     const auto* Stack=From->Items.FindByPredicate([Item](const auto& Entry){return Entry.Type==Item;});
     if(!Stack || !FMath::IsFinite(Stack->UnitTonnes) || Stack->UnitTonnes<=0)return 0;
-    const double Free=To?To->CapacityTonnes-FEconomyLedger::Used(*To)-To->ReservedOutputTonnes:MissingCapacity;
+    const double Free=To?To->CapacityTonnes-FEconomyLedger::Used(*To):MissingCapacity;
     double Limit=FMath::Min(FEconomyLedger::Available(State,Source,Item),FMath::Max(0.0,Free)/Stack->UnitTonnes);
     if(!FMath::IsFinite(Limit))return 0;
     return FMath::Max(0.0,WholeUnits?FMath::FloorToDouble(Limit+1.e-9):Limit);
@@ -151,8 +152,9 @@ bool FStationServices::MoveCargo(UGameInstance* Instance,FName Item,bool ToStati
         Site && FString(Compartment)!=TEXT("Player Storage")?Site->CapacityTonnes:1000000) ||
         !FEconomyLedger::Transfer(State,FEconomyLedger::Pilot(),ToStation?Hold:Store,ToStation?Store:Hold,Item,Quantity))
     {State=Before;Reason=INVTEXT("Cargo changed or the destination is full. Transfer cancelled.");return false;}
+    Craft->ApplyCargoInventoryToManifest();
     if(!Players->SaveActivePlayerProgress())
-    {State=Before;Reason=INVTEXT("Could not save the transfer. Cargo was restored.");return false;}
+    {State=Before;Craft->ApplyCargoInventoryToManifest();Reason=INVTEXT("Could not save the transfer. Cargo was restored.");return false;}
     Craft->ApplyCargoInventoryToManifest();Reason=FText::Format(INVTEXT("Transferred {0} to the selected inventory."),FText::AsNumber(Quantity));return true;
 }
 bool FStationServices::QuoteMarket(UGameInstance* Instance,FName Item,double Quantity,bool Buy,FStationMarketQuote& Quote)
@@ -177,7 +179,7 @@ bool FStationServices::QuoteMarket(UGameInstance* Instance,FName Item,double Qua
     const double Ask=Goods->Value*FMath::Clamp(.8+Demand/FMath::Max(1.0,Quote.Available),.85,3.0);
     Quote.UnitPrice=Buy?Ask:Ask*.8;
     const auto* Destination=State.Inventories.Find(Quote.Destination);
-    const double Free=Destination?FMath::Max(0.0,Destination->CapacityTonnes-FEconomyLedger::Used(*Destination)-Destination->ReservedOutputTonnes):0;
+    const double Free=Destination?FMath::Max(0.0,Destination->CapacityTonnes-FEconomyLedger::Used(*Destination)):0;
     const double Funds=double(State.Wallets.FindRef(Quote.Buyer));
     Quote.Maximum=FMath::Max(0.0,FMath::Min3(Buy?Quote.Available:Quote.InHold,Free/Goods->Size,Funds/Quote.UnitPrice));
     if(WholeCargoUnits(Goods))Quote.Maximum=FMath::FloorToDouble(Quote.Maximum+1.e-9);
@@ -210,7 +212,8 @@ bool FStationServices::TradeMarket(UGameInstance* Instance,FName Item,double Qua
     FStationMarketQuote Quote;if(!QuoteMarket(Instance,Item,Quantity,Buy,Quote)){Reason=Quote.Reason;return false;}
     if(Quote.TotalCredits!=ExpectedTotal){Reason=INVTEXT("The market quote changed. Review the new price and try again.");return false;}
     auto* Players=Instance->GetSubsystem<UStarshatterPlayerSubsystem>();if(!Players)return false;
-    if(!CommitMarketTrade(Sim::GetSim()->GetEconomy(),Quote,Receipt,[Players](){return Players->SaveActivePlayerProgress();},Reason))return false;
+    const bool Saved=CommitMarketTrade(Sim::GetSim()->GetEconomy(),Quote,Receipt,[Players](){Sim::GetSim()->GetPlayerShip()->ApplyCargoInventoryToManifest();return Players->SaveActivePlayerProgress();},Reason);
+    if(!Saved){Sim::GetSim()->GetPlayerShip()->ApplyCargoInventoryToManifest();return false;}
     Sim::GetSim()->GetPlayerShip()->ApplyCargoInventoryToManifest();return true;
 }
 int64 FStationServices::RepairQuote(Ship& Craft)
@@ -242,11 +245,5 @@ bool FStationServices::RepairAll(UGameInstance* Instance, FText& Reason)
 {
     const int64 Cost = FullRepairCost();
     if (!Instance || !IsDocked() || Cost <= 0) { Reason = INVTEXT("Dock with a damaged fighter or ship to use the repair service."); return false; }
-    auto* Players = Instance->GetSubsystem<UStarshatterPlayerSubsystem>(); if (!Players) return false;
-    auto& State = Sim::GetSim()->GetEconomy(); const auto Before = State;
-    if (!FEconomyLedger::Pay(State, FEconomyLedger::Pilot(), TEXT("Station repair service"), Cost, FGuid::NewGuid(), TEXT("Full ship repairs")) || !Players->SaveActivePlayerProgress())
-    { State = Before; Reason = INVTEXT("Repair failed. No credits were charged."); return false; }
-    if (!Sim::GetSim()->GetPlayerShip()->RepairAtStation())
-    { State = Before; Players->SaveActivePlayerProgress(); Reason = INVTEXT("Repair requires docking. Payment was reversed."); return false; }
-    Reason = INVTEXT("Hull and all installed systems fully repaired. Installed grades and loadout retained."); return true;
+    return FOwnedHullCondition::RepairAndSave(Instance,*Sim::GetSim()->GetPlayerShip(),Cost,Reason);
 }

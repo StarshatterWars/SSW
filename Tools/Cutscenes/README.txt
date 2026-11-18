@@ -30,3 +30,10 @@ The exporter probes the NVIDIA H.264 encoder and uses it when available, with
 quality target 18 and the high-quality preset. Otherwise it uses CPU H.264 CRF18.
 Use --video-encoder cpu or --video-encoder nvenc to select explicitly.
 Per-scene encode-progress.txt records encoding progress.
+
+2026-11-18 finishing pass: full-frame gentle contrast, subtle vignette and fades.
+News/documentary clips get a small bottom-right ISN watermark. Intro and the menu
+battle clip are unbranded. Existing MP4s change only after successful new capture,
+encoding and full decode validation. Remaining campaign exports stay on hold for
+the user cook/package break. --source and --movie-output support isolated menu
+clips without adding them to campaign progression.

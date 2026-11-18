@@ -1,0 +1,28 @@
+[
+  {
+    "ShipDesign": "Prospector",
+    "ServiceLifeTonnes": 3000,
+    "Crystals": [
+      "StandardFocus",
+      "FerriteFocus",
+      "SilicateFocus",
+      "CarbonFocus",
+      "TraceMetalFocus",
+      "CryogenicFocus",
+      "ExoticFocus"
+    ]
+  },
+  {
+    "ShipDesign": "Rockhopper",
+    "ServiceLifeTonnes": 12000,
+    "Crystals": [
+      "StandardFocus",
+      "FerriteFocus",
+      "SilicateFocus",
+      "CarbonFocus",
+      "TraceMetalFocus",
+      "CryogenicFocus",
+      "ExoticFocus"
+    ]
+  }
+]

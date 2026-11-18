@@ -110,6 +110,7 @@ FText DescribeQuote(const TSharedPtr<FBlueprintTable>& Model)
     {
         Lines.Add(FText::Format(INVTEXT("{0} RUNS | {1} S TOTAL | INPUT: {2} | OUTPUT: {3}"), FText::AsNumber(Model->Runs),
             FText::AsNumber(Model->Quote.Duration), FText::FromName(Model->Quote.Input), FText::FromName(Model->Quote.Output)));
+        Lines.Add(FText::Format(INVTEXT("SERVICE: {0} | INSTALLATION: {1} CR"), FText::FromName(Model->Quote.ServiceProfile), FText::AsNumber(Model->Quote.InstallationFee)));
         for (const auto& Amount : Model->Quote.Materials)
             Lines.Add(FText::Format(INVTEXT("INPUT  {0}: {1} ({2} T)"), FText::FromName(Amount.Item), FText::AsNumber(Amount.Quantity), FText::AsNumber(Amount.Quantity * Amount.UnitTonnes)));
         for (const auto& Amount : Model->Quote.Products)

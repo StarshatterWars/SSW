@@ -1,12 +1,15 @@
 {
   "Scene": "Intro",
   "FrameRate": 30,
-  "Duration": 100.02225979417562,
-  "render_inputs_sha256": "0d845550119937e5d210742ba952c20690c481bdff53125b5d8cbcea29bc62d1",
+  "Duration": 100.85202420130372,
+  "clean_closing_card_sha256": "896abc5851ded3cf93d829fbe77bbfc0a88799478b8a03d358faebd9b4186c28",
+  "cinematic_finish": "contrast, subtle vignette and fades; ISN on documentary clips",
+  "video_encoder": "h264_nvenc",
+  "render_inputs_sha256": "12533df73a0446c7606fe8ff1a16519c8a199c503b77667a10200e5e7f89d9ad",
   "campaign": 1,
   "source_def": "D:\\SSW\\Content\\GameData\\Campaigns\\01\\Scenes\\Intro.def",
-  "source_sha256": "4f311d6fe51756c238d8dd20c62ca409ea98b8084a97135be4c82dd546cbfa31",
-  "mp4_sha256": "a99b8898bbd090c762e56a0cbefcdfd56ed884684d209d642787c6e0768676fc",
-  "captured_frames": 2923,
-  "render_directory": "D:\\SSW\\Saved\\CutsceneRenders\\Campaign01\\Intro\\20261118_182728"
+  "source_sha256": "3b691b378af6f7e265f82e0aba8d4b948d80cadf6ecae94484ee8db47d824d77",
+  "mp4_sha256": "9832df677f9e59539d3f060972185eb79815fd2de65592ad0de8b0abb8abde8e",
+  "captured_frames": 3022,
+  "render_directory": "D:\\SSW\\Saved\\CutsceneRenders\\Campaign01\\Intro\\20261118_223130"
 }

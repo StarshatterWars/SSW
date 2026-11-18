@@ -1,6 +1,8 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
 #include "QuantumTravel.h"
+#include "NiagaraComponent.h"
+#include "QuantumEffectsActor.h"
 #include "QuantumDrive.h"
 #include "QuantumTravelPopup.h"
 #include "TravelTransition.h"
@@ -211,6 +213,10 @@ bool FFarcasterEffectsTest::RunTest(const FString& Parameters)
         FGateFixture Legacy;
         Legacy.SetShip(&Gate);
         Legacy.Arrive(nullptr);
+        TestTrue(TEXT("Destination arrival uses blue-green palette"),Effect->IsArrivalEffect());
+        for (const auto* Ring : TInlineComponentArray<UNiagaraComponent*>(Effect))
+            TestNotNull(TEXT("Jump-point particle ring has an authored Niagara system"),Ring->GetAsset());
+
         for (const auto* Layer : Layers)
             TestFalse(TEXT("Legacy arrival opens the portal layer"), Layer->bHiddenInGame);
 
@@ -218,6 +224,10 @@ bool FFarcasterEffectsTest::RunTest(const FString& Parameters)
             Legacy.ExecFrame(1.0 / 60.0);
         for (const auto* Layer : Layers)
             TestTrue(TEXT("Legacy postwarp closes the portal layer"), Layer->bHiddenInGame);
+        TestFalse(TEXT("Closed arrival resets next departure palette"),Effect->IsArrivalEffect());
+        for (const auto* Ring : TInlineComponentArray<UNiagaraComponent*>(Effect))
+            TestFalse(TEXT("Closed portal stops particle simulation"),Ring->IsActive());
+
     }
     return true;
 }

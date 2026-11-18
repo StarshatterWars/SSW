@@ -54,10 +54,10 @@ drive: {
    design:           "Plasma Drive",
    thrust:           2500,
    scale:            4,
-   port:             (-595, -23, -6),
-   port:             (-595, -23, -31),
-   port:             (-595, 23, -6),
-   port:             (-595, 23, -31),
+   port: { loc: (-595, -23, -6), flare_scale: 1.15, trail_scale: 1.15, flare: true, trail: true }
+   port: { loc: (-595, -23, -31), flare_scale: 1.15, trail_scale: 1.15, flare: true, trail: true }
+   port: { loc: (-595, 23, -6), flare_scale: 1.15, trail_scale: 1.15, flare: true, trail: true }
+   port: { loc: (-595, 23, -31), flare_scale: 1.15, trail_scale: 1.15, flare: true, trail: true }
 
    loc:              (0, -20, -480),
    size:             48,

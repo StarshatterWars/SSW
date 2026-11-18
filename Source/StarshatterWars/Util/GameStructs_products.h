@@ -14,6 +14,14 @@ struct FSSWProductionFacility : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     FString Facility;
+    // Player service terms; NPC background batches retain their authored recipe.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FName ServiceProfile = TEXT("Standard");
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bPlayerManufacturing = true;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) double PlayerMaterialMultiplier = 1.0;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) double PlayerTimeMultiplier = 1.0;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) int64 InstallationFeeCredits = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) int64 PerRunFeeCredits = 0;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) int32 MaximumPlayerRuns = 1000000;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FName Image = TEXT("Production");
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     FString System;

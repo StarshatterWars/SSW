@@ -1,3 +1,4 @@
+#include "OptionsScreen.h"
 #include "CreditsContent.h"
 /*=============================================================================
     Project:        Starshatter Wars
@@ -29,7 +30,6 @@
 
 =============================================================================*/
 
-#include "OptionsScreen.h"
 #include "AudioDlg.h"
 #include "VideoDlg.h"
 #include "ControlOptionsDlg.h"
@@ -91,7 +91,6 @@ UOptionsScreen::UOptionsScreen(const FObjectInitializer& ObjectInitializer)
 TSharedRef<SWidget> UOptionsScreen::RebuildWidget()
 {
     // Reuse every authored page and control; only replace their outer presentation.
-    BuildModsPage();
     BuildCreditsPage();
     BuildModernShell();
     return Super::RebuildWidget();
@@ -126,7 +125,6 @@ void UOptionsScreen::NativeConstruct()
         }
     }
 
-    BuildModsPage();
     BuildCreditsPage();
     StandardizeTopTabs();
     ShowAudDlg();
@@ -247,8 +245,12 @@ void UOptionsScreen::SwitchToWidget(UWidget* Widget)
 
 void UOptionsScreen::StandardizeTopTabs()
 {
-    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick, BtnKeyboard, BtnMods, BtnVideo, BtnCredits };
-    const TCHAR* Labels[] = { TEXT("AUDIO"), TEXT("CONTROLS"), TEXT("GAME"), TEXT("JOYSTICK"), TEXT("KEYBOARD"), TEXT("MODS"), TEXT("VIDEO"), TEXT("CREDITS") };
+    if (BtnMods) BtnMods->SetVisibility(ESlateVisibility::Collapsed);
+    if (BorderMods) BorderMods->SetVisibility(ESlateVisibility::Collapsed);
+    if (ModsDlg) { ModsDlg->SetVisibility(ESlateVisibility::Collapsed); if (OptionsSwitcher) OptionsSwitcher->RemoveChild(ModsDlg); }
+
+    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick, BtnKeyboard, BtnVideo, BtnCredits };
+    const TCHAR* Labels[] = { TEXT("AUDIO"), TEXT("CONTROLS"), TEXT("GAME"), TEXT("JOYSTICK"), TEXT("KEYBOARD"), TEXT("VIDEO"), TEXT("CREDITS") };
     for (int32 Index=0; Index<UE_ARRAY_COUNT(Tabs); ++Index)
         if (UButton* Tab=Tabs[Index])
         {
@@ -268,7 +270,7 @@ void UOptionsScreen::StandardizeTopTabs()
 
 void UOptionsScreen::SetActiveTab(UButton* ActiveButton)
 {
-    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick, BtnKeyboard, BtnMods, BtnVideo, BtnCredits };
+    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick, BtnKeyboard, BtnVideo, BtnCredits };
     for (int32 Index=0; Index<UE_ARRAY_COUNT(Tabs); ++Index)
         if (Tabs[Index] && Tabs[Index]==ActiveButton) ActiveTabIndex=Index;
     StandardizeTopTabs();
@@ -311,7 +313,7 @@ int32 UOptionsScreen::GetCurrentTabIndex() const
 
 void UOptionsScreen::FocusTabByDelta(int32 Delta)
 {
-    const int32 Count = 8;
+    const int32 Count = 7;
     int32 Cur = GetCurrentTabIndex();
     int32 Next = Cur;
 
@@ -327,9 +329,8 @@ void UOptionsScreen::FocusTabByDelta(int32 Delta)
         case 2: Candidate = BtnGame; break;
         case 3: Candidate = BtnJoystick; break;
         case 4: Candidate = BtnKeyboard; break;
-        case 5: Candidate = BtnMods; break;
-        case 6: Candidate = BtnVideo; break;
-        case 7: Candidate = BtnCredits; break;
+        case 5: Candidate = BtnVideo; break;
+        case 6: Candidate = BtnCredits; break;
         default: break;
         }
 
@@ -344,9 +345,8 @@ void UOptionsScreen::FocusTabByDelta(int32 Delta)
         case 2: ShowGameDlg(); break;
         case 3: ShowJoyDlg(); break;
         case 4: ShowKeyDlg(); break;
-        case 5: ShowModDlg(); break;
-        case 6: ShowVidDlg(); break;
-        case 7: ShowCreditsDlg(); break;
+        case 5: ShowVidDlg(); break;
+        case 6: ShowCreditsDlg(); break;
         default: break;
         }
 
@@ -422,17 +422,8 @@ void UOptionsScreen::ShowKeyDlg()
 
 void UOptionsScreen::ShowModDlg()
 {
-    SetActiveTab(BtnMods);
-    if (OptionsSwitcher && ModsPage)
-    {
-        OptionsSwitcher->RemoveChild(ModsPage);
-        ModsPage = nullptr;
-    }
-    BuildModsPage();
-    SwitchToWidget(ModsPage.Get());
-
-    if (APlayerController* PC = GetOwningPlayer())
-        if (BtnMods) BtnMods->SetUserFocus(PC);
+    // Retained for old Blueprint bindings; mod tools now live in Mod Editor.
+    ShowAudDlg();
 }
 
 void UOptionsScreen::ShowVidDlg()
@@ -553,11 +544,6 @@ void UOptionsScreen::ApplyOptions()
     if (auto* Page=Cast<UJoyDlg>(JoystickDlg)) Page->Apply();
     if (auto* Page=Cast<UKeyDlg>(KeyboardDlg)) Page->Apply();
     if (auto* Page=Cast<UVideoDlg>(VideoDlg)) Page->Apply();
-    if (ModsDlg && ModsDlg->Implements<UOptionsPage>())
-    {
-        IOptionsPage::Execute_ApplySettings(ModsDlg);
-        IOptionsPage::Execute_SaveSettings(ModsDlg);
-    }
     auto* Save=GetGameInstance()?GetGameInstance()->GetSubsystem<UStarshatterSettingsSaveSubsystem>():nullptr;
     bool Saved=false;
     if (Save && (Save->HasSettings() || Save->LoadOrCreateSettings()))
@@ -580,7 +566,6 @@ void UOptionsScreen::CancelOptions()
     if (auto* Page=Cast<UJoyDlg>(JoystickDlg)) Page->Cancel();
     if (auto* Page=Cast<UKeyDlg>(KeyboardDlg)) Page->Cancel();
     if (auto* Page=Cast<UVideoDlg>(VideoDlg)) Page->Cancel();
-    if (ModsDlg && ModsDlg->Implements<UOptionsPage>()) IOptionsPage::Execute_CancelChanges(ModsDlg);
 
     // Return to menu
     if (UMenuScreen* Menu = GetMenuManager())
@@ -605,7 +590,7 @@ void UOptionsScreen::ReturnFromKeyDlg()
 void UOptionsScreen::BuildModernShell()
 {
     if (ModernShell || !WidgetTree || !OptionsSwitcher) return;
-    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick, BtnKeyboard, BtnMods, BtnVideo, BtnCredits };
+    UButton* Tabs[] = { BtnAudio, BtnControls, BtnGame, BtnJoystick, BtnKeyboard, BtnVideo, BtnCredits };
     // A partial Blueprint must retain its authored layout rather than lose navigation.
     for (UButton* Tab : Tabs) if (!Tab) return;
     auto* Scale=WidgetTree->ConstructWidget<UScaleBox>(UScaleBox::StaticClass(),TEXT("OptionsModernScale"));
@@ -663,7 +648,9 @@ void UOptionsScreen::StylePage(UUserWidget* Page)
         }
         if (auto* Slider=Cast<USlider>(Widget))
         {
-            Slider->SetSliderBarColor(FLinearColor(0.10f,0.20f,0.28f,1));
+            Slider->SetWidgetStyle(MissionUIStyle::StandaloneSliderStyle());
+            Slider->SetIndentHandle(false);
+            Slider->SetSliderBarColor(FLinearColor(.14f,.8f,.95f,1));
             Slider->SetSliderHandleColor(FLinearColor(0.16f,0.77f,0.91f,1));
         }
         if (auto* Button=Cast<UButton>(Widget))
@@ -679,59 +666,5 @@ void UOptionsScreen::StylePage(UUserWidget* Page)
 
 void UOptionsScreen::BuildModsPage()
 {
-    if (!OptionsSwitcher || !WidgetTree || ModsPage) return;
-    UBorder* Page = WidgetTree->ConstructWidget<UBorder>();
-    ModsPage = Page;
-    if (ModsDlg && ModsDlg->GetParent() == OptionsSwitcher) OptionsSwitcher->RemoveChild(ModsDlg);
-    Page->SetPadding(FMargin(32.f));
-    Page->SetBrushColor(FLinearColor(0.008f, 0.025f, 0.04f, 0.94f));
-    UVerticalBox* Content = WidgetTree->ConstructWidget<UVerticalBox>();
-    Page->SetContent(Content);
-    UTextBlock* Heading = WidgetTree->ConstructWidget<UTextBlock>();
-    Heading->SetText(FText::FromString(TEXT("MODS")));
-    Heading->SetFont(MissionUIStyle::GetInfoLabelFont(24));
-    Heading->SetColorAndOpacity(FSlateColor(FLinearColor(0.35f, 0.85f, 1.f)));
-    Content->AddChildToVerticalBox(Heading)->SetPadding(FMargin(0.f, 0.f, 0.f, 24.f));
-    const FString Directory = SSWMissionMods::Directory();
-    IFileManager::Get().MakeDirectory(*Directory, true);
-    auto* Host = WidgetTree->ConstructWidget<UNativeWidgetHost>();
-    auto List = SNew(SScrollBox);
-    List->AddSlot().Padding(0,0,0,18)
-    [
-        SNew(STextBlock)
-        .Text(FText::FromString(FString::Printf(
-            TEXT("%s\nInstall mission packs as <Pack>/Missions/*.def. Enabled packs appear in Custom Missions."),
-            *Directory)))
-        .Font(MissionUIStyle::GetRowFont(18))
-        .AutoWrapText(true)
-    ];
-    const auto Packs = SSWMissionMods::Discover();
-    if (Packs.IsEmpty())
-    {
-        auto* EmptyState = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass(),
-            MakeUniqueObjectName(WidgetTree, UTextBlock::StaticClass(), TEXT("Options_ModsEmptyState")));
-        EmptyState->SetText(NSLOCTEXT("Options", "NoMods", "No mods available."));
-        EmptyState->SetFont(MissionUIStyle::GetRowFont(18));
-        Content->AddChildToVerticalBox(EmptyState);
-    }
-    for (const auto& Pack : Packs)
-    {
-        List->AddSlot().Padding(0,0,0,10)
-        [
-            SNew(SCheckBox)
-            .IsChecked(Pack.bEnabled ? ECheckBoxState::Checked : ECheckBoxState::Unchecked)
-            .OnCheckStateChanged_Lambda([Name = Pack.Name](ECheckBoxState State)
-            {
-                SSWMissionMods::SetEnabled(Name, State == ECheckBoxState::Checked);
-            })
-            [
-                SNew(STextBlock)
-                .Text(FText::FromString(Pack.Name))
-                .Font(MissionUIStyle::GetRowFont(18))
-            ]
-        ];
-    }
-    Host->SetContent(List);
-    Content->AddChildToVerticalBox(Host)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-    OptionsSwitcher->AddChild(Page);
+    // Compatibility hook only. Mod management belongs to the docked Mod Editor.
 }

@@ -31,6 +31,7 @@ public:
     };
 
     explicit MiningAI(Ship* InShip);
+    static FVector BeamEndpoint(const FVector& Muzzle,const FVector& DepositCenter,double MaxRange);
 
     static ScanResult ScanAsteroids(SimRegion& Region, const FVector& Origin, double Range, ScanTier Tier);
     static Asteroid* SelectClaimedDeposit(FEconomyState&, FName Claimant, SimRegion&, const FVector&, const ScanResult&,

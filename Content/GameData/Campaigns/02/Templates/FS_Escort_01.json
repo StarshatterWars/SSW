@@ -1,0 +1,1754 @@
+{
+	"missionId": 251,
+	"missionName": "Humanitarian Aid",
+	"targetName": "",
+	"wardName": "Ward",
+	"missionSystem": "Solus",
+	"missionRegion": "Trellis",
+	"templateObjective": "",
+	"templateSitrep": "",
+	"templateStart": "",
+	"templateAfter": "",
+	"templateGroup": "FIGHTER_SQUADRON",
+	"templateType": "ESCORT_FREIGHT",
+	"displayType": "PlayerMission",
+	"templateSource": "Template",
+	"templateTeam": 0,
+	"templateDegrees": true,
+	"templateOnce": false,
+	"element": [
+		{
+			"name": "Ward",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "IM2800",
+			"skinName": "",
+			"roleName": "CARGO",
+			"regionName": "",
+			"instr": "",
+			"intel": "TRACKED",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 900,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [
+				{
+					"reference": "FC2",
+					"dex": 100000,
+					"dexVar": 30000,
+					"azimuth": 0,
+					"azimuthVar": 60,
+					"elevation": 0,
+					"elevationVar": 0,
+					"baseLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					}
+				}
+			],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 520,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "vector",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "FC1",
+							"dex": 99000,
+							"dexVar": 10000,
+							"azimuth": 180,
+							"azimuthVar": 45,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 520,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "vector",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "FC1",
+							"dex": 30000,
+							"dexVar": 3000,
+							"azimuth": 180,
+							"azimuthVar": 3,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 520,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "vector",
+					"statusName": "",
+					"orderRegionName": "Solus",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "FC2",
+							"dex": 25000,
+							"dexVar": 0,
+							"azimuth": 0,
+							"azimuthVar": 0,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 400,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "vector",
+					"statusName": "",
+					"orderRegionName": "Solus",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "FC2",
+							"dex": 100000,
+							"dexVar": 30000,
+							"azimuth": 0,
+							"azimuthVar": 60,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Player",
+			"carrier": "",
+			"commander": "A1",
+			"squadron": "A2",
+			"text": "",
+			"path": "",
+			"design": "Stormhawk",
+			"skinName": "",
+			"roleName": "ESCORT_FREIGHT",
+			"regionName": "",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 2,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 1,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": true,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [
+				{
+					"ship": -1,
+					"loadoutName": "ACM Medium Range",
+					"stations": [
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "patrol",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "inbound enemy units",
+					"objectiveType": "",
+					"action": "Patrol",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				},
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "escort",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Ward",
+					"objectiveDesc": "",
+					"objectiveInfo": "the merchant vessel",
+					"objectiveType": "",
+					"action": "Escort",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				},
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "rtb",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "RTB",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "vector",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "Ward",
+							"dex": 15000,
+							"dexVar": 0,
+							"azimuth": 270,
+							"azimuthVar": 20,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "escort",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Escort",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "Ward:1",
+							"dex": 10000,
+							"dexVar": 0,
+							"azimuth": 270,
+							"azimuthVar": 30,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "escort",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Escort",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "Ward:2",
+							"dex": 7000,
+							"dexVar": 0,
+							"azimuth": 270,
+							"azimuthVar": 20,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "escort",
+					"statusName": "",
+					"orderRegionName": "Solus",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Escort",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "Ward:3",
+							"dex": 10000,
+							"dexVar": 0,
+							"azimuth": 0,
+							"azimuthVar": 10,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "escort",
+					"statusName": "",
+					"orderRegionName": "Solus",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Escort",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "Ward:4",
+							"dex": 20000,
+							"dexVar": 0,
+							"azimuth": 180,
+							"azimuthVar": 20,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "vector",
+					"statusName": "",
+					"orderRegionName": "Solus",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "FC2",
+							"dex": 30000,
+							"dexVar": 5000,
+							"azimuth": 180,
+							"azimuthVar": 25,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "vector",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "A1",
+							"dex": 30000,
+							"dexVar": 2000,
+							"azimuth": 180,
+							"azimuthVar": 75,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 250,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "rtb",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "RTB",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "A1",
+							"dex": 20000,
+							"dexVar": 0,
+							"azimuth": 180,
+							"azimuthVar": 0,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				}
+			],
+			"ship": []
+		}
+	],
+	"event": [
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_NAVPT",
+			"eventShip": "Ward",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "Player",
+			"triggerTarget": "",
+			"eventId": 1,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 1
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_EVENT",
+			"eventShip": "Player",
+			"eventSource": "Ward",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Glad to see you guys! Thanks for escorting us.",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "A01-01",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 2,
+			"eventChance": 35,
+			"eventDelay": 1,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 1
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_NAVPT",
+			"eventShip": "Player",
+			"eventSource": "Ward",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "OK, we're ready to make the jump.",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "A01-02",
+			"triggerShip": "Ward",
+			"triggerTarget": "",
+			"eventId": 3,
+			"eventChance": 0,
+			"eventDelay": 1,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				2,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 1
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_EVENT",
+			"eventShip": "Player",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Form up and we'll go through together.",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "A01-03",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 4,
+			"eventChance": 0,
+			"eventDelay": 2,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 1
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_NAVPT",
+			"eventShip": "Player",
+			"eventSource": "Ward",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Looks like our pick-up is late.",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "A01-07",
+			"triggerShip": "Ward",
+			"triggerTarget": "",
+			"eventId": 5,
+			"eventChance": 50,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 1
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_EVENT",
+			"eventShip": "Player",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Can you stick with us in case there's any trouble?",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "A01-08",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 6,
+			"eventChance": 0,
+			"eventDelay": 2,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 1
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_NAVPT",
+			"eventShip": "Player",
+			"eventSource": "Ward",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Thanks for the lift.  I think we are clear now.",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "A01-06",
+			"triggerShip": "Ward",
+			"triggerTarget": "",
+			"eventId": 7,
+			"eventChance": 0,
+			"eventDelay": 2,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				4,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 1
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_SKIPPED",
+			"eventShip": "Player",
+			"eventSource": "Ward",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Looks like our escort is here.  Let's get going.",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "A01-09",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 102,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				2,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 1
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_SKIPPED",
+			"eventShip": "Player",
+			"eventSource": "Ward",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "We were expecting some Zodiacs to pick up our cargo.",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "A01-10",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 105,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 1
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_EVENT",
+			"eventShip": "Player",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Still can't see them.  I hope everything is all right.",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "A01-11",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 106,
+			"eventChance": 0,
+			"eventDelay": 5,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				105,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 1
+		}
+	],
+	"callsign": [
+		{
+			"callsign": "Player",
+			"iff": 1
+		},
+		{
+			"callsign": "Alpha",
+			"iff": 2
+		},
+		{
+			"callsign": "Bravo",
+			"iff": 2
+		}
+	],
+	"optional": [
+		{
+			"min": 1,
+			"max": 2,
+			"total": 2,
+			"element": [
+				{
+					"name": "Alpha",
+					"carrier": "",
+					"commander": "",
+					"squadron": "",
+					"text": "",
+					"path": "",
+					"design": "Viper",
+					"skinName": "",
+					"roleName": "PATROL",
+					"regionName": "",
+					"instr": "",
+					"intel": "KNOWN",
+					"location":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"deck": 1,
+					"iFFCode": 2,
+					"count": 2,
+					"maintCount": 0,
+					"deadCount": 0,
+					"player": 0,
+					"commandAI": 1,
+					"respawns": 0,
+					"holdTime": 0,
+					"zoneLock": 0,
+					"heading": 0,
+					"alert": false,
+					"playable": false,
+					"rogue": false,
+					"invulnerable": false,
+					"rLoc": [
+						{
+							"reference": "Ward:1",
+							"dex": 40000,
+							"dexVar": 0,
+							"azimuth": 200,
+							"azimuthVar": 30,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					],
+					"loadout": [
+						{
+							"ship": -1,
+							"loadoutName": "ACM Medium Range",
+							"stations": [
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0
+							]
+						}
+					],
+					"instruction": [],
+					"navpoint": [
+						{
+							"formation": 0,
+							"speed": 300,
+							"priority": 1,
+							"eMCON": 0,
+							"orderName": "intercept",
+							"statusName": "",
+							"orderRegionName": "Trellis",
+							"objectiveName": "Player",
+							"objectiveDesc": "",
+							"objectiveInfo": "",
+							"objectiveType": "",
+							"action": "Intercept",
+							"objectiveLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							},
+							"arrivalRadius": 5000,
+							"rLoc": [
+								{
+									"reference": "Ward:1",
+									"dex": 40000,
+									"dexVar": 0,
+									"azimuth": 200,
+									"azimuthVar": 30,
+									"elevation": 0,
+									"elevationVar": 0,
+									"baseLocation":
+									{
+										"x": 0,
+										"y": 0,
+										"z": 0
+									}
+								}
+							]
+						}
+					],
+					"ship": []
+				},
+				{
+					"name": "Bravo",
+					"carrier": "",
+					"commander": "",
+					"squadron": "",
+					"text": "",
+					"path": "",
+					"design": "Razor",
+					"skinName": "",
+					"roleName": "PATROL",
+					"regionName": "Solus",
+					"instr": "",
+					"intel": "SECRET",
+					"location":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"deck": 1,
+					"iFFCode": 2,
+					"count": 3,
+					"maintCount": 0,
+					"deadCount": 0,
+					"player": 0,
+					"commandAI": 1,
+					"respawns": 0,
+					"holdTime": 0,
+					"zoneLock": 0,
+					"heading": 0,
+					"alert": false,
+					"playable": false,
+					"rogue": false,
+					"invulnerable": false,
+					"rLoc": [
+						{
+							"reference": "Ward:4",
+							"dex": 20000,
+							"dexVar": 0,
+							"azimuth": 180,
+							"azimuthVar": 20,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					],
+					"loadout": [
+						{
+							"ship": -1,
+							"loadoutName": "Ship Strike",
+							"stations": [
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0,
+								0
+							]
+						}
+					],
+					"instruction": [],
+					"navpoint": [
+						{
+							"formation": 0,
+							"speed": 200,
+							"priority": 1,
+							"eMCON": 0,
+							"orderName": "assault",
+							"statusName": "",
+							"orderRegionName": "Solus",
+							"objectiveName": "Ward",
+							"objectiveDesc": "",
+							"objectiveInfo": "",
+							"objectiveType": "",
+							"action": "Assault",
+							"objectiveLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							},
+							"arrivalRadius": 5000,
+							"rLoc": [
+								{
+									"reference": "Ward:4",
+									"dex": 20000,
+									"dexVar": 0,
+									"azimuth": 180,
+									"azimuthVar": 20,
+									"elevation": 0,
+									"elevationVar": 0,
+									"baseLocation":
+									{
+										"x": 0,
+										"y": 0,
+										"z": 0
+									}
+								}
+							]
+						}
+					],
+					"ship": []
+				}
+			]
+		}
+	],
+	"alias": [
+		{
+			"aliasName": "A1",
+			"design": "",
+			"code": "player_carrier",
+			"elementName": "",
+			"mission": "",
+			"iff": -1,
+			"player": 0,
+			"useLocation": false,
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"rLoc": [],
+			"navpoint": [],
+			"objective": []
+		},
+		{
+			"aliasName": "A2",
+			"design": "",
+			"code": "player_squadron",
+			"elementName": "",
+			"mission": "",
+			"iff": -1,
+			"player": 0,
+			"useLocation": false,
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"rLoc": [],
+			"navpoint": [],
+			"objective": []
+		},
+		{
+			"aliasName": "FC1",
+			"design": "",
+			"code": "",
+			"elementName": "Trellis-Solus",
+			"mission": "",
+			"iff": -1,
+			"player": 0,
+			"useLocation": false,
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"rLoc": [],
+			"navpoint": [],
+			"objective": []
+		},
+		{
+			"aliasName": "FC2",
+			"design": "",
+			"code": "",
+			"elementName": "Solus-Trellis",
+			"mission": "",
+			"iff": -1,
+			"player": 0,
+			"useLocation": false,
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"rLoc": [],
+			"navpoint": [],
+			"objective": []
+		}
+	]
+}

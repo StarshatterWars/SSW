@@ -51,7 +51,7 @@ TSharedRef<SWidget> URecordedCutsceneDlg::RebuildWidget()
         + SVerticalBox::Slot().FillHeight(1)
         [SNew(SBox).MinAspectRatio(16.f/9.f).MaxAspectRatio(16.f/9.f)[Picture->TakeWidget()]]
         + SVerticalBox::Slot().AutoHeight()
-        [SNew(SSlider).ToolTipText(INVTEXT("Cutscene position"))
+        [SNew(SSlider).Style(&MissionUIStyle::StandaloneSliderStyle()).IndentHandle(false).SliderBarColor(FLinearColor(.14f,.8f,.95f)).ToolTipText(INVTEXT("Cutscene position"))
             .Value_Lambda([this](){const double Duration=Player->GetDuration().GetTotalSeconds();return Duration>0?float(Player->GetTime().GetTotalSeconds()/Duration):0.f;})
             .OnValueChanged_Lambda([this](float Value){Player->Seek(FTimespan::FromSeconds(Player->GetDuration().GetTotalSeconds()*Value));})]
         + SVerticalBox::Slot().AutoHeight()[Controls]

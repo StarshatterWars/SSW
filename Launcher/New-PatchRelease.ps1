@@ -1,7 +1,7 @@
 param(
     [Parameter(Mandatory)][string]$Package,
     [Parameter(Mandatory)][string]$Output,
-    [string]$Version = [DateTime]::UtcNow.ToString("yyyyMMdd-HHmmss'Z'", [Globalization.CultureInfo]::InvariantCulture),
+    [string]$Version = '',
     [Parameter(Mandatory)][ValidateLength(1,500)][string]$About,
     [Parameter(Mandatory)][string]$PrivateKey,
     [string]$StarServerPackage = (Join-Path $PSScriptRoot '../Build/StarServer/WindowsServer')
@@ -9,6 +9,12 @@ param(
 $ErrorActionPreference = 'Stop'
 if ([string]::IsNullOrWhiteSpace($About)) { throw 'Describe the update in plain English.' }
 $source = (Resolve-Path -LiteralPath $Package).Path
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    $buildRecord = Join-Path $source 'StarshatterWars/Content/Build/build-version.json'
+    if (!(Test-Path -LiteralPath $buildRecord)) { throw 'Package build-version.json is missing. Build the game before releasing a patch.' }
+    $Version = (Get-Content -LiteralPath $buildRecord -Raw | ConvertFrom-Json).version
+    if ([string]::IsNullOrWhiteSpace($Version)) { throw 'Package build number is empty.' }
+}
 $server = (Resolve-Path -LiteralPath $StarServerPackage).Path
 $target = [IO.Path]::GetFullPath($Output)
 if ($target.StartsWith($source.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase) -or

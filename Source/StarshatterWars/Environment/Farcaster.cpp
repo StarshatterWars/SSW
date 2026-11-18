@@ -88,8 +88,8 @@ namespace
 
 FVector Farcaster::GetApproachTarget(const FVector& Position) const
 {
+    if (!HasValidApproach() || Position.ContainsNaN()) return StartPoint();
     const FVector Axis = (StartPoint() - ApproachPoint(0)).GetSafeNormal();
-    if (Axis.IsNearlyZero()) return StartPoint();
 
     const FVector Offset = Position - StartPoint();
     const double Along = FVector::DotProduct(Offset, Axis);
@@ -101,17 +101,27 @@ FVector Farcaster::GetApproachTarget(const FVector& Position) const
 
 bool Farcaster::CanEnter(const Ship& Traveler) const
 {
-    const FVector Offset = Traveler.GetLocation() - StartPoint();
-    if (Offset.SizeSquared() >= FMath::Square(EntryRange)) return false;
+    return CanEnterAt(Traveler.GetLocation(), Traveler.GetHeading(), Traveler.GetVelocity());
+}
 
+bool Farcaster::HasValidApproach() const
+{
+    return !StartPoint().ContainsNaN() && !ApproachPoint(0).ContainsNaN() &&
+        !(StartPoint() - ApproachPoint(0)).IsNearlyZero();
+}
+
+bool Farcaster::CanEnterAt(const FVector& Position, const FVector& Heading, const FVector& Velocity) const
+{
+    // An unoriented or malformed gate must not silently waive the entry checks.
+    if (!HasValidApproach() || Position.ContainsNaN() || Heading.ContainsNaN() || Velocity.ContainsNaN()) return false;
+    const FVector Offset = Position - StartPoint();
+    if (Offset.SizeSquared() >= FMath::Square(EntryRange)) return false;
     const FVector Axis = (StartPoint() - ApproachPoint(0)).GetSafeNormal();
-    if (Axis.IsNearlyZero()) return true;
     const double Along = FVector::DotProduct(Offset, Axis);
     if (Along > LaneRadius || (Offset - Along * Axis).SizeSquared() > FMath::Square(LaneRadius))
         return false;
 
-    const FVector Velocity = Traveler.GetVelocity();
-    return FVector::DotProduct(Traveler.GetHeading().GetSafeNormal(), Axis) >= AlignmentCosine &&
+    return FVector::DotProduct(Heading.GetSafeNormal(), Axis) >= AlignmentCosine &&
         FVector::DotProduct(Velocity, Axis) > 1.0 &&
         FVector::DotProduct(Velocity.GetSafeNormal(), Axis) >= AlignmentCosine;
 }
@@ -291,7 +301,7 @@ Farcaster::Arrive(Ship* s)
 	warp_fov = 5000;
 	jumpship = s;
     if (auto* Effect = AFarcasterEffectActor::FindFor(ship))
-        Effect->SetOpening(1.f);
+        Effect->FlashArrival();
 
 	if (jumpship && jumpship->GetVelocity().Length() < 500.0f) {
 		jumpship->SetVelocity(jumpship->GetHeading() * 500.0f);

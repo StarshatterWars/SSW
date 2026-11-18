@@ -133,6 +133,9 @@ void ASystemSceneBuilder::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+    // Axial presentation follows the legacy universe clock independently of the
+    // optional compressed-orbit animation. Roots and runway anchors stay fixed.
+    RefreshRuntimeBodyRotations();
     ++TickCounter;
     DebugTickAccumulator += DeltaTime;
 
@@ -285,6 +288,7 @@ void ASystemSceneBuilder::ClearSpawnedBodies()
     SpawnedActors.Empty();
     SpawnedBodies.Empty();
     SpawnedRegions.Empty();
+    GasCoreBaseRotations.Empty();
     RuntimeBodyMap.Empty();
     BodyActorMap.Empty();
 }
@@ -958,6 +962,35 @@ void ASystemSceneBuilder::TrackRuntimeBody(
             *GetNameSafe(Actor),
             RuntimeBodyMap.Num(),
             BodyActorMap.Num());
+    }
+}
+
+void ASystemSceneBuilder::RefreshRuntimeBodyRotations()
+{
+    for (const auto& Pair : RuntimeBodyMap)
+    {
+        const OrbitalBody* Body = Pair.Value;
+        const auto* Found = BodyActorMap.Find(Pair.Key);
+        AActor* Actor = Found ? Found->Get() : nullptr;
+        if (!Body || !IsValid(Actor) || !FMath::IsFinite(Body->Rotation()) || Body->Rotation() <= 0 ||
+            (Body->GetType() != Orbital::PLANET && Body->GetType() != Orbital::MOON)) continue;
+        // WorldScape's live collision and the graded runway share a fixed frame.
+        // Do not turn the globe under its stations or animate its proxy separately.
+        if (Actor->IsA<AWorldScapeRoot>()) continue;
+        const double Phase = -2.0 * PI * FMath::Fmod(StarSystem::GetStardate(), Body->Rotation()) / Body->Rotation();
+        if (!FMath::IsFinite(Phase)) continue;
+        if (auto* Planet = Cast<APlanetActor>(Actor)) Planet->SetAxialRotationPhaseRadians(Phase);
+        else if (Actor->IsA<AGasGiantActor>())
+        {
+            TArray<UStaticMeshComponent*> Meshes;Actor->GetComponents(Meshes);
+            for (auto* Mesh : Meshes)
+            {
+                if (!Mesh || Mesh->GetFName() != TEXT("CoreMesh")) continue;
+                const TWeakObjectPtr<UStaticMeshComponent> Key(Mesh);
+                if (!GasCoreBaseRotations.Contains(Key)) GasCoreBaseRotations.Add(Key,Mesh->GetRelativeRotation().Quaternion());
+                Mesh->SetRelativeRotation(GasCoreBaseRotations.FindChecked(Key) * FQuat(FVector::UpVector,Phase));
+            }
+        }
     }
 }
 

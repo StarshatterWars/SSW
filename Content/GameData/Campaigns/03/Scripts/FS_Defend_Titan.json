@@ -1,0 +1,1574 @@
+{
+	"missionId": 0,
+	"missionName": "Fleet Defense",
+	"targetName": "",
+	"wardName": "",
+	"missionSystem": "",
+	"missionRegion": "",
+	"templateObjective": "",
+	"templateSitrep": "",
+	"templateStart": "",
+	"templateAfter": "",
+	"templateGroup": "NONE",
+	"templateType": "DEFEND",
+	"displayType": "PlayerMission",
+	"templateSource": "Scripted",
+	"templateTeam": 0,
+	"templateDegrees": true,
+	"templateOnce": false,
+	"element": [
+		{
+			"name": "Player",
+			"carrier": "",
+			"commander": "A1",
+			"squadron": "A2",
+			"text": "",
+			"path": "",
+			"design": "Stormhawk",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 2,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 1,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": true,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [
+				{
+					"ship": -1,
+					"loadoutName": "ACM Medium Range",
+					"stations": [
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "patrol",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "inbound enemy units",
+					"objectiveType": "",
+					"action": "Patrol",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				},
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "rtb",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "RTB",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 750,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "patrol",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Patrol",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "A1",
+							"dex": 150000,
+							"dexVar": 25000,
+							"azimuth": 0,
+							"azimuthVar": 10,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 750,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "patrol",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Patrol",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "this:1",
+							"dex": 150000,
+							"dexVar": 25000,
+							"azimuth": 90,
+							"azimuthVar": 10,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 750,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "patrol",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Patrol",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "this:2",
+							"dex": 150000,
+							"dexVar": 15000,
+							"azimuth": 170,
+							"azimuthVar": 10,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "vector",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "A1",
+							"dex": 40000,
+							"dexVar": 0,
+							"azimuth": 140,
+							"azimuthVar": 10,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 250,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "rtb",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "RTB",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "A1",
+							"dex": 20000,
+							"dexVar": 0,
+							"azimuth": 180,
+							"azimuthVar": 0,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Helper",
+			"carrier": "",
+			"commander": "A1",
+			"squadron": "A2",
+			"text": "",
+			"path": "",
+			"design": "Stormhawk",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 2,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [
+				{
+					"reference": "A1",
+					"dex": 55000,
+					"dexVar": 25000,
+					"azimuth": -20,
+					"azimuthVar": 10,
+					"elevation": 0,
+					"elevationVar": 0,
+					"baseLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					}
+				}
+			],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Cobra1",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Cobra",
+			"skinName": "",
+			"roleName": "ASSAULT",
+			"regionName": "",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 4,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [
+				{
+					"reference": "A1",
+					"dex": 40000,
+					"dexVar": 10000,
+					"azimuth": 0,
+					"azimuthVar": 70,
+					"elevation": 0,
+					"elevationVar": 0,
+					"baseLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					}
+				}
+			],
+			"loadout": [
+				{
+					"ship": -1,
+					"loadoutName": "Hvy Ship Strike",
+					"stations": [
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "assault",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "A1",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Assault",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 750,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "assault",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "A1",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Assault",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "A1",
+							"dex": 40000,
+							"dexVar": 10000,
+							"azimuth": 0,
+							"azimuthVar": 70,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Cobra2",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Cobra",
+			"skinName": "",
+			"roleName": "ASSAULT",
+			"regionName": "",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 4,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [
+				{
+					"reference": "A1",
+					"dex": 40000,
+					"dexVar": 10000,
+					"azimuth": 0,
+					"azimuthVar": 70,
+					"elevation": 0,
+					"elevationVar": 0,
+					"baseLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					}
+				}
+			],
+			"loadout": [
+				{
+					"ship": -1,
+					"loadoutName": "Hvy Ship Strike",
+					"stations": [
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "assault",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "A1",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Assault",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 750,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "assault",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "A1",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Assault",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "A1",
+							"dex": 40000,
+							"dexVar": 10000,
+							"azimuth": 0,
+							"azimuthVar": 70,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				}
+			],
+			"ship": []
+		}
+	],
+	"event": [
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "Player",
+			"eventSource": "A1",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "vox.misc.a02-01",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "A02-01",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 1,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 38,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DAMAGE",
+			"eventTrigger": "TRIGGER_EVENT",
+			"eventShip": "Defender",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 2,
+			"eventChance": 0,
+			"eventDelay": 35,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 38,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				40000,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 1
+		},
+		{
+			"eventType": "DAMAGE",
+			"eventTrigger": "TRIGGER_EVENT",
+			"eventShip": "A1",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 3,
+			"eventChance": 0,
+			"eventDelay": 67,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 38,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				30000,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 1
+		},
+		{
+			"eventType": "DAMAGE",
+			"eventTrigger": "TRIGGER_EVENT",
+			"eventShip": "A1",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 4,
+			"eventChance": 0,
+			"eventDelay": 112,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 38,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				30000,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 1
+		},
+		{
+			"eventType": "DAMAGE",
+			"eventTrigger": "TRIGGER_EVENT",
+			"eventShip": "A1",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 5,
+			"eventChance": 0,
+			"eventDelay": 138,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 38,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				30000,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 1
+		}
+	],
+	"callsign": [
+		{
+			"callsign": "Player",
+			"iff": 1
+		},
+		{
+			"callsign": "Helper",
+			"iff": 1
+		},
+		{
+			"callsign": "Cobra1",
+			"iff": 2
+		},
+		{
+			"callsign": "Cobra2",
+			"iff": 2
+		}
+	],
+	"optional": [
+		{
+			"min": 4,
+			"max": 8,
+			"total": 4,
+			"element": [
+				{
+					"name": "DB1",
+					"carrier": "",
+					"commander": "",
+					"squadron": "",
+					"text": "",
+					"path": "",
+					"design": "Broadsword",
+					"skinName": "",
+					"roleName": "PATROL",
+					"regionName": "",
+					"instr": "",
+					"intel": "SECRET",
+					"location":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"deck": 1,
+					"iFFCode": 2,
+					"count": 1,
+					"maintCount": 0,
+					"deadCount": 0,
+					"player": 0,
+					"commandAI": 1,
+					"respawns": 0,
+					"holdTime": 0,
+					"zoneLock": 0,
+					"heading": 0,
+					"alert": false,
+					"playable": false,
+					"rogue": false,
+					"invulnerable": false,
+					"rLoc": [
+						{
+							"reference": "A1",
+							"dex": 60000,
+							"dexVar": 20000,
+							"azimuth": 0,
+							"azimuthVar": 70,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					],
+					"loadout": [],
+					"instruction": [
+						{
+							"formation": 0,
+							"speed": 0,
+							"priority": 1,
+							"eMCON": 0,
+							"orderName": "assault",
+							"statusName": "",
+							"orderRegionName": "",
+							"objectiveName": "A1",
+							"objectiveDesc": "",
+							"objectiveInfo": "",
+							"objectiveType": "",
+							"action": "Assault",
+							"objectiveLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							},
+							"arrivalRadius": 5000,
+							"rLoc": []
+						}
+					],
+					"navpoint": [
+						{
+							"formation": 0,
+							"speed": 750,
+							"priority": 1,
+							"eMCON": 0,
+							"orderName": "assault",
+							"statusName": "",
+							"orderRegionName": "",
+							"objectiveName": "A1",
+							"objectiveDesc": "",
+							"objectiveInfo": "",
+							"objectiveType": "",
+							"action": "Assault",
+							"objectiveLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							},
+							"arrivalRadius": 5000,
+							"rLoc": [
+								{
+									"reference": "A1",
+									"dex": 60000,
+									"dexVar": 20000,
+									"azimuth": 0,
+									"azimuthVar": 70,
+									"elevation": 0,
+									"elevationVar": 0,
+									"baseLocation":
+									{
+										"x": 0,
+										"y": 0,
+										"z": 0
+									}
+								}
+							]
+						}
+					],
+					"ship": []
+				},
+				{
+					"name": "DB2",
+					"carrier": "",
+					"commander": "",
+					"squadron": "",
+					"text": "",
+					"path": "",
+					"design": "Broadsword",
+					"skinName": "",
+					"roleName": "PATROL",
+					"regionName": "",
+					"instr": "",
+					"intel": "SECRET",
+					"location":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"deck": 1,
+					"iFFCode": 2,
+					"count": 1,
+					"maintCount": 0,
+					"deadCount": 0,
+					"player": 0,
+					"commandAI": 1,
+					"respawns": 0,
+					"holdTime": 0,
+					"zoneLock": 0,
+					"heading": 0,
+					"alert": false,
+					"playable": false,
+					"rogue": false,
+					"invulnerable": false,
+					"rLoc": [
+						{
+							"reference": "A1",
+							"dex": 60000,
+							"dexVar": 20000,
+							"azimuth": 0,
+							"azimuthVar": 70,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					],
+					"loadout": [],
+					"instruction": [
+						{
+							"formation": 0,
+							"speed": 0,
+							"priority": 1,
+							"eMCON": 0,
+							"orderName": "assault",
+							"statusName": "",
+							"orderRegionName": "",
+							"objectiveName": "A1",
+							"objectiveDesc": "",
+							"objectiveInfo": "",
+							"objectiveType": "",
+							"action": "Assault",
+							"objectiveLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							},
+							"arrivalRadius": 5000,
+							"rLoc": []
+						}
+					],
+					"navpoint": [
+						{
+							"formation": 0,
+							"speed": 750,
+							"priority": 1,
+							"eMCON": 0,
+							"orderName": "assault",
+							"statusName": "",
+							"orderRegionName": "",
+							"objectiveName": "A1",
+							"objectiveDesc": "",
+							"objectiveInfo": "",
+							"objectiveType": "",
+							"action": "Assault",
+							"objectiveLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							},
+							"arrivalRadius": 5000,
+							"rLoc": [
+								{
+									"reference": "A1",
+									"dex": 60000,
+									"dexVar": 20000,
+									"azimuth": 0,
+									"azimuthVar": 70,
+									"elevation": 0,
+									"elevationVar": 0,
+									"baseLocation":
+									{
+										"x": 0,
+										"y": 0,
+										"z": 0
+									}
+								}
+							]
+						}
+					],
+					"ship": []
+				},
+				{
+					"name": "DB3",
+					"carrier": "",
+					"commander": "",
+					"squadron": "",
+					"text": "",
+					"path": "",
+					"design": "Broadsword",
+					"skinName": "",
+					"roleName": "PATROL",
+					"regionName": "",
+					"instr": "",
+					"intel": "SECRET",
+					"location":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"deck": 1,
+					"iFFCode": 2,
+					"count": 1,
+					"maintCount": 0,
+					"deadCount": 0,
+					"player": 0,
+					"commandAI": 1,
+					"respawns": 0,
+					"holdTime": 0,
+					"zoneLock": 0,
+					"heading": 0,
+					"alert": false,
+					"playable": false,
+					"rogue": false,
+					"invulnerable": false,
+					"rLoc": [
+						{
+							"reference": "A1",
+							"dex": 70000,
+							"dexVar": 20000,
+							"azimuth": 0,
+							"azimuthVar": 30,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					],
+					"loadout": [],
+					"instruction": [
+						{
+							"formation": 0,
+							"speed": 0,
+							"priority": 1,
+							"eMCON": 0,
+							"orderName": "assault",
+							"statusName": "",
+							"orderRegionName": "",
+							"objectiveName": "A1",
+							"objectiveDesc": "",
+							"objectiveInfo": "",
+							"objectiveType": "",
+							"action": "Assault",
+							"objectiveLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							},
+							"arrivalRadius": 5000,
+							"rLoc": []
+						}
+					],
+					"navpoint": [
+						{
+							"formation": 0,
+							"speed": 750,
+							"priority": 1,
+							"eMCON": 0,
+							"orderName": "assault",
+							"statusName": "",
+							"orderRegionName": "",
+							"objectiveName": "A1",
+							"objectiveDesc": "",
+							"objectiveInfo": "",
+							"objectiveType": "",
+							"action": "Assault",
+							"objectiveLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							},
+							"arrivalRadius": 5000,
+							"rLoc": [
+								{
+									"reference": "A1",
+									"dex": 70000,
+									"dexVar": 20000,
+									"azimuth": 0,
+									"azimuthVar": 30,
+									"elevation": 0,
+									"elevationVar": 0,
+									"baseLocation":
+									{
+										"x": 0,
+										"y": 0,
+										"z": 0
+									}
+								}
+							]
+						}
+					],
+					"ship": []
+				},
+				{
+					"name": "DB4",
+					"carrier": "",
+					"commander": "",
+					"squadron": "",
+					"text": "",
+					"path": "",
+					"design": "Broadsword",
+					"skinName": "",
+					"roleName": "PATROL",
+					"regionName": "",
+					"instr": "",
+					"intel": "SECRET",
+					"location":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"deck": 1,
+					"iFFCode": 2,
+					"count": 1,
+					"maintCount": 0,
+					"deadCount": 0,
+					"player": 0,
+					"commandAI": 1,
+					"respawns": 0,
+					"holdTime": 0,
+					"zoneLock": 0,
+					"heading": 0,
+					"alert": false,
+					"playable": false,
+					"rogue": false,
+					"invulnerable": false,
+					"rLoc": [
+						{
+							"reference": "A1",
+							"dex": 70000,
+							"dexVar": 20000,
+							"azimuth": 0,
+							"azimuthVar": 30,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					],
+					"loadout": [],
+					"instruction": [
+						{
+							"formation": 0,
+							"speed": 0,
+							"priority": 1,
+							"eMCON": 0,
+							"orderName": "assault",
+							"statusName": "",
+							"orderRegionName": "",
+							"objectiveName": "A1",
+							"objectiveDesc": "",
+							"objectiveInfo": "",
+							"objectiveType": "",
+							"action": "Assault",
+							"objectiveLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							},
+							"arrivalRadius": 5000,
+							"rLoc": []
+						}
+					],
+					"navpoint": [
+						{
+							"formation": 0,
+							"speed": 750,
+							"priority": 1,
+							"eMCON": 0,
+							"orderName": "assault",
+							"statusName": "",
+							"orderRegionName": "",
+							"objectiveName": "A1",
+							"objectiveDesc": "",
+							"objectiveInfo": "",
+							"objectiveType": "",
+							"action": "Assault",
+							"objectiveLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							},
+							"arrivalRadius": 5000,
+							"rLoc": [
+								{
+									"reference": "A1",
+									"dex": 70000,
+									"dexVar": 20000,
+									"azimuth": 0,
+									"azimuthVar": 30,
+									"elevation": 0,
+									"elevationVar": 0,
+									"baseLocation":
+									{
+										"x": 0,
+										"y": 0,
+										"z": 0
+									}
+								}
+							]
+						}
+					],
+					"ship": []
+				}
+			]
+		}
+	],
+	"alias": [
+		{
+			"aliasName": "A1",
+			"design": "",
+			"code": "player_carrier",
+			"elementName": "",
+			"mission": "",
+			"iff": -1,
+			"player": 0,
+			"useLocation": false,
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"rLoc": [],
+			"navpoint": [],
+			"objective": []
+		},
+		{
+			"aliasName": "A2",
+			"design": "",
+			"code": "player_squadron",
+			"elementName": "",
+			"mission": "",
+			"iff": -1,
+			"player": 0,
+			"useLocation": false,
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"rLoc": [],
+			"navpoint": [],
+			"objective": []
+		}
+	]
+}

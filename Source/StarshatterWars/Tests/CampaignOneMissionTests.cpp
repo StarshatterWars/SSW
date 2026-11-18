@@ -104,7 +104,7 @@ bool FCampaignOneMissionAudit::RunTest(const FString& Parameters)
             if (Id == 102 || Id == 103)
             {
                 const auto& Objectives = Element->GetObjectives();
-                TestEqual(TEXT("Drone intercept objective count"), Objectives.size(), Id == 102 ? 2 : 1);
+                TestEqual(TEXT("Authored target intercept objective count"), Objectives.size(), Id == 102 ? 3 : 1);
                 for (int32 ObjectiveIndex = 0; ObjectiveIndex < Objectives.size(); ++ObjectiveIndex)
                 {
                     const Instruction* Objective = Objectives[ObjectiveIndex];
@@ -112,7 +112,7 @@ bool FCampaignOneMissionAudit::RunTest(const FString& Parameters)
                         static_cast<int32>(EInstruction::Intercept));
                     TestEqual(TEXT("Primary priority"), Objective->GetPriority(), static_cast<int32>(Instruction::PRIMARY));
                     TestEqual(TEXT("Target element"), FString(UTF8_TO_TCHAR(Objective->GetTargetName())),
-                        FString(Id == 103 ? TEXT("Sierra") : ObjectiveIndex == 0 ? TEXT("Alpha") : TEXT("Bravo")));
+                        FString(Id == 103 ? TEXT("Sierra") : ObjectiveIndex == 0 ? TEXT("Alpha") : ObjectiveIndex == 1 ? TEXT("Bravo") : TEXT("Delta")));
                 }
             }
             TestFalse(TEXT("Player element has a resolved region"),FString(UTF8_TO_TCHAR(Element->GetRegion().data())).IsEmpty());

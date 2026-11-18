@@ -1,3 +1,4 @@
+#include "CutsceneReplayDlg.h"
 #include "Galaxy.h"
 #include "StarSystem.h"
 #include "OrbitalBody.h"
@@ -6,7 +7,6 @@
 #include "Engine/Texture2D.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Misc/Paths.h"
-#include "CutsceneReplayDlg.h"
 #include "Blueprint/WidgetTree.h"
 #include "Components/Viewport.h"
 #include "Components/Border.h"

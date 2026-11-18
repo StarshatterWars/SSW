@@ -175,6 +175,18 @@ void APlanetActor::Tick(float DeltaTime)
     }
 }
 
+void APlanetActor::SetAxialRotationPhaseRadians(double PhaseRadians)
+{
+    if (!PlanetMesh || !FMath::IsFinite(PhaseRadians)) return;
+    if (!bHasAxialBaseRotation)
+    {
+        AxialBaseRotation = PlanetMesh->GetRelativeRotation().Quaternion();
+        bHasAxialBaseRotation = true;
+    }
+    bEnableAxialRotation = false; // absolute simulation time owns this mesh now
+    PlanetMesh->SetRelativeRotation(AxialBaseRotation * FQuat(FVector::UpVector, FMath::Fmod(PhaseRadians, 2.0 * PI)));
+}
+
 void APlanetActor::SetPlanetRadius(float InRadiusUnits)
 {
     if (!PlanetMesh)

@@ -200,6 +200,7 @@ public:
     void LoadMissionList(FString Path);
     void LoadSingleMissions();
     bool ImportStoryMissions(UDataTable& Output);
+    static int32 MergeStoryMissionRows(FS_Campaign& Campaign, const UDataTable& Stories);
     void LoadMultiplayerMissions();
     UDataTable* GetMultiplayerMissionsDataTable() const { return MultiplayerMissionsDataTable; }
     const TArray<FS_CampaignMission>& GetMultiplayerMissionScenarios() const { return MultiplayerMissionScenarios; }
@@ -223,8 +224,9 @@ public:
     void BuildCombatRosterFromOrderOfBattle();
 
     // Mission parsing
-    void ParseMission(const char* filename);
-    bool ReadLooseMission(const FString& Filename, FS_CampaignMission& Out);
+    void ParseMission(const char* filename, bool bPreferJson = true);
+    bool ConvertPlayableMissionsToJson();
+    bool ReadLooseMission(const FString& Filename, FS_CampaignMission& Out, bool bPreferJson = true);
     bool ParseMissionInstructionCommon(TermStruct* Val, const char* Fn, FS_MissionInstruction& OutInstr);
     void ParseNavpoint(TermStruct* val, const char* fn);
     void ParseObjective(TermStruct* val, const char* fn);
@@ -233,8 +235,8 @@ public:
     void ParseMissionLoadout(TermStruct* val, const char* fn);
     void ParseEvent(TermStruct* val, const char* fn);
     void ParseElement(TermStruct* val, const char* fn);
-    void ParseScriptedTemplate(const char* fn);
-    void ParseMissionTemplate(const char* fname);
+    void ParseScriptedTemplate(const char* fn, bool bPreferJson = true);
+    void ParseMissionTemplate(const char* fname, bool bPreferJson = true);
     void ParseAlias(TermStruct* val, const char* fn);
     void ParseRLoc(TermStruct* val, const char* fn);
     void ParseCallsign(TermStruct* val, const char* fn);

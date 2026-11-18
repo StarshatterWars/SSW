@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include "CoreMinimal.h"
 
@@ -27,9 +27,11 @@ public:
     const FAssignment* Find(FName Pilot) const;
     const FAssignment* FindOffer(FName Pilot, FName Issuer = NAME_None) const;
     TConstArrayView<FAssignment> GetQueue(FName Pilot) const;
-    const FAssignment* Request(FName Pilot, TConstArrayView<int32> EligibleMissions, FName Issuer = NAME_None, bool bRetryDeclined = false);
+    const FAssignment* Request(FName Pilot, TConstArrayView<int32> EligibleMissions, FName Issuer = NAME_None, bool bRetryDeclined = false, TFunction<bool(int32)> HistoricalCompletion = {});
     bool IsCompleted(FName Pilot, int32 MissionId) const { const auto* History = Completed.Find(Pilot); return History && History->Contains(MissionId); }
-    bool Accept(FName Pilot, int32 MissionId);
+    FText ArcRequirement(FName Pilot, int32 MissionId, TFunction<bool(int32)> HistoricalCompletion = {}) const;
+    FText ArcStatus(FName Pilot, int32 MissionId, TFunction<bool(int32)> HistoricalCompletion = {}) const;
+    bool Accept(FName Pilot, int32 MissionId, TFunction<bool(int32)> HistoricalCompletion = {});
     bool QueueTestReplay(FName Pilot,int32 MissionId,FName Issuer);
     bool Decline(FName Pilot, int32 MissionId);
     bool Start(FName Pilot, int32 MissionId);

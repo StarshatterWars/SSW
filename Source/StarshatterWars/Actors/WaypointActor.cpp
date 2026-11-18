@@ -1,4 +1,4 @@
-﻿#include "WaypointActor.h"
+#include "WaypointActor.h"
 #include "WaypointArrival.h"
 #include "ProceduralMeshComponent.h"
 #include "Components/TextRenderComponent.h"
@@ -65,4 +65,4 @@ void AWaypointActor::RefreshAppearance(bool Visible){
  if(MarkerMaterial){MarkerMaterial->SetVectorParameterValue(TEXT("MarkerColor"),FLinearColor(.18f,1.f,.4f));MarkerMaterial->SetScalarParameterValue(TEXT("Intensity"),bNextWaypoint?2.5f:1.2f);MarkerMaterial->SetScalarParameterValue(TEXT("Opacity"),bNextWaypoint?.85f:.35f);}
  WaypointLabel->SetTextRenderColor(bNextWaypoint?FColor(125,255,175):FColor(50,150,85));
 }
-void AWaypointActor::Tick(float Delta){Super::Tick(Delta);if(IsHidden())return;WaypointMarker->AddLocalRotation(FRotator(0,18*Delta,0));if(auto* W=GetWorld())if(auto* PC=W->GetFirstPlayerController())if(PC->PlayerCameraManager)WaypointLabel->SetWorldRotation((PC->PlayerCameraManager->GetCameraLocation()-WaypointLabel->GetComponentLocation()).Rotation());}
+void AWaypointActor::Tick(float Delta){Super::Tick(Delta);if(IsHidden())return;WaypointMarker->AddLocalRotation(FRotator(10*Delta,0,0));if(auto* W=GetWorld())if(auto* PC=W->GetFirstPlayerController())if(PC->PlayerCameraManager)WaypointLabel->SetWorldRotation((PC->PlayerCameraManager->GetCameraLocation()-WaypointLabel->GetComponentLocation()).Rotation());}

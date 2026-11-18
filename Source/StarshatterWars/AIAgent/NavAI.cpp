@@ -308,11 +308,17 @@ void NavAI::FindObjective()
         // PART IIIa: Deal with farcaster jumps:
         else if (nav_rgn->IsOrbital() && self_rgn->IsOrbital()) {
 
+            // A changed/removed link must not keep steering at yesterday's gate.
+            if (farcaster && (!farcaster->HasValidApproach() || !farcaster->GetShip() ||
+                farcaster->GetShip()->GetRegion() != self_rgn || !farcaster->GetDest() ||
+                farcaster->GetDest()->GetRegion() != nav_rgn || farcaster->GetDest()->IsDead() ||
+                farcaster->GetDest()->IsDying() || !farcaster->GetDest()->GetFarcaster()))
+                farcaster = nullptr;
             ListIter<Ship> s = self_rgn->GetShips();
             while (++s && !farcaster) {
-                if (s->GetFarcaster()) {
+                if (s->GetFarcaster() && s->GetFarcaster()->HasValidApproach() && !s->IsDead() && !s->IsDying()) {
                     const Ship* Dest = s->GetFarcaster()->GetDest();
-                    if (Dest && Dest->GetRegion() == nav_rgn) {
+                    if (Dest && !Dest->IsDead() && !Dest->IsDying() && Dest->GetFarcaster() && Dest->GetRegion() == nav_rgn) {
                         farcaster = s->GetFarcaster();
                     }
                 }

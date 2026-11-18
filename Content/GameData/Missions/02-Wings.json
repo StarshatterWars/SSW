@@ -1,0 +1,948 @@
+{
+	"storyCampaignId": 0,
+	"storyUnlockScene": "",
+	"storyPoints": 0,
+	"rowName": "None",
+	"id": 0,
+	"missionName": "02. On Wings of Thunder",
+	"maxPlayers": 0,
+	"missionRegion": "Loris",
+	"missionSystem": "Loris",
+	"scene": "",
+	"subtitles": "",
+	"desc": "",
+	"targetName": "",
+	"wardName": "",
+	"objective": "* Disable or destroy inbound enemy units in the Loris sector\\n* Escort the Thunderbolts in strike package Condor\\n* Return safely to base",
+	"sitrep": "Force:Intel has discovered a Hegemony plot to smuggle weapons and personnel from Loris into Silessia using unmarked civilian transports.  Field agents report that the first of these shipments will use the freighter Ascentia.  The Heracles is launching strike package Condor to take out the freighter before it can leave Loris space.\\n\\nYour element, Ranger, is assigned to escort the strike package and protect it from enemy fighters.  We want to get in, do the mission, and get out again before the Hegemony has time to react.  Choose your loadout, and get to your ships.",
+	"startTime": "01/11:00:00",
+	"startAfter": "",
+	"group": "NONE",
+	"missionType": "ESCORT_STRIKE",
+	"source": "Scripted",
+	"displayType": "CutsceneOnly",
+	"team": 0,
+	"stardate": 0,
+	"degrees": true,
+	"once": false,
+	"element": [
+		{
+			"name": "Heracles",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Orion",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 0,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Aces",
+			"carrier": "Heracles",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Falcon",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 24,
+			"maintCount": 4,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Kings",
+			"carrier": "Heracles",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Thunderbolt",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 12,
+			"maintCount": 4,
+			"deadCount": 4,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Condor",
+			"carrier": "",
+			"commander": "",
+			"squadron": "Kings",
+			"text": "",
+			"path": "",
+			"design": "Thunderbolt",
+			"skinName": "",
+			"roleName": "ASSAULT",
+			"regionName": "",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 4000,
+				"y": 5000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 2,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": true,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [
+				{
+					"ship": -1,
+					"loadoutName": "Ship Strike",
+					"stations": [
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "assault",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Ascentia",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Assault",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				},
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "RTB",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "RTB",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "vector",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 40000,
+						"y": -95000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				},
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "assault",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Ascentia",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Assault",
+					"objectiveLocation":
+					{
+						"x": -20000,
+						"y": -120000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Ranger",
+			"carrier": "",
+			"commander": "",
+			"squadron": "Aces",
+			"text": "",
+			"path": "",
+			"design": "Falcon",
+			"skinName": "",
+			"roleName": "ESCORT",
+			"regionName": "",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 4000,
+				"y": 5000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 2,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 1,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [
+				{
+					"reference": "Condor:2",
+					"dex": 15000,
+					"dexVar": 0,
+					"azimuth": 0,
+					"azimuthVar": 0,
+					"elevation": 0,
+					"elevationVar": 0,
+					"baseLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					}
+				}
+			],
+			"loadout": [
+				{
+					"ship": -1,
+					"loadoutName": "ACM Medium Range",
+					"stations": [
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "escort",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Condor",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Escort",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				},
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "RTB",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "RTB",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "escort",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Condor",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Escort",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "Condor:1",
+							"dex": 15000,
+							"dexVar": 0,
+							"azimuth": 0,
+							"azimuthVar": 0,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "escort",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Condor",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Escort",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "Condor:2",
+							"dex": 15000,
+							"dexVar": 0,
+							"azimuth": 0,
+							"azimuthVar": 0,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Ascentia",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "IM3500",
+			"skinName": "Green",
+			"roleName": "PATROL",
+			"regionName": "",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": -200000,
+				"y": -120000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "vector",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": -120000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				},
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "vector",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 90000,
+						"y": -50000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Martak",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Viper",
+			"skinName": "",
+			"roleName": "INTERCEPT",
+			"regionName": "",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 2,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [
+				{
+					"reference": "Ascentia:2",
+					"dex": 25000,
+					"dexVar": 0,
+					"azimuth": 0,
+					"azimuthVar": 0,
+					"elevation": 0,
+					"elevationVar": 0,
+					"baseLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					}
+				}
+			],
+			"loadout": [
+				{
+					"ship": -1,
+					"loadoutName": "ACM Medium Range",
+					"stations": [
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "intercept",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Condor",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Intercept",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "escort",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Ascentia",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Escort",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "Ascentia:1",
+							"dex": 25000,
+							"dexVar": 0,
+							"azimuth": 0,
+							"azimuthVar": 0,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "intercept",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Condor",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Intercept",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "Ascentia:2",
+							"dex": 25000,
+							"dexVar": 0,
+							"azimuth": 0,
+							"azimuthVar": 0,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Malik",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Razor",
+			"skinName": "",
+			"roleName": "INTERCEPT",
+			"regionName": "",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 200000,
+				"y": -120000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 2,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [
+				{
+					"reference": "Condor:2",
+					"dex": 25000,
+					"dexVar": 0,
+					"azimuth": 0,
+					"azimuthVar": 0,
+					"elevation": 0,
+					"elevationVar": 0,
+					"baseLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					}
+				}
+			],
+			"loadout": [
+				{
+					"ship": -1,
+					"loadoutName": "ACM Medium Range",
+					"stations": [
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "intercept",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Condor",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Intercept",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "vector",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "Condor:1",
+							"dex": 25000,
+							"dexVar": 0,
+							"azimuth": 0,
+							"azimuthVar": 0,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				},
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "intercept",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Condor",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Intercept",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": [
+						{
+							"reference": "Condor:2",
+							"dex": 25000,
+							"dexVar": 0,
+							"azimuth": 0,
+							"azimuthVar": 0,
+							"elevation": 0,
+							"elevationVar": 0,
+							"baseLocation":
+							{
+								"x": 0,
+								"y": 0,
+								"z": 0
+							}
+						}
+					]
+				}
+			],
+			"ship": []
+		}
+	],
+	"event": []
+}

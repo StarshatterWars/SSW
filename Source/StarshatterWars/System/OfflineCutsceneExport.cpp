@@ -27,6 +27,8 @@ namespace
     double StartSeconds=0;
     int32 FrameRate=30;
     bool bFinishing=false;
+    bool bScreenMessagesSuppressed=false;
+    TUniquePtr<FS_Campaign> ExportCampaign;
 }
 #endif
 bool OfflineCutsceneExport::IsRequested()
@@ -47,9 +49,20 @@ bool OfflineCutsceneExport::TryStart(UMenuScreen* Menu)
     auto* Game=Cast<USSWGameInstance>(Menu->GetGameInstance());
     auto* Data=Game?Game->GetSubsystem<UStarshatterGameDataSubsystem>():nullptr;
     const auto* Row=Data?Data->GetCampaignByIndex1Based(Number):nullptr;
+    FString Source;const bool Custom=FParse::Value(FCommandLine::Get(),TEXT("SSWRenderSource="),Source);
+    if (Custom && Row)
+    {
+        FS_CampaignMission Scene;
+        if (!Data->ReadLooseMission(Source,Scene) || !Scene.Scene.Equals(Requested,ESearchCase::IgnoreCase) ||
+            !Scene.Event.ContainsByPredicate([](const FS_MissionEvent& Event){return Event.EventType==MISSIONEVENT_TYPE::END_SCENE;}))
+        { UE_LOG(LogTemp,Error,TEXT("[OfflineCutscene] Invalid isolated render source %s"),*Source);FPlatformMisc::RequestExit(false);return true; }
+        ExportCampaign=MakeUnique<FS_Campaign>(*Row);
+        ExportCampaign->Missions.Add(MoveTemp(Scene));
+        Row=ExportCampaign.Get();
+    }
     if(!Row || !Row->Missions.ContainsByPredicate([&](const FS_CampaignMission& Item){return Item.Scene.Equals(Requested,ESearchCase::IgnoreCase);}) || !Campaign::SelectFromData(*Row))
     { UE_LOG(LogTemp,Error,TEXT("[OfflineCutscene] Unknown campaign/scene %d/%s"),Number,*Requested);FPlatformMisc::RequestExit(false);return true; }
-    Campaign::GetCampaign()->Start();Data->SetActiveCampaign(*Row);Data->CampaignIndex=Number-1;Data->SelectedCampaignRowName=Row->RowName;
+    Campaign::GetCampaign()->Start();Data->SetActiveCampaign(*Row);Data->CampaignIndex=Number-1;Data->SelectedCampaignRowName=Custom?NAME_None:Row->RowName;
     Game->SelectedCampaignIndex=Number;Game->SelectedCampaignRowName=Row->RowName;Game->SelectedCampaignDisplayName=Row->Name;
     FS_PlayerGameInfo Pilot;Pilot.Name=TEXT("Cutscene Export");Pilot.Callsign=TEXT("RENDER");Pilot.Campaign=Number;Pilot.CampaignRowName=Row->RowName;Pilot.Rank=6;Pilot.bTrainingGraduate=true;
     PlayerCharacter::Initialize();PlayerCharacter::GetCurrentPlayer()->FromPlayerInfo(Pilot);
@@ -76,6 +89,7 @@ void OfflineCutsceneExport::Begin(UWorld* World,const FString& Scene)
     Capture->Settings.bUseCustomFrameRate=true;Capture->Settings.CustomFrameRate=FFrameRate(FrameRate,1);
     Capture->Settings.Resolution=FCaptureResolution(1920,1080);Capture->Settings.bOverwriteExisting=false;
     Capture->ImageCaptureProtocolType=FSoftClassPath(TEXT("/Script/MovieSceneCapture.ImageSequenceProtocol_PNG"));
+    bScreenMessagesSuppressed=GEngine->Exec(World,TEXT("DisableAllScreenMessages"));
     Capture->Initialize(Engine->SceneViewport);Capture->StartCapture();
     // Image capture normally mutes the app. This export records the master submix alongside it.
     FApp::SetVolumeMultiplier(1);FApp::SetUnfocusedVolumeMultiplier(1);
@@ -100,6 +114,7 @@ bool OfflineCutsceneExport::Finish(UWorld* World)
     UAudioMixerBlueprintLibrary::StopRecordingOutput(World,EAudioRecordingExportType::WavFile,TEXT("audio"),OutputDirectory);
     auto Data=MakeShared<FJsonObject>();Data->SetStringField(TEXT("Scene"),SceneName);Data->SetNumberField(TEXT("FrameRate"),FrameRate);
     Data->SetNumberField(TEXT("Duration"),World?World->GetRealTimeSeconds()-StartSeconds:0);
+    Data->SetBoolField(TEXT("ScreenMessagesSuppressed"),bScreenMessagesSuppressed);
     FString Json;FJsonSerializer::Serialize(Data,TJsonWriterFactory<>::Create(&Json));
     FFileHelper::SaveStringToFile(Json,*(OutputDirectory/TEXT("capture.json")));
     Capture->FinalizeWhenReady();return true;

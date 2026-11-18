@@ -80,6 +80,17 @@ bool UBlueprintCatalogSubsystem::QuotePlayerJob(const FEconomyState& State, cons
     const FSSWProductionRecipe& Recipe, FGuid Blueprint, int32 Runs, FPlayerIndustryQuote& Quote, FText& Reason)
 {
     Quote = {};
+    if (!Site.bPlayerManufacturing) { Reason=INVTEXT("This facility does not offer player manufacturing."); return false; }
+    if (!FMath::IsFinite(Site.PlayerMaterialMultiplier) || Site.PlayerMaterialMultiplier<.5 || Site.PlayerMaterialMultiplier>2 ||
+        !FMath::IsFinite(Site.PlayerTimeMultiplier) || Site.PlayerTimeMultiplier<.25 || Site.PlayerTimeMultiplier>4 ||
+        Site.InstallationFeeCredits<0 || Site.PerRunFeeCredits<0 || Site.MaximumPlayerRuns<1)
+    { Reason=INVTEXT("The facility service terms are invalid."); return false; }
+    Quote.ServiceProfile=Site.ServiceProfile;
+    if (Runs>Site.MaximumPlayerRuns) { Reason=FText::Format(INVTEXT("This facility accepts at most {0} runs per installation."),FText::AsNumber(Site.MaximumPlayerRuns)); return false; }
+    const double Fee=double(Site.InstallationFeeCredits)+double(Site.PerRunFeeCredits)*Runs;
+    if (!FMath::IsFinite(Fee) || Fee>9.e15) { Reason=INVTEXT("Installation fee exceeds the supported balance limit."); return false; }
+    Quote.InstallationFee=FMath::CeilToInt64(Fee);
+    if (Quote.InstallationFee>State.Wallets.FindRef(FEconomyLedger::Pilot())) { Reason=INVTEXT("Insufficient credits for this facility's installation fee."); return false; }
     const auto* BP = State.Blueprints.Find(Blueprint);
     if (!BP || BP->Owner != FEconomyLedger::Pilot() || BP->Recipe != Site.Recipe ||
         !State.BlueprintReceipts.Contains(Blueprint) || !State.CommittedTransactions.Contains(State.BlueprintReceipts.FindRef(Blueprint)))
@@ -108,9 +119,10 @@ bool UBlueprintCatalogSubsystem::QuotePlayerJob(const FEconomyState& State, cons
     { Reason = INVTEXT("The facility input or output inventory is unavailable."); return false; }
     TArray<FCommodityAmount> Materials = Recipe.Inputs, Products;
     const double Factor = Runs * (1.0 - BP->MaterialEfficiency);
+    for (auto& Material : Materials) Material.Quantity *= Site.PlayerMaterialMultiplier;
     if (Materials.IsEmpty())
     {
-        double Needed = Recipe.InputTonnes * Factor;
+        double Needed = Recipe.InputTonnes * Factor * Site.PlayerMaterialMultiplier;
         const auto& Inventory = Candidate.Inventories.FindChecked(Quote.Input);
         for (const auto& Stack : Inventory.Items)
         {
@@ -129,9 +141,11 @@ bool UBlueprintCatalogSubsystem::QuotePlayerJob(const FEconomyState& State, cons
     Product.Item = DataTableUtils::MakeValidName(Recipe.CargoItem.IsEmpty() ? Recipe.OutputDisplayName : Recipe.CargoItem);
     Product.Quantity = Recipe.OutputQuantity > 0 ? Recipe.OutputQuantity : Recipe.OutputTonnes;
     Product.UnitTonnes = Product.Quantity > 0 ? Recipe.OutputTonnes / Product.Quantity : 0;
+    Product.bWholeUnits = !Recipe.OutputUnit.IsEmpty() && !Recipe.OutputUnit.Equals(TEXT("t"),ESearchCase::IgnoreCase);
     Products.Add(Product);
+    Quote.NominalMaterials=Materials; Quote.NominalProducts=Products; Quote.NominalDuration=Recipe.SecondsPerBatch*Site.PlayerTimeMultiplier;
     const FGuid Id = FEconomyLedger::QueueBlueprintJob(Candidate, FEconomyLedger::Pilot(), FName(*Site.Facility), Quote.Input, Quote.Output,
-        Blueprint, Runs, Materials, Products, Recipe.SecondsPerBatch);
+        Blueprint, Runs, Materials, Products, Recipe.SecondsPerBatch * Site.PlayerTimeMultiplier);
     if (!Id.IsValid()) { Reason = INVTEXT("The blueprint is busy or its recipe and inventories are incompatible."); return false; }
     const auto& Job = Candidate.Jobs.Last();
     Quote.Materials = Job.Materials; Quote.Products = Job.Products; Quote.Duration = Job.Duration;
@@ -160,16 +174,10 @@ FGuid UBlueprintCatalogSubsystem::BeginPlayerJob(const FSSWProductionFacility& S
     const auto Before = Players->GetPlayerInfo(); auto& State = Players->GetEconomy();
     FEconomyLedger::CreateInventory(State, Quote.Input, FEconomyLedger::Pilot(), FName(*Site.System), Site.CapacityTonnes);
     FEconomyLedger::CreateInventory(State, Quote.Output, FEconomyLedger::Pilot(), FName(*Site.System), Site.CapacityTonnes);
-    // QueueBlueprintJob applies efficiency and runs once. Recover per-run nominal inputs from the validated preview.
-    const auto& BP = State.Blueprints.FindChecked(Blueprint);
-    auto Materials = Quote.Materials; auto Products = Quote.Products;
-    const double MaterialFactor = Runs * (1.0 - BP.MaterialEfficiency);
-    const double TimeFactor = Runs * (1.0 - BP.TimeEfficiency);
-    for (auto& Amount : Materials) Amount.Quantity /= MaterialFactor;
-    for (auto& Amount : Products) Amount.Quantity /= Runs;
+    // Preserve nominal inputs: reversing a rounded discrete preview would apply efficiency twice.
     const FGuid Id = FEconomyLedger::QueueBlueprintJob(State, FEconomyLedger::Pilot(), FName(*Site.Facility), Quote.Input, Quote.Output,
-        Blueprint, Runs, Materials, Products, Quote.Duration / TimeFactor);
-    if (!Id.IsValid() || !Players->SaveActivePlayerProgress())
+        Blueprint, Runs, Quote.NominalMaterials, Quote.NominalProducts, Quote.NominalDuration);
+    if (!Id.IsValid() || (Quote.InstallationFee>0 && !FEconomyLedger::Pay(State,FEconomyLedger::Pilot(),TEXT("NPC facility services"),Quote.InstallationFee,Id,TEXT("Manufacturing installation"))) || !Players->SaveActivePlayerProgress())
     { Players->GetMutablePlayerInfo() = Before; Reason = INVTEXT("Could not save the job. No materials or licensed runs were consumed."); return {}; }
     Reason = INVTEXT("Manufacturing job installed. Output is delivered automatically."); return Id;
 }

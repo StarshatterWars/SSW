@@ -69,10 +69,7 @@ bool FFirstRunPresentationTest::RunTest(const FString& Parameters)
     if(!TestNotNull(TEXT("Main menu circular logo widget exists"),Logo))return false;
     TestTrue(TEXT("Circular asset is actually assigned"),Logo->GetBrush().GetResourceObject() && Logo->GetBrush().GetResourceObject()->GetPathName()==TEXT("/Game/UI/Materials/M_UISSWCircularLogo.M_UISSWCircularLogo"));
     auto* Options=Cast<UButton>(Menu->WidgetTree->FindWidget(TEXT("BtnOptions")));
-    auto* GearSize=Options?Cast<USizeBox>(Options->GetContent()):nullptr;
-    auto* Gear=GearSize?Cast<UImage>(GearSize->GetContent()):nullptr;
-    if(TestNotNull(TEXT("Main menu options has a persistent image"),Gear))
-        TestTrue(TEXT("Gear texture is assigned"),Gear->GetBrush().GetResourceObject() && Gear->GetBrush().GetResourceObject()->GetPathName().Contains(TEXT("T_Gear_256x256")));
+    TestTrue(TEXT("Options is absent from main menu"),!Options || Options->GetVisibility()==ESlateVisibility::Collapsed || !Options->GetParent());
     if (GUsingNullRHI) {
         auto VerifyAsset=[&](UButton* Button,const TCHAR* Path){
             auto* Size=Button?Cast<USizeBox>(Button->GetContent()):nullptr;

@@ -1,4 +1,5 @@
 #include "QuantumEffectsActor.h"
+#include "NiagaraSystem.h"
 
 #include "Components/MaterialBillboardComponent.h"
 #include "Engine/CollisionProfile.h"
@@ -7,6 +8,10 @@
 
 AQuantumEffectsActor::AQuantumEffectsActor()
 {
+    static ConstructorHelpers::FObjectFinder<UNiagaraSystem> QuantumBurst(TEXT("/Game/Advanced_Space_Fx_Pack1/FX/Electric_Shockwaves/NS_Electric_Shockwave_Blue.NS_Electric_Shockwave_Blue"));
+    NiagaraSystem=QuantumBurst.Object;
+    VisualScale=2.f;
+
     Flash = CreateDefaultSubobject<UMaterialBillboardComponent>(TEXT("QuantumFlash"));
     Flash->SetupAttachment(EffectRoot);
     Flash->SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);

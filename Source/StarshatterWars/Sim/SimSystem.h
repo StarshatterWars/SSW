@@ -36,6 +36,7 @@ class SystemDesign;
 
 class SimSystem
 {
+    friend class FOwnedHullCondition;
 	friend SimComponent;
 
 public:

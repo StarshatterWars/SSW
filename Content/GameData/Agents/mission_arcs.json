@@ -1,0 +1,167 @@
+[
+  {
+    "Id": "JanekSupplyLine",
+    "Title": "Janek Supply Line",
+    "Empire": "Terellian",
+    "Description": "Secure the Janek supply corridor, protect a vital convoy and intercept the raiders behind the attacks.",
+    "Steps": [
+      {
+        "MissionId": 910017,
+        "Title": "Janek: Silent Watch",
+        "AgentId": "JanekFleet",
+        "Issuer": "Cmdr. Tomas Hale",
+        "System": "Janus",
+        "Region": "Janek",
+        "Brief": "Map the patrol corridor and identify threats to civilian traffic."
+      },
+      {
+        "MissionId": 910015,
+        "Title": "Janek: Convoy Shield",
+        "AgentId": "JanekTraffic",
+        "Issuer": "Lt. Anika Merrow",
+        "System": "Janus",
+        "Region": "Janek",
+        "Brief": "Escort the convoy through the corridor secured by the preceding patrol."
+      },
+      {
+        "MissionId": 910016,
+        "Title": "Janek: Broken Spear",
+        "AgentId": "JanekMaterials",
+        "Issuer": "Liaison Elian Corv",
+        "System": "Janus",
+        "Region": "Janek",
+        "Brief": "Intercept the raider group identified during the convoy attack."
+      }
+    ]
+  },
+  {
+    "Id": "JarnellConvoyWatch",
+    "Title": "Jarnell Convoy Watch",
+    "Empire": "Terellian",
+    "Description": "Protect Jarnell shipping and break up the force hunting its freighters.",
+    "Steps": [
+      {
+        "MissionId": 910018,
+        "Title": "Jarnell: Convoy Shield",
+        "AgentId": "JarnellWatch",
+        "Issuer": "Lt. Soren Calis",
+        "System": "Jarnell",
+        "Region": "Jarnell",
+        "Brief": "Keep the convoy intact and report the hostile approach vector."
+      },
+      {
+        "MissionId": 910019,
+        "Title": "Jarnell: Broken Spear",
+        "AgentId": "JarnellEnvoy",
+        "Issuer": "Envoy Rhea Voss",
+        "System": "Jarnell",
+        "Region": "Jarnell",
+        "Brief": "Use the convoy report to intercept the raiders before their next attack."
+      }
+    ]
+  },
+  {
+    "Id": "MarakIronVigil",
+    "Title": "Iron Vigil",
+    "Empire": "Marakan",
+    "Description": "Defend Marak against intruders through patrol and interception.",
+    "Steps": [
+      {
+        "MissionId": 910035,
+        "Title": "Marak: Silent Watch",
+        "AgentId": "MarakCommand",
+        "Issuer": "Cmdr. Varek Dorr",
+        "System": "Marak",
+        "Region": "Marak",
+        "Brief": "Establish a patrol picture around Marak and report unauthorized ships."
+      },
+      {
+        "MissionId": 910034,
+        "Title": "Marak: Broken Spear",
+        "AgentId": "MarakWatch",
+        "Issuer": "Lt. Karesh Tol",
+        "System": "Marak",
+        "Region": "Marak",
+        "Brief": "Intercept the hostile force identified by the patrol."
+      }
+    ]
+  },
+  {
+    "Id": "LorisBorderWatch",
+    "Title": "Loris Border Watch",
+    "Empire": "Marakan",
+    "Description": "Reassert control of the Loris border shipping lanes.",
+    "Steps": [
+      {
+        "MissionId": 910014,
+        "Title": "Loris: Silent Watch",
+        "AgentId": "LorisWatch",
+        "Issuer": "Lt. Iven Karr",
+        "System": "Loris",
+        "Region": "Loris",
+        "Brief": "Patrol the border lanes and confirm the intrusion."
+      },
+      {
+        "MissionId": 910037,
+        "Title": "Loris: Broken Spear",
+        "AgentId": "LorisCommand",
+        "Issuer": "Capt. Terek Maal",
+        "System": "Loris",
+        "Region": "Loris",
+        "Brief": "Respond to the patrol report and intercept the intruding force."
+      }
+    ]
+  },
+  {
+    "Id": "HaicheSafePassage",
+    "Title": "Haiche Safe Passage",
+    "Empire": "Haiche",
+    "Description": "Defend local commerce while tracing the source of attacks.",
+    "Steps": [
+      {
+        "MissionId": 910030,
+        "Title": "Haiche: Convoy Shield",
+        "AgentId": "HaicheWatch",
+        "Issuer": "Capt. Iona Tres",
+        "System": "Haiche",
+        "Region": "Haiche",
+        "Brief": "Escort the threatened freighters and collect the attack report."
+      },
+      {
+        "MissionId": 910031,
+        "Title": "Haiche: Broken Spear",
+        "AgentId": "HaicheEnvoy",
+        "Issuer": "Envoy Oren Sal",
+        "System": "Haiche",
+        "Region": "Haiche",
+        "Brief": "Intercept the force exposed by the convoy encounter."
+      }
+    ]
+  },
+  {
+    "Id": "SilessiaTradeGuard",
+    "Title": "Silessia Trade Guard",
+    "Empire": "Silessian",
+    "Description": "Survey the Silessia trade lanes before committing to convoy protection.",
+    "Steps": [
+      {
+        "MissionId": 910032,
+        "Title": "Silessia: Silent Watch",
+        "AgentId": "SilessiaWatch",
+        "Issuer": "Lt. Lysa Corin",
+        "System": "Silessia",
+        "Region": "Silessia",
+        "Brief": "Patrol the trade approaches and clear the route for the next convoy."
+      },
+      {
+        "MissionId": 910033,
+        "Title": "Silessia: Convoy Shield",
+        "AgentId": "SilessiaEnvoy",
+        "Issuer": "Envoy Perin Das",
+        "System": "Silessia",
+        "Region": "Silessia",
+        "Brief": "Escort the convoy through the surveyed trade corridor."
+      }
+    ]
+  }
+]

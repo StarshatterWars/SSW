@@ -374,7 +374,10 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.InsurancePopupClass"),
         TEXT("UI.ShipFitPopupClass"),
         TEXT("UI.SkillsPopupClass"),
+        TEXT("UI.SkillsPopupClass"),
         TEXT("UI.AwardPopupClass"),
+        TEXT("UI.ModEditorClass"),
+        TEXT("UI.TransactionPopupClass"),
 
         TEXT("UI.Theme.MenuButton.Normal"),
         TEXT("UI.Theme.MenuButton.Hover"),

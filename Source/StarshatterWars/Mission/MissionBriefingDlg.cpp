@@ -1,4 +1,4 @@
-/*  Project Starshatter Wars
+﻿/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026.
 
@@ -30,6 +30,9 @@
 #include "QuantumTravel.h"
 #include "QuantumTravelPopup.h"
 #include "TravelTransition.h"
+#include "QuantumCameraPresentation.h"
+#include "AwardsDlg.h"
+#include "TransactionDlg.h"
 #include "Blueprint/WidgetTree.h"
 #include "MissionUIStyle.h"
 #include "Components/Border.h"
@@ -2106,7 +2109,7 @@ void UMissionBriefingDlg::UpdateFlightPanelInput(TSharedPtr<SWidget> Focus)
     APlayerController* PC = GetOwningPlayer();
     if (!PC) return;
     const bool bHasPanels = EngineeringPopup || WeaponsPopup || NavigationPopup || QuantumPopup ||
-        IntelPopup || MissionPopup || ObjectivesPopup || FlightOpsPopup || ContactsPopup || ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup;
+        IntelPopup || MissionPopup || ObjectivesPopup || FlightOpsPopup || ContactsPopup || ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || AwardsPopup || WalletPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup;
     if (!bHasPanels && !bFlightPanelInput) return;
 
     if (!bFlightPanelInput) bFlightPanelPreviousCursor = PC->bShowMouseCursor;
@@ -2410,7 +2413,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
             const bool Staged=Pilot && Pilot->GetDock() && Pilot->GetDock()->IsLaunchDeck() && Pilot->GetFlightPhase()<EOPSMode::ACTIVE;
             return HUDOwner.IsValid() && HUDOwner->CanShowFighterHUD() && !Staged &&
                 HUDOwner->bFighterHUDVisible && !(HUDOwner->MissionCameraRig.IsValid() && HUDOwner->MissionCameraRig->bThirdPersonView) && !(HUDOwner->FighterHUDDetails.IsValid() && HUDOwner->FighterHUDDetails->IsCockpitDisplayActive()) && !HUDOwner->MissionSceneCover.IsValid() &&
-                !HUDOwner->LiveOptionsPopup && !HUDOwner->CargoManifestPopup && !HUDOwner->MarketplacePopup && !HUDOwner->ProductionPopup && !HUDOwner->ShipStorePopup && !HUDOwner->AgentsPopup && !HUDOwner->PlayersPopup && !HUDOwner->SkillsPopup && !HUDOwner->HangarPopup && !HUDOwner->InsurancePopup && !HUDOwner->LoadoutsPopup && !HUDOwner->FittingPopup && !HUDOwner->ContractsPopup && !HUDOwner->ReferencePopup &&
+                !HUDOwner->LiveOptionsPopup && !HUDOwner->CargoManifestPopup && !HUDOwner->MarketplacePopup && !HUDOwner->ProductionPopup && !HUDOwner->ShipStorePopup && !HUDOwner->AgentsPopup && !HUDOwner->PlayersPopup && !HUDOwner->AwardsPopup && !HUDOwner->WalletPopup && !HUDOwner->SkillsPopup && !HUDOwner->HangarPopup && !HUDOwner->InsurancePopup && !HUDOwner->LoadoutsPopup && !HUDOwner->FittingPopup && !HUDOwner->ContractsPopup && !HUDOwner->ReferencePopup &&
                 !(HUDOwner->MissionQuitMenu && HUDOwner->MissionQuitMenu->IsMenuShown());
         });
         GetWorld()->GetGameViewport()->AddViewportWidgetContent(FighterHUDPanels.ToSharedRef(), 800);
@@ -2847,7 +2850,7 @@ void UMissionBriefingDlg::NextMissionTarget()
         if (HUDView* Hud = HUDView::GetInstance()) Hud->SetHUDColorSet(HUDView::DefaultColorSet());
         return;
     }
-    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup ||
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || AwardsPopup || WalletPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup ||
         EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() ||
         FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || !GetWorld() || GetWorld()->IsPaused())
@@ -3042,7 +3045,7 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
 bool UMissionBriefingDlg::CanUseFighterHUD() const
 {
     return bLiveMissionStarted && !bMissionCompleteHandedOff
-        && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !IntelPopup.IsValid() && !MissionPopup.IsValid() && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() && !ReferencePopup && !LiveOptionsPopup && !CargoManifestPopup && !MarketplacePopup && !ProductionPopup && !ShipStorePopup && !AgentsPopup && !PlayersPopup && !HangarPopup && !InsurancePopup && !LoadoutsPopup && !FittingPopup && !ContractsPopup &&
+        && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !IntelPopup.IsValid() && !MissionPopup.IsValid() && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() && !ReferencePopup && !LiveOptionsPopup && !CargoManifestPopup && !MarketplacePopup && !ProductionPopup && !ShipStorePopup && !AgentsPopup && !PlayersPopup && !AwardsPopup && !WalletPopup && !HangarPopup && !InsurancePopup && !LoadoutsPopup && !FittingPopup && !ContractsPopup &&
         !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
 }
 
@@ -3832,7 +3835,7 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
     APlayerController* PC = GetOwningPlayer();
     if (!World || !PC || !bLiveMissionStarted || bMissionCompleteHandedOff
         || (Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) || !IsValid(MissionPreviewCamera)) return;
-    if (ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
+    if (ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || AwardsPopup || WalletPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
@@ -4200,6 +4203,8 @@ void UMissionBriefingDlg::TogglePlayers()
         {
             PlayersWidget->OnOpenHangar = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleHangar);
             PlayersWidget->OnOpenSkills = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleSkills);
+            PlayersWidget->OnOpenAwards = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleAwards);
+            PlayersWidget->OnOpenWallet = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleWallet);
         }
     if (PlayersWidget)
         AddFloatingPanel(PlayersPopup, PlayersWidget->BuildPanelContent(GetGameInstance()), TEXT("Player Logbook"), 1,
@@ -4208,8 +4213,54 @@ void UMissionBriefingDlg::TogglePlayers()
 
 void UMissionBriefingDlg::ClosePlayers()
 {
+    CloseWallet();
+    CloseAwards();
     RemoveFloatingPanel(PlayersPopup);
     PlayersWidget = nullptr;
+}
+
+void UMissionBriefingDlg::ToggleAwards()
+{
+    if (AwardsPopup) { CloseAwards(); return; }
+    if (!CanOpenFlightPanel() || !FlightPanelCanvas) return;
+    ClearMissionRotationInput();
+    AwardsWidget = CreateWidget<UAwardsDlg>(GetOwningPlayer(),
+        ResolveFlightPopupClass<UAwardsDlg>(GetGameInstance(), TEXT("UI.AwardsPopupClass")));
+    if (!AwardsWidget) return;
+    AddFloatingPanel(AwardsPopup, AwardsWidget->TakeWidget(), TEXT("Awards"), 2,
+        FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseAwards));
+}
+
+void UMissionBriefingDlg::CloseAwards()
+{
+    RemoveFloatingPanel(AwardsPopup);
+    AwardsWidget = nullptr;
+}
+
+void UMissionBriefingDlg::ToggleWallet()
+{
+    if (WalletPopup) { CloseWallet(); return; }
+    if (!CanOpenFlightPanel() || !FlightPanelCanvas) return;
+    ClearMissionRotationInput();
+    TransactionWidget=CreateWidget<UTransactionDlg>(GetOwningPlayer(),
+        ResolveFlightPopupClass<UTransactionDlg>(GetGameInstance(),TEXT("UI.TransactionPopupClass")));
+    if(!TransactionWidget)return;
+    TransactionWidget->OnOpenMarketplace=FSimpleDelegate::CreateWeakLambda(this,[this]()
+        { if(!MarketplacePopup)ToggleMarketplace();else UpdateFlightPanelInput(MarketplacePopup); });
+    TransactionWidget->OnOpenContracts=FSimpleDelegate::CreateWeakLambda(this,[this]()
+        { if(!ContractsPopup)ToggleContracts();else UpdateFlightPanelInput(ContractsPopup); });
+    TransactionWidget->OnOpenProduction=FSimpleDelegate::CreateWeakLambda(this,[this]()
+        { if(!ProductionPopup)ToggleProduction();else UpdateFlightPanelInput(ProductionPopup); });
+    TransactionWidget->OnOpenHangar=FSimpleDelegate::CreateWeakLambda(this,[this]()
+        { if(!HangarPopup)ToggleHangar();else UpdateFlightPanelInput(HangarPopup); });
+    AddFloatingPanel(WalletPopup,TransactionWidget->TakeWidget(),TEXT("Wallet"),2,
+        FSimpleDelegate::CreateUObject(this,&UMissionBriefingDlg::CloseWallet),true);
+}
+
+void UMissionBriefingDlg::CloseWallet()
+{
+    RemoveFloatingPanel(WalletPopup);
+    TransactionWidget=nullptr;
 }
 
 void UMissionBriefingDlg::ToggleHangar()
@@ -4997,6 +5048,9 @@ void UMissionBriefingDlg::ClearTravelPresentation(bool bStopUpdates)
 {
     if (bStopUpdates && GetWorld()) GetWorld()->GetTimerManager().ClearTimer(TravelPresentationTimer);
     CloseQuantumTravel();
+    if (QuantumCameraPresentation) QuantumCameraPresentation->Reset();
+    QuantumCameraPresentation.Reset();
+    bTravelPresentationUnavailable=false; PreviousPresentedWarp=1; PreviousQuantumPhase=QuantumDrive::ACTIVE_READY; PresentedQuantumTraveler=nullptr;
     if (GetWorld() && GetWorld()->GetGameViewport() && TravelTransition.IsValid()) GetWorld()->GetGameViewport()->RemoveViewportWidgetContent(TravelTransition.ToSharedRef());
     TravelTransition.Reset(); PresentedTravelRegion=nullptr; PendingTravelPackage.Empty(); TravelRevealAt=0;
     AtmosphereTravelFade = 0.f;
@@ -5012,10 +5066,16 @@ void UMissionBriefingDlg::ClearTravelPresentation(bool bStopUpdates)
 
 void UMissionBriefingDlg::UpdateTravelPresentation(float DeltaSeconds)
 {
-    if (!bLiveMissionStarted || !GetWorld() || MissionSceneCover.IsValid()) return;
+    if (!bLiveMissionStarted || !GetWorld() || MissionSceneCover.IsValid())
+    { if (QuantumCameraPresentation) QuantumCameraPresentation->Reset(); return; }
     Sim* Simulation=Sim::GetSim(); Ship* Pilot=Simulation?Simulation->GetPlayerShip():nullptr;
     SimRegion* Region=Pilot?Pilot->GetRegion():nullptr;
     if (!Pilot || !Region || Pilot->IsDead() || Pilot->IsDying()) { ClearTravelPresentation(false); return; }
+    if (PresentedQuantumTraveler!=Pilot)
+    {
+        if (QuantumCameraPresentation) QuantumCameraPresentation->Reset();
+        PresentedQuantumTraveler=Pilot; PreviousPresentedWarp=1; PreviousQuantumPhase=QuantumDrive::ACTIVE_READY;
+    }
     auto* Runtime=GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>();
     const FString Package=Region->GetSystem()?FString(TEXT("/Game/Maps/"))+UTF8_TO_TCHAR(Region->GetSystem()->GetName()):FString();
     const int TransitionType = Pilot->GetTransitionType();
@@ -5062,9 +5122,11 @@ void UMissionBriefingDlg::UpdateTravelPresentation(float DeltaSeconds)
         }
         PresentedTravelRegion=Region;
     }
+    if (!PendingTravelLevel && Package.Equals(MissionSystemPackage,ESearchCase::IgnoreCase)) bTravelPresentationUnavailable=false;
     if (!PendingTravelLevel && !Package.IsEmpty() && !Package.Equals(MissionSystemPackage,ESearchCase::IgnoreCase) && Package!=PendingTravelPackage)
     {
         PendingTravelPackage=Package;
+        bTravelPresentationUnavailable=true;
         if (FPackageName::DoesPackageExist(Package))
         {
             bool Started=false;
@@ -5089,8 +5151,26 @@ void UMissionBriefingDlg::UpdateTravelPresentation(float DeltaSeconds)
             PendingTravelLevel->SetShouldBeVisible(false);PendingTravelLevel->SetShouldBeLoaded(false);PendingTravelLevel->SetIsRequestingUnloadAndRemoval(true);PendingTravelLevel=nullptr;
         }
     }
-    const bool Transit = bAtmosphereTravel || Pilot->GetWarpFactor()>1.01 ||
-        PendingTravelLevel || GetWorld()->GetTimeSeconds()<TravelRevealAt;
+    const bool Loading = PendingTravelLevel || bTravelPresentationUnavailable;
+    QuantumDrive* Drive = Pilot->GetQuantumDrive();
+    if (!Drive && Pilot->GetCarrier()) Drive=Pilot->GetCarrier()->GetQuantumDrive();
+    const int32 DrivePhase=Drive ? Drive->ActiveState() : QuantumDrive::ACTIVE_READY;
+    const double Warp=Pilot->GetWarpFactor();
+    EQuantumPresentationPhase CameraPhase=EQuantumPresentationPhase::Idle;
+    if (Loading) CameraPhase=EQuantumPresentationPhase::Loading;
+    else if (DrivePhase==QuantumDrive::ACTIVE_COUNTDOWN) CameraPhase=EQuantumPresentationPhase::Countdown;
+    else if (DrivePhase==QuantumDrive::ACTIVE_PREWARP) CameraPhase=EQuantumPresentationPhase::Departure;
+    else if (DrivePhase==QuantumDrive::ACTIVE_POSTWARP || GetWorld()->GetTimeSeconds()<TravelRevealAt) CameraPhase=EQuantumPresentationPhase::Arrival;
+    else if (Warp>1.01) CameraPhase=Warp>=PreviousPresentedWarp ? EQuantumPresentationPhase::Departure : EQuantumPresentationPhase::Arrival;
+    if (!QuantumCameraPresentation) QuantumCameraPresentation=MakeShared<FQuantumCameraPresentation>();
+    const bool Aborted = !Loading && DrivePhase==QuantumDrive::ACTIVE_READY && Warp<=1.01 &&
+        (PreviousQuantumPhase==QuantumDrive::ACTIVE_COUNTDOWN || PreviousQuantumPhase==QuantumDrive::ACTIVE_PREWARP);
+    if (Aborted || bAtmosphereTravel || (bTravelPresentationUnavailable && !PendingTravelLevel)) QuantumCameraPresentation->Reset();
+    else QuantumCameraPresentation->Update(GetOwningPlayer(),GetWorld()->IsPaused()?0.f:DeltaSeconds,CameraPhase,
+        MissionCameraRig ? static_cast<int32>(MissionCameraRig->Mode) : INDEX_NONE);
+    PreviousPresentedWarp=Warp; PreviousQuantumPhase=DrivePhase;
+    const bool Transit = bAtmosphereTravel || Warp>1.01 || Loading ||
+        GetWorld()->GetTimeSeconds()<TravelRevealAt || QuantumCameraPresentation->IsVisible();
     if (Transit)
     {
         CloseQuantumTravel();
@@ -5101,11 +5181,11 @@ void UMissionBriefingDlg::UpdateTravelPresentation(float DeltaSeconds)
         }
         if (TravelTransition.IsValid())
         {
-            if (bAtmosphereTravel)
+            if (bAtmosphereTravel && !Loading)
                 TravelTransition->UpdateAtmosphere(AtmosphereTravelFade, bAtmosphereDescent);
             else
                 TravelTransition->Update(GetWorld()->IsPaused()?0.f:DeltaSeconds,Pilot->GetWarpFactor(),
-                    PendingTravelLevel || GetWorld()->GetTimeSeconds()<TravelRevealAt,UTF8_TO_TCHAR(Region->GetName()));
+                    Loading,UTF8_TO_TCHAR(Region->GetName()),bTravelPresentationUnavailable && !PendingTravelLevel);
         }
     }
     else if (TravelTransition.IsValid())
@@ -5130,6 +5210,7 @@ void UMissionBriefingDlg::HandleTravelSystemShown()
     }
     MissionSystemLevel=PendingTravelLevel;
     MissionSystemPackage=PendingTravelPackage;
+    bTravelPresentationUnavailable=false;
     PendingTravelLevel->OnLevelShown.RemoveDynamic(this,&UMissionBriefingDlg::HandleTravelSystemShown);
     PendingTravelLevel=nullptr;
     TravelRevealAt=GetWorld()->GetTimeSeconds()+1.5;

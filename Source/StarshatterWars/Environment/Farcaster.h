@@ -49,6 +49,8 @@ public:
 	FVector        EndPoint()           const { return end_point; }
 	FVector        GetApproachTarget(const FVector& Position) const;
 	bool           CanEnter(const Ship& Traveler) const;
+    bool           HasValidApproach() const;
+    bool           CanEnterAt(const FVector& Position, const FVector& Heading, const FVector& Velocity) const;
 
 	virtual void   SetApproachPoint(int i, FVector loc);
 	virtual void   SetStartPoint(FVector loc);
@@ -76,13 +78,13 @@ protected:
 	Ship* dest;
 	Ship* jumpship;
 
-	FVector           start_rel;
-	FVector           end_rel;
-	FVector           approach_rel[NUM_APPROACH_PTS];
+	FVector           start_rel = FVector::ZeroVector;
+	FVector           end_rel = FVector::ZeroVector;
+	FVector           approach_rel[NUM_APPROACH_PTS] = { FVector::ZeroVector, FVector::ZeroVector, FVector::ZeroVector, FVector::ZeroVector };
 
-	FVector           start_point;
-	FVector           end_point;
-	FVector           approach_point[NUM_APPROACH_PTS];
+	FVector           start_point = FVector::ZeroVector;
+	FVector           end_point = FVector::ZeroVector;
+	FVector           approach_point[NUM_APPROACH_PTS] = { FVector::ZeroVector, FVector::ZeroVector, FVector::ZeroVector, FVector::ZeroVector };
 
 	double            cycle_time;
 	int               active_state;

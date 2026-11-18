@@ -1,6 +1,8 @@
 #include "StarshatterPlayerSubsystem.h"
 #include "PlayerCharacter.h"
 #include "PlayerProgressSaveTransaction.h"
+#include "OwnedHullCondition.h"
+#include "TransactionAI.h"
 #include "SSWGameInstance.h"
 
 #include "Kismet/GameplayStatics.h"
@@ -114,7 +116,8 @@ FEconomyState& UStarshatterPlayerSubsystem::GetEconomy()
     if (!State.bLegacyWalletMigrated)
     {
         const int64 Existing=FMath::Max(0LL,State.Wallets.FindRef(FEconomyLedger::Pilot()));
-        State.Wallets.Add(FEconomyLedger::Pilot(),Existing+FMath::Min(MAX_int64-Existing,FMath::Max(0LL,PlayerInfo.InsuranceCredits)));
+        TransactionAI::ReconcileExternalBalance(State,FEconomyLedger::Pilot(),Existing+FMath::Min(MAX_int64-Existing,FMath::Max(0LL,PlayerInfo.InsuranceCredits)),
+            TEXT("Opening career balance"),TEXT("Legacy career balance"),EWalletTransactionCategory::OpeningBalance);
         PlayerInfo.InsuranceCredits = 0;
         State.bLegacyWalletMigrated = true;
     }
@@ -240,6 +243,7 @@ bool UStarshatterPlayerSubsystem::SavePlayer(bool bForce)
 bool UStarshatterPlayerSubsystem::SaveActivePlayerProgress()
 {
     if (!RecoverPlayerProgress()) return false;
+    FOwnedHullCondition::CaptureActive(PlayerInfo);
     // Preserve ownership: autosave only the active mutable profile, never SV_ snapshots.
     auto* Index = ReadPlayerIndex(false);
     if (!Index) return false;
@@ -281,6 +285,7 @@ bool UStarshatterPlayerSubsystem::SaveGameInternal(
         return false;
     }
 
+    if (&InPlayerData == &PlayerInfo) FOwnedHullCondition::CaptureActive(PlayerInfo);
     SaveObject->SaveVersion = InSaveVersion;
     SaveObject->PlayerInfo = InPlayerData;
     if (&InPlayerData == &PlayerInfo)

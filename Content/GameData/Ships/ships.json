@@ -2135,8 +2135,8 @@
 							"Yaw": 0,
 							"Roll": 0
 						},
-						"FlareScale": 4,
-						"TrailScale": 4,
+						"FlareScale": 1.15,
+						"TrailScale": 1.15,
 						"bShowFlare": true,
 						"bShowTrail": true,
 						"EngineColor":
@@ -2165,8 +2165,8 @@
 							"Yaw": 0,
 							"Roll": 0
 						},
-						"FlareScale": 4,
-						"TrailScale": 4,
+						"FlareScale": 1.15,
+						"TrailScale": 1.15,
 						"bShowFlare": true,
 						"bShowTrail": true,
 						"EngineColor":
@@ -2195,8 +2195,8 @@
 							"Yaw": 0,
 							"Roll": 0
 						},
-						"FlareScale": 4,
-						"TrailScale": 4,
+						"FlareScale": 1.15,
+						"TrailScale": 1.15,
 						"bShowFlare": true,
 						"bShowTrail": true,
 						"EngineColor":
@@ -2225,8 +2225,8 @@
 							"Yaw": 0,
 							"Roll": 0
 						},
-						"FlareScale": 4,
-						"TrailScale": 4,
+						"FlareScale": 1.15,
+						"TrailScale": 1.15,
 						"bShowFlare": true,
 						"bShowTrail": true,
 						"EngineColor":
@@ -69700,8 +69700,8 @@
 							"Yaw": 0,
 							"Roll": 0
 						},
-						"FlareScale": 4,
-						"TrailScale": 4,
+						"FlareScale": 1.15,
+						"TrailScale": 1.15,
 						"bShowFlare": true,
 						"bShowTrail": true,
 						"EngineColor":
@@ -69730,8 +69730,8 @@
 							"Yaw": 0,
 							"Roll": 0
 						},
-						"FlareScale": 4,
-						"TrailScale": 4,
+						"FlareScale": 1.15,
+						"TrailScale": 1.15,
 						"bShowFlare": true,
 						"bShowTrail": true,
 						"EngineColor":
@@ -69760,8 +69760,8 @@
 							"Yaw": 0,
 							"Roll": 0
 						},
-						"FlareScale": 4,
-						"TrailScale": 4,
+						"FlareScale": 1.15,
+						"TrailScale": 1.15,
 						"bShowFlare": true,
 						"bShowTrail": true,
 						"EngineColor":
@@ -69790,8 +69790,8 @@
 							"Yaw": 0,
 							"Roll": 0
 						},
-						"FlareScale": 4,
-						"TrailScale": 4,
+						"FlareScale": 1.15,
+						"TrailScale": 1.15,
 						"bShowFlare": true,
 						"bShowTrail": true,
 						"EngineColor":

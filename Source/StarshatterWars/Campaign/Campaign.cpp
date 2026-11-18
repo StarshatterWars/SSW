@@ -16,6 +16,7 @@
 */
 
 #include "Campaign.h"
+#include "CampaignStoryRules.h"
 #include "CampaignPresentationRules.h"
 
 #include "CampaignPlanStrategic.h"
@@ -187,6 +188,7 @@ Campaign::~Campaign()
     actions.destroy();
     events.destroy();
     missions.destroy();
+    story_missions.destroy();
     templates.destroy();
     planners.destroy();
     zones.destroy();
@@ -381,6 +383,7 @@ void
 Campaign::Clear()
 {
     missions.destroy();
+    story_missions.destroy();
     planners.destroy();
     combatants.destroy();
     events.destroy();
@@ -1635,6 +1638,9 @@ Mission* Campaign::GetMission(int32 Id)
     }
 
     if (!Info)
+        for (int32 Index=0; Index<story_missions.size(); ++Index)
+            if (story_missions[Index] && story_missions[Index]->id==Id) { Info=story_missions[Index]; break; }
+    if (!Info)
     {
         UE_LOG(LogCampaign, Warning, TEXT("Campaign::GetMission(%d) could not find mission info"), Id);
         return nullptr;
@@ -1643,7 +1649,7 @@ Mission* Campaign::GetMission(int32 Id)
     // Static campaigns use authored FS_CampaignMission data.  A Mission built
     // only from MissionInfo has text for SIT but no elements for PKG/NAV/WEP.
     // Leave the proven dynamic mission construction path unchanged.
-    if (!IsDynamic())
+    if (!IsDynamic() || FindStoryMissionData(Id))
     {
         const FS_CampaignMission* MissionData = FindCampaignMissionById(Id);
         if (MissionData)
@@ -1841,6 +1847,9 @@ MissionInfo* Campaign::GetMissionInfo(int id)
         }
     }
 
+    if (!m)
+        for (int32 Index=0; Index<story_missions.size(); ++Index)
+            if (story_missions[Index] && story_missions[Index]->id==id) { m=story_missions[Index]; break; }
     if (m)
     {
         if (!m->mission)
@@ -1896,6 +1905,14 @@ bool Campaign::IsMissionIdInUse(int Id) const
     return false;
 }
 
+const FS_CampaignMission* Campaign::FindStoryMissionData(int32 Id) const
+{
+    if (!CampaignData) return nullptr;
+    for (const auto& Row : CampaignData->StoryMissions)
+        if (Row.Id == Id && CampaignStoryRules::IsPlayable(Row, campaign_id)) return &Row;
+    return nullptr;
+}
+
 const FS_CampaignMission* Campaign::FindCampaignMissionById(int32 id) const
 {
     if (!CampaignData)
@@ -1907,7 +1924,7 @@ const FS_CampaignMission* Campaign::FindCampaignMissionById(int32 id) const
             return &Row;
     }
 
-    return nullptr;
+    return FindStoryMissionData(id);
 }
 void
 Campaign::ReloadMission(int id)
@@ -2956,6 +2973,28 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
         Info->mission = 0;
 
         missions.append(Info);
+    }
+
+    // Companion story assignments survive dynamic mission-list regeneration. Cinematic
+    // action records and camera scene IDs remain untouched and continue to trigger video/fallback.
+    for (const FS_CampaignMission& Row : Data.StoryMissions)
+    {
+        if (!CampaignStoryRules::IsPlayable(Row, campaign_id)) continue;
+        bool Collision=false;
+        for (int32 Index=0; Index<missions.size(); ++Index) if (missions[Index] && missions[Index]->id==Row.Id) Collision=true;
+        for (int32 Index=0; Index<story_missions.size(); ++Index) if (story_missions[Index] && story_missions[Index]->id==Row.Id) Collision=true;
+        if (Collision || CutsceneMissionIds.Contains(Row.Id)) continue;
+        auto* Info = new MissionInfo;
+        Info->id=Row.Id; Info->name=TCHAR_TO_UTF8(*Row.MissionName);
+        Info->description=TCHAR_TO_UTF8(*Row.Desc); Info->objective=TCHAR_TO_UTF8(*Row.Objective);
+        Info->player_info=TCHAR_TO_UTF8(*Row.Objective); Info->situation=TCHAR_TO_UTF8(*Row.Sitrep);
+        Info->system=TCHAR_TO_UTF8(*Row.MissionSystem); Info->region="";
+        Info->Source=EMissionSource::Scripted; Info->DisplayType=EMissionDisplayType::PlayerMission;
+        Info->is_cutscene=false; Info->type=static_cast<int32>(Row.MissionType);
+        Info->start=0; Info->start_after=0; Info->start_before=MAX_int32;
+        Info->min_rank=0; Info->max_rank=0; Info->action_id=0; Info->action_status=0;
+        Info->exec_once=0; Info->mission=nullptr;
+        story_missions.append(Info);
     }
 
     // ------------------------------------------------------------

@@ -9,7 +9,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Adonis_Alloy_Works",
@@ -21,7 +28,14 @@
     "bSurface": false,
     "Recipe": "StructuralAlloy",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Maraner_Orbital_Concentrator",
@@ -33,7 +47,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Maraner_Materials_Refinery",
@@ -45,7 +66,14 @@
     "bSurface": false,
     "Recipe": "ConductiveMetal",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Pallas_Orbital_Concentrator",
@@ -57,7 +85,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Pallas_Industrial_Works",
@@ -69,7 +104,14 @@
     "bSurface": false,
     "Recipe": "OpticalGlass",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Dorrath_Orbital_Concentrator",
@@ -81,7 +123,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Dorrath_Metals_Works",
@@ -93,7 +142,14 @@
     "bSurface": false,
     "Recipe": "StructuralAlloy",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Hera_Orbital_Concentrator",
@@ -105,7 +161,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Hera_Mineral_Processing_Works",
@@ -117,7 +180,14 @@
     "bSurface": false,
     "Recipe": "IndustrialCeramics",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Dante_Orbital_Concentrator",
@@ -129,7 +199,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Janek_Orbital_Materials_Works",
@@ -141,7 +218,14 @@
     "bSurface": false,
     "Recipe": "JanusConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Jalah_Orbital_Concentrator",
@@ -153,7 +237,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Kalon_Orbital_Concentrator",
@@ -165,7 +256,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Kalon_Materials_Works",
@@ -177,7 +275,14 @@
     "bSurface": false,
     "Recipe": "IndustrialCeramics",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Prosenar_Orbital_Concentrator",
@@ -189,7 +294,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Silessia_Orbital_Concentrator",
@@ -201,7 +313,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Silessia_Materials_Works",
@@ -213,7 +332,14 @@
     "bSurface": false,
     "Recipe": "IndustrialCeramics",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Tal_Amin_Orbital_Concentrator",
@@ -225,7 +351,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Tal_Amin_Materials_Works",
@@ -237,7 +370,14 @@
     "bSurface": false,
     "Recipe": "WaterRecovery",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Renser_Orbital_Concentrator",
@@ -249,7 +389,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Renser_Materials_Works",
@@ -261,7 +408,14 @@
     "bSurface": false,
     "Recipe": "ConductiveMetal",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Loris_Orbital_Concentrator",
@@ -273,7 +427,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Loris_Materials_Works",
@@ -285,7 +446,14 @@
     "bSurface": false,
     "Recipe": "ConstructionMaterials",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Aram_Orbital_Concentrator",
@@ -297,7 +465,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Aram_Materials_Works",
@@ -309,7 +484,14 @@
     "bSurface": false,
     "Recipe": "OpticalGlass",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Kolchev_Orbital_Concentrator",
@@ -321,7 +503,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Kolchev_Materials_Works",
@@ -333,7 +522,14 @@
     "bSurface": false,
     "Recipe": "ConstructionMaterials",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Adantar_Orbital_Concentrator",
@@ -345,7 +541,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Adantar_Materials_Works",
@@ -357,7 +560,14 @@
     "bSurface": false,
     "Recipe": "ConductiveMetal",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Tarsus_Orbital_Concentrator",
@@ -369,7 +579,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Tarsus_Materials_Works",
@@ -381,7 +598,14 @@
     "bSurface": false,
     "Recipe": "ConstructionMaterials",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Sintar_Orbital_Concentrator",
@@ -393,7 +617,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Nergal_Orbital_Concentrator",
@@ -405,7 +636,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Nergal_Materials_Works",
@@ -417,7 +655,14 @@
     "bSurface": false,
     "Recipe": "WaterRecovery",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Radix_Orbital_Concentrator",
@@ -429,7 +674,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Radix_Materials_Works",
@@ -441,7 +693,14 @@
     "bSurface": false,
     "Recipe": "ConstructionMaterials",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Ramek_Orbital_Concentrator",
@@ -453,7 +712,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Ramek_Materials_Works",
@@ -465,7 +731,14 @@
     "bSurface": false,
     "Recipe": "OpticalGlass",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Marak_Orbital_Concentrator",
@@ -477,7 +750,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Marak_Materials_Works",
@@ -489,7 +769,14 @@
     "bSurface": false,
     "Recipe": "ConductiveMetal",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Garrison_Orbital_Concentrator",
@@ -501,7 +788,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Garrison_Materials_Works",
@@ -513,7 +807,14 @@
     "bSurface": false,
     "Recipe": "ConstructionMaterials",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   },
   {
     "Name": "Volante_Orbital_Concentrator",
@@ -525,7 +826,14 @@
     "bSurface": false,
     "Recipe": "OrbitalConcentrate",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Refinery",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000
   },
   {
     "Name": "Volante_Materials_Works",
@@ -537,6 +845,13 @@
     "bSurface": false,
     "Recipe": "IndustrialCeramics",
     "CapacityTonnes": 90000,
-    "Image": "Production"
+    "Image": "Production",
+    "ServiceProfile": "Factory",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 0.98,
+    "PlayerTimeMultiplier": 0.95,
+    "InstallationFeeCredits": 100,
+    "PerRunFeeCredits": 5,
+    "MaximumPlayerRuns": 1000
   }
 ]

@@ -313,7 +313,7 @@ private:
          +SHorizontalBox::Slot()[Button(TEXT("Toggle override"),[this](){if(auto* S=CurrentSystem())S->SetOverride(!S->IsOverrideActive());},[this](){return CurrentSystem()!=nullptr;}, SNew(SShipSystemIcon).Icon(EShipSystemIcon::Override))]];
         Details->AddSlot().AutoHeight()[Label(TEXT("POWER ALLOCATION"))];
         Details->AddSlot().AutoHeight().Padding(0,4)
-        [SNew(SSlider).IsEnabled_Lambda([this](){return CurrentSystem() && CurrentSystem()->IsPowerOn();})
+        [SNew(SSlider).Style(&MissionUIStyle::StandaloneSliderStyle()).IndentHandle(false).SliderBarColor(FLinearColor(.14f,.8f,.95f)).IsEnabled_Lambda([this](){return CurrentSystem() && CurrentSystem()->IsPowerOn();})
          .Value_Lambda([this](){return CurrentSystem()?float(FMath::Clamp(CurrentSystem()->GetPowerLevel()/100.0,0.0,1.0)):0.0f;})
          .OnValueChanged_Lambda([this](float V){if(auto* S=CurrentSystem())S->SetPowerLevel(V*100.0);})];
         Details->AddSlot().AutoHeight().Padding(0,8)[Label(TEXT("CAPACITOR CHARGE"))];

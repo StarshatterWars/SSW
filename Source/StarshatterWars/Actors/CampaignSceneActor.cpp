@@ -1,4 +1,7 @@
 ﻿#include "CampaignSceneActor.h"
+#include "CinematicSimulationStep.h"
+#include "OfflineCutsceneExport.h"
+#include "SimElement.h"
 #include "SSWCameraManager.h"
 
 #include "SceneMeshActor.h"
@@ -77,6 +80,22 @@ void ACampaignSceneActor::BeginPlay()
 void ACampaignSceneActor::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
+    // Isolated exporter diagnostics distinguish a slow recovery from a stalled one.
+    if (bScenePlaybackEnabled && OfflineCutsceneExport::IsRequested())
+    {
+        static double NextDiagnostic=0;
+        const double Now=GetWorld()->GetRealTimeSeconds();
+        if (Now>=NextDiagnostic)
+        {
+            NextDiagnostic=Now+10;
+            if (Sim* Runtime=Sim::GetSim())
+                if (Ship* Shuttle=Runtime->FindShip("Proteus"))
+                    UE_LOG(LogTemp,Display,TEXT("[OfflineCutscene] Proteus pos=%s speed=%.1f phase=%d controller=%hs carrier=%hs inbound=%d recovery=%d hold=%.1f AI=%hs"),
+                        *Shuttle->GetLocation().ToString(),Shuttle->GetVelocity().Size(),int(Shuttle->GetFlightPhase()),
+                        Shuttle->GetController()?Shuttle->GetController()->GetName():"none",Shuttle->GetCarrier()?Shuttle->GetCarrier()->GetName():"none",
+                        Shuttle->GetInbound()!=nullptr,Shuttle->CanBeginRecovery(),Shuttle->GetElement()?Shuttle->GetElement()->GetHoldTime():0.0,Shuttle->GetDirectorInfo());
+        }
+    }
 
     if (bEnableRuntimeAITick && bScenePlaybackEnabled)
     {
@@ -161,6 +180,7 @@ void ACampaignSceneActor::TickRuntimeShips(float DeltaSeconds)
 
     if (Sim* RTSim = Sim::GetSim())
     {
+        const FScopedCinematicSimulationStep ActiveFrame(SimSeconds);
         RTSim->ExecFrame(SimSeconds);
 
         UE_LOG(LogTemp, Verbose,
@@ -331,6 +351,7 @@ void ACampaignSceneActor::BuildSceneActorsFromMission(
             //-----------------------------------------------------
             SimInst->ExecMission();
             CutsceneMission = SimInst->GetMission() == LegacyMission ? LegacyMission : nullptr;
+            if (CutsceneMission) SimInst->PrepareCutscenePlayback(CutsceneMission);
 
             UE_LOG(LogTemp, Warning,
                 TEXT("[CampaignSceneActor] Legacy Sim mission executed"));

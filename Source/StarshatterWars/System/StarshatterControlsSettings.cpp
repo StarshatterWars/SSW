@@ -111,7 +111,8 @@ void UStarshatterControlsSettings::SetMouseInvert(bool bV)
 
 void UStarshatterControlsSettings::ApplyToRuntimeControls(UObject* WorldContextObject)
 {
-    Load();
+    // Applying edits must not reload and discard them.
+    Sanitize();
     ApplyToEnhancedInput(WorldContextObject);
 }
 

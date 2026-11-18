@@ -137,6 +137,7 @@ private:
     double TargetSpeed = -1;
     FString TargetRarity, TargetMineral, TargetDepositAmount, TargetDepositValue;
     FString TargetCargo;
+      FString TargetMiningFocus;
     FJumpRouteReadout JumpReadout;
     TArray<FString> JumpRoute;
     double PlayerShield = -1, PlayerHull = -1, TargetHull = -1, TargetShield = -1, TargetRange = -1, SensorRange = 1;

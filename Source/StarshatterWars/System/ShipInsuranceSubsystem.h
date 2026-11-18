@@ -1,11 +1,12 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
+#include "Tickable.h"
 #include "GameStructs_insurance.h"
 #include "ShipInsuranceSubsystem.generated.h"
 
 UCLASS()
-class STARSHATTERWARS_API UShipInsuranceSubsystem : public UGameInstanceSubsystem
+class STARSHATTERWARS_API UShipInsuranceSubsystem : public UGameInstanceSubsystem, public FTickableGameObject
 {
     GENERATED_BODY()
 public:
@@ -13,6 +14,10 @@ public:
     static EShipInsuranceTier EffectiveTier(const FPlayerHangarShip& Ship, int64 Now);
     static FString TierName(EShipInsuranceTier Tier);
     void RefreshAssignment();
+    void Tick(float DeltaTime) override;
+    TStatId GetStatId() const override { RETURN_QUICK_DECLARE_CYCLE_STAT(UShipInsuranceSubsystem, STATGROUP_Tickables); }
+    bool IsTickable() const override { return !IsTemplate() && GetGameInstance()!=nullptr; }
+    UWorld* GetTickableGameObjectWorld() const override { return GetWorld(); }
     void BeginMission();
     bool RememberLoadout(const TArray<int32>& Stations, const FString& Name);
     bool CanModifyHull(FGuid Hull) const;
@@ -30,4 +35,7 @@ public:
     bool CanInsure() const;
 private:
     bool bRestoreLoadout = false;
+    float ConditionElapsed = 0;
+    bool bDockedConditionSaved = false;
+    FGuid LastConditionHull;
 };

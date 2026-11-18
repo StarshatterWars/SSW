@@ -3,7 +3,6 @@
 #include "StarshatterPlayerSubsystem.h"
 #include "CampaignPresentationRules.h"
 #include "SingleMissionDlg.h"
-#include "CustomMissionDlg.h"
 #include "CampaignMissionDlg.h"
 #include "StoryMissionsDlg.h"
 #include "StarshatterAssetRegistrySubsystem.h"
@@ -189,7 +188,6 @@ void UMissionsPanelDriver::BuildDriverLayout()
     StoryTab = MakeTab(Tabs, TEXT("STORY"));
     TrainingTab = MakeTab(Tabs, TEXT("TRAINING"));
     SingleTab = MakeTab(Tabs, TEXT("SINGLE"));
-    CustomTab = MakeTab(Tabs, TEXT("CUSTOM"));
     SummaryButton = MakeTab(StatusRow, TEXT("SUMMARY"));
     UHorizontalBoxSlot* SummarySlot = CastChecked<UHorizontalBoxSlot>(SummaryButton->Slot);
     SummarySlot->SetSize(FSlateChildSize(ESlateSizeRule::Automatic));
@@ -206,7 +204,6 @@ void UMissionsPanelDriver::BuildDriverLayout()
     CampaignTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenCampaign);
     TrainingTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenTraining);
     SingleTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenSingle);
-    CustomTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenCustom);
     StoryTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenStory);
     MenuTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::Back);
     BriefingTab->OnClicked.AddUniqueDynamic(this, &UMissionsPanelDriver::OpenBriefing);
@@ -303,8 +300,6 @@ void UMissionsPanelDriver::RefreshTabStyles()
         ActiveMode == EMissionsNavigationMode::Training ? BlueP : CyanP);
     StyleTab(SingleTab, ActiveMode == EMissionsNavigationMode::Single ? BlueN : CyanN,
         ActiveMode == EMissionsNavigationMode::Single ? BlueP : CyanP);
-    StyleTab(CustomTab, ActiveMode == EMissionsNavigationMode::Custom ? BlueN : CyanN,
-        ActiveMode == EMissionsNavigationMode::Custom ? BlueP : CyanP);
     StyleTab(StoryTab, ActiveMode == EMissionsNavigationMode::Story ? BlueN : CyanN,
         ActiveMode == EMissionsNavigationMode::Story ? BlueP : CyanP);
     StyleTab(MenuTab, RedN, RedP);
@@ -341,7 +336,6 @@ void UMissionsPanelDriver::SelectChild(UUserWidget* Child,const TCHAR* InModeTit
     if (Child == CampaignChild) ActiveMode = EMissionsNavigationMode::Campaign;
     else if (Child == TrainingChild) ActiveMode = EMissionsNavigationMode::Training;
     else if (Child == SingleChild) ActiveMode = EMissionsNavigationMode::Single;
-    else if (Child == CustomChild) ActiveMode = EMissionsNavigationMode::Custom;
     else if (Child == StoryChild) ActiveMode = EMissionsNavigationMode::Story;
     RefreshTabStyles();
     UpdateBriefingEnabled();
@@ -399,10 +393,8 @@ void UMissionsPanelDriver::ShowSingleMode()
 }
 void UMissionsPanelDriver::ShowCustomMode()
 {
-    if (!AreStandaloneTabsUnlocked()) { OpenTraining(); return; }
-    APlayerController* PC=GetOwningPlayer(); if (!PC)return;
-    if (!CustomChild) {UCustomMissionDlg* W=CreateWidget<UCustomMissionDlg>(PC,UCustomMissionDlg::StaticClass());CustomChild=W;if (W){W->SetMenuManager(Manager);W->InitializeDlg(Manager);}}
-    if (UCustomMissionDlg* W=Cast<UCustomMissionDlg>(CustomChild)){W->Show();SelectChild(W,TEXT("CUSTOM MISSIONS"));}
+    // Compatibility calls now go to the separate menu authoring workspace.
+    if(Manager)Manager->ShowModEditorDlg();
 }
 void UMissionsPanelDriver::RefreshTabAccess()
 {
@@ -413,7 +405,7 @@ void UMissionsPanelDriver::RefreshTabAccess()
     CampaignTab->SetToolTipText(FText::FromString(bCampaignUnlocked
         ? TEXT("View active campaign missions") : TEXT("Deploy a campaign after Flight School or as a first-run Ensign")));
     const bool bStandaloneUnlocked = AreStandaloneTabsUnlocked();
-    for (UButton* Tab : {SingleTab.Get(), CustomTab.Get()})
+    for (UButton* Tab : {SingleTab.Get()})
     {
         Tab->SetIsEnabled(bStandaloneUnlocked);
         Tab->SetToolTipText(bStandaloneUnlocked ? FText::GetEmpty()
@@ -431,7 +423,7 @@ void UMissionsPanelDriver::Show()
     if (ActiveMode == EMissionsNavigationMode::Campaign && bCampaignUnlocked) ShowCampaignMode();
     else if (!ActiveChild || ActiveMode == EMissionsNavigationMode::Campaign ||
         (ActiveMode == EMissionsNavigationMode::Story && !bCampaignUnlocked) ||
-        (!bStandaloneUnlocked && (ActiveMode == EMissionsNavigationMode::Single || ActiveMode == EMissionsNavigationMode::Custom)))
+        (!bStandaloneUnlocked && ActiveMode == EMissionsNavigationMode::Single))
     {
         if (bStandaloneUnlocked) ShowSingleMode();
         else OpenTraining();

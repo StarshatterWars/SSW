@@ -11,6 +11,8 @@ class STARSHATTERWARS_API UFlightLogbookDlg : public UBaseScreen
 public:
     FSimpleDelegate OnOpenHangar;
     FSimpleDelegate OnOpenSkills;
+    FSimpleDelegate OnOpenAwards;
+    FSimpleDelegate OnOpenWallet;
     TSharedRef<SWidget> BuildPanelContent(UGameInstance* Instance) const;
 
 protected:

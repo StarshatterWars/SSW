@@ -1,5 +1,6 @@
 
 #include "FighterHUDDetails.h"
+#include "MiningCrystalEquipment.h"
 #include "HUDView.h"
 #include "SSWSessionLobbyGameMode.h"
 #include "ShipVisualCatalog.h"
@@ -300,6 +301,7 @@ void SFighterHUDDetails::Refresh()
     TargetRarity.Reset();
     TargetDepositValue.Reset();
     TargetCargo.Reset();
+    TargetMiningFocus.Reset();
     JumpRoute.Reset();
     HomeCarrierReadout.Reset();
     NavReadouts.Reset(); MissileReadouts.Reset(); DefenseReadout.Reset();
@@ -545,6 +547,7 @@ void SFighterHUDDetails::Refresh()
                         else if (LoadStatus == EFreighterLoadStatus::PartiallyLoaded)
                             TargetCargo = FText::Format(NSLOCTEXT("Freight", "PartialCargo", "PARTIAL | {0}"), FText::FromString(TargetCargo)).ToString();
                     }
+                    TargetMiningFocus=FMiningCrystalService::Summary(S->ReadEconomy(),T->GetCargoInventoryKey()).ToString();
                 }
             }
         }
@@ -666,10 +669,10 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
     const FVector2D Size = MyGeometry.GetLocalSize();
     const float Scale = FMath::Min(Size.X / 1280.0f, Size.Y / 720.0f);
     const FVector2D Local = MyGeometry.AbsoluteToLocal(MouseEvent.GetScreenSpacePosition());
+    Ship* P=PlayerShip();
+    const bool bPreTakeoff = P && P->GetDock() && P->GetDock()->IsLaunchDeck() && P->GetFlightPhase()<EOPSMode::ACTIVE;
     if(MouseEvent.GetEffectingButton()==EKeys::LeftMouseButton)
     {
-        Ship* P=PlayerShip();
-        const bool bPreTakeoff = P && P->GetDock() && P->GetDock()->IsLaunchDeck() && P->GetFlightPhase()<EOPSMode::ACTIVE;
         if (CockpitDisplays && CockpitDisplays->HandleControlClick()) return FReply::Handled();
         if (!bPreTakeoff && CockpitDisplays && CockpitDisplays->HandleGearClick()) return FReply::Handled();
         const bool Mini=ThirdPerson.Get() && !bPreTakeoff && !IsCockpitDisplayActive();
@@ -691,8 +694,11 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
         Local.X >= LaunchRect.Left && Local.X <= LaunchRect.Right &&
         Local.Y >= LaunchRect.Top && Local.Y <= LaunchRect.Bottom)
     {
-        if (Sim* LiveSim = GetReadyCarrierLaunchSim(); LiveSim && LiveSim->RequestPlayerCarrierLaunch())
+        if (Sim* LiveSim=Sim::GetSim(); LiveSim && (GetReadyCarrierLaunchSim() || (bPreTakeoff && LiveSim->NeedsTrainingLaunchClearance())))
+        {
+            LiveSim->RequestPlayerCarrierLaunch();
             return FReply::Handled();
+        }
     }
     if (Local.X >= Right.X && Local.Y >= Right.Y && Local.X <= Right.X + Extent.X && Local.Y <= Right.Y + Extent.Y)
     {
@@ -1128,14 +1134,15 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
 
     }
-    if (!NetworkController.IsValid() && GetReadyCarrierLaunchSim())
+    const bool bTrainingClearanceDenied=bPreTakeoff && Sim::GetSim() && Sim::GetSim()->NeedsTrainingLaunchClearance();
+    if (!NetworkController.IsValid() && (GetReadyCarrierLaunchSim() || bTrainingClearanceDenied))
     {
         const FSlateRect R = CarrierLaunchButtonRect(Size, Scale);
         const FVector2D TopLeft(R.Left, R.Top);
         const FVector2D Dimensions(R.Right - R.Left, R.Bottom - R.Top);
         // Render exactly like the existing GEAR DOWN popup, rather than
         // stretching TAC_button artwork to a non-native aspect ratio.
-        const FLinearColor Border = InstrumentColor;
+        const FLinearColor Border = bTrainingClearanceDenied?FLinearColor(.4f,.5f,.55f):InstrumentColor;
         Box(TopLeft, Dimensions, FLinearColor(0, 0.015f, 0.03f, 0.75f));
         Box(TopLeft, FVector2D(Dimensions.X, Scale), Border);
         Box(TopLeft + FVector2D(0, Dimensions.Y - Scale), FVector2D(Dimensions.X, Scale), Border);
@@ -1323,7 +1330,8 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             bTargetTracking ? TargetClass + TEXT("   TRACKING") :
             bTargetLocked ? TargetClass + TEXT("   LOCKED") : TargetClass, TargetDisplayColor);
         if (TargetHull >= 0) TargetText(P+FVector2D(0,132)*Scale,FString(TEXT("HULL  "))+FormatStatusReadout(TEXT("HULL"),TargetHull),TargetDisplayColor);
-        if (TargetHull >= 0) TargetText(P+FVector2D(0,152)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),TargetShield),TargetDisplayColor);
+        if (TargetHull >= 0) TargetText(P+FVector2D(0,TargetMiningFocus.IsEmpty()?152:145)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),TargetShield),TargetDisplayColor);
+        if (!TargetMiningFocus.IsEmpty()) TargetText(P+FVector2D(0,159)*Scale,TargetMiningFocus,TargetDisplayColor);
         if (!TargetMineral.IsEmpty())
         {
             TargetText(P+FVector2D(0,132)*Scale, TargetRarity, TargetDisplayColor);
@@ -1781,6 +1789,7 @@ void SFighterHUDDetails::UpdateInformationMessages()
     InformationRows->ClearChildren();InformationCaptions.Reset();InformationExpiry.Reset();
     for(const auto& Line:Lines)
     {
+        if (Line.Caption==TEXT("NO MISSION ASSIGNED. CLEARANCE DECLINED.")) { bShowInformation=true; bShowCaution=false; }
         InformationCaptions.Add(Line.Caption);InformationExpiry.Add(Line.ExpiresAt);
         InformationRows->AddSlot().AutoHeight().Padding(0,0,0,3)
         [ SNew(STextBlock).Text(FText::FromString(Line.Caption)).AutoWrapText(true)

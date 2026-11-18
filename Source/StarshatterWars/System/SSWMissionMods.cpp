@@ -26,6 +26,14 @@ TArray<SSWMissionMods::FPack> SSWMissionMods::Discover()
         const FString Folder = Directory() / Name / TEXT("Missions");
         FPack Pack;
         IFileManager::Get().FindFiles(Pack.Missions, *(Folder / TEXT("*.def")), true, false);
+        TArray<FString> JsonMissions;
+        IFileManager::Get().FindFiles(JsonMissions,*(Folder/TEXT("*.json")),true,false);
+        for (const FString& Json:JsonMissions)
+        {
+            Pack.Missions.Remove(FPaths::ChangeExtension(Json,TEXT("def")));
+            Pack.Missions.AddUnique(Json);
+        }
+
         if (Pack.Missions.IsEmpty() &&
             !IFileManager::Get().DirectoryExists(*(Directory() / Name / TEXT("Campaigns")))) continue;
         Pack.Name = Name;

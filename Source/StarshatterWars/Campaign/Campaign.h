@@ -145,6 +145,8 @@ public:
 
     int                  GetPlayerTeamScore();
     List<MissionInfo>& GetMissionList() { return missions; }
+    List<MissionInfo>& GetStoryMissionList() { return story_missions; }
+    const FS_CampaignMission* FindStoryMissionData(int32 Id) const;
     List<Combatant>& GetCombatants() { return combatants; }
     List<CombatZone>& GetZones() { return zones; }
     
@@ -276,6 +278,7 @@ protected:
     List<CombatZone>     zones;
     List<CampaignPlan>   planners;
     List<MissionInfo>    missions;
+    List<MissionInfo>    story_missions;
     List<TemplateList>   templates;
     List<CombatAction>   actions;
     List<CombatEvent>    events;

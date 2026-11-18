@@ -45,7 +45,7 @@ FText GetProductionStatus(const FSSWProductionStock* Stock)
     if (!Stock) return INVTEXT("NO LIVE DATA");
     if (Stock->RemainingSeconds > 0) return INVTEXT("PRODUCING");
     if (Stock->GetTonnes(FName(TEXT("Finished Goods Storage"))) > 0) return INVTEXT("OUTPUT READY");
-    return INVTEXT("AWAITING ORE");
+    return INVTEXT("AWAITING MATERIALS");
 }
 
 class SProductionRow : public SMultiColumnTableRow<FFacilityPtr>
@@ -145,7 +145,9 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                 {
                     Minerals.Reset();
                     for (const auto& Input : Recipe.Inputs)
-                        Minerals.Add(FText::Format(INVTEXT("{0} t {1}"), FText::AsNumber(Input.Quantity * Input.UnitTonnes), FText::FromName(Input.Item)));
+                        Minerals.Add(Input.bWholeUnits
+                            ? FText::Format(INVTEXT("{0} UNITS {1} ({2} T)"),FText::AsNumber(Input.Quantity),FText::FromName(Input.Item),FText::AsNumber(Input.Quantity*Input.UnitTonnes))
+                            : FText::Format(INVTEXT("{0} T {1}"),FText::AsNumber(Input.Quantity*Input.UnitTonnes),FText::FromName(Input.Item)));
                 }
                 RecipeLabels->Add(Name, FRecipeLabels{
                     FText::Format(INVTEXT("{0} t: {1}"), FText::AsNumber(Recipe.InputTonnes),
@@ -293,6 +295,10 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                         Site.bSurface ? INVTEXT("SURFACE") : INVTEXT("ORBITAL")));
                     Lines.Add(FText::Format(INVTEXT("MAX STORAGE  {0} T  |  {1}"),
                         FText::AsNumber(Site.CapacityTonnes), GetProductionStatus(Stock)));
+                    Lines.Add(FText::Format(INVTEXT("SERVICE {0} | INSTALL {1} CR + {2} CR/RUN | MAX {3} RUNS"),
+                        FText::FromName(Site.ServiceProfile),FText::AsNumber(Site.InstallationFeeCredits),FText::AsNumber(Site.PerRunFeeCredits),FText::AsNumber(Site.MaximumPlayerRuns)));
+                    Lines.Add(FText::Format(INVTEXT("PLAYER MATERIALS {0}% | BATCH TIME {1}%"),
+                        FText::AsNumber(Site.PlayerMaterialMultiplier*100),FText::AsNumber(Site.PlayerTimeMultiplier*100)));
                     if (Recipe)
                     {
                         Lines.Add(FText::Format(INVTEXT("INPUT PER BATCH  {0}"), Recipe->Minerals));

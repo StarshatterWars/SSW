@@ -27,8 +27,10 @@ public:
     static TSubclassOf<ABeamWeaponActor> ClassForWeapon(const FString& Name);
     static TSubclassOf<ABeamWeaponActor> BlueprintClassForWeapon(const FString& Name);
     static FString BlueprintPathForWeapon(const FString& Name);
-    void BeginSimulationBeam(const FString& Name);
-    void SetPresentationClock(bool bPaused,float Dilation);
+    virtual void BeginSimulationBeam(const FString& Name);
+    virtual void SetPresentationClock(bool bPaused,float Dilation);
+    // Presentation metadata from an authoritative, real asteroid intersection.
+    virtual void SetMiningContact(bool bContact, FName Mineral, FName Crystal) {}
     virtual void OnConstruction(const FTransform& Transform) override;
 
 
@@ -39,10 +41,10 @@ public:
 
     /** Update the beam endpoints. Called every frame by the weapon sim for continuous beams. */
     UFUNCTION(BlueprintCallable, Category = "Beam")
-    void SetBeamPoints(FVector Start, FVector End);
+    virtual void SetBeamPoints(FVector Start, FVector End);
 
     UFUNCTION(BlueprintCallable, Category = "Beam")
-    void SetBeamActive(bool bActive);
+    virtual void SetBeamActive(bool bActive);
 
     UFUNCTION(BlueprintCallable, Category = "Beam")
     void SetBeamColor(FLinearColor Color);

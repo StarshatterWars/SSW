@@ -11,5 +11,6 @@ public class StarshatterWarsTarget : TargetRules
 		DefaultBuildSettings = BuildSettingsVersion.Latest;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_6;
 		ExtraModuleNames.Add("StarshatterWars");
+        PreBuildSteps.Add("powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"$(ProjectDir)/Script/Update-BuildVersion.ps1\" -ProjectRoot \"$(ProjectDir)\"");
 	}
 }

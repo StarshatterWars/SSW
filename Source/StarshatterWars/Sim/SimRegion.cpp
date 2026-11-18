@@ -21,6 +21,8 @@
 #include "AsteroidFieldLayout.h"
 #include "Sim.h"
 #include "MissionEvent.h"
+#include "MiningCrystalCatalog.h"
+#include "MiningCrystalEquipment.h"
 
 // Core world types:
 #include "StarSystem.h"
@@ -799,6 +801,7 @@ void SimRegion::DamageShips()
         if (!Shot || IsDeadShot(Shot)) continue;
         if (Shot->GetDesign()->IsMiningLaser())
         {
+            Shot->SetMiningContact(false);
             if (!Shot->IsArmed() || !Shot->IsBeam()) continue;
             const FVector Start = Shot->GetOrigin();
             const FVector Segment = Shot->GetLocation() - Start;
@@ -826,16 +829,32 @@ void SimRegion::DamageShips()
             if (Deposit)
             {
                 Shot->SetBeamPoints(Start, Start + Direction * Nearest);
+                const auto& ContactResource=Deposit->GetResource();
+                Shot->SetMiningContact(ContactResource.AmountTonnes>0,
+                    FName(*StaticEnum<ESSWMineral>()->GetNameStringByValue(static_cast<int64>(ContactResource.Mineral))));
                 if (Ship* Miner = const_cast<Ship*>(Shot->Owner()); Miner && ships.contains(Miner) && !Miner->IsDead() && Miner->Design())
                 {
                     const auto& Resource = Deposit->GetResource();
-                    const double Rate = Shot->GetDesign()->MiningTonnesPerSecond;
+                    Sim* Simulation=Sim::GetSim();
+                    const FName Hull=Miner->GetCargoInventoryKey();
+                    if(Simulation && Simulation->HasSimulationAuthority() && Shot->GetMiningCrystal().IsNone())
+                    {
+                        const FName Fitted=FMiningCrystalService::FitConfigured(Simulation->GetEconomy(),Hull,
+                            FName(UTF8_TO_TCHAR(Miner->DesignName())),Resource.Mineral);
+                        Shot->SetMiningCrystal(Fitted);
+                    }
+                    // No fitted crystal is exactly the existing Wep.def extraction rate.
+                    // An explicit compatible focusing crystal is evaluated by the authority.
+                    const double Multiplier=Simulation?FMiningCrystalService::Multiplier(Simulation->ReadEconomy(),Hull,Shot->GetMiningCrystal(),Resource.Mineral):1;
+                    const double Rate = Shot->GetDesign()->MiningTonnesPerSecond * Multiplier;
                     const double Seconds = Shot->MiningStepSeconds();
                     double& Loaded = OreLoadedThisFrame.FindOrAdd(Miner);
                     const double Intake = FMath::Max(0.0, Miner->Design()->CargoCapacity.LoadTonnesPerSecond * Seconds - Loaded);
                     const double Accepted = Miner->LoadMinedOre(Resource.GetMineralName().ToString(),
                         FMath::Min3(Resource.AmountTonnes, Rate * Seconds, Intake));
                     Deposit->ExtractOre(Accepted);
+                    if(Simulation && Simulation->HasSimulationAuthority())
+                        FMiningCrystalService::RecordExtraction(Simulation->GetEconomy(),Hull,Shot->GetMiningCrystal(),Accepted);
                     Loaded += Accepted;
                 }
             }

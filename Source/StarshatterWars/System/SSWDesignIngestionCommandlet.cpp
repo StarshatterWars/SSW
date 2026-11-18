@@ -368,6 +368,12 @@ USSWDesignIngestionCommandlet::USSWDesignIngestionCommandlet()
 int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
 {
 #if WITH_EDITOR
+    if (FParse::Param(*Params, TEXT("ConvertMissionJson")))
+    {
+        auto* Context = NewObject<USSWGameInstance>();
+        auto* Data = NewObject<UStarshatterGameDataSubsystem>(Context);
+        return Data->ConvertPlayableMissionsToJson() ? 0 : 1;
+    }
     if(FParse::Param(*Params,TEXT("PreparePropulsionMeshes")))
     {
         auto* Catalog=NewObject<UDataTable>();
@@ -781,6 +787,13 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
         if (!CheckTable(*Table.Table, Table.Name, Table.bAllowEmpty))
             return 1;
 
+
+    if (FParse::Param(*Params, TEXT("WriteUpdatedMissionTables")))
+    {
+        const TSet<FString> Requested={TEXT("DT_Campaign"),TEXT("DT_Cutscene"),TEXT("DT_SingleMissions"),TEXT("DT_StoryMissions"),TEXT("DT_MultiplayerMissions"),TEXT("DT_ShipDesign")};
+        for (const auto& Table:Tables)
+            if (Requested.Contains(Table.Name) && !SaveOutputTable(*Table.Table,Table.Name,false)) return 2;
+    }
     if (FParse::Param(*Params, TEXT("WriteStaged")))
     {
         for (const auto& Table : Tables)

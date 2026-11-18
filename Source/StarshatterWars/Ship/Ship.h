@@ -492,6 +492,14 @@ public:
         ScriptedContactSpeed = Speed;
         bScriptedMotionLastFrame = true;
     }
+    // End/hold a scripted industrial movement task without leaving arcade drift
+    // or an old angular/throttle request for the ordinary controller to resume.
+    void StopScriptedMotion()
+    {
+        velocity=FVector::ZeroVector;arcade_velocity=FVector::ZeroVector;
+        SetAngularVelocity(FVector::ZeroVector);SetThrottleRequest(0);
+        SetScriptedContactSpeed(0);
+    }
     void SetNativeCockpitRequested(bool Requested) {bNativeCockpitRequested=Requested;}
     bool IsNativeCockpitRequested() const {return bNativeCockpitRequested;}
     void BindNativePresentation(AShipActor* Actor);
@@ -570,6 +578,7 @@ public:
     List<LandingGear>  landing_gear;
 
 protected:
+    bool RestoreCourierPackageFromInventory(const FEconomyState& State);
     int               CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** wep = 0);
     WeaponGroup* FindWeaponGroup(const char* name);
 

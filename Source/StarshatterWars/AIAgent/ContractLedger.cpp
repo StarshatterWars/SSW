@@ -1,11 +1,42 @@
 #include "ContractLedger.h"
+#include "TransactionAI.h"
+
+bool FContractLedger::CanCapture(const FEconomyState& State, const FContractAccounts& Accounts)
+{
+    for (const auto& Account : Accounts)
+    {
+        if (Account.Key.IsNone() || Account.Value.Credits < 0 || State.Wallets.FindRef(Account.Key) < 0) return false;
+        for (const auto& Station : Account.Value.StationStock)
+            for (const auto& Item : Station.Value)
+                if (Station.Key.IsNone() || Item.Key.IsNone() || !FMath::IsFinite(Item.Value) || Item.Value < 0 || Item.Value > 1.e15) return false;
+    }
+    return true;
+}
 
 void FContractLedger::Capture(FEconomyState& State, const TMap<FName, FContractTransaction>& Contracts, const FContractAccounts& Accounts)
 {
+    // Capture is an all-account boundary: malformed legacy state must not partially overwrite live wallets.
+    if (!CanCapture(State, Accounts)) return;
+    FGuid Reference;
+    FName Reason(TEXT("Contract settlement and escrow"));
+    int32 Changed = 0;
+    for (const auto& Pair : Contracts)
+    {
+        const auto* Old = State.Contracts.Find(Pair.Key); const auto& Current = Pair.Value;
+        if (Old && Old->State == Current.State && Old->HighBid == Current.HighBid && Old->HighBidder == Current.HighBidder &&
+            Old->Acceptor == Current.Acceptor && Old->bSellerClaimed == Current.bSellerClaimed && Old->bBuyerClaimed == Current.bBuyerClaimed) continue;
+        ++Changed; Reference = Current.Id;
+        Reason = Current.State == EContractState::Completed ? FName(TEXT("Contract completed"))
+            : Current.State == EContractState::Failed ? FName(TEXT("Contract failed"))
+            : Current.State == EContractState::Expired ? FName(TEXT("Contract expired"))
+            : Current.State == EContractState::InProgress ? FName(TEXT("Contract acceptance and collateral"))
+            : Current.HighBid > 0 ? FName(TEXT("Contract auction bid and settlement")) : FName(TEXT("Contract publication and escrow"));
+    }
+    if (Changed != 1) { Reference.Invalidate(); Reason = TEXT("Contract settlement and escrow"); }
     State.Contracts = Contracts;
     for (const auto& Account : Accounts)
     {
-        State.Wallets.Add(Account.Key, Account.Value.Credits);
+        TransactionAI::ReconcileExternalBalance(State, Account.Key, Account.Value.Credits, Reason, TEXT("Contract escrow"), EWalletTransactionCategory::Contract, Reference);
         for (const auto& Station : Account.Value.StationStock)
         {
             const FName Key(*(TEXT("ContractInventory/") + Account.Key.ToString() + TEXT("/") + Station.Key.ToString()));

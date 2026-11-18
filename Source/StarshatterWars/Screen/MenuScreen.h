@@ -10,6 +10,7 @@
 // ------------------------------------------------------------
 
 class UMenuDlg;
+class UModEditorDlg;
 class UExitDlg;
 class UConfirmDlg;
 
@@ -79,7 +80,13 @@ public:
     // Dialog routing API
     // ------------------------------------------------------------
 
+    static bool HasLivePlayerSession();
+    static bool CanOpenMainMenu();
+    static bool MenuAccessForState(bool bHasLivePlayer, bool bDocked, bool bNetworked)
+    { return !bHasLivePlayer || (bDocked && !bNetworked); }
     void ShowMenuDlg();
+    void ShowModEditorDlg();
+    void OpenModMissionTools();
     void StartFreeFlight();
     void StartTestMission(bool bResume = false);
     bool OpenQueuedAssignment(int32 MissionId, bool bFromFreeFlight);
@@ -272,6 +279,8 @@ protected:
 
     UPROPERTY()
     TObjectPtr<UMenuDlg> MenuDlg;
+    UPROPERTY(Transient) TObjectPtr<UModEditorDlg> ModEditorDlg;
+    bool bModMissionToolsActive=false;
 
     UPROPERTY()
     TObjectPtr<UExitDlg> ExitDlg;

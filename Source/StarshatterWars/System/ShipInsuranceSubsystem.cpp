@@ -1,4 +1,6 @@
 #include "ShipInsuranceSubsystem.h"
+#include "TransactionAI.h"
+#include "OwnedHullCondition.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "ShipDesignRegistry.h"
@@ -86,17 +88,28 @@ void UShipInsuranceSubsystem::RefreshAssignment()
     auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
     auto* Simulation = Sim::GetSim();
     auto* Craft = Simulation ? Simulation->GetPlayerShip() : nullptr;
-    if (!Players || !Craft || !Craft->Design()) return;
+    if (!Players || !Craft || !Craft->Design() || !Simulation->HasSimulationAuthority() || Simulation->IsNetworked()) return;
     auto& Pilot = Players->GetMutablePlayerInfo();
     const FName Design(UTF8_TO_TCHAR(Craft->Design()->name));
     auto* Current = Pilot.HangarShips.FindByPredicate([&Pilot](const auto& Item)
         { return Item.HullId == Pilot.AssignedHangarHull; });
-    if (Current && (Craft->IsDead() || Craft->IsDying()))
+    const bool FreeFlight=Simulation->GetMission() && Simulation->GetMission()->IsFreeFlight();
+    if (Current && FOwnedHullCondition::IsOwnedLive(*Current,Pilot.AssignedHangarHull,Design,Craft->GetCargoInventoryKey(),FreeFlight))
+        FOwnedHullCondition::Capture(*Craft,*Current);
+    if (Craft->IsDead() || Craft->IsDying())
     {
-        FText Ignored;
-        SettleLoss(Current->HullId, Ignored);
+        // Do not attribute a newly provisioned/loaner death to a merely selected owned hull.
+        if (Current && (Current->bAssigned || FOwnedHullCondition::IsOwnedLive(*Current,Pilot.AssignedHangarHull,
+            Design,Craft->GetCargoInventoryKey(),FreeFlight)))
+        { FText Ignored; SettleLoss(Current->HullId,Ignored); }
         return;
     }
+    // Mission-assigned craft never inherit an owned hull solely because their designs match.
+    if (!FreeFlight && Current && !Current->bAssigned) Current=nullptr;
+    if (FreeFlight)
+        if (auto* Selected=Pilot.HangarShips.FindByPredicate([&](const auto& Row)
+            {return Row.HullId==Pilot.SelectedHangarHull && !Row.bAssigned && !Row.bLost && Row.Design==Design;}))
+        { Current=Selected; Pilot.AssignedHangarHull=Selected->HullId; }
     if (!Current || Current->Design != Design || Current->bLost)
     {
         FPlayerHangarShip NewShip;
@@ -108,7 +121,10 @@ void UShipInsuranceSubsystem::RefreshAssignment()
         Pilot.HangarShips.Add(NewShip);
         Current = &Pilot.HangarShips.Last();
     }
+    const bool RestoreCondition=FreeFlight && !Current->bAssigned &&
+        Craft->GetCargoInventoryKey()!=FName(*(TEXT("Ship/")+Current->HullId.ToString(EGuidFormats::Digits)));
     Craft->BindCargoInventory(Current->HullId);
+    if (RestoreCondition) { bDockedConditionSaved=false; LastConditionHull=Current->HullId; }
     if (Craft->GetFlightPhase() <= EOPSMode::ALERT)
     {
         if (bRestoreLoadout && !Current->LoadoutStations.IsEmpty())
@@ -179,6 +195,15 @@ void UShipInsuranceSubsystem::RefreshAssignment()
                 : TOptional<FComponentDesign>();
             Current->InstalledComponentValue += Variant ? Variant->BaseCost : Part->Cost();
         }
+    }
+    if (FreeFlight && !Current->bAssigned)
+    {
+        if (RestoreCondition)
+        {
+            if (Current->bHasCondition) FOwnedHullCondition::Apply(*Craft,*Current);
+            else FOwnedHullCondition::ApplyPristine(*Craft); // Backward-compatible/new hull baseline.
+        }
+        FOwnedHullCondition::Capture(*Craft,*Current);
     }
     Current->Name = UTF8_TO_TCHAR(Craft->GetObserverName());
     if (Craft->GetRegion()) Current->Location = UTF8_TO_TCHAR(Craft->GetRegion()->GetName());
@@ -268,8 +293,16 @@ bool UShipInsuranceSubsystem::SettleLoss(FGuid Hull, FText& Result)
     auto& Economy = Players->GetEconomy();
     // NPC underwriter capitalization, once per career. Claims still use normal wallet transfers.
     if (!Economy.InitializedMarkets.Contains(TEXT("Insurance fund")))
-    { Economy.Wallets.FindOrAdd(TEXT("Insurance fund")) += MaximumValue; Economy.InitializedMarkets.Add(TEXT("Insurance fund")); }
-    if (!FEconomyLedger::Pay(Economy, TEXT("Insurance fund"), FEconomyLedger::Pilot(), Payout, Hull, TEXT("Insurance claim"))) return false;
+    {
+        const int64 Fund = Economy.Wallets.FindRef(TEXT("Insurance fund"));
+        if (Fund < 0 || Fund > MAX_int64 - MaximumValue ||
+            !TransactionAI::ReconcileExternalBalance(Economy, TEXT("Insurance fund"), Fund + MaximumValue,
+                TEXT("Insurance fund capitalization"), TEXT("NPC underwriter reserves"), EWalletTransactionCategory::OpeningBalance))
+        { Pilot = Previous; Result = INVTEXT("The insurance fund is unavailable. No claim was charged or settled."); return false; }
+        Economy.InitializedMarkets.Add(TEXT("Insurance fund"));
+    }
+    if (!FEconomyLedger::Pay(Economy, TEXT("Insurance fund"), FEconomyLedger::Pilot(), Payout, Hull, TEXT("Insurance claim")))
+    { Pilot = Previous; Result = INVTEXT("The claim could not be paid. No policy or wallet changes were kept."); return false; }
     Entry->bLost = true;
     Entry->Insurance.bSettled = true;
     if (!Players->SaveActivePlayerProgress())
@@ -286,6 +319,7 @@ bool UShipInsuranceSubsystem::IsSelected(FGuid Hull) const
 
 bool UShipInsuranceSubsystem::SelectHull(FGuid Hull, FText& Result)
 {
+    RefreshAssignment();
     auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
     const auto* Entry = FindShip(Hull);
     if (!Players || !CanModifyHull(Hull) || !Entry || Entry->bLost)
@@ -311,6 +345,7 @@ bool UShipInsuranceSubsystem::SelectHull(FGuid Hull, FText& Result)
     Players->GetMutablePlayerInfo().SelectedHangarHull = Hull;
     if (!Players->SaveActivePlayerProgress())
     { Players->GetMutablePlayerInfo() = Previous; Result = INVTEXT("Could not save hull selection."); return false; }
+    RefreshAssignment();
     Result = INVTEXT("Hull selected for Free Verse. Missions use their assigned craft.");
     return true;
 }
@@ -382,11 +417,18 @@ bool UShipInsuranceSubsystem::FitComponent(FGuid Hull, int32 Slot, int32 Level, 
     if (GetBalance() < Price)
     { Result = INVTEXT("Insufficient credits for this refit."); return false; }
     const auto Previous = Pilot;
+    FPlayerHangarShip PreviousCondition; FOwnedHullCondition::Capture(*Craft,PreviousCondition);
+    SimComponent* NativePart=Components[Fitted.ComponentIndex];
+    const SimComponent PreviousPart(*NativePart);
     if (!FEconomyLedger::Pay(Players->GetEconomy(), FEconomyLedger::Pilot(), TEXT("Shipyard"), Price, FGuid::NewGuid(), TEXT("Component refit"))) return false;
     Entry->Components[Slot].Level = Level;
     Entry->Components[Slot].ItemId = FGuid::NewGuid();
-    if (!Players->SaveActivePlayerProgress())
-    { Pilot = Previous; Result = INVTEXT("Could not save this fitting."); return false; }
+    Entry->Components[Slot].bHasCondition=true;
+    Entry->Components[Slot].ConditionPercent=100;
+    Entry->Components[Slot].ConditionStatus=static_cast<int32>(SYSTEM_STATUS::NOMINAL);
+    Entry->Components[Slot].MaintenanceSeconds=0;
+    Entry->Components[Slot].JerryCount=0;
+    Entry->Components[Slot].SpareCount=Variant->Spares;
     ComponentDesign Native;
     Native.name = TCHAR_TO_UTF8(*Variant->Name);
     Native.abrv = TCHAR_TO_UTF8(*Variant->Abbrev);
@@ -397,7 +439,13 @@ bool UShipInsuranceSubsystem::FitComponent(FGuid Hull, int32 Slot, int32 Level, 
     Native.replace_time = Variant->ReplaceTime;
     Native.spares = Variant->Spares;
     Native.affects = Variant->Affects;
-    Components[Fitted.ComponentIndex]->InstallDesign(Native);
+    NativePart->InstallDesign(Native);
+    if (!Entry->bAssigned) FOwnedHullCondition::Capture(*Craft,*Entry);
+    if (!Players->SaveActivePlayerProgress())
+    {
+        Pilot=Previous; *NativePart=PreviousPart; FOwnedHullCondition::Apply(*Craft,PreviousCondition);
+        Result=INVTEXT("Could not save this fitting. Component, condition and credits restored."); return false;
+    }
     Result = INVTEXT("Component refitted.");
     RefreshAssignment();
     return true;
@@ -434,4 +482,33 @@ bool UShipInsuranceSubsystem::RememberLoadout(const TArray<int32>& Stations, con
     if (!Players->SaveActivePlayerProgress())
     { Pilot = Previous; return false; }
     return true;
+}
+
+void UShipInsuranceSubsystem::Tick(float DeltaTime)
+{
+    ConditionElapsed+=DeltaTime;
+    if (ConditionElapsed<0.5f)return;
+    ConditionElapsed=0;
+    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    auto* Simulation=Sim::GetSim();
+    auto* Craft=Simulation?Simulation->GetPlayerShip():nullptr;
+    if (!Players || !Craft || !Craft->Design() || !Simulation->HasSimulationAuthority() || Simulation->IsNetworked())return;
+    const auto& View=Players->GetPlayerInfo();
+    const auto* Eligible=View.HangarShips.FindByPredicate([&](const auto& Row){return FOwnedHullCondition::IsOwnedLive(Row,
+        View.AssignedHangarHull,FName(UTF8_TO_TCHAR(Craft->Design()->name)),Craft->GetCargoInventoryKey(),
+        Simulation->GetMission() && Simulation->GetMission()->IsFreeFlight());});
+    if (!Eligible) { bDockedConditionSaved=false; LastConditionHull.Invalidate(); return; }
+    auto& Pilot=Players->GetMutablePlayerInfo();
+    auto* Owned=Pilot.HangarShips.FindByPredicate([&](const auto& Row){return Row.HullId==View.AssignedHangarHull;});
+    const bool Docked=Craft->GetFlightPhase()<=EOPSMode::ALERT && !Craft->IsDead() && !Craft->IsDying();
+    if (LastConditionHull!=Owned->HullId) {LastConditionHull=Owned->HullId;bDockedConditionSaved=false;}
+    if (!Docked)bDockedConditionSaved=false;
+    if (Docked && !bDockedConditionSaved)
+    {
+        const auto Previous=Pilot;
+        FOwnedHullCondition::Capture(*Craft,*Owned);
+        if (Players->SaveActivePlayerProgress())bDockedConditionSaved=true;
+        else Pilot=Previous; // Retried while docked; never discard damage or charge anything.
+    }
+    else FOwnedHullCondition::Capture(*Craft,*Owned);
 }

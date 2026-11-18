@@ -5,6 +5,7 @@
 class FContractLedger
 {
 public:
+    static bool CanCapture(const FEconomyState&, const FContractAccounts&);
     static void Capture(FEconomyState&, const TMap<FName, FContractTransaction>&, const FContractAccounts&);
     static void Restore(const FEconomyState&, TMap<FName, FContractTransaction>&, FContractAccounts&);
 };

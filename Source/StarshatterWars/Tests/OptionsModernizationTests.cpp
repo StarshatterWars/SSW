@@ -1,6 +1,8 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
 #include "OptionsScreen.h"
+#include "StarshatterControlsSettings.h"
+#include "MissionUIStyle.h"
 #include "StarshatterSettingsSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "KeyMap.h"
@@ -81,7 +83,7 @@ bool FOptionsModernizationTest::RunTest(const FString& Parameters)
     auto Widget=Screen->TakeWidget(); Widget->SlatePrepass();
     TestNotNull(TEXT("Modern shell built"),Screen->ModernShell.Get());
     TestTrue(TEXT("Original switcher retained"),Switcher==Screen->OptionsSwitcher);
-    TestEqual(TEXT("Six settings pages plus native Mods and Credits, no duplication"),Switcher->GetNumWidgets(),8);
+    TestEqual(TEXT("Six settings pages plus Credits, no duplication"),Switcher->GetNumWidgets(),7);
     for (UUserWidget* Page:Pages) if(Page!=Screen->ModsDlg) TestTrue(TEXT("Original settings page identity retained"),Switcher->GetChildIndex(Page)>=0);
     TestEqual(TEXT("Obsolete Mods placeholder removed"),Switcher->GetChildIndex(Screen->ModsDlg),INDEX_NONE);
     TestNotNull(TEXT("Red back arrow"),Screen->BtnCancel.Get());TestNotNull(TEXT("Green apply arrow"),Screen->BtnSave.Get());
@@ -93,15 +95,9 @@ bool FOptionsModernizationTest::RunTest(const FString& Parameters)
     Screen->FocusTabByDelta(-1);TestTrue(TEXT("Reverse tab navigation"),Switcher->GetActiveWidget()==Pages[2]);
     Screen->ShowCreditsDlg();TestTrue(TEXT("Credits retained"),Switcher->GetActiveWidget()==Screen->CreditsPage);
     Screen->ShowModDlg();
-    TestTrue(TEXT("Mods tab opens native empty page"), Switcher->GetActiveWidget()==Screen->ModsPage);
-    TArray<UWidget*> ModWidgets;
-    UWidgetTree::GetChildWidgets(Screen->ModsPage, ModWidgets);
-    UTextBlock* EmptyMods = nullptr;
-    for (UWidget* ModWidget : ModWidgets)
-        if (ModWidget->GetName().StartsWith(TEXT("Options_ModsEmptyState")))
-            EmptyMods = Cast<UTextBlock>(ModWidget);
-    TestNotNull(TEXT("Mods empty-state label exists"),EmptyMods);
-    if(EmptyMods) TestEqual(TEXT("Mods page has no fabricated entries"),EmptyMods->GetText().ToString(),FString(TEXT("No mods available.")));
+    TestTrue(TEXT("Deprecated Mods shortcut safely selects Audio"),Switcher->GetActiveWidget()==Screen->AudioDlg);
+    TestNull(TEXT("Options creates no Mods management page"),Screen->ModsPage.Get());
+    TestTrue(TEXT("Mods tab is absent from Options"),Screen->BtnMods->GetVisibility()==ESlateVisibility::Collapsed);
     Screen->ShowGameDlg();TestTrue(TEXT("Leaving mods preserves authored game page"),Switcher->GetActiveWidget()==Pages[2]);
     Screen->ShowAudDlg();
     FString CaptureDir;
@@ -118,10 +114,10 @@ bool FOptionsModernizationTest::RunTest(const FString& Parameters)
         Renderer.DrawWidget(Widget,FVector2D(1920,1080));FlushRenderingCommands();
         if (GShaderCompilingManager) GShaderCompilingManager->FinishAllCompilation();
         FlushRenderingCommands();
-        const TCHAR* Names[]={TEXT("Audio"),TEXT("Controls"),TEXT("Game"),TEXT("Joystick"),TEXT("Keyboard"),TEXT("Mods"),TEXT("Video"),TEXT("Credits")};
-        for (int32 Index=0;Index<8;++Index)
+        const TCHAR* Names[]={TEXT("Audio"),TEXT("Controls"),TEXT("Game"),TEXT("Joystick"),TEXT("Keyboard"),TEXT("Video"),TEXT("Credits")};
+        for (int32 Index=0;Index<7;++Index)
         {
-            for(int32 Step=0;Screen->ActiveTabIndex!=Index && Step<8;++Step) Screen->FocusTabByDelta(1);
+            for(int32 Step=0;Screen->ActiveTabIndex!=Index && Step<7;++Step) Screen->FocusTabByDelta(1);
             Widget->SlatePrepass();
             auto* Target=Renderer.DrawWidget(Widget,FVector2D(1920,1080));FlushRenderingCommands();
             TArray<FColor> Pixels;FReadSurfaceDataFlags ReadFlags(RCM_UNorm);ReadFlags.SetLinearToGamma(false);Target->GameThread_GetRenderTargetResource()->ReadPixels(Pixels,ReadFlags);
@@ -132,4 +128,23 @@ bool FOptionsModernizationTest::RunTest(const FString& Parameters)
     Screen->RemoveFromParent();
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FControlsLiveApplyTest,"Starshatter.Options.LiveControlsApply",
+    EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FControlsLiveApplyTest::RunTest(const FString&)
+{
+    auto* Settings=UStarshatterControlsSettings::Get();
+    const auto Original=Settings->GetControlsConfig();
+    ON_SCOPE_EXIT {Settings->SetControlsConfig(Original);};
+    Settings->SetControlModelEnum(EStarshatterControlModel::Hybrid);
+    Settings->SetMouseSensitivity(39);Settings->SetJoystickSensitivity(8);
+    Settings->ApplyToRuntimeControls(nullptr);
+    TestTrue(TEXT("Live apply retains selected control scheme"),Settings->GetControlsConfig().ControlModel==EStarshatterControlModel::Hybrid);
+    TestEqual(TEXT("Live apply retains mouse edits"),Settings->GetControlsConfig().MouseSensitivity,39);
+    TestEqual(TEXT("Live apply retains joystick edits"),Settings->GetControlsConfig().JoystickSensitivity,8);
+    const auto& Style=MissionUIStyle::StandaloneSliderStyle();
+    TestTrue(TEXT("All standalone slider tracks are thick"),Style.BarThickness>=8.f);
+    TestTrue(TEXT("All slider thumbs use the wide shared size"),Style.NormalThumbImage.ImageSize.X>=20.f);
+    return true;
+}
+
 #endif

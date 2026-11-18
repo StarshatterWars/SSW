@@ -784,7 +784,7 @@ bool PlayerCharacter::SaveToSubsystem(UObject* WorldContext)
     P->ToPlayerInfo(Info);
 
     // Persist (force because legacy often expects immediate write)
-    const bool bOk = PlayerSS->SavePlayer(true);
+    const bool bOk = PlayerSS->SaveActivePlayerProgress();
     if (bOk)
         P->bDirty = false;
 

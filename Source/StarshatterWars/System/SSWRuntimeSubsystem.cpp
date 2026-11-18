@@ -1867,7 +1867,8 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
                         ProjectileVisuals.Add(Shot,Beam);
                     }
                 }
-                if(Beam){Beam->SetPresentationClock(bPaused,TimeCompression);Beam->SetBeamPoints(Start,Position);}
+                if(Beam){Beam->SetPresentationClock(bPaused,TimeCompression);Beam->SetBeamPoints(Start,Position);
+                    Beam->SetMiningContact(Shot->HasMiningContact(),Shot->GetMiningContactMineral(),Shot->GetMiningCrystal());}
                 else DrawDebugLine(World,Start,Position,FColor::Cyan,false,0.0f,0,2.0f);
             }
             else if (Shot->GetDesign() && Shot->GetDesign()->graphic_type == Graphic::BOLT)

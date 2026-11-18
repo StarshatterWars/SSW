@@ -2,6 +2,10 @@
 #include "ShipSystemIcon.h"
 #include "StationServices.h"
 #include "EconomyRuntime.h"
+#include "StarshatterPlayerSubsystem.h"
+#include "Ship.h"
+#include "Misc/DateTime.h"
+#include "Widgets/SOverlay.h"
 
 #include "CargoCatalogSubsystem.h"
 #include "Engine/GameInstance.h"
@@ -181,6 +185,32 @@ namespace
         FOfferPtr Offer;
     };
 
+    struct FMarketRecord
+    {
+        FGuid Id;FString Item,Kind,Status;double Quantity=0,Price=0;int64 Credits=0,Time=0,Sequence=0;
+    };
+    using FMarketRecordPtr=TSharedPtr<FMarketRecord>;
+    class SMarketRecordRow:public SMultiColumnTableRow<FMarketRecordPtr>
+    {
+    public:
+        SLATE_BEGIN_ARGS(SMarketRecordRow){} SLATE_ARGUMENT(FMarketRecordPtr,Record) SLATE_END_ARGS()
+        void Construct(const FArguments& Args,const TSharedRef<STableViewBase>& Owner)
+        {Record=Args._Record;SMultiColumnTableRow<FMarketRecordPtr>::Construct(FSuperRowType::FArguments().Style(&MissionUIStyle::FlightTableRowStyle()),Owner);}
+        TSharedRef<SWidget> GenerateWidgetForColumn(const FName& Column) override
+        {
+            FText Text;
+            if(Column=="Item")Text=FText::FromString(Record->Item);
+            else if(Column=="Kind")Text=FText::FromString(Record->Kind);
+            else if(Column=="Quantity")Text=FText::AsNumber(Record->Quantity);
+            else if(Column=="Price")Text=FText::AsNumber(Record->Price);
+            else if(Column=="Credits")Text=FText::AsNumber(Record->Credits);
+            else if(Column=="Status")Text=FText::FromString(Record->Status);
+            return SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(Text.ToUpper()).ToolTipText(Text)
+                .Margin(FMargin(8,5)).OverflowPolicy(ETextOverflowPolicy::Ellipsis)
+                .Justification(Column=="Quantity" || Column=="Price" || Column=="Credits"?ETextJustify::Right:ETextJustify::Left);
+        }
+    private:FMarketRecordPtr Record;
+    };
     struct FMarketTable
     {
         TArray<FOfferPtr> Offers;
@@ -196,6 +226,109 @@ namespace
         FGuid BuyReceipt=FGuid::NewGuid(),SellReceipt=FGuid::NewGuid();
         FText ServiceMessage;
         double NextTradeAt=0;
+        int32 View=0;
+        int64 LimitPrice=1;
+        FGuid SelectedOrder;
+        TArray<FMarketRecordPtr> Orders,History;
+        TWeakPtr<SListView<FMarketRecordPtr>> OrderList,HistoryList;
+        FName RecordSort="Time";
+        EColumnSortMode::Type RecordSortMode=EColumnSortMode::Descending;
+        void SortRecords()
+        {
+            const auto Less=[this](const FMarketRecordPtr& A,const FMarketRecordPtr& B)
+            {
+                const auto& L=*(RecordSortMode==EColumnSortMode::Descending?B:A);const auto& R=*(RecordSortMode==EColumnSortMode::Descending?A:B);
+                if(RecordSort=="Item")return L.Item<R.Item;
+                if(RecordSort=="Kind")return L.Kind<R.Kind;
+                if(RecordSort=="Quantity")return L.Quantity<R.Quantity;
+                if(RecordSort=="Price")return L.Price<R.Price;
+                if(RecordSort=="Credits")return L.Credits<R.Credits;
+                if(RecordSort=="Status")return L.Status<R.Status;
+                return L.Time!=R.Time?L.Time<R.Time:L.Sequence<R.Sequence;
+            };
+            Orders.StableSort(Less);History.StableSort(Less);
+            if(auto OrderWidget=OrderList.Pin())OrderWidget->RequestListRefresh();if(auto HistoryWidget=HistoryList.Pin())HistoryWidget->RequestListRefresh();
+        }
+        void RefreshRecords()
+        {
+            Orders.Reset();History.Reset();const auto* Simulation=Sim::GetSim();if(!Simulation)return;
+            const auto& State=Simulation->ReadEconomy();const FName Local=FEconomyRuntime::Warehouse(System,TEXT("NPC Market"),TEXT("Stock"));
+            const auto Name=[this](FName Item)->FString{for(const auto& Offer:Offers)if(FName(*Offer->Name)==Item)return Offer->DisplayName();return Item.ToString();};
+            for(const auto& Pair:State.MarketOrders)
+            {
+                const auto& Order=Pair.Value;if(Order.Owner!=FEconomyLedger::Pilot() || Order.Market!=Local)continue;
+                auto Row=MakeShared<FMarketRecord>();Row->Id=Order.Id;Row->Item=Name(Order.Item);Row->Kind=Order.Side==EMarketOrderSide::Buy?TEXT("BUY"):TEXT("SELL");
+                Row->Quantity=Order.Remaining;Row->Price=double(Order.UnitPrice);Row->Credits=Order.EscrowCredits;Row->Time=Order.CreatedUtc;Row->Sequence=Order.Sequence;
+                Row->Status=Order.State==EMarketOrderState::Open?TEXT("OPEN"):Order.State==EMarketOrderState::Filled?TEXT("FILLED"):Order.State==EMarketOrderState::Expired?TEXT("EXPIRED"):TEXT("CANCELLED");Orders.Add(Row);
+            }
+            int64 Sequence=0;
+            for(const auto& Entry:State.Journal)
+            {
+                ++Sequence;if(Entry.From!=FEconomyLedger::Pilot() && Entry.To!=FEconomyLedger::Pilot())continue;
+                auto Row=MakeShared<FMarketRecord>();Row->Id=Entry.Id;Row->Item=Entry.Item.IsNone()?TEXT("ï¿½"):Name(Entry.Item);Row->Kind=Entry.Reason.ToString();
+                Row->Quantity=Entry.Quantity;Row->Price=Entry.UnitPrice;Row->Credits=Entry.Credits;Row->Time=Entry.TimestampUtc;Row->Sequence=Sequence;
+                Row->Status=Entry.TimestampUtc>0?FDateTime::FromUnixTimestamp(Entry.TimestampUtc).ToString(TEXT("%Y-%m-%d %H:%M UTC")):TEXT("ï¿½");History.Add(Row);
+            }
+            SortRecords();
+            if(auto OrderWidget=OrderList.Pin())for(const auto& Row:Orders)if(Row->Id==SelectedOrder){OrderWidget->SetSelection(Row);break;}
+        }
+        bool CanManageOrder() const
+        {
+            const auto* Simulation=Sim::GetSim();const auto* Order=Simulation?Simulation->ReadEconomy().MarketOrders.Find(SelectedOrder):nullptr;
+            return FStationServices::IsDocked() && Order && Order->Owner==FEconomyLedger::Pilot() && Order->State==EMarketOrderState::Open;
+        }
+        void CrossNPC(FEconomyState& State,FGuid Id,int64 Ask,int64 Bid,int64 Now)
+        {
+            const auto* Found=State.MarketOrders.Find(Id);if(!Found || Found->State!=EMarketOrderState::Open)return;
+            const auto Order=*Found;const auto* NPC=State.Inventories.Find(Order.Market);if(!NPC)return;
+            const FName Owner=NPC->Owner;
+            double Count=0;int64 Price=0;const auto Side=Order.Side==EMarketOrderSide::Buy?EMarketOrderSide::Sell:EMarketOrderSide::Buy;
+            if(Order.Side==EMarketOrderSide::Buy && Ask>0 && Order.UnitPrice>=Ask)
+            {Price=Ask;Count=FMath::Min(Order.Remaining,FMath::FloorToDouble(FEconomyLedger::Available(State,Order.Market,Order.Item)));}
+            else if(Order.Side==EMarketOrderSide::Sell && Bid>0 && Order.UnitPrice<=Bid)
+            {
+                Price=Bid;Count=FMath::Min3(Order.Remaining,FMath::FloorToDouble(double(State.Wallets.FindRef(Owner))/Price),
+                    FMath::FloorToDouble(FMath::Max(0.0,NPC->CapacityTonnes-FEconomyLedger::Used(*NPC))/Order.UnitTonnes));
+            }
+            if(Count<=0)return;
+            FText Reason;const FGuid Counter=FEconomyLedger::PlaceMarketOrder(State,Owner,Order.Market,Order.Market,Order.Item,Side,Count,Order.UnitTonnes,Price,Now,Now+60,FGuid::NewGuid(),Reason);
+            FEconomyLedger::AdvanceMarketOrders(State,Now);
+            if(Counter.IsValid())
+                if(const auto* Remaining=State.MarketOrders.Find(Counter);Remaining && Remaining->State==EMarketOrderState::Open)
+                    FEconomyLedger::CancelMarketOrder(State,Owner,Counter,FGuid::NewGuid(),Reason);
+        }
+        void OrderAction(int32 Action)
+        {
+            if(!FStationServices::IsDocked() || (Action>=2 && !CanManageOrder()) || (Action<2 && (!Selected || Selected->bRestricted || Selected->Goods.Type==ECargoType::Passengers)))return;
+            auto* Simulation=Sim::GetSim();auto* Craft=Simulation?Simulation->GetPlayerShip():nullptr;
+            auto* Players=Instance.IsValid()?Instance->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;if(!Craft || !Players)return;
+            Craft->SyncCargoInventory();
+            const auto* Existing=Simulation->ReadEconomy().MarketOrders.Find(SelectedOrder);
+            const FName Item=Action<2?FName(*Selected->Name):Existing->Item;
+            const double Count=Action<2?Quantity:Existing->Remaining;
+            FStationMarketQuote AskQuote,BidQuote;
+            FStationServices::QuoteMarket(Instance.Get(),Item,Count,true,AskQuote);FStationServices::QuoteMarket(Instance.Get(),Item,Count,false,BidQuote);
+            const int64 Ask=FMath::IsFinite(AskQuote.UnitPrice) && AskQuote.UnitPrice>0?FMath::CeilToInt64(AskQuote.UnitPrice):0;
+            const int64 Bid=FMath::IsFinite(BidQuote.UnitPrice) && BidQuote.UnitPrice>0?FMath::FloorToInt64(BidQuote.UnitPrice):0;
+            auto& State=Simulation->GetEconomy();const auto Before=State;const int64 Now=FDateTime::UtcNow().ToUnixTimestamp();bool Changed=false;FGuid Id=SelectedOrder;
+            if(Action<2)
+            {
+                Id=FEconomyLedger::PlaceMarketOrder(State,FEconomyLedger::Pilot(),FEconomyRuntime::Warehouse(System,TEXT("NPC Market"),TEXT("Stock")),Craft->GetCargoInventoryKey(),Item,
+                    Action==0?EMarketOrderSide::Buy:EMarketOrderSide::Sell,Quantity,Selected->Goods.Size,LimitPrice,Now,Now+24*3600,FGuid::NewGuid(),ServiceMessage);
+                Changed=Id.IsValid();
+            }
+            else if(Action==2)Changed=FEconomyLedger::ModifyMarketOrder(State,FEconomyLedger::Pilot(),Id,LimitPrice,FGuid::NewGuid(),ServiceMessage);
+            else Changed=FEconomyLedger::CancelMarketOrder(State,FEconomyLedger::Pilot(),Id,FGuid::NewGuid(),ServiceMessage);
+            if(!Changed)return;
+            NextTradeAt=FPlatformTime::Seconds()+.35;
+            if(Action<3)CrossNPC(State,Id,Ask,Bid,Now);
+            FEconomyLedger::AdvanceMarketOrders(State,Now);
+            Craft->ApplyCargoInventoryToManifest();
+            if(!Players->SaveActivePlayerProgress())
+            {State=Before;Craft->ApplyCargoInventoryToManifest();ServiceMessage=INVTEXT("COULD NOT SAVE THE ORDER CHANGE. CARGO, CREDITS AND RESERVATIONS WERE RESTORED.");}
+            else {Craft->ApplyCargoInventoryToManifest();SelectedOrder=Id;ServiceMessage=INVTEXT("ORDER CHANGE SAVED. MARKETABLE ORDERS MATCH REAL STOCK AND FUNDED COUNTERPARTS; OPEN REMAINDERS STAY RESERVED.");}
+            RefreshLive();
+        }
 
         void UpdateQuotes()
         {
@@ -222,7 +355,7 @@ namespace
                         Offer->ProducerStock=FEconomyLedger::SystemQuantity(State,FName(*Offer->Producer),FName(*Offer->Name))/Offer->Goods.Size;
                 }
             }
-            UpdateQuotes();Sort();
+            UpdateQuotes();Sort();RefreshRecords();
         }
         bool CanTrade(bool Buy) const
         {
@@ -282,7 +415,7 @@ namespace
                 const int32 LabelOrder = A.DisplayName().Compare(B.DisplayName(), ESearchCase::IgnoreCase);
                 return LabelOrder != 0 ? LabelOrder < 0 : A.Name.Compare(B.Name, ESearchCase::IgnoreCase) < 0;
             });
-            if (auto View = List.Pin()) View->RequestListRefresh();
+            if (auto OffersWidget = List.Pin()) OffersWidget->RequestListRefresh();
         }
     };
 }
@@ -394,13 +527,33 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
     auto List = SNew(SListView<FOfferPtr>).ListItemsSource(&Table->Rows).HeaderRow(Header)
         .SelectionMode(ESelectionMode::Single)
         .OnSelectionChanged_Lambda([Selected,Table](FOfferPtr Offer,ESelectInfo::Type)
-        { *Selected=Offer;Table->Selected=MoveTemp(Offer);Table->Quantity=1;Table->ChangeOrder(); })
+        { *Selected=Offer;Table->Selected=MoveTemp(Offer);Table->Quantity=1;Table->LimitPrice=Table->Selected?FMath::Max<int64>(1,FMath::CeilToInt64(Table->Selected->Price)):1;Table->ChangeOrder(); })
         .OnGenerateRow_Lambda([Table](FOfferPtr Offer, const TSharedRef<STableViewBase>& Owner)
             -> TSharedRef<ITableRow>
         {
             return SNew(SMarketRow, Owner).Offer(Offer);
         });
     Table->List = List;
+    const auto Records=[Table](bool History)->TSharedRef<SListView<FMarketRecordPtr>>
+    {
+        auto Columns=SNew(SHeaderRow);
+        const auto Column=[Table,Columns](FName Id,const FText& Label,float Width)
+        {
+            Columns->AddColumn(SHeaderRow::Column(Id).DefaultLabel(Label).FillWidth(Width)
+                .SortMode_Lambda([Table,Id](){return Table->RecordSort==Id?Table->RecordSortMode:EColumnSortMode::None;})
+                .OnSort_Lambda([Table](EColumnSortPriority::Type,const FName& Id,EColumnSortMode::Type Mode){Table->RecordSort=Id;Table->RecordSortMode=Mode;Table->SortRecords();}));
+        };
+        Column("Item",INVTEXT("ITEM"),2.2);Column("Kind",History?INVTEXT("TRANSACTION"):INVTEXT("SIDE"),1.5);
+        Column("Quantity",INVTEXT("QUANTITY"),1);Column("Price",INVTEXT("CR / UNIT"),1);
+        Column("Credits",History?INVTEXT("CREDITS"):INVTEXT("ESCROW CR"),1.2);Column("Status",History?INVTEXT("UTC"):INVTEXT("STATUS"),1.8);
+        return SNew(SListView<FMarketRecordPtr>).ListItemsSource(History?&Table->History:&Table->Orders).HeaderRow(Columns)
+            .SelectionMode(ESelectionMode::Single)
+            .OnSelectionChanged_Lambda([Table,History](FMarketRecordPtr Row,ESelectInfo::Type)
+            {if(!History && Row){Table->SelectedOrder=Row->Id;Table->LimitPrice=FMath::Max<int64>(1,static_cast<int64>(Row->Price));}})
+            .OnGenerateRow_Lambda([](FMarketRecordPtr Row,const TSharedRef<STableViewBase>& Owner)->TSharedRef<ITableRow>
+            {return SNew(SMarketRecordRow,Owner).Record(Row);});
+    };
+    auto Orders=Records(false),History=Records(true);Table->OrderList=Orders;Table->HistoryList=History;
     Table->RefreshLive();
     List->RegisterActiveTimer(.5f,FWidgetActiveTimerDelegate::CreateLambda([Table](double,float)
     {Table->RefreshLive();return EActiveTimerReturnType::Continue;}));
@@ -417,13 +570,26 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
             .HintText(INVTEXT("Search item names, or type * to show all"))
             .OnTextChanged_Lambda([Table, Selected](const FText& Search)
             {
-                if (auto View = Table->List.Pin()) View->ClearSelection();
+                if (auto OffersWidget = Table->List.Pin()) OffersWidget->ClearSelection();
                 Selected->Reset();Table->Selected.Reset();Table->ChangeOrder();
                 Table->Filter(Search);
             })
         ]
+        + SVerticalBox::Slot().AutoHeight().Padding(20,0,20,8)
+        [SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().AutoWidth().Padding(0,0,8,0)[SNew(SButton).ToolTipText(INVTEXT("Local NPC goods"))
+                .OnClicked_Lambda([Table](){Table->View=0;return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Marketplace)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(0,0,8,0)[SNew(SButton).ToolTipText(INVTEXT("My local limit orders"))
+                .OnClicked_Lambda([Table](){Table->View=1;Table->RefreshRecords();return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Contracts)]]
+            + SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ToolTipText(INVTEXT("Recent saved transactions"))
+                .OnClicked_Lambda([Table](){Table->View=2;Table->RefreshRecords();return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Intel)]]
+            + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center).Padding(10,0)
+            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text_Lambda([Table](){return Table->View==0?INVTEXT("NPC MARKET"):Table->View==1?INVTEXT("MY LIMIT ORDERS ï¿½ SELECT AN OPEN ROW TO REPRICE OR CANCEL"):INVTEXT("TRANSACTION HISTORY ï¿½ MOST RECENT 512 EVENTS");})]]
         + SVerticalBox::Slot().FillHeight(0.65f).Padding(20, 0, 20, 8)
-        [MissionUIStyle::MakeDataPane(List, FMargin(0))]
+        [MissionUIStyle::MakeDataPane(SNew(SOverlay)
+            + SOverlay::Slot()[SNew(SBox).Visibility_Lambda([Table](){return Table->View==0?EVisibility::Visible:EVisibility::Collapsed;})[List]]
+            + SOverlay::Slot()[SNew(SBox).Visibility_Lambda([Table](){return Table->View==1?EVisibility::Visible:EVisibility::Collapsed;})[Orders]]
+            + SOverlay::Slot()[SNew(SBox).Visibility_Lambda([Table](){return Table->View==2?EVisibility::Visible:EVisibility::Collapsed;})[History]],FMargin(0))]
         + SVerticalBox::Slot().FillHeight(0.35f).Padding(20, 0, 20, 18)
         [
             MissionUIStyle::MakeDataPane(
@@ -436,9 +602,9 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                             if(!*Selected)return INVTEXT("SELECT AN ITEM TO VIEW MARKET DETAILS. TRADING REQUIRES DOCKING.");
                             const auto& Offer=**Selected;
                             const FText Source=Offer.Producer.IsEmpty()?INVTEXT("NO REACHABLE PRODUCER WITH STOCK"):
-                                FText::Format(INVTEXT("{0} · {1} JUMPS · {2} {3} IN STOCK"),FText::FromString(Offer.Producer).ToUpper(),
+                                FText::Format(INVTEXT("{0} ï¿½ {1} JUMPS ï¿½ {2} {3} IN STOCK"),FText::FromString(Offer.Producer).ToUpper(),
                                     FText::AsNumber(Offer.ProducerJumps),FText::AsNumber(Offer.ProducerStock),FText::FromString(Offer.Unit()).ToUpper());
-                            return FText::Format(INVTEXT("{0}\n{1}\n{2} · {3} {4} LOCAL NPC STOCK\n{5}"),
+                            return FText::Format(INVTEXT("{0}\n{1}\n{2} ï¿½ {3} {4} LOCAL NPC STOCK\n{5}"),
                                 FText::FromString(Offer.DisplayName()).ToUpper(),FText::FromString(Offer.Goods.Description),
                                 Offer.Goods.bIllicit?INVTEXT("ILLICIT"):INVTEXT("LEGAL"),FText::AsNumber(Offer.Available),FText::FromString(Offer.Unit()).ToUpper(),Source);
                         })]]
@@ -463,6 +629,30 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                     + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center).Padding(8,0)
                     [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true)
                         .Text_Lambda([](){const auto* Simulation=Sim::GetSim();return FText::Format(INVTEXT("BALANCE  {0} CR"),FText::AsNumber(Simulation?Simulation->ReadEconomy().Wallets.FindRef(FEconomyLedger::Pilot()):0));})]]
+                + SVerticalBox::Slot().AutoHeight().Padding(0,2)
+                [SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0,0,8,0)
+                    [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(INVTEXT("LIMIT CR / UNIT"))]
+                    + SHorizontalBox::Slot().AutoWidth()
+                    [SNew(SBox).WidthOverride(140)[SNew(SSpinBox<int64>).MinValue(1).MaxValue(1000000000000LL).Delta(1)
+                        .Value_Lambda([Table](){return Table->LimitPrice;}).OnValueChanged_Lambda([Table](int64 Value){Table->LimitPrice=Value;})
+                        .ToolTipText(INVTEXT("Queued orders use whole units/tonnes and whole-credit unit prices. Orders expire after 24 hours; immediate NPC trades still accept fractional tonnes."))]]
+                    + SHorizontalBox::Slot().AutoWidth().Padding(6,0)
+                    [SNew(SButton).ToolTipText(INVTEXT("Place a 24-hour buy limit order; reserves real credits and cargo space"))
+                        .IsEnabled_Lambda([Table](){return Table->Selected && !Table->Selected->bRestricted && FStationServices::IsDocked() && FPlatformTime::Seconds()>=Table->NextTradeAt;})
+                        .OnClicked_Lambda([Table](){Table->OrderAction(0);return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Down)]]
+                    + SHorizontalBox::Slot().AutoWidth().Padding(6,0)
+                    [SNew(SButton).ToolTipText(INVTEXT("Place a 24-hour sell limit order; reserves actual ship cargo"))
+                        .IsEnabled_Lambda([Table](){return Table->Selected && !Table->Selected->bRestricted && FStationServices::IsDocked() && FPlatformTime::Seconds()>=Table->NextTradeAt;})
+                        .OnClicked_Lambda([Table](){Table->OrderAction(1);return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Up)]]
+                    + SHorizontalBox::Slot().AutoWidth().Padding(6,0)
+                    [SNew(SButton).ToolTipText(INVTEXT("Reprice the selected open order; changes escrow and resets time priority"))
+                        .IsEnabled_Lambda([Table](){return Table->CanManageOrder();})
+                        .OnClicked_Lambda([Table](){Table->OrderAction(2);return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Refresh)]]
+                    + SHorizontalBox::Slot().AutoWidth().Padding(6,0)
+                    [SNew(SButton).ToolTipText(INVTEXT("Cancel the selected open order and release unspent escrow or unsold cargo"))
+                        .IsEnabled_Lambda([Table](){return Table->CanManageOrder();})
+                        .OnClicked_Lambda([Table](){Table->OrderAction(3);return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Abort)]]]
                 + SVerticalBox::Slot().AutoHeight()
                 [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([Table]()
                 {return Table->Selected?FText::Format(INVTEXT("{0}  |  MAX {1}\n{2}  |  MAX {3}"),Table->BuyQuote.Reason,FText::AsNumber(Table->BuyQuote.Maximum),Table->SellQuote.Reason,FText::AsNumber(Table->SellQuote.Maximum)):FText::GetEmpty();})]
