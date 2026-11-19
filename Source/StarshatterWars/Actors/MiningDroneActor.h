@@ -10,6 +10,8 @@ public:
     void UpdateVisual(FVector Position,FVector Heading,bool Mining,FVector BeamEnd);
     void Tick(float DeltaSeconds) override;
 private:
+    void EndPlay(const EEndPlayReason::Type Reason) override;
+    UPROPERTY() TObjectPtr<class AMiningBeamActor> ActiveBeam;
     UPROPERTY() TObjectPtr<class UStaticMeshComponent> Body;
     UPROPERTY() TObjectPtr<class UStaticMeshComponent> Arms;
     FVector Destination=FVector::ZeroVector;

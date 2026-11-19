@@ -21,6 +21,7 @@ public:
     void BeginMission();
     bool RememberLoadout(const TArray<int32>& Stations, const FString& Name);
     bool CanModifyHull(FGuid Hull) const;
+    bool CanRefitHull(FGuid Hull, FText* Reason = nullptr) const;
     const TArray<FPlayerHangarShip>& GetShips() const;
     const FPlayerHangarShip* FindShip(FGuid Hull) const;
     UFUNCTION(BlueprintCallable) FGuid RegisterOwnedShip(FName Design, const FString& Name,

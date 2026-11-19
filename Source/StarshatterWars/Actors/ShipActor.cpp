@@ -37,6 +37,8 @@
 #include "TurretBaseCatalog.h"
 #include "FighterActor.h"
 #include "FighterExhaustTuning.h"
+#include "EnginePlumeTuning.h"
+#include "ShipDesignRegistry.h"
 #include "WaypointArrival.h"
 #include "Components/SceneComponent.h"
 #include "Components/ChildActorComponent.h"
@@ -2347,25 +2349,34 @@ void AShipActor::UpdateSnapshotPropulsion(float DeltaTime, float DrivePower, flo
     PresentThrusterEffects(FMath::Clamp(DrivePower, 0.0f, 1.0f), nullptr, PortBurns, false);
 }
 
+namespace
+{
+EShipEmpire ExhaustEmpire(const ShipDesign* Design)
+{
+    if (Design)
+        if (const auto* Row=ShipDesignRegistry::Find(Design->name))return Row->ShipEmpire;
+    return EShipEmpire::NONE;
+}
+}
+
 void AShipActor::ConfigurePropulsionAssets(const Drive* MainDrive)
 {
-    if (Cast<AFighterActor>(this) && (!MainEngineEmitterSystem ||
-        MainEngineEmitterSystem->GetPathName() == FighterExhaustTuning::StockSystem))
-        if (auto* Tuned = LoadObject<UNiagaraSystem>(nullptr, FighterExhaustTuning::FighterSystem))
-            MainEngineEmitterSystem = Tuned;
-    if (!MainEngineEmitterSystem)
-        MainEngineEmitterSystem = LoadObject<UNiagaraSystem>(nullptr, FighterExhaustTuning::StockSystem);
-    if (!ThrusterFlareSystem && !ThrusterTrailSystem)
-        ThrusterTrailSystem = LoadObject<UNiagaraSystem>(nullptr,
-            MainDrive && MainDrive->GetDriveType() == EDriveType::YELLOW
-                ? TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_Yellow.NS_RocketExhaust_Yellow")
-                : TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_White.NS_RocketExhaust_White"));
+    const ShipDesign* Design=RuntimeShip?RuntimeShip->Design():SnapshotVisualDesign;
+    const EDriveType Type=MainDrive?MainDrive->GetDriveType():EDriveType::BLUE;
+    const FString Path=EnginePlumeTuning::SystemPath(ExhaustEmpire(Design),Type);
+    if(auto* Nozzle=LoadObject<UNiagaraSystem>(nullptr,*Path))
+    {
+        MainEngineEmitterSystem=Nozzle;
+        ThrusterTrailSystem=Nozzle;
+        ThrusterFlareSystem=Nozzle;
+    }
 }
 
 void AShipActor::BuildMainEngineEffects(const Drive* MainDrive)
 {
     ClearRuntimeMainEngines();
     if (!bEnableMainEngineEmitters) return;
+    ConfigurePropulsionAssets(MainDrive);
 
     if (!MainDrive)
     {
@@ -2406,11 +2417,8 @@ void AShipActor::BuildMainEngineEffects(const Drive* MainDrive)
         IdleGlow->SetupAttachment(Point);
         IdleGlow->SetMobility(EComponentMobility::Movable);
         IdleGlow->SetCastShadows(false);
-        FLinearColor GlowColor(.18f,.52f,1.f);
-        const bool YellowFX=MainEngineEmitterSystem && MainEngineEmitterSystem->GetPathName().Contains(TEXT("Yellow"));
-        if (YellowFX || MainDrive->GetDriveType()==EDriveType::YELLOW) GlowColor=FLinearColor(1.f,.34f,.035f);
-        else if (MainDrive->GetDriveType()==EDriveType::RED) GlowColor=FLinearColor(1.f,.035f,.015f);
-        else if (MainDrive->GetDriveType()==EDriveType::GREEN) GlowColor=FLinearColor(.08f,1.f,.24f);
+        const ShipDesign* VisualDesign=RuntimeShip?RuntimeShip->Design():SnapshotVisualDesign;
+        const FLinearColor GlowColor=EnginePlumeTuning::Color(ExhaustEmpire(VisualDesign),MainDrive->GetDriveType());
         IdleGlow->SetLightColor(GlowColor);
         IdleGlow->SetIntensity(.5f);
         IdleGlow->SetAttenuationRadius(FMath::Clamp(20.f*float(GetActorScale3D().GetAbsMax())*FMath::Max(.25f,MainDrive->GetPortScale(i)),1.f,12.f));
@@ -2428,26 +2436,29 @@ void AShipActor::BuildMainEngineEffects(const Drive* MainDrive)
             Emitter->SetupAttachment(Point);
             Emitter->RegisterComponent();
 
-            static const TCHAR* YellowExhaustPath =
-                TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_Yellow.NS_RocketExhaust_Yellow");
-            UNiagaraSystem* Exhaust = MainEngineEmitterSystem;
-            if (MainDrive->GetDriveType() == EDriveType::YELLOW &&
-                (!Exhaust || Exhaust->GetPathName() == FighterExhaustTuning::StockSystem))
-            {
-                if (UNiagaraSystem* Yellow = LoadObject<UNiagaraSystem>(nullptr, YellowExhaustPath))
-                    Exhaust = Yellow;
-            }
-            Emitter->SetAsset(Exhaust);
+            Emitter->SetAsset(MainEngineEmitterSystem);
             Emitter->SetRelativeLocation(FVector::ZeroVector);
-            // Legacy capital flare values (often 5..8) sized billboard sprites.
-            // Applying them directly to the complete Niagara flame multiplies
-            // its width, length and particle lights again after hull scaling.
-            // Orion's 1.15 port factor is the existing Niagara reference size.
-            const float AuthoredPortScale=MainDrive->GetPortScale(i);
-            const float VisualPortScale=Cast<AFighterActor>(this) ? AuthoredPortScale :
-                (FMath::IsFinite(AuthoredPortScale) && AuthoredPortScale>0 ? FMath::Min(AuthoredPortScale,1.15f) : 1.f);
-            Emitter->SetRelativeScale3D(
-                MainEngineEmitterRelativeScale * VisualPortScale);
+            // No legacy billboard flare or BP effect multiplier is applied here.
+            // Read the nozzle rim in world space, then apply that radius once.
+            const FVector WorldPort=Point->GetComponentLocation();
+            const FVector Outward=Point->GetForwardVector();
+            const double HullRadius=HullMesh && HullMesh->GetStaticMesh()?HullMesh->Bounds.SphereRadius:0.;
+            double Separation=0.;
+            for(int32 Other=0;Other<PortCount;++Other)if(Other!=i)
+            {
+                const FVector Local=RuntimeEmitterLocalPosition(MainDrive->GetPortLocation(Other),bPropulsionPortsInModelUnits);
+                const double Distance=FVector::Dist(WorldPort,VFXRoot->GetComponentTransform().TransformPosition(Local));
+                if(Distance>UE_SMALL_NUMBER && (Separation<=0 || Distance<Separation))Separation=Distance;
+            }
+            const double Fallback=HullRadius>0?HullRadius*.025:.5;
+            const double Limit=EnginePlumeTuning::Radius(0,HullRadius>0?HullRadius*.08:.5,Separation,HullRadius);
+            if(!NativeGeometry)NativeGeometry=MakeShared<FNativeShipGeometry>();
+            const double Measured=NativeGeometry->NozzleRadius(*this,WorldPort,Outward,Limit);
+            const double Radius=EnginePlumeTuning::Radius(Measured,Fallback,Separation,HullRadius);
+            // Rotation/location still follow the ship. World scale avoids applying
+            // model-import, Blueprint and actor scales a second time to the flame.
+            Emitter->SetAbsolute(false,false,true);
+            Emitter->SetRelativeScale3D(FVector(Radius));
 
             Emitter->SetAutoActivate(false);
             Emitter->Deactivate();
@@ -2560,7 +2571,7 @@ void AShipActor::UpdateMainEnginesFromRuntime(float DeltaTime)
 void AShipActor::PresentMainEngineEffects(float DeltaTime, float RawPower, float ThrottleRequest,
     float Throttle, bool bAlive)
 {
-    const float RequestAlpha = Cast<AFighterActor>(this) ? FighterExhaustTuning::VisualPower(RawPower) : RawPower;
+    const float RequestAlpha = EnginePlumeTuning::Power(RawPower);
 
     constexpr float IdleThreshold = 0.005f;
     const bool bRequested = RequestAlpha > IdleThreshold;
@@ -2617,20 +2628,10 @@ void AShipActor::PresentMainEngineEffects(float DeltaTime, float RawPower, float
             continue;
         }
 
-        FVector RuntimeScale =
-            FVector(1.0f, 0.5f, 0.5f);
-
-        RuntimeScale.X *=
-            FMath::Lerp(
-                0.10f,
-                2.00f,
-                MainEngineVisualPower);
-
-        const FVector BaseScale = RuntimeMainEngineBaseScales.IsValidIndex(EmitterIndex)
-            ? RuntimeMainEngineBaseScales[EmitterIndex] : FVector::OneVector;
-        const FVector DesiredScale = RuntimeScale * BaseScale;
-        if (Emitter->GetRelativeScale3D() != DesiredScale)
-            Emitter->SetRelativeScale3D(DesiredScale);
+        const FVector BaseScale=RuntimeMainEngineBaseScales.IsValidIndex(EmitterIndex)
+            ?RuntimeMainEngineBaseScales[EmitterIndex]:FVector::OneVector;
+        const FVector DesiredScale=BaseScale*FVector(FMath::Lerp(.30f,1.f,FMath::Clamp(MainEngineVisualPower,0.f,1.f)),1.,1.);
+        if(Emitter->GetRelativeScale3D()!=DesiredScale)Emitter->SetRelativeScale3D(DesiredScale);
         if (Emitter->IsVisible() != bActive)
             Emitter->SetVisibility(bActive);
         if (Emitter->bHiddenInGame == bActive)
@@ -2639,7 +2640,12 @@ void AShipActor::PresentMainEngineEffects(float DeltaTime, float RawPower, float
         // Niagara queues deferred writes even when the value is unchanged.
         // Keep every real throttle change; never quantize or defer engine spool-up.
         if (bPowerChanged)
-            Emitter->SetFloatParameter(TEXT("EnginePower"), MainEngineVisualPower);
+        {
+            Emitter->SetFloatParameter(TEXT("EnginePower"),MainEngineVisualPower);
+            Emitter->SetFloatParameter(TEXT("User.Emissive_Boost"),FMath::Lerp(1.1f,3.2f,MainEngineVisualPower));
+            Emitter->SetFloatParameter(TEXT("User.Thrusters_SpawnRate"),650.f*MainEngineVisualPower);
+            Emitter->SetFloatParameter(TEXT("User.EnergyCore_SpawnRate"),250.f*MainEngineVisualPower);
+        }
         if (bRequestChanged)
             Emitter->SetFloatParameter(TEXT("ThrottleRequest"), ThrottleRequest);
         if (bThrottleChanged)
@@ -2929,60 +2935,43 @@ void AShipActor::BuildThrusterEffects(const Thruster* RuntimeThruster)
         const FVector PortLocation = bUseHullPorts ? AuthoredPort :
             FitEmitterToHull(AuthoredPort, ConvertLegacyPortRotation(FX.Rotation).Vector());
 
+        const FRotator ExhaustRotation=ConvertLegacyPortRotation(FX.Rotation);
+        const FVector WorldPort=VFXRoot->GetComponentTransform().TransformPosition(PortLocation);
+        const FVector Outward=VFXRoot->GetComponentTransform().TransformVectorNoScale(ExhaustRotation.Vector()).GetSafeNormal();
+        const double HullRadius=HullMesh && HullMesh->GetStaticMesh()?HullMesh->Bounds.SphereRadius:0.;
+        const double Maximum=HullRadius>0?HullRadius*.018:.25;
+        if(!NativeGeometry)NativeGeometry=MakeShared<FNativeShipGeometry>();
+        const double Measured=NativeGeometry->NozzleRadius(*this,WorldPort,Outward,Maximum);
+        const double Radius=FMath::Clamp(Measured>0?Measured:(HullRadius>0?HullRadius*.006:.25),.001,Maximum);
         if (NozzleMesh)
         {
-            const FRotator ExhaustRotation = ConvertLegacyPortRotation(FX.Rotation);
-            const float Diameter = FMath::Clamp(FMath::Max(FX.FlareScale,FX.TrailScale) * 0.06f, 0.035f, 0.14f);
-            FX.Nozzle = NewObject<UStaticMeshComponent>(this,
-                MakeUniqueObjectName(this, UStaticMeshComponent::StaticClass(), TEXT("ThrusterNozzle")), RF_Transient);
-            FX.Nozzle->SetupAttachment(VFXRoot);
-            FX.Nozzle->SetStaticMesh(NozzleMesh);
-            FX.Nozzle->SetRelativeLocation(PortLocation - ExhaustRotation.Vector() * (Diameter * 25.0));
-            FX.Nozzle->SetRelativeRotation(ExhaustRotation.Quaternion() * FRotator(90, 0, 0).Quaternion());
-            FX.Nozzle->SetRelativeScale3D(FVector(Diameter, Diameter, Diameter * 0.5f));
+            FX.Nozzle=NewObject<UStaticMeshComponent>(this,
+                MakeUniqueObjectName(this,UStaticMeshComponent::StaticClass(),TEXT("ThrusterNozzle")),RF_Transient);
+            FX.Nozzle->SetupAttachment(VFXRoot);FX.Nozzle->SetStaticMesh(NozzleMesh);
+            FX.Nozzle->SetRelativeRotation(ExhaustRotation.Quaternion()*FRotator(90,0,0).Quaternion());
+            FX.Nozzle->SetAbsolute(false,false,true);
+            FX.Nozzle->SetRelativeScale3D(FVector(Radius/50.,Radius/50.,Radius/100.));
             FX.Nozzle->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-            FX.Nozzle->SetGenerateOverlapEvents(false);
-            FX.Nozzle->SetCastShadow(false);
-            FX.Nozzle->SetCanEverAffectNavigation(false);
-            FX.Nozzle->RegisterComponent();
+            FX.Nozzle->SetGenerateOverlapEvents(false);FX.Nozzle->SetCastShadow(false);
+            FX.Nozzle->SetCanEverAffectNavigation(false);FX.Nozzle->RegisterComponent();
+            FX.Nozzle->SetWorldLocation(WorldPort-Outward*(Radius*.5));
         }
-
-        if (bEnableThrusterEmitters && Port->bShowFlare && ThrusterFlareSystem)
+        // One native Niagara instance per firing port, including flare-only ports.
+        // The normalized nozzle asset is shared with engines; short RCS-specific
+        // particle lifetimes and speeds distinguish maneuvering pulses.
+        if(Port->bShowTrail || Port->bShowFlare)
         {
-            FX.Flare = NewObject<UNiagaraComponent>(this);
-
-            if (FX.Flare)
-            {
-                FX.Flare->SetAsset(ThrusterFlareSystem);
-                FX.Flare->SetupAttachment(VFXRoot);
-                FX.Flare->SetRelativeLocation(PortLocation);
-                FX.Flare->SetAutoActivate(false);
-                FX.Flare->RegisterComponent();
-                FX.Flare->SetRelativeRotation(
-                    ConvertLegacyPortRotation(FX.Rotation));
-
-                FX.Flare->SetVariableFloat(TEXT("Scale"), Port->FlareScale);
-                FX.Flare->SetVariableLinearColor(TEXT("ThrusterColor"), Port->ThrusterColor);
-            }
-        }
-
-        if (bEnableThrusterEmitters && Port->bShowTrail && ThrusterTrailSystem)
-        {
-            FX.Trail = NewObject<UNiagaraComponent>(this);
-
-            if (FX.Trail)
-            {
-                FX.Trail->SetAsset(ThrusterTrailSystem);
-                FX.Trail->SetupAttachment(VFXRoot);
-                FX.Trail->SetRelativeLocation(PortLocation);
-                FX.Trail->SetRelativeRotation(
-                    ConvertLegacyPortRotation(FX.Rotation));
-                FX.Trail->SetAutoActivate(false);
-                FX.Trail->RegisterComponent();
-
-                FX.Trail->SetVariableFloat(TEXT("Scale"), Port->TrailScale);
-                FX.Trail->SetVariableLinearColor(TEXT("ThrusterColor"), Port->ThrusterColor);
-            }
+            auto* Jet=NewObject<UNiagaraComponent>(this);
+            Jet->SetAsset(ThrusterTrailSystem);Jet->SetupAttachment(VFXRoot);
+            Jet->SetRelativeLocation(PortLocation);Jet->SetRelativeRotation(ExhaustRotation);
+            Jet->SetAbsolute(false,false,true);Jet->SetRelativeScale3D(FVector(Radius));
+            Jet->SetAutoActivate(false);Jet->SetVisibility(false);Jet->SetHiddenInGame(true);
+            Jet->SetVariableFloat(TEXT("User.Thrusters_Life"),.06f);
+            Jet->SetVariableFloat(TEXT("User.Thrusters_Speed"),14.f);
+            Jet->SetVariableFloat(TEXT("User.EnergyCore_Life"),.05f);
+            Jet->SetVariableFloat(TEXT("User.EnergyCore_Speed"),4.f);
+            Jet->RegisterComponent();
+            if(Port->bShowTrail)FX.Trail=Jet;else FX.Flare=Jet;
         }
 
         RuntimeThrusterFX.Add(FX);
@@ -3086,10 +3075,7 @@ void AShipActor::PresentThrusterEffects(float DriveBurn, const Thruster* Runtime
         const bool bActive =
             VisualBurnFiltered > 0.0f;
 
-        const float FinalPortScale =
-            FX->PortScale > 0.0f
-            ? FX->PortScale
-            : 1.0f;
+        const float FinalPortScale=FX->Nozzle?float(FX->Nozzle->GetComponentScale().X*50.):.25f;
 
         const auto HasExpectedState = [bActive](const UNiagaraComponent* Component)
         {
@@ -3102,216 +3088,28 @@ void AShipActor::PresentThrusterEffects(float DriveBurn, const Thruster* Runtime
         FX->PresentedBurn = VisualBurnFiltered;
         FX->PresentedPortScale = FinalPortScale;
 
-        // The port scale already makes these plumes smaller than the main drive.
-        // Keep the exhaust proportions readable after the hull's import scale.
-        const float Length = FMath::Lerp(0.35f, 1.5f, VisualBurnFiltered);
-        const float Width = FMath::Lerp(0.30f, 0.50f, VisualBurnFiltered);
-        const FVector PlumeShape(Length, Width, Width);
-
-        if (FX->Flare)
+        for(UNiagaraComponent* Jet:{FX->Flare,FX->Trail})
         {
-            const FVector EffectScale=bActive?PlumeShape*FX->FlareScale:FVector::ZeroVector;
-            FX->Flare->SetRelativeScale3D(EffectScale);
-            FX->Flare->SetVisibility(bActive, true);
-            FX->Flare->SetHiddenInGame(!bActive, true);
-
-            FX->Flare->SetFloatParameter(
-                TEXT("Burn"),
-                VisualBurnFiltered);
-            FX->Flare->SetFloatParameter(TEXT("EnginePower"), VisualBurnFiltered);
-
-            FX->Flare->SetFloatParameter(
-                TEXT("Length"),
-                EffectScale.X);
-
-            FX->Flare->SetFloatParameter(
-                TEXT("Width"),
-                EffectScale.Y);
-
-            if (bActive)
-            {
-                if (!FX->Flare->IsActive())
-                {
-                    FX->Flare->Activate(true);
-                }
-            }
-            else if (FX->Flare->IsActive())
-            {
-                FX->Flare->DeactivateImmediate();
-            }
-        }
-
-        if (FX->Trail)
-        {
-            const FVector EffectScale=bActive?PlumeShape*FX->TrailScale:FVector::ZeroVector;
-            FX->Trail->SetRelativeScale3D(EffectScale);
-            FX->Trail->SetVisibility(bActive, true);
-            FX->Trail->SetHiddenInGame(!bActive, true);
-
-            FX->Trail->SetFloatParameter(
-                TEXT("Burn"),
-                VisualBurnFiltered);
-            FX->Trail->SetFloatParameter(TEXT("EnginePower"), VisualBurnFiltered);
-
-            FX->Trail->SetFloatParameter(
-                TEXT("Length"),
-                EffectScale.X);
-
-            FX->Trail->SetFloatParameter(
-                TEXT("Width"),
-                EffectScale.Y);
-
-            if (bActive)
-            {
-                if (!FX->Trail->IsActive())
-                {
-                    FX->Trail->Activate(true);
-                }
-            }
-            else if (FX->Trail->IsActive())
-            {
-                FX->Trail->DeactivateImmediate();
-            }
+            if(!Jet)continue;
+            const FVector Shape(FMath::Lerp(.35f,1.f,VisualBurnFiltered),1,1);
+            Jet->SetRelativeScale3D(Shape*FinalPortScale);
+            Jet->SetVisibility(bActive,true);Jet->SetHiddenInGame(!bActive,true);
+            Jet->SetFloatParameter(TEXT("EnginePower"),VisualBurnFiltered);
+            Jet->SetFloatParameter(TEXT("User.Emissive_Boost"),FMath::Lerp(1.5f,4.f,VisualBurnFiltered));
+            Jet->SetFloatParameter(TEXT("User.Thrusters_SpawnRate"),360.f*VisualBurnFiltered);
+            Jet->SetFloatParameter(TEXT("User.EnergyCore_SpawnRate"),140.f*VisualBurnFiltered);
+            if(bActive){if(!Jet->IsActive())Jet->Activate(true);}
+            else if(Jet->IsActive())Jet->DeactivateImmediate();
         }
     }
 }
 
 void AShipActor::DebugFireAllThrusters(float BurnValue)
 {
-    if (!RuntimeShip)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[DebugFireAllThrusters] No RuntimeShip"));
-        return;
-    }
-
-    Thruster* RuntimeThruster =
-        RuntimeShip->GetThruster();
-
-    if (!RuntimeThruster)
-    {
-        UE_LOG(LogTemp, Warning,
-            TEXT("[DebugFireAllThrusters] No RuntimeThruster"));
-        return;
-    }
-
-    const int32 NumPorts =
-        RuntimeThruster->GetNumThrusters();
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("==================================================="));
-    UE_LOG(LogTemp, Warning,
-        TEXT("[DebugFireAllThrusters] Ship='%s' Ports=%d Burn=%.2f"),
-        *GetName(),
-        NumPorts,
-        BurnValue);
-
-    for (int32 PortIndex = 0;
-        PortIndex < NumPorts;
-        ++PortIndex)
-    {
-        FRuntimeThrusterFX* FX = nullptr;
-
-        for (FRuntimeThrusterFX& Candidate : RuntimeThrusterFX)
-        {
-            if (Candidate.RuntimePortIndex == PortIndex)
-            {
-                FX = &Candidate;
-                break;
-            }
-        }
-
-        if (!FX)
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[DebugFireAllThrusters] Missing FX Port=%d"),
-                PortIndex);
-
-            continue;
-        }
-
-        const FThrusterPort* Port =
-            RuntimeThruster->GetPort(PortIndex);
-
-        if (!Port)
-        {
-            continue;
-        }
-
-        //---------------------------------------------------------
-        // Visual scale
-        //---------------------------------------------------------
-        const bool bMainEngine =
-            Port->Direction == EThrusterPortDir::AFT;
-
-        const float Length =
-            bMainEngine
-            ? FMath::Lerp(0.25f, 2.00f, BurnValue)
-            : FMath::Lerp(0.08f, 0.45f, BurnValue);
-
-        const float Width =
-            bMainEngine
-            ? FMath::Lerp(0.40f, 0.80f, BurnValue)
-            : FMath::Lerp(0.02f, 0.08f, BurnValue);
-
-        const float FinalScale =
-            FX->PortScale > 0.0f
-            ? FX->PortScale
-            : 1.0f;
-
-        const FVector RuntimeScale =
-            FVector(Length, Width, Width) * FinalScale;
-
-        UE_LOG(LogTemp, Warning,
-            TEXT("[DebugFireAllThrusters] ")
-            TEXT("Port=%d ")
-            TEXT("Name='%s' ")
-            TEXT("Dir=%d ")
-            TEXT("Loc=%s ")
-            TEXT("Rot=%s ")
-            TEXT("Fire=0x%08X ")
-            TEXT("Scale=%s"),
-            PortIndex,
-            *Port->PointName.ToString(),
-            static_cast<int32>(Port->Direction),
-            *Port->Location.ToString(),
-            *Port->Rotation.ToString(),
-            static_cast<uint32>(Port->Fire),
-            *RuntimeScale.ToString());
-
-        //---------------------------------------------------------
-        // Flare
-        //---------------------------------------------------------
-        if (FX->Flare)
-        {
-            FX->Flare->SetRelativeScale3D(RuntimeScale);
-            FX->Flare->SetVisibility(true, true);
-            FX->Flare->SetHiddenInGame(false, true);
-
-            if (!FX->Flare->IsActive())
-            {
-                FX->Flare->Activate(true);
-            }
-        }
-
-        //---------------------------------------------------------
-        // Trail
-        //---------------------------------------------------------
-        if (FX->Trail)
-        {
-            FX->Trail->SetRelativeScale3D(RuntimeScale);
-            FX->Trail->SetVisibility(true, true);
-            FX->Trail->SetHiddenInGame(false, true);
-
-            if (!FX->Trail->IsActive())
-            {
-                FX->Trail->Activate(true);
-            }
-        }
-    }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("==================================================="));
+    const Thruster* System=RuntimeShip?RuntimeShip->GetThruster():nullptr;
+    if(!System)return;
+    TArray<uint8> Burns;Burns.Init(uint8(FMath::RoundToInt(255.f*FMath::Clamp(BurnValue,0.f,1.f))),System->GetNumThrusters());
+    PresentThrusterEffects(0,nullptr,Burns,false);
 }
 
 void AShipActor::HoldRecoveryPresentation()

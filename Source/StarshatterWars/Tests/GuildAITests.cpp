@@ -136,6 +136,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FGuildCatalogTest,"Starshatter.Guilds.JsonCatal
 bool FGuildCatalogTest::RunTest(const FString&)
 {
     auto* Game=NewObject<UGameInstance>();auto* Catalog=NewObject<UGuildCatalogSubsystem>(Game);
+    TestTrue(TEXT("Unloaded pilot has no empire rather than a default faction"),Catalog->GetContext().Empire.IsNone());
     if(!TestTrue(TEXT("JSON-only guild catalog loads"),Catalog->LoadCatalog()))return false;
     TestEqual(TEXT("Seven careers and one charter for each of four empires"),Catalog->GetCatalog().Num(),32);
     for(const TCHAR* Empire:{TEXT("Terellian"),TEXT("Marakan"),TEXT("Dantari"),TEXT("Solus")})

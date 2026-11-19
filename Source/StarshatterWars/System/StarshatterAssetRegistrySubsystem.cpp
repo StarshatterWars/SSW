@@ -1043,6 +1043,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.StationServicesPopupClass
+    if (!Cache.Contains(TEXT("UI.StationServicesPopupClass")))
+    {
+        if (!Settings->StationServicesPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->StationServicesPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.StationServicesPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.StationServicesPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            Cache.Add(TEXT("UI.StationServicesPopupClass"), TSoftObjectPtr<UObject>(
+                FSoftObjectPath(TEXT("/Script/StarshatterWars.StationServicesDlg"))));
+        }
+    }
+
     // UI.CustomMissionScreenClass
     if (!Cache.Contains(TEXT("UI.CustomMissionScreenClass")))
     {

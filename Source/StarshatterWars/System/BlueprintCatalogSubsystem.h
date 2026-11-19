@@ -2,6 +2,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "GameStructs_economy.h"
 #include "GameStructs_products.h"
+#include "GameStructs_skills.h"
 #include "BlueprintCatalogSubsystem.generated.h"
 USTRUCT(BlueprintType)
 struct FBlueprintOffer
@@ -36,7 +37,10 @@ public:
     bool CanPurchase(FName Recipe, bool bOriginal, FText& Reason) const;
     bool Purchase(FName Recipe, bool bOriginal, FText& Reason);
     bool CanBeginPlayerJob(const FSSWProductionFacility&, FGuid Blueprint, int32 Runs, FPlayerIndustryQuote&, FText& Reason) const;
-    static bool QuotePlayerJob(const FEconomyState&, const FSSWProductionFacility&, const FSSWProductionRecipe&, FGuid Blueprint, int32 Runs, FPlayerIndustryQuote&, FText& Reason);
+    static bool MeetsRecipeSkills(const FSSWProductionRecipe&, const TMap<FName, FSkillProgress>* PilotSkills, FText& Reason,
+        const TMap<FName, FSkillDefinition>* SkillCatalog = nullptr);
+    static bool QuotePlayerJob(const FEconomyState&, const FSSWProductionFacility&, const FSSWProductionRecipe&, FGuid Blueprint, int32 Runs, FPlayerIndustryQuote&, FText& Reason,
+        const TMap<FName, FSkillProgress>* PilotSkills = nullptr, const TMap<FName, FSkillDefinition>* SkillCatalog = nullptr);
     bool CancelPlayerJob(FGuid Job, FText& Reason);
     FGuid BeginPlayerJob(const FSSWProductionFacility&, FGuid Blueprint, int32 Runs, FText& Reason);
     static FGuid PurchaseLicense(FEconomyState&, const FBlueprintOffer&, bool bOriginal);

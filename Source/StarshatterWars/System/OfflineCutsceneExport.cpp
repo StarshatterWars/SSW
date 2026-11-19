@@ -53,10 +53,11 @@ bool OfflineCutsceneExport::TryStart(UMenuScreen* Menu)
     if (Custom && Row)
     {
         FS_CampaignMission Scene;
-        if (!Data->ReadLooseMission(Source,Scene) || !Scene.Scene.Equals(Requested,ESearchCase::IgnoreCase) ||
+        if (!Data->ReadLooseMission(Source,Scene,!Source.EndsWith(TEXT(".def"),ESearchCase::IgnoreCase)) || !Scene.Scene.Equals(Requested,ESearchCase::IgnoreCase) ||
             !Scene.Event.ContainsByPredicate([](const FS_MissionEvent& Event){return Event.EventType==MISSIONEVENT_TYPE::END_SCENE;}))
         { UE_LOG(LogTemp,Error,TEXT("[OfflineCutscene] Invalid isolated render source %s"),*Source);FPlatformMisc::RequestExit(false);return true; }
         ExportCampaign=MakeUnique<FS_Campaign>(*Row);
+        ExportCampaign->Missions.RemoveAll([&](const FS_CampaignMission& Item){return Item.Scene.Equals(Requested,ESearchCase::IgnoreCase);});
         ExportCampaign->Missions.Add(MoveTemp(Scene));
         Row=ExportCampaign.Get();
     }

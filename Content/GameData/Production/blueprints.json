@@ -1710,5 +1710,13 @@
     "CopyPrice": 480000,
     "CopyRuns": 10,
     "Image": "Cargo"
+  },
+  {
+    "Recipe": "Make_mining_drone",
+    "DisplayName": "Mining Drone Blueprint",
+    "OriginalPrice": 11192160,
+    "CopyPrice": 1119216,
+    "CopyRuns": 10,
+    "Image": "MiningDrone"
   }
 ]

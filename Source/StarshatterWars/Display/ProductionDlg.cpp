@@ -182,6 +182,7 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
 
     const auto Selected = MakeShared<FFacilityPtr>();
     auto Screens = SNew(SWidgetSwitcher);
+    ProductionPages=Screens;
     const auto OpenFactory = [Selected, WeakScreens = TWeakPtr<SWidgetSwitcher>(Screens)](FFacilityPtr Site)
     {
         if (Site)
@@ -406,4 +407,9 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                 .OnClicked_Lambda([Weak=TWeakPtr<SWidgetSwitcher>(Screens)]() { if(auto View=Weak.Pin())View->SetActiveWidgetIndex(3);return FReply::Handled(); })
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::MissionPackage)]]]
         + SVerticalBox::Slot().FillHeight(1)[Screens];
+}
+
+void UProductionDlg::ShowBlueprints()
+{
+    if(auto Pages=ProductionPages.Pin();Pages && Pages->GetNumWidgets()>2)Pages->SetActiveWidgetIndex(2);
 }

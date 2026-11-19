@@ -31,8 +31,8 @@ bool FCapitalExhaustScaleTest::RunTest(const FString&)
             {
                 ++Engines;
                 const FVector Scale=Component->GetRelativeScale3D();
-                TestTrue(TEXT("Full-burn flame length bounded by existing Orion calibration"),Scale.X<=2.301);
-                TestTrue(TEXT("Full-burn flame width bounded by existing Orion calibration"),Scale.Y<=.576 && Scale.Z<=.576);
+                TestTrue(TEXT("Legacy flare does not inflate canonical nozzle length"),FMath::IsNearlyEqual(Scale.X,.5,.001));
+                TestTrue(TEXT("Legacy flare does not inflate canonical nozzle width"),FMath::IsNearlyEqual(Scale.Y,.5,.001) && FMath::IsNearlyEqual(Scale.Z,.5,.001));
                 TestTrue(TEXT("Exhaust remains visible at full burn"),Component->IsVisible() && Scale.GetMin()>0);
             }
         TestEqual(TEXT("Main-engine emitter is retained"),Engines,1);

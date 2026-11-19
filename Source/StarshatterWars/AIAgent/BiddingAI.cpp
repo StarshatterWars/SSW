@@ -27,7 +27,12 @@ bool BiddingAI::PlaceBid(FContractTransaction& Contract, FContractAccounts& Acco
         return false;
 
     Buyer->Credits -= Debit;
-    if (!bSameBidder && Previous) Previous->Credits += Contract.HighBid;
+    RecordWallet(*Buyer,-Debit,TEXT("Contract auction bid"),Contract.Id);
+    if (!bSameBidder && Previous)
+    {
+        Previous->Credits += Contract.HighBid;
+        RecordWallet(*Previous,Contract.HighBid,TEXT("Contract bid refund"),Contract.Id);
+    }
     Contract.HighBidder = Bidder;
     Contract.HighBid = Amount;
     if (bBuyout)

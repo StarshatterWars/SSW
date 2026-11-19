@@ -10,11 +10,104 @@
 #include "Misc/PackageName.h"
 #include "Misc/Paths.h"
 #include "HAL/FileManager.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Parse.h"
 #endif
 USSWExhaustTuningCommandlet::USSWExhaustTuningCommandlet(){IsClient=true;IsServer=false;IsEditor=true;LogToConsole=true;}
 int32 USSWExhaustTuningCommandlet::Main(const FString& Params)
 {
 #if WITH_EDITOR
+    if (FParse::Param(*Params,TEXT("Nozzles")))
+    {
+        for(const TCHAR* Variant:{TEXT("Blue"),TEXT("OrangeYellow"),TEXT("Green"),TEXT("Red")})
+        {
+            const FString SourceColor=FString(Variant)==TEXT("OrangeYellow")?TEXT("Yellow"):Variant;
+            const FString SourcePath=FString::Printf(TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_%s.NS_RocketExhaust_%s"),*SourceColor,*SourceColor);
+            auto* Original=LoadObject<UNiagaraSystem>(nullptr,*SourcePath);if(!Original)return 20;
+            Original->EnsureFullyLoaded();
+            const FString Name=FString::Printf(TEXT("NS_SSW_Nozzle_%s"),Variant);
+            const FString PackageName=TEXT("/Game/Effects/Engines/")+Name;
+            auto* FX=LoadObject<UNiagaraSystem>(nullptr,*(PackageName+TEXT(".")+Name));
+            if(!FX)
+            {
+                FX=DuplicateObject<UNiagaraSystem>(Original,CreatePackage(*PackageName),*Name);
+                if(!FX)return 21;FX->SetFlags(RF_Public|RF_Standalone);FAssetRegistryModule::AssetCreated(FX);
+            }
+            FX->EnsureFullyLoaded();
+            auto& Store=FX->GetExposedParameters();
+            bool Valid=true;
+            const auto Float=[&](const TCHAR* Key,float Value)
+            {
+                const FNiagaraVariable Variable(FNiagaraTypeDefinition::GetFloatDef(),FName(Key));
+                if(!Store.GetParameterData(Variable)){Valid=false;UE_LOG(LogTemp,Error,TEXT("Missing nozzle parameter %s"),Key);return;}
+                Store.SetParameterValue(Value,Variable);
+            };
+            const auto Size=[&](const TCHAR* Key,FVector2f Value)
+            {
+                const FNiagaraVariable Variable(FNiagaraTypeDefinition::GetVec2Def(),FName(Key));
+                if(!Store.GetParameterData(Variable)){Valid=false;return;}
+                Store.SetParameterValue(Value,Variable);
+            };
+            // Canonical one-unit nozzle radius. The native actor supplies the
+            // measured world radius exactly once; throttle changes length/emission.
+            Float(TEXT("User.Thrusters_Radius"),.65f);
+            Float(TEXT("User.Thrusters_Life"),.14f);
+            Float(TEXT("User.Thrusters_Speed"),32.f);
+            Float(TEXT("User.Thrusters_AttractionPower"),0.f);
+            Float(TEXT("User.Thrusters_NoiseStrength"),.5f);
+            Float(TEXT("User.Thrusters_NoiseFrequency"),2.f);
+            Float(TEXT("User.Thrusters_ConeAngle"),2.f);
+            Float(TEXT("User.Thrusters_SpawnRate"),450.f);
+            Size(TEXT("User.Thrusters_SpriteSize"),FVector2f(1.4f,2.0f));
+            Float(TEXT("User.EnergyCore_Radius"),.45f);
+            Float(TEXT("User.EnergyCore_SpriteSize"),1.2f);
+            Float(TEXT("User.EnergyCore_Speed"),8.f);
+            Float(TEXT("User.EnergyCore_Attraction"),0.f);
+            Float(TEXT("User.EnergyCore_Life"),.10f);
+            Float(TEXT("User.EnergyCore_SpawnRate"),180.f);
+            Float(TEXT("User.Particulate_SpawnRate"),0.f);
+            Float(TEXT("User.HeatHaze_SpawnRate"),0.f);
+            Float(TEXT("User.Smoke_SpawnRate"),0.f);
+            Float(TEXT("User.Emissive_Boost"),1.f);
+            if(!Valid)return 22;
+            for(auto& Handle:FX->GetEmitterHandles())if(auto* Data=Handle.GetEmitterData())
+            {
+                const auto Instance=Handle.GetInstance();
+                if(!Instance.Emitter || !Instance.Emitter->IsIn(FX))return 23;
+                Data->bLocalSpace=true;
+                Instance.Emitter->PostEditChange();
+            }
+            FX->PostEditChange();FX->RequestCompile(true);FX->WaitForCompilationComplete(false,false);
+            auto* Package=FX->GetOutermost();Package->MarkPackageDirty();
+            const FString Filename=FPackageName::LongPackageNameToFilename(PackageName,FPackageName::GetAssetPackageExtension());
+            IFileManager::Get().MakeDirectory(*FPaths::GetPath(Filename),true);
+            FSavePackageArgs Save;Save.TopLevelFlags=RF_Public|RF_Standalone;Save.SaveFlags=SAVE_NoError;
+            if(!UPackage::SavePackage(Package,FX,*Filename,Save))return 24;
+            UE_LOG(LogTemp,Display,TEXT("Native nozzle recipe saved %s"),*PackageName);
+        }
+        return 0;
+    }
+    if (FParse::Param(*Params,TEXT("Inspect")))
+    {
+        FString Report;
+        for (const TCHAR* Color : {TEXT("Blue"),TEXT("Yellow"),TEXT("Green")})
+        {
+            const FString Path=FString::Printf(TEXT("/Game/RocketThrusterExhaustFX/FX/NS_RocketExhaust_%s.NS_RocketExhaust_%s"),Color,Color);
+            auto* FX=LoadObject<UNiagaraSystem>(nullptr,*Path);if(!FX)return 10;
+            FX->EnsureFullyLoaded();Report+=Path+TEXT("\n");
+            TArray<FNiagaraVariable> Variables;FX->GetExposedParameters().GetParameters(Variables);
+            for(const auto& Variable:Variables)
+            {
+                Report+=Variable.GetName().ToString()+TEXT(" ")+Variable.GetType().GetName();
+                const uint8* Data=FX->GetExposedParameters().GetParameterData(Variable);
+                if(Data && Variable.GetType()==FNiagaraTypeDefinition::GetFloatDef())Report+=FString::Printf(TEXT(" = %g"),*reinterpret_cast<const float*>(Data));
+                Report+=TEXT("\n");
+            }
+            for(auto& Handle:FX->GetEmitterHandles())if(const auto* Data=Handle.GetEmitterData())
+                Report+=FString::Printf(TEXT("Emitter %s LocalSpace=%d\n"),*Handle.GetName().ToString(),Data->bLocalSpace);
+        }
+        return FFileHelper::SaveStringToFile(Report,*(FPaths::ProjectSavedDir()/TEXT("Analysis/NozzleNiagaraParameters.txt")))?0:11;
+    }
     auto* Source=LoadObject<UNiagaraSystem>(nullptr,FighterExhaustTuning::StockSystem);
     if(!Source)return 1;
     Source->EnsureFullyLoaded();

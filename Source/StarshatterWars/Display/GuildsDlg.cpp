@@ -149,14 +149,14 @@ private:
         bRefreshing=true;const FRow Previous=Selected;Rows.Reset();
         const auto& State=Service->GetState();const auto Context=Service->GetContext();
         if(Page==0)
-            for(const auto& Pair:Service->GetCatalog())if(Pair.Value.Kind==EGuildKind::Career)
+            for(const auto& Pair:Service->GetCatalog())if(!Context.Empire.IsNone() && Pair.Value.Empire==Context.Empire && Pair.Value.Kind==EGuildKind::Career)
             {
                 auto Row=MakeShared<FGuildRow>();Row->Definition=Pair.Key;Row->Name=Pair.Value.DisplayName;Row->Kind=TEXT("CAREER");Row->Empire=Pair.Value.Empire.ToString();
                 FText Reason;Row->Status=GuildAI::Eligible(Pair.Value,Context,Reason)?TEXT("AVAILABLE"):Reason.ToString();
                 for(const auto& Org:State.Organizations)if(!Org.Value.bDisbanded && Org.Value.Definition==Pair.Key && Org.Value.Members.Contains(Context.Pilot))Row->Status=TEXT("ENROLLED");
                 if(Search.IsEmpty() || (Row->Name+Row->Empire+Pair.Value.Description).Contains(Search,ESearchCase::IgnoreCase))Rows.Add(Row);
             }
-        if(Page==1)for(const auto& Pair:State.Organizations)if(!Pair.Value.bDisbanded && Pair.Value.Kind==EGuildKind::PlayerOrganization)
+        if(Page==1)for(const auto& Pair:State.Organizations)if(!Context.Empire.IsNone() && Pair.Value.Empire==Context.Empire && !Pair.Value.bDisbanded && Pair.Value.Kind==EGuildKind::PlayerOrganization)
         {
             auto Row=MakeShared<FGuildRow>();Row->Id=Pair.Key;Row->Definition=Pair.Value.Definition;Row->Name=Pair.Value.DisplayName;Row->Kind=TEXT("ORGANIZATION");Row->Empire=Pair.Value.Empire.ToString();
             Row->Status=Pair.Value.Members.Contains(Context.Pilot)?TEXT("MEMBER"):TEXT("RECRUITING");
@@ -167,7 +167,7 @@ private:
             const int64 Now=FDateTime::UtcNow().ToUnixTimestamp();
             const auto AddRequest=[this,&State,&Context](FGuid Id,FGuid Group,FName Pilot,bool Invitation)
             {
-                const auto* Org=State.Organizations.Find(Group);if(!Org || Org->bDisbanded)return;
+                const auto* Org=State.Organizations.Find(Group);if(!Org || Org->bDisbanded || Context.Empire.IsNone() || Org->Empire!=Context.Empire)return;
                 if(Pilot!=Context.Pilot && (Invitation || !(GuildAI::HasRole(*Org,Context.Pilot,EGuildRole::Leader) || GuildAI::HasRole(*Org,Context.Pilot,EGuildRole::Director) || GuildAI::HasRole(*Org,Context.Pilot,EGuildRole::Recruiter))))return;
                 auto Row=MakeShared<FGuildRow>();Row->Id=Id;Row->bInvitation=Invitation;Row->Name=Org->DisplayName+TEXT(" / ")+Service->GetPilotDisplayName(Pilot).ToString();Row->Kind=Invitation?TEXT("INVITATION"):TEXT("APPLICATION");Row->Empire=Org->Empire.ToString();Row->Status=TEXT("PENDING");
                 if(Search.IsEmpty() || Row->Name.Contains(Search,ESearchCase::IgnoreCase))Rows.Add(Row);
@@ -182,6 +182,7 @@ private:
     }
     FText Details()const
     {
+        if(Service.IsValid() && Service->GetContext().Empire.IsNone())return INVTEXT("LOAD A PILOT WITH A KNOWN EMPIRE TO VIEW GUILDS.");
         if(!Selected)return INVTEXT("SELECT A CAREER, ORGANIZATION OR REQUEST. CAREER STARTER SHIPS ARE CLAIMED INTO YOUR HANGAR WHILE DOCKED; ASSIGNED MISSION SHIPS ARE UNCHANGED.");
         if(!Service.IsValid())return FText::GetEmpty();
         FString Text=Selected->Name+TEXT("\n")+Selected->Empire+TEXT(" | ")+Selected->Status;

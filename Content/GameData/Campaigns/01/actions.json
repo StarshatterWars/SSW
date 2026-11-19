@@ -1,0 +1,45 @@
+{
+	"schemaVersion": 1,
+	"campaign": "Operation Live Fire",
+	"actions": [
+		{
+			"campaign": "Operation Live Fire",
+			"id": 0,
+			"type": "event",
+			"subtype": 0,
+			"team": 1,
+			"oppType": 0,
+			"iff": 0,
+			"count": 0,
+			"startBefore": 0,
+			"startAfter": 0,
+			"minRank": 0,
+			"maxRank": 0,
+			"delay": 0,
+			"assetId": 0,
+			"targetId": 0,
+			"targetIff": 0,
+			"probability": 0,
+			"system": "",
+			"region": "Janus",
+			"title": "",
+			"source": "News",
+			"message": "",
+			"image": "",
+			"audio": "",
+			"date": "01/00:00:00",
+			"scene": "Intro",
+			"assetType": "",
+			"targetType": "",
+			"assetKill": "",
+			"targetKill": "",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"requirement": []
+		}
+	]
+}

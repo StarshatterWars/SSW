@@ -20,7 +20,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 338740000,
+		"BaseCost": 439610000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -1928,7 +1928,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 43971000,
+		"BaseCost": 21986000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -4213,7 +4213,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 1136000,
+		"BaseCost": 970000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -6012,7 +6012,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 20486000,
+		"BaseCost": 10243000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -7804,7 +7804,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 20380000,
+		"BaseCost": 10190000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -11324,7 +11324,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 44828000,
+		"BaseCost": 22414000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -14047,7 +14047,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 12797000,
+		"BaseCost": 25594000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -15194,7 +15194,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 13104000,
+		"BaseCost": 26208000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -16397,7 +16397,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 2831000,
+		"BaseCost": 1469000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -18155,7 +18155,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 1119000,
+		"BaseCost": 956000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -20495,7 +20495,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 101919000,
+		"BaseCost": 50960000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -23022,7 +23022,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 1099000,
+		"BaseCost": 1463000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -24346,7 +24346,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 574000,
+		"BaseCost": 572000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -25824,7 +25824,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 104486000,
+		"BaseCost": 52243000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -28588,7 +28588,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 355720000,
+		"BaseCost": 461646000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -31554,7 +31554,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 579000,
+		"BaseCost": 577000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -40941,7 +40941,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 353805000,
+		"BaseCost": 459161000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -50157,7 +50157,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 108694000,
+		"BaseCost": 54347000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -51711,7 +51711,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 589000,
+		"BaseCost": 587000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -53366,7 +53366,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 459000,
+		"BaseCost": 460000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -55092,7 +55092,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 20354000,
+		"BaseCost": 10177000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -57389,7 +57389,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 355936000,
+		"BaseCost": 461926000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -60133,7 +60133,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 12723000,
+		"BaseCost": 25446000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -61398,7 +61398,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 589000,
+		"BaseCost": 587000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -63189,7 +63189,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 576000,
+		"BaseCost": 574000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -68108,7 +68108,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 576000,
+		"BaseCost": 574000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -69493,7 +69493,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 44524000,
+		"BaseCost": 22262000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -71872,7 +71872,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 576000,
+		"BaseCost": 574000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -74719,7 +74719,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 12797000,
+		"BaseCost": 25594000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -75898,7 +75898,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 12993000,
+		"BaseCost": 25986000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -77390,7 +77390,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 1141000,
+		"BaseCost": 975000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -79617,7 +79617,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 19963000,
+		"BaseCost": 9982000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -81665,7 +81665,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 160
 		},
-		"BaseCost": 1107000,
+		"BaseCost": 1474000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -82823,7 +82823,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 110321000,
+		"BaseCost": 55161000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -84483,7 +84483,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 574000,
+		"BaseCost": 572000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -86098,7 +86098,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 44429000,
+		"BaseCost": 22215000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -88348,7 +88348,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 43999000,
+		"BaseCost": 22000000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -90325,7 +90325,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 16
 		},
-		"BaseCost": 458000,
+		"BaseCost": 459000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -91473,7 +91473,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 1124000,
+		"BaseCost": 960000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -92204,7 +92204,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 107141000,
+		"BaseCost": 53571000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -93367,7 +93367,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 107141000,
+		"BaseCost": 53571000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -94530,7 +94530,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 45933000,
+		"BaseCost": 22967000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -95597,7 +95597,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 580000,
+		"BaseCost": 578000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -96328,7 +96328,7 @@
 			"UnloadTonnesPerSecond": 0,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 21403000,
+		"BaseCost": 10702000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -100403,7 +100403,7 @@
 			"UnloadTonnesPerSecond": 1,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 458000,
+		"BaseCost": 463000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,
@@ -101483,7 +101483,7 @@
 			"UnloadTonnesPerSecond": 3,
 			"PassengerBerths": 0
 		},
-		"BaseCost": 12797000,
+		"BaseCost": 25594000,
 		"ProductionRecipe": "None",
 		"Mesh": "None",
 		"PCS": 3,

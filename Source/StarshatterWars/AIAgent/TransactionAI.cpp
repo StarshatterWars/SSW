@@ -56,12 +56,13 @@ TArray<FTransactionEntry> TransactionAI::Query(const FEconomyState& State, const
     return Result;
 }
 
-bool TransactionAI::ReconcileExternalBalance(FEconomyState& State, FName Owner, int64 NewBalance, FName Reason, FName Counterparty, EWalletTransactionCategory Category, FGuid Reference)
+bool TransactionAI::ReconcileExternalBalance(FEconomyState& State, FName Owner, int64 NewBalance, FName Reason, FName Counterparty, EWalletTransactionCategory Category, FGuid Reference, FGuid Receipt)
 {
     if (Owner.IsNone() || NewBalance < 0 || State.Wallets.FindRef(Owner) < 0) return false;
+    if (Receipt.IsValid() && State.CommittedTransactions.Contains(Receipt)) return true;
     const int64 Previous = State.Wallets.FindRef(Owner);
     if (Previous == NewBalance) return true;
-    FEconomyTransaction Entry; Entry.Id = FGuid::NewGuid(); Entry.Reason = Reason;
+    FEconomyTransaction Entry; Entry.Id = Receipt.IsValid() ? Receipt : FGuid::NewGuid(); Entry.Reason = Reason;
     Entry.TimestampUtc = FDateTime::UtcNow().ToUnixTimestamp(); Entry.bHasWalletDeltas = true;
     Entry.WalletDeltas.Add(Owner, NewBalance - Previous);
     Entry.WalletBalancesAfter.Add(Owner, NewBalance); Entry.Category = Category;

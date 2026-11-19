@@ -20,6 +20,7 @@
   },
   {
     "Name": "Adonis_Alloy_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Adonis Alloy Works",
     "System": "Jarnell",
     "Planet": "Adonis",
@@ -58,6 +59,7 @@
   },
   {
     "Name": "Maraner_Materials_Refinery",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Maraner Materials Refinery",
     "System": "Borova",
     "Planet": "Maraner",
@@ -96,6 +98,7 @@
   },
   {
     "Name": "Pallas_Industrial_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Pallas Industrial Works",
     "System": "Athenar",
     "Planet": "Pallas",
@@ -134,6 +137,7 @@
   },
   {
     "Name": "Dorrath_Metals_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Dorrath Metals Works",
     "System": "Paragon",
     "Planet": "Dorrath",
@@ -172,6 +176,7 @@
   },
   {
     "Name": "Hera_Mineral_Processing_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Hera Mineral Processing Works",
     "System": "Thralis",
     "Planet": "Hera",
@@ -267,6 +272,7 @@
   },
   {
     "Name": "Kalon_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Kalon Materials Works",
     "System": "Solus",
     "Planet": "Kalon",
@@ -324,6 +330,7 @@
   },
   {
     "Name": "Silessia_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Silessia Materials Works",
     "System": "Silessia",
     "Planet": "Silessia",
@@ -362,6 +369,7 @@
   },
   {
     "Name": "Tal_Amin_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Tal Amin Materials Works",
     "System": "Haiche",
     "Planet": "Tal Amin",
@@ -400,6 +408,7 @@
   },
   {
     "Name": "Renser_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Renser Materials Works",
     "System": "Renser",
     "Planet": "Renser",
@@ -438,6 +447,7 @@
   },
   {
     "Name": "Loris_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Loris Materials Works",
     "System": "Loris",
     "Planet": "Loris",
@@ -476,6 +486,7 @@
   },
   {
     "Name": "Aram_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Aram Materials Works",
     "System": "Ostara",
     "Planet": "Aram",
@@ -514,6 +525,7 @@
   },
   {
     "Name": "Kolchev_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Kolchev Materials Works",
     "System": "Kolchev",
     "Planet": "Kolchev",
@@ -552,6 +564,7 @@
   },
   {
     "Name": "Adantar_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Adantar Materials Works",
     "System": "Korius",
     "Planet": "Adantar",
@@ -590,6 +603,7 @@
   },
   {
     "Name": "Tarsus_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Tarsus Materials Works",
     "System": "Tarsus",
     "Planet": "Tarsus",
@@ -647,6 +661,7 @@
   },
   {
     "Name": "Nergal_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Nergal Materials Works",
     "System": "Nephrys",
     "Planet": "Nergal",
@@ -685,6 +700,7 @@
   },
   {
     "Name": "Radix_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Radix Materials Works",
     "System": "Radix",
     "Planet": "Radix",
@@ -723,6 +739,7 @@
   },
   {
     "Name": "Ramek_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Ramek Materials Works",
     "System": "Isham",
     "Planet": "Ramek",
@@ -761,6 +778,7 @@
   },
   {
     "Name": "Marak_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Marak Materials Works",
     "System": "Marak",
     "Planet": "Marak",
@@ -799,6 +817,7 @@
   },
   {
     "Name": "Garrison_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Garrison Materials Works",
     "System": "Garrison",
     "Planet": "Garrison",
@@ -837,6 +856,7 @@
   },
   {
     "Name": "Volante_Materials_Works",
+    "AdditionalRecipes": ["Make_mining_drone"],
     "Facility": "Volante Materials Works",
     "System": "Trocanther",
     "Planet": "Volante",

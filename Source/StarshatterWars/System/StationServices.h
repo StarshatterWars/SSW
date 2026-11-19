@@ -1,5 +1,6 @@
 #pragma once
 #include "GameStructs_economy.h"
+#include "StationServiceCatalog.h"
 class UGameInstance;
 struct FSSWProductionFacility;
 struct FStationMarketQuote
@@ -15,6 +16,7 @@ class FStationServices
 {
 public:
     static bool IsDocked();
+    static bool Offers(ESSWStationService Service);
     static bool HasIndustry();
     static const FSSWProductionFacility* Facility();
     static FName Inventory(const TCHAR* Compartment);

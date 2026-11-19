@@ -142,3 +142,37 @@ bool FNativeShipGeometry::ProjectHullPort(const AShipActor& Actor,const FVector&
     Hit=Pose.TransformPosition(LocalHit);
     return FVector::Distance(Hit,Position)<=Distance+.01;
 }
+
+double FNativeShipGeometry::NozzleRadius(const AShipActor& Actor,const FVector& Position,const FVector& Outward,double MaximumRadius)
+{
+    auto Data=Actor.HullMesh?PortModel(Actor.HullMesh->GetStaticMesh()):TSharedPtr<SimModel>();
+    if(!Data || MaximumRadius<=0 || Outward.IsNearlyZero())return 0;
+    const FTransform Pose=Actor.HullMesh->GetComponentTransform();
+    const FVector Axis=Outward.GetSafeNormal();
+    double Nearest=MaximumRadius;bool Found=false;
+    // Read vertices on nozzle walls, not subdivisions inside the flat cap.
+    // A cap's central tessellation otherwise looks like a false smaller rim.
+    // Spacing/hull limits are applied by the caller.
+    for(ListIter<Surface> Surfaces=Data->GetSurfaces();++Surfaces;)
+    {
+        const auto* Vertices=Surfaces->GetVertexSet();const auto* Polygons=Surfaces->GetPolys();if(!Vertices || !Polygons)continue;
+        for(int32 I=0;I<Surfaces->GetNumPolys();++I)
+        {
+            const auto& Polygon=Polygons[I];if(Polygon.nverts<3)continue;
+            const FVector A=Pose.TransformPosition(Vertices->loc[Polygon.verts[0]]);
+            const FVector B=Pose.TransformPosition(Vertices->loc[Polygon.verts[1]]);
+            const FVector C=Pose.TransformPosition(Vertices->loc[Polygon.verts[2]]);
+            const FVector Normal=FVector::CrossProduct(B-A,C-A).GetSafeNormal();
+            if(Normal.IsNearlyZero() || FMath::Abs(FVector::DotProduct(Normal,Axis))>.80)continue;
+            for(int32 Vertex=0;Vertex<Polygon.nverts;++Vertex)
+            {
+                const FVector Delta=Pose.TransformPosition(Vertices->loc[Polygon.verts[Vertex]])-Position;
+                const double Axial=FVector::DotProduct(Delta,Axis);
+                if(FMath::Abs(Axial)>MaximumRadius*.35)continue;
+                const double Radial=(Delta-Axis*Axial).Size();
+                if(Radial>MaximumRadius*.05 && Radial<Nearest){Nearest=Radial;Found=true;}
+            }
+        }
+    }
+    return Found?Nearest*.90:0;
+}

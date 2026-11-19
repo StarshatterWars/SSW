@@ -5,6 +5,7 @@
 #include "GameStructs.h"
 #include "MissionBriefingDlg.generated.h"
 
+enum class ESSWStationService : uint8;
 class UEnhancedInputComponent;
 class UInputMappingContext;
 class UInputAction;
@@ -155,6 +156,16 @@ protected:
     UPROPERTY(Transient) TObjectPtr<class UCargoManifestDlg> CargoManifestWidget;
     void ToggleCargoManifest();
     void CloseCargoManifest();
+    TSharedPtr<SWidget> StationServicesPopup;
+    UPROPERTY(Transient) TObjectPtr<class UStationServicesDlg> StationServicesWidget;
+    bool bOpeningStationService = false;
+    FName StationServicesFacility;
+    FName ResolveStationServicesTarget() const;
+    bool CanOpenStationServices() const;
+    bool CanUseStationServices() const;
+    void ToggleStationServices();
+    void CloseStationServices();
+    void OpenStationService(ESSWStationService Service);
     TSharedPtr<SWidget> ProductionPopup;
     UPROPERTY(Transient) TObjectPtr<class UProductionDlg> ProductionWidget;
     void ToggleProduction();

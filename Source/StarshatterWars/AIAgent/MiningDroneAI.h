@@ -13,13 +13,14 @@ struct FMiningDroneFrame
     double TargetRadius=0;
     FName TargetOre;
     double RemainingTonnes=0;
+    double OwnerFreeTonnes=TNumericLimits<double>::Max();
 };
 class STARSHATTERWARS_API MiningDroneAI
 {
 public:
     static bool Eligible(bool Authority,bool Playing,bool Cinematic,bool Exporting,bool Paused);
     static bool Launch(FMiningDroneFleetState&,FGuid,const FMiningDroneBayDefinition&,const FMiningDroneFrame&,FText&);
-    static bool Mine(FMiningDroneState&,const FMiningDroneBayDefinition&,const FMiningDroneFrame&,FText&);
+    static bool Mine(FMiningDroneState&,const FMiningDroneBayDefinition&,const FMiningDroneFrame&,FText&,bool bRepeat=false);
     static bool Stop(FMiningDroneState&,const FMiningDroneFrame&,FText&);
     static bool Return(FMiningDroneState&,const FMiningDroneFrame&,FText&);
     static bool Dock(FMiningDroneState&,const FMiningDroneFrame&,TFunctionRef<double(FName,double)> Unload,FText&);

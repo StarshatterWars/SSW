@@ -26,6 +26,13 @@ bool FStationServices::IsDocked()
     return Simulation && !Simulation->IsNetworked() && Simulation->HasSimulationAuthority() && Craft && !Craft->IsDead() && !Craft->IsDying() &&
         Craft->GetFlightPhase() <= EOPSMode::ALERT && Base && !Base->IsDead() && !Base->IsDying() && !Base->HasNetworkPilot();
 }
+bool FStationServices::Offers(ESSWStationService Service)
+{
+    if(!IsDocked())return false;
+    const auto* Base=Sim::GetSim()->GetPlayerShip()->GetCarrier();
+    return Base && Base->Design() && FStationServiceCatalog::Get().HasService(
+        FName(UTF8_TO_TCHAR(Base->Design()->name)),FName(UTF8_TO_TCHAR(Base->GetName())),Service);
+}
 namespace
 {
 const FSSWProductionFacility* DockedFacility()
@@ -44,8 +51,8 @@ const FSSWProductionFacility* DockedFacility()
     return nullptr;
 }
 }
-bool FStationServices::HasIndustry() { return DockedFacility() != nullptr; }
-const FSSWProductionFacility* FStationServices::Facility() { return DockedFacility(); }
+bool FStationServices::HasIndustry() { return Offers(ESSWStationService::Manufacturing) && DockedFacility() != nullptr; }
+const FSSWProductionFacility* FStationServices::Facility() { return HasIndustry() ? DockedFacility() : nullptr; }
 FName FStationServices::Inventory(const TCHAR* Compartment)
 {
     if (!IsDocked()) return NAME_None;
@@ -68,6 +75,8 @@ bool TransferContext(UGameInstance* Instance,FName Item,bool ToStation,const TCH
 {
     if(!Instance || !FStationServices::IsDocked() || Item.IsNone() || Item.ToString().StartsWith(TEXT("Courier/")))
     {Reason=INVTEXT("Dock at an NPC base. Sealed courier packages must be delivered through Contracts.");return false;}
+    if(!FStationServices::Offers(ESSWStationService::Cargo))
+    {Reason=INVTEXT("This dock has no cargo transfer service.");return false;}
     const FString Area(Compartment);
     if(Area!=TEXT("Player Storage") && Area!=TEXT("Player Input") && Area!=TEXT("Player Output"))
     {Reason=INVTEXT("Choose a player storage compartment.");return false;}
@@ -161,6 +170,7 @@ bool FStationServices::QuoteMarket(UGameInstance* Instance,FName Item,double Qua
 {
     Quote=FStationMarketQuote{};Quote.Item=Item;Quote.Quantity=Quantity;Quote.bBuy=Buy;
     if(!Instance || !IsDocked()){Quote.Reason=INVTEXT("Dock at an NPC base to buy or sell cargo.");return false;}
+    if(!Offers(ESSWStationService::Market)){Quote.Reason=INVTEXT("This dock has no marketplace service.");return false;}
     const auto* Goods=CatalogItem(Instance,Item);
     if(!Goods || Item.IsNone() || Item.ToString().StartsWith(TEXT("Courier/")) || Goods->Type==ECargoType::Passengers || (!FMath::IsFinite(Goods->Size) || Goods->Size<=0) || !FMath::IsFinite(Goods->Value) || Goods->Value<=0)
     {Quote.Reason=INVTEXT("This item is not available for cargo trading.");return false;}
@@ -239,7 +249,7 @@ int64 FStationServices::RepairQuote(Ship& Craft)
 }
 int64 FStationServices::FullRepairCost()
 {
-    return IsDocked() ? RepairQuote(*Sim::GetSim()->GetPlayerShip()) : 0;
+    return Offers(ESSWStationService::Repair) ? RepairQuote(*Sim::GetSim()->GetPlayerShip()) : 0;
 }
 bool FStationServices::RepairAll(UGameInstance* Instance, FText& Reason)
 {

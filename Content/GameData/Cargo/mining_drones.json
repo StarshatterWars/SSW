@@ -1,26 +1,26 @@
 [
   {
     "ShipDesign": "Prospector",
-    "BayCount": 2,
-    "Bandwidth": 2,
+    "BayCount": 3,
+    "Bandwidth": 3,
     "DroneBandwidth": 1,
     "CapacityTonnes": 0.25,
     "Speed": 250,
     "ControlRange": 15000,
     "MiningRange": 150,
-    "MiningRateScale": 0.25,
+    "MiningRateScale": 0.625,
     "MiningWeapon": "Mining Laser"
   },
   {
     "ShipDesign": "Rockhopper",
-    "BayCount": 6,
-    "Bandwidth": 4,
+    "BayCount": 10,
+    "Bandwidth": 10,
     "DroneBandwidth": 1,
     "CapacityTonnes": 0.5,
     "Speed": 300,
     "ControlRange": 25000,
     "MiningRange": 150,
-    "MiningRateScale": 0.25,
+    "MiningRateScale": 0.825,
     "MiningWeapon": "Mining Laser"
   }
 ]

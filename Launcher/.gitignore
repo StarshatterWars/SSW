@@ -1,2 +1,5 @@
 bin/
 obj/
+
+# Verified third-party runtime is staged reproducibly, not checked in.
+LocalFeedServer/Apache24/

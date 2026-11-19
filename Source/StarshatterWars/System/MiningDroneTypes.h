@@ -29,6 +29,8 @@ struct FMiningDroneState
     UPROPERTY(SaveGame) int32 TargetContact=INDEX_NONE;
     UPROPERTY(SaveGame) FName Ore;
     UPROPERTY(SaveGame) double OreTonnes=0;
+    // Repeating intent is local to this live deployment; explicit recall cancels it.
+    UPROPERTY(SaveGame) bool bRepeatMining=false;
 };
 USTRUCT()
 struct FMiningDroneFleetState

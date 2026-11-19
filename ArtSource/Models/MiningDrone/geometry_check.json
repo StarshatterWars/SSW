@@ -1,0 +1,945 @@
+{
+  "objects": {
+    "MiningDrone_Hull": {
+      "verts": 323,
+      "faces": 588,
+      "open_boundary_edges": 40,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": false,
+      "volume": null,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        2.8,
+        1.438,
+        0.6122
+      ],
+      "islands": 7
+    },
+    "CutterShoulder_-1": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.022102924,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.55,
+        0.18,
+        0.23
+      ],
+      "islands": 1
+    },
+    "CutterBoom_-1": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.036190195,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        1.15,
+        0.18,
+        0.18
+      ],
+      "islands": 1
+    },
+    "CutterRail_-1": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.005293339,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.75,
+        0.12,
+        0.06
+      ],
+      "islands": 1
+    },
+    "CutterHousing_-1": {
+      "verts": 96,
+      "faces": 188,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.03126687,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.32,
+        0.32,
+        0.4
+      ],
+      "islands": 1
+    },
+    "CutterCollar_-1": {
+      "verts": 96,
+      "faces": 188,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.007842237,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.36,
+        0.36,
+        0.08
+      ],
+      "islands": 1
+    },
+    "CutterLens_-1": {
+      "verts": 96,
+      "faces": 188,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.000953341,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.23,
+        0.23,
+        0.025
+      ],
+      "islands": 1
+    },
+    "RearThruster_-1": {
+      "verts": 96,
+      "faces": 188,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.019129502,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.28,
+        0.28,
+        0.32
+      ],
+      "islands": 1
+    },
+    "RearNozzle_-1": {
+      "verts": 96,
+      "faces": 188,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.000714409,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.2,
+        0.2,
+        0.025
+      ],
+      "islands": 1
+    },
+    "CargoClamp_-1": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.009516855,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.65,
+        0.13,
+        0.12
+      ],
+      "islands": 1
+    },
+    "CutterShoulder_1": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.022102924,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.55,
+        0.18,
+        0.23
+      ],
+      "islands": 1
+    },
+    "CutterBoom_1": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.036190195,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        1.15,
+        0.18,
+        0.18
+      ],
+      "islands": 1
+    },
+    "CutterRail_1": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.005293339,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.75,
+        0.12,
+        0.06
+      ],
+      "islands": 1
+    },
+    "CutterHousing_1": {
+      "verts": 96,
+      "faces": 188,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.03126687,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.32,
+        0.32,
+        0.4
+      ],
+      "islands": 1
+    },
+    "CutterCollar_1": {
+      "verts": 96,
+      "faces": 188,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.007842237,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.36,
+        0.36,
+        0.08
+      ],
+      "islands": 1
+    },
+    "CutterLens_1": {
+      "verts": 96,
+      "faces": 188,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.000953341,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.23,
+        0.23,
+        0.025
+      ],
+      "islands": 1
+    },
+    "RearThruster_1": {
+      "verts": 96,
+      "faces": 188,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.019129502,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.28,
+        0.28,
+        0.32
+      ],
+      "islands": 1
+    },
+    "RearNozzle_1": {
+      "verts": 96,
+      "faces": 188,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.000714409,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.2,
+        0.2,
+        0.025
+      ],
+      "islands": 1
+    },
+    "CargoClamp_1": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.009516855,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.65,
+        0.13,
+        0.12
+      ],
+      "islands": 1
+    },
+    "CutterCrossbrace": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.102389597,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.35,
+        1.65,
+        0.18
+      ],
+      "islands": 1
+    },
+    "TailCrossbrace": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.043766805,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.32,
+        1.0,
+        0.14
+      ],
+      "islands": 1
+    },
+    "CargoHanger_-1": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.013174062,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.25,
+        0.14,
+        0.38
+      ],
+      "islands": 1
+    },
+    "CargoHanger_1": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.013174062,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.25,
+        0.14,
+        0.38
+      ],
+      "islands": 1
+    },
+    "TopPanelMount": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.016374063,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.3,
+        0.25,
+        0.22
+      ],
+      "islands": 1
+    },
+    "BeamBridge": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.051679152,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.5,
+        0.42,
+        0.25
+      ],
+      "islands": 1
+    },
+    "MainEmitterHousing": {
+      "verts": 96,
+      "faces": 188,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.026455104,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.34,
+        0.34,
+        0.3
+      ],
+      "islands": 1
+    },
+    "MainEmitterLens": {
+      "verts": 96,
+      "faces": 188,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.001040638,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.24,
+        0.24,
+        0.025
+      ],
+      "islands": 1
+    },
+    "TopServicePanel": {
+      "verts": 56,
+      "faces": 108,
+      "open_boundary_edges": 0,
+      "nonmanifold_edges": 0,
+      "loose_verts": 0,
+      "loose_edges": 0,
+      "degenerate_faces": 0,
+      "ngons": 0,
+      "closed": true,
+      "volume": 0.019314172,
+      "scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "dimensions": [
+        0.65,
+        0.4,
+        0.075
+      ],
+      "islands": 1
+    }
+  },
+  "errors": [],
+  "warnings": [],
+  "info": [
+    "MiningDrone_Hull: open mesh (40 boundary edges); fine for planes/cloth, bad for solids and 3D printing.",
+    "44 expected embedded contacts (expect_embedded)."
+  ],
+  "units": "m",
+  "overall": {
+    "min": [
+      -1.4825000762939453,
+      -0.9700000286102295,
+      -0.3700000047683716
+    ],
+    "max": [
+      1.7025001049041748,
+      0.9700000286102295,
+      0.3774999976158142
+    ],
+    "size": [
+      3.18500018119812,
+      1.940000057220459,
+      0.7475000023841858
+    ],
+    "contact_tolerance": 0.015,
+    "parts": 34
+  },
+  "contacts": [
+    {
+      "a": "MiningDrone_Hull[island 0]",
+      "b": "MiningDrone_Hull[island 1]",
+      "depth": 0.014706119894981384,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 0]",
+      "b": "MiningDrone_Hull[island 2]",
+      "depth": 0.014705881476402283,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 0]",
+      "b": "MiningDrone_Hull[island 3]",
+      "depth": 0.007842238061130047,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 0]",
+      "b": "MiningDrone_Hull[island 4]",
+      "depth": 0.007889358326792717,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 0]",
+      "b": "MiningDrone_Hull[island 5]",
+      "depth": 0.03006868250668049,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 0]",
+      "b": "MiningDrone_Hull[island 6]",
+      "depth": 0.04903465881943703,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 0]",
+      "b": "CutterCrossbrace",
+      "depth": 0.06115815043449402,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 0]",
+      "b": "TailCrossbrace",
+      "depth": 0.05204460769891739,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 0]",
+      "b": "TopPanelMount",
+      "depth": 0.045347828418016434,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 0]",
+      "b": "BeamBridge",
+      "depth": 0.08806431293487549,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 0]",
+      "b": "MainEmitterHousing",
+      "depth": 0.13999998569488525,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 1]",
+      "b": "CutterShoulder_-1",
+      "depth": 0.005678196437656879,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 1]",
+      "b": "CargoHanger_-1",
+      "depth": 0.017808066681027412,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 2]",
+      "b": "CutterShoulder_1",
+      "depth": 0.005678200162947178,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 2]",
+      "b": "CargoHanger_1",
+      "depth": 0.017808083444833755,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 3]",
+      "b": "BeamBridge",
+      "depth": 0.08214440196752548,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 4]",
+      "b": "BeamBridge",
+      "depth": 0.08214440196752548,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 5]",
+      "b": "BeamBridge",
+      "depth": 0.01708434522151947,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 5]",
+      "b": "MainEmitterHousing",
+      "depth": 0.007151246070861816,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 6]",
+      "b": "CutterCrossbrace",
+      "depth": 0.05609261989593506,
+      "expected": true
+    },
+    {
+      "a": "MiningDrone_Hull[island 6]",
+      "b": "BeamBridge",
+      "depth": 0.0,
+      "expected": true
+    },
+    {
+      "a": "CutterShoulder_-1",
+      "b": "CutterCrossbrace",
+      "depth": 0.0,
+      "expected": true
+    },
+    {
+      "a": "CutterBoom_-1",
+      "b": "CutterRail_-1",
+      "depth": 0.015000000596046448,
+      "expected": true
+    },
+    {
+      "a": "CutterBoom_-1",
+      "b": "CutterHousing_-1",
+      "depth": 0.06676806509494781,
+      "expected": true
+    },
+    {
+      "a": "CutterBoom_-1",
+      "b": "CutterCrossbrace",
+      "depth": 0.04500000923871994,
+      "expected": true
+    },
+    {
+      "a": "CutterRail_-1",
+      "b": "CutterHousing_-1",
+      "depth": 0.06678689271211624,
+      "expected": true
+    },
+    {
+      "a": "CutterHousing_-1",
+      "b": "CutterCollar_-1",
+      "depth": 0.029999971389770508,
+      "expected": true
+    },
+    {
+      "a": "CutterCollar_-1",
+      "b": "CutterLens_-1",
+      "depth": 0.0024999380111694336,
+      "expected": true
+    },
+    {
+      "a": "RearThruster_-1",
+      "b": "RearNozzle_-1",
+      "depth": 0.0024999380111694336,
+      "expected": true
+    },
+    {
+      "a": "RearThruster_-1",
+      "b": "TailCrossbrace",
+      "depth": 0.06999999284744263,
+      "expected": true
+    },
+    {
+      "a": "CargoClamp_-1",
+      "b": "CargoHanger_-1",
+      "depth": 0.041999995708465576,
+      "expected": true
+    },
+    {
+      "a": "CutterShoulder_1",
+      "b": "CutterCrossbrace",
+      "depth": 0.0,
+      "expected": true
+    },
+    {
+      "a": "CutterBoom_1",
+      "b": "CutterRail_1",
+      "depth": 0.015000000596046448,
+      "expected": true
+    },
+    {
+      "a": "CutterBoom_1",
+      "b": "CutterHousing_1",
+      "depth": 0.06676806509494781,
+      "expected": true
+    },
+    {
+      "a": "CutterBoom_1",
+      "b": "CutterCrossbrace",
+      "depth": 0.04500000923871994,
+      "expected": true
+    },
+    {
+      "a": "CutterRail_1",
+      "b": "CutterHousing_1",
+      "depth": 0.06678689271211624,
+      "expected": true
+    },
+    {
+      "a": "CutterHousing_1",
+      "b": "CutterCollar_1",
+      "depth": 0.029999971389770508,
+      "expected": true
+    },
+    {
+      "a": "CutterCollar_1",
+      "b": "CutterLens_1",
+      "depth": 0.0024999380111694336,
+      "expected": true
+    },
+    {
+      "a": "RearThruster_1",
+      "b": "RearNozzle_1",
+      "depth": 0.0024999380111694336,
+      "expected": true
+    },
+    {
+      "a": "RearThruster_1",
+      "b": "TailCrossbrace",
+      "depth": 0.06999999284744263,
+      "expected": true
+    },
+    {
+      "a": "CargoClamp_1",
+      "b": "CargoHanger_1",
+      "depth": 0.041999995708465576,
+      "expected": true
+    },
+    {
+      "a": "TopPanelMount",
+      "b": "TopServicePanel",
+      "depth": 0.02950000762939453,
+      "expected": true
+    },
+    {
+      "a": "BeamBridge",
+      "b": "MainEmitterHousing",
+      "depth": 0.06424422562122345,
+      "expected": true
+    },
+    {
+      "a": "MainEmitterHousing",
+      "b": "MainEmitterLens",
+      "depth": 0.0,
+      "expected": true
+    }
+  ],
+  "summary": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "text": "GEOMETRY CHECK: 0 errors, 0 warnings\n  overall size (m): (3.185, 1.940, 0.748)  parts: 34  contact tol: 0.0150\n  [INFO] MiningDrone_Hull: open mesh (40 boundary edges); fine for planes/cloth, bad for solids and 3D printing.\n  [INFO] 44 expected embedded contacts (expect_embedded).\n  objects:\n    MiningDrone_Hull: dims (2.800, 1.438, 0.612) verts 323 faces 588 islands 7\n    CutterShoulder_-1: dims (0.550, 0.180, 0.230) verts 56 faces 108 islands 1\n    CutterBoom_-1: dims (1.150, 0.180, 0.180) verts 56 faces 108 islands 1\n    CutterRail_-1: dims (0.750, 0.120, 0.060) verts 56 faces 108 islands 1\n    CutterHousing_-1: dims (0.320, 0.320, 0.400) verts 96 faces 188 islands 1\n    CutterCollar_-1: dims (0.360, 0.360, 0.080) verts 96 faces 188 islands 1\n    CutterLens_-1: dims (0.230, 0.230, 0.025) verts 96 faces 188 islands 1\n    RearThruster_-1: dims (0.280, 0.280, 0.320) verts 96 faces 188 islands 1\n    RearNozzle_-1: dims (0.200, 0.200, 0.025) verts 96 faces 188 islands 1\n    CargoClamp_-1: dims (0.650, 0.130, 0.120) verts 56 faces 108 islands 1\n    CutterShoulder_1: dims (0.550, 0.180, 0.230) verts 56 faces 108 islands 1\n    CutterBoom_1: dims (1.150, 0.180, 0.180) verts 56 faces 108 islands 1\n    CutterRail_1: dims (0.750, 0.120, 0.060) verts 56 faces 108 islands 1\n    CutterHousing_1: dims (0.320, 0.320, 0.400) verts 96 faces 188 islands 1\n    CutterCollar_1: dims (0.360, 0.360, 0.080) verts 96 faces 188 islands 1\n    CutterLens_1: dims (0.230, 0.230, 0.025) verts 96 faces 188 islands 1\n    RearThruster_1: dims (0.280, 0.280, 0.320) verts 96 faces 188 islands 1\n    RearNozzle_1: dims (0.200, 0.200, 0.025) verts 96 faces 188 islands 1\n    CargoClamp_1: dims (0.650, 0.130, 0.120) verts 56 faces 108 islands 1\n    CutterCrossbrace: dims (0.350, 1.650, 0.180) verts 56 faces 108 islands 1\n    TailCrossbrace: dims (0.320, 1.000, 0.140) verts 56 faces 108 islands 1\n    CargoHanger_-1: dims (0.250, 0.140, 0.380) verts 56 faces 108 islands 1\n    CargoHanger_1: dims (0.250, 0.140, 0.380) verts 56 faces 108 islands 1\n    TopPanelMount: dims (0.300, 0.250, 0.220) verts 56 faces 108 islands 1\n    BeamBridge: dims (0.500, 0.420, 0.250) verts 56 faces 108 islands 1\n    MainEmitterHousing: dims (0.340, 0.340, 0.300) verts 96 faces 188 islands 1\n    MainEmitterLens: dims (0.240, 0.240, 0.025) verts 96 faces 188 islands 1\n    TopServicePanel: dims (0.650, 0.400, 0.075) verts 56 faces 108 islands 1"
+}

@@ -1,0 +1,114 @@
+{
+	"schemaVersion": 1,
+	"campaign": "Operation Shining Fortress",
+	"zones": [
+		{
+			"system": "Silessia",
+			"region": "Silessia"
+		},
+		{
+			"system": "Silessia",
+			"region": "Prosenar"
+		},
+		{
+			"system": "Silessia",
+			"region": "Vesta"
+		},
+		{
+			"system": "Silessia",
+			"region": "Nero"
+		},
+		{
+			"system": "Haiche",
+			"region": "Haiche"
+		},
+		{
+			"system": "Haiche",
+			"region": "Tantalus"
+		},
+		{
+			"system": "Haiche",
+			"region": "Cygnus"
+		},
+		{
+			"system": "Haiche",
+			"region": "Tal Amin"
+		},
+		{
+			"system": "Haiche",
+			"region": "Kala"
+		},
+		{
+			"system": "Janus",
+			"region": "Dante"
+		},
+		{
+			"system": "Janus",
+			"region": "Janek"
+		},
+		{
+			"system": "Janus",
+			"region": "Janek Station"
+		},
+		{
+			"system": "Janus",
+			"region": "Alystra"
+		},
+		{
+			"system": "Janus",
+			"region": "Navara"
+		},
+		{
+			"system": "Janus",
+			"region": "Dante"
+		},
+		{
+			"system": "Borova",
+			"region": "Talistar"
+		},
+		{
+			"system": "Borova",
+			"region": "Maraner"
+		},
+		{
+			"system": "Borova",
+			"region": "Borova"
+		},
+		{
+			"system": "Borova",
+			"region": "Danova"
+		},
+		{
+			"system": "Borova",
+			"region": "Zhalisal"
+		},
+		{
+			"system": "Borova",
+			"region": "Tulkas"
+		},
+		{
+			"system": "Jarnell",
+			"region": "Adonai"
+		},
+		{
+			"system": "Jarnell",
+			"region": "Jarnell"
+		},
+		{
+			"system": "Jarnell",
+			"region": "Caladan"
+		},
+		{
+			"system": "Jarnell",
+			"region": "Dawn"
+		},
+		{
+			"system": "Athenar",
+			"region": "Athenar"
+		},
+		{
+			"system": "Athenar",
+			"region": "Pallas"
+		}
+	]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "SSW industrial mining drone prototype",
+  "units": "m",
+  "ground": false,
+  "overall": {
+    "dims": [
+      3.185,
+      1.94,
+      0.748
+    ],
+    "tol": 0.04
+  },
+  "contact_tolerance": 0.015,
+  "expect_embedded": [
+    [
+      "*",
+      "*"
+    ]
+  ]
+}

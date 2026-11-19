@@ -102,6 +102,9 @@
 #include "CargoManifestDlg.h"
 #include "MarketplaceDlg.h"
 #include "ProductionDlg.h"
+#include "StationServicesDlg.h"
+#include "StationServices.h"
+#include "StationServicesAI.h"
 #include "ShipStoreDlg.h"
 #include "ContractsDlg.h"
 #include "AgentsDlg.h"
@@ -1886,7 +1889,7 @@ private:
 bool UMissionBriefingDlg::CanOpenFlightPanel() const
 {
     return bLiveMissionStarted && !bMissionCompleteHandedOff && GetWorld() && !GetWorld()->IsPaused()
-        && ((MissionPtr && MissionPtr->IsFreeFlight()) || !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()))
+        && ((bOpeningStationService && FStationServices::IsDocked()) || (MissionPtr && MissionPtr->IsFreeFlight()) || !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()))
         && !TravelTransition && !MissionSceneCover
         && !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
 }
@@ -1924,6 +1927,11 @@ void UMissionBriefingDlg::InstallFlightPanelToolbar()
             .ToolTipText_Lambda([this, Label, Toggle, bRequiresLaunch, bQuantum, QuantumPilot]()
             {
                 if (Toggle == &UMissionBriefingDlg::ToggleMarketplace && !CanOpenMarketplace()) return INVTEXT("Marketplace (available when docked)");
+                if (Toggle == &UMissionBriefingDlg::ToggleStationServices)
+                {
+                    if (!CanOpenStationServices()) return INVTEXT("Station Services (select a station or carrier to inspect)");
+                    return CanUseStationServices() ? INVTEXT("Station Services") : INVTEXT("Station Services (read-only until docked at the viewed facility)");
+                }
                 if (bQuantum)
                 {
                     const Ship* Pilot = QuantumPilot();
@@ -1945,6 +1953,7 @@ void UMissionBriefingDlg::InstallFlightPanelToolbar()
                         return Pilot && Pilot->GetQuantumDrive();
                     }
                     if (Toggle == &UMissionBriefingDlg::ToggleMarketplace) return CanOpenMarketplace();
+                    if (Toggle == &UMissionBriefingDlg::ToggleStationServices) return CanOpenStationServices();
                     return CanOpenFlightPanel() && Toggle && (!bRequiresLaunch || CanOpenCameraAndRadio());
                 })
                 .ButtonColorAndOpacity_Lambda([this, Panel]()
@@ -1979,6 +1988,7 @@ void UMissionBriefingDlg::InstallFlightPanelToolbar()
     AddButton(TEXT("Quantum"), EShipSystemIcon::Jump, &UMissionBriefingDlg::ToggleQuantumTravel, &UMissionBriefingDlg::QuantumPopup);
     AddButton(TEXT("Radio"), EShipSystemIcon::Radio, &UMissionBriefingDlg::ToggleFighterRadio, nullptr, true);
     AddButton(TEXT("Ship Store"), EShipSystemIcon::ShipStore, &UMissionBriefingDlg::ToggleShipStore, &UMissionBriefingDlg::ShipStorePopup);
+    AddButton(TEXT("Station Services"), EShipSystemIcon::Station, &UMissionBriefingDlg::ToggleStationServices, &UMissionBriefingDlg::StationServicesPopup);
     AddButton(TEXT("Tactical Reference"), EShipSystemIcon::Reference, &UMissionBriefingDlg::ToggleFlightReference, &UMissionBriefingDlg::ReferencePopup);
     AddButton(TEXT("Weapons"), EShipSystemIcon::Weapon, &UMissionBriefingDlg::ToggleFighterWeaponsPanel, &UMissionBriefingDlg::WeaponsPopup);
     AddButton(TEXT("Mission exit menu"), EShipSystemIcon::Exit, &UMissionBriefingDlg::ToggleMissionMenu, nullptr);
@@ -2112,7 +2122,7 @@ void UMissionBriefingDlg::UpdateFlightPanelInput(TSharedPtr<SWidget> Focus)
     APlayerController* PC = GetOwningPlayer();
     if (!PC) return;
     const bool bHasPanels = EngineeringPopup || WeaponsPopup || NavigationPopup || QuantumPopup ||
-        IntelPopup || MissionPopup || ObjectivesPopup || FlightOpsPopup || ContactsPopup || ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || AwardsPopup || WalletPopup || GuildsPopup || MiningDronesPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup;
+        IntelPopup || MissionPopup || ObjectivesPopup || FlightOpsPopup || ContactsPopup || ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || StationServicesPopup || ShipStorePopup || AgentsPopup || PlayersPopup || AwardsPopup || WalletPopup || GuildsPopup || MiningDronesPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup;
     if (!bHasPanels && !bFlightPanelInput) return;
 
     if (!bFlightPanelInput) bFlightPanelPreviousCursor = PC->bShowMouseCursor;
@@ -2416,7 +2426,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
             const bool Staged=Pilot && Pilot->GetDock() && Pilot->GetDock()->IsLaunchDeck() && Pilot->GetFlightPhase()<EOPSMode::ACTIVE;
             return HUDOwner.IsValid() && HUDOwner->CanShowFighterHUD() && !Staged &&
                 HUDOwner->bFighterHUDVisible && !(HUDOwner->MissionCameraRig.IsValid() && HUDOwner->MissionCameraRig->bThirdPersonView) && !(HUDOwner->FighterHUDDetails.IsValid() && HUDOwner->FighterHUDDetails->IsCockpitDisplayActive()) && !HUDOwner->MissionSceneCover.IsValid() &&
-                !HUDOwner->LiveOptionsPopup && !HUDOwner->CargoManifestPopup && !HUDOwner->MarketplacePopup && !HUDOwner->ProductionPopup && !HUDOwner->ShipStorePopup && !HUDOwner->AgentsPopup && !HUDOwner->PlayersPopup && !HUDOwner->AwardsPopup && !HUDOwner->WalletPopup && !HUDOwner->GuildsPopup && !HUDOwner->MiningDronesPopup && !HUDOwner->SkillsPopup && !HUDOwner->HangarPopup && !HUDOwner->InsurancePopup && !HUDOwner->LoadoutsPopup && !HUDOwner->FittingPopup && !HUDOwner->ContractsPopup && !HUDOwner->ReferencePopup &&
+                !HUDOwner->LiveOptionsPopup && !HUDOwner->CargoManifestPopup && !HUDOwner->MarketplacePopup && !HUDOwner->ProductionPopup && !HUDOwner->StationServicesPopup && !HUDOwner->ShipStorePopup && !HUDOwner->AgentsPopup && !HUDOwner->PlayersPopup && !HUDOwner->AwardsPopup && !HUDOwner->WalletPopup && !HUDOwner->GuildsPopup && !HUDOwner->MiningDronesPopup && !HUDOwner->SkillsPopup && !HUDOwner->HangarPopup && !HUDOwner->InsurancePopup && !HUDOwner->LoadoutsPopup && !HUDOwner->FittingPopup && !HUDOwner->ContractsPopup && !HUDOwner->ReferencePopup &&
                 !(HUDOwner->MissionQuitMenu && HUDOwner->MissionQuitMenu->IsMenuShown());
         });
         GetWorld()->GetGameViewport()->AddViewportWidgetContent(FighterHUDPanels.ToSharedRef(), 800);
@@ -2753,6 +2763,7 @@ void UMissionBriefingDlg::DisableMissionMenuInput()
     CloseCargoManifest();
     CloseMarketplace();
     CloseProduction();
+    CloseStationServices();
     CloseMiningDrones();
     CloseShipStore();
     CloseAgents();
@@ -2854,7 +2865,7 @@ void UMissionBriefingDlg::NextMissionTarget()
         if (HUDView* Hud = HUDView::GetInstance()) Hud->SetHUDColorSet(HUDView::DefaultColorSet());
         return;
     }
-    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || AwardsPopup || WalletPopup || GuildsPopup || MiningDronesPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup ||
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || StationServicesPopup || ShipStorePopup || AgentsPopup || PlayersPopup || AwardsPopup || WalletPopup || GuildsPopup || MiningDronesPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup ||
         EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() ||
         FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || !GetWorld() || GetWorld()->IsPaused())
@@ -2913,7 +2924,7 @@ void UMissionBriefingDlg::NextMissionTarget()
 }
 void UMissionBriefingDlg::CycleMissionTarget(int32 Direction)
 {
-    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || StationServicesPopup.IsValid() || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || !IsValid(MissionPreviewCamera)) return;
     Sim* Simulation = Sim::GetSim();
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
@@ -3049,7 +3060,7 @@ void UMissionBriefingDlg::SelectMissionContact(AActor* Selected)
 bool UMissionBriefingDlg::CanUseFighterHUD() const
 {
     return bLiveMissionStarted && !bMissionCompleteHandedOff
-        && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !IntelPopup.IsValid() && !MissionPopup.IsValid() && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() && !ReferencePopup && !LiveOptionsPopup && !CargoManifestPopup && !MarketplacePopup && !ProductionPopup && !ShipStorePopup && !AgentsPopup && !PlayersPopup && !AwardsPopup && !WalletPopup && !GuildsPopup && !MiningDronesPopup && !HangarPopup && !InsurancePopup && !LoadoutsPopup && !FittingPopup && !ContractsPopup &&
+        && !(Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) && !QuantumPopup.IsValid() && !TravelTransition.IsValid() && !MissionSceneCover.IsValid() && !EngineeringPopup.IsValid() && !WeaponsPopup.IsValid() && !IntelPopup.IsValid() && !MissionPopup.IsValid() && !ObjectivesPopup.IsValid() && !FlightOpsPopup.IsValid() && !NavigationPopup.IsValid() && !ReferencePopup && !LiveOptionsPopup && !CargoManifestPopup && !MarketplacePopup && !ProductionPopup && !StationServicesPopup && !ShipStorePopup && !AgentsPopup && !PlayersPopup && !AwardsPopup && !WalletPopup && !GuildsPopup && !MiningDronesPopup && !HangarPopup && !InsurancePopup && !LoadoutsPopup && !FittingPopup && !ContractsPopup &&
         !(MissionQuitMenu && MissionQuitMenu->IsMenuShown());
 }
 
@@ -3108,7 +3119,7 @@ void UMissionBriefingDlg::ToggleFighterCautionPanel()
 
 void UMissionBriefingDlg::ToggleFighterHUD()
 {
-    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
+    if (!bLiveMissionStarted || MissionSceneCover.IsValid() || StationServicesPopup.IsValid() || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() ||
         (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return;
     APlayerController* PC = GetOwningPlayer();
     if (PC && StarshatterInputBindings::IsModifierDown(PC, TEXT("Shift")))
@@ -3146,6 +3157,7 @@ void UMissionBriefingDlg::ToggleMissionMenu()
     CloseCargoManifest();
     CloseMarketplace();
     CloseProduction();
+    CloseStationServices();
     CloseMiningDrones();
     CloseShipStore();
     CloseAgents();
@@ -3840,7 +3852,7 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
     APlayerController* PC = GetOwningPlayer();
     if (!World || !PC || !bLiveMissionStarted || bMissionCompleteHandedOff
         || (Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) || !IsValid(MissionPreviewCamera)) return;
-    if (ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || ShipStorePopup || AgentsPopup || PlayersPopup || AwardsPopup || WalletPopup || GuildsPopup || MiningDronesPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
+    if (ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || StationServicesPopup || ShipStorePopup || AgentsPopup || PlayersPopup || AwardsPopup || WalletPopup || GuildsPopup || MiningDronesPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
@@ -4158,6 +4170,116 @@ void UMissionBriefingDlg::CloseMarketplace()
     MarketplaceWidget = nullptr;
 }
 
+FName UMissionBriefingDlg::ResolveStationServicesTarget() const
+{
+    Sim* Simulation = Sim::GetSim();
+    const Ship* Pilot = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
+    if (!Pilot) return NAME_None;
+    const auto Eligible = [](const Ship* Base)
+    {
+        if (!Base || Base->IsDead() || Base->IsDying()) return false;
+        const auto Kind = Base->GetClassification();
+        return Kind == CLASSIFICATION::STATION || Kind == CLASSIFICATION::STARBASE || Kind == CLASSIFICATION::CARRIER;
+    };
+    if (Region)
+    {
+        const auto* Visual = Cast<AShipActor>(SelectedMissionTarget.Get());
+        Ship* Selected = Visual ? Visual->GetRuntimeShip() : nullptr;
+        if (Selected && Region->GetShips().contains(Selected) && Eligible(Selected))
+            return FName(UTF8_TO_TCHAR(Selected->GetName()));
+        for (ListIter<Ship> Ships = Region->GetShips(); ++Ships;)
+            if (static_cast<SimObject*>(Ships.value()) == Pilot->GetTarget() && Eligible(Ships.value()))
+                return FName(UTF8_TO_TCHAR(Ships.value()->GetName()));
+    }
+    const Ship* Dock = FStationServices::IsDocked() ? Pilot->GetCarrier() : nullptr;
+    return Eligible(Dock) ? FName(UTF8_TO_TCHAR(Dock->GetName())) : NAME_None;
+}
+
+bool UMissionBriefingDlg::CanOpenStationServices() const
+{
+    if (!bLiveMissionStarted || bMissionCompleteHandedOff || !GetWorld() || GetWorld()->IsPaused() ||
+        TravelTransition || MissionSceneCover || (MissionQuitMenu && MissionQuitMenu->IsMenuShown())) return false;
+    Sim* Simulation = Sim::GetSim();
+    const Ship* Pilot = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    return Pilot && !Pilot->IsDead() && !Pilot->IsDying() &&
+        (StationServicesPopup.IsValid() || !ResolveStationServicesTarget().IsNone());
+}
+
+bool UMissionBriefingDlg::CanUseStationServices() const
+{
+    if (!CanOpenStationServices() || !FStationServices::IsDocked()) return false;
+    const FName Viewed = StationServicesPopup.IsValid() ? StationServicesFacility : ResolveStationServicesTarget();
+    return StationServicesAI::Context(Viewed).bDocked;
+}
+
+void UMissionBriefingDlg::ToggleStationServices()
+{
+    if (StationServicesPopup) { CloseStationServices(); return; }
+    if (!CanOpenStationServices() || !FlightPanelCanvas) return;
+    StationServicesFacility = ResolveStationServicesTarget();
+    if (StationServicesFacility.IsNone()) return;
+    ClearMissionRotationInput();
+    StationServicesWidget = CreateWidget<UStationServicesDlg>(GetOwningPlayer(),
+        ResolveFlightPopupClass<UStationServicesDlg>(GetGameInstance(), TEXT("UI.StationServicesPopupClass")));
+    if (!StationServicesWidget) return;
+    StationServicesWidget->SetStation(StationServicesFacility);
+    StationServicesWidget->OnOpenService = FOpenStationService::CreateUObject(this, &UMissionBriefingDlg::OpenStationService);
+    AddFloatingPanel(StationServicesPopup, StationServicesWidget->TakeWidget(), TEXT("Station Services"), 1,
+        FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseStationServices));
+}
+
+void UMissionBriefingDlg::CloseStationServices()
+{
+    if (StationServicesWidget) StationServicesWidget->OnOpenService.Unbind();
+    RemoveFloatingPanel(StationServicesPopup);
+    StationServicesWidget = nullptr;
+    StationServicesFacility = NAME_None;
+}
+
+void UMissionBriefingDlg::OpenStationService(ESSWStationService Service)
+{
+    if (!CanUseStationServices()) return;
+    FText Unavailable;
+    if (!StationServicesAI::CanUse(StationServicesAI::Context(StationServicesFacility), Service, Unavailable)) return;
+    TGuardValue<bool> ServiceScope(bOpeningStationService, true);
+    auto* Players = GetGameInstance() ? GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    const FGuid AssignedHull = Players ? Players->GetPlayerInfo().AssignedHangarHull : FGuid();
+    switch (Service)
+    {
+    case ESSWStationService::Cargo:
+        if (!CargoManifestPopup) ToggleCargoManifest(); else UpdateFlightPanelInput(CargoManifestPopup);
+        break;
+    case ESSWStationService::Market:
+        if (!MarketplacePopup) ToggleMarketplace(); else UpdateFlightPanelInput(MarketplacePopup);
+        break;
+    case ESSWStationService::Insurance:
+        if (AssignedHull.IsValid()) OpenInsurance(AssignedHull);
+        else if (!HangarPopup) ToggleHangar(); else UpdateFlightPanelInput(HangarPopup);
+        break;
+    case ESSWStationService::Loadout:
+        if (AssignedHull.IsValid()) OpenHangarLoadout(AssignedHull);
+        else if (!HangarPopup) ToggleHangar(); else UpdateFlightPanelInput(HangarPopup);
+        break;
+    case ESSWStationService::Refit:
+        if (AssignedHull.IsValid()) OpenHangarFit(AssignedHull);
+        else if (!HangarPopup) ToggleHangar(); else UpdateFlightPanelInput(HangarPopup);
+        break;
+    case ESSWStationService::Repair:
+    case ESSWStationService::HullSelection:
+        if (!HangarPopup) ToggleHangar(); else UpdateFlightPanelInput(HangarPopup);
+        break;
+    case ESSWStationService::Manufacturing:
+    case ESSWStationService::Blueprints:
+        if (!ProductionPopup) ToggleProduction(); else UpdateFlightPanelInput(ProductionPopup);
+        if(Service==ESSWStationService::Blueprints && ProductionWidget)ProductionWidget->ShowBlueprints();
+        break;
+    case ESSWStationService::SkillBooks:
+        if (!SkillsPopup) ToggleSkills(); else UpdateFlightPanelInput(SkillsPopup);
+        break;
+    }
+}
+
 void UMissionBriefingDlg::ToggleProduction()
 {
     if (ProductionPopup) { CloseProduction(); return; }
@@ -4313,9 +4435,21 @@ void UMissionBriefingDlg::ToggleHangar()
     HangarWidget = CreateWidget<UHangarDlg>(GetOwningPlayer(),
         ResolveFlightPopupClass<UHangarDlg>(GetGameInstance(), TEXT("UI.HangarPopupClass")));
     if (!HangarWidget) return;
-    HangarWidget->OnLoadout = FOpenShipInsurance::CreateUObject(this, &UMissionBriefingDlg::OpenHangarLoadout);
-    HangarWidget->OnFit = FOpenShipInsurance::CreateUObject(this, &UMissionBriefingDlg::OpenHangarFit);
-    HangarWidget->OnInsurance = FOpenShipInsurance::CreateUObject(this, &UMissionBriefingDlg::OpenInsurance);
+    HangarWidget->OnLoadout = FOpenShipInsurance::CreateWeakLambda(this, [this](FGuid Hull)
+    {
+        TGuardValue<bool> ServiceScope(bOpeningStationService, CanUseStationServices());
+        OpenHangarLoadout(Hull);
+    });
+    HangarWidget->OnFit = FOpenShipInsurance::CreateWeakLambda(this, [this](FGuid Hull)
+    {
+        TGuardValue<bool> ServiceScope(bOpeningStationService, CanUseStationServices());
+        OpenHangarFit(Hull);
+    });
+    HangarWidget->OnInsurance = FOpenShipInsurance::CreateWeakLambda(this, [this](FGuid Hull)
+    {
+        TGuardValue<bool> ServiceScope(bOpeningStationService, CanUseStationServices());
+        OpenInsurance(Hull);
+    });
     AddFloatingPanel(HangarPopup, HangarWidget->TakeWidget(), TEXT("Hangar"), 2,
         FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseHangar));
 }

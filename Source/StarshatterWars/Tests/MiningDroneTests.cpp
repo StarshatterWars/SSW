@@ -95,4 +95,69 @@ bool FMiningDroneRollbackTest::RunTest(const FString&)
     TestEqual(TEXT("Repeated rollback cannot mint source ore"),Rock.ReturnExtractedOre(Taken),0.0);
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMiningDroneRepeatTest,"Starshatter.Mining.Drones.RepeatHaulsConserveOreAndStopAtFullHold",EAutomationTestFlags_ApplicationContextMask|EAutomationTestFlags::EngineFilter)
+bool FMiningDroneRepeatTest::RunTest(const FString&)
+{
+    auto Fleet=DroneFleet();const auto Bay=DroneBay();auto Frame=DroneFrame();FText Reason;auto& Drone=Fleet.Drones[0];
+    double Source=1,Hold=0;const double OwnerCapacity=.5;
+    Frame.OwnerFreeTonnes=OwnerCapacity;
+    MiningDroneAI::Launch(Fleet,Drone.Id,Bay,Frame,Reason);
+    TestTrue(TEXT("Repeat mining is an explicit authorized command"),MiningDroneAI::Mine(Drone,Bay,Frame,Reason,true));
+    const auto Extract=[&](double Requested){const double Amount=FMath::Min(Source,Requested);Source-=Amount;return Amount;};
+    const auto Unload=[&](FName,double Requested){const double Amount=FMath::Min(Requested,OwnerCapacity-Hold);Hold+=Amount;return Amount;};
+    TestTrue(TEXT("A complete repeat haul is dirty even if its state and empty drone cargo match the previous frame"),MiningDroneAI::Tick(Drone,Bay,Frame,1,.25,Extract,Unload));
+    TestTrue(TEXT("One physical return credits exactly one drone hold"),FMath::IsNearlyEqual(Hold,.25));
+    TestTrue(TEXT("Remaining capacity permits another haul"),Drone.bRepeatMining);
+    TestEqual(TEXT("Drone resumes approach to the same deposit"),Drone.State,EMiningDroneState::Approaching);
+    TestEqual(TEXT("Original asteroid ID is retained"),Drone.TargetContact,Frame.TargetContact);
+    Frame.OwnerFreeTonnes=OwnerCapacity-Hold;Frame.RemainingTonnes=Source;
+    TestTrue(TEXT("Second haul commits"),MiningDroneAI::Tick(Drone,Bay,Frame,1,.25,Extract,Unload));
+    TestTrue(TEXT("Owner hold cannot be overfilled"),FMath::IsNearlyEqual(Hold,OwnerCapacity));
+    TestFalse(TEXT("No automatic relaunch when unloading fills the owner hold"),Drone.bRepeatMining);
+    TestEqual(TEXT("Full owner hold leaves unloaded drone safely docked"),Drone.State,EMiningDroneState::Docked);
+    TestTrue(TEXT("Extraction plus delivered cargo conserves original source mass"),FMath::IsNearlyEqual(Source+Hold+Drone.OreTonnes,1.0));
+    TestEqual(TEXT("Repeat flag is cleared on docking"),Drone.TargetContact,INDEX_NONE);
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMiningDroneRepeatGateTest,"Starshatter.Mining.Drones.RepeatRevalidatesDepletionScanRangeAndRecall",EAutomationTestFlags_ApplicationContextMask|EAutomationTestFlags::EngineFilter)
+bool FMiningDroneRepeatGateTest::RunTest(const FString&)
+{
+    auto Fleet=DroneFleet();const auto Bay=DroneBay();auto Frame=DroneFrame();FText Reason;auto& Drone=Fleet.Drones[0];
+    MiningDroneAI::Launch(Fleet,Drone.Id,Bay,Frame,Reason);Frame.OwnerFreeTonnes=0;
+    TestFalse(TEXT("Repeat cannot start with a full owner hold"),MiningDroneAI::Mine(Drone,Bay,Frame,Reason,true));
+    Frame.OwnerFreeTonnes=1;double Source=.25,Hold=0;Frame.RemainingTonnes=Source;
+    MiningDroneAI::Mine(Drone,Bay,Frame,Reason,true);
+    MiningDroneAI::Tick(Drone,Bay,Frame,1,.25,[&](double Amount){Source-=Amount;return Amount;},[&](FName,double Amount){Hold+=Amount;return Amount;});
+    TestFalse(TEXT("A deposit exhausted during the haul cannot trigger another launch"),Drone.bRepeatMining);
+    TestEqual(TEXT("Depleted target leaves drone docked"),Drone.State,EMiningDroneState::Docked);
+    TestTrue(TEXT("Depleted haul is delivered once"),FMath::IsNearlyEqual(Hold,.25));
+    MiningDroneAI::Launch(Fleet,Drone.Id,Bay,Frame,Reason);Frame.RemainingTonnes=1;
+    MiningDroneAI::Mine(Drone,Bay,Frame,Reason,true);Frame.bTargetAssayed=false;int32 Calls=0;
+    MiningDroneAI::Tick(Drone,Bay,Frame,1,.25,[&](double){++Calls;return 0.0;},[](FName,double){return 0.0;});
+    TestFalse(TEXT("Lost scan authorization cancels repeat"),Drone.bRepeatMining);TestEqual(TEXT("No unassayed extraction"),Calls,0);
+    Frame.bTargetAssayed=true;MiningDroneAI::Mine(Drone,Bay,Frame,Reason,true);Frame.TargetPosition=FVector(2000,0,0);
+    MiningDroneAI::Tick(Drone,Bay,Frame,1,.25,[&](double){++Calls;return 0.0;},[](FName,double){return 0.0;});
+    TestFalse(TEXT("Leaving control range cancels repeat"),Drone.bRepeatMining);TestEqual(TEXT("No out-of-range extraction"),Calls,0);
+    Frame.TargetPosition=FVector(200,0,0);MiningDroneAI::Mine(Drone,Bay,Frame,Reason,true);
+    MiningDroneAI::Stop(Drone,Frame,Reason);TestFalse(TEXT("Explicit Stop clears repeating intent"),Drone.bRepeatMining);
+    MiningDroneAI::Mine(Drone,Bay,Frame,Reason,true);MiningDroneAI::Return(Drone,Frame,Reason);
+    TestFalse(TEXT("Explicit Return clears repeating intent"),Drone.bRepeatMining);
+    MiningDroneAI::Mine(Drone,Bay,Frame,Reason,true);MiningDroneAI::Lose(Drone);
+    TestFalse(TEXT("Owner loss or region change clears repeating intent"),Drone.bRepeatMining);
+    TestEqual(TEXT("Lost drone remains lost"),Drone.State,EMiningDroneState::Lost);
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMiningDroneSingleTripTest,"Starshatter.Mining.Drones.SingleTripRemainsExplicit",EAutomationTestFlags_ApplicationContextMask|EAutomationTestFlags::EngineFilter)
+bool FMiningDroneSingleTripTest::RunTest(const FString&)
+{
+    auto Fleet=DroneFleet();const auto Bay=DroneBay();auto Frame=DroneFrame();FText Reason;auto& Drone=Fleet.Drones[0];double Hold=0;
+    MiningDroneAI::Launch(Fleet,Drone.Id,Bay,Frame,Reason);MiningDroneAI::Mine(Drone,Bay,Frame,Reason);
+    MiningDroneAI::Tick(Drone,Bay,Frame,1,.25,[](double Amount){return Amount;},[&](FName,double Amount){Hold+=Amount;return Amount;});
+    TestEqual(TEXT("Original Mine command still docks after one haul"),Drone.State,EMiningDroneState::Docked);
+    TestFalse(TEXT("Original command does not silently enable repeating"),Drone.bRepeatMining);
+    TestTrue(TEXT("Original extraction rate unchanged"),FMath::IsNearlyEqual(Hold,.25));
+    return true;
+}
+
 #endif

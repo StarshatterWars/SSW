@@ -382,6 +382,7 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.TransactionPopupClass"),
         TEXT("UI.GuildsPopupClass"),
         TEXT("UI.MiningDronesPopupClass"),
+        TEXT("UI.StationServicesPopupClass"),
 
         TEXT("UI.Theme.MenuButton.Normal"),
         TEXT("UI.Theme.MenuButton.Hover"),

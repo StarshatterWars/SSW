@@ -2113,6 +2113,7 @@ Sim::FindOrbitalBody(const char* name)
 SimShot*
 Sim::CreateShot(const FVector& pos, const Camera& shot_cam, WeaponDesign* design, const Ship* ship, SimRegion* rgn)
 {
+    if (!design) return nullptr;
 	SimShot* shot = 0;
 
 	if (design->drone)
@@ -2756,6 +2757,7 @@ const TMap<FName, FContractTransaction>& Sim::GetTrainingContracts()
             TrainingContracts.Add(TEXT("Auction"), Auction);
 
         FContractTransaction Sale = Auction;
+        Sale.Id=FGuid::NewGuid();
         Sale.State = EContractState::Draft;
         Sale.Issuer = TrainingContractPilot;
         Sale.Terms.Title = TEXT("Training auction payout");
@@ -2766,6 +2768,7 @@ const TMap<FName, FContractTransaction>& Sim::GetTrainingContracts()
             TrainingContracts.Add(TEXT("Sale"), MoveTemp(Sale));
     }
 
+    Changed |= FContractLedger::RepairIdentities(TrainingContracts);
     for (auto& Entry : TrainingContracts)
     {
         auto& Contract = Entry.Value;
@@ -2867,6 +2870,13 @@ FText Sim::ExecuteTrainingContract(FName ContractId, ETrainingContractAction Act
         }
         return INVTEXT("This contract cannot be delivered.");
     }
+    case ETrainingContractAction::Abandon:
+        if (SettlementAI::FailCourier(*Contract,TrainingContractAccounts,TrainingContractPilot,Now,true))
+        {
+            if (ContractPlayer) ContractPlayer->RemoveCourierPackage(ContractId);
+            Changed=true;return INVTEXT("Courier contract abandoned. Package removed and collateral forfeited.");
+        }
+        return INVTEXT("Only your active courier contract can be abandoned.");
     case ETrainingContractAction::Claim:
         if (SettlementAI::ClaimAuction(*Contract, TrainingContractAccounts, TrainingContractPilot))
         { Changed = true; return Contract->Issuer == TrainingContractPilot ? INVTEXT("Auction payout credited.")

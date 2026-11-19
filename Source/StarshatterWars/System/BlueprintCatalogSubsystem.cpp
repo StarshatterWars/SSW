@@ -6,6 +6,7 @@
 #include "ManufacturingAI.h"
 #include "ReprocessingAI.h"
 #include "StationServices.h"
+#include "SkillsSubsystem.h"
 #include "Ship.h"
 #include "Sim.h"
 #include "SimRegion.h"
@@ -62,6 +63,7 @@ bool UBlueprintCatalogSubsystem::CanPurchase(FName Recipe, bool Original, FText&
     const auto* Offer = Offers.Find(Recipe);
     if (!Offer) { Reason = INVTEXT("Blueprint offer unavailable."); return false; }
     if (!DockedNPC()) { Reason = INVTEXT("Dock at an NPC base to purchase blueprints."); return false; }
+    if(!FStationServices::Offers(ESSWStationService::Blueprints)){Reason=INVTEXT("This dock has no blueprint publisher.");return false;}
     const auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
     if (!Players) { Reason = INVTEXT("Player data is unavailable."); return false; }
     const auto& Pilot = Players->GetPlayerInfo();
@@ -79,10 +81,39 @@ bool UBlueprintCatalogSubsystem::Purchase(FName Recipe, bool Original, FText& Re
     { Players->GetMutablePlayerInfo() = Before; Reason = INVTEXT("Could not save the blueprint purchase. No credits were charged."); return false; }
     Reason = INVTEXT("Blueprint purchased from the NPC publisher and added to your library."); return true;
 }
+bool UBlueprintCatalogSubsystem::MeetsRecipeSkills(const FSSWProductionRecipe& Recipe,
+    const TMap<FName, FSkillProgress>* PilotSkills, FText& Reason, const TMap<FName, FSkillDefinition>* SkillCatalog)
+{
+    if (!Recipe.HasValidSkillRequirements())
+    { Reason = INVTEXT("The recipe has invalid skill requirements."); return false; }
+    TArray<FName> Required; Recipe.RequiredSkillLevels.GetKeys(Required);
+    Required.Sort(FNameLexicalLess());
+    for (FName Id : Required)
+    {
+        const int32 Level = Recipe.RequiredSkillLevels.FindChecked(Id);
+        const auto* Definition = SkillCatalog ? SkillCatalog->Find(Id) : nullptr;
+        if (SkillCatalog && (!Definition || Level > Definition->MaximumLevel))
+        { Reason = INVTEXT("The recipe references an unavailable skill or level."); return false; }
+        const auto* Progress = PilotSkills ? PilotSkills->Find(Id) : nullptr;
+        // Purchased books grant a complete skill today; saved levels support future training.
+        const int32 Actual = Progress ? (Progress->bComplete ? (Definition ? Definition->MaximumLevel : 5)
+            : FMath::Clamp(Progress->TrainedLevel, 0, 5)) : 0;
+        if (Actual < Level)
+        {
+            const FText Name = Definition ? FText::FromString(Definition->DisplayName)
+                : FText::FromString(Id.ToString().Replace(TEXT("_"), TEXT(" ")));
+            Reason = FText::Format(INVTEXT("Requires {0}, level {1}. Your level: {2}."), Name, FText::AsNumber(Level), FText::AsNumber(Actual));
+            return false;
+        }
+    }
+    Reason = FText::GetEmpty(); return true;
+}
 bool UBlueprintCatalogSubsystem::QuotePlayerJob(const FEconomyState& State, const FSSWProductionFacility& Site,
-    const FSSWProductionRecipe& Recipe, FGuid Blueprint, int32 Runs, FPlayerIndustryQuote& Quote, FText& Reason)
+    const FSSWProductionRecipe& Recipe, FGuid Blueprint, int32 Runs, FPlayerIndustryQuote& Quote, FText& Reason,
+    const TMap<FName, FSkillProgress>* PilotSkills, const TMap<FName, FSkillDefinition>* SkillCatalog)
 {
     Quote = {};
+    if (!MeetsRecipeSkills(Recipe, PilotSkills, Reason, SkillCatalog)) return false;
     if (!Site.bPlayerManufacturing) { Reason=INVTEXT("This facility does not offer player manufacturing."); return false; }
     if (!FMath::IsFinite(Site.PlayerMaterialMultiplier) || Site.PlayerMaterialMultiplier<.5 || Site.PlayerMaterialMultiplier>2 ||
         !FMath::IsFinite(Site.PlayerTimeMultiplier) || Site.PlayerTimeMultiplier<.25 || Site.PlayerTimeMultiplier>4 ||
@@ -95,7 +126,7 @@ bool UBlueprintCatalogSubsystem::QuotePlayerJob(const FEconomyState& State, cons
     Quote.InstallationFee=FMath::CeilToInt64(Fee);
     if (Quote.InstallationFee>State.Wallets.FindRef(FEconomyLedger::Pilot())) { Reason=INVTEXT("Insufficient credits for this facility's installation fee."); return false; }
     const auto* BP = State.Blueprints.Find(Blueprint);
-    if (!BP || BP->Owner != FEconomyLedger::Pilot() || BP->Recipe != Site.Recipe ||
+    if (!BP || BP->Owner != FEconomyLedger::Pilot() || !Site.SupportsRecipe(BP->Recipe) ||
         !State.BlueprintReceipts.Contains(Blueprint) || !State.CommittedTransactions.Contains(State.BlueprintReceipts.FindRef(Blueprint)))
     { Reason = INVTEXT("Purchase the correct blueprint from an NPC publisher first."); return false; }
     if (Runs <= 0 || Runs > 1000000) { Reason = INVTEXT("Choose between 1 and 1,000,000 runs."); return false; }
@@ -164,10 +195,18 @@ bool UBlueprintCatalogSubsystem::CanBeginPlayerJob(const FSSWProductionFacility&
     if (!DockedNPC() || !Local || Local->Facility != Site.Facility || Local->System != Site.System || Local->Recipe != Site.Recipe)
     { Reason = INVTEXT("Dock at this production facility to install a job."); return false; }
     const auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    const auto* BlueprintRow = Players ? Players->GetPlayerInfo().Economy.Blueprints.Find(Blueprint) : nullptr;
+    const FName RecipeId = BlueprintRow ? BlueprintRow->Recipe : NAME_None;
+    if (!Local->SupportsRecipe(RecipeId))
+    { Reason = INVTEXT("This facility does not manufacture the selected recipe."); return false; }
     const auto* Table = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionRecipes.DT_ProductionRecipes"));
-    const auto* Recipe = Table ? Table->FindRow<FSSWProductionRecipe>(Site.Recipe, TEXT("Player industry"), false) : nullptr;
+    const auto* Recipe = Table ? Table->FindRow<FSSWProductionRecipe>(RecipeId, TEXT("Player industry"), false) : nullptr;
     if (!Players || !Recipe) { Reason = INVTEXT("Player industry data is unavailable."); return false; }
-    return QuotePlayerJob(Players->GetPlayerInfo().Economy, Site, *Recipe, Blueprint, Runs, Quote, Reason);
+    const auto* Skills = GetGameInstance()->GetSubsystem<USkillsSubsystem>();
+    if (!Recipe->RequiredSkillLevels.IsEmpty() && (!Skills || Skills->GetCatalog().IsEmpty()))
+    { Reason = INVTEXT("The skill catalog is unavailable; manufacturing cannot be authorized."); return false; }
+    return QuotePlayerJob(Players->GetPlayerInfo().Economy, *Local, *Recipe, Blueprint, Runs, Quote, Reason,
+        &Players->GetPlayerInfo().Skills, Skills ? &Skills->GetCatalog() : nullptr);
 }
 FGuid UBlueprintCatalogSubsystem::BeginPlayerJob(const FSSWProductionFacility& Site, FGuid Blueprint, int32 Runs, FText& Reason)
 {

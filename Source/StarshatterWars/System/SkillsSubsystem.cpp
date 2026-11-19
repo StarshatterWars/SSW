@@ -1,4 +1,5 @@
 #include "SkillsSubsystem.h"
+#include "StationServices.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "TransactionAI.h"
 #include "Engine/GameInstance.h"
@@ -132,6 +133,7 @@ bool USkillsSubsystem::CanPurchaseBook(FName Id, FText& Reason) const
     if (!Definition || !Players || !Pilot) { Reason = INVTEXT("Skill catalog or pilot unavailable."); return false; }
     if (!Simulation || !Simulation->HasSimulationAuthority() || !Craft || Craft->IsDead() || Craft->GetFlightPhase() > EOPSMode::ALERT)
     { Reason = INVTEXT("Dock to purchase skill books."); return false; }
+    if(!FStationServices::Offers(ESSWStationService::SkillBooks)){Reason=INVTEXT("This dock has no skill-book service.");return false;}
     const FName Empire(*StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(static_cast<int64>(Pilot->GetEmpire())));
     if (!FSkillRules::CanPurchase(*Definition, Players->GetPlayerInfo().Skills, Pilot->GetRank(), Empire, Reason)) return false;
     const auto& Economy = Players->GetPlayerInfo().Economy;

@@ -178,7 +178,7 @@ public:
     // =====================================================================
     // Campaigns (static load + DT hydration)
     // =====================================================================
-    void LoadCampaignData(const char* FileName, bool full = false);
+    void LoadCampaignData(const char* FileName, bool full = false, bool bPreferJson = true);
 
     void ReadCombatRosterData();
 
@@ -197,7 +197,7 @@ public:
         const FString& Path,
         const FString& CampaignId);
 
-    void LoadMissionList(FString Path);
+    void LoadMissionList(FString Path, bool bPreferJson = true);
     void LoadSingleMissions();
     bool ImportStoryMissions(UDataTable& Output);
     static int32 MergeStoryMissionRows(FS_Campaign& Campaign, const UDataTable& Stories);
@@ -209,7 +209,7 @@ public:
     const TArray<FS_CampaignMissionList>& GetSingleMissionCatalog() const { return SingleMissionCatalog; }
     const TArray<FS_CampaignMission>& GetSingleMissionScenarios() const { return SingleMissionScenarios; }
     const FS_CampaignMission* FindSingleMissionScenario(int32 MissionId) const;
-    void LoadTemplateList(FString Path);
+    void LoadTemplateList(FString Path, bool bPreferJson = true);
 
     void LoadCutscene(FString Name);
     /** Authoring migration: rebuild only scene rows, preserving playable missions. */
@@ -264,7 +264,7 @@ public:
     Text GetContentBundleText(const char* key) const;
 
     void LoadContentBundle();
-    void LoadAwardTables();
+    void LoadAwardTables(bool bPreferJson = true);
 
     bool GetBestRankForPointsFromTable(const UDataTable* RanksTable, int32 PlayerPoints, FRankInfo& OutRank) const;
     int32 GetRequiredRankIdForShipClassFromTable(const UDataTable* RanksTable, int32 ShipClassMask) const;
@@ -333,6 +333,8 @@ public:
 private:
     friend class USSWDesignIngestionCommandlet;
     friend class FStagedIngestionTest;
+    friend class FCampaignJsonParityTest;
+    friend class FAwardsJsonParityTest;
     // =====================================================================
     // Internal helpers
     // =====================================================================

@@ -118,7 +118,8 @@ element: {
    region:    "Borova"
    loc:       (1220, 8500, 0)
 
-   navpt:     { cmd: Vector, loc: (1220, 6500, 0), speed: 100 }
+   // Request the carrier recovery corridor directly; a vector into its hull
+   // avoidance envelope prevents a shuttle from ever reaching the RTB order.
    navpt:     { cmd: RTB,    loc: (1220, 5000, 0), speed: 100 }
 }
 

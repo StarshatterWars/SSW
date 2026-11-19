@@ -12,8 +12,8 @@ namespace
         Row.Id=2201; Row.StoryCampaignId=2; Row.StoryUnlockScene=TEXT("07-Research-Lab");
         Row.StartTime=TEXT("01/00:00:00"); Row.MissionName=TEXT("Research Lab: Relief Corridor"); Row.Objective=TEXT("Protect the observatory");
         Row.DisplayType=EMissionDisplayType::PlayerMission; Row.Source=EMissionSource::Scripted; Row.MissionType=EMissionType::SWEEP;
-        FS_MissionElement Pilot; Pilot.Design=TEXT("Falcon"); Pilot.Player=1; Pilot.Count=1;
-        Pilot.Instruction.Add(FS_MissionInstruction()); Row.Element.Add(Pilot);
+        FS_MissionElement PilotFixture; PilotFixture.Design=TEXT("Falcon"); PilotFixture.Player=1; PilotFixture.Count=1;
+        PilotFixture.Instruction.Add(FS_MissionInstruction()); Row.Element.Add(PilotFixture);
         return Row;
     }
 }

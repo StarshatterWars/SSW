@@ -118,8 +118,28 @@ TSharedRef<SWidget> UShipFitDlg::RebuildWidget()
             + SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).Text_Lambda([Feedback]() { return *Feedback; })]
             + SHorizontalBox::Slot().AutoWidth()
             [
-                SNew(SButton).ToolTipText(INVTEXT("Refit selected component — docked service"))
-                .IsEnabled_Lambda([Weak, Selected, Id = Hull]() { return Weak.IsValid() && Weak->CanModifyHull(Id) && *Selected != INDEX_NONE; })
+                SNew(SButton).ToolTipText_Lambda([Weak, Selected, Grade, Id = Hull]()
+                {
+                    if (!Weak.IsValid()) return INVTEXT("Fitting services are unavailable.");
+                    FText Reason;
+                    if (!Weak->CanRefitHull(Id, &Reason)) return Reason;
+                    const auto* Entry = Weak->FindShip(Id);
+                    if (!Entry || !Entry->Components.IsValidIndex(*Selected))
+                        return INVTEXT("Select an installed component and a replacement grade.");
+                    if (Entry->Components[*Selected].Level == *Grade)
+                        return INVTEXT("This grade is already installed. Choose another component grade.");
+                    if (!Weak->ValidateFitting(Id, *Selected, *Grade, Reason))
+                        return Reason.IsEmpty() ? INVTEXT("This component cannot be fitted in the selected slot.") : Reason;
+                    return INVTEXT("Refit selected component. Shipyard service and reactor power budget verified; credits are charged only when applied.");
+                })
+                .IsEnabled_Lambda([Weak, Selected, Grade, Id = Hull]()
+                {
+                    if (!Weak.IsValid() || !Weak->CanRefitHull(Id)) return false;
+                    const auto* Entry = Weak->FindShip(Id);
+                    if (!Entry || !Entry->Components.IsValidIndex(*Selected) || Entry->Components[*Selected].Level == *Grade) return false;
+                    FText Reason;
+                    return Weak->ValidateFitting(Id, *Selected, *Grade, Reason);
+                })
                 .OnClicked_Lambda([Weak, Id = Hull, Selected, Grade, Feedback]()
                 {
                     if (Weak.IsValid()) Weak->FitComponent(Id, *Selected, *Grade, *Feedback);

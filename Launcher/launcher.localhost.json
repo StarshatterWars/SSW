@@ -1,0 +1,13 @@
+{
+  "feedUrl": "http://127.0.0.1:18787/current/feed.json",
+  "steamAppId": 0,
+  "patchManifestUrl": "http://127.0.0.1:18787/current/manifest.json",
+  "patchPublicKeyPem": "-----BEGIN PUBLIC KEY-----\nMIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEAqSY9T/Zo5LUj8b0kKIKC\nAEksDi3IFB9bftcXU7K8HQBzPn7tGzY2d4ZYkbIJ10X8zeKkcsnNO+XcL+jZPrns\nOIZea15uuCLrHi24/e9ZxP3tiKUhNiw2W0XXTtp95YqzEvzPQmYv8tYcVAp6boCF\nhWt+798rWLCYGBa7j6CFGKpCwkKe3d7l/vb0hF38Z07IPkJ2m63aK+WjWibE+Bvl\nDeCmqi9basUC7mrOpVd3Gzl0MpDdCy9o43ggfw0FievIumJybZF8BCmX3ncP+Xhs\n4dG/ImDbbmajPOmeUTpZA4ohKNnf7Yl5gl1U7hi7OV0hV0xNkrJx77t0o/k4bPKD\nz5BgFQslQy5lHMK+CmVh6JdVntGtNs6TtGUsB++2r0awao/Bg+WQheI5MrR+Cboh\ne0WDnMgKMbyGzc5XcHRsTvhhJmhBJdSmhlRAcZU+ZM+wzZj553N4PTf35XeCaNMr\nTHZX+7+MyR/ynDjpi97ITtOnY1b0Dz/CRimaZlKKDCatAgMBAAE=\n-----END PUBLIC KEY-----",
+  "gameArchiveUrl": "http://127.0.0.1:18787/current/StarshatterWars.zip",
+  "localFeedServer": {
+    "enabled": true,
+    "documentRoot": "D:/SSW/Build/LauncherFeed",
+    "port": 18787,
+    "readyTimeoutSeconds": 12
+  }
+}

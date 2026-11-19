@@ -200,7 +200,7 @@ public:
         bool bDelivering = false;
     };
     TArray<FActiveHaul> GetActiveHauls();
-    enum class ETrainingContractAction : uint8 { Accept, Bid, Deliver, Claim };
+    enum class ETrainingContractAction : uint8 { Accept, Bid, Deliver, Claim, Abandon };
     const TMap<FName, FContractTransaction>& GetTrainingContracts();
     int64 GetTrainingContractBalance() const;
     FText ExecuteTrainingContract(FName ContractId, ETrainingContractAction Action, int64 Bid);

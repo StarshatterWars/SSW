@@ -1,13 +1,16 @@
 param(
     [Parameter(Mandatory)][string]$Wix,
-    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '1.0.0',
-    [string]$LauncherConfig
+    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '1.0.12',
+    [string]$LauncherConfig,
+    [string]$ApacheArchive
 )
 $ErrorActionPreference = 'Stop'
 $root = Split-Path $PSScriptRoot -Parent
 $payload = Join-Path $root "Saved/LauncherInstaller/$([guid]::NewGuid())"
 $output = Join-Path $root 'Build/LauncherInstaller'
 New-Item -ItemType Directory -Path $payload, $output -Force | Out-Null
+if ($ApacheArchive) { & (Join-Path $PSScriptRoot 'New-LocalFeedServerBundle.ps1') -Archive $ApacheArchive }
+else { & (Join-Path $PSScriptRoot 'New-LocalFeedServerBundle.ps1') }
 dotnet publish (Join-Path $PSScriptRoot 'StarshatterWarsLauncher.csproj') -c Release -r win-x64 --self-contained true -p:DebugType=None "-p:Version=$Version" -o $payload
 if ($LASTEXITCODE -ne 0) { throw 'Launcher publish failed' }
 if ($LauncherConfig) {

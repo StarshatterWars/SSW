@@ -86,13 +86,13 @@ void RefreshPreflight(const TWeakObjectPtr<UBlueprintCatalogSubsystem>& Catalog,
     const auto* Site = FStationServices::Facility(); const auto* Simulation = Sim::GetSim();
     if (!Catalog.IsValid() || !Model->Selected || !Site || !Simulation)
     { Model->Preflight = INVTEXT("Select a blueprint and dock at its production facility to install a job."); return; }
-    if (Site->Recipe != Model->Selected->Recipe)
+    if (!Site->SupportsRecipe(Model->Selected->Recipe))
     { Model->Preflight = INVTEXT("This facility does not manufacture the selected recipe."); return; }
     const FBlueprintInstance* Selected = nullptr;
     for (const auto& Pair : Simulation->ReadEconomy().Blueprints)
     {
         const auto& BP = Pair.Value;
-        if (BP.Owner != FEconomyLedger::Pilot() || BP.Recipe != Site->Recipe || (!BP.bOriginal && BP.RunsRemaining < Model->Runs) ||
+        if (BP.Owner != FEconomyLedger::Pilot() || BP.Recipe != Model->Selected->Recipe || (!BP.bOriginal && BP.RunsRemaining < Model->Runs) ||
             Simulation->ReadEconomy().Jobs.ContainsByPredicate([&](const auto& Job) { return Job.Blueprint == Pair.Key &&
                 Job.State != EIndustryJobState::Completed && Job.State != EIndustryJobState::Cancelled; })) continue;
         if (!Selected || (BP.bOriginal && !Selected->bOriginal) || (BP.bOriginal == Selected->bOriginal &&

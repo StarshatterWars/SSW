@@ -22,6 +22,7 @@ public partial class MainWindow : Window
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StarshatterWars", "LauncherInstall.txt");
     private bool busy;
     private readonly CancellationTokenSource closing = new();
+    private readonly LocalFeedServer localFeedServer = new();
 
     public MainWindow()
     {
@@ -59,9 +60,30 @@ public partial class MainWindow : Window
         Loaded += async (_, _) =>
         {
             StartMusic();
-            await Task.WhenAll(LoadFeedAsync(), LoadPatchNotesAsync());
+            await PrepareLocalFeedServerAsync();
+            if (!closing.IsCancellationRequested) await Task.WhenAll(LoadFeedAsync(), LoadPatchNotesAsync());
         };
-        Closed += (_, _) => { closing.Cancel(); music.Close(); NewsView.Dispose(); };
+        Closed += (_, _) => { closing.Cancel(); localFeedServer.Dispose(); music.Close(); NewsView.Dispose(); };
+    }
+
+    private Task EnsureLocalFeedServerAsync(LauncherSettings? config, CancellationToken token) =>
+        localFeedServer.EnsureReadyAsync(config?.LocalFeedServer,
+            [config?.FeedUrl, config?.PatchManifestUrl, config?.GameArchiveUrl], token);
+
+    private async Task PrepareLocalFeedServerAsync()
+    {
+        try
+        {
+            var config = JsonSerializer.Deserialize<LauncherSettings>(
+                await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "launcher.json"), closing.Token), JsonOptions);
+            await EnsureLocalFeedServerAsync(config, closing.Token);
+        }
+        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException or ArgumentException
+            or OperationCanceledException or InvalidOperationException)
+        {
+            if (!closing.IsCancellationRequested)
+                LaunchStatus.Text = $"Local update feed unavailable. {ex.Message} Play requires a verified current release.";
+        }
     }
 
     private void Music_Click(object sender, RoutedEventArgs e)
@@ -125,6 +147,7 @@ public partial class MainWindow : Window
         {
             var config = JsonSerializer.Deserialize<LauncherSettings>(
                 await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "launcher.json"), timeout.Token), JsonOptions);
+            await EnsureLocalFeedServerAsync(config, timeout.Token);
             if (!Uri.TryCreate(config?.PatchManifestUrl, UriKind.Absolute, out Uri? manifestUrl) ||
                 string.IsNullOrWhiteSpace(config?.PatchPublicKeyPem))
                 throw new InvalidOperationException("Playing requires a configured update feed to verify your game version.");
@@ -271,6 +294,7 @@ public partial class MainWindow : Window
             var progress = new Progress<string>(message => LaunchStatus.Text = message);
             string settings = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "launcher.json"), closing.Token);
             var config = JsonSerializer.Deserialize<LauncherSettings>(settings, JsonOptions);
+            await EnsureLocalFeedServerAsync(config, closing.Token);
             if (Uri.TryCreate(config?.PatchManifestUrl, UriKind.Absolute, out Uri? url) &&
                 !string.IsNullOrWhiteSpace(config?.PatchPublicKeyPem))
             {
@@ -328,6 +352,7 @@ public partial class MainWindow : Window
             }
             string settings = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "launcher.json"), closing.Token);
             var config = JsonSerializer.Deserialize<LauncherSettings>(settings, JsonOptions);
+            await EnsureLocalFeedServerAsync(config, closing.Token);
             if (!Uri.TryCreate(config?.PatchManifestUrl, UriKind.Absolute, out Uri? url) ||
                 string.IsNullOrWhiteSpace(config?.PatchPublicKeyPem))
             {
@@ -373,20 +398,28 @@ public partial class MainWindow : Window
         {
             string settings = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "launcher.json"), closing.Token);
             var config = JsonSerializer.Deserialize<LauncherSettings>(settings, JsonOptions);
+            await EnsureLocalFeedServerAsync(config, closing.Token);
             if (!Uri.TryCreate(config?.PatchManifestUrl, UriKind.Absolute, out Uri? url) ||
-                string.IsNullOrWhiteSpace(config?.PatchPublicKeyPem)) return;
+                string.IsNullOrWhiteSpace(config?.PatchPublicKeyPem))
+            {
+                AvailableVersion.Text = "Update feed is not configured.";
+                return;
+            }
             using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
             {
                 Timeout = TimeSpan.FromSeconds(10),
                 MaxResponseContentBufferSize = 16 * 1024 * 1024
             };
             var manifest = await new GamePatcher(http).ReadManifestAsync(url, config.PatchPublicKeyPem, closing.Token);
+            AvailableVersion.Text = $"Latest build {manifest.Version}";
             if (!string.IsNullOrWhiteSpace(manifest.About)) ShowPatchNotes(manifest.About);
         }
         catch (Exception ex) when (ex is IOException or InvalidDataException or HttpRequestException or JsonException
             or System.Security.Cryptography.CryptographicException or ArgumentException or UnauthorizedAccessException or OperationCanceledException)
         {
             // The release feed is optional when starting the launcher offline.
+            if (!closing.IsCancellationRequested)
+                AvailableVersion.Text = "Latest build unavailable · check the localhost connection.";
         }
     }
 
@@ -462,11 +495,13 @@ public partial class MainWindow : Window
         try
         {
             string settings = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "launcher.json"), closing.Token);
-            string? feedUrl = JsonSerializer.Deserialize<LauncherSettings>(settings, JsonOptions)?.FeedUrl;
+            var config = JsonSerializer.Deserialize<LauncherSettings>(settings, JsonOptions);
+            await EnsureLocalFeedServerAsync(config, closing.Token);
+            string? feedUrl = config?.FeedUrl;
             if (!string.IsNullOrWhiteSpace(feedUrl))
             {
-                if (!Uri.TryCreate(feedUrl, UriKind.Absolute, out Uri? uri) || uri.Scheme != Uri.UriSchemeHttps)
-                    throw new InvalidDataException("The feed URL must use HTTPS.");
+                if (!Uri.TryCreate(feedUrl, UriKind.Absolute, out Uri? uri) || !GamePatcher.IsDownloadUrl(uri))
+                    throw new InvalidDataException("Use HTTPS or a localhost HTTP address for the news feed.");
 
                 using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
                     { MaxResponseContentBufferSize = MaxFeedBytes, Timeout = TimeSpan.FromSeconds(6) };
@@ -475,7 +510,8 @@ public partial class MainWindow : Window
                 source = "Web feed";
             }
         }
-        catch (Exception ex) when (ex is IOException or HttpRequestException or JsonException or OperationCanceledException)
+        catch (Exception ex) when (ex is IOException or InvalidDataException or HttpRequestException or JsonException
+            or ArgumentException or UnauthorizedAccessException or OperationCanceledException)
         {
             if (closing.IsCancellationRequested) return;
             source = "Web feed unavailable · showing bundled feed";
@@ -485,12 +521,17 @@ public partial class MainWindow : Window
         {
             feed ??= JsonSerializer.Deserialize<Feed>(
                 await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "feed.json"), closing.Token), JsonOptions);
+            // Keep readable details underneath the optional browser. News must
+            // never block installation or leave an empty panel if WebView stalls.
+            FeedStatus.Text = string.Join("\n\n", (feed?.Entries ?? []).OfType<FeedEntry>().Take(20)
+                .Select(entry => $"{entry.Title}\n{entry.Date} · {entry.Category}\n{entry.Body}"));
             string html = RenderFeed(feed?.Entries ?? [], source);
             var environment = await CoreWebView2Environment.CreateAsync(userDataFolder:
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StarshatterWars", "LauncherWebView"));
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StarshatterWars", "LauncherWebView"))
+                .WaitAsync(TimeSpan.FromSeconds(10), closing.Token);
             if (closing.IsCancellationRequested) return;
             NewsView.Visibility = Visibility.Visible;
-            await NewsView.EnsureCoreWebView2Async(environment);
+            await NewsView.EnsureCoreWebView2Async(environment).WaitAsync(TimeSpan.FromSeconds(10), closing.Token);
             if (closing.IsCancellationRequested) return;
             var core = NewsView.CoreWebView2;
             core.Settings.IsScriptEnabled = false;
@@ -501,7 +542,7 @@ public partial class MainWindow : Window
                 if (!args.IsSuccess)
                 {
                     NewsView.Visibility = Visibility.Hidden;
-                    FeedStatus.Text = "News and patch notes could not be displayed.";
+                    // The native text beneath the browser remains available.
                 }
             };
             core.NewWindowRequested += (_, args) => args.Handled = true;
@@ -511,15 +552,18 @@ public partial class MainWindow : Window
         catch (WebView2RuntimeNotFoundException)
         {
             NewsView.Visibility = Visibility.Hidden;
-            FeedStatus.Text = "News requires the Microsoft Edge WebView2 Runtime. You can still launch the game.";
+            if (string.IsNullOrWhiteSpace(FeedStatus.Text))
+                FeedStatus.Text = "News requires the Microsoft Edge WebView2 Runtime. You can still launch the game.";
         }
-        catch (Exception ex) when (ex is IOException or JsonException or InvalidOperationException
+        catch (Exception ex) when (ex is IOException or InvalidDataException or JsonException or InvalidOperationException
+            or ArgumentException or UnauthorizedAccessException or TimeoutException
             or System.Runtime.InteropServices.COMException or OperationCanceledException)
         {
             if (!closing.IsCancellationRequested)
             {
                 NewsView.Visibility = Visibility.Hidden;
-                FeedStatus.Text = "News and patch notes could not be loaded.";
+                if (string.IsNullOrWhiteSpace(FeedStatus.Text) || FeedStatus.Text.StartsWith("Loading news", StringComparison.Ordinal))
+                    FeedStatus.Text = "News and patch notes are unavailable. Install, update and play remain available.";
             }
         }
     }
@@ -546,7 +590,7 @@ public partial class MainWindow : Window
         return html.Append("</html>").ToString();
     }
 
-    private sealed record LauncherSettings(string? FeedUrl, uint SteamAppId, string? PatchManifestUrl, string? PatchPublicKeyPem, string? GameArchiveUrl, bool UseEasyAntiCheatBootstrapper);
+    private sealed record LauncherSettings(string? FeedUrl, uint SteamAppId, string? PatchManifestUrl, string? PatchPublicKeyPem, string? GameArchiveUrl, bool UseEasyAntiCheatBootstrapper, LocalFeedServerSettings? LocalFeedServer = null);
     private sealed record Feed(FeedEntry[]? Entries);
     private sealed record FeedEntry(string? Category, string? Title, string? Date, string? Body);
 }

@@ -35,6 +35,9 @@ struct FSSWProductionFacility : public FTableRowBase
     bool bSurface = false;
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     FName Recipe;
+    // Player jobs may use these recipes without replacing automated primary production.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<FName> AdditionalRecipes;
+    bool SupportsRecipe(FName Id) const { return !Id.IsNone() && (Recipe == Id || AdditionalRecipes.Contains(Id)); }
     UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(ClampMin="0"))
     double CapacityTonnes = 0;
 };
@@ -46,6 +49,17 @@ struct FSSWProductionRecipe : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TArray<ESSWMineral> Minerals;
+
+    // Player installation gates use native SSW skill keys. Empty keeps legacy recipes unrestricted.
+    // NPC background production does not depend on the player's qualifications.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TMap<FName, int32> RequiredSkillLevels;
+
+    bool HasValidSkillRequirements() const
+    {
+        for (const auto& Requirement : RequiredSkillLevels)
+            if (Requirement.Key.IsNone() || Requirement.Value < 1 || Requirement.Value > 5) return false;
+        return true;
+    }
 
     // Exact bill of materials. Empty only for ore refining, where Minerals are alternatives.
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<FCommodityAmount> Inputs;

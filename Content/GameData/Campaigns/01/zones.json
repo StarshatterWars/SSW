@@ -1,0 +1,34 @@
+{
+	"schemaVersion": 1,
+	"campaign": "Operation Live Fire",
+	"zones": [
+		{
+			"system": "Janus",
+			"region": "Ilon"
+		},
+		{
+			"system": "Janus",
+			"region": "Dante"
+		},
+		{
+			"system": "Janus",
+			"region": "Janek"
+		},
+		{
+			"system": "Janus",
+			"region": "Janek Station"
+		},
+		{
+			"system": "Janus",
+			"region": "Alystra"
+		},
+		{
+			"system": "Janus",
+			"region": "Navara"
+		},
+		{
+			"system": "Janus",
+			"region": "Vail"
+		}
+	]
+}

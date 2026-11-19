@@ -155,7 +155,6 @@ UClass* ShipVisualCatalog::Resolve(const FString& DesignName, const FString& Mod
     Names.AddUnique(DesignName);
     if (DesignName.Equals(TEXT("Rockhopper"))) Names.AddUnique(TEXT("CargoA"));
     if (DesignName.Equals(TEXT("Prospector"))) Names.AddUnique(TEXT("Zodiac"));
-    if (Names[0] == TEXT("ProcessingFacility")) return AProductionActor::StaticClass();
     if (Names[0] == TEXT("AsteroidBase") || Names[0] == TEXT("MiningStation")) Names.AddUnique(TEXT("FreightXfer"));
     if (!ModelName.IsEmpty()) Names.AddUnique(ModelName);
     for (const FString& Name : Names)
@@ -165,6 +164,8 @@ UClass* ShipVisualCatalog::Resolve(const FString& DesignName, const FString& Mod
         if (!FPackageName::IsValidLongPackageName(Package) || !FPackageName::DoesPackageExist(Package)) continue;
         if (UClass* Class = LoadClass<AShipActor>(nullptr, *ClassPath(Name))) return Class;
     }
+    // Prefer the authored Blueprint; retain the original native fallback for older packs.
+    if (Names[0] == TEXT("ProcessingFacility")) return AProductionActor::StaticClass();
     return nullptr;
 }
 

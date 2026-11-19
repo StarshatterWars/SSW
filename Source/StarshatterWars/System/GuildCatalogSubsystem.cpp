@@ -68,7 +68,7 @@ bool UGuildCatalogSubsystem::CanChange(FText& Reason) const
 FGuildPilotContext UGuildCatalogSubsystem::GetContext() const
 {
     const auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();FText Reason;
-    return Players?ProfileContext(Players->GetPlayerInfo(),CanChange(Reason)):FGuildPilotContext();
+    return Players && Players->HasLoaded()?ProfileContext(Players->GetPlayerInfo(),CanChange(Reason)):FGuildPilotContext();
 }
 bool UGuildCatalogSubsystem::ResolvePilot(FName Input,FGuildPilotContext& Pilot) const
 {

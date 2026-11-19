@@ -47,7 +47,7 @@ void UShieldComponent::ShowImpact(const FVector& LocalImpact, const FVector& Loc
         {
             if (!ShieldTexture) return;
             Mesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Plane.Plane"));
-            Material = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/Ships/M_ShieldImpact.M_ShieldImpact"));
+            Material = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Effects/Shields/M_SSW_ShieldImpact_Radial.M_SSW_ShieldImpact_Radial"), nullptr, LOAD_NoWarn);
         }
         if (!Mesh || !Material) return;
 

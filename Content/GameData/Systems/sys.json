@@ -4,23 +4,23 @@
       "Level": 1,
       "RepairScale": 1.3,
       "ReplacementScale": 0.8,
-      "PriceMultiplier": 1,
-      "PerformanceMultiplier": 0.8,
-      "PowerDemandMultiplier": 1.1
+      "PriceMultiplier": 1.0,
+      "PerformanceMultiplier": 0.922958207,
+      "PowerDemandMultiplier": 0.953462589
     },
     {
       "Level": 2,
       "RepairScale": 1.15,
       "ReplacementScale": 0.9,
-      "PriceMultiplier": 2,
-      "PerformanceMultiplier": 0.9,
-      "PowerDemandMultiplier": 1.05
+      "PriceMultiplier": 1.583618687,
+      "PerformanceMultiplier": 0.960707139,
+      "PowerDemandMultiplier": 0.97645409
     },
     {
       "Level": 3,
       "RepairScale": 1.0,
       "ReplacementScale": 1.0,
-      "PriceMultiplier": 4,
+      "PriceMultiplier": 2.507848146,
       "PerformanceMultiplier": 1.0,
       "PowerDemandMultiplier": 1.0
     },
@@ -28,17 +28,17 @@
       "Level": 4,
       "RepairScale": 0.9,
       "ReplacementScale": 1.15,
-      "PriceMultiplier": 8,
-      "PerformanceMultiplier": 1.1,
-      "PowerDemandMultiplier": 0.95
+      "PriceMultiplier": 3.971475189,
+      "PerformanceMultiplier": 1.040899936,
+      "PowerDemandMultiplier": 1.024113689
     },
     {
       "Level": 5,
       "RepairScale": 0.8,
       "ReplacementScale": 1.3,
-      "PriceMultiplier": 16,
-      "PerformanceMultiplier": 1.2,
-      "PowerDemandMultiplier": 0.9
+      "PriceMultiplier": 6.289302326,
+      "PerformanceMultiplier": 1.083472678,
+      "PowerDemandMultiplier": 1.048808848
     }
   ],
   "Systems": [
@@ -549,6 +549,48 @@
           "Affects": 5,
           "BaseCost": 800
         }
+      ],
+      "ComponentGrades": [
+        {
+          "Level": 1,
+          "RepairScale": 1.3,
+          "ReplacementScale": 0.8,
+          "PriceMultiplier": 1.0,
+          "PerformanceMultiplier": 0.912870929,
+          "PowerDemandMultiplier": 0.953462589
+        },
+        {
+          "Level": 2,
+          "RepairScale": 1.15,
+          "ReplacementScale": 0.9,
+          "PriceMultiplier": 1.583618687,
+          "PerformanceMultiplier": 0.955442792,
+          "PowerDemandMultiplier": 0.97645409
+        },
+        {
+          "Level": 3,
+          "RepairScale": 1.0,
+          "ReplacementScale": 1.0,
+          "PriceMultiplier": 2.507848146,
+          "PerformanceMultiplier": 1.0,
+          "PowerDemandMultiplier": 1.0
+        },
+        {
+          "Level": 4,
+          "RepairScale": 0.9,
+          "ReplacementScale": 1.15,
+          "PriceMultiplier": 3.971475189,
+          "PerformanceMultiplier": 1.046635139,
+          "PowerDemandMultiplier": 1.024113689
+        },
+        {
+          "Level": 5,
+          "RepairScale": 0.8,
+          "ReplacementScale": 1.3,
+          "PriceMultiplier": 6.289302326,
+          "PerformanceMultiplier": 1.095445115,
+          "PowerDemandMultiplier": 1.048808848
+        }
       ]
     },
     {
@@ -580,6 +622,48 @@
           "Spares": 1,
           "Affects": 5,
           "BaseCost": 1100
+        }
+      ],
+      "ComponentGrades": [
+        {
+          "Level": 1,
+          "RepairScale": 1.3,
+          "ReplacementScale": 0.8,
+          "PriceMultiplier": 1.0,
+          "PerformanceMultiplier": 0.912870929,
+          "PowerDemandMultiplier": 0.935414347
+        },
+        {
+          "Level": 2,
+          "RepairScale": 1.15,
+          "ReplacementScale": 0.9,
+          "PriceMultiplier": 1.872006923,
+          "PerformanceMultiplier": 0.955442792,
+          "PowerDemandMultiplier": 0.96716821
+        },
+        {
+          "Level": 3,
+          "RepairScale": 1.0,
+          "ReplacementScale": 1.0,
+          "PriceMultiplier": 3.50440992,
+          "PerformanceMultiplier": 1.0,
+          "PowerDemandMultiplier": 1.0
+        },
+        {
+          "Level": 4,
+          "RepairScale": 0.9,
+          "ReplacementScale": 1.15,
+          "PriceMultiplier": 6.560279632,
+          "PerformanceMultiplier": 1.046635139,
+          "PowerDemandMultiplier": 1.033946308
+        },
+        {
+          "Level": 5,
+          "RepairScale": 0.8,
+          "ReplacementScale": 1.3,
+          "PriceMultiplier": 12.280888889,
+          "PerformanceMultiplier": 1.095445115,
+          "PowerDemandMultiplier": 1.069044968
         }
       ]
     },
@@ -630,6 +714,48 @@
           "Spares": 1,
           "Affects": 5,
           "BaseCost": 800
+        }
+      ],
+      "ComponentGrades": [
+        {
+          "Level": 1,
+          "RepairScale": 1.3,
+          "ReplacementScale": 0.8,
+          "PriceMultiplier": 1.0,
+          "PerformanceMultiplier": 0.912870929,
+          "PowerDemandMultiplier": 0.935414347
+        },
+        {
+          "Level": 2,
+          "RepairScale": 1.15,
+          "ReplacementScale": 0.9,
+          "PriceMultiplier": 1.872006923,
+          "PerformanceMultiplier": 0.955442792,
+          "PowerDemandMultiplier": 0.96716821
+        },
+        {
+          "Level": 3,
+          "RepairScale": 1.0,
+          "ReplacementScale": 1.0,
+          "PriceMultiplier": 3.50440992,
+          "PerformanceMultiplier": 1.0,
+          "PowerDemandMultiplier": 1.0
+        },
+        {
+          "Level": 4,
+          "RepairScale": 0.9,
+          "ReplacementScale": 1.15,
+          "PriceMultiplier": 6.560279632,
+          "PerformanceMultiplier": 1.046635139,
+          "PowerDemandMultiplier": 1.033946308
+        },
+        {
+          "Level": 5,
+          "RepairScale": 0.8,
+          "ReplacementScale": 1.3,
+          "PriceMultiplier": 12.280888889,
+          "PerformanceMultiplier": 1.095445115,
+          "PowerDemandMultiplier": 1.069044968
         }
       ]
     },

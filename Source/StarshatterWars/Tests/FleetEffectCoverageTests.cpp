@@ -20,9 +20,11 @@
 #include "ShipActor.h"
 #include "Ship.h"
 #include "Drive.h"
+#include "EnginePlumeTuning.h"
 #include "Thruster.h"
 #include "NavLight.h"
 #include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 #include "TacticalReferenceActor.h"
 #include "ShipWeaponMountComponent.h"
 #include "TurretActor.h"
@@ -324,6 +326,18 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
         const auto* Drive=Runtime.GetMainDrive();const auto* RCS=Runtime.GetThruster();
         TestEqual(FString(Entry.Definition)+TEXT(" engine count"),Engines,Drive && Actor->bEnableMainEngineEmitters?Drive->NumPorts():0);
         TestEqual(FString(Entry.Definition)+TEXT(" light count"),Lights,ExpectedLights);
+        if(Drive && Actor->bEnableMainEngineEmitters)
+        {
+            const FString Expected=EnginePlumeTuning::SystemPath(Row->ShipEmpire,Drive->GetDriveType());
+            for(const auto& Engine:Actor->RuntimeMainEngineEmitters)if(Engine)
+            {
+                if(TestNotNull(FString(Entry.Definition) + TEXT(" native nozzle asset"),Engine->GetAsset()))
+                    TestEqual(FString(Entry.Definition)+TEXT(" faction plume"),Engine->GetAsset()->GetPathName(),Expected);
+                const double HullRadius=Actor->HullMesh->Bounds.SphereRadius;
+                if(HullRadius>0)TestTrue(FString(Entry.Definition)+TEXT(" nozzle width bounded to actual imported hull"),
+                    Engine->GetComponentScale().GetAbsMax()<=HullRadius*.0801);
+            }
+        }
         int32 VisibleBulbs = 0;
         for (const auto& Bulb : Actor->NavLightBulbMeshes)
         {
@@ -393,7 +407,7 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
                     {
                         TestTrue(TEXT("Replicated burn displays the lateral exhaust"), Trail->IsVisible());
                         TestTrue(TEXT("Lateral exhaust retains width after port scaling"),
-                            Trail->GetRelativeScale3D().Y >= 0.3 * Effects[LateralPort].PortScale);
+                            Effects[LateralPort].Nozzle && FMath::IsNearlyEqual(Trail->GetComponentScale().Y,Effects[LateralPort].Nozzle->GetComponentScale().X*50.,1.e-4));
                     }
                     TestEqual(TEXT("An unfired fore jet stays idle"), Effects[0].PresentedBurn, 0.0f);
                     for(int32 I=0;I<Effects.Num();++I)
@@ -404,6 +418,15 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
                     {
                         return Engine && Engine->IsVisible();
                     }));
+                Proxy->UpdateSnapshotPropulsion(.1f,0,0,Burns);
+                if(Effects.IsValidIndex(LateralPort) && Effects[LateralPort].Trail)
+                {
+                    const auto* Jet=Effects[LateralPort].Trail;
+                    TestTrue(TEXT("Native maneuvering jet fires with main throttle at zero"),Jet->IsVisible() && Effects[LateralPort].PresentedBurn>0);
+                    TestTrue(TEXT("Maneuvering port uses the native faction nozzle system"),Jet->GetAsset() && Jet->GetAsset()->GetPathName().StartsWith(TEXT("/Game/Effects/Engines/NS_SSW_Nozzle_")));
+                    bool Valid=false;const float Life=Jet->GetVariableFloat(TEXT("User.Thrusters_Life"),Valid);
+                    TestTrue(TEXT("RCS has a shorter native pulse than main-engine exhaust"),Valid && Life<.10f);
+                }
                 Burns[LateralPort] = 0;
                 Proxy->UpdateSnapshotPropulsion(0.1f, 0.0f, 0.0f, Burns);
                 if (Effects.IsValidIndex(LateralPort) && Effects[LateralPort].Trail)
@@ -443,7 +466,7 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
             TArray<uint8> Burns;Burns.Init(255,RCS->GetNumThrusters());Actor->UpdateSnapshotPropulsion(.1f,1,1,Burns);
             for(int32 I=0;I<Actor->RuntimeThrusterFX.Num();++I)
                 if(const auto* Trail=Actor->RuntimeThrusterFX[I].Trail)
-                    TestTrue(TEXT("Carrier jets use individual plume size instead of system size"),FMath::IsNearlyEqual(Trail->GetRelativeScale3D().Y,double(RCS->GetPort(I)->TrailScale)*.5,1.e-4));
+                    TestTrue(TEXT("Carrier jets use individual plume size instead of system size"),Actor->RuntimeThrusterFX[I].Nozzle && FMath::IsNearlyEqual(Trail->GetComponentScale().Y,Actor->RuntimeThrusterFX[I].Nozzle->GetComponentScale().X*50.,1.e-4));
         }
         AddInfo(FString::Printf(TEXT("%s: main=%d rcsFX=%d nav=%d"),Entry.Definition,Engines,Thrusters,Lights));
     }

@@ -66,6 +66,7 @@
             <StackPanel VerticalAlignment="Center">
                 <TextBlock x:Name="LauncherVersion" FontSize="11" Foreground="#ACC4D5"/>
                 <TextBlock x:Name="InstalledVersion" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                <TextBlock x:Name="AvailableVersion" Text="Checking latest build…" FontSize="12" Foreground="#ACC4D5" TextWrapping="Wrap"/>
                 <TextBlock x:Name="LaunchStatus" Foreground="#ACC4D5" TextWrapping="Wrap"/>
                 <ProgressBar x:Name="TransferBar" Height="7" Margin="0,5,12,0" Maximum="100" Visibility="Collapsed"/>
             </StackPanel>

@@ -1,4 +1,5 @@
 #include "ShipInsuranceSubsystem.h"
+#include "StationServiceCatalog.h"
 #include "TransactionAI.h"
 #include "OwnedHullCondition.h"
 #include "PlayerHullLoss.h"
@@ -363,6 +364,10 @@ bool UShipInsuranceSubsystem::ValidateFitting(FGuid Hull, int32 Slot, int32 Leve
     const auto* Catalog = GetGameInstance()->GetSubsystem<UStarshatterSystemDesignSubsystem>();
     if (!Craft || !Entry || !Catalog || !CanModifyHull(Hull) || !Entry->Components.IsValidIndex(Slot))
     { Result = INVTEXT("Dock with this hull to fit a component."); return false; }
+    const auto* Base=Craft->GetCarrier();
+    if (!Base || !Base->Design() || !FStationServiceCatalog::Get().HasService(
+        FName(UTF8_TO_TCHAR(Base->Design()->name)),FName(UTF8_TO_TCHAR(Base->GetName())),ESSWStationService::Refit))
+    { Result=INVTEXT("Component refits require a shipyard fitting service.");return false; }
     const auto& Fitted = Entry->Components[Slot];
     const auto Variant = Catalog->FindComponentGrade(Fitted.SystemDesign, Fitted.Component, Level);
     auto& Systems = Craft->GetSystems();
@@ -462,6 +467,25 @@ void UShipInsuranceSubsystem::BeginMission()
 {
     bRestoreLoadout = true;
     RefreshAssignment();
+}
+
+bool UShipInsuranceSubsystem::CanRefitHull(FGuid Hull, FText* Reason) const
+{
+    const auto Denied = [Reason](const FText& Text) { if (Reason) *Reason = Text; return false; };
+    auto* Instance = GetGameInstance();
+    const auto* Players = Instance ? Instance->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    auto* Simulation = Sim::GetSim();
+    const auto* Craft = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    if (!Players || !Craft || !CanModifyHull(Hull))
+        return Denied(INVTEXT("Dock with an available owned hull to refit components."));
+    if (Players->GetPlayerInfo().AssignedHangarHull != Hull)
+        return Denied(INVTEXT("Select and board this hull while docked before refitting it."));
+    const auto* Base = Craft->GetCarrier();
+    if (!Base || !Base->Design() || !FStationServiceCatalog::Get().HasService(
+        FName(UTF8_TO_TCHAR(Base->Design()->name)), FName(UTF8_TO_TCHAR(Base->GetName())), ESSWStationService::Refit))
+        return Denied(INVTEXT("Component refits require a shipyard fitting service."));
+    if (Reason) *Reason = INVTEXT("Shipyard fitting service available. Select a component and grade to check its power budget.");
+    return true;
 }
 
 bool UShipInsuranceSubsystem::CanModifyHull(FGuid Hull) const

@@ -2,5 +2,11 @@
   "feedUrl": null,
   "steamAppId": 0,
   "patchManifestUrl": null,
-  "patchPublicKeyPem": null
+  "patchPublicKeyPem": null,
+  "localFeedServer": {
+    "enabled": false,
+    "documentRoot": "LauncherFeed",
+    "port": 18787,
+    "readyTimeoutSeconds": 12
+  }
 }

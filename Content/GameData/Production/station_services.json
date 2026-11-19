@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "profiles": [
+    {
+      "name": "FleetSupport",
+      "services": [
+        "Cargo",
+        "Insurance",
+        "Repair",
+        "Loadout",
+        "HullSelection"
+      ]
+    },
+    {
+      "name": "Shipyard",
+      "services": [
+        "Cargo",
+        "Market",
+        "Insurance",
+        "Repair",
+        "Loadout",
+        "HullSelection",
+        "Refit",
+        "Blueprints",
+        "SkillBooks"
+      ]
+    },
+    {
+      "name": "Starport",
+      "services": [
+        "Cargo",
+        "Market",
+        "Insurance",
+        "Repair",
+        "Loadout",
+        "HullSelection",
+        "SkillBooks"
+      ]
+    },
+    {
+      "name": "Transfer",
+      "services": [
+        "Cargo",
+        "Market",
+        "Insurance",
+        "Repair",
+        "SkillBooks"
+      ]
+    },
+    {
+      "name": "MiningDepot",
+      "services": [
+        "Cargo",
+        "Market",
+        "Repair"
+      ]
+    },
+    {
+      "name": "Refinery",
+      "services": [
+        "Cargo",
+        "Market",
+        "Repair",
+        "Manufacturing",
+        "Blueprints"
+      ]
+    },
+    {
+      "name": "Research",
+      "services": [
+        "Cargo",
+        "Market",
+        "Repair",
+        "Manufacturing",
+        "Blueprints",
+        "SkillBooks"
+      ]
+    },
+    {
+      "name": "NoServices",
+      "services": []
+    }
+  ],
+  "stations": [
+    {
+      "design": "Adventure",
+      "profile": "FleetSupport"
+    },
+    {
+      "design": "Dragon",
+      "profile": "FleetSupport"
+    },
+    {
+      "design": "Goliath",
+      "profile": "FleetSupport"
+    },
+    {
+      "design": "Orion",
+      "profile": "FleetSupport"
+    },
+    {
+      "design": "Station3",
+      "profile": "Shipyard"
+    },
+    {
+      "design": "Station4",
+      "profile": "Shipyard"
+    },
+    {
+      "design": "Airbase1",
+      "profile": "Starport"
+    },
+    {
+      "design": "Airbase2",
+      "profile": "Starport"
+    },
+    {
+      "design": "Airbase3",
+      "profile": "Starport"
+    },
+    {
+      "design": "FoothillBase",
+      "profile": "Starport"
+    },
+    {
+      "design": "JanekStation",
+      "profile": "Starport"
+    },
+    {
+      "design": "RadixBase",
+      "profile": "Starport"
+    },
+    {
+      "design": "Station1",
+      "profile": "Transfer"
+    },
+    {
+      "design": "Station2",
+      "profile": "Transfer"
+    },
+    {
+      "design": "Station5",
+      "profile": "Transfer"
+    },
+    {
+      "design": "Station6",
+      "profile": "Transfer"
+    },
+    {
+      "design": "Colony",
+      "profile": "Transfer"
+    },
+    {
+      "design": "Asteroid Base",
+      "profile": "MiningDepot"
+    },
+    {
+      "design": "Mining Station",
+      "profile": "MiningDepot"
+    },
+    {
+      "design": "Processing Facility",
+      "profile": "Refinery"
+    },
+    {
+      "design": "Station7",
+      "profile": "Research"
+    },
+    {
+      "design": "Farcaster",
+      "profile": "NoServices"
+    },
+    {
+      "design": "Marakan Farcaster",
+      "profile": "NoServices"
+    },
+    {
+      "design": "Observatory",
+      "profile": "NoServices"
+    }
+  ]
+}

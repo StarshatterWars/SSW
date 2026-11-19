@@ -1,5 +1,8 @@
 #include "StarshatterGameDataSubsystem.h"
 #include "CampaignStoryRules.h"
+#include "CampaignJsonCatalog.h"
+#include "MissionListJson.h"
+#include "AwardsJsonCatalog.h"
 #include "JsonObjectConverter.h"
 /*
     Project Starshatter Wars
@@ -1727,7 +1730,7 @@ void UStarshatterGameDataSubsystem::LoadSingleMissions()
     UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][08] catalog=%s exists=%d directory=%s exists=%d"),
         *CatalogFile, FPaths::FileExists(CatalogFile) ? 1 : 0,
         *MissionsDir, IFileManager::Get().DirectoryExists(*MissionsDir) ? 1 : 0);
-    if (!FPaths::FileExists(CatalogFile))
+    if (!FPaths::FileExists(CatalogFile) && !FPaths::FileExists(FPaths::ChangeExtension(CatalogFile,TEXT("json"))))
     {
         UE_LOG(LogTemp, Error, TEXT("[SingleMissions] Catalog missing: %s"), *CatalogFile);
         ReadRows();
@@ -1984,7 +1987,7 @@ const FS_CampaignMission* UStarshatterGameDataSubsystem::FindSingleMissionScenar
     });
 }
 
-void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
+void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full, bool bPreferJson)
 {
 	if (!CampaignDataTable)
 	{
@@ -1994,6 +1997,10 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 	//CampaignDataTable->EmptyTable();
 
 	const FString CampaignDPath = ANSI_TO_TCHAR(fs);
+    const FString JsonDirectory=FPaths::GetPath(CampaignDPath);
+    CampaignPath=JsonDirectory+TEXT("/");
+    const bool bJsonActions=bPreferJson && FPaths::FileExists(JsonDirectory/TEXT("actions.json"));
+    const bool bJsonZones=bPreferJson && FPaths::FileExists(JsonDirectory/TEXT("zones.json"));
 
 	TArray<uint8> Bytes;
 	if (!SSWModFiles::Read(CampaignDPath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *CampaignDPath))
@@ -2105,6 +2112,7 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 				}
 
 				else if (def->name()->value() == "action") {
+                    if(bJsonActions)continue;
 
 					TermStruct* ActionTerm = def->term()->isStruct();
 
@@ -2553,9 +2561,9 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 
 	} while (term);
 
-	LoadZones(CampaignPath, FString(name));
-	LoadMissionList(CampaignPath);
-	LoadTemplateList(CampaignPath);
+    if(!bJsonZones)LoadZones(CampaignPath, FString(name));
+	LoadMissionList(CampaignPath, bPreferJson);
+	LoadTemplateList(CampaignPath, bPreferJson);
 	LoadCutscene(CampaignPath);
 	LoadTemplateMission(CampaignPath);
 	LoadScriptedMission(CampaignPath);
@@ -2566,6 +2574,12 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full)
 	NewCampaignData.Missions = MissionArray;
 	NewCampaignData.TemplateMissions = TemplateMissionArray;
 	NewCampaignData.ScriptedMissions = ScriptedMissionArray;
+    if(bPreferJson)
+    {
+        FString Error;
+        if(!CampaignJsonCatalog::Apply(JsonDirectory,NewCampaignData,CampaignActionDataTable,ZonesDataTable,Error))
+        {UE_LOG(LogTemp,Error,TEXT("[CampaignJson] %s; campaign import rejected"),*Error);return;}
+    }
 	NewCampaignData.bAvailable = true;
 	NewCampaignData.bCompleted = false;
 
@@ -2957,8 +2971,16 @@ void UStarshatterGameDataSubsystem::LoadZones(
 // +--------------------------------------------------------------------+
 
 void
-UStarshatterGameDataSubsystem::LoadMissionList(FString Path)
+UStarshatterGameDataSubsystem::LoadMissionList(FString Path,bool bPreferJson)
 {
+    if(bPreferJson)
+    {
+        FString Error;
+        const auto Result=MissionListJson::ReadMissions(Path,MissionListArray,Error);
+        if(Result==MissionListJson::EReadResult::Loaded)return;
+        if(Result==MissionListJson::EReadResult::Invalid)
+        {UE_LOG(LogTemp,Error,TEXT("[LoadMissionList] %s; DEF fallback rejected."),*Error);return;}
+    }
     UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][CATALOG] LoadMissionList called path=%s"), *Path);
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::LoadMissionList()"));
 	MissionListArray.Empty();
@@ -3148,8 +3170,16 @@ UStarshatterGameDataSubsystem::LoadMissionList(FString Path)
 // +--------------------------------------------------------------------+
 
 void
-UStarshatterGameDataSubsystem::LoadTemplateList(FString Path)
+UStarshatterGameDataSubsystem::LoadTemplateList(FString Path,bool bPreferJson)
 {
+    if(bPreferJson)
+    {
+        FString Error;
+        const auto Result=MissionListJson::ReadTemplates(Path,TemplateListArray,Error);
+        if(Result==MissionListJson::EReadResult::Loaded)return;
+        if(Result==MissionListJson::EReadResult::Invalid)
+        {UE_LOG(LogTemp,Error,TEXT("[LoadTemplateList] %s; DEF fallback rejected."),*Error);return;}
+    }
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::LoadTemplateList()"));
 
 	TemplateListArray.Empty();
@@ -5943,7 +5973,7 @@ static TSoftObjectPtr<UTexture2D> AwardImageReference(const TCHAR* Folder, const
     return TSoftObjectPtr<UTexture2D>(FSoftObjectPath(Path));
 }
 
-void UStarshatterGameDataSubsystem::LoadAwardTables()
+void UStarshatterGameDataSubsystem::LoadAwardTables(bool bPreferJson)
 {
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::LoadAwardTables()"));
 
@@ -5965,12 +5995,6 @@ void UStarshatterGameDataSubsystem::LoadAwardTables()
 
 	UE_LOG(LogTemp, Log, TEXT("Loading Awards file: %s"), *AwardsPath);
 
-	if (!FPaths::FileExists(AwardsPath))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("LoadAwardTables: file not found: %s"), *AwardsPath);
-		return;
-	}
-
 	if (!RanksDataTable || !MedalsDataTable)
 	{
 		UE_LOG(LogTemp, Error, TEXT("LoadAwardTables: RanksDataTable or MedalsDataTable is null."));
@@ -5990,6 +6014,30 @@ void UStarshatterGameDataSubsystem::LoadAwardTables()
 		return;
 	}
 
+    // Resolve JSON/DEF inside the highest-priority enabled mod before using
+    // the base JSON catalog. A legacy awards DEF mod therefore still overrides
+    // the new stock JSON rather than silently losing its changes.
+    TArray<uint8> ModBytes; bool bModJson = false;
+    const bool bModOverride = bPreferJson && SSWModFiles::ReadMission(AwardsPath, ModBytes, bModJson);
+    const FString JsonPath = FPaths::ChangeExtension(AwardsPath, TEXT("json"));
+    const bool bUseJson = bPreferJson && (bModOverride ? bModJson : FPaths::FileExists(JsonPath));
+    if (bUseJson)
+    {
+        auto* NewRanks = NewObject<UDataTable>(this); NewRanks->RowStruct = FRankInfo::StaticStruct();
+        auto* NewMedals = NewObject<UDataTable>(this); NewMedals->RowStruct = FMedalInfo::StaticStruct();
+        FString Error;
+        if (!AwardsJsonCatalog::Import(JsonPath, *NewRanks, *NewMedals, Error))
+        {
+            UE_LOG(LogTemp, Error, TEXT("LoadAwardTables: %s; existing tables retained"), *Error);
+            return;
+        }
+        RanksDataTable = NewRanks; MedalsDataTable = NewMedals;
+        bAwardTablesLoaded = true;
+        UE_LOG(LogTemp, Display, TEXT("[AwardsJson] Loaded %d ranks and %d medals from awards.json"),
+            RanksDataTable->GetRowMap().Num(), MedalsDataTable->GetRowMap().Num());
+        return;
+    }
+
     // Keep source DataTable assets untouched in Editor and packaged play.
     RanksDataTable = DuplicateObject<UDataTable>(RanksDataTable, this);
     MedalsDataTable = DuplicateObject<UDataTable>(MedalsDataTable, this);
@@ -5997,8 +6045,8 @@ void UStarshatterGameDataSubsystem::LoadAwardTables()
 	// ------------------------------------------------------------
 	// Load file bytes (UE-native)
 	// ------------------------------------------------------------
-	TArray<uint8> Bytes;
-	if (!SSWModFiles::Read(AwardsPath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *AwardsPath))
+	TArray<uint8> Bytes = MoveTemp(ModBytes);
+	if (!bModOverride && !SSWModFiles::Read(AwardsPath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *AwardsPath))
 	{
 		UE_LOG(LogTemp, Error, TEXT("LoadAwardTables: failed to read: %s"), *AwardsPath);
 		return;

@@ -127,7 +127,7 @@ internal sealed class GamePatcher(HttpClient http)
         }
     }
 
-    private static bool IsDownloadUrl(Uri url) => url.IsAbsoluteUri &&
+    internal static bool IsDownloadUrl(Uri url) => url.IsAbsoluteUri &&
         string.IsNullOrEmpty(url.UserInfo) &&
         (url.Scheme == "https" || (url.Scheme == "http" && url.IsLoopback));
 

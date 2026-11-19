@@ -15,6 +15,9 @@
 #include "Asteroid.h"
 #include "MiningAI.h"
 #include "MiningDroneSaveTransaction.h"
+#include "MiningDroneBayService.h"
+#include "CargoCatalogSubsystem.h"
+#include "StationServices.h"
 #include "GameStructs_economy.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
@@ -84,8 +87,12 @@ bool UMiningDroneSubsystem::PrepareBay(FText& Reason)
     {
         if(BoundFleets.Contains(Key))return true;
         const auto Before=State;bool Changed=false;
-        for(auto& Drone:Existing->Drones)if(Drone.State!=EMiningDroneState::Docked && Drone.State!=EMiningDroneState::Lost)
-        {Drone.State=EMiningDroneState::Returning;Drone.TargetContact=INDEX_NONE;Changed=true;}
+        for(auto& Drone:Existing->Drones)
+        {
+            if(Drone.bRepeatMining){Drone.bRepeatMining=false;Changed=true;}
+            if(Drone.State!=EMiningDroneState::Docked && Drone.State!=EMiningDroneState::Lost)
+            {Drone.State=EMiningDroneState::Returning;Drone.TargetContact=INDEX_NONE;Changed=true;}
+        }
         if(Changed && !Players->SaveActivePlayerProgress()){State=Before;Reason=INVTEXT("Could not restore deployed mining drones.");return false;}
         BoundFleets.Add(Key);return true;
     }
@@ -100,7 +107,10 @@ bool UMiningDroneSubsystem::PrepareBay(FText& Reason)
 FMiningDroneFrame UMiningDroneSubsystem::Frame(Ship& Owner,int32 Target,const FMiningDroneBayDefinition& Bay,Asteroid*& Rock) const
 {
     FMiningDroneFrame Result;Rock=nullptr;auto* Simulation=Sim::GetSim();Result.bAuthority=Simulation && Simulation->HasSimulationAuthority() && !Simulation->IsNetworked();
-    Result.bOwnerAlive=!Owner.IsDead() && !Owner.IsDying();Result.OwnerPosition=Owner.GetLocation();auto* Region=Owner.GetRegion();if(!Region)return Result;
+    Result.bOwnerAlive=!Owner.IsDead() && !Owner.IsDying();Result.OwnerPosition=Owner.GetLocation();Result.OwnerFreeTonnes=0;
+    const auto* Hold=Simulation?Simulation->ReadEconomy().Inventories.Find(Owner.GetCargoInventoryKey()):nullptr;
+    if(Hold && Hold->Owner==FEconomyLedger::Pilot())Result.OwnerFreeTonnes=FMath::Max(0.0,Hold->CapacityTonnes-FEconomyLedger::Used(*Hold));
+    auto* Region=Owner.GetRegion();if(!Region)return Result;
     for(ListIter<Asteroid> Rocks=Region->GetRoids();++Rocks;)
         if(Rocks.value() && (Target>=0?Rocks.value()->GetContactId()==Target:static_cast<SimObject*>(Rocks.value())==Owner.GetTarget())){Rock=Rocks.value();break;}
     if(!Rock || Rock->GetIntegrity()<=0)return Result;
@@ -117,6 +127,40 @@ double UMiningDroneSubsystem::Unload(Ship& Owner,FName Ore,double Amount)
     const double Count=FMath::Min(Amount,FMath::Max(0.0,Hold->CapacityTonnes-FEconomyLedger::Used(*Hold)));
     return Count>0 && FEconomyLedger::Deposit(State,Owner.GetCargoInventoryKey(),Ore,Count,1)?Count:0;
 }
+bool UMiningDroneSubsystem::CanLoadSpare(FText& Reason) const
+{
+    if (!Authority(Reason)) return false;
+    auto* Simulation = Sim::GetSim(); const auto* Owner = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    const auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if (!Owner || !Players || !Players->GetPlayerInfo().AssignedHangarHull.IsValid() ||
+        Owner->GetCargoInventoryKey() != FName(*(TEXT("Ship/") + Players->GetPlayerInfo().AssignedHangarHull.ToString(EGuidFormats::Digits))))
+    { Reason = INVTEXT("The fitted drone bay needs your persistent assigned hull."); return false; }
+    const auto* Catalog = GetGameInstance()->GetSubsystem<UCargoCatalogSubsystem>();
+    const auto* Drone = Catalog ? Catalog->FindCargo(TEXT("mining drone"), TEXT("units")) : nullptr;
+    if (!Drone || !FMath::IsNearlyEqual(Drone->Size, .5))
+    { Reason = INVTEXT("The mining drone cargo definition is unavailable."); return false; }
+    const auto* Bay = GetBay(Owner);
+    return Bay && MiningDroneBayService::CanLoad(Simulation->ReadEconomy(), Owner->GetCargoInventoryKey(), *Bay,
+        FStationServices::IsDocked(), Simulation->HasSimulationAuthority(), Reason);
+}
+bool UMiningDroneSubsystem::LoadSpare(FText& Reason)
+{
+    if (!PrepareBay(Reason)) return false;
+    auto* Simulation = Sim::GetSim(); auto* Owner = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    if (!Owner) return false;
+    Owner->SyncCargoInventory();
+    if (!CanLoadSpare(Reason)) return false;
+    auto& State = Simulation->GetEconomy(); const auto Before = State;
+    const auto* Bay = GetBay(Owner);
+    if (!Bay || !MiningDroneBayService::Load(State, Owner->GetCargoInventoryKey(), *Bay,
+        FStationServices::IsDocked(), Simulation->HasSimulationAuthority(), Reason)) return false;
+    auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    const TArray<TPair<Asteroid*, double>> NoExtraction;
+    if (!MiningDroneSaveTransaction::Commit(State, Before, NoExtraction,
+        [&]() { return Players && Players->SaveActivePlayerProgress(); }, [&]() { Owner->ApplyCargoInventoryToManifest(); }))
+    { Reason = INVTEXT("Could not save the spare drone. Cargo and bay contents were restored."); return false; }
+    LastStatus = Reason; return true;
+}
 bool UMiningDroneSubsystem::Command(FGuid Id,int32 Action,FText& Reason)
 {
     if(!Authority(Reason) || !PrepareBay(Reason))return false;auto* Simulation=Sim::GetSim();auto* Owner=Simulation->GetPlayerShip();
@@ -124,12 +168,13 @@ bool UMiningDroneSubsystem::Command(FGuid Id,int32 Action,FText& Reason)
     Owner->SyncCargoInventory();auto& State=Simulation->GetEconomy();const auto Before=State;auto& Fleet=State.MiningDrones.FindChecked(Owner->GetCargoInventoryKey());
     if(!Id.IsValid())for(const auto& Item:Fleet.Drones)if(Item.State==EMiningDroneState::Docked){Id=Item.Id;break;}
     auto* Drone=Fleet.Drones.FindByPredicate([Id](const auto& Item){return Item.Id==Id;});if(!Drone){Reason=INVTEXT("Select a mining drone.");return false;}
-    const auto* Bay=GetBay(Owner);Asteroid* Rock=nullptr;const auto Context=Frame(*Owner,Action==1?INDEX_NONE:Drone->TargetContact,*Bay,Rock);bool Changed=false;
+    const auto* Bay=GetBay(Owner);Asteroid* Rock=nullptr;const auto Context=Frame(*Owner,(Action==1 || Action==5)?INDEX_NONE:Drone->TargetContact,*Bay,Rock);bool Changed=false;
     const double PreviousOre=Drone->OreTonnes;
     switch(Action)
     {
     case 0:Changed=MiningDroneAI::Launch(Fleet,Id,*Bay,Context,Reason);Fleet.Region=Owner->GetRegion()?FName(UTF8_TO_TCHAR(Owner->GetRegion()->GetName())):NAME_None;break;
     case 1:Changed=MiningDroneAI::Mine(*Drone,*Bay,Context,Reason);break;
+    case 5:Changed=MiningDroneAI::Mine(*Drone,*Bay,Context,Reason,true);break;
     case 2:Changed=MiningDroneAI::Stop(*Drone,Context,Reason);break;
     case 3:Changed=MiningDroneAI::Return(*Drone,Context,Reason);break;
     case 4:Changed=MiningDroneAI::Dock(*Drone,Context,[&](FName Ore,double Tonnes){return Unload(*Owner,Ore,Tonnes);},Reason);break;
@@ -142,6 +187,7 @@ bool UMiningDroneSubsystem::Command(FGuid Id,int32 Action,FText& Reason)
 }
 bool UMiningDroneSubsystem::Launch(FGuid Id,FText& Reason){return Command(Id,0,Reason);}
 bool UMiningDroneSubsystem::Mine(FGuid Id,FText& Reason){return Command(Id,1,Reason);}
+bool UMiningDroneSubsystem::MineRepeatedly(FGuid Id,FText& Reason){return Command(Id,5,Reason);}
 bool UMiningDroneSubsystem::Stop(FGuid Id,FText& Reason){return Command(Id,2,Reason);}
 bool UMiningDroneSubsystem::Return(FGuid Id,FText& Reason){return Command(Id,3,Reason);}
 bool UMiningDroneSubsystem::Dock(FGuid Id,FText& Reason){return Command(Id,4,Reason);}

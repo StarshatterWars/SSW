@@ -196,17 +196,8 @@ Weapon::Weapon(const Weapon& w)
 
 Weapon::~Weapon()
 {
-    if (beams) {
-        for (int i = 0; i < nbarrels; i++) {
-            if (beams[i]) {
-                Ignore(beams[i]);
-                delete beams[i];
-                beams[i] = 0;
-            }
-        }
-
-        delete[] beams;
-    }
+    KillBeams();
+    delete[] beams;
 
     GRAPHIC_DESTROY(turret);
     GRAPHIC_DESTROY(turret_base);
@@ -223,10 +214,14 @@ void Weapon::KillBeams()
     for (int i = 0; i < nbarrels; ++i)
     {
         if (!beams[i]) continue;
-        Ignore(beams[i]);
-        beams[i]->Destroy();   // drops the laser actor
-        delete beams[i];
+        SimShot* Beam = beams[i];
         beams[i] = nullptr;
+        Ignore(Beam);
+        Beam->Destroy();
+        // Inserted projectiles belong to SimRegion. Damage or weapon teardown
+        // can run during UpdateShips, before that region advances its shots.
+        // Defer deletion to its owning list instead of leaving a freed pointer.
+        if (!Beam->GetRegion()) delete Beam;
     }
 }
 
@@ -880,6 +875,7 @@ SimShot* Weapon::FireBarrel(int n)
 
 SimShot* Weapon::CreateShot(const FVector& loc, const Camera& cam, WeaponDesign* dsn, const Ship* own)
 {
+    if (!dsn) return nullptr;
     if (dsn->drone)
         return new Drone(loc, cam, dsn, own);
     else

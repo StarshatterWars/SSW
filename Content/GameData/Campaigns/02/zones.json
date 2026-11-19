@@ -1,0 +1,54 @@
+{
+	"schemaVersion": 1,
+	"campaign": "Operation Highland",
+	"zones": [
+		{
+			"system": "Solus",
+			"region": "Meridian"
+		},
+		{
+			"system": "Solus",
+			"region": "Solus"
+		},
+		{
+			"system": "Solus",
+			"region": "Telmera"
+		},
+		{
+			"system": "Solus",
+			"region": "Kalon"
+		},
+		{
+			"system": "Solus",
+			"region": "Jalah"
+		},
+		{
+			"system": "Solus",
+			"region": "Trellis"
+		},
+		{
+			"system": "Renser",
+			"region": "Garana"
+		},
+		{
+			"system": "Renser",
+			"region": "Rhomindal"
+		},
+		{
+			"system": "Renser",
+			"region": "Renser"
+		},
+		{
+			"system": "Renser",
+			"region": "Marisol"
+		},
+		{
+			"system": "Renser",
+			"region": "Lornas"
+		},
+		{
+			"system": "Renser",
+			"region": "Khaital"
+		}
+	]
+}

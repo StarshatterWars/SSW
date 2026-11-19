@@ -15,6 +15,8 @@ bool SettlementAI::DeliverCourier(FContractTransaction& Contract, FContractAccou
         !GiveItems(*Issuer, Station, Contract.Terms.OfferedItems))
         return false;
     Courier->Credits += Payout;
+    RecordWallet(*Courier,Contract.Terms.RewardCredits,TEXT("Contract reward"),Contract.Id);
+    RecordWallet(*Courier,Contract.Terms.CollateralCredits,TEXT("Contract collateral refund"),Contract.Id);
     Contract.State = EContractState::Completed;
     return true;
 }
@@ -31,6 +33,8 @@ bool SettlementAI::FailCourier(FContractTransaction& Contract, FContractAccounts
         (!bPackageLost && !GiveItems(*Issuer, Contract.Terms.PickupStationId, Contract.Terms.OfferedItems)))
         return false;
     Issuer->Credits += Refund;
+    RecordWallet(*Issuer,Contract.Terms.RewardCredits,TEXT("Contract failed reward return"),Contract.Id);
+    RecordWallet(*Issuer,Contract.Terms.CollateralCredits,TEXT("Contract forfeited collateral"),Contract.Id);
     Contract.State = EContractState::Failed;
     return true;
 }
@@ -49,6 +53,7 @@ bool SettlementAI::CloseExpired(FContractTransaction& Contract, FContractAccount
         !GiveItems(*Issuer, Contract.Terms.PickupStationId, Contract.Terms.OfferedItems))
         return false;
     Issuer->Credits += Contract.Terms.RewardCredits;
+    RecordWallet(*Issuer,Contract.Terms.RewardCredits,TEXT("Contract expired reward return"),Contract.Id);
     Contract.State = EContractState::Expired;
     return true;
 }
@@ -63,6 +68,7 @@ bool SettlementAI::ClaimAuction(FContractTransaction& Contract, FContractAccount
     if (Actor == Contract.Issuer && !Contract.bSellerClaimed && CanReceiveCredits(*Account, Contract.HighBid))
     {
         Account->Credits += Contract.HighBid;
+        RecordWallet(*Account,Contract.HighBid,TEXT("Contract auction proceeds"),Contract.Id);
         Contract.bSellerClaimed = true;
     }
     else if (Actor == Contract.HighBidder && !Contract.bBuyerClaimed &&

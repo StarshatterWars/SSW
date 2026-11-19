@@ -44,6 +44,7 @@ bool AcceptanceAI::Publish(FContractTransaction& Contract, FContractAccounts& Ac
         return false;
     if (!Contract.Id.IsValid()) Contract.Id=FGuid::NewGuid();
     Issuer->Credits -= Terms.RewardCredits;
+    RecordWallet(*Issuer,-Terms.RewardCredits,TEXT("Contract reward escrow"),Contract.Id);
     Contract.ExpiresAt = Now + FTimespan::FromMinutes(Terms.OfferExpiryMinutes);
     Contract.State = EContractState::Open;
     return true;
@@ -65,6 +66,7 @@ bool AcceptanceAI::Accept(FContractTransaction& Contract, FContractAccounts& Acc
             Terms.CompletionDays > (FDateTime::MaxValue() - Now).GetTotalDays())
             return false;
         Buyer->Credits -= Terms.CollateralCredits;
+        RecordWallet(*Buyer,-Terms.CollateralCredits,TEXT("Contract collateral escrow"),Contract.Id);
         Contract.DeliverBy = Now + FTimespan::FromDays(Terms.CompletionDays);
         Contract.State = EContractState::InProgress;
     }
@@ -81,6 +83,9 @@ bool AcceptanceAI::Accept(FContractTransaction& Contract, FContractAccounts& Acc
             return false;
         BuyerAfter.Credits += Terms.RewardCredits - Terms.PriceCredits;
         IssuerAfter.Credits += Terms.PriceCredits;
+        RecordWallet(BuyerAfter,-Terms.PriceCredits,TEXT("Contract purchase"),Contract.Id);
+        RecordWallet(BuyerAfter,Terms.RewardCredits,TEXT("Contract reward"),Contract.Id);
+        RecordWallet(IssuerAfter,Terms.PriceCredits,TEXT("Contract sale"),Contract.Id);
         *Buyer = MoveTemp(BuyerAfter);
         *Issuer = MoveTemp(IssuerAfter);
         Contract.State = EContractState::Completed;

@@ -16,7 +16,8 @@
       "prototype antenna gimbal",
       "standard reactor control relay",
       "heavy duty servo controller",
-      "precision refinery crucible"
+      "precision refinery crucible",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -37,7 +38,8 @@
       "standard signal processor",
       "heavy duty reactor control relay",
       "precision servo controller",
-      "prototype refinery crucible"
+      "prototype refinery crucible",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -59,7 +61,8 @@
       "heavy duty signal processor",
       "precision reactor control relay",
       "prototype servo controller",
-      "standard survey drill head"
+      "standard survey drill head",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -80,7 +83,8 @@
       "precision signal processor",
       "prototype reactor control relay",
       "standard machine tool spindle",
-      "heavy duty survey drill head"
+      "heavy duty survey drill head",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -101,7 +105,8 @@
       "prototype signal processor",
       "standard battery cell pack",
       "heavy duty machine tool spindle",
-      "precision survey drill head"
+      "precision survey drill head",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -143,7 +148,8 @@
       "heavy duty fiber data harness",
       "precision battery cell pack",
       "prototype machine tool spindle",
-      "standard hull inspection scanner"
+      "standard hull inspection scanner",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -164,7 +170,8 @@
       "precision fiber data harness",
       "prototype battery cell pack",
       "standard ore sampler",
-      "heavy duty hull inspection scanner"
+      "heavy duty hull inspection scanner",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -185,7 +192,8 @@
       "prototype fiber data harness",
       "standard flux sensor",
       "heavy duty ore sampler",
-      "precision hull inspection scanner"
+      "precision hull inspection scanner",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -206,7 +214,8 @@
       "standard circuit breaker bank",
       "heavy duty flux sensor",
       "precision ore sampler",
-      "prototype hull inspection scanner"
+      "prototype hull inspection scanner",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -226,7 +235,8 @@
       "standard infrared detector",
       "heavy duty circuit breaker bank",
       "precision flux sensor",
-      "prototype ore sampler"
+      "prototype ore sampler",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -250,7 +260,8 @@
       "standard ore sorting sensor",
       "unregistered survey cores",
       "ketracel-white",
-      "khyber crystals"
+      "khyber crystals",
+      "mining drone"
     ],
     "bIllicitTrade": true
   },
@@ -270,7 +281,8 @@
       "precision infrared detector",
       "prototype circuit breaker bank",
       "standard thruster control valve",
-      "heavy duty ore sorting sensor"
+      "heavy duty ore sorting sensor",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -290,7 +302,8 @@
       "prototype infrared detector",
       "standard voltage converter",
       "heavy duty thruster control valve",
-      "precision ore sorting sensor"
+      "precision ore sorting sensor",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -310,7 +323,8 @@
       "standard radio receiver module",
       "heavy duty voltage converter",
       "precision thruster control valve",
-      "prototype ore sorting sensor"
+      "prototype ore sorting sensor",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -330,7 +344,8 @@
       "heavy duty radio receiver module",
       "precision voltage converter",
       "prototype thruster control valve",
-      "standard conveyor drive"
+      "standard conveyor drive",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -354,7 +369,8 @@
       "heavy duty conveyor drive",
       "cipher relays",
       "restricted memory crystals",
-      "dust"
+      "dust",
+      "mining drone"
     ],
     "bIllicitTrade": true
   },
@@ -376,7 +392,8 @@
       "standard power bus coupler",
       "heavy duty gyroscope assembly",
       "precision conveyor drive",
-      "ghost navigation charts"
+      "ghost navigation charts",
+      "mining drone"
     ],
     "bIllicitTrade": true
   },
@@ -396,7 +413,8 @@
       "standard antenna gimbal",
       "heavy duty power bus coupler",
       "precision gyroscope assembly",
-      "prototype conveyor drive"
+      "prototype conveyor drive",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -416,7 +434,8 @@
       "heavy duty antenna gimbal",
       "precision power bus coupler",
       "prototype gyroscope assembly",
-      "standard refinery crucible"
+      "standard refinery crucible",
+      "mining drone"
     ],
     "bIllicitTrade": false
   },
@@ -436,7 +455,8 @@
       "precision antenna gimbal",
       "prototype power bus coupler",
       "standard servo controller",
-      "heavy duty refinery crucible"
+      "heavy duty refinery crucible",
+      "mining drone"
     ],
     "bIllicitTrade": false
   }

@@ -1,0 +1,4 @@
+Prototype derived from targetdrone.fbx; original mesh UVs retained. +X forward/+Z up per SSW.
+Iteration1: 3.185 x1.940 x0.748m, four orthographic/perspective views. Visual critique found floating tail pods and3cm shoulder gaps.
+Iteration2 script adds tail/cutter crossbraces, cargo hangers and top service panel mount. Pending measured rerun before import.
+Iteration2 measured check:0 errors/0 warnings. Original source hull retains40 open boundary edges (visual game mesh). Four views inspected: thrusters/cutters mounted, geometry aligned. FBX roundtrip3.185x1.940x.7475m, expected UE318.5x194x74.75cm. Prototype ready for UE import verification; no Unreal import performed by modeling agent.

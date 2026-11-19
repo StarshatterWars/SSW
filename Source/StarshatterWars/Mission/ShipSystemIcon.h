@@ -31,6 +31,7 @@ public:
     // JSON image keys use native vectors so they stay sharp and follow the HUD palette.
     static EShipSystemIcon ForCatalogImage(FName Image)
     {
+        if (Image == TEXT("MiningDrone")) return EShipSystemIcon::MiningDrone;
         if (Image == TEXT("Mineral")) return EShipSystemIcon::Mineral;
         if (Image == TEXT("Electronics")) return EShipSystemIcon::Electronics;
         if (Image == TEXT("Medical")) return EShipSystemIcon::Medical;

@@ -22,9 +22,12 @@ public:
     const TArray<FMiningDroneState>& GetDrones() const;
     bool Launch(FGuid,FText&);
     bool Mine(FGuid,FText&);
+    bool MineRepeatedly(FGuid,FText&);
     bool Stop(FGuid,FText&);
     bool Return(FGuid,FText&);
     bool Dock(FGuid,FText&);
+    bool CanLoadSpare(FText&) const;
+    bool LoadSpare(FText&);
     FText GetStatusText() const {return LastStatus;}
 private:
     TMap<FName,FMiningDroneBayDefinition> Bays;

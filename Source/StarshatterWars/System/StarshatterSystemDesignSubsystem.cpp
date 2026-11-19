@@ -100,7 +100,14 @@ bool UStarshatterSystemDesignSubsystem::ImportDefinitions(UDataTable& Table)
             Components.Add(Name);
             ++ComponentCount;
         }
-        System.ComponentGrades = Document.ComponentGrades;
+        // Optional native per-system profiles allow weapon quality to use its
+        // own reviewed damage/fitting ratios; ordinary systems retain defaults.
+        if (System.ComponentGrades.IsEmpty()) System.ComponentGrades = Document.ComponentGrades;
+        if (!HasCompleteGrades(System.ComponentGrades))
+        {
+            UE_LOG(LogTemp, Warning, TEXT("[SYSTEM] Invalid per-system grade profile: %s"), *System.Name);
+            return false;
+        }
         System.SourceFile = SystemSource;
     }
     if (Table.GetRowStruct() && Table.GetRowStruct() != FSystemDesign::StaticStruct()) return false;

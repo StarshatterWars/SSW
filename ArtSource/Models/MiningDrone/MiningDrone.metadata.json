@@ -1,0 +1,119 @@
+{
+  "source": "D:\\SSW\\ArtSource\\Assets\\Drone\\targetdrone.fbx",
+  "prototype": true,
+  "units": "meters",
+  "forward": "+X",
+  "up": "+Z",
+  "dimensions_m": [
+    3.18500018119812,
+    1.940000057220459,
+    0.7475000023841858
+  ],
+  "bounds_min_m": [
+    -1.4825000762939453,
+    -0.9700000286102295,
+    -0.3700000047683716
+  ],
+  "bounds_max_m": [
+    1.7025001049041748,
+    0.9700000286102295,
+    0.3774999976158142
+  ],
+  "triangles": 4464,
+  "vertices": 2315,
+  "materials": [
+    "Black",
+    "Metal",
+    "MiningDrone_Ceramic",
+    "MiningDrone_Emitter",
+    "MiningDrone_SafetyAmber",
+    "MiningDrone_Titanium",
+    "Plate"
+  ],
+  "sockets": {
+    "SOCKET_MiningBeam": {
+      "location_m": [
+        1.5800000429153442,
+        0.0,
+        0.019999999552965164
+      ],
+      "forward": [
+        1,
+        0,
+        0
+      ]
+    },
+    "SOCKET_CutterLeft": {
+      "location_m": [
+        1.7200000286102295,
+        -0.7900000214576721,
+        -0.10000000149011612
+      ],
+      "forward": [
+        1,
+        0,
+        0
+      ]
+    },
+    "SOCKET_CutterRight": {
+      "location_m": [
+        1.7200000286102295,
+        0.7900000214576721,
+        -0.10000000149011612
+      ],
+      "forward": [
+        1,
+        0,
+        0
+      ]
+    },
+    "SOCKET_EngineLeft": {
+      "location_m": [
+        -1.5,
+        -0.41999998688697815,
+        0.05000000074505806
+      ],
+      "forward": [
+        -1,
+        0,
+        0
+      ]
+    },
+    "SOCKET_EngineRight": {
+      "location_m": [
+        -1.5,
+        0.41999998688697815,
+        0.05000000074505806
+      ],
+      "forward": [
+        -1,
+        0,
+        0
+      ]
+    }
+  },
+  "geometry_check": {
+    "errors": 0,
+    "warnings": 0,
+    "note": "Original hull retains40 open boundary edges; visual game mesh, not fabrication solid."
+  },
+  "fbx_roundtrip": {
+    "roundtrip_dimensions_m": [
+      3.184999942779541,
+      1.9399999380111694,
+      0.7475000023841858
+    ],
+    "expected_ue_dimensions_cm": [
+      318.4999942779541,
+      193.99999380111694,
+      74.75000023841858
+    ],
+    "axes": "+X forward +Z up",
+    "beam_socket_m": [
+      1.5799999237060547,
+      0.0,
+      0.019999999552965164
+    ]
+  },
+  "source_sha256": "2947a82b11b5ba6277b6489a6aabfb7e04de0776ba6c648ba5851caec44157e5"
+}

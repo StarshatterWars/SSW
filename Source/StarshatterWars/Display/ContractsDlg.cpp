@@ -95,10 +95,11 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
     const auto Query = MakeShared<FString>();
     const auto Selected = MakeShared<TOptional<Sim::FActiveHaul>>();
     const auto SelectedId = MakeShared<FName>();
+    const auto AbandonArmed = MakeShared<bool>(false);
     const auto Feedback = MakeShared<FText>();
     const auto BidInput = SNew(SEditableTextBox).HintText(INVTEXT("Bid in credits"));
     auto Rows = SNew(SScrollBox);
-    const auto Refresh = [Rows, Query, Tab, Selected, SelectedId, Feedback, BidInput]()
+    const auto Refresh = [Rows, Query, Tab, Selected, SelectedId, Feedback, BidInput, AbandonArmed]()
     {
         Rows->ClearChildren();
         Sim* Simulation = Sim::GetSim();
@@ -124,8 +125,9 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
                 AddRow(Row, TAttribute<FSlateColor>::CreateLambda([SelectedId, Id = Entry.Key]()
                 {
                     return FSlateColor(*SelectedId == Id ? MissionUIStyle::RowSelectedBG : MissionUIStyle::RowBG);
-                }), FOnClicked::CreateLambda([SelectedId, Feedback, BidInput, Id = Entry.Key]()
+                }), FOnClicked::CreateLambda([SelectedId, Feedback, BidInput, AbandonArmed, Id = Entry.Key]()
                 {
+                    *AbandonArmed = false;
                     *SelectedId = Id;
                     *Feedback = FText::GetEmpty();
                     BidInput->SetText(FText::GetEmpty());
@@ -161,8 +163,9 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
         return *Tab != ETab::Hauls && Simulation && !SelectedId->IsNone()
             ? Simulation->GetTrainingContracts().Find(*SelectedId) : nullptr;
     };
-    const auto Execute = [SelectedId, Feedback, Refresh, Tab](Action Task, int64 Credits)
+    const auto Execute = [SelectedId, Feedback, Refresh, Tab, AbandonArmed](Action Task, int64 Credits)
     {
+        *AbandonArmed = false;
         if (Sim* Simulation = Sim::GetSim())
         {
             *Feedback = Simulation->ExecuteTrainingContract(*SelectedId, Task, Credits);
@@ -299,6 +302,20 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
             ((Offer->Issuer == Sim::TrainingContractPilot && !Offer->bSellerClaimed) ||
              (Offer->HighBidder == Sim::TrainingContractPilot && !Offer->bBuyerClaimed));
     }, FOnClicked::CreateLambda([Execute]() { return Execute(Action::Claim, 0); }));
+    Actions->AddSlot().AutoWidth().Padding(0,0,6,0)
+    [SNew(SButton)
+        .Text_Lambda([AbandonArmed](){return *AbandonArmed ? INVTEXT("CONFIRM ABANDON") : INVTEXT("ABANDON");})
+        .ToolTipText(INVTEXT("Abandon your active courier contract. The sealed package is removed and collateral is forfeited. Click twice to confirm."))
+        .Visibility_Lambda([GetSelectedOffer](){const auto* Offer=GetSelectedOffer();return Offer && Offer->Terms.Type==ESSWContractType::Courier &&
+            Offer->State==EContractState::InProgress && Offer->Acceptor==Sim::TrainingContractPilot ? EVisibility::Visible : EVisibility::Collapsed;})
+        .OnClicked_Lambda([AbandonArmed,GetSelectedOffer,Feedback,Execute]()
+        {
+            const auto* Offer=GetSelectedOffer();if (!Offer)return FReply::Handled();
+            if (*AbandonArmed)return Execute(Action::Abandon,0);
+            *AbandonArmed=true;
+            *Feedback=FText::Format(INVTEXT("Abandoning removes the package and forfeits {0} cr collateral. Click CONFIRM ABANDON to proceed."),FText::AsNumber(Offer->Terms.CollateralCredits));
+            return FReply::Handled();
+        })];
     AddAction(INVTEXT("TARGET FREIGHTER"), [GetLocalFreighter]() { return GetLocalFreighter() != nullptr; },
         FOnClicked::CreateLambda([GetLocalFreighter]()
         {

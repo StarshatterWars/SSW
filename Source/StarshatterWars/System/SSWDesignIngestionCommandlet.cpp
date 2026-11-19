@@ -12,11 +12,15 @@
 #include "Misc/FileHelper.h"
 #include "StarshatterShipDesignSubsystem.h"
 #include "GameStructs_products.h"
+#include "SkillsSubsystem.h"
 #include "StarshatterSystemDesignSubsystem.h"
 #include "StarshatterWeaponDesignSubsystem.h"
 #include "UObject/SavePackage.h"
 #include "SSWGameInstance.h"
 #include "StarshatterGameDataSubsystem.h"
+#include "CampaignJsonCatalog.h"
+#include "MissionListJson.h"
+#include "AwardsJsonCatalog.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "SSWCombatGroupSubsystem.h"
 #include "ShipVisualCatalog.h"
@@ -143,12 +147,21 @@ bool ImportProductionRecipes(UDataTable& Table)
         UE_LOG(LogTemp, Error, TEXT("%s: %s"), *Path, *Problem);
     if (!Problems.IsEmpty() || Table.GetRowMap().IsEmpty()) return false;
 
+    auto* SkillContext=NewObject<UGameInstance>();
+    auto* Skills=NewObject<USkillsSubsystem>(SkillContext);
+    if (!Skills->LoadCatalog())return false;
     for (const auto& Row : Table.GetRowMap())
     {
         const auto& Recipe = *reinterpret_cast<const FSSWProductionRecipe*>(Row.Value);
+        for (const auto& Requirement:Recipe.RequiredSkillLevels)
+        {
+            const auto* Skill=Skills->GetCatalog().Find(Requirement.Key);
+            if (!Skill || Requirement.Value<1 || Requirement.Value>Skill->MaximumLevel)
+            { UE_LOG(LogTemp,Error,TEXT("Recipe %s references unavailable skill %s"),*Row.Key.ToString(),*Requirement.Key.ToString());return false; }
+        }
         if ((Recipe.Minerals.IsEmpty() && Recipe.Inputs.IsEmpty()) || Recipe.Minerals.Contains(ESSWMineral::None) ||
             !FMath::IsFinite(Recipe.InputTonnes) || !FMath::IsFinite(Recipe.OutputTonnes) ||
-            !FMath::IsFinite(Recipe.SecondsPerBatch) ||
+            !FMath::IsFinite(Recipe.SecondsPerBatch) || !Recipe.HasValidSkillRequirements() ||
             !Recipe.CanStart(Recipe.InputTonnes, Recipe.OutputTonnes))
         {
             UE_LOG(LogTemp, Error, TEXT("Invalid production recipe %s in %s"), *Row.Key.ToString(), *Path);
@@ -368,6 +381,95 @@ USSWDesignIngestionCommandlet::USSWDesignIngestionCommandlet()
 int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
 {
 #if WITH_EDITOR
+    if (FParse::Param(*Params,TEXT("ConvertMissionListsJson")))
+    {
+        auto* Context=NewObject<USSWGameInstance>();auto* Data=NewObject<UStarshatterGameDataSubsystem>(Context);
+        int32 Missions=0,Templates=0;
+        for(int32 I=0;I<=5;++I)
+        {
+            const FString Directory=FPaths::ProjectContentDir()/(I==0?FString(TEXT("GameData/Missions")):FString::Printf(TEXT("GameData/Campaigns/%02d"),I));
+            Data->LoadMissionList(Directory+TEXT("/"),false);Data->LoadTemplateList(Directory+TEXT("/"),false);
+            FString Error;TArray<FS_CampaignMissionList> ReadMissions;TArray<FS_CampaignTemplateList> ReadTemplates;
+            if(!MissionListJson::WriteMissions(Directory,Data->MissionListArray,Error) ||
+               !MissionListJson::WriteTemplates(Directory,Data->TemplateListArray,Error) ||
+               MissionListJson::ReadMissions(Directory,ReadMissions,Error)!=MissionListJson::EReadResult::Loaded ||
+               MissionListJson::ReadTemplates(Directory,ReadTemplates,Error)!=MissionListJson::EReadResult::Loaded)
+            {UE_LOG(LogTemp,Error,TEXT("[MissionListsJson] %s"),*Error);return 50;}
+            if(ReadMissions.Num()!=Data->MissionListArray.Num() || ReadTemplates.Num()!=Data->TemplateListArray.Num())return 51;
+            for(int32 N=0;N<ReadMissions.Num();++N)
+                if(!FS_CampaignMissionList::StaticStruct()->CompareScriptStruct(&ReadMissions[N],&Data->MissionListArray[N],0))return 52;
+            for(int32 N=0;N<ReadTemplates.Num();++N)
+                if(!FS_CampaignTemplateList::StaticStruct()->CompareScriptStruct(&ReadTemplates[N],&Data->TemplateListArray[N],0))return 53;
+            Missions+=ReadMissions.Num();Templates+=ReadTemplates.Num();
+        }
+        UE_LOG(LogTemp,Display,TEXT("[MissionListsJson] %d mission entries, %d template entries; full DEF/JSON parity PASS"),Missions,Templates);return 0;
+    }
+    if (FParse::Param(*Params,TEXT("ConvertAwardsJson")))
+    {
+        auto* Context=NewObject<USSWGameInstance>();
+        auto* Data=NewObject<UStarshatterGameDataSubsystem>(Context);
+        Data->RanksDataTable=NewObject<UDataTable>(Context);Data->RanksDataTable->RowStruct=FRankInfo::StaticStruct();
+        Data->MedalsDataTable=NewObject<UDataTable>(Context);Data->MedalsDataTable->RowStruct=FMedalInfo::StaticStruct();
+        Data->LoadAwardTables(false);
+        if (Data->RanksDataTable->GetRowMap().IsEmpty() || Data->MedalsDataTable->GetRowMap().IsEmpty()) return 40;
+        const FString Path=FPaths::ProjectContentDir()/TEXT("GameData/Awards/awards.json");
+        FString Error;
+        if (!AwardsJsonCatalog::Export(Path,*Data->RanksDataTable,*Data->MedalsDataTable,Error))
+        { UE_LOG(LogTemp,Error,TEXT("[AwardsJson] %s"),*Error);return 41; }
+        auto* Ranks=NewObject<UDataTable>(Context);Ranks->RowStruct=FRankInfo::StaticStruct();
+        auto* Medals=NewObject<UDataTable>(Context);Medals->RowStruct=FMedalInfo::StaticStruct();
+        if (!AwardsJsonCatalog::Import(Path,*Ranks,*Medals,Error))
+        { UE_LOG(LogTemp,Error,TEXT("[AwardsJson] %s"),*Error);return 42; }
+        for (const auto* Pair : {Data->RanksDataTable,Data->MedalsDataTable})
+        {
+            const auto* Imported=Pair->GetRowStruct()==FRankInfo::StaticStruct()?Ranks:Medals;
+            if (Pair->GetRowMap().Num()!=Imported->GetRowMap().Num()) return 43;
+            for (const auto& Row:Pair->GetRowMap())
+            {
+                const auto* Other=Imported->GetRowMap().Find(Row.Key);
+                if (!Other || !Pair->GetRowStruct()->CompareScriptStruct(Row.Value,*Other,0)) return 44;
+            }
+        }
+        UE_LOG(LogTemp,Display,TEXT("[AwardsJson] %d ranks, %d medals; every legacy field preserved"),Ranks->GetRowMap().Num(),Medals->GetRowMap().Num());
+        return 0;
+    }
+    if(FParse::Param(*Params,TEXT("ConvertCampaignJson")) || FParse::Param(*Params,TEXT("WriteCampaignJsonTables")))
+    {
+        const bool Export=FParse::Param(*Params,TEXT("ConvertCampaignJson"));
+        auto* Context=NewObject<USSWGameInstance>();
+        auto* Data=NewObject<UStarshatterGameDataSubsystem>(Context);
+        Data->CampaignDataTable=NewObject<UDataTable>(Context);Data->CampaignDataTable->RowStruct=FS_Campaign::StaticStruct();
+        Data->CampaignActionDataTable=NewObject<UDataTable>(Context);Data->CampaignActionDataTable->RowStruct=FS_CampaignAction::StaticStruct();
+        Data->ZonesDataTable=NewObject<UDataTable>(Context);Data->ZonesDataTable->RowStruct=FS_CampaignZone::StaticStruct();
+        int32 Campaigns=0,Actions=0,Zones=0;
+        for(int32 I=1;I<=5;++I)
+        {
+            const FString Directory=FPaths::ProjectContentDir()/FString::Printf(TEXT("GameData/Campaigns/%02d"),I);
+            const FTCHARToUTF8 Path(*(Directory/TEXT("campaign.def")));
+            Data->LoadCampaignData(Path.Get(),true,!Export);
+            FS_Campaign* Row=nullptr;
+            for(const auto& Pair:Data->CampaignDataTable->GetRowMap())
+                if(reinterpret_cast<FS_Campaign*>(Pair.Value)->Index==I-1)Row=reinterpret_cast<FS_Campaign*>(Pair.Value);
+            if(!Row)return 30;
+            if(Export)
+            {
+                FString Error;const FS_Campaign Original=*Row;FS_Campaign RoundTrip=*Row;
+                if(!CampaignJsonCatalog::Export(Directory,Original,Error) || !CampaignJsonCatalog::Apply(Directory,RoundTrip,nullptr,nullptr,Error))
+                {UE_LOG(LogTemp,Error,TEXT("[CampaignJson] %s"),*Error);return 31;}
+                if(Original.Action.Num()!=RoundTrip.Action.Num() || Original.Zone.Num()!=RoundTrip.Zone.Num())return 32;
+                for(int32 N=0;N<Original.Action.Num();++N)
+                    if(!FS_CampaignAction::StaticStruct()->CompareScriptStruct(&Original.Action[N],&RoundTrip.Action[N],0))return 33;
+                for(int32 N=0;N<Original.Zone.Num();++N)
+                    if(!FS_CampaignZone::StaticStruct()->CompareScriptStruct(&Original.Zone[N],&RoundTrip.Zone[N],0))return 34;
+            }
+            ++Campaigns;Actions+=Row->Action.Num();Zones+=Row->Zone.Num();
+        }
+        UE_LOG(LogTemp,Display,TEXT("[CampaignJson] %d campaigns, %d actions, %d zones; %s"),Campaigns,Actions,Zones,Export?TEXT("DEF/JSON parity PASS"):TEXT("JSON ingestion complete"));
+        if(Export)return 0;
+        return SaveOutputTable(*Data->CampaignDataTable,TEXT("DT_Campaign"),false) &&
+            SaveOutputTable(*Data->CampaignActionDataTable,TEXT("DT_CampaignAction"),false) &&
+            SaveOutputTable(*Data->ZonesDataTable,TEXT("DT_CampaignZone"),false)?0:35;
+    }
     if (FParse::Param(*Params, TEXT("ConvertMissionJson")))
     {
         auto* Context = NewObject<USSWGameInstance>();

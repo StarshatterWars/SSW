@@ -59,8 +59,8 @@ bool FCampaignAgentOffersTest::RunTest(const FString&)
     int32 Campaign=0,Original=0;
     TestTrue(TEXT("Journal encoding roundtrip"),AgentMissionRules::Decode(AgentMissionRules::Encode(2,42),Campaign,Original));
     TestEqual(TEXT("Original sim mission ID retained"),Original,42);
-    FS_PlayerGameInfo Pilot;
-    TestFalse(TEXT("Campaign progression gate remains"),CampaignPresentationRules::IsCampaignUnlocked(3,Pilot));
+    FS_PlayerGameInfo PilotFixture;
+    TestFalse(TEXT("Campaign progression gate remains"),CampaignPresentationRules::IsCampaignUnlocked(3,PilotFixture));
     return true;
 }
 #endif

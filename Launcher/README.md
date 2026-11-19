@@ -14,7 +14,7 @@ dotnet publish Launcher/StarshatterWarsLauncher.csproj -c Release -r win-x64 --s
 
 ## Install a local copy
 
-Select **Install Game…** and choose a new or empty folder. The launcher copies the current Windows package, omits developer symbols and the source build's Saved directory, and remembers the installed copy for future launches and updates.
+Select **Install Gameâ€¦** and choose a new or empty folder. The launcher copies the current Windows package, omits developer symbols and the source build's Saved directory, and remembers the installed copy for future launches and updates.
 
 ## Publish updates
 
@@ -39,3 +39,29 @@ Include that directory in the same signed ZIP. The launcher extracts it inside t
 For EOS hosting, provision `Saved/StarServer/Config/Custom/StarServer/DefaultEngine.ini` locally inside the SSW installation.
 
 **Check for Updates** verifies the signed manifest and each file. It downloads changed files, carries saves and the local StarServer configuration forward, and keeps the previous install beside the new one.
+
+
+## Bundled local release server
+
+Launcher 1.0.12 includes an opt-in, launcher-owned Apache HTTP Server 2.4.71
+for localhost installation tests. Stage its reviewed Windows runtime with
+`New-LocalFeedServerBundle.ps1`; the installer script includes it automatically.
+The published Apache Lounge SHA-256 is pinned and its original license and
+notices travel with the minimal static-file runtime. The distributor requires
+the current Visual C++ x64 runtime; a missing runtime produces a readable error.
+
+`launcher.localhost.json` is the current test configuration: it uses port 18787
+and the separate `D:/SSW/Build/LauncherFeed` release directory. Pass it explicitly
+with `New-LauncherInstaller.ps1 -LauncherConfig`. Populate its `current` folder
+with the signed manifest, signature, full ZIP, news and `files` patch payload
+only after a new game package is verified. The game download is not embedded
+in the launcher installer. Source `launcher.json` keeps local hosting off by
+default; future hosted HTTPS feeds bypass Apache even when it is bundled.
+
+The local process has no visible window, listens on 127.0.0.1 only, and has a
+private readiness token and startup deadline. It is attached to a Windows
+lifetime job and stops when the launcher exits. It does not install a service,
+require elevation, or stop/reconfigure XAMPP or another Apache instance. A busy
+port or missing release files gets a clear error while bundled news remains
+readable. Playing still requires the signed current release: no cached-version
+or offline patch-check bypass has been introduced.

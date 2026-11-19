@@ -1,14 +1,15 @@
 {
   "Scene": "01-News-Start",
   "FrameRate": 30,
-  "Duration": 89.53550735488534,
+  "Duration": 89.50035185366869,
+  "ScreenMessagesSuppressed": true,
   "cinematic_finish": "contrast, subtle vignette and fades; ISN on documentary clips",
   "video_encoder": "h264_nvenc",
-  "render_inputs_sha256": "6fab7a0e615ad71321ef4b875ee676c0bfbfafe9ed4dfe10535a27c88232b076",
+  "render_inputs_sha256": "520eb7452bafd7478bbf03f55d8186bdcc81efb997b604655678cb1b0832713d",
   "campaign": 2,
   "source_def": "D:\\SSW\\Content\\GameData\\Campaigns\\02\\Scenes\\01-News-Start.def",
-  "source_sha256": "8ffc07c1092d61b931809f35fbb1ccb15c6a01c8d36e1d3a6999d60ce4da6bd8",
-  "mp4_sha256": "c1ad17cdb3c5c95252bdde37e8cb29ef23d9800c5b36c27d19c4f0bb46ddd132",
-  "captured_frames": 1610,
-  "render_directory": "D:\\SSW\\Saved\\CutsceneRenders\\Campaign02\\01-News-Start\\20261118_215656"
+  "source_sha256": "f9e5829ad60a0df0f5afd89447115099ecc3d74c4ed638f4ee78ee9775fe61aa",
+  "mp4_sha256": "293e76c6a6d80a6db182292d2ac7ef5257d500bf4e162a4b5fedd2d308601710",
+  "captured_frames": 1583,
+  "render_directory": "D:\\SSW\\Saved\\CutsceneRenders\\Campaign02\\01-News-Start\\20261119_100133"
 }
