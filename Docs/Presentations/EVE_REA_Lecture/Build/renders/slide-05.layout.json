@@ -1,0 +1,6 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/aimepg","index":4,"layout":{"id":"ly/6ts3apsb","name":"Blank"},"backgroundColor":"rgba(11,20,34,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/5wr25wrm","kind":"textbox","position":{"left":64,"top":42,"width":1152,"height":60},"text":"The shipped artifact","style":{"fontSize":41.8,"typeface":"Arial","color":"#EEF5FA","bold":true,"alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/it0jahsb","kind":"textbox","position":{"left":64,"top":145,"width":1152,"height":490},"text":"Installed client: C:/CCP/EVE Online/tq/code.ccp\n\nSelected .pyj members contain compressed legacy Python bytecode.\n\nRecord archive identity, member path and SHA-256 before analysis.\n\nTreat bytecode as data; do not import or execute recovered modules.","style":{"fontSize":27,"typeface":"Arial","color":"#CDD9E5","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/ju9k3mtw","kind":"textbox","position":{"left":64,"top":668,"width":1130,"height":28},"text":"5   ·   Sources and qualifications in speaker notes","style":{"fontSize":15.36,"typeface":"Arial","color":"#8FA5BC","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

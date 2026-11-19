@@ -1,0 +1,6 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/p28uta","index":35,"layout":{"id":"ly/6ts3apsb","name":"Blank"},"backgroundColor":"rgba(11,20,34,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/83ex0vmh","kind":"textbox","position":{"left":64,"top":42,"width":1152,"height":60},"text":"SDE families used in the comparison","style":{"fontSize":41.8,"typeface":"Arial","color":"#EEF5FA","bold":true,"alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/725w7a5w","kind":"textbox","position":{"left":64,"top":145,"width":1152,"height":490},"text":"types and groups: item identity, category and catalog relationships.\n\nblueprints, materials and industry activities: recipes and requirements.\n\ntypeDogma, attributes and effects: declared equipment relationships.\n\nagents, epic arcs, skill plans and accounting types: schema and workflow gaps.","style":{"fontSize":27,"typeface":"Arial","color":"#CDD9E5","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/61wfy54b","kind":"textbox","position":{"left":64,"top":668,"width":1130,"height":28},"text":"36   ·   Sources and qualifications in speaker notes","style":{"fontSize":15.36,"typeface":"Arial","color":"#8FA5BC","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

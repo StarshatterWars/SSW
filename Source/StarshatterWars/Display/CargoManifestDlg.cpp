@@ -1,4 +1,5 @@
 #include "CargoManifestDlg.h"
+#include "RecordDetails.h"
 #include "StationServices.h"
 #include "Algo/AllOf.h"
 #include "MissionUIStyle.h"
@@ -267,6 +268,19 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
         ]
         + SVerticalBox::Slot().FillHeight(1).Padding(20, 0)
         [MissionUIStyle::MakeDataPane(List, FMargin(0))]
+        + SVerticalBox::Slot().AutoHeight().Padding(20,8)
+        [SNew(SBox).MaxDesiredHeight(190)[MissionUIStyle::MakeDataPane(SNew(SScrollBox)+SScrollBox::Slot()
+            [SNew(SRecordDetails).Record_Lambda([Table]() {
+                FRecordDetails D;D.Icon=EShipSystemIcon::Cargo;
+                const FCargoItem* Found=Table->Rows.FindByPredicate([Table](const FCargoItem& Row){return Row && Row->Name==Table->SelectedName;});
+                if(!Found){D.Title=INVTEXT("SELECT CARGO");D.Description=INVTEXT("Select an entry to inspect its quantity, mass and value.");return D;}
+                const auto& Row=**Found;D.Title=FText::FromString(Row.DisplayName.IsEmpty()?Row.Name:Row.DisplayName);D.Icon=SShipSystemIcon::ForCatalogImage(Row.Image);D.Status=Row.bIllicit?INVTEXT("ILLICIT"):INVTEXT("LEGAL");
+                if(Table->Catalog.IsValid())if(const auto* Entry=Table->Catalog->FindCargo(Row.Name,Row.Unit))D.Description=FText::FromString(Entry->Description);
+                D.Fact(INVTEXT("QUANTITY"),FText::Format(INVTEXT("{0} {1}"),FText::AsNumber(Row.Quantity),FText::FromString(Row.Unit)));
+                D.Fact(INVTEXT("TOTAL MASS"),FText::Format(INVTEXT("{0} T"),FText::AsNumber(Row.Size*Row.Quantity)));
+                D.Fact(INVTEXT("UNIT VALUE"),Row.Value>=0?FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Row.Value)):INVTEXT("UNQUOTED"));
+                D.Fact(INVTEXT("TOTAL VALUE"),Row.TotalValue>=0?FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Row.TotalValue)):INVTEXT("UNQUOTED"));return D;
+            })])]]
         + SVerticalBox::Slot().AutoHeight().Padding(20, 4)
         [
             SNew(STextBlock).Font(Font)

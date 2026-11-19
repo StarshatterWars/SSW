@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Engine/DataTable.h"
+#include "GameStructs.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "CargoCatalogSubsystem.generated.h"
 
@@ -22,5 +22,5 @@ public:
 
 private:
     UPROPERTY(Transient)
-    TObjectPtr<UDataTable> Catalog;
+    TMap<FName, FS_CargoCatalogRow> Catalog;
 };

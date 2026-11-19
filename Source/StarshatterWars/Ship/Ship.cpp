@@ -4207,8 +4207,10 @@ Ship::ExecNavFrame(
 	Instruction* NavPt =
 		GetNextNavPoint();
 
-	if (NavPt &&
-		!AutoPilot)
+	// Proximity completes travel legs, never a landing/recovery order.
+	// Recovery owns its completion after clearance and docking.
+	if (NavPt && NavPt->GetAction() != EInstruction::RTB &&
+	    NavPt->GetAction() != EInstruction::Dock && !AutoPilot)
 	{
 		if (NavPt->GetRegion() == GetRegion())
 		{

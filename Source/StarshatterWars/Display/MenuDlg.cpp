@@ -253,6 +253,9 @@ void UMenuDlg::SetVisibility(ESlateVisibility InVisibility)
 {
     if(InVisibility==ESlateVisibility::Hidden || InVisibility==ESlateVisibility::Collapsed)StopAttractVideo();
     Super::SetVisibility(InVisibility);
+    // Startup routing may reveal a cached menu without calling Show().
+    if(InVisibility!=ESlateVisibility::Hidden && InVisibility!=ESlateVisibility::Collapsed)
+        StartAttractVideo();
 }
 void UMenuDlg::Hide(){StopAttractVideo();Super::Hide();}
 void UMenuDlg::NativeDestruct(){StopAttractVideo();Super::NativeDestruct();}

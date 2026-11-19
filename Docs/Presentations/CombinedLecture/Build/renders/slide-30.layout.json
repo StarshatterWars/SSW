@@ -1,0 +1,10 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/kobhq2","index":29,"backgroundColor":"rgba(241,236,223,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/jydsfu9k","kind":"shape","position":{"left":0,"top":0,"width":1280,"height":7.68},"geometry":"rect","fillColor":"#1F3DA8","lineWidth":0},
+{"id":"sh/kzm98za5","kind":"textbox","position":{"left":52.8,"top":26.88,"width":1000,"height":27},"text":"PART II  /  PRACTICAL","style":{"fontSize":14.67,"typeface":"Helvetica Neue","color":"#6B6B6B","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/l0vah4rq","kind":"textbox","position":{"left":52.8,"top":72,"width":1171.2,"height":56},"text":"Navigation distance: recovered source","style":{"fontSize":37.33,"typeface":"Helvetica Neue","color":"#1A1A1A","bold":true,"alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/a9kr2ps3","kind":"textbox","position":{"left":52.8,"top":676.8,"width":300,"height":27},"text":"30 / 35","style":{"fontSize":13.33,"typeface":"Helvetica Neue","color":"#9A9A9A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/butsbut8","kind":"textbox","position":{"left":880,"top":676.8,"width":350,"height":27},"text":"PRACTICAL","style":{"fontSize":13.33,"typeface":"Helvetica Neue","color":"#9A9A9A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/wv294zat","kind":"textbox","position":{"left":52.8,"top":145,"width":1171.2,"height":75},"text":"The branch falls back to GetDefaultDist and forwards keyword arguments. A supplied range returns unchanged.","style":{"fontSize":23,"typeface":"Helvetica Neue","color":"#1A1A1A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/xwvad4be","kind":"textbox","position":{"left":60,"top":235,"width":1160,"height":415},"text":"def _GetMovementDistanceOrDefault(\n        targetID, targetRange, action, **kwargs):\n    if targetRange is None:\n        return GetDefaultDist(action, targetID, **kwargs)\n    return targetRange","style":{"fontSize":24,"typeface":"Consolas","color":"#1F3DA8","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

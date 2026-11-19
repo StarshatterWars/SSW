@@ -16,11 +16,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Adonis_Alloy_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Adonis Alloy Works",
     "System": "Jarnell",
     "Planet": "Adonis",
@@ -55,11 +58,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Maraner_Materials_Refinery",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Maraner Materials Refinery",
     "System": "Borova",
     "Planet": "Maraner",
@@ -94,11 +100,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Pallas_Industrial_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Pallas Industrial Works",
     "System": "Athenar",
     "Planet": "Pallas",
@@ -133,11 +142,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Dorrath_Metals_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Dorrath Metals Works",
     "System": "Paragon",
     "Planet": "Dorrath",
@@ -172,11 +184,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Hera_Mineral_Processing_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Hera Mineral Processing Works",
     "System": "Thralis",
     "Planet": "Hera",
@@ -211,7 +226,8 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Janek_Orbital_Materials_Works",
@@ -230,7 +246,8 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Jalah_Orbital_Concentrator",
@@ -249,7 +266,8 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Kalon_Orbital_Concentrator",
@@ -268,11 +286,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Kalon_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Kalon Materials Works",
     "System": "Solus",
     "Planet": "Kalon",
@@ -307,7 +328,8 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Silessia_Orbital_Concentrator",
@@ -326,11 +348,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Silessia_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Silessia Materials Works",
     "System": "Silessia",
     "Planet": "Silessia",
@@ -365,11 +390,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Tal_Amin_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Tal Amin Materials Works",
     "System": "Haiche",
     "Planet": "Tal Amin",
@@ -404,11 +432,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Renser_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Renser Materials Works",
     "System": "Renser",
     "Planet": "Renser",
@@ -443,11 +474,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Loris_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Loris Materials Works",
     "System": "Loris",
     "Planet": "Loris",
@@ -482,11 +516,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Aram_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Aram Materials Works",
     "System": "Ostara",
     "Planet": "Aram",
@@ -521,11 +558,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Kolchev_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Kolchev Materials Works",
     "System": "Kolchev",
     "Planet": "Kolchev",
@@ -560,11 +600,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Adantar_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Adantar Materials Works",
     "System": "Korius",
     "Planet": "Adantar",
@@ -599,11 +642,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Tarsus_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Tarsus Materials Works",
     "System": "Tarsus",
     "Planet": "Tarsus",
@@ -638,7 +684,8 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Nergal_Orbital_Concentrator",
@@ -657,11 +704,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Nergal_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Nergal Materials Works",
     "System": "Nephrys",
     "Planet": "Nergal",
@@ -696,11 +746,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Radix_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Radix Materials Works",
     "System": "Radix",
     "Planet": "Radix",
@@ -735,11 +788,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Ramek_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Ramek Materials Works",
     "System": "Isham",
     "Planet": "Ramek",
@@ -774,11 +830,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Marak_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Marak Materials Works",
     "System": "Marak",
     "Planet": "Marak",
@@ -813,11 +872,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Garrison_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Garrison Materials Works",
     "System": "Garrison",
     "Planet": "Garrison",
@@ -852,11 +914,14 @@
     "PlayerTimeMultiplier": 1.0,
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
-    "MaximumPlayerRuns": 10000
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": []
   },
   {
     "Name": "Volante_Materials_Works",
-    "AdditionalRecipes": ["Make_mining_drone"],
+    "AdditionalRecipes": [
+      "Make_mining_drone"
+    ],
     "Facility": "Volante Materials Works",
     "System": "Trocanther",
     "Planet": "Volante",

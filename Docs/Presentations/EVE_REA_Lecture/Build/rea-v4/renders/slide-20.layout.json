@@ -1,0 +1,7 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/q2k3sp","index":19,"layout":{"id":"ly/q90v6pob","name":"Blank"},"backgroundColor":"rgba(11,20,34,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/wvu94fu9","kind":"textbox","position":{"left":64,"top":42,"width":1152,"height":60},"text":"Inventory location: recovered source","style":{"fontSize":41.8,"typeface":"Arial","color":"#EEF5FA","bold":true,"alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/vulsbato","kind":"textbox","position":{"left":64,"top":145,"width":1152,"height":72},"text":"Tuple unpacking reveals that the first component is the location identifier. The ignored component remains part of the data model.","style":{"fontSize":24,"typeface":"Arial","color":"#CDD9E5","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/utcr25c3","kind":"textbox","position":{"left":70,"top":225,"width":1146,"height":422},"text":"def GetInventoryLocationID(self):\n    inventoryLocationID, _ = self.invID\n    return inventoryLocationID","style":{"fontSize":28,"typeface":"Consolas","color":"#78D5E6","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/983a90bi","kind":"textbox","position":{"left":64,"top":668,"width":1130,"height":28},"text":"20   ·   Sources and qualifications in speaker notes","style":{"fontSize":15.36,"typeface":"Arial","color":"#8FA5BC","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

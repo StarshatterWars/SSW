@@ -1,4 +1,5 @@
 #include "CargoCatalogSubsystem.h"
+#include "JsonRecordCatalog.h"
 
 #include "GameStructs.h"
 #include "Engine/GameInstance.h"
@@ -9,26 +10,26 @@
 
 void UCargoCatalogSubsystem::LoadCatalog()
 {
-    auto* Imported = NewObject<UDataTable>(this);
-    if (ImportDefinitions(*Imported))
+    TMap<FName, FS_CargoCatalogRow> Candidate;
+    FString Error;
+    const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Cargo/cargo.json");
+    if (!SSWJsonRecords::Load(Path, Candidate, Error))
     {
-        Catalog = Imported;
+        UE_LOG(LogTemp, Error, TEXT("%s"), *Error);
         return;
     }
-
-    auto* Assets = GetGameInstance()->GetSubsystem<UStarshatterAssetRegistrySubsystem>();
-    Catalog = Assets ? Assets->GetDataTable(TEXT("Data.CargoTable")) : nullptr;
-    if (Catalog && Catalog->GetRowStruct() == FS_CargoCatalogRow::StaticStruct() &&
-        !Catalog->GetRowMap().IsEmpty())
+    for (const auto& Pair : Candidate)
     {
-        UE_LOG(LogTemp, Display, TEXT("Loaded %d cargo definitions from Data.CargoTable (%s)"),
-            Catalog->GetRowMap().Num(), *Catalog->GetPathName());
+        const auto& Row = Pair.Value;
+        if (Row.Description.TrimStartAndEnd().IsEmpty() || !FMath::IsFinite(Row.Size) || Row.Size < 0.0 ||
+            !FMath::IsFinite(Row.Value) || Row.Value < 0.0)
+        {
+            UE_LOG(LogTemp, Error, TEXT("Invalid cargo record: %s"), *Pair.Key.ToString());
+            return;
+        }
     }
-    else
-    {
-        Catalog = nullptr;
-        UE_LOG(LogTemp, Warning, TEXT("Cargo catalog unavailable: cargo.json could not be imported and Data.CargoTable did not resolve to a populated cargo catalog"));
-    }
+    Catalog = MoveTemp(Candidate);
+    UE_LOG(LogTemp, Display, TEXT("Loaded %d cargo definitions directly from JSON"), Catalog.Num());
 }
 
 bool UCargoCatalogSubsystem::ImportDefinitions(UDataTable& Table)
@@ -63,17 +64,13 @@ bool UCargoCatalogSubsystem::ImportDefinitions(UDataTable& Table)
 
 const FS_CargoCatalogRow* UCargoCatalogSubsystem::FindCargo(const FString& Item, const FString& Unit) const
 {
-    const auto* Definition = Catalog
-        ? Catalog->FindRow<FS_CargoCatalogRow>(DataTableUtils::MakeValidName(Item.TrimStartAndEnd()), TEXT("Cargo Catalog"), false)
-        : nullptr;
+    const auto* Definition = Catalog.Find(DataTableUtils::MakeValidName(Item.TrimStartAndEnd()));
     return Definition && Definition->Unit.Equals(Unit, ESearchCase::IgnoreCase) ? Definition : nullptr;
 }
 
 void UCargoCatalogSubsystem::ForEachDefinition(TFunctionRef<void(FName, const FS_CargoCatalogRow&)> Visit) const
 {
-    if (!Catalog) return;
-    Catalog->ForeachRow<FS_CargoCatalogRow>(TEXT("Cargo catalog"),
-        [&Visit](const FName& Name, const FS_CargoCatalogRow& Row) { Visit(Name, Row); });
+    for (const auto& Pair : Catalog) Visit(Pair.Key, Pair.Value);
 }
 
 bool UCargoCatalogSubsystem::DescribeCargo(const Ship& Vessel, FS_Cargo& Row) const

@@ -147,17 +147,17 @@ bool FAgentCatalogTest::RunTest(const FString&)
 {
     auto* Catalog = NewObject<UAgentCatalogSubsystem>(NewObject<UGameInstance>());
     Catalog->LoadCatalog();
-    const auto* Table = Catalog->GetCatalog();
-    if (!TestNotNull(TEXT("Agent JSON is ingested as a data table"), Table)) return false;
-    TestTrue(TEXT("At least forty agent postings"), Table->GetRowMap().Num() >= 40);
+    const auto& Records = Catalog->GetCatalog();
+    auto ForEachAgent = [&Records](const TCHAR*, TFunctionRef<void(FName, const FS_AgentCatalogRow&)> Visit)
+    { for (const auto& Pair : Records) Visit(Pair.Key, Pair.Value); };
+    TestTrue(TEXT("At least forty direct JSON agent records"), Records.Num() >= 40);
     TSet<FString> Systems;
     TSet<int32> Levels;
-    Table->ForeachRow<FS_AgentCatalogRow>(TEXT("Check roster coverage"),
-        [&Systems, &Levels](FName, const FS_AgentCatalogRow& Agent)
-        {
-            Systems.Add(Agent.System);
-            Levels.Add(Agent.Level);
-        });
+    for (const auto& Pair : Records)
+    {
+        Systems.Add(Pair.Value.System);
+        Levels.Add(Pair.Value.Level);
+    }
     TestTrue(TEXT("Agents are distributed across at least twenty systems"), Systems.Num() >= 20);
     TestEqual(TEXT("All five levels are represented"), Levels.Num(), 5);
 
@@ -181,13 +181,13 @@ bool FAgentCatalogTest::RunTest(const FString&)
     if (!TestNotNull(TEXT("Standalone scenarios are available"), Scenarios)) return false;
     TestEqual(TEXT("Expanded single mission pool has forty sorties"),Scenarios->GetRowMap().Num(),40);
     TSet<int32> RoutedMissions;
-    Table->ForeachRow<FS_AgentCatalogRow>(TEXT("Collect agent routing"),[&RoutedMissions](FName,const FS_AgentCatalogRow& Row)
+    ForEachAgent(TEXT("Collect agent routing"),[&RoutedMissions](FName,const FS_AgentCatalogRow& Row)
     { if(Row.Class!=EAgentClass::Training) for(int32 Id:Row.MissionIds)RoutedMissions.Add(Id); });
     Scenarios->ForeachRow<FS_CampaignMission>(TEXT("No orphan singles"),[this,&RoutedMissions](FName,const FS_CampaignMission& Row)
     { TestTrue(FString::Printf(TEXT("Mission %d has a local officer"),Row.Id),RoutedMissions.Contains(Row.Id)); });
     const auto* Instructor=Catalog->FindAgent(TEXT("JanekFlightTraining"));
     TestTrue(TEXT("Same instructor introduces all seven lessons"),Instructor && Instructor->MissionIds.Num()==7 && Instructor->MissionIds.Contains(107));
-    Table->ForeachRow<FS_AgentCatalogRow>(TEXT("Verify regional agent postings"),
+    ForEachAgent(TEXT("Verify regional agent postings"),
         [this, Scenarios](FName Key, const FS_AgentCatalogRow& Agent)
         {
             if (Agent.Class == EAgentClass::Training)

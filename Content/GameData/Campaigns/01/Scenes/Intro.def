@@ -118,9 +118,9 @@ element: {
    region:    "Borova"
    loc:       (1220, 8500, 0)
 
-   // Request the carrier recovery corridor directly; a vector into its hull
-   // avoidance envelope prevents a shuttle from ever reaching the RTB order.
-   navpt:     { cmd: RTB,    loc: (1220, 5000, 0), speed: 100 }
+   // Request recovery at the outer holding point before entering the carrier
+   // avoidance envelope; autoland then follows the cleared recovery corridor.
+   navpt:     { cmd: RTB,    loc: (1220, 7400, 0), speed: 100 }
 }
 
 // Narration keeps its authored timing. The shuttle holds for the opening

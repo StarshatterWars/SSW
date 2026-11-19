@@ -1,4 +1,5 @@
 #include "MarketplaceDlg.h"
+#include "RecordDetails.h"
 #include "ShipSystemIcon.h"
 #include "StationServices.h"
 #include "EconomyRuntime.h"
@@ -596,17 +597,18 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                 SNew(SVerticalBox)
                 + SVerticalBox::Slot().FillHeight(1)
                 [SNew(SScrollBox) + SScrollBox::Slot()
-                    [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true)
-                        .Text_Lambda([Selected]()
+                    [SNew(SRecordDetails).Record_Lambda([Selected]()
                         {
-                            if(!*Selected)return INVTEXT("SELECT AN ITEM TO VIEW MARKET DETAILS. TRADING REQUIRES DOCKING.");
-                            const auto& Offer=**Selected;
-                            const FText Source=Offer.Producer.IsEmpty()?INVTEXT("NO REACHABLE PRODUCER WITH STOCK"):
-                                FText::Format(INVTEXT("{0} � {1} JUMPS � {2} {3} IN STOCK"),FText::FromString(Offer.Producer).ToUpper(),
-                                    FText::AsNumber(Offer.ProducerJumps),FText::AsNumber(Offer.ProducerStock),FText::FromString(Offer.Unit()).ToUpper());
-                            return FText::Format(INVTEXT("{0}\n{1}\n{2} � {3} {4} LOCAL NPC STOCK\n{5}"),
-                                FText::FromString(Offer.DisplayName()).ToUpper(),FText::FromString(Offer.Goods.Description),
-                                Offer.Goods.bIllicit?INVTEXT("ILLICIT"):INVTEXT("LEGAL"),FText::AsNumber(Offer.Available),FText::FromString(Offer.Unit()).ToUpper(),Source);
+                            FRecordDetails D;D.Icon=EShipSystemIcon::Marketplace;
+                            if(!*Selected){D.Title=INVTEXT("SELECT AN ITEM");D.Description=INVTEXT("Inspect local stock and the nearest producer. Trading requires docking.");return D;}
+                            const auto& Offer=**Selected;D.Title=FText::FromString(Offer.DisplayName());D.Description=FText::FromString(Offer.Goods.Description);
+                            D.Status=Offer.Goods.bIllicit?INVTEXT("ILLICIT"):INVTEXT("LEGAL");
+                            D.Fact(INVTEXT("LOCAL NPC STOCK"),FText::Format(INVTEXT("{0} {1}"),FText::AsNumber(Offer.Available),FText::FromString(Offer.Unit())));
+                            D.Fact(INVTEXT("NEAREST PRODUCER"),Offer.Producer.IsEmpty()?INVTEXT("NO REACHABLE STOCK"):FText::FromString(Offer.Producer));
+                            if(!Offer.Producer.IsEmpty()){
+                                D.Fact(INVTEXT("ROUTE"),FText::Format(INVTEXT("{0} JUMPS"),FText::AsNumber(Offer.ProducerJumps)));
+                                D.Fact(INVTEXT("PRODUCER STOCK"),FText::Format(INVTEXT("{0} {1}"),FText::AsNumber(Offer.ProducerStock),FText::FromString(Offer.Unit())));
+                            }return D;
                         })]]
                 + SVerticalBox::Slot().AutoHeight().Padding(0,8)
                 [SNew(SHorizontalBox)

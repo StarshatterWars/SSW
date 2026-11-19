@@ -298,7 +298,7 @@ element: {
 event: { type: BeginScene, time: 0 }
 event: { type: Camera, time: 0.01, param: 3, target: "Resolute", vec: (2.75, 0.32, 7200) }
 event: { type: Camera, time: 0.01, param: 5, vec: (0.055, 0.003, 0) }
-event: { type: Camera, time: 6, param: 3, target: "Sabre 1", vec: (0.4, 0.16, 550) }
+event: { type: Camera, time: 6, param: 3, target: "Valiant", vec: (0.4, 0.16, 2100) }
 event: { type: Camera, time: 6, param: 5, vec: (0.1, 0.005, 0) }
 event: { type: Camera, time: 11, param: 3, target: "Iron Reign", vec: (0.4, 0.18, 2600) }
 event: { type: Camera, time: 11, param: 5, vec: (-0.065, 0.003, 0) }
@@ -306,13 +306,13 @@ event: { type: Camera, time: 17, param: 3, target: "Valiant", vec: (2.2, -0.12, 
 event: { type: Camera, time: 17, param: 5, vec: (0.07, 0.004, 0) }
 event: { type: Camera, time: 23, param: 3, target: "Black Spear", vec: (5.5, 0.28, 2400) }
 event: { type: Camera, time: 23, param: 5, vec: (-0.075, -0.003, 0) }
-event: { type: Camera, time: 29, param: 3, target: "Resolute", vec: (3.2, 0.2, 3600) }
+event: { type: Camera, time: 29, param: 3, target: "Iron Reign", vec: (3.2, 0.2, 3600) }
 event: { type: Camera, time: 29, param: 5, vec: (0.055, 0.004, 0) }
 event: { type: Camera, time: 36, param: 3, target: "Iron Reign", vec: (0.2, -0.18, 3400) }
 event: { type: Camera, time: 36, param: 5, vec: (-0.06, 0.003, 0) }
 event: { type: Camera, time: 43, param: 3, target: "Valiant", vec: (2.7, 0.45, 7500) }
 event: { type: Camera, time: 43, param: 5, vec: (0.035, -0.003, 0) }
-event: { type: Camera, time: 49, param: 3, target: "Resolute", vec: (2.9, 0.28, 11000) }
+event: { type: Camera, time: 49, param: 3, target: "Black Spear", vec: (2.9, 0.28, 6500) }
 event: { type: Camera, time: 49, param: 5, vec: (0.025, 0.002, 0) }
 event: { type: EndScene, time: 54 }
 event: { type: Exit, time: 54.1 }

@@ -1,0 +1,10 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/a0axds","index":24,"backgroundColor":"rgba(241,236,223,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/5ojqd8r2","kind":"shape","position":{"left":0,"top":0,"width":1280,"height":7.68},"geometry":"rect","fillColor":"#1F3DA8","lineWidth":0},
+{"id":"sh/il872dsb","kind":"textbox","position":{"left":52.8,"top":26.88,"width":1000,"height":27},"text":"PART II  /  PRACTICAL","style":{"fontSize":14.67,"typeface":"Helvetica Neue","color":"#6B6B6B","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/jm18bi9w","kind":"textbox","position":{"left":52.8,"top":72,"width":1171.2,"height":56},"text":"Manufacturing cost: recovered source","style":{"fontSize":37.33,"typeface":"Helvetica Neue","color":"#1A1A1A","bold":true,"alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/sbap8nad","kind":"textbox","position":{"left":52.8,"top":676.8,"width":300,"height":27},"text":"25 / 35","style":{"fontSize":13.33,"typeface":"Helvetica Neue","color":"#9A9A9A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/tcjqhsry","kind":"textbox","position":{"left":880,"top":676.8,"width":350,"height":27},"text":"PRACTICAL","style":{"fontSize":13.33,"typeface":"Helvetica Neue","color":"#9A9A9A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/6ps76ds7","kind":"textbox","position":{"left":52.8,"top":145,"width":1171.2,"height":75},"text":"This function looks up a blueprint price and multiplies by runs. Other fees and final settlement may live elsewhere.","style":{"fontSize":23,"typeface":"Helvetica Neue","color":"#1A1A1A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/ra18fi9s","kind":"textbox","position":{"left":60,"top":235,"width":1160,"height":415},"text":"def job_cost(self, job):\n    return (\n        job.prices.get(job.blueprint.blueprintTypeID, 0)\n        * float(job.runs)\n    )","style":{"fontSize":24,"typeface":"Consolas","color":"#1F3DA8","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

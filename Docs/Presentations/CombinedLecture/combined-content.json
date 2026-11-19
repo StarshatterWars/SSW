@@ -1,0 +1,768 @@
+{
+  "core_count": 35,
+  "appendix_count": 14,
+  "duration_seconds": 3600,
+  "slides": [
+    {
+      "kind": "source",
+      "source": 1,
+      "seconds": 45,
+      "start": 0,
+      "end": 45,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 1"
+      ]
+    },
+    {
+      "kind": "source",
+      "source": 2,
+      "seconds": 60,
+      "start": 45,
+      "end": 105,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 2"
+      ]
+    },
+    {
+      "kind": "divider",
+      "title": "PART I  /  THEORY",
+      "subtitle": "Evidence, tools and agentic analysis",
+      "seconds": 15,
+      "start": 105,
+      "end": 120,
+      "part": "Theory",
+      "note": ""
+    },
+    {
+      "kind": "source",
+      "source": 3,
+      "seconds": 60,
+      "start": 120,
+      "end": 180,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 3"
+      ]
+    },
+    {
+      "kind": "source",
+      "source": 4,
+      "seconds": 150,
+      "start": 180,
+      "end": 330,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 4"
+      ]
+    },
+    {
+      "kind": "source",
+      "source": 5,
+      "seconds": 90,
+      "start": 330,
+      "end": 420,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 5"
+      ]
+    },
+    {
+      "kind": "source",
+      "source": 7,
+      "seconds": 120,
+      "start": 420,
+      "end": 540,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 7",
+        "https://github.com/NationalSecurityAgency/ghidra",
+        "https://github.com/icsharpcode/ILSpy"
+      ]
+    },
+    {
+      "kind": "source",
+      "source": 8,
+      "seconds": 150,
+      "start": 540,
+      "end": 690,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 8",
+        "https://github.com/NationalSecurityAgency/ghidra"
+      ]
+    },
+    {
+      "kind": "source",
+      "source": 11,
+      "seconds": 90,
+      "start": 690,
+      "end": 780,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 11",
+        "https://github.com/icsharpcode/ILSpy"
+      ]
+    },
+    {
+      "kind": "source",
+      "source": 13,
+      "seconds": 120,
+      "start": 780,
+      "end": 900,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 13"
+      ]
+    },
+    {
+      "kind": "source",
+      "source": 14,
+      "seconds": 90,
+      "start": 900,
+      "end": 990,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 14"
+      ]
+    },
+    {
+      "kind": "source",
+      "source": 16,
+      "seconds": 210,
+      "start": 990,
+      "end": 1200,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 16"
+      ]
+    },
+    {
+      "kind": "source",
+      "source": 22,
+      "seconds": 120,
+      "start": 1200,
+      "end": 1320,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 22"
+      ]
+    },
+    {
+      "kind": "source",
+      "source": 23,
+      "seconds": 180,
+      "start": 1320,
+      "end": 1500,
+      "part": "Theory",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 23"
+      ]
+    },
+    {
+      "kind": "divider",
+      "title": "PART II  /  PRACTICAL",
+      "subtitle": "Raw bytecode, recovered Python and SSW comparisons",
+      "seconds": 30,
+      "start": 1500,
+      "end": 1530,
+      "part": "Practical",
+      "note": ""
+    },
+    {
+      "title": "The investigation starts with an artifact",
+      "body": [
+        "Target: the installed EVE client archive, code.ccp.",
+        "The selected .pyj members contain compressed Python bytecode.",
+        "A member path, SHA-256 and function name identify every exhibit."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveGateApproach_20261118/report.json"
+      ],
+      "code": null,
+      "note": "",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 1530,
+      "end": 1620,
+      "part": "Practical"
+    },
+    {
+      "title": "Three views of the same function",
+      "body": [
+        "Raw bytes show the actual co_code payload.",
+        "Disassembly resolves offsets, operations and operands.",
+        "Recovered Python reconstructs readable control flow from those operations."
+      ],
+      "refs": [],
+      "code": null,
+      "note": "The next exhibits show actual function bodies. A def line is reconstructed from the code object metadata. Original decorators, default argument expressions, comments and formatting are not recovered from an isolated code object.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 1620,
+      "end": 1710,
+      "part": "Practical"
+    },
+    {
+      "title": "Ore scan knowledge: bytecode",
+      "body": [
+        "A scan can exist without a known quantity."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\4.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "co_code (25 bytes)\n7c 00 00 6a 00 00 7c 01 00 83 01 00 64 00 00 74\n02 00 66 02 00 6b 07 00 53\n\n0 LOAD_FAST            (self)\n3 LOAD_ATTR            (get_quantity)\n6 LOAD_FAST            (asteroid_id)\n9 CALL_FUNCTION        (1 positional, 0 named)\n12 LOAD_CONST           (None)\n15 LOAD_GLOBAL          (QUANTITY_UNKNOWN)\n18 BUILD_TUPLE          2\n21 COMPARE_OP           (not-in)\n24 RETURN_VALUE",
+      "note": "Function: AsteroidScanningService.is_quantity_known\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\mining\\client\\asteroid_scanning_service.py\nSHA-256: 26ae152f9bacf202ededee4a176c813b1482d39979c5c32ca7ad2c7bd33f75c8\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n 73:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (get_quantity)\n               6 LOAD_FAST            (asteroid_id)\n               9 CALL_FUNCTION        (1 positional, 0 named)\n              12 LOAD_CONST           (None)\n              15 LOAD_GLOBAL          (QUANTITY_UNKNOWN)\n              18 BUILD_TUPLE          2\n              21 COMPARE_OP           (not-in)\n              24 RETURN_VALUE\n\n\nRecovered source:\ndef is_quantity_known(self, asteroid_id):\n    return self.get_quantity(asteroid_id) not in (None, QUANTITY_UNKNOWN)\n\nThe predicate rejects both None and QUANTITY_UNKNOWN. It says nothing about the authoritative ore amount.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 1710,
+      "end": 1800,
+      "part": "Practical"
+    },
+    {
+      "title": "Ore scan knowledge: recovered source",
+      "body": [
+        "The predicate rejects both None and QUANTITY_UNKNOWN. It says nothing about the authoritative ore amount."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\4.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "def is_quantity_known(self, asteroid_id):\n    return self.get_quantity(asteroid_id) not in (None, QUANTITY_UNKNOWN)",
+      "note": "Function: AsteroidScanningService.is_quantity_known\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\mining\\client\\asteroid_scanning_service.py\nSHA-256: 26ae152f9bacf202ededee4a176c813b1482d39979c5c32ca7ad2c7bd33f75c8\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n 73:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (get_quantity)\n               6 LOAD_FAST            (asteroid_id)\n               9 CALL_FUNCTION        (1 positional, 0 named)\n              12 LOAD_CONST           (None)\n              15 LOAD_GLOBAL          (QUANTITY_UNKNOWN)\n              18 BUILD_TUPLE          2\n              21 COMPARE_OP           (not-in)\n              24 RETURN_VALUE\n\n\nRecovered source:\ndef is_quantity_known(self, asteroid_id):\n    return self.get_quantity(asteroid_id) not in (None, QUANTITY_UNKNOWN)\n\nThe predicate rejects both None and QUANTITY_UNKNOWN. It says nothing about the authoritative ore amount.\nRecovery: decompiled by uncompyle6 3.9.3. Function body decompiled; def line rebuilt from argument metadata. No target code executed.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 1800,
+      "end": 1890,
+      "part": "Practical"
+    },
+    {
+      "title": "SSW example: scan uncertainty",
+      "body": [
+        "The recovered distinction informs an explicit optional quantity. This is SSW C++, not decompiled EVE server code."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/MiningAI.cpp:44",
+        "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\4.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "const TOptional<double> Quantity = Tier == ScanTier::Assay\n    ? TOptional<double>(Resource.AmountTonnes)\n    : TOptional<double>();\nScan.Readings.Add({Rock->GetContactId(), Distance,\n    Resource.Mineral, Quantity});\nif (Quantity && *Quantity > UE_SMALL_NUMBER)\n    Scan.Status = BeltStatus::HasOre;",
+      "note": "Native SSW source excerpt. Included only to demonstrate interpretation of the preceding recovered evidence. No claim of equivalent EVE server implementation.\nCode excerpt reformatted for slide readability; semantics unchanged. Surrounding function context is in the cited native file.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 1890,
+      "end": 1980,
+      "part": "Practical"
+    },
+    {
+      "title": "Drone recovery command: bytecode",
+      "body": [
+        "The recovery command crosses a service boundary."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveMiningDrones_20261119\\drone_commands.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "co_code (56 bytes)\n74 00 00 6a 01 00 83 00 00 7d 01 00 7c 01 00 72\n34 00 7c 01 00 6a 02 00 7c 00 00 83 01 00 7d 02\n00 74 03 00 7c 00 00 7c 02 00 64 01 00 83 03 00\n01 6e 00 00 64 00 00 53\n\n0 LOAD_GLOBAL          (eveMoniker)\n3 LOAD_ATTR            (GetEntityAccess)\n6 CALL_FUNCTION        (0 positional, 0 named)\n9 STORE_FAST           (entity)\n12 LOAD_FAST            (entity)\n15 POP_JUMP_IF_FALSE    (to 52)\n18 LOAD_FAST            (entity)\n21 LOAD_ATTR            (CmdReturnBay)\n24 LOAD_FAST            (droneIDs)\n27 CALL_FUNCTION        (1 positional, 0 named)\n30 STORE_FAST           (ret)\n... full disassembly in speaker notes",
+      "note": "Function: ReturnToDroneBay\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\services\\menuSvcExtras\\droneFunctions.py\nSHA-256: c8640981f4a11bf730c6ae38208ec2a78a53d24a26e61a774148181b0dfa117e\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n205:           0 LOAD_GLOBAL          (eveMoniker)\n               3 LOAD_ATTR            (GetEntityAccess)\n               6 CALL_FUNCTION        (0 positional, 0 named)\n               9 STORE_FAST           (entity)\n\n206:          12 LOAD_FAST            (entity)\n              15 POP_JUMP_IF_FALSE    (to 52)\n\n207:          18 LOAD_FAST            (entity)\n              21 LOAD_ATTR            (CmdReturnBay)\n              24 LOAD_FAST            (droneIDs)\n              27 CALL_FUNCTION        (1 positional, 0 named)\n              30 STORE_FAST           (ret)\n\n208:          33 LOAD_GLOBAL          (HandleMultipleCallError)\n              36 LOAD_FAST            (droneIDs)\n              39 LOAD_FAST            (ret)\n              42 LOAD_CONST           (\"MultiDroneCmdResult\")\n              45 CALL_FUNCTION        (3 positional, 0 named)\n              48 POP_TOP\n              49 JUMP_FORWARD         (to 52)\n         >>   52 LOAD_CONST           (None)\n              55 RETURN_VALUE\n\n\nRecovered source:\ndef ReturnToDroneBay(droneIDs):\n    entity = eveMoniker.GetEntityAccess()\n    if entity:\n        ret = entity.CmdReturnBay(droneIDs)\n        HandleMultipleCallError(droneIDs, ret, 'MultiDroneCmdResult')\n    return\n\nThe client obtains entity access, sends CmdReturnBay and handles per-drone errors. The server movement implementation is absent.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 1980,
+      "end": 2070,
+      "part": "Practical"
+    },
+    {
+      "title": "Drone recovery command: recovered source",
+      "body": [
+        "The client obtains entity access, sends CmdReturnBay and handles per-drone errors. The server movement implementation is absent."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveMiningDrones_20261119\\drone_commands.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "def ReturnToDroneBay(droneIDs):\n    entity = eveMoniker.GetEntityAccess()\n    if entity:\n        ret = entity.CmdReturnBay(droneIDs)\n        HandleMultipleCallError(droneIDs, ret, 'MultiDroneCmdResult')\n    return",
+      "note": "Function: ReturnToDroneBay\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\services\\menuSvcExtras\\droneFunctions.py\nSHA-256: c8640981f4a11bf730c6ae38208ec2a78a53d24a26e61a774148181b0dfa117e\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n205:           0 LOAD_GLOBAL          (eveMoniker)\n               3 LOAD_ATTR            (GetEntityAccess)\n               6 CALL_FUNCTION        (0 positional, 0 named)\n               9 STORE_FAST           (entity)\n\n206:          12 LOAD_FAST            (entity)\n              15 POP_JUMP_IF_FALSE    (to 52)\n\n207:          18 LOAD_FAST            (entity)\n              21 LOAD_ATTR            (CmdReturnBay)\n              24 LOAD_FAST            (droneIDs)\n              27 CALL_FUNCTION        (1 positional, 0 named)\n              30 STORE_FAST           (ret)\n\n208:          33 LOAD_GLOBAL          (HandleMultipleCallError)\n              36 LOAD_FAST            (droneIDs)\n              39 LOAD_FAST            (ret)\n              42 LOAD_CONST           (\"MultiDroneCmdResult\")\n              45 CALL_FUNCTION        (3 positional, 0 named)\n              48 POP_TOP\n              49 JUMP_FORWARD         (to 52)\n         >>   52 LOAD_CONST           (None)\n              55 RETURN_VALUE\n\n\nRecovered source:\ndef ReturnToDroneBay(droneIDs):\n    entity = eveMoniker.GetEntityAccess()\n    if entity:\n        ret = entity.CmdReturnBay(droneIDs)\n        HandleMultipleCallError(droneIDs, ret, 'MultiDroneCmdResult')\n    return\n\nThe client obtains entity access, sends CmdReturnBay and handles per-drone errors. The server movement implementation is absent.\nRecovery: decompiled by uncompyle6 3.9.3. Function body decompiled; def line rebuilt from argument metadata. No target code executed.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 2070,
+      "end": 2160,
+      "part": "Practical"
+    },
+    {
+      "title": "SSW example: drone authority",
+      "body": [
+        "SSW adds its own authority check and return state. The recovered client predicate alone would not be sufficient."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/MiningDroneAI.cpp:34",
+        "D:\\SSW\\Saved\\Analysis\\EveMiningDrones_20261119\\drone_checks.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "bool MiningDroneAI::Return(FMiningDroneState& Drone,\n    const FMiningDroneFrame& Frame, FText& Reason)\n{\n    if (!Authorized(Frame, Reason) || !Deployed(Drone))\n        return false;\n    Drone.State = EMiningDroneState::Returning;\n    Drone.TargetContact = INDEX_NONE;\n    Drone.bRepeatMining = false;\n    Reason = INVTEXT(\"Drone returning to its owner.\");\n    return true;\n}",
+      "note": "Native SSW source excerpt. Included only to demonstrate interpretation of the preceding recovered evidence. No claim of equivalent EVE server implementation.\nCode excerpt reformatted for slide readability; semantics unchanged. Surrounding function context is in the cited native file.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 2160,
+      "end": 2250,
+      "part": "Practical"
+    },
+    {
+      "title": "Manufacturing cost: bytecode",
+      "body": [
+        "The recovered helper prices a manufacturing job."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\2.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "co_code (38 bytes)\n7c 01 00 6a 00 00 6a 01 00 7c 01 00 6a 02 00 6a\n03 00 64 01 00 83 02 00 74 04 00 7c 01 00 6a 05\n00 83 01 00 14 53\n\n0 LOAD_FAST            (job)\n3 LOAD_ATTR            (prices)\n6 LOAD_ATTR            (get)\n9 LOAD_FAST            (job)\n12 LOAD_ATTR            (blueprint)\n15 LOAD_ATTR            (blueprintTypeID)\n18 LOAD_CONST           (0)\n21 CALL_FUNCTION        (2 positional, 0 named)\n24 LOAD_GLOBAL          (float)\n27 LOAD_FAST            (job)\n30 LOAD_ATTR            (runs)\n... full disassembly in speaker notes",
+      "note": "Function: Manufacturing.job_cost\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\industry\\activities\\manufacturing.py\nSHA-256: 3869c99fd14891c5654a201e7e53e0b10f4807fc13544caca9af3356c502abaf\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n 25:           0 LOAD_FAST            (job)\n               3 LOAD_ATTR            (prices)\n               6 LOAD_ATTR            (get)\n               9 LOAD_FAST            (job)\n              12 LOAD_ATTR            (blueprint)\n              15 LOAD_ATTR            (blueprintTypeID)\n              18 LOAD_CONST           (0)\n              21 CALL_FUNCTION        (2 positional, 0 named)\n              24 LOAD_GLOBAL          (float)\n              27 LOAD_FAST            (job)\n              30 LOAD_ATTR            (runs)\n              33 CALL_FUNCTION        (1 positional, 0 named)\n              36 BINARY_MULTIPLY\n              37 RETURN_VALUE\n\n\nRecovered source:\ndef job_cost(self, job):\n    return job.prices.get(job.blueprint.blueprintTypeID, 0) * float(job.runs)\n\nThis function looks up a blueprint price and multiplies by runs. Other fees and final settlement may live elsewhere.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 2250,
+      "end": 2340,
+      "part": "Practical"
+    },
+    {
+      "title": "Manufacturing cost: recovered source",
+      "body": [
+        "This function looks up a blueprint price and multiplies by runs. Other fees and final settlement may live elsewhere."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\2.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "def job_cost(self, job):\n    return (\n        job.prices.get(job.blueprint.blueprintTypeID, 0)\n        * float(job.runs)\n    )",
+      "note": "Function: Manufacturing.job_cost\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\industry\\activities\\manufacturing.py\nSHA-256: 3869c99fd14891c5654a201e7e53e0b10f4807fc13544caca9af3356c502abaf\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n 25:           0 LOAD_FAST            (job)\n               3 LOAD_ATTR            (prices)\n               6 LOAD_ATTR            (get)\n               9 LOAD_FAST            (job)\n              12 LOAD_ATTR            (blueprint)\n              15 LOAD_ATTR            (blueprintTypeID)\n              18 LOAD_CONST           (0)\n              21 CALL_FUNCTION        (2 positional, 0 named)\n              24 LOAD_GLOBAL          (float)\n              27 LOAD_FAST            (job)\n              30 LOAD_ATTR            (runs)\n              33 CALL_FUNCTION        (1 positional, 0 named)\n              36 BINARY_MULTIPLY\n              37 RETURN_VALUE\n\n\nRecovered source:\ndef job_cost(self, job):\n    return job.prices.get(job.blueprint.blueprintTypeID, 0) * float(job.runs)\n\nThis function looks up a blueprint price and multiplies by runs. Other fees and final settlement may live elsewhere.\nRecovery: decompiled by uncompyle6 3.9.3. Function body decompiled; def line rebuilt from argument metadata. No target code executed.\nDisplay formatting adds grouping parentheses to keep the original expression on readable lines.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 2340,
+      "end": 2430,
+      "part": "Practical"
+    },
+    {
+      "title": "SSW example: manufacturing locations",
+      "body": [
+        "SSW validates separate input and output locations before consuming material. This is an adaptation comparison, not an EVE formula."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/ManufacturingAI.cpp:15",
+        "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\2.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "if (WorkOrder.Facility.IsNone() ||\n    WorkOrder.InputLocation.IsNone() ||\n    WorkOrder.OutputLocation.IsNone() ||\n    WorkOrder.InputLocation == WorkOrder.OutputLocation ||\n    !FMath::IsFinite(Capacity) || Capacity < 0.0 ||\n    !FMath::IsFinite(WorkOrder.MaterialMultiplier) ||\n    WorkOrder.MaterialMultiplier <= 0.0)\n    return false;",
+      "note": "Native SSW source excerpt. Included only to demonstrate interpretation of the preceding recovered evidence. No claim of equivalent EVE server implementation.\nCode excerpt reformatted for slide readability; semantics unchanged. Surrounding function context is in the cited native file.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 2430,
+      "end": 2520,
+      "part": "Practical"
+    },
+    {
+      "title": "Contract service boundary: bytecode",
+      "body": [
+        "A cached proxy provides contract access."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveFinalGapAudit_20261118\\0.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "co_code (43 bytes)\n7c 00 00 6a 00 00 64 00 00 6b 02 00 72 24 00 74\n02 00 6a 03 00 64 01 00 83 01 00 7c 00 00 5f 00\n00 6e 00 00 7c 00 00 6a 00 00 53\n\n0 LOAD_FAST            (self)\n3 LOAD_ATTR            (contractProxySvc)\n6 LOAD_CONST           (None)\n9 COMPARE_OP           (==)\n12 POP_JUMP_IF_FALSE    (to 36)\n15 LOAD_GLOBAL          (sm)\n18 LOAD_ATTR            (ProxySvc)\n21 LOAD_CONST           (\"contractProxy\")\n24 CALL_FUNCTION        (1 positional, 0 named)\n27 LOAD_FAST            (self)\n30 STORE_ATTR           (contractProxySvc)\n... full disassembly in speaker notes",
+      "note": "Function: ContractsSvc.GetContractProxySvc\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\shared\\neocom\\contracts\\contracts.py\nSHA-256: 3cd3e0c841829dd25e8cb9a4e78c77037497d5445eb27c81050551474a7f75eb\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n148:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (contractProxySvc)\n               6 LOAD_CONST           (None)\n               9 COMPARE_OP           (==)\n              12 POP_JUMP_IF_FALSE    (to 36)\n\n149:          15 LOAD_GLOBAL          (sm)\n              18 LOAD_ATTR            (ProxySvc)\n              21 LOAD_CONST           (\"contractProxy\")\n              24 CALL_FUNCTION        (1 positional, 0 named)\n              27 LOAD_FAST            (self)\n              30 STORE_ATTR           (contractProxySvc)\n              33 JUMP_FORWARD         (to 36)\n\n150:     >>   36 LOAD_FAST            (self)\n              39 LOAD_ATTR            (contractProxySvc)\n              42 RETURN_VALUE\n\n\nRecovered source:\ndef GetContractProxySvc(self):\n    if self.contractProxySvc == None:\n        self.contractProxySvc = sm.ProxySvc('contractProxy')\n    return self.contractProxySvc\n\nThe client lazily creates contractProxy. A service name identifies a boundary, not its server settlement algorithm.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 2520,
+      "end": 2610,
+      "part": "Practical"
+    },
+    {
+      "title": "Contract service boundary: recovered source",
+      "body": [
+        "The client lazily creates contractProxy. A service name identifies a boundary, not its server settlement algorithm."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveFinalGapAudit_20261118\\0.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "def GetContractProxySvc(self):\n    if self.contractProxySvc == None:\n        self.contractProxySvc = sm.ProxySvc('contractProxy')\n    return self.contractProxySvc",
+      "note": "Function: ContractsSvc.GetContractProxySvc\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\shared\\neocom\\contracts\\contracts.py\nSHA-256: 3cd3e0c841829dd25e8cb9a4e78c77037497d5445eb27c81050551474a7f75eb\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n148:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (contractProxySvc)\n               6 LOAD_CONST           (None)\n               9 COMPARE_OP           (==)\n              12 POP_JUMP_IF_FALSE    (to 36)\n\n149:          15 LOAD_GLOBAL          (sm)\n              18 LOAD_ATTR            (ProxySvc)\n              21 LOAD_CONST           (\"contractProxy\")\n              24 CALL_FUNCTION        (1 positional, 0 named)\n              27 LOAD_FAST            (self)\n              30 STORE_ATTR           (contractProxySvc)\n              33 JUMP_FORWARD         (to 36)\n\n150:     >>   36 LOAD_FAST            (self)\n              39 LOAD_ATTR            (contractProxySvc)\n              42 RETURN_VALUE\n\n\nRecovered source:\ndef GetContractProxySvc(self):\n    if self.contractProxySvc == None:\n        self.contractProxySvc = sm.ProxySvc('contractProxy')\n    return self.contractProxySvc\n\nThe client lazily creates contractProxy. A service name identifies a boundary, not its server settlement algorithm.\nRecovery: decompiled by uncompyle6 3.9.3. Function body decompiled; def line rebuilt from argument metadata. No target code executed.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 2610,
+      "end": 2700,
+      "part": "Practical"
+    },
+    {
+      "title": "Navigation distance: bytecode",
+      "body": [
+        "An absent range selects an action default."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveGateApproach_20261118\\0.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "co_code (32 bytes)\n7c 01 00 64 00 00 6b 08 00 72 1c 00 74 01 00 7c\n02 00 7c 00 00 7c 03 00 8d 02 00 53 7c 01 00 53\n\n0 LOAD_FAST            (targetRange)\n3 LOAD_CONST           (None)\n6 COMPARE_OP           (is)\n9 POP_JUMP_IF_FALSE    (to 28)\n12 LOAD_GLOBAL          (GetDefaultDist)\n15 LOAD_FAST            (action)\n18 LOAD_FAST            (targetID)\n21 LOAD_FAST            (kwargs)\n24 CALL_FUNCTION_KW     (2 positional, 0 named)\n27 RETURN_VALUE\n>>   28 LOAD_FAST            (targetRange)\n... full disassembly in speaker notes",
+      "note": "Function: _GetMovementDistanceOrDefault\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\services\\menuSvcExtras\\movementFunctions.py\nSHA-256: f9353a3596f2383a2296e97ca8bdb228a214f1baf9fefd2f26c552efd2e30f25\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n260:           0 LOAD_FAST            (targetRange)\n               3 LOAD_CONST           (None)\n               6 COMPARE_OP           (is)\n               9 POP_JUMP_IF_FALSE    (to 28)\n\n261:          12 LOAD_GLOBAL          (GetDefaultDist)\n              15 LOAD_FAST            (action)\n              18 LOAD_FAST            (targetID)\n              21 LOAD_FAST            (kwargs)\n              24 CALL_FUNCTION_KW     (2 positional, 0 named)\n              27 RETURN_VALUE\n\n262:     >>   28 LOAD_FAST            (targetRange)\n              31 RETURN_VALUE\n\n\nRecovered source:\ndef _GetMovementDistanceOrDefault(targetID, targetRange, action, **kwargs):\n    if targetRange is None:\n        return GetDefaultDist(action, targetID, **kwargs)\n    return targetRange\n\nThe branch falls back to GetDefaultDist and forwards keyword arguments. A supplied range returns unchanged.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 2700,
+      "end": 2790,
+      "part": "Practical"
+    },
+    {
+      "title": "Navigation distance: recovered source",
+      "body": [
+        "The branch falls back to GetDefaultDist and forwards keyword arguments. A supplied range returns unchanged."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveGateApproach_20261118\\0.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "def _GetMovementDistanceOrDefault(\n        targetID, targetRange, action, **kwargs):\n    if targetRange is None:\n        return GetDefaultDist(action, targetID, **kwargs)\n    return targetRange",
+      "note": "Function: _GetMovementDistanceOrDefault\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\services\\menuSvcExtras\\movementFunctions.py\nSHA-256: f9353a3596f2383a2296e97ca8bdb228a214f1baf9fefd2f26c552efd2e30f25\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n260:           0 LOAD_FAST            (targetRange)\n               3 LOAD_CONST           (None)\n               6 COMPARE_OP           (is)\n               9 POP_JUMP_IF_FALSE    (to 28)\n\n261:          12 LOAD_GLOBAL          (GetDefaultDist)\n              15 LOAD_FAST            (action)\n              18 LOAD_FAST            (targetID)\n              21 LOAD_FAST            (kwargs)\n              24 CALL_FUNCTION_KW     (2 positional, 0 named)\n              27 RETURN_VALUE\n\n262:     >>   28 LOAD_FAST            (targetRange)\n              31 RETURN_VALUE\n\n\nRecovered source:\ndef _GetMovementDistanceOrDefault(targetID, targetRange, action, **kwargs):\n    if targetRange is None:\n        return GetDefaultDist(action, targetID, **kwargs)\n    return targetRange\n\nThe branch falls back to GetDefaultDist and forwards keyword arguments. A supplied range returns unchanged.\nRecovery: decompiled by uncompyle6 3.9.3. Function body decompiled; def line rebuilt from argument metadata. No target code executed.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 2790,
+      "end": 2880,
+      "part": "Practical"
+    },
+    {
+      "title": "Mission expiry: bytecode",
+      "body": [
+        "An offer without an expiry is still valid."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveFinalGapAudit_20261118\\2.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "co_code (39 bytes)\n7c 00 00 6a 00 00 73 0d 00 74 01 00 53 7c 00 00\n6a 00 00 74 02 00 6a 03 00 6a 04 00 83 00 00 18\n64 01 00 6b 00 00 53\n\n0 LOAD_FAST            (self)\n3 LOAD_ATTR            (expiration_time)\n6 POP_JUMP_IF_TRUE     (to 13)\n9 LOAD_GLOBAL          (False)\n12 RETURN_VALUE\n>>   13 LOAD_FAST            (self)\n16 LOAD_ATTR            (expiration_time)\n19 LOAD_GLOBAL          (blue)\n22 LOAD_ATTR            (os)\n25 LOAD_ATTR            (GetWallclockTime)\n28 CALL_FUNCTION        (0 positional, 0 named)\n... full disassembly in speaker notes",
+      "note": "Function: Mission.is_expired\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\evemissions\\client\\mission.py\nSHA-256: fe80a550c645bda83823dc423195faf31ee80a6835f7dd5ff2ac4a80ae47ad98\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n136:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (expiration_time)\n               6 POP_JUMP_IF_TRUE     (to 13)\n\n137:           9 LOAD_GLOBAL          (False)\n              12 RETURN_VALUE\n\n138:     >>   13 LOAD_FAST            (self)\n              16 LOAD_ATTR            (expiration_time)\n              19 LOAD_GLOBAL          (blue)\n              22 LOAD_ATTR            (os)\n              25 LOAD_ATTR            (GetWallclockTime)\n              28 CALL_FUNCTION        (0 positional, 0 named)\n              31 BINARY_SUBTRACT\n              32 LOAD_CONST           (0)\n              35 COMPARE_OP           (<)\n              38 RETURN_VALUE\n\n\nRecovered source:\ndef is_expired(self):\n    if not self.expiration_time:\n        return False\n    return self.expiration_time - blue.os.GetWallclockTime() < 0\n\nA missing expiration returns False. Otherwise the client compares its expiration with wall-clock time.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 2880,
+      "end": 2970,
+      "part": "Practical"
+    },
+    {
+      "title": "Mission expiry: recovered source",
+      "body": [
+        "A missing expiration returns False. Otherwise the client compares its expiration with wall-clock time."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveFinalGapAudit_20261118\\2.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "def is_expired(self):\n    if not self.expiration_time:\n        return False\n    return self.expiration_time - blue.os.GetWallclockTime() < 0",
+      "note": "Function: Mission.is_expired\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\evemissions\\client\\mission.py\nSHA-256: fe80a550c645bda83823dc423195faf31ee80a6835f7dd5ff2ac4a80ae47ad98\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n136:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (expiration_time)\n               6 POP_JUMP_IF_TRUE     (to 13)\n\n137:           9 LOAD_GLOBAL          (False)\n              12 RETURN_VALUE\n\n138:     >>   13 LOAD_FAST            (self)\n              16 LOAD_ATTR            (expiration_time)\n              19 LOAD_GLOBAL          (blue)\n              22 LOAD_ATTR            (os)\n              25 LOAD_ATTR            (GetWallclockTime)\n              28 CALL_FUNCTION        (0 positional, 0 named)\n              31 BINARY_SUBTRACT\n              32 LOAD_CONST           (0)\n              35 COMPARE_OP           (<)\n              38 RETURN_VALUE\n\n\nRecovered source:\ndef is_expired(self):\n    if not self.expiration_time:\n        return False\n    return self.expiration_time - blue.os.GetWallclockTime() < 0\n\nA missing expiration returns False. Otherwise the client compares its expiration with wall-clock time.\nRecovery: decompiled by uncompyle6 3.9.3. Function body decompiled; def line rebuilt from argument metadata. No target code executed.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 90,
+      "start": 2970,
+      "end": 3060,
+      "part": "Practical"
+    },
+    {
+      "kind": "summary",
+      "title": "What the investigation established",
+      "body": [
+        "Raw bytes anchor the claim. Disassembly exposes the operation.",
+        "Recovered source makes a rule readable, but still needs checking.",
+        "An RPC call reveals a boundary. It does not reveal the server.",
+        "SSW comparisons show deliberate adaptations with separate tests."
+      ],
+      "seconds": 120,
+      "refs": [
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "start": 3060,
+      "end": 3180,
+      "part": "Practical",
+      "note": ""
+    },
+    {
+      "kind": "source",
+      "source": 28,
+      "seconds": 405,
+      "start": 3180,
+      "end": 3585,
+      "part": "Discussion",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 28"
+      ]
+    },
+    {
+      "kind": "source",
+      "source": 29,
+      "seconds": 15,
+      "start": 3585,
+      "end": 3600,
+      "part": "Discussion",
+      "note": "",
+      "refs": [
+        "C:/Users/Carlo/OneDrive/Documents/Coventry/Agentic_AI_Reverse_Engineering_Dr_Carlos_Bott.pptx, source slide 29"
+      ]
+    },
+    {
+      "title": "Drone classification: bytecode",
+      "body": [
+        "A group ID identifies the mining-drone class."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveMiningDrones_20261119\\drone_checks.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "co_code (19 bytes)\n7c 00 00 6a 00 00 6a 01 00 74 02 00 6a 03 00 6b\n02 00 53\n\n0 LOAD_FAST            (self)\n3 LOAD_ATTR            (item)\n6 LOAD_ATTR            (groupID)\n9 LOAD_GLOBAL          (invConst)\n12 LOAD_ATTR            (groupMiningDrone)\n15 COMPARE_OP           (==)\n18 RETURN_VALUE",
+      "note": "Function: DroneChecker.IsMiningDrone\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\menucheckers\\droneCheckers.py\nSHA-256: 6e4465e7b5d9c964594aed2ae891f14cfa6823cec0f6a64e3355e70918a9f512\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n 99:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (item)\n               6 LOAD_ATTR            (groupID)\n               9 LOAD_GLOBAL          (invConst)\n              12 LOAD_ATTR            (groupMiningDrone)\n              15 COMPARE_OP           (==)\n              18 RETURN_VALUE\n\n\nRecovered source:\ndef IsMiningDrone(self):\n    return self.item.groupID == invConst.groupMiningDrone\n\nTwo attribute chains feed a single equality comparison. The type constant supplies meaning that byte values alone do not convey.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "title": "Drone classification: recovered source",
+      "body": [
+        "Two attribute chains feed a single equality comparison. The type constant supplies meaning that byte values alone do not convey."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveMiningDrones_20261119\\drone_checks.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "def IsMiningDrone(self):\n    return self.item.groupID == invConst.groupMiningDrone",
+      "note": "Function: DroneChecker.IsMiningDrone\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\menucheckers\\droneCheckers.py\nSHA-256: 6e4465e7b5d9c964594aed2ae891f14cfa6823cec0f6a64e3355e70918a9f512\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n 99:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (item)\n               6 LOAD_ATTR            (groupID)\n               9 LOAD_GLOBAL          (invConst)\n              12 LOAD_ATTR            (groupMiningDrone)\n              15 COMPARE_OP           (==)\n              18 RETURN_VALUE\n\n\nRecovered source:\ndef IsMiningDrone(self):\n    return self.item.groupID == invConst.groupMiningDrone\n\nTwo attribute chains feed a single equality comparison. The type constant supplies meaning that byte values alone do not convey.\nRecovery: decompiled by uncompyle6 3.9.3. Function body decompiled; def line rebuilt from argument metadata. No target code executed.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "title": "Drone ownership: bytecode",
+      "body": [
+        "Ownership and current control are separate ideas."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveMiningDrones_20261119\\drone_checks.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "co_code (22 bytes)\n7c 00 00 6a 00 00 83 00 00 7c 00 00 6a 01 00 6a\n02 00 6b 02 00 53\n\n0 LOAD_FAST            (self)\n3 LOAD_ATTR            (GetController)\n6 CALL_FUNCTION        (0 positional, 0 named)\n9 LOAD_FAST            (self)\n12 LOAD_ATTR            (session)\n15 LOAD_ATTR            (shipid)\n18 COMPARE_OP           (==)\n21 RETURN_VALUE",
+      "note": "Function: DroneChecker.IsControlledByActiveShip\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\menucheckers\\droneCheckers.py\nSHA-256: 6e4465e7b5d9c964594aed2ae891f14cfa6823cec0f6a64e3355e70918a9f512\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n 95:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (GetController)\n               6 CALL_FUNCTION        (0 positional, 0 named)\n               9 LOAD_FAST            (self)\n              12 LOAD_ATTR            (session)\n              15 LOAD_ATTR            (shipid)\n              18 COMPARE_OP           (==)\n              21 RETURN_VALUE\n\n\nRecovered source:\ndef IsControlledByActiveShip(self):\n    return self.GetController() == self.session.shipid\n\nThe client checks the current controller against the active ship. This is a client-side availability rule, not proof of server authorization.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "title": "Drone ownership: recovered source",
+      "body": [
+        "The client checks the current controller against the active ship. This is a client-side availability rule, not proof of server authorization."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveMiningDrones_20261119\\drone_checks.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "def IsControlledByActiveShip(self):\n    return self.GetController() == self.session.shipid",
+      "note": "Function: DroneChecker.IsControlledByActiveShip\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\menucheckers\\droneCheckers.py\nSHA-256: 6e4465e7b5d9c964594aed2ae891f14cfa6823cec0f6a64e3355e70918a9f512\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n 95:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (GetController)\n               6 CALL_FUNCTION        (0 positional, 0 named)\n               9 LOAD_FAST            (self)\n              12 LOAD_ATTR            (session)\n              15 LOAD_ATTR            (shipid)\n              18 COMPARE_OP           (==)\n              21 RETURN_VALUE\n\n\nRecovered source:\ndef IsControlledByActiveShip(self):\n    return self.GetController() == self.session.shipid\n\nThe client checks the current controller against the active ship. This is a client-side availability rule, not proof of server authorization.\nRecovery: decompiled by uncompyle6 3.9.3. Function body decompiled; def line rebuilt from argument metadata. No target code executed.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "title": "Inventory location: bytecode",
+      "body": [
+        "An inventory identity contains a location."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\7.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "co_code (19 bytes)\n7c 00 00 6a 00 00 5c 02 00 7d 01 00 7d 02 00 7c\n01 00 53\n\n0 LOAD_FAST            (self)\n3 LOAD_ATTR            (invID)\n6 UNPACK_SEQUENCE      2\n9 STORE_FAST           (inventoryLocationID)\n12 STORE_FAST           (_)\n15 LOAD_FAST            (inventoryLocationID)\n18 RETURN_VALUE",
+      "note": "Function: BaseInvContainer.GetInventoryLocationID\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\environment\\invControllers.py\nSHA-256: 4710df44ee8c1780604ff0794e2b7736d1146db965f90ea61322c7122b3deeb8\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n104:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (invID)\n               6 UNPACK_SEQUENCE      2\n               9 STORE_FAST           (inventoryLocationID)\n              12 STORE_FAST           (_)\n\n105:          15 LOAD_FAST            (inventoryLocationID)\n              18 RETURN_VALUE\n\n\nRecovered source:\ndef GetInventoryLocationID(self):\n    inventoryLocationID, _ = self.invID\n    return inventoryLocationID\n\nTuple unpacking reveals that the first component is the location identifier. The ignored component remains part of the data model.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "title": "Inventory location: recovered source",
+      "body": [
+        "Tuple unpacking reveals that the first component is the location identifier. The ignored component remains part of the data model."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\7.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "def GetInventoryLocationID(self):\n    inventoryLocationID, _ = self.invID\n    return inventoryLocationID",
+      "note": "Function: BaseInvContainer.GetInventoryLocationID\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\environment\\invControllers.py\nSHA-256: 4710df44ee8c1780604ff0794e2b7736d1146db965f90ea61322c7122b3deeb8\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n104:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (invID)\n               6 UNPACK_SEQUENCE      2\n               9 STORE_FAST           (inventoryLocationID)\n              12 STORE_FAST           (_)\n\n105:          15 LOAD_FAST            (inventoryLocationID)\n              18 RETURN_VALUE\n\n\nRecovered source:\ndef GetInventoryLocationID(self):\n    inventoryLocationID, _ = self.invID\n    return inventoryLocationID\n\nTuple unpacking reveals that the first component is the location identifier. The ignored component remains part of the data model.\nRecovery: decompiled by uncompyle6 3.9.3. Function body decompiled; def line rebuilt from argument metadata. No target code executed.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "title": "Wallet filtering: bytecode",
+      "body": [
+        "Changing a filter refreshes the visible list."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveWallet_20261118\\1.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "co_code (23 bytes)\n7c 01 00 7c 00 00 5f 00 00 7c 00 00 6a 01 00 83\n00 00 01 64 00 00 53\n\n0 LOAD_FAST            (filterMethod)\n3 LOAD_FAST            (self)\n6 STORE_ATTR           (_filterMethod)\n9 LOAD_FAST            (self)\n12 LOAD_ATTR            (_UpdateSortedAndFiltered)\n15 CALL_FUNCTION        (0 positional, 0 named)\n18 POP_TOP\n19 LOAD_CONST           (None)\n22 RETURN_VALUE",
+      "note": "Function: BaseTransactionsList.SetFilter\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\shared\\neocom\\wallet\\panels\\baseTransactionsPanel.py\nSHA-256: 49bb5dc0f800830a14425672b50d69a22ddd0e507909f70a3837f02ad3f271e2\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n 49:           0 LOAD_FAST            (filterMethod)\n               3 LOAD_FAST            (self)\n               6 STORE_ATTR           (_filterMethod)\n\n 50:           9 LOAD_FAST            (self)\n              12 LOAD_ATTR            (_UpdateSortedAndFiltered)\n              15 CALL_FUNCTION        (0 positional, 0 named)\n              18 POP_TOP\n              19 LOAD_CONST           (None)\n              22 RETURN_VALUE\n\n\nRecovered source:\ndef SetFilter(self, filterMethod):\n    self._filterMethod = filterMethod\n    self._UpdateSortedAndFiltered()\n    return\n\nThe client stores a filter function and rebuilds its sorted, filtered view. No money changes here.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "title": "Wallet filtering: recovered source",
+      "body": [
+        "The client stores a filter function and rebuilds its sorted, filtered view. No money changes here."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveWallet_20261118\\1.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "def SetFilter(self, filterMethod):\n    self._filterMethod = filterMethod\n    self._UpdateSortedAndFiltered()\n    return",
+      "note": "Function: BaseTransactionsList.SetFilter\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\shared\\neocom\\wallet\\panels\\baseTransactionsPanel.py\nSHA-256: 49bb5dc0f800830a14425672b50d69a22ddd0e507909f70a3837f02ad3f271e2\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n 49:           0 LOAD_FAST            (filterMethod)\n               3 LOAD_FAST            (self)\n               6 STORE_ATTR           (_filterMethod)\n\n 50:           9 LOAD_FAST            (self)\n              12 LOAD_ATTR            (_UpdateSortedAndFiltered)\n              15 CALL_FUNCTION        (0 positional, 0 named)\n              18 POP_TOP\n              19 LOAD_CONST           (None)\n              22 RETURN_VALUE\n\n\nRecovered source:\ndef SetFilter(self, filterMethod):\n    self._filterMethod = filterMethod\n    self._UpdateSortedAndFiltered()\n    return\n\nThe client stores a filter function and rebuilds its sorted, filtered view. No money changes here.\nRecovery: decompiled by uncompyle6 3.9.3. Function body decompiled; def line rebuilt from argument metadata. No target code executed.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "title": "Mission arc validation: bytecode",
+      "body": [
+        "Arc eligibility comes from an interval helper."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveEpicArcs\\1.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "co_code (22 bytes)\n74 00 00 7c 01 00 83 01 00 7d 02 00 7c 02 00 64\n01 00 6b 04 00 53\n\n0 LOAD_GLOBAL          (get_epic_arc_restart_interval)\n3 LOAD_FAST            (epicArcID)\n6 CALL_FUNCTION        (1 positional, 0 named)\n9 STORE_FAST           (arcRestartInterval)\n12 LOAD_FAST            (arcRestartInterval)\n15 LOAD_CONST           (1)\n18 COMPARE_OP           (>)\n21 RETURN_VALUE",
+      "note": "Function: EpicArcController.IsValidArc\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\shared\\epicArcs\\epicArcController.py\nSHA-256: 193f0842d41798817756c98a64fa3896a0917212771d8a2d3667d7f13d882bb0\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n 41:           0 LOAD_GLOBAL          (get_epic_arc_restart_interval)\n               3 LOAD_FAST            (epicArcID)\n               6 CALL_FUNCTION        (1 positional, 0 named)\n               9 STORE_FAST           (arcRestartInterval)\n\n 42:          12 LOAD_FAST            (arcRestartInterval)\n              15 LOAD_CONST           (1)\n              18 COMPARE_OP           (>)\n              21 RETURN_VALUE\n\n\nRecovered source:\ndef IsValidArc(self, epicArcID):\n    arcRestartInterval = get_epic_arc_restart_interval(epicArcID)\n    return arcRestartInterval > 1\n\nThis predicate compares an externally supplied restart interval with 1. The helper implementation is needed to interpret its full policy.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "title": "Mission arc validation: recovered source",
+      "body": [
+        "This predicate compares an externally supplied restart interval with 1. The helper implementation is needed to interpret its full policy."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveEpicArcs\\1.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "def IsValidArc(self, epicArcID):\n    arcRestartInterval = get_epic_arc_restart_interval(epicArcID)\n    return arcRestartInterval > 1",
+      "note": "Function: EpicArcController.IsValidArc\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\shared\\epicArcs\\epicArcController.py\nSHA-256: 193f0842d41798817756c98a64fa3896a0917212771d8a2d3667d7f13d882bb0\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n 41:           0 LOAD_GLOBAL          (get_epic_arc_restart_interval)\n               3 LOAD_FAST            (epicArcID)\n               6 CALL_FUNCTION        (1 positional, 0 named)\n               9 STORE_FAST           (arcRestartInterval)\n\n 42:          12 LOAD_FAST            (arcRestartInterval)\n              15 LOAD_CONST           (1)\n              18 COMPARE_OP           (>)\n              21 RETURN_VALUE\n\n\nRecovered source:\ndef IsValidArc(self, epicArcID):\n    arcRestartInterval = get_epic_arc_restart_interval(epicArcID)\n    return arcRestartInterval > 1\n\nThis predicate compares an externally supplied restart interval with 1. The helper implementation is needed to interpret its full policy.\nRecovery: decompiled by uncompyle6 3.9.3. Function body decompiled; def line rebuilt from argument metadata. No target code executed.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "title": "Fitting slot count: bytecode",
+      "body": [
+        "The fitting view counts slots across groups."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\9.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "co_code (44 bytes)\n74 00 00 67 00 00 7c 00 00 6a 01 00 6a 02 00 83\n00 00 44 5d 12 00 7d 01 00 74 03 00 7c 01 00 83\n01 00 5e 02 00 71 13 00 83 01 00 53\n\n0 LOAD_GLOBAL          (sum)\n3 BUILD_LIST           0\n6 LOAD_FAST            (self)\n9 LOAD_ATTR            (slotsByGroups)\n12 LOAD_ATTR            (itervalues)\n15 CALL_FUNCTION        (0 positional, 0 named)\n18 GET_ITER\n>>   19 FOR_ITER             (to 40)\n22 STORE_FAST           (group)\n25 LOAD_GLOBAL          (len)\n28 LOAD_FAST            (group)\n... full disassembly in speaker notes",
+      "note": "Function: FittingController.GetTotalNumSlots\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\shared\\fitting\\fittingController.py\nSHA-256: 6a6da8fe8f5ff94e5b22044d80d68fd99957c04d92de095788a7ca557887af85\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n127:           0 LOAD_GLOBAL          (sum)\n               3 BUILD_LIST           0\n               6 LOAD_FAST            (self)\n               9 LOAD_ATTR            (slotsByGroups)\n              12 LOAD_ATTR            (itervalues)\n              15 CALL_FUNCTION        (0 positional, 0 named)\n              18 GET_ITER\n         >>   19 FOR_ITER             (to 40)\n              22 STORE_FAST           (group)\n              25 LOAD_GLOBAL          (len)\n              28 LOAD_FAST            (group)\n              31 CALL_FUNCTION        (1 positional, 0 named)\n              34 LIST_APPEND          2\n              37 JUMP_ABSOLUTE        (to 19)\n         >>   40 CALL_FUNCTION        (1 positional, 0 named)\n              43 RETURN_VALUE\n\n\nRecovered source:\ndef GetTotalNumSlots(self):\n    return sum([len(group) for group in self.slotsByGroups.itervalues()])\n\nThe comprehension sums each slot group length. It describes a UI-facing count, not power, CPU or fitting legality.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "title": "Fitting slot count: recovered source",
+      "body": [
+        "The comprehension sums each slot group length. It describes a UI-facing count, not power, CPU or fitting legality."
+      ],
+      "refs": [
+        "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\9.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "def GetTotalNumSlots(self):\n    return sum([len(group) for group in self.slotsByGroups.itervalues()])",
+      "note": "Function: FittingController.GetTotalNumSlots\nEmbedded file: C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\shared\\fitting\\fittingController.py\nSHA-256: 6a6da8fe8f5ff94e5b22044d80d68fd99957c04d92de095788a7ca557887af85\nPython version: [2, 7]; magic: 62211\n\nFull disassembly:\n127:           0 LOAD_GLOBAL          (sum)\n               3 BUILD_LIST           0\n               6 LOAD_FAST            (self)\n               9 LOAD_ATTR            (slotsByGroups)\n              12 LOAD_ATTR            (itervalues)\n              15 CALL_FUNCTION        (0 positional, 0 named)\n              18 GET_ITER\n         >>   19 FOR_ITER             (to 40)\n              22 STORE_FAST           (group)\n              25 LOAD_GLOBAL          (len)\n              28 LOAD_FAST            (group)\n              31 CALL_FUNCTION        (1 positional, 0 named)\n              34 LIST_APPEND          2\n              37 JUMP_ABSOLUTE        (to 19)\n         >>   40 CALL_FUNCTION        (1 positional, 0 named)\n              43 RETURN_VALUE\n\n\nRecovered source:\ndef GetTotalNumSlots(self):\n    return sum([len(group) for group in self.slotsByGroups.itervalues()])\n\nThe comprehension sums each slot group length. It describes a UI-facing count, not power, CPU or fitting legality.\nRecovery: decompiled by uncompyle6 3.9.3. Function body decompiled; def line rebuilt from argument metadata. No target code executed.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "title": "SSW example: wallet query",
+      "body": [
+        "The recovered filter-refresh behavior motivates a separate query path. SSW supplies its own ledger and accounting rules."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/TransactionAI.cpp:16",
+        "D:\\SSW\\Saved\\Analysis\\EveWallet_20261118\\1.pyc",
+        "D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/rea-recovery/examples.json"
+      ],
+      "code": "const bool Incoming = Filter.bMarketOnly\n    ? Receipt.To == Filter.Owner : DeltaKnown && Delta > 0;\nconst bool Outgoing = Filter.bMarketOnly\n    ? Receipt.From == Filter.Owner : DeltaKnown && Delta < 0;\nif ((Filter.Direction == ETransactionDirection::Incoming\n        && !Incoming) ||\n    (Filter.Direction == ETransactionDirection::Outgoing\n        && !Outgoing)) continue;",
+      "note": "Native SSW source excerpt. Included only to demonstrate interpretation of the preceding recovered evidence. No claim of equivalent EVE server implementation.\nCode excerpt reformatted for slide readability; semantics unchanged. Surrounding function context is in the cited native file.",
+      "image": null,
+      "kind": "practical",
+      "seconds": 0,
+      "appendix": true
+    },
+    {
+      "kind": "resources",
+      "title": "Sources and further reading",
+      "body": [
+        "github.com/NationalSecurityAgency/ghidra",
+        "github.com/icsharpcode/ILSpy",
+        "github.com/morluto/rea",
+        "github.com/rocky/python-xdis",
+        "github.com/rocky/python-uncompyle6",
+        "The lecture evidence includes twelve saved code exhibits, hashes and full disassemblies."
+      ],
+      "seconds": 0,
+      "appendix": true,
+      "refs": [
+        "https://github.com/NationalSecurityAgency/ghidra",
+        "https://github.com/icsharpcode/ILSpy",
+        "https://github.com/morluto/rea",
+        "https://github.com/rocky/python-xdis",
+        "https://github.com/rocky/python-uncompyle6"
+      ]
+    }
+  ]
+}

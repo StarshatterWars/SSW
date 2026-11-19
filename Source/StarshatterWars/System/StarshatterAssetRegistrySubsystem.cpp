@@ -264,36 +264,6 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
-    // Data.AwardsTable
-    if (!Cache.Contains(TEXT("Data.MedalsTable")))
-    {
-        if (!Settings->MedalsTable.IsNull())
-        {
-            const FSoftObjectPath Path = Settings->MedalsTable.ToSoftObjectPath();
-            Cache.Add(TEXT("Data.MedalsTable"), TSoftObjectPtr<UObject>(Path));
-            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind Data.MedalsTable -> %s"), *Path.ToString());
-        }
-        else
-        {
-            UE_LOG(LogStarshatterAssetRegistry, Warning, TEXT("[ASSETS] MedalsTable is not set in Project Settings"));
-        }
-    }
-
-    // Data.AwardsTable
-    if (!Cache.Contains(TEXT("Data.RanksTable")))
-    {
-        if (!Settings->RanksTable.IsNull())
-        {
-            const FSoftObjectPath Path = Settings->RanksTable.ToSoftObjectPath();
-            Cache.Add(TEXT("Data.RanksTable"), TSoftObjectPtr<UObject>(Path));
-            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind Data.RanksTable -> %s"), *Path.ToString());
-        }
-        else
-        {
-            UE_LOG(LogStarshatterAssetRegistry, Warning, TEXT("[ASSETS] RanksTable is not set in Project Settings"));
-        }
-    }
-
     // Data.RegionsTable
     if (!Cache.Contains(TEXT("Data.RegionsTable")))
     {

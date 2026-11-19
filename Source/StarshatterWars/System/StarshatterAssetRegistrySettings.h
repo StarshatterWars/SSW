@@ -125,12 +125,6 @@ public:
     TSoftObjectPtr<UDataTable> OrderOfBattleTable;
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")
-    TSoftObjectPtr<UDataTable> MedalsTable;
-
-    UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")
-    TSoftObjectPtr<UDataTable> RanksTable;
-
-    UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")
     TSoftObjectPtr<UDataTable> RegionsDataTable;
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|DataTables")

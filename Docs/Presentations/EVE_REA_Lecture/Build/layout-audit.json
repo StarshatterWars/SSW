@@ -1,0 +1,65 @@
+[
+  {
+    "slide": 7,
+    "title": "Bound decompression before decoding",
+    "codeLines": 8,
+    "font": 23,
+    "availableHeight": 439
+  },
+  {
+    "slide": 8,
+    "title": "Read metadata without running the module",
+    "codeLines": 14,
+    "font": 23,
+    "availableHeight": 439
+  },
+  {
+    "slide": 10,
+    "title": "Observed bytecode: a repeat-mining command",
+    "codeLines": 6,
+    "font": 23,
+    "availableHeight": 422
+  },
+  {
+    "slide": 12,
+    "title": "A scan result can contain an unknown quantity",
+    "codeLines": 14,
+    "font": 23,
+    "availableHeight": 439
+  },
+  {
+    "slide": 18,
+    "title": "Unload through the inventory ledger",
+    "codeLines": 16,
+    "font": 23,
+    "availableHeight": 439
+  },
+  {
+    "slide": 20,
+    "title": "Reserve output while a batch runs",
+    "codeLines": 12,
+    "font": 23,
+    "availableHeight": 439
+  },
+  {
+    "slide": 37,
+    "title": "Price relationships without importing ISK",
+    "codeLines": 6,
+    "font": 23,
+    "availableHeight": 272
+  },
+  {
+    "slide": 39,
+    "title": "Component quality with a fixed midpoint",
+    "codeLines": 6,
+    "font": 23,
+    "availableHeight": 272
+  },
+  {
+    "slide": 42,
+    "title": "Retire a beam without freeing its owner’s pointer",
+    "codeLines": 10,
+    "font": 23,
+    "availableHeight": 439
+  }
+]

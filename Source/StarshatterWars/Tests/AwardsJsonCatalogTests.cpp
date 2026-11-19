@@ -80,7 +80,7 @@ bool FAwardsJsonAtomicTest::RunTest(const FString&)
     FString Json; FFileHelper::LoadFileToString(Json, *Path);
     TSharedPtr<FJsonObject> Object;
     if (!FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Object) || !Object) return false;
-    auto Duplicate = Object->GetArrayField(TEXT("medals")); Duplicate.Add(Duplicate[0]);
+    auto Duplicate = Object->GetArrayField(TEXT("medals")); const auto FirstMedal = Duplicate[0]; Duplicate.Add(FirstMedal);
     Object->SetArrayField(TEXT("medals"), Duplicate);
     FString Invalid; FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Invalid));
     FFileHelper::SaveStringToFile(Invalid, *Path);
@@ -93,8 +93,41 @@ bool FAwardsJsonAtomicTest::RunTest(const FString&)
     Object->GetArrayField(TEXT("ranks"))[0]->AsObject()->RemoveField(TEXT("rankId"));
     Invalid.Reset(); FJsonSerializer::Serialize(Object.ToSharedRef(), TJsonWriterFactory<>::Create(&Invalid));
     FFileHelper::SaveStringToFile(Invalid, *Path);
+    AddExpectedError(TEXT("JsonObjectToUStruct - Missing JSON value named RankId"), EAutomationExpectedErrorFlags::Contains, 1);
     TestFalse(TEXT("Missing authored ID cannot silently become Cadet"), AwardsJsonCatalog::Import(Path, *Ranks, *Medals, Error));
     TestEqual(TEXT("Incomplete catalog preserves both tables"), Ranks->GetRowMap().Num() + Medals->GetRowMap().Num(), 2);
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAwardsDirectJsonTest, "Starshatter.Awards.DirectJsonWithoutTables",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FAwardsDirectJsonTest::RunTest(const FString&)
+{
+    auto* Context = NewObject<UGameInstance>();
+    auto* Data = NewObject<UStarshatterGameDataSubsystem>(Context);
+    Data->LoadAwardsJson();
+    TestEqual(TEXT("All authored ranks load without table assets"), Data->RankDefinitions.Num(), 11);
+    TestEqual(TEXT("All authored medals load without table assets"), Data->MedalDefinitions.Num(), 16);
+    for (const auto& Rank : Data->RankDefinitions)
+    {
+        FRankInfo Found;
+        TestTrue(TEXT("Rank lookup populated directly"), Data->GetRankInfo(Rank.RankId, Found));
+        TestTrue(TEXT("Every native rank field retained"), FRankInfo::StaticStruct()->CompareScriptStruct(&Rank, &Found, 0));
+    }
+    for (const auto& Medal : Data->MedalDefinitions)
+    {
+        FMedalInfo Found;
+        TestTrue(TEXT("Medal flag lookup populated directly"), Data->GetMedalInfoByFlag(Medal.MedalId, Found));
+        TestTrue(TEXT("Every native medal field retained"), FMedalInfo::StaticStruct()->CompareScriptStruct(&Medal, &Found, 0));
+    }
+    Data->LoadAwardsJson();
+    TestEqual(TEXT("Repeated boot does not duplicate ranks"), Data->RankDefinitions.Num(), 11);
+    // A missing replacement must preserve both validated arrays.
+    FString Error;
+    TestFalse(TEXT("Missing JSON rejected atomically"), AwardsJsonCatalog::Load(
+        FPaths::ProjectSavedDir() / TEXT("MissingAwardsCatalog.json"), Data->RankDefinitions, Data->MedalDefinitions, Error));
+    TestEqual(TEXT("Failed reload retains ranks"), Data->RankDefinitions.Num(), 11);
+    TestEqual(TEXT("Failed reload retains medals"), Data->MedalDefinitions.Num(), 16);
     return true;
 }
 #endif

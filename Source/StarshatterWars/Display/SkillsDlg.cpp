@@ -1,4 +1,6 @@
 #include "SkillsDlg.h"
+#include "RecordDetails.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "PlayerCharacter.h"
 #include "Widgets/Views/SExpanderArrow.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
@@ -155,17 +157,18 @@ TSharedRef<SWidget> USkillsDlg::RebuildWidget()
             + SHorizontalBox::Slot().FillWidth(1).Padding(0,0,8,0)[MissionUIStyle::MakeDataPane(Tree)]
             + SHorizontalBox::Slot().FillWidth(2)[MissionUIStyle::MakeDataPane(List)]]
         + SVerticalBox::Slot().FillHeight(0.35f).Padding(8)
-        [MissionUIStyle::MakeDataPane(SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).Margin(10).AutoWrapText(true)
-            .Text_Lambda([Table,Weak]()
+        [MissionUIStyle::MakeDataPane(SNew(SScrollBox)+SScrollBox::Slot()[SNew(SRecordDetails).Record_Lambda([Table,Weak]()
             {
-                if (!Table->Selected) return INVTEXT("Select a skill book. Buying a book grants the complete skill immediately. Timed training is inactive.");
-                const auto& Skill = *Table->Selected; FText Reason;
-                if (Weak.IsValid()) Weak->CanPurchaseBook(Skill.Name,Reason);
-                TArray<FString> Required; for (FName Id : Skill.Prerequisites)
-                    if (Weak.IsValid()) { const auto* Parent = Weak->GetCatalog().Find(Id); Required.Add(Parent ? Parent->DisplayName : Id.ToString()); }
-                return FText::Format(INVTEXT("{0}\n{1}\n\nPREREQUISITES: {2}\nMINIMUM RANK: {4}\n{3}"), FText::FromString(Skill.DisplayName).ToUpper(),
-                    FText::FromString(Skill.Description), Required.IsEmpty() ? INVTEXT("NONE") : FText::FromString(FString::Join(Required,TEXT(", "))),Reason,FText::FromString(UTF8_TO_TCHAR(PlayerCharacter::RankName(Skill.MinimumRank))));
-            }))]
+                FRecordDetails D;D.Icon=EShipSystemIcon::Skills;
+                if(!Table->Selected){D.Title=INVTEXT("SELECT A SKILL BOOK");D.Description=INVTEXT("Buying a book grants its complete skill immediately. Timed training is inactive.");return D;}
+                const auto& Skill=*Table->Selected;FText Reason;const bool Allowed=Weak.IsValid() && Weak->CanPurchaseBook(Skill.Name,Reason);
+                D.Title=FText::FromString(Skill.DisplayName);D.Subtitle=FText::FromName(Skill.Group);D.Description=FText::FromString(Skill.Description);
+                D.Status=Weak.IsValid() && Weak->HasSkill(Skill.Name)?INVTEXT("COMPLETE"):Allowed?INVTEXT("AVAILABLE"):INVTEXT("LOCKED");
+                TArray<FString> Required;for(FName Id:Skill.Prerequisites)if(Weak.IsValid()){const auto* Parent=Weak->GetCatalog().Find(Id);Required.Add(Parent?Parent->DisplayName:Id.ToString());}
+                D.Fact(INVTEXT("MINIMUM RANK"),FText::FromString(UTF8_TO_TCHAR(PlayerCharacter::RankName(Skill.MinimumRank))));
+                D.Fact(INVTEXT("PREREQUISITES"),Required.IsEmpty()?INVTEXT("NONE"):FText::FromString(FString::Join(Required,TEXT(", "))));
+                D.Section(INVTEXT("PURCHASE STATUS"),Reason);return D;
+            })])]
         + SVerticalBox::Slot().AutoHeight().Padding(8)
         [SNew(SHorizontalBox)
             + SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).AutoWrapText(true).Text_Lambda([Table]() { return Table->Feedback; })]

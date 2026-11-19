@@ -1,0 +1,82 @@
+{
+	"schemaVersion": 1,
+	"campaign": "Operation Nightfall",
+	"zones": [
+		{
+			"system": "Isham",
+			"region": "Garden"
+		},
+		{
+			"system": "Isham",
+			"region": "Tiger Bay"
+		},
+		{
+			"system": "Isham",
+			"region": "Senesca"
+		},
+		{
+			"system": "Isham",
+			"region": "Ramek"
+		},
+		{
+			"system": "Isham",
+			"region": "Relay"
+		},
+		{
+			"system": "Radix",
+			"region": "Senna"
+		},
+		{
+			"system": "Radix",
+			"region": "Radix"
+		},
+		{
+			"system": "Radix",
+			"region": "Shadow Canyon"
+		},
+		{
+			"system": "Radix",
+			"region": "Cavenda"
+		},
+		{
+			"system": "Garrison",
+			"region": "Rhofar"
+		},
+		{
+			"system": "Garrison",
+			"region": "Garrison"
+		},
+		{
+			"system": "Garrison",
+			"region": "Korul"
+		},
+		{
+			"system": "Garrison",
+			"region": "Nerasil"
+		},
+		{
+			"system": "Trocanther",
+			"region": "Volante"
+		},
+		{
+			"system": "Trocanther",
+			"region": "Hell's Kitchen"
+		},
+		{
+			"system": "Trocanther",
+			"region": "Narcissus"
+		},
+		{
+			"system": "Trocanther",
+			"region": "Path"
+		},
+		{
+			"system": "Marak",
+			"region": "Marak"
+		},
+		{
+			"system": "Marak",
+			"region": "Xanthe"
+		}
+	]
+}

@@ -1,0 +1,24 @@
+MONO_WASM: WebAssembly resource does not have the expected content type "application/wasm", so falling back to slower ArrayBuffer instantiation.
+Inspect result written to file: D:/SSW/Docs/Presentations/EVE_REA_Lecture/Build/candidate.pptx.inspect.ndjson
+Exported 50 slides
+Rendered 10 slides
+Rendered 20 slides
+Rendered 30 slides
+Rendered 40 slides
+Rendered 50 slides
+node:internal/fs/promises:1345
+  return new FileHandle(await PromisePrototypeThen(
+                        ^
+
+Error: EEXIST: file already exists, open 'D:\SSW\Docs\Presentations\EVE_REA_Lecture\Build\validation.json'
+    at async open (node:internal/fs/promises:1345:25)
+    at async Object.writeFile (node:internal/fs/promises:1972:14)
+    at async finalizePresentation (file:///C:/Users/Carlo/.codex/plugins/cache/openai-primary-runtime/presentations/26.1118.11504/skills/presentations/container_tools/artifact_tool_utils.mjs:1058:5)
+    at async file:///D:/SSW/Docs/Presentations/EVE_REA_Lecture/build_deck.mjs:70:14 {
+  errno: -4075,
+  code: 'EEXIST',
+  syscall: 'open',
+  path: 'D:\\SSW\\Docs\\Presentations\\EVE_REA_Lecture\\Build\\validation.json'
+}
+
+Node.js v24.22.3

@@ -32,7 +32,7 @@ public:
             World.Reset(UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options));
             if (!World.IsValid()) {Test->AddError(TEXT("Menu preview world unavailable"));return true;}
             World->SetGameInstance(NewObject<UGameInstance>());
-            Menu.Reset(NewObject<UMenuDlg>(World.Get()));Menu->Initialize();Widget=Menu->TakeWidget();Menu->SetVisibility(ESlateVisibility::Visible);Menu->Show();
+            Menu.Reset(NewObject<UMenuDlg>(World.Get()));Menu->Initialize();Menu->SetVisibility(ESlateVisibility::Collapsed);Widget=Menu->TakeWidget();Menu->SetVisibility(ESlateVisibility::Visible);
             Started=FPlatformTime::Seconds();
             return false;
         }

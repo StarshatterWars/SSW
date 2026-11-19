@@ -20,47 +20,9 @@
         - LoadAwardTables()
         - static rank/medal lookup functions
 
-    The registry loads and indexes FS_AwardInfo rows from a DataTable
-    (typically DT_Awards) and provides fast, centralized lookup services
-    for rank titles, medal names, descriptions, and progression logic.
-
-    RESPONSIBILITIES
-    ================
-    - Load award definitions from UDataTable
-    - Separate rank entries from medal entries
-    - Provide rank lookup (RankName, RankDescription, RankAbrv)
-    - Provide medal lookup (MedalName, MedalDescription)
-    - Compute command eligibility by ship class
-    - Determine rank progression by TotalPoints
-    - Provide clean runtime API for UI and gameplay systems
-
-    ARCHITECTURAL ROLE
-    ==================
-    FS_AwardInfo:
-        Data-only struct (row definition)
-
-    UAwardInfoRegistry:
-        Runtime logic + indexing + lookup layer
-
-    UStarshatterPlayerSubsystem:
-        Owns player state (FS_PlayerGameInfo)
-        Uses this registry for rank/award display and evaluation
-
-    DESIGN NOTES
-    ============
-    - No persistence logic lives here.
-    - No player state is owned here.
-    - No gameplay mutation occurs here.
-    - Pure lookup + evaluation layer.
-    - Safe for UI use.
-    - Safe for subsystem injection.
-
-    FUTURE EXTENSIONS
-    =================
-    - Cached TMap<int32, const FS_AwardInfo*> for O(1) lookups
-    - Rank progression evaluation by PlayerPoints
-    - Medal eligibility evaluation helpers
-    - Async asset loading for insignia images
+    Gameplay loads validated awards.json values into owned rank and medal records.
+    DataTable overloads are retained solely for legacy conversion and parity tests.
+    No rank or medal DataTable asset is required by boot, gameplay or UI lookups.
 =============================================================================*/
 
 
@@ -68,6 +30,8 @@
 #include "AwardInfoRegistry.h"
 #include "Logging/LogMacros.h"
 
+TArray<FRankInfo> UAwardInfoRegistry::OwnedRanks;
+TArray<FMedalInfo> UAwardInfoRegistry::OwnedMedals;
 TWeakObjectPtr<UDataTable> UAwardInfoRegistry::RankTable;
 TWeakObjectPtr<UDataTable> UAwardInfoRegistry::MedalTable;
 
@@ -81,15 +45,24 @@ void UAwardInfoRegistry::Initialize(UDataTable* InRankTable, UDataTable* InMedal
     BuildCaches();
 }
 
+void UAwardInfoRegistry::Initialize(const TArray<FRankInfo>& Ranks, const TArray<FMedalInfo>& Medals)
+{
+    Reset();
+    OwnedRanks = Ranks; OwnedMedals = Medals;
+    for (const auto& Row : OwnedRanks) RankById.Add(Row.RankId, &Row);
+    for (const auto& Row : OwnedMedals) MedalById.Add(Row.MedalId, &Row);
+}
+
 bool UAwardInfoRegistry::IsInitialized()
 {
-    const bool bHasRanks = RankTable.IsValid() && RankById.Num() > 0;
-    const bool bHasMedals = MedalTable.IsValid() && MedalById.Num() > 0;
+    const bool bHasRanks = RankById.Num() > 0;
+    const bool bHasMedals = MedalById.Num() > 0;
     return bHasRanks || bHasMedals;
 }
 
 void UAwardInfoRegistry::Reset()
 {
+    OwnedRanks.Reset(); OwnedMedals.Reset();
     RankTable.Reset();
     MedalTable.Reset();
     RankById.Reset();
@@ -228,7 +201,7 @@ void UAwardInfoRegistry::ForEachMedal(TFunctionRef<void(const FMedalInfo&)> Fn)
 int32 UAwardInfoRegistry::RankFromName(const FString& Name)
 {
     const FString Key=Name.TrimStartAndEnd();
-    if (Key.IsEmpty() || !RankTable.IsValid()) return 0;
+    if (Key.IsEmpty() || RankById.IsEmpty()) return 0;
     int32 Result=MAX_int32;
     for (const auto& Pair : RankById)
     {

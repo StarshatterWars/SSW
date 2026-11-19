@@ -1,0 +1,9 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/3mdove10","index":33,"layout":{"id":"ly/ux4ruhcv","name":"DEFAULT"},"backgroundColor":"rgba(241,236,223,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/q9cz6xkv","kind":"textbox","name":"Text 0","position":{"left":52.8,"top":26.88,"width":768,"height":26.88},"text":"07  —  DISCUSSION","style":{"fontSize":14.67,"typeface":"Helvetica Neue","color":"#6B6B6B","alignment":"left"},"geometry":"rect"},
+{"id":"sh/ralgf21g","kind":"textbox","name":"Text 1","position":{"left":52.8,"top":676.8,"width":211.2,"height":26.88},"text":"34 / 35","style":{"fontSize":13.33,"typeface":"Helvetica Neue","color":"#9A9A9A","alignment":"left"},"geometry":"rect"},
+{"id":"sh/0zehcr2x","kind":"textbox","name":"Text 2","position":{"left":816,"top":676.8,"width":412.8,"height":26.88},"text":"CLOSE","style":{"fontSize":13.33,"typeface":"Helvetica Neue","color":"#9A9A9A","alignment":"right"},"geometry":"rect"},
+{"id":"sh/10nylwji","kind":"shape","name":"Shape 3","position":{"left":0,"top":0,"width":1279.97,"height":7.68},"style":{"fontSize":24,"typeface":"Calibri","color":"#000000","alignment":"left"},"geometry":"rect","fillColor":"#1F3DA8"},
+{"id":"sh/exwzahkr","kind":"textbox","name":"Text 4","position":{"left":52.8,"top":172.8,"width":1171.2,"height":76.8},"text":"Questions & Discussion","style":{"fontSize":48,"typeface":"Helvetica Neue","color":"#1A1A1A","bold":true,"alignment":"center"},"geometry":"rect"},
+{"id":"sh/zy5gjm1c","kind":"textbox","name":"Text 5","position":{"left":144,"top":288,"width":988.8,"height":153.6},"text":"Which conclusion is supported by the recovered function?\nWhat evidence would establish behavior across an RPC boundary?\nWhere would you place human review in the agent loop?","style":{"fontSize":24,"typeface":"Helvetica Neue","color":"#1A1A1A","alignment":"center"},"geometry":"rect"}
+]}

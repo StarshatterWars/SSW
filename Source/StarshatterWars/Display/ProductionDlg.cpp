@@ -1,4 +1,5 @@
-﻿#include "ProductionDlg.h"
+#include "ProductionDlg.h"
+#include "RecordDetails.h"
 #include "BlueprintsDlg.h"
 #include "IndustryJobsPanel.h"
 #include "Widgets/SNullWidget.h"
@@ -261,16 +262,6 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
         [
             MissionUIStyle::MakeDataPane(
             SNew(SScrollBox)
-            + SScrollBox::Slot()
-            [
-                SNew(STextBlock)
-                .Font(MissionUIStyle::GetRowFont(16))
-                .Text_Lambda([Selected]()
-                {
-                    return *Selected ? FText::FromString((*Selected)->Facility).ToUpper()
-                        : INVTEXT("SELECT A PRODUCTION FACILITY");
-                })
-            ]
             + SScrollBox::Slot().Padding(0, 6)
             [
                 SNew(SButton).Text(INVTEXT("OPEN FACTORY"))
@@ -279,38 +270,21 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
             ]
             + SScrollBox::Slot().Padding(0, 6)
             [
-                SNew(STextBlock)
-                .Font(MissionUIStyle::GetRowFont(13))
-                .AutoWrapText(true)
-                .Text_Lambda([Selected, RecipeLabels]()
+                SNew(SRecordDetails).Record_Lambda([Selected, RecipeLabels]()
                 {
-                    if (!*Selected) return FText::GetEmpty();
-
-                    const auto& Site = **Selected;
-                    const auto* Recipe = RecipeLabels->Find(Site.Recipe);
-                    const auto* Stock = GetLiveStock(Site);
-                    TArray<FText> Lines;
-                    Lines.Add(FText::Format(INVTEXT("{0}  |  {1}  |  {2}  |  {3}  |  {4}"),
-                        FText::FromString(Site.System), FText::FromString(Site.Planet),
-                        FText::FromString(Site.Region), FText::FromString(Site.Empire),
-                        Site.bSurface ? INVTEXT("SURFACE") : INVTEXT("ORBITAL")));
-                    Lines.Add(FText::Format(INVTEXT("MAX STORAGE  {0} T  |  {1}"),
-                        FText::AsNumber(Site.CapacityTonnes), GetProductionStatus(Stock)));
-                    Lines.Add(FText::Format(INVTEXT("SERVICE {0} | INSTALL {1} CR + {2} CR/RUN | MAX {3} RUNS"),
-                        FText::FromName(Site.ServiceProfile),FText::AsNumber(Site.InstallationFeeCredits),FText::AsNumber(Site.PerRunFeeCredits),FText::AsNumber(Site.MaximumPlayerRuns)));
-                    Lines.Add(FText::Format(INVTEXT("PLAYER MATERIALS {0}% | BATCH TIME {1}%"),
-                        FText::AsNumber(Site.PlayerMaterialMultiplier*100),FText::AsNumber(Site.PlayerTimeMultiplier*100)));
-                    if (Recipe)
-                    {
-                        Lines.Add(FText::Format(INVTEXT("INPUT PER BATCH  {0}"), Recipe->Minerals));
-                        Lines.Add(FText::Format(INVTEXT("OUTPUT PER BATCH  {0}"), Recipe->Product));
-                        Lines.Add(FText::Format(INVTEXT("BATCH TIME  {0}"), Recipe->ProcessingTime));
-                    }
-                    else
-                    {
-                        Lines.Add(INVTEXT("NO RECIPE ASSIGNED"));
-                    }
-                    return FText::Join(INVTEXT("\n"), Lines).ToUpper();
+                    FRecordDetails D; D.Icon=EShipSystemIcon::Production;
+                    if(!*Selected){D.Title=INVTEXT("SELECT A PRODUCTION FACILITY");D.Description=INVTEXT("Choose a facility above to inspect its storage, recipe and live production status.");return D;}
+                    const auto& Site=**Selected;const auto* Recipe=RecipeLabels->Find(Site.Recipe);const auto* Stock=GetLiveStock(Site);
+                    D.Title=FText::FromString(Site.Facility);D.Status=GetProductionStatus(Stock);
+                    D.Subtitle=FText::Format(INVTEXT("{0} / {1} / {2}"),FText::FromString(Site.System),FText::FromString(Site.Planet),FText::FromString(Site.Region));
+                    D.Fact(INVTEXT("EMPIRE"),FText::FromString(Site.Empire)).Fact(INVTEXT("FACILITY"),Site.bSurface?INVTEXT("SURFACE"):INVTEXT("ORBITAL"));
+                    D.Fact(INVTEXT("MAX STORAGE"),FText::Format(INVTEXT("{0} T"),FText::AsNumber(Site.CapacityTonnes)));
+                    D.Fact(INVTEXT("INSTALLATION"),FText::Format(INVTEXT("{0} CR + {1} CR / RUN"),FText::AsNumber(Site.InstallationFeeCredits),FText::AsNumber(Site.PerRunFeeCredits)));
+                    D.Fact(INVTEXT("SERVICE PROFILE"),FText::FromName(Site.ServiceProfile)).Fact(INVTEXT("MAX BATCH"),FText::Format(INVTEXT("{0} RUNS"),FText::AsNumber(Site.MaximumPlayerRuns)));
+                    D.Fact(INVTEXT("MATERIAL MODIFIER"),FText::Format(INVTEXT("{0}%"),FText::AsNumber(Site.PlayerMaterialMultiplier*100)));
+                    D.Fact(INVTEXT("TIME MODIFIER"),FText::Format(INVTEXT("{0}%"),FText::AsNumber(Site.PlayerTimeMultiplier*100)));
+                    if(Recipe){D.Fact(INVTEXT("BATCH TIME"),Recipe->ProcessingTime);D.Section(INVTEXT("REQUIRED INPUT / BATCH"),Recipe->Minerals);D.Section(INVTEXT("FINISHED OUTPUT / BATCH"),Recipe->Product);}
+                    else D.Section(INVTEXT("RECIPE"),INVTEXT("No recipe assigned."));return D;
                 })
             ]
             )

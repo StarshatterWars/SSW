@@ -1,0 +1,198 @@
+[
+  {
+    "slide": 6,
+    "title": "Ore scan knowledge: bytecode",
+    "codeLines": 13,
+    "font": 24,
+    "availableHeight": 439
+  },
+  {
+    "slide": 7,
+    "title": "Ore scan knowledge: recovered source",
+    "codeLines": 2,
+    "font": 28,
+    "availableHeight": 422
+  },
+  {
+    "slide": 8,
+    "title": "SSW example: scan uncertainty",
+    "codeLines": 7,
+    "font": 24,
+    "availableHeight": 422
+  },
+  {
+    "slide": 9,
+    "title": "Drone classification: bytecode",
+    "codeLines": 11,
+    "font": 24,
+    "availableHeight": 439
+  },
+  {
+    "slide": 10,
+    "title": "Drone classification: recovered source",
+    "codeLines": 2,
+    "font": 28,
+    "availableHeight": 422
+  },
+  {
+    "slide": 11,
+    "title": "Drone ownership: bytecode",
+    "codeLines": 12,
+    "font": 24,
+    "availableHeight": 439
+  },
+  {
+    "slide": 12,
+    "title": "Drone ownership: recovered source",
+    "codeLines": 2,
+    "font": 28,
+    "availableHeight": 422
+  },
+  {
+    "slide": 13,
+    "title": "SSW example: drone authority",
+    "codeLines": 11,
+    "font": 24,
+    "availableHeight": 422
+  },
+  {
+    "slide": 14,
+    "title": "Drone recovery command: bytecode",
+    "codeLines": 18,
+    "font": 22,
+    "availableHeight": 439
+  },
+  {
+    "slide": 15,
+    "title": "Drone recovery command: recovered source",
+    "codeLines": 6,
+    "font": 28,
+    "availableHeight": 422
+  },
+  {
+    "slide": 16,
+    "title": "Manufacturing cost: bytecode",
+    "codeLines": 17,
+    "font": 22,
+    "availableHeight": 439
+  },
+  {
+    "slide": 17,
+    "title": "Manufacturing cost: recovered source",
+    "codeLines": 5,
+    "font": 28,
+    "availableHeight": 422
+  },
+  {
+    "slide": 18,
+    "title": "SSW example: manufacturing locations",
+    "codeLines": 8,
+    "font": 24,
+    "availableHeight": 422
+  },
+  {
+    "slide": 19,
+    "title": "Inventory location: bytecode",
+    "codeLines": 11,
+    "font": 24,
+    "availableHeight": 439
+  },
+  {
+    "slide": 20,
+    "title": "Inventory location: recovered source",
+    "codeLines": 3,
+    "font": 28,
+    "availableHeight": 422
+  },
+  {
+    "slide": 21,
+    "title": "Wallet filtering: bytecode",
+    "codeLines": 13,
+    "font": 24,
+    "availableHeight": 439
+  },
+  {
+    "slide": 22,
+    "title": "Wallet filtering: recovered source",
+    "codeLines": 4,
+    "font": 28,
+    "availableHeight": 439
+  },
+  {
+    "slide": 23,
+    "title": "SSW example: wallet query",
+    "codeLines": 8,
+    "font": 24,
+    "availableHeight": 422
+  },
+  {
+    "slide": 24,
+    "title": "Contract service boundary: bytecode",
+    "codeLines": 17,
+    "font": 22,
+    "availableHeight": 439
+  },
+  {
+    "slide": 25,
+    "title": "Contract service boundary: recovered source",
+    "codeLines": 4,
+    "font": 28,
+    "availableHeight": 422
+  },
+  {
+    "slide": 26,
+    "title": "Navigation distance: bytecode",
+    "codeLines": 16,
+    "font": 24,
+    "availableHeight": 439
+  },
+  {
+    "slide": 27,
+    "title": "Navigation distance: recovered source",
+    "codeLines": 5,
+    "font": 28,
+    "availableHeight": 422
+  },
+  {
+    "slide": 28,
+    "title": "Mission arc validation: bytecode",
+    "codeLines": 12,
+    "font": 24,
+    "availableHeight": 439
+  },
+  {
+    "slide": 29,
+    "title": "Mission arc validation: recovered source",
+    "codeLines": 3,
+    "font": 28,
+    "availableHeight": 422
+  },
+  {
+    "slide": 30,
+    "title": "Mission expiry: bytecode",
+    "codeLines": 17,
+    "font": 22,
+    "availableHeight": 439
+  },
+  {
+    "slide": 31,
+    "title": "Mission expiry: recovered source",
+    "codeLines": 4,
+    "font": 28,
+    "availableHeight": 422
+  },
+  {
+    "slide": 32,
+    "title": "Fitting slot count: bytecode",
+    "codeLines": 17,
+    "font": 22,
+    "availableHeight": 439
+  },
+  {
+    "slide": 33,
+    "title": "Fitting slot count: recovered source",
+    "codeLines": 2,
+    "font": 28,
+    "availableHeight": 422
+  }
+]

@@ -13,6 +13,7 @@ class STARSHATTERWARS_API UAwardInfoRegistry : public UObject
     GENERATED_BODY()
 
 public:
+    static void Initialize(const TArray<FRankInfo>& Ranks, const TArray<FMedalInfo>& Medals);
     static void Initialize(UDataTable* InRankTable, UDataTable* InMedalTable);
     static bool IsInitialized();
     static void Reset();
@@ -49,6 +50,8 @@ private:
     static const TCHAR* SafeStr(const FString& S, const TCHAR* Fallback);
 
 private:
+    static TArray<FRankInfo> OwnedRanks;
+    static TArray<FMedalInfo> OwnedMedals;
     static TWeakObjectPtr<UDataTable> RankTable;
     static TWeakObjectPtr<UDataTable> MedalTable;
 

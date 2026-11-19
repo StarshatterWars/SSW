@@ -1,0 +1,7 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/qn57qz","index":28,"layout":{"id":"ly/q90v6pob","name":"Blank"},"backgroundColor":"rgba(11,20,34,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/69wvyt4r","kind":"textbox","position":{"left":64,"top":42,"width":1152,"height":60},"text":"Mission arc validation: recovered source","style":{"fontSize":41.8,"typeface":"Arial","color":"#EEF5FA","bold":true,"alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/tcne983i","kind":"textbox","position":{"left":64,"top":145,"width":1152,"height":72},"text":"This predicate compares an externally supplied restart interval with 1. The helper implementation is needed to interpret its full policy.","style":{"fontSize":24,"typeface":"Arial","color":"#CDD9E5","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/sbed03mx","kind":"textbox","position":{"left":70,"top":225,"width":1146,"height":422},"text":"def IsValidArc(self, epicArcID):\n    arcRestartInterval = get_epic_arc_restart_interval(epicArcID)\n    return arcRestartInterval > 1","style":{"fontSize":28,"typeface":"Consolas","color":"#78D5E6","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/jm5w3ylg","kind":"textbox","position":{"left":64,"top":668,"width":1130,"height":28},"text":"29   ·   Sources and qualifications in speaker notes","style":{"fontSize":15.36,"typeface":"Arial","color":"#8FA5BC","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

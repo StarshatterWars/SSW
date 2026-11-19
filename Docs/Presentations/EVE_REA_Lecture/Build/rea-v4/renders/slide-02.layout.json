@@ -1,0 +1,6 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/1l99c5","index":1,"layout":{"id":"ly/q90v6pob","name":"Blank"},"backgroundColor":"rgba(11,20,34,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/ju9w76hc","kind":"textbox","position":{"left":64,"top":42,"width":1152,"height":60},"text":"The investigation starts with an artifact","style":{"fontSize":41.8,"typeface":"Arial","color":"#EEF5FA","bold":true,"alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/kvidgbix","kind":"textbox","position":{"left":64,"top":145,"width":1152,"height":490},"text":"Target: the installed EVE client archive, code.ccp.\n\nThe selected .pyj members contain compressed Python bytecode.\n\nA member path, SHA-256 and function name identify every exhibit.","style":{"fontSize":27,"typeface":"Arial","color":"#CDD9E5","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/lwre9gzi","kind":"textbox","position":{"left":64,"top":668,"width":1130,"height":28},"text":"2   ·   Sources and qualifications in speaker notes","style":{"fontSize":15.36,"typeface":"Arial","color":"#8FA5BC","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

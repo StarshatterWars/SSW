@@ -62,3 +62,15 @@ TSharedRef<SWidget> UMissionsDlg::RebuildWidget()
                 [SNew(SHorizontalBox) + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Play)] + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(6,0)[SNew(STextBlock).Text(INVTEXT("MISSION")).Font(MissionUIStyle::GetRowFont(14))]]]
         ]);
 }
+
+void UMissionsDlg::NativeDestruct()
+{
+    // Drop the nested UUserWidget's SObjectWidget while its UObject is alive.
+    Supplement.Reset();
+    Super::NativeDestruct();
+}
+void UMissionsDlg::ReleaseSlateResources(bool bReleaseChildren)
+{
+    Supplement.Reset();
+    Super::ReleaseSlateResources(bReleaseChildren);
+}

@@ -466,7 +466,9 @@ SimShot::ExecFrame(double seconds)
 						Sim* sim = Sim::GetSim();
 						WeaponDesign* child_design = WeaponDesign::Find(design->det_child);
 
-						if (sim && child_design) {
+                        // Owner retirement clears this observed pointer before the
+                        // missile expires. Do not dereference it for submunitions.
+						if (sim && child_design && GetRegion()) {
 							double spread = design->det_spread;
 
 							Camera aim_cam;
@@ -475,8 +477,9 @@ SimShot::ExecFrame(double seconds)
 
 							for (int i = 0; i < design->det_count; i++) {
 								SimShot* child = (SimShot*)sim->CreateShot(GetLocation(), aim_cam, child_design,
-									owner, owner->GetRegion());
+									owner, GetRegion());
 
+                                if (!child) continue;
 								child->SetCharge(child_design->charge);
 
 								if (child_design->guided)

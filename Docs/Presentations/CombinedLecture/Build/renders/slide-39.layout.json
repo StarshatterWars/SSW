@@ -1,0 +1,10 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/mfra24","index":38,"backgroundColor":"rgba(241,236,223,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/65k72ts3","kind":"shape","position":{"left":0,"top":0,"width":1280,"height":7.68},"geometry":"rect","fillColor":"#1F3DA8","lineWidth":0},
+{"id":"sh/t8b6x8ru","kind":"textbox","position":{"left":52.8,"top":26.88,"width":1000,"height":27},"text":"APPENDIX  /  CODE EXHIBITS","style":{"fontSize":14.67,"typeface":"Helvetica Neue","color":"#6B6B6B","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/s72p43a9","kind":"textbox","position":{"left":52.8,"top":72,"width":1171.2,"height":56},"text":"Drone ownership: recovered source","style":{"fontSize":37.33,"typeface":"Helvetica Neue","color":"#1A1A1A","bold":true,"alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/fatozi90","kind":"textbox","position":{"left":52.8,"top":676.8,"width":300,"height":27},"text":"BACKUP 04","style":{"fontSize":13.33,"typeface":"Helvetica Neue","color":"#9A9A9A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/e9k76dsf","kind":"textbox","position":{"left":880,"top":676.8,"width":350,"height":27},"text":"NOT IN TIMED LECTURE","style":{"fontSize":13.33,"typeface":"Helvetica Neue","color":"#9A9A9A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/1wv61sr6","kind":"textbox","position":{"left":52.8,"top":145,"width":1171.2,"height":75},"text":"The client checks the current controller against the active ship. This is a client-side availability rule, not proof of server authorization.","style":{"fontSize":23,"typeface":"Helvetica Neue","color":"#1A1A1A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/0v2p8nal","kind":"textbox","position":{"left":60,"top":235,"width":1160,"height":415},"text":"def IsControlledByActiveShip(self):\n    return self.GetController() == self.session.shipid","style":{"fontSize":24,"typeface":"Consolas","color":"#1F3DA8","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

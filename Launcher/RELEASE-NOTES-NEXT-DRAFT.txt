@@ -1,41 +1,12 @@
-DRAFT â€” next Starshatter Wars build
-Awaiting final automated checks, refreshed videos, and the new cooked package.
-Do not publish these notes as an available update until that package is staged.
+NEXT BUILD - awaiting user cook and package
 
-Flight and presentation
-- Brighter engine plumes follow the nozzles: Terellian blue, Dantari orange-yellow
-  and Marakan green. Native maneuvering jets respond smoothly to actual burns.
-- Refreshed introduction, main-menu battle and campaign 2â€“5 opening videos are
-  being recorded with the corrected effects. Final video checks are pending.
+Intel replay stability
+The replay transport icons remain owned while the panel is visible, including during garbage collection. Nested mission rehearsals release their Slate references on close. Live intro playback passed three forced GC/redraw cycles and seeking; release/rebuild and wide/narrow panel checks passed.
 
-Mining and production
-- Mining drones have their own model and beam. Repeat Mining sends a drone back
-  to the same deposit after it returns and unloads; it stops when the deposit
-  runs out or your hold is full. Lost, recalled and out-of-range drones stop.
-- The Prospector carries three drones and the Rockhopper carries ten. Spare
-  drones come from cargo, with drone cargo entries, blueprints and recipes.
-- Drone production is assigned across twenty factory systems. Manufacturing
-  checks recipe skills and supports additional recipes at a facility.
-- Processing times and drone yields have been recalibrated alongside five
-  commodity prices, 46 hull prices and component and weapon quality grades.
-  Higher-grade equipment trades stronger performance for increased power use;
-  grade III keeps its normal physical baseline. Prices remain SSW credits.
+Clearer list details
+Production, marketplace, contracts, skills, blueprints, agents, wallet receipts, cargo and contacts now use a shared compact record layout: title and icon, status badge, labelled fact cards, and separate description/material sections. Detail cards adapt to available width. Existing actions, prices, requirements and inventory behavior remain in place.
 
-Station services and contracts
-- A floating Station Services panel lets you inspect a station or carrier in
-  flight. Its actions work only while docked at that exact facility. Carriers
-  provide basic support; full component refits require a shipyard.
-- Courier contracts offer a confirmed abandon action. Contract wallet entries
-  identify individual operations more clearly. Contract IDs, stock ownership
-  and inventory handoffs receive additional consistency checks.
-- Guild listings follow your pilot's empire.
+No new launcher download has been published for these changes.
 
-Data and launcher
-- Awards, ranks, campaign catalogs, actions and zones move to editable JSON,
-  with comparisons against their previous definitions to preserve progression.
-- The launcher bundles its own hidden local Apache update server. Local test
-  installs no longer need XAMPP. Game downloads remain separate from the
-  launcher installer, and signed version and patch checks still apply.
-
-This update does not announce new StarServer multiplayer support, blueprint
-research or invention. Those remain separate work.
+Validation checkpoint
+Editor and Windows Development builds succeeded. Four render-device checks passed with no warnings. Source build version: 20261119-111508Z. Ready for user cook and package; current launcher download remains 20261119-093150Z until a new package is supplied.

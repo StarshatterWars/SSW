@@ -17,6 +17,8 @@ public:
 
 protected:
     TSharedRef<SWidget> RebuildWidget() override;
+    void NativeDestruct() override;
+    void ReleaseSlateResources(bool bReleaseChildren) override;
 
 private:
     TSharedPtr<SWidget> Supplement;

@@ -90,10 +90,18 @@ void ACampaignSceneActor::Tick(float DeltaSeconds)
             NextDiagnostic=Now+10;
             if (Sim* Runtime=Sim::GetSim())
                 if (Ship* Shuttle=Runtime->FindShip("Proteus"))
+                {
+                    SimElement* Element = Shuttle->GetElement();
+                    Instruction* Route = Shuttle->GetNextNavPoint();
+                    Instruction* First = Element && Element->GetFlightPlan().size() ? Element->GetFlightPlan()[0] : nullptr;
+                    UE_LOG(LogTemp, Display, TEXT("[OfflineCutsceneRoute] Count=%d Next=%d/%d First=%d/%d"),
+                        Element ? Element->FlightPlanLength() : 0, Route ? int(Route->GetAction()) : -1, Route ? int(Route->GetStatus()) : -1,
+                        First ? int(First->GetAction()) : -1, First ? int(First->GetStatus()) : -1);
                     UE_LOG(LogTemp,Display,TEXT("[OfflineCutscene] Proteus pos=%s speed=%.1f phase=%d controller=%hs carrier=%hs inbound=%d recovery=%d hold=%.1f AI=%hs"),
                         *Shuttle->GetLocation().ToString(),Shuttle->GetVelocity().Size(),int(Shuttle->GetFlightPhase()),
                         Shuttle->GetController()?Shuttle->GetController()->GetName():"none",Shuttle->GetCarrier()?Shuttle->GetCarrier()->GetName():"none",
                         Shuttle->GetInbound()!=nullptr,Shuttle->CanBeginRecovery(),Shuttle->GetElement()?Shuttle->GetElement()->GetHoldTime():0.0,Shuttle->GetDirectorInfo());
+                }
         }
     }
 

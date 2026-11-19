@@ -405,10 +405,7 @@ void UStarshatterGameDataSubsystem::Initialize(FSubsystemCollectionBase& Collect
 	CampaignOOBDataTable = Assets->GetDataTable(TEXT("Data.CampaignOOBTable"), true);
 	CombatGroupDataTable = Assets->GetDataTable(TEXT("Data.CombatGroupTable"), true);
 	OrderOfBattleDataTable = Assets->GetDataTable(TEXT("Data.OrderOfBattleTable"), true);
-	MedalsDataTable = Assets->GetDataTable(TEXT("Data.MedalsTable"), true);
-	RanksDataTable = Assets->GetDataTable(TEXT("Data.RanksTable"), true);
-	LoadAwardTables();
-	UAwardInfoRegistry::Initialize(RanksDataTable, MedalsDataTable);
+	LoadAwardsJson();
 	
 	ZonesDataTable = Assets->GetDataTable(TEXT("Data.ZonesTable"), true);
 
@@ -1526,11 +1523,7 @@ void UStarshatterGameDataSubsystem::LoadAll(bool bFull)
 	
 	LoadContentBundle();
 
-	LoadAwardTables();
-	UAwardInfoRegistry::Initialize(RanksDataTable, MedalsDataTable);
-	BuildRankCache(RanksDataTable, RankById);
-	BuildMedalCache(MedalsDataTable, MedalById);
-	BuildMedalCache_ByFlag(MedalsDataTable);
+	LoadAwardsJson();
 	
 	InitializeCampaignData();
 	ReadCampaignData();
@@ -5971,6 +5964,29 @@ static TSoftObjectPtr<UTexture2D> AwardImageReference(const TCHAR* Folder, const
     const FString Asset = FPaths::GetBaseFilename(Id);
     const FString Path = FString::Printf(TEXT("/Game/UI/%s/%s.%s"), Folder, *Asset, *Asset);
     return TSoftObjectPtr<UTexture2D>(FSoftObjectPath(Path));
+}
+
+void UStarshatterGameDataSubsystem::LoadAwardsJson()
+{
+    if (bAwardTablesLoaded) return;
+    const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Awards/awards.json");
+    FString Error;
+    if (!AwardsJsonCatalog::Load(Path, RankDefinitions, MedalDefinitions, Error))
+    {
+        UE_LOG(LogTemp, Error, TEXT("[AwardsJson] %s"), *Error);
+        return;
+    }
+    RankById.Reset(); MedalById.Reset(); MedalByFlag.Reset();
+    for (const auto& Row : RankDefinitions) RankById.Add(Row.RankId, Row);
+    for (const auto& Row : MedalDefinitions)
+    {
+        MedalById.Add(Row.MedalId, Row);
+        MedalByFlag.Add(static_cast<uint32>(Row.MedalId), Row);
+    }
+    UAwardInfoRegistry::Initialize(RankDefinitions, MedalDefinitions);
+    bAwardTablesLoaded = true;
+    UE_LOG(LogTemp, Display, TEXT("[AwardsJson] Loaded %d ranks and %d medals directly from JSON (no Data Tables)"),
+        RankDefinitions.Num(), MedalDefinitions.Num());
 }
 
 void UStarshatterGameDataSubsystem::LoadAwardTables(bool bPreferJson)

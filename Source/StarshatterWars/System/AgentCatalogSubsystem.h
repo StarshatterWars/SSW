@@ -2,6 +2,7 @@
 
 #include "Engine/DataTable.h"
 #include "GameStructs.h"
+#include "AgentDirectoryRules.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "AgentCatalogSubsystem.generated.h"
 
@@ -38,7 +39,9 @@ struct FS_AgentCatalogRow : public FTableRowBase
 
     bool ServesEmpire(EEMPIRE_NAME PilotEmpire) const
     {
-        return Empire != EEMPIRE_NAME::NONE && Empire != EEMPIRE_NAME::Unknown && Empire == PilotEmpire;
+        return PilotEmpire != EEMPIRE_NAME::NONE && PilotEmpire != EEMPIRE_NAME::Unknown &&
+            Empire != EEMPIRE_NAME::NONE && Empire != EEMPIRE_NAME::Unknown &&
+            (Empire == EEMPIRE_NAME::Neutral || Empire == PilotEmpire);
     }
 };
 
@@ -49,9 +52,11 @@ class STARSHATTERWARS_API UAgentCatalogSubsystem : public UGameInstanceSubsystem
 
 public:
     void LoadCatalog();
-    const UDataTable* GetCatalog() const { return Catalog; }
+    const TMap<FName, FS_AgentCatalogRow>& GetCatalog() const { return Catalog; }
     const FS_AgentCatalogRow* FindAgent(FName Id) const;
     bool CanContact(FName Id) const;
+    TArray<FName> GetDirectorySystems(FName Origin, const TSet<FName>& Neighbors, EAgentDirectoryScope Scope) const;
+    TArray<FName> GetSystemAgents(FName System) const;
     TArray<int32> GetEligibleMissions(FName AgentId) const;
     bool CanAccept(int32 MissionId, FName AgentId) const;
     bool CanReplayTrainingTest(int32 MissionId,FName AgentId) const;
@@ -75,7 +80,7 @@ private:
     bool IsStoryUnlocked(const Campaign& Active, int32 MissionId) const;
     const FS_CampaignMission* FindScenario(int32 Id) const;
 
-    UPROPERTY(Transient) TObjectPtr<UDataTable> Catalog;
+    UPROPERTY(Transient) TMap<FName, FS_AgentCatalogRow> Catalog;
     TSharedPtr<Campaign> RegionalRepository;
     TMap<int32, TSharedPtr<Mission>> RegionalMissions;
 };

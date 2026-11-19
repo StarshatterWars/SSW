@@ -1,0 +1,230 @@
+[
+  {
+    "title": "Ore scan knowledge",
+    "input": "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\4.pyc",
+    "sha256": "26ae152f9bacf202ededee4a176c813b1482d39979c5c32ca7ad2c7bd33f75c8",
+    "function": "AsteroidScanningService.is_quantity_known",
+    "embedded_filename": "C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\mining\\client\\asteroid_scanning_service.py",
+    "first_line": 72,
+    "version": [
+      2,
+      7
+    ],
+    "magic": 62211,
+    "hex": "7c 00 00 6a 00 00 7c 01 00 83 01 00 64 00 00 74 02 00 66 02 00 6b 07 00 53",
+    "byte_count": 25,
+    "disassembly": " 73:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (get_quantity)\n               6 LOAD_FAST            (asteroid_id)\n               9 CALL_FUNCTION        (1 positional, 0 named)\n              12 LOAD_CONST           (None)\n              15 LOAD_GLOBAL          (QUANTITY_UNKNOWN)\n              18 BUILD_TUPLE          2\n              21 COMPARE_OP           (not-in)\n              24 RETURN_VALUE\n",
+    "source": "def is_quantity_known(self, asteroid_id):\n    return self.get_quantity(asteroid_id) not in (None, QUANTITY_UNKNOWN)",
+    "status": "decompiled by uncompyle6 3.9.3",
+    "executed": false
+  },
+  {
+    "title": "Drone classification",
+    "input": "D:\\SSW\\Saved\\Analysis\\EveMiningDrones_20261119\\drone_checks.pyc",
+    "sha256": "6e4465e7b5d9c964594aed2ae891f14cfa6823cec0f6a64e3355e70918a9f512",
+    "function": "DroneChecker.IsMiningDrone",
+    "embedded_filename": "C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\menucheckers\\droneCheckers.py",
+    "first_line": 97,
+    "version": [
+      2,
+      7
+    ],
+    "magic": 62211,
+    "hex": "7c 00 00 6a 00 00 6a 01 00 74 02 00 6a 03 00 6b 02 00 53",
+    "byte_count": 19,
+    "disassembly": " 99:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (item)\n               6 LOAD_ATTR            (groupID)\n               9 LOAD_GLOBAL          (invConst)\n              12 LOAD_ATTR            (groupMiningDrone)\n              15 COMPARE_OP           (==)\n              18 RETURN_VALUE\n",
+    "source": "def IsMiningDrone(self):\n    return self.item.groupID == invConst.groupMiningDrone",
+    "status": "decompiled by uncompyle6 3.9.3",
+    "executed": false
+  },
+  {
+    "title": "Drone ownership",
+    "input": "D:\\SSW\\Saved\\Analysis\\EveMiningDrones_20261119\\drone_checks.pyc",
+    "sha256": "6e4465e7b5d9c964594aed2ae891f14cfa6823cec0f6a64e3355e70918a9f512",
+    "function": "DroneChecker.IsControlledByActiveShip",
+    "embedded_filename": "C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\menucheckers\\droneCheckers.py",
+    "first_line": 93,
+    "version": [
+      2,
+      7
+    ],
+    "magic": 62211,
+    "hex": "7c 00 00 6a 00 00 83 00 00 7c 00 00 6a 01 00 6a 02 00 6b 02 00 53",
+    "byte_count": 22,
+    "disassembly": " 95:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (GetController)\n               6 CALL_FUNCTION        (0 positional, 0 named)\n               9 LOAD_FAST            (self)\n              12 LOAD_ATTR            (session)\n              15 LOAD_ATTR            (shipid)\n              18 COMPARE_OP           (==)\n              21 RETURN_VALUE\n",
+    "source": "def IsControlledByActiveShip(self):\n    return self.GetController() == self.session.shipid",
+    "status": "decompiled by uncompyle6 3.9.3",
+    "executed": false
+  },
+  {
+    "title": "Drone recovery command",
+    "input": "D:\\SSW\\Saved\\Analysis\\EveMiningDrones_20261119\\drone_commands.pyc",
+    "sha256": "c8640981f4a11bf730c6ae38208ec2a78a53d24a26e61a774148181b0dfa117e",
+    "function": "ReturnToDroneBay",
+    "embedded_filename": "C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\services\\menuSvcExtras\\droneFunctions.py",
+    "first_line": 204,
+    "version": [
+      2,
+      7
+    ],
+    "magic": 62211,
+    "hex": "74 00 00 6a 01 00 83 00 00 7d 01 00 7c 01 00 72 34 00 7c 01 00 6a 02 00 7c 00 00 83 01 00 7d 02 00 74 03 00 7c 00 00 7c 02 00 64 01 00 83 03 00 01 6e 00 00 64 00 00 53",
+    "byte_count": 56,
+    "disassembly": "205:           0 LOAD_GLOBAL          (eveMoniker)\n               3 LOAD_ATTR            (GetEntityAccess)\n               6 CALL_FUNCTION        (0 positional, 0 named)\n               9 STORE_FAST           (entity)\n\n206:          12 LOAD_FAST            (entity)\n              15 POP_JUMP_IF_FALSE    (to 52)\n\n207:          18 LOAD_FAST            (entity)\n              21 LOAD_ATTR            (CmdReturnBay)\n              24 LOAD_FAST            (droneIDs)\n              27 CALL_FUNCTION        (1 positional, 0 named)\n              30 STORE_FAST           (ret)\n\n208:          33 LOAD_GLOBAL          (HandleMultipleCallError)\n              36 LOAD_FAST            (droneIDs)\n              39 LOAD_FAST            (ret)\n              42 LOAD_CONST           (\"MultiDroneCmdResult\")\n              45 CALL_FUNCTION        (3 positional, 0 named)\n              48 POP_TOP\n              49 JUMP_FORWARD         (to 52)\n         >>   52 LOAD_CONST           (None)\n              55 RETURN_VALUE\n",
+    "source": "def ReturnToDroneBay(droneIDs):\n    entity = eveMoniker.GetEntityAccess()\n    if entity:\n        ret = entity.CmdReturnBay(droneIDs)\n        HandleMultipleCallError(droneIDs, ret, 'MultiDroneCmdResult')\n    return",
+    "status": "decompiled by uncompyle6 3.9.3",
+    "executed": false
+  },
+  {
+    "title": "Manufacturing cost",
+    "input": "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\2.pyc",
+    "sha256": "3869c99fd14891c5654a201e7e53e0b10f4807fc13544caca9af3356c502abaf",
+    "function": "Manufacturing.job_cost",
+    "embedded_filename": "C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\industry\\activities\\manufacturing.py",
+    "first_line": 24,
+    "version": [
+      2,
+      7
+    ],
+    "magic": 62211,
+    "hex": "7c 01 00 6a 00 00 6a 01 00 7c 01 00 6a 02 00 6a 03 00 64 01 00 83 02 00 74 04 00 7c 01 00 6a 05 00 83 01 00 14 53",
+    "byte_count": 38,
+    "disassembly": " 25:           0 LOAD_FAST            (job)\n               3 LOAD_ATTR            (prices)\n               6 LOAD_ATTR            (get)\n               9 LOAD_FAST            (job)\n              12 LOAD_ATTR            (blueprint)\n              15 LOAD_ATTR            (blueprintTypeID)\n              18 LOAD_CONST           (0)\n              21 CALL_FUNCTION        (2 positional, 0 named)\n              24 LOAD_GLOBAL          (float)\n              27 LOAD_FAST            (job)\n              30 LOAD_ATTR            (runs)\n              33 CALL_FUNCTION        (1 positional, 0 named)\n              36 BINARY_MULTIPLY\n              37 RETURN_VALUE\n",
+    "source": "def job_cost(self, job):\n    return job.prices.get(job.blueprint.blueprintTypeID, 0) * float(job.runs)",
+    "status": "decompiled by uncompyle6 3.9.3",
+    "executed": false
+  },
+  {
+    "title": "Inventory location",
+    "input": "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\7.pyc",
+    "sha256": "4710df44ee8c1780604ff0794e2b7736d1146db965f90ea61322c7122b3deeb8",
+    "function": "BaseInvContainer.GetInventoryLocationID",
+    "embedded_filename": "C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\environment\\invControllers.py",
+    "first_line": 103,
+    "version": [
+      2,
+      7
+    ],
+    "magic": 62211,
+    "hex": "7c 00 00 6a 00 00 5c 02 00 7d 01 00 7d 02 00 7c 01 00 53",
+    "byte_count": 19,
+    "disassembly": "104:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (invID)\n               6 UNPACK_SEQUENCE      2\n               9 STORE_FAST           (inventoryLocationID)\n              12 STORE_FAST           (_)\n\n105:          15 LOAD_FAST            (inventoryLocationID)\n              18 RETURN_VALUE\n",
+    "source": "def GetInventoryLocationID(self):\n    inventoryLocationID, _ = self.invID\n    return inventoryLocationID",
+    "status": "decompiled by uncompyle6 3.9.3",
+    "executed": false
+  },
+  {
+    "title": "Wallet filtering",
+    "input": "D:\\SSW\\Saved\\Analysis\\EveWallet_20261118\\1.pyc",
+    "sha256": "49bb5dc0f800830a14425672b50d69a22ddd0e507909f70a3837f02ad3f271e2",
+    "function": "BaseTransactionsList.SetFilter",
+    "embedded_filename": "C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\shared\\neocom\\wallet\\panels\\baseTransactionsPanel.py",
+    "first_line": 48,
+    "version": [
+      2,
+      7
+    ],
+    "magic": 62211,
+    "hex": "7c 01 00 7c 00 00 5f 00 00 7c 00 00 6a 01 00 83 00 00 01 64 00 00 53",
+    "byte_count": 23,
+    "disassembly": " 49:           0 LOAD_FAST            (filterMethod)\n               3 LOAD_FAST            (self)\n               6 STORE_ATTR           (_filterMethod)\n\n 50:           9 LOAD_FAST            (self)\n              12 LOAD_ATTR            (_UpdateSortedAndFiltered)\n              15 CALL_FUNCTION        (0 positional, 0 named)\n              18 POP_TOP\n              19 LOAD_CONST           (None)\n              22 RETURN_VALUE\n",
+    "source": "def SetFilter(self, filterMethod):\n    self._filterMethod = filterMethod\n    self._UpdateSortedAndFiltered()\n    return",
+    "status": "decompiled by uncompyle6 3.9.3",
+    "executed": false
+  },
+  {
+    "title": "Contract service boundary",
+    "input": "D:\\SSW\\Saved\\Analysis\\EveFinalGapAudit_20261118\\0.pyc",
+    "sha256": "3cd3e0c841829dd25e8cb9a4e78c77037497d5445eb27c81050551474a7f75eb",
+    "function": "ContractsSvc.GetContractProxySvc",
+    "embedded_filename": "C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\shared\\neocom\\contracts\\contracts.py",
+    "first_line": 147,
+    "version": [
+      2,
+      7
+    ],
+    "magic": 62211,
+    "hex": "7c 00 00 6a 00 00 64 00 00 6b 02 00 72 24 00 74 02 00 6a 03 00 64 01 00 83 01 00 7c 00 00 5f 00 00 6e 00 00 7c 00 00 6a 00 00 53",
+    "byte_count": 43,
+    "disassembly": "148:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (contractProxySvc)\n               6 LOAD_CONST           (None)\n               9 COMPARE_OP           (==)\n              12 POP_JUMP_IF_FALSE    (to 36)\n\n149:          15 LOAD_GLOBAL          (sm)\n              18 LOAD_ATTR            (ProxySvc)\n              21 LOAD_CONST           (\"contractProxy\")\n              24 CALL_FUNCTION        (1 positional, 0 named)\n              27 LOAD_FAST            (self)\n              30 STORE_ATTR           (contractProxySvc)\n              33 JUMP_FORWARD         (to 36)\n\n150:     >>   36 LOAD_FAST            (self)\n              39 LOAD_ATTR            (contractProxySvc)\n              42 RETURN_VALUE\n",
+    "source": "def GetContractProxySvc(self):\n    if self.contractProxySvc == None:\n        self.contractProxySvc = sm.ProxySvc('contractProxy')\n    return self.contractProxySvc",
+    "status": "decompiled by uncompyle6 3.9.3",
+    "executed": false
+  },
+  {
+    "title": "Navigation distance",
+    "input": "D:\\SSW\\Saved\\Analysis\\EveGateApproach_20261118\\0.pyc",
+    "sha256": "f9353a3596f2383a2296e97ca8bdb228a214f1baf9fefd2f26c552efd2e30f25",
+    "function": "_GetMovementDistanceOrDefault",
+    "embedded_filename": "C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\services\\menuSvcExtras\\movementFunctions.py",
+    "first_line": 259,
+    "version": [
+      2,
+      7
+    ],
+    "magic": 62211,
+    "hex": "7c 01 00 64 00 00 6b 08 00 72 1c 00 74 01 00 7c 02 00 7c 00 00 7c 03 00 8d 02 00 53 7c 01 00 53",
+    "byte_count": 32,
+    "disassembly": "260:           0 LOAD_FAST            (targetRange)\n               3 LOAD_CONST           (None)\n               6 COMPARE_OP           (is)\n               9 POP_JUMP_IF_FALSE    (to 28)\n\n261:          12 LOAD_GLOBAL          (GetDefaultDist)\n              15 LOAD_FAST            (action)\n              18 LOAD_FAST            (targetID)\n              21 LOAD_FAST            (kwargs)\n              24 CALL_FUNCTION_KW     (2 positional, 0 named)\n              27 RETURN_VALUE\n\n262:     >>   28 LOAD_FAST            (targetRange)\n              31 RETURN_VALUE\n",
+    "source": "def _GetMovementDistanceOrDefault(targetID, targetRange, action, **kwargs):\n    if targetRange is None:\n        return GetDefaultDist(action, targetID, **kwargs)\n    return targetRange",
+    "status": "decompiled by uncompyle6 3.9.3",
+    "executed": false
+  },
+  {
+    "title": "Mission arc validation",
+    "input": "D:\\SSW\\Saved\\Analysis\\EveEpicArcs\\1.pyc",
+    "sha256": "193f0842d41798817756c98a64fa3896a0917212771d8a2d3667d7f13d882bb0",
+    "function": "EpicArcController.IsValidArc",
+    "embedded_filename": "C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\shared\\epicArcs\\epicArcController.py",
+    "first_line": 40,
+    "version": [
+      2,
+      7
+    ],
+    "magic": 62211,
+    "hex": "74 00 00 7c 01 00 83 01 00 7d 02 00 7c 02 00 64 01 00 6b 04 00 53",
+    "byte_count": 22,
+    "disassembly": " 41:           0 LOAD_GLOBAL          (get_epic_arc_restart_interval)\n               3 LOAD_FAST            (epicArcID)\n               6 CALL_FUNCTION        (1 positional, 0 named)\n               9 STORE_FAST           (arcRestartInterval)\n\n 42:          12 LOAD_FAST            (arcRestartInterval)\n              15 LOAD_CONST           (1)\n              18 COMPARE_OP           (>)\n              21 RETURN_VALUE\n",
+    "source": "def IsValidArc(self, epicArcID):\n    arcRestartInterval = get_epic_arc_restart_interval(epicArcID)\n    return arcRestartInterval > 1",
+    "status": "decompiled by uncompyle6 3.9.3",
+    "executed": false
+  },
+  {
+    "title": "Mission expiry",
+    "input": "D:\\SSW\\Saved\\Analysis\\EveFinalGapAudit_20261118\\2.pyc",
+    "sha256": "fe80a550c645bda83823dc423195faf31ee80a6835f7dd5ff2ac4a80ae47ad98",
+    "function": "Mission.is_expired",
+    "embedded_filename": "C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\packages\\evemissions\\client\\mission.py",
+    "first_line": 135,
+    "version": [
+      2,
+      7
+    ],
+    "magic": 62211,
+    "hex": "7c 00 00 6a 00 00 73 0d 00 74 01 00 53 7c 00 00 6a 00 00 74 02 00 6a 03 00 6a 04 00 83 00 00 18 64 01 00 6b 00 00 53",
+    "byte_count": 39,
+    "disassembly": "136:           0 LOAD_FAST            (self)\n               3 LOAD_ATTR            (expiration_time)\n               6 POP_JUMP_IF_TRUE     (to 13)\n\n137:           9 LOAD_GLOBAL          (False)\n              12 RETURN_VALUE\n\n138:     >>   13 LOAD_FAST            (self)\n              16 LOAD_ATTR            (expiration_time)\n              19 LOAD_GLOBAL          (blue)\n              22 LOAD_ATTR            (os)\n              25 LOAD_ATTR            (GetWallclockTime)\n              28 CALL_FUNCTION        (0 positional, 0 named)\n              31 BINARY_SUBTRACT\n              32 LOAD_CONST           (0)\n              35 COMPARE_OP           (<)\n              38 RETURN_VALUE\n",
+    "source": "def is_expired(self):\n    if not self.expiration_time:\n        return False\n    return self.expiration_time - blue.os.GetWallclockTime() < 0",
+    "status": "decompiled by uncompyle6 3.9.3",
+    "executed": false
+  },
+  {
+    "title": "Fitting slot count",
+    "input": "D:\\SSW\\Saved\\Analysis\\EveSystemsAudit\\9.pyc",
+    "sha256": "6a6da8fe8f5ff94e5b22044d80d68fd99957c04d92de095788a7ca557887af85",
+    "function": "FittingController.GetTotalNumSlots",
+    "embedded_filename": "C:\\BuildAgent\\work\\d50fcc72fcb6ee81\\eve\\release\\V24.02\\eve\\client\\script\\ui\\shared\\fitting\\fittingController.py",
+    "first_line": 126,
+    "version": [
+      2,
+      7
+    ],
+    "magic": 62211,
+    "hex": "74 00 00 67 00 00 7c 00 00 6a 01 00 6a 02 00 83 00 00 44 5d 12 00 7d 01 00 74 03 00 7c 01 00 83 01 00 5e 02 00 71 13 00 83 01 00 53",
+    "byte_count": 44,
+    "disassembly": "127:           0 LOAD_GLOBAL          (sum)\n               3 BUILD_LIST           0\n               6 LOAD_FAST            (self)\n               9 LOAD_ATTR            (slotsByGroups)\n              12 LOAD_ATTR            (itervalues)\n              15 CALL_FUNCTION        (0 positional, 0 named)\n              18 GET_ITER\n         >>   19 FOR_ITER             (to 40)\n              22 STORE_FAST           (group)\n              25 LOAD_GLOBAL          (len)\n              28 LOAD_FAST            (group)\n              31 CALL_FUNCTION        (1 positional, 0 named)\n              34 LIST_APPEND          2\n              37 JUMP_ABSOLUTE        (to 19)\n         >>   40 CALL_FUNCTION        (1 positional, 0 named)\n              43 RETURN_VALUE\n",
+    "source": "def GetTotalNumSlots(self):\n    return sum([len(group) for group in self.slotsByGroups.itervalues()])",
+    "status": "decompiled by uncompyle6 3.9.3",
+    "executed": false
+  }
+]

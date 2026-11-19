@@ -32,9 +32,11 @@ TSharedRef<SWidget> URecordedCutsceneDlg::RebuildWidget()
         Picture->SetVisibility(ESlateVisibility::HitTestInvisible);
     }
     auto Controls=SNew(SHorizontalBox);
+    ControlImages.Reset();
     auto Add=[&](const TCHAR* Icon,const TCHAR* Tip,TFunction<void()> Action)
     {
         auto* Image=WidgetTree->ConstructWidget<UImage>();
+        ControlImages.Add(Image);
         const FString Path=FString::Printf(TEXT("/Game/ProIconPack/Textures/Generic_Icons/256x256/%s.%s"),Icon,Icon);
         MissionUIStyle::SetActionIcon(Image,*Path,FLinearColor::White);Image->SetDesiredSizeOverride(FVector2D(24));
         Image->SetVisibility(ESlateVisibility::HitTestInvisible);
@@ -72,3 +74,12 @@ bool URecordedCutsceneDlg::LoadMovie(const FString& Filename)
 void URecordedCutsceneDlg::OnOpened(FString Url){Status=FText::GetEmpty();UE_LOG(LogTemp,Display,TEXT("[IntelMovie] Opened recorded cutscene: %s"),*Url);}
 void URecordedCutsceneDlg::OnOpenFailed(FString Url){Status=INVTEXT("The cutscene video could not be opened.");UE_LOG(LogTemp,Error,TEXT("[IntelMovie] Open failed: %s"),*Url);}
 void URecordedCutsceneDlg::NativeDestruct(){if(Player)Player->Close();if(Sound){Sound->Stop();Sound->DestroyComponent();Sound=nullptr;}Super::NativeDestruct();}
+
+void URecordedCutsceneDlg::ReleaseSlateResources(bool bReleaseChildren)
+{
+    Super::ReleaseSlateResources(bReleaseChildren);
+    if (Picture) Picture->ReleaseSlateResources(bReleaseChildren);
+    for (UImage* Image : ControlImages)
+        if (Image) Image->ReleaseSlateResources(bReleaseChildren);
+    ControlImages.Reset();
+}

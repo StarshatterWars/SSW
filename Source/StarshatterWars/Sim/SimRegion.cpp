@@ -798,7 +798,7 @@ void SimRegion::DamageShips()
     // HitBy owns shields, subsystem damage, arming and friendly-fire rules.
     TMap<Ship*, double> OreLoadedThisFrame;
     for (SimShot* Shot : GetProjectiles()) {
-        if (!Shot || IsDeadShot(Shot)) continue;
+        if (!Shot || IsDeadShot(Shot) || !Shot->GetDesign()) continue;
         if (Shot->GetDesign()->IsMiningLaser())
         {
             Shot->SetMiningContact(false);

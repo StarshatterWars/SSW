@@ -1,0 +1,10 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/3c47yg","index":44,"backgroundColor":"rgba(241,236,223,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/3ulwvm50","kind":"shape","position":{"left":0,"top":0,"width":1280,"height":7.68},"geometry":"rect","fillColor":"#1F3DA8","lineWidth":0},
+{"id":"sh/4vuxo7ml","kind":"textbox","position":{"left":52.8,"top":26.88,"width":1000,"height":27},"text":"APPENDIX  /  CODE EXHIBITS","style":{"fontSize":14.67,"typeface":"Helvetica Neue","color":"#6B6B6B","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/pgnexcn6","kind":"textbox","position":{"left":52.8,"top":72,"width":1171.2,"height":56},"text":"Mission arc validation: recovered source","style":{"fontSize":37.33,"typeface":"Helvetica Neue","color":"#1A1A1A","bold":true,"alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/upcvix4j","kind":"textbox","position":{"left":52.8,"top":676.8,"width":300,"height":27},"text":"BACKUP 10","style":{"fontSize":13.33,"typeface":"Helvetica Neue","color":"#9A9A9A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/fqlwr254","kind":"textbox","position":{"left":880,"top":676.8,"width":350,"height":27},"text":"NOT IN TIMED LECTURE","style":{"fontSize":13.33,"typeface":"Helvetica Neue","color":"#9A9A9A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/gruxk7m9","kind":"textbox","position":{"left":52.8,"top":145,"width":1171.2,"height":75},"text":"This predicate compares an externally supplied restart interval with 1. The helper implementation is needed to interpret its full policy.","style":{"fontSize":23,"typeface":"Helvetica Neue","color":"#1A1A1A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/hs3etcnu","kind":"textbox","position":{"left":60,"top":235,"width":1160,"height":415},"text":"def IsValidArc(self, epicArcID):\n    arcRestartInterval = get_epic_arc_restart_interval(epicArcID)\n    return arcRestartInterval > 1","style":{"fontSize":24,"typeface":"Consolas","color":"#1F3DA8","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

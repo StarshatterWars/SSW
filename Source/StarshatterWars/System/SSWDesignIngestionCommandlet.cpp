@@ -800,25 +800,15 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     }
     Campaign->MultiplayerMissionsDataTable = Stage(TEXT("DT_MultiplayerMissions"));
     Campaign->OrderOfBattleDataTable = Stage(TEXT("DT_OrderOfBattle"));
-    Campaign->RanksDataTable = Stage(TEXT("FRankInfo"), true);
-    Campaign->MedalsDataTable = Stage(TEXT("FMedalInfo"), true);
     if (!Campaign->CampaignDataTable || !Campaign->CampaignActionDataTable || !Campaign->ZonesDataTable ||
         !Campaign->CutsceneDataTable || !Campaign->SingleMissionsDataTable || !Campaign->MultiplayerMissionsDataTable ||
-        !Campaign->OrderOfBattleDataTable || !Campaign->RanksDataTable || !Campaign->MedalsDataTable)
+        !Campaign->OrderOfBattleDataTable)
         return 1;
     Campaign->InitializeCampaignData();
     Campaign->LoadSingleMissions();
     Campaign->LoadMultiplayerMissions();
 
-    Campaign->LoadAwardTables();
-    // Award ingestion replaces its input with a private copy.
-    for (auto& Output : Tables)
-    {
-        if (FCString::Strcmp(Output.Name, TEXT("FRankInfo")) == 0)
-            Output.Table = Campaign->RanksDataTable;
-        else if (FCString::Strcmp(Output.Name, TEXT("FMedalInfo")) == 0)
-            Output.Table = Campaign->MedalsDataTable;
-    }
+    Campaign->LoadAwardsJson();
 
     auto* Roster = NewObject<USSWCombatGroupSubsystem>(Context);
     Roster->CombatGroupDataTable = Stage(TEXT("DT_CombatGroup"));

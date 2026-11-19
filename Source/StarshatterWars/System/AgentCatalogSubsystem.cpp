@@ -1,4 +1,5 @@
 #include "AgentCatalogSubsystem.h"
+#include "JsonRecordCatalog.h"
 #include "TrainingTestRules.h"
 #include "AgentMissionRules.h"
 #include "CampaignPresentationRules.h"
@@ -24,22 +25,17 @@
 void UAgentCatalogSubsystem::LoadCatalog()
 {
     const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Agents/agents.json");
-    FString Json;
-    if (!FFileHelper::LoadFileToString(Json, *Path))
+    TMap<FName, FS_AgentCatalogRow> Imported;
+    FString Error;
+    if (!SSWJsonRecords::Load(Path, Imported, Error))
     {
-        UE_LOG(LogTemp, Warning, TEXT("Agent catalog missing: %s"), *Path);
+        UE_LOG(LogTemp, Error, TEXT("%s"), *Error);
         return;
     }
 
-    auto* Imported = NewObject<UDataTable>(this);
-    Imported->RowStruct = FS_AgentCatalogRow::StaticStruct();
-    const auto Problems = Imported->CreateTableFromJSONString(Json);
-    for (const auto& Problem : Problems) UE_LOG(LogTemp, Warning, TEXT("%s: %s"), *Path, *Problem);
-    if (!Problems.IsEmpty() || Imported->GetRowMap().IsEmpty()) return;
-
-    for (const auto& Pair : Imported->GetRowMap())
+    for (const auto& Pair : Imported)
     {
-        const auto& Agent = *reinterpret_cast<const FS_AgentCatalogRow*>(Pair.Value);
+        const auto& Agent = Pair.Value;
         if (Agent.DisplayName.IsEmpty() || Agent.System.IsEmpty() || Agent.Planet.IsEmpty() ||
             Agent.Region.IsEmpty() || Agent.Station.IsEmpty() || Agent.Division.IsEmpty() ||
             Agent.MinimumRank < 0 || !Agent.ServesEmpire(Agent.Empire) || Agent.Level < 1 || Agent.Level > 5)
@@ -48,13 +44,13 @@ void UAgentCatalogSubsystem::LoadCatalog()
             return;
         }
     }
-    Catalog = Imported;
-    UE_LOG(LogTemp, Display, TEXT("Imported %d agents from %s"), Catalog->GetRowMap().Num(), *Path);
+    Catalog = MoveTemp(Imported);
+    UE_LOG(LogTemp, Display, TEXT("Imported %d agents from %s"), Catalog.Num(), *Path);
 }
 
 const FS_AgentCatalogRow* UAgentCatalogSubsystem::FindAgent(FName Id) const
 {
-    return Catalog ? Catalog->FindRow<FS_AgentCatalogRow>(Id, TEXT("Agent catalog"), false) : nullptr;
+    return Catalog.Find(Id);
 }
 
 bool UAgentCatalogSubsystem::CanContact(FName Id) const
@@ -64,6 +60,36 @@ bool UAgentCatalogSubsystem::CanContact(FName Id) const
     const auto* Game = Cast<USSWGameInstance>(GetGameInstance());
     if (Game && Game->IsTrainingTestSession() && Id != TEXT("JanekFlightTraining")) return false;
     return Agent && Pilot && Agent->ServesEmpire(Pilot->GetEmpire());
+}
+
+TArray<FName> UAgentCatalogSubsystem::GetDirectorySystems(FName Origin, const TSet<FName>& Neighbors, EAgentDirectoryScope Scope) const
+{
+    TSet<FName> Unique;
+    for (const auto& Pair : Catalog)
+    {
+        const FName System(*Pair.Value.System);
+        if (CanContact(Pair.Key) && AgentDirectoryRules::IncludesSystem(Origin, System, Neighbors, Scope)) Unique.Add(System);
+    }
+    auto Systems = Unique.Array();
+    Systems.Sort([](FName A, FName B) { return A.LexicalLess(B); });
+    return Systems;
+}
+
+TArray<FName> UAgentCatalogSubsystem::GetSystemAgents(FName System) const
+{
+    TArray<FName> Agents;
+    if (System.IsNone()) return Agents;
+    for (const auto& Pair : Catalog)
+        if (FName(*Pair.Value.System) == System && CanContact(Pair.Key)) Agents.Add(Pair.Key);
+    Agents.Sort([this](FName A, FName B)
+    {
+        const auto& Left = Catalog.FindChecked(A);
+        const auto& Right = Catalog.FindChecked(B);
+        if (Left.Level != Right.Level) return Left.Level < Right.Level;
+        const int32 NameOrder = Left.DisplayName.Compare(Right.DisplayName, ESearchCase::IgnoreCase);
+        return NameOrder != 0 ? NameOrder < 0 : A.LexicalLess(B);
+    });
+    return Agents;
 }
 
 TArray<int32> UAgentCatalogSubsystem::GetEligibleMissions(FName AgentId) const

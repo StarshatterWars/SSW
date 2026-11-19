@@ -1,0 +1,6 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/ttrl97","index":42,"layout":{"id":"ly/6ts3apsb","name":"Blank"},"backgroundColor":"rgba(11,20,34,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/sbexszex","kind":"textbox","position":{"left":64,"top":42,"width":1152,"height":60},"text":"Tests convert assumptions into contracts","style":{"fontSize":41.8,"typeface":"Arial","color":"#EEF5FA","bold":true,"alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/ra5wzudc","kind":"textbox","position":{"left":64,"top":145,"width":1152,"height":490},"text":"Inventory: no ore credit before unload; no reservation can be spent twice.\n\nManufacturing: consume once, reserve capacity, complete into the right inventory.\n\nServices: reject actions while flying or docked at another facility.\n\nLifetime: disable a weapon, destroy it, then advance the region without double deletion.","style":{"fontSize":27,"typeface":"Arial","color":"#CDD9E5","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/69wfqpwr","kind":"textbox","position":{"left":64,"top":668,"width":1130,"height":28},"text":"43   ·   Sources and qualifications in speaker notes","style":{"fontSize":15.36,"typeface":"Arial","color":"#8FA5BC","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

@@ -1,15 +1,15 @@
 {
   "Scene": "BattleAttract",
   "FrameRate": 30,
-  "Duration": 54.03924225270748,
+  "Duration": 54.01492299884558,
   "ScreenMessagesSuppressed": true,
   "cinematic_finish": "contrast, subtle vignette and fades; ISN on documentary clips",
   "video_encoder": "h264_nvenc",
-  "render_inputs_sha256": "520eb7452bafd7478bbf03f55d8186bdcc81efb997b604655678cb1b0832713d",
+  "render_inputs_sha256": "7d8db4b02ba21fb672aa5afc765441a1e62db4983cdb32dd154ca248cc47791b",
   "campaign": 1,
   "source_def": "D:\\SSW\\Content\\GameData\\Cinematics\\Menu\\BattleAttract.def",
-  "source_sha256": "172856dafaa7cc01ee3f3cd514e865e9d31af7c7847078c4793387b6ec357007",
-  "mp4_sha256": "eaa6daaaa7a45e1934c721e4d6138f0e36cbbd9f96dd3cf97bf5bf5060aaa433",
-  "captured_frames": 968,
-  "render_directory": "D:\\SSW\\Saved\\CutsceneRenders\\Campaign01\\BattleAttract\\20261119_095211"
+  "source_sha256": "eaed171a7050068892caf2eeb9b5d7d46a7c426005dd284c994dac3a8c1dc662",
+  "mp4_sha256": "8bef5938e8612cb2f8c35f6eaaa00a09dfd7c1029b8df42c2606124af645b098",
+  "captured_frames": 1600,
+  "render_directory": "D:\\SSW\\Saved\\CutsceneRenders\\Campaign01\\BattleAttract\\20261119_102553"
 }

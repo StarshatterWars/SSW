@@ -1,0 +1,8 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/2xp0jm","index":14,"backgroundColor":"rgba(241,236,223,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/bih0fu1c","kind":"shape","position":{"left":0,"top":0,"width":1280,"height":230.4},"geometry":"rect","fillColor":"#1F3DA8","lineWidth":0},
+{"id":"sh/wja1oz2x","kind":"textbox","position":{"left":67.2,"top":70,"width":1152,"height":90},"text":"PART II  /  PRACTICAL","style":{"fontSize":48,"typeface":"Helvetica Neue","color":"#FFFFFF","bold":true,"alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/xkjih4j2","kind":"textbox","position":{"left":67.2,"top":275,"width":1120,"height":130},"text":"Raw bytecode, recovered Python and SSW comparisons","style":{"fontSize":36,"typeface":"Helvetica Neue","color":"#1F3DA8","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/ylsjq9kn","kind":"textbox","position":{"left":67.2,"top":465,"width":1000,"height":54},"text":"28 minutes","style":{"fontSize":28,"typeface":"Helvetica Neue","color":"#1A1A1A","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/jm10je18","kind":"textbox","position":{"left":67.2,"top":676.8,"width":300,"height":27},"text":"15 / 35","style":{"fontSize":13.33,"typeface":"Helvetica Neue","color":"#9A9A9A","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

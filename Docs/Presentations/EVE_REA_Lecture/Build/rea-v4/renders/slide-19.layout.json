@@ -1,0 +1,7 @@
+{"schema":"openai.presentation.layout/v5","unit":"px","slide":{"id":"sl/tscdme","index":18,"layout":{"id":"ly/q90v6pob","name":"Blank"},"backgroundColor":"rgba(11,20,34,1)","position":{"left":0,"top":0,"width":1280,"height":720}},
+"elements":[
+{"id":"sh/ads7ytg7","kind":"textbox","position":{"left":64,"top":42,"width":1152,"height":60},"text":"Inventory location: bytecode","style":{"fontSize":41.8,"typeface":"Arial","color":"#EEF5FA","bold":true,"alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/xgj6t8zi","kind":"textbox","position":{"left":64,"top":145,"width":1152,"height":55},"text":"An inventory identity contains a location.","style":{"fontSize":24,"typeface":"Arial","color":"#CDD9E5","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/wfap03yd","kind":"textbox","position":{"left":70,"top":208,"width":1146,"height":439},"text":"co_code (19 bytes)\n7c 00 00 6a 00 00 5c 02 00 7d 01 00 7d 02 00 7c\n01 00 53\n\n0 LOAD_FAST            (self)\n3 LOAD_ATTR            (invID)\n6 UNPACK_SEQUENCE      2\n9 STORE_FAST           (inventoryLocationID)\n12 STORE_FAST           (_)\n15 LOAD_FAST            (inventoryLocationID)\n18 RETURN_VALUE","style":{"fontSize":24,"typeface":"Consolas","color":"#78D5E6","alignment":"left"},"geometry":"rect","lineWidth":0},
+{"id":"sh/ji1oviho","kind":"textbox","position":{"left":64,"top":668,"width":1130,"height":28},"text":"19   ·   Sources and qualifications in speaker notes","style":{"fontSize":15.36,"typeface":"Arial","color":"#8FA5BC","alignment":"left"},"geometry":"rect","lineWidth":0}
+]}

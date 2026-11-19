@@ -264,7 +264,13 @@ public:
     Text GetContentBundleText(const char* key) const;
 
     void LoadContentBundle();
+    // Legacy conversion/parity adapter only. Gameplay calls LoadAwardsJson.
     void LoadAwardTables(bool bPreferJson = true);
+    void LoadAwardsJson();
+    UPROPERTY(Transient)
+    TArray<FRankInfo> RankDefinitions;
+    UPROPERTY(Transient)
+    TArray<FMedalInfo> MedalDefinitions;
 
     bool GetBestRankForPointsFromTable(const UDataTable* RanksTable, int32 PlayerPoints, FRankInfo& OutRank) const;
     int32 GetRequiredRankIdForShipClassFromTable(const UDataTable* RanksTable, int32 ShipClassMask) const;
@@ -281,14 +287,10 @@ public:
     bool FillMedalInfoFromTable(const UDataTable* MedalsTable, int32 MedalId, FMedalInfo& OutMedal);
 
     UFUNCTION(BlueprintPure, Category = "Starshatter|Awards")
-    UDataTable* GetRanksTable() const { return DT_Ranks; }
+    TArray<FRankInfo> GetRankDefinitions() const { return RankDefinitions; }
 
     UFUNCTION(BlueprintPure, Category = "Starshatter|Awards")
-    UDataTable* GetMedalsTable() const { return DT_Medals; }
-
-    // Optional: unified view
-    UFUNCTION(BlueprintPure, Category = "Starshatter|Awards")
-    UDataTable* GetAllAwardsTable() const { return DT_AwardsAll; }
+    TArray<FMedalInfo> GetMedalDefinitions() const { return MedalDefinitions; }
     
     TMap<int32, FRankInfo> RankById;
     TMap<int32, FMedalInfo> MedalById;
@@ -677,17 +679,7 @@ protected:
     FString CurrentShipProbeWeaponType;
     FString CurrentShipSourceFile;
 
-    // NOTE: these should be constructed somewhere (Initialize or on-demand)
-    UPROPERTY(Transient)
-    TObjectPtr<UDataTable> DT_Ranks = nullptr;
 
-    UPROPERTY(Transient)
-    TObjectPtr<UDataTable> DT_Medals = nullptr;
-
-    UPROPERTY(Transient)
-    TObjectPtr<UDataTable> DT_AwardsAll = nullptr;
-
-    void EnsureAwardTables();
 
     UPROPERTY()
     TArray<FS_Campaign> AllCampaigns;

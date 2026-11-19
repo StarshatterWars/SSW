@@ -1,0 +1,415 @@
+[
+  {
+    "slide": 1,
+    "title": "",
+    "part": "Theory",
+    "seconds": 45,
+    "start": 0,
+    "end": 45,
+    "hidden": false
+  },
+  {
+    "slide": 2,
+    "title": "One hour: theory, practical and discussion",
+    "part": "Theory",
+    "seconds": 60,
+    "start": 45,
+    "end": 105,
+    "hidden": false
+  },
+  {
+    "slide": 3,
+    "title": "PART I  /  THEORY",
+    "part": "Theory",
+    "seconds": 15,
+    "start": 105,
+    "end": 120,
+    "hidden": false
+  },
+  {
+    "slide": 4,
+    "title": "Learning Objectives",
+    "part": "Theory",
+    "seconds": 60,
+    "start": 120,
+    "end": 180,
+    "hidden": false
+  },
+  {
+    "slide": 5,
+    "title": "What is Reverse Engineering?",
+    "part": "Theory",
+    "seconds": 150,
+    "start": 180,
+    "end": 330,
+    "hidden": false
+  },
+  {
+    "slide": 6,
+    "title": "Permission, scope and handling",
+    "part": "Theory",
+    "seconds": 90,
+    "start": 330,
+    "end": 420,
+    "hidden": false
+  },
+  {
+    "slide": 7,
+    "title": "Decompilers & RE Platforms",
+    "part": "Theory",
+    "seconds": 120,
+    "start": 420,
+    "end": 540,
+    "hidden": false
+  },
+  {
+    "slide": 8,
+    "title": "NSA Ghidra",
+    "part": "Theory",
+    "seconds": 150,
+    "start": 540,
+    "end": 690,
+    "hidden": false
+  },
+  {
+    "slide": 9,
+    "title": "ILSpy — .NET Decompiler",
+    "part": "Theory",
+    "seconds": 90,
+    "start": 690,
+    "end": 780,
+    "hidden": false
+  },
+  {
+    "slide": 10,
+    "title": "What is Agentic AI?",
+    "part": "Theory",
+    "seconds": 120,
+    "start": 780,
+    "end": 900,
+    "hidden": false
+  },
+  {
+    "slide": 11,
+    "title": "Traditional Prompting vs Agentic Systems",
+    "part": "Theory",
+    "seconds": 90,
+    "start": 900,
+    "end": 990,
+    "hidden": false
+  },
+  {
+    "slide": 12,
+    "title": "Typical Agentic RE Workflow",
+    "part": "Theory",
+    "seconds": 210,
+    "start": 990,
+    "end": 1200,
+    "hidden": false
+  },
+  {
+    "slide": 13,
+    "title": "Decompiler Limitations",
+    "part": "Theory",
+    "seconds": 120,
+    "start": 1200,
+    "end": 1320,
+    "hidden": false
+  },
+  {
+    "slide": 14,
+    "title": "AI Hallucinations & Verification",
+    "part": "Theory",
+    "seconds": 180,
+    "start": 1320,
+    "end": 1500,
+    "hidden": false
+  },
+  {
+    "slide": 15,
+    "title": "PART II  /  PRACTICAL",
+    "part": "Practical",
+    "seconds": 30,
+    "start": 1500,
+    "end": 1530,
+    "hidden": false
+  },
+  {
+    "slide": 16,
+    "title": "The investigation starts with an artifact",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 1530,
+    "end": 1620,
+    "hidden": false
+  },
+  {
+    "slide": 17,
+    "title": "Three views of the same function",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 1620,
+    "end": 1710,
+    "hidden": false
+  },
+  {
+    "slide": 18,
+    "title": "Ore scan knowledge: bytecode",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 1710,
+    "end": 1800,
+    "hidden": false
+  },
+  {
+    "slide": 19,
+    "title": "Ore scan knowledge: recovered source",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 1800,
+    "end": 1890,
+    "hidden": false
+  },
+  {
+    "slide": 20,
+    "title": "SSW example: scan uncertainty",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 1890,
+    "end": 1980,
+    "hidden": false
+  },
+  {
+    "slide": 21,
+    "title": "Drone recovery command: bytecode",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 1980,
+    "end": 2070,
+    "hidden": false
+  },
+  {
+    "slide": 22,
+    "title": "Drone recovery command: recovered source",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 2070,
+    "end": 2160,
+    "hidden": false
+  },
+  {
+    "slide": 23,
+    "title": "SSW example: drone authority",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 2160,
+    "end": 2250,
+    "hidden": false
+  },
+  {
+    "slide": 24,
+    "title": "Manufacturing cost: bytecode",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 2250,
+    "end": 2340,
+    "hidden": false
+  },
+  {
+    "slide": 25,
+    "title": "Manufacturing cost: recovered source",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 2340,
+    "end": 2430,
+    "hidden": false
+  },
+  {
+    "slide": 26,
+    "title": "SSW example: manufacturing locations",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 2430,
+    "end": 2520,
+    "hidden": false
+  },
+  {
+    "slide": 27,
+    "title": "Contract service boundary: bytecode",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 2520,
+    "end": 2610,
+    "hidden": false
+  },
+  {
+    "slide": 28,
+    "title": "Contract service boundary: recovered source",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 2610,
+    "end": 2700,
+    "hidden": false
+  },
+  {
+    "slide": 29,
+    "title": "Navigation distance: bytecode",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 2700,
+    "end": 2790,
+    "hidden": false
+  },
+  {
+    "slide": 30,
+    "title": "Navigation distance: recovered source",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 2790,
+    "end": 2880,
+    "hidden": false
+  },
+  {
+    "slide": 31,
+    "title": "Mission expiry: bytecode",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 2880,
+    "end": 2970,
+    "hidden": false
+  },
+  {
+    "slide": 32,
+    "title": "Mission expiry: recovered source",
+    "part": "Practical",
+    "seconds": 90,
+    "start": 2970,
+    "end": 3060,
+    "hidden": false
+  },
+  {
+    "slide": 33,
+    "title": "What the investigation established",
+    "part": "Practical",
+    "seconds": 120,
+    "start": 3060,
+    "end": 3180,
+    "hidden": false
+  },
+  {
+    "slide": 34,
+    "title": "",
+    "part": "Discussion",
+    "seconds": 405,
+    "start": 3180,
+    "end": 3585,
+    "hidden": false
+  },
+  {
+    "slide": 35,
+    "title": "",
+    "part": "Discussion",
+    "seconds": 15,
+    "start": 3585,
+    "end": 3600,
+    "hidden": false
+  },
+  {
+    "slide": 36,
+    "title": "Drone classification: bytecode",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 37,
+    "title": "Drone classification: recovered source",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 38,
+    "title": "Drone ownership: bytecode",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 39,
+    "title": "Drone ownership: recovered source",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 40,
+    "title": "Inventory location: bytecode",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 41,
+    "title": "Inventory location: recovered source",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 42,
+    "title": "Wallet filtering: bytecode",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 43,
+    "title": "Wallet filtering: recovered source",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 44,
+    "title": "Mission arc validation: bytecode",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 45,
+    "title": "Mission arc validation: recovered source",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 46,
+    "title": "Fitting slot count: bytecode",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 47,
+    "title": "Fitting slot count: recovered source",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 48,
+    "title": "SSW example: wallet query",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  },
+  {
+    "slide": 49,
+    "title": "Sources and further reading",
+    "part": "Appendix",
+    "seconds": 0,
+    "hidden": true
+  }
+]

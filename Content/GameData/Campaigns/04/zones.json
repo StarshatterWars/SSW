@@ -1,0 +1,78 @@
+{
+	"schemaVersion": 1,
+	"campaign": "Operation Firestorm",
+	"zones": [
+		{
+			"system": "Ostara",
+			"region": "Aram"
+		},
+		{
+			"system": "Tarsus",
+			"region": "Tarsus"
+		},
+		{
+			"system": "Tarsus",
+			"region": "Sintar"
+		},
+		{
+			"system": "Tarsus",
+			"region": "Theramin"
+		},
+		{
+			"system": "Kolchev",
+			"region": "Ilya"
+		},
+		{
+			"system": "Kolchev",
+			"region": "Kolchev"
+		},
+		{
+			"system": "Kolchev",
+			"region": "Lovo"
+		},
+		{
+			"system": "Kolchev",
+			"region": "Anatoly"
+		},
+		{
+			"system": "Kolchev",
+			"region": "Volova"
+		},
+		{
+			"system": "Korius",
+			"region": "Moneta"
+		},
+		{
+			"system": "Korius",
+			"region": "Korius"
+		},
+		{
+			"system": "Korius",
+			"region": "Adantar"
+		},
+		{
+			"system": "Korius",
+			"region": "Tanis"
+		},
+		{
+			"system": "Korius",
+			"region": "Solnas"
+		},
+		{
+			"system": "Loris",
+			"region": "Duna"
+		},
+		{
+			"system": "Loris",
+			"region": "Loris"
+		},
+		{
+			"system": "Loris",
+			"region": "Casalle"
+		},
+		{
+			"system": "Nephrys",
+			"region": "Nergal"
+		}
+	]
+}

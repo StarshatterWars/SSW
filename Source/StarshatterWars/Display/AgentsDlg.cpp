@@ -1,4 +1,10 @@
 #include "AgentsDlg.h"
+#include "RecordDetails.h"
+#include "StarshatterEnvironmentSubsystem.h"
+#include "Sim.h"
+#include "Ship.h"
+#include "SimRegion.h"
+#include "StarSystem.h"
 #include "PanelCloseIcon.h"
 #include "StarshatterPlayerSubsystem.h"
 
@@ -308,42 +314,90 @@ void UAgentsDlg::RequestMission(bool bCampaign)
     if (Saved && OfferId!=INDEX_NONE) OpenDetails(OfferId,true);
 }
 
+void UAgentsDlg::NativeConstruct()
+{
+    Super::NativeConstruct();
+    RefreshDirectory();
+    RefreshBoard();
+}
+
+void UAgentsDlg::SelectDirectoryAgent()
+{
+    Feedback = FText::GetEmpty();
+    CloseDetails();
+    if (auto* Game = Cast<USSWGameInstance>(GetGameInstance()); Game && SelectedAgent == TEXT("JanekFlightTraining"))
+        if (auto* Catalog = Game->GetSubsystem<UAgentCatalogSubsystem>())
+            CommitAgentCommand(Game,[&]() { return Game->GetTrainingAgent().Request(PilotId(),Catalog->GetEligibleMissions(SelectedAgent),SelectedAgent,true,RegionalHistory(Game))!=nullptr; },Feedback);
+    RefreshBoard();
+}
+
+void UAgentsDlg::RefreshDirectory()
+{
+    if (bRefreshingDirectory) return;
+    const FName PreviousAgent = SelectedAgent;
+    {
+        TGuardValue<bool> Guard(bRefreshingDirectory, true);
+        auto* Catalog = GetGameInstance() ? GetGameInstance()->GetSubsystem<UAgentCatalogSubsystem>() : nullptr;
+        auto* Environment = GetGameInstance() ? GetGameInstance()->GetSubsystem<UStarshatterEnvironmentSubsystem>() : nullptr;
+        auto* Simulation = Sim::GetSim();
+        auto* Ship = Simulation ? Simulation->GetPlayerShip() : nullptr;
+        auto* Region = Ship ? Ship->GetRegion() : Simulation ? Simulation->GetActiveRegion() : nullptr;
+        auto* OriginSystem = Region ? Region->GetSystem() : nullptr;
+        FName Origin = OriginSystem ? FName(UTF8_TO_TCHAR(OriginSystem->GetName())) : NAME_None;
+        if (Origin.IsNone() && Simulation && Simulation->GetMission())
+            if (const char* Name = Simulation->GetMission()->GetSystem()) Origin = FName(UTF8_TO_TCHAR(Name));
+        if (Origin.IsNone() && GetGameInstance())
+            if (auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>()) Origin = Players->GetPlayerInfo().HomeSystem;
+        TSet<FName> Neighbors;
+        if (Environment)
+        {
+            const auto& Systems = Environment->GetRuntimeStarSystems();
+            if (!OriginSystem)
+                for (auto* System : Systems)
+                    if (System && FName(UTF8_TO_TCHAR(System->GetName())) == Origin) { OriginSystem = System; break; }
+            if (OriginSystem)
+                for (auto* System : Systems)
+                    if (System && OriginSystem->HasLinkTo(System)) Neighbors.Add(FName(UTF8_TO_TCHAR(System->GetName())));
+        }
+        SystemChoices.Reset();
+        if (Catalog)
+            for (FName System : Catalog->GetDirectorySystems(Origin, Neighbors, DirectoryScope)) SystemChoices.Add(MakeShared<FName>(System));
+        TSharedPtr<FName> SystemSelection;
+        for (const auto& System : SystemChoices) if (*System == SelectedSystem) SystemSelection = System;
+        if (!SystemSelection)
+            for (const auto& System : SystemChoices) if (*System == Origin) SystemSelection = System;
+        if (!SystemSelection && !SystemChoices.IsEmpty()) SystemSelection = SystemChoices[0];
+        SelectedSystem = SystemSelection ? *SystemSelection : NAME_None;
+        AgentChoices.Reset();
+        if (Catalog)
+            for (FName Agent : Catalog->GetSystemAgents(SelectedSystem)) AgentChoices.Add(MakeShared<FName>(Agent));
+        TSharedPtr<FName> AgentSelection;
+        for (const auto& Agent : AgentChoices) if (*Agent == SelectedAgent) AgentSelection = Agent;
+        if (!AgentSelection)
+            for (const auto& Agent : AgentChoices) if (*Agent == TEXT("JanekFlightTraining")) AgentSelection = Agent;
+        if (!AgentSelection && !AgentChoices.IsEmpty()) AgentSelection = AgentChoices[0];
+        SelectedAgent = AgentSelection ? *AgentSelection : NAME_None;
+        if (SystemPicker) { SystemPicker->RefreshOptions(); SystemPicker->SetSelectedItem(SystemSelection); }
+        if (AgentPicker) { AgentPicker->RefreshOptions(); AgentPicker->SetSelectedItem(AgentSelection); }
+    }
+    if (PreviousAgent != SelectedAgent) SelectDirectoryAgent();
+}
+
 TSharedRef<SWidget> UAgentsDlg::RebuildWidget()
 {
     SetIsFocusable(true);
     auto* Catalog = GetGameInstance() ? GetGameInstance()->GetSubsystem<UAgentCatalogSubsystem>() : nullptr;
-    const auto* Table = Catalog ? Catalog->GetCatalog() : nullptr;
-    AgentChoices.Reset();
-    TSharedPtr<FName> InitialAgent;
-    if (Table)
-    {
-        auto Names = Table->GetRowNames();
-        Names.Sort([Catalog](FName A, FName B)
-        {
-            const auto& Left = *Catalog->FindAgent(A);
-            const auto& Right = *Catalog->FindAgent(B);
-            const int32 SystemOrder = Left.System.Compare(Right.System);
-            if (SystemOrder != 0) return SystemOrder < 0;
-            if (Left.Level != Right.Level) return Left.Level < Right.Level;
-            return Left.DisplayName < Right.DisplayName;
-        });
-        for (FName Id : Names)
-        {
-            if (!Catalog->CanContact(Id)) continue;
-            auto Item = MakeShared<FName>(Id);
-            AgentChoices.Add(Item);
-            if (Id == SelectedAgent || (!InitialAgent && Catalog->FindAgent(Id)->Class == EAgentClass::Training))
-                InitialAgent = Item;
-        }
-    }
-    if (!InitialAgent && !AgentChoices.IsEmpty()) InitialAgent = AgentChoices[0];
-    SelectedAgent = InitialAgent ? *InitialAgent : NAME_None;
+    SystemPicker.Reset(); AgentPicker.Reset();
+    RefreshDirectory();
+    TSharedPtr<FName> InitialSystem, InitialAgent;
+    for (const auto& Item : SystemChoices) if (*Item == SelectedSystem) InitialSystem = Item;
+    for (const auto& Item : AgentChoices) if (*Item == SelectedAgent) InitialAgent = Item;
 
     const auto AgentLabel = [Catalog](FName Id)
     {
         const auto* Agent = Catalog ? Catalog->FindAgent(Id) : nullptr;
-        return Agent ? FText::FromString(FString::Printf(TEXT("%s   /   %s"), *Agent->DisplayName, *Agent->System))
-            : INVTEXT("No agents for your faction");
+        return Agent ? FText::FromString(FString::Printf(TEXT("%s   /   LEVEL %d"), *Agent->DisplayName, Agent->Level))
+            : INVTEXT("No neutral or own-empire agents");
     };
     const auto Content = SNew(SOverlay)
         + SOverlay::Slot()
@@ -352,31 +406,54 @@ TSharedRef<SWidget> UAgentsDlg::RebuildWidget()
                 SNew(SVerticalBox)
                 + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 6)
                 [
-                    SNew(SComboBox<TSharedPtr<FName>>).OptionsSource(&AgentChoices).InitiallySelectedItem(InitialAgent)
-                    .OnGenerateWidget_Lambda([AgentLabel](TSharedPtr<FName> Item)
-                    {
-                        return SNew(STextBlock).Text(AgentLabel(*Item)).Font(MissionUIStyle::GetRowFont(14));
-                    })
-                    .OnSelectionChanged_Lambda([this](TSharedPtr<FName> Item, ESelectInfo::Type)
-                    {
-                        SelectedAgent = Item ? *Item : NAME_None;
-                        Feedback = FText::GetEmpty();
-                        CloseDetails();
-                        if (auto* Game = Cast<USSWGameInstance>(GetGameInstance()); Game && SelectedAgent == TEXT("JanekFlightTraining"))
-                            if (auto* Catalog = Game->GetSubsystem<UAgentCatalogSubsystem>())
-                                CommitAgentCommand(Game,[&]() { return Game->GetTrainingAgent().Request(PilotId(),Catalog->GetEligibleMissions(SelectedAgent),SelectedAgent,true,RegionalHistory(Game))!=nullptr; },Feedback);
-                        RefreshBoard();
-                    })
-                    [SNew(STextBlock).Text_Lambda([this, AgentLabel]() { return AgentLabel(SelectedAgent); })
-                        .Font(MissionUIStyle::GetHeaderFont(15))]
+                    SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().FillWidth(1).Padding(0,0,4,0)
+                    [SNew(SButton).Text(INVTEXT("SAME SYSTEM"))
+                        .ToolTipText(INVTEXT("Show neutral and own-empire agents in your current system"))
+                        .ButtonColorAndOpacity_Lambda([this]() { return DirectoryScope == EAgentDirectoryScope::SameSystem ? FLinearColor(.08f,.35f,.45f) : FLinearColor(.08f,.12f,.16f); })
+                        .OnClicked_Lambda([this]() { DirectoryScope=EAgentDirectoryScope::SameSystem; RefreshDirectory(); return FReply::Handled(); })]
+                    + SHorizontalBox::Slot().FillWidth(1).Padding(0,0,4,0)
+                    [SNew(SButton).Text(INVTEXT("ONE JUMP"))
+                        .ToolTipText(INVTEXT("Show neutral and own-empire agents here and one farcaster link away"))
+                        .ButtonColorAndOpacity_Lambda([this]() { return DirectoryScope == EAgentDirectoryScope::OneJump ? FLinearColor(.08f,.35f,.45f) : FLinearColor(.08f,.12f,.16f); })
+                        .OnClicked_Lambda([this]() { DirectoryScope=EAgentDirectoryScope::OneJump; RefreshDirectory(); return FReply::Handled(); })]
+                    + SHorizontalBox::Slot().FillWidth(1)
+                    [SNew(SButton).Text(INVTEXT("EMPIRE-WIDE"))
+                        .ToolTipText(INVTEXT("Show neutral and own-empire agents throughout the galaxy"))
+                        .ButtonColorAndOpacity_Lambda([this]() { return DirectoryScope == EAgentDirectoryScope::EmpireWide ? FLinearColor(.08f,.35f,.45f) : FLinearColor(.08f,.12f,.16f); })
+                        .OnClicked_Lambda([this]() { DirectoryScope=EAgentDirectoryScope::EmpireWide; RefreshDirectory(); return FReply::Handled(); })]
+                ]
+                + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 6)
+                [
+                    SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().FillWidth(1).Padding(0,0,8,0)
+                    [SNew(SVerticalBox)
+                        + SVerticalBox::Slot().AutoHeight()[SNew(STextBlock).Text(INVTEXT("SYSTEM")).Font(MissionUIStyle::GetRowFont(12))]
+                        + SVerticalBox::Slot().AutoHeight()
+                        [SAssignNew(SystemPicker,SComboBox<TSharedPtr<FName>>).OptionsSource(&SystemChoices).InitiallySelectedItem(InitialSystem)
+                            .OnGenerateWidget_Lambda([](TSharedPtr<FName> Item) { return SNew(STextBlock).Text(FText::FromName(*Item).ToUpper()).Font(MissionUIStyle::GetRowFont(14)); })
+                            .OnSelectionChanged_Lambda([this](TSharedPtr<FName> Item,ESelectInfo::Type)
+                            { if (bRefreshingDirectory) return; SelectedSystem=Item ? *Item : NAME_None; RefreshDirectory(); })
+                            [SNew(STextBlock).Text_Lambda([this]() { return SelectedSystem.IsNone() ? INVTEXT("NO SYSTEMS IN RANGE") : FText::FromName(SelectedSystem).ToUpper(); }).Font(MissionUIStyle::GetHeaderFont(15))]]]
+                    + SHorizontalBox::Slot().FillWidth(1.5f)
+                    [SNew(SVerticalBox)
+                        + SVerticalBox::Slot().AutoHeight()[SNew(STextBlock).Text(INVTEXT("AGENT")).Font(MissionUIStyle::GetRowFont(12))]
+                        + SVerticalBox::Slot().AutoHeight()
+                        [SAssignNew(AgentPicker,SComboBox<TSharedPtr<FName>>).OptionsSource(&AgentChoices).InitiallySelectedItem(InitialAgent)
+                            .IsEnabled_Lambda([this]() { return !SelectedSystem.IsNone() && !AgentChoices.IsEmpty(); })
+                            .OnGenerateWidget_Lambda([AgentLabel](TSharedPtr<FName> Item) { return SNew(STextBlock).Text(AgentLabel(*Item)).Font(MissionUIStyle::GetRowFont(14)); })
+                            .OnSelectionChanged_Lambda([this](TSharedPtr<FName> Item,ESelectInfo::Type)
+                            { if (bRefreshingDirectory) return; SelectedAgent=Item ? *Item : NAME_None; SelectDirectoryAgent(); })
+                            [SNew(STextBlock).Text_Lambda([this,AgentLabel]() { return AgentLabel(SelectedAgent); }).Font(MissionUIStyle::GetHeaderFont(15))]]]
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 12, 12)
-                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).AutoWrapText(true)
-                    .Text_Lambda([this, Catalog]()
+                [SNew(SRecordDetails).Record_Lambda([this, Catalog]()
                     {
-                        const auto* Agent = Catalog ? Catalog->FindAgent(SelectedAgent) : nullptr;
-                        return Agent ? FText::FromString(FString::Printf(TEXT("%s  /  LEVEL %d\n%s  /  %s\n%s"),
-                            *Agent->Division, Agent->Level, *Agent->Planet, *Agent->Station, *Agent->Description)) : FText::GetEmpty();
+                        FRecordDetails D;D.Icon=EShipSystemIcon::Agent;
+                        const auto* Agent=Catalog?Catalog->FindAgent(SelectedAgent):nullptr;
+                        if(!Agent){D.Title=INVTEXT("SELECT AN AGENT");return D;}
+                        D.Title=FText::FromString(Agent->DisplayName);D.Subtitle=FText::FromString(Agent->Division);D.Description=FText::FromString(Agent->Description);
+                        D.Fact(INVTEXT("LEVEL"),FText::AsNumber(Agent->Level)).Fact(INVTEXT("PLANET"),FText::FromString(Agent->Planet)).Fact(INVTEXT("STATION"),FText::FromString(Agent->Station));return D;
                     })]
                 + SVerticalBox::Slot().AutoHeight()
                 [SNew(STextBlock).Text(INVTEXT("MISSION QUEUE")).Font(MissionUIStyle::GetHeaderFont(15))]
@@ -440,5 +517,6 @@ void UAgentsDlg::ReleaseSlateResources(bool bReleaseChildren)
 {
     Super::ReleaseSlateResources(bReleaseChildren);
     Board.Reset();
+    SystemPicker.Reset(); AgentPicker.Reset();
     DetailLayer.Reset();
 }

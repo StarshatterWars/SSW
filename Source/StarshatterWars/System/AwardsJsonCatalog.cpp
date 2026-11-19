@@ -68,10 +68,9 @@ template<class Row> bool WriteRows(const UDataTable& Table, TArray<TSharedPtr<FJ
 }
 }
 
-bool AwardsJsonCatalog::Import(const FString& Path, UDataTable& Ranks, UDataTable& Medals, FString& Error)
+bool AwardsJsonCatalog::Load(const FString& Path, TArray<FRankInfo>& Ranks, TArray<FMedalInfo>& Medals, FString& Error)
 {
     Error.Reset();
-    if (!CorrectTables(Ranks, Medals, Error)) return false;
     TArray<uint8> Bytes;
     if ((!SSWModFiles::Read(Path, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *Path)) || Bytes.IsEmpty() || Bytes.Num() > 4 * 1024 * 1024)
     { Error = TEXT("Unreadable/oversized awards JSON: ") + Path; return false; }
@@ -84,7 +83,16 @@ bool AwardsJsonCatalog::Import(const FString& Path, UDataTable& Ranks, UDataTabl
     { Error = TEXT("Unsupported awards schemaVersion"); return false; }
     TArray<FRankInfo> RankRows; TArray<FMedalInfo> MedalRows;
     if (!ReadRows(*Object, TEXT("ranks"), RankRows, Error) || !ReadRows(*Object, TEXT("medals"), MedalRows, Error)) return false;
-    // The catalog owns both award tables; a reload must remove deleted entries.
+    Ranks = MoveTemp(RankRows); Medals = MoveTemp(MedalRows);
+    return true;
+}
+
+bool AwardsJsonCatalog::Import(const FString& Path, UDataTable& Ranks, UDataTable& Medals, FString& Error)
+{
+    if (!CorrectTables(Ranks, Medals, Error)) return false;
+    TArray<FRankInfo> RankRows; TArray<FMedalInfo> MedalRows;
+    if (!Load(Path, RankRows, MedalRows, Error)) return false;
+    // Legacy conversion/test adapter only; gameplay uses value arrays.
     Ranks.EmptyTable(); Medals.EmptyTable();
     for (const auto& Row : RankRows) Ranks.AddRow(FName(*Row.Name), Row);
     for (const auto& Row : MedalRows) Medals.AddRow(FName(*Row.Name), Row);

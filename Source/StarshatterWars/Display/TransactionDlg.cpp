@@ -1,4 +1,5 @@
 #include "TransactionDlg.h"
+#include "RecordDetails.h"
 #include "TransactionAI.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "MissionUIStyle.h"
@@ -141,8 +142,8 @@ public:
                     [SNew(STextBlock).Text(INVTEXT("›")).Font(MissionUIStyle::GetRowFont(15))]]]
             + SVerticalBox::Slot().AutoHeight().Padding(10,4)[Services]
             + SVerticalBox::Slot().AutoHeight().Padding(10,8)
-            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true)
-                .Text_Lambda([this]() { return Details; })])];
+            [SNew(SBox).MaxDesiredHeight(210)[SNew(SScrollBox)+SScrollBox::Slot()[SNew(SRecordDetails)
+                .Record_Lambda([this]() { auto D=Details;D.Icon=EShipSystemIcon::Wallet;if(D.Title.IsEmpty()){D.Title=INVTEXT("SELECT A TRANSACTION");D.Description=INVTEXT("Inspect its receipt, counterparties and wallet movement. Amounts are credits; dates are GMT.");}return D; })]]])];
         Refresh();
     }
     void Tick(const FGeometry& Geometry, double Time, float Delta) override
@@ -170,7 +171,7 @@ private:
     bool bRecentOnly=false;
     double MinimumQuantity=0;
     double MinimumAmount=0;
-    FText Details=INVTEXT("Select a transaction to inspect its receipt. Amounts are credits; dates are GMT.");
+    FRecordDetails Details;
     TArray<TSharedPtr<FString>> Categories;
     int32 CategoryIndex=-1;
     int32 PageIndex=0, PageCount=1, MatchCount=0;
@@ -261,12 +262,18 @@ private:
                 .OnClicked_Lambda([this,Tx,Delta=Entry.WalletDelta,Known=Entry.bWalletDeltaKnown]()
                 {
                     Selected=Tx.Id;
-                    Details=FText::FromString(FString::Printf(TEXT("%s  •  %s\nFROM: %s  •  TO: %s\nSOURCE: %s  •  DESTINATION: %s\nTRADE VALUE: %s CR  •  WALLET CHANGE: %s CR\nRECEIPT: %s  •  REFERENCE: %s\nBUY ORDER: %s  •  SELL ORDER: %s"),
-                        *StaticEnum<EWalletTransactionCategory>()->GetNameStringByValue(static_cast<int64>(Tx.Category)).ToUpper(),
-                        *WalletName(Tx.Reason),*WalletName(Tx.From),*WalletName(Tx.To),*WalletName(Tx.Source),*WalletName(Tx.Destination),
-                        *FText::AsNumber(Tx.Credits).ToString(),*(Known ? FText::AsNumber(Delta).ToString() : TEXT("UNKNOWN")),*Tx.Id.ToString(),
-                        *(Tx.Reference.IsValid() ? Tx.Reference.ToString() : TEXT("NOT RECORDED")),
-                        *(Tx.BuyOrder.IsValid() ? Tx.BuyOrder.ToString() : TEXT("—")),*(Tx.SellOrder.IsValid() ? Tx.SellOrder.ToString() : TEXT("—"))));
+                    Details={};Details.Icon=EShipSystemIcon::Wallet;
+                    Details.Title=FText::FromString(WalletName(Tx.Reason));
+                    Details.Subtitle=StaticEnum<EWalletTransactionCategory>()->GetDisplayNameTextByValue(static_cast<int64>(Tx.Category));
+                    Details.Status=Known?(Delta>=0?INVTEXT("CREDIT"):INVTEXT("DEBIT")):INVTEXT("UNRECORDED BALANCE");
+                    Details.Fact(INVTEXT("FROM"),FText::FromString(WalletName(Tx.From))).Fact(INVTEXT("TO"),FText::FromString(WalletName(Tx.To)));
+                    Details.Fact(INVTEXT("SOURCE"),FText::FromString(WalletName(Tx.Source))).Fact(INVTEXT("DESTINATION"),FText::FromString(WalletName(Tx.Destination)));
+                    Details.Fact(INVTEXT("TRADE VALUE"),FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Tx.Credits)));
+                    Details.Fact(INVTEXT("WALLET CHANGE"),Known?FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Delta)):INVTEXT("UNKNOWN"));
+                    Details.Fact(INVTEXT("RECEIPT"),FText::FromString(Tx.Id.ToString()));
+                    if(Tx.Reference.IsValid())Details.Fact(INVTEXT("REFERENCE"),FText::FromString(Tx.Reference.ToString()));
+                    if(Tx.BuyOrder.IsValid())Details.Fact(INVTEXT("BUY ORDER"),FText::FromString(Tx.BuyOrder.ToString()));
+                    if(Tx.SellOrder.IsValid())Details.Fact(INVTEXT("SELL ORDER"),FText::FromString(Tx.SellOrder.ToString()));
                     return FReply::Handled();
                 })[Line]]];
         }

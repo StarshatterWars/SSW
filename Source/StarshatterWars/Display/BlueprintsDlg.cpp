@@ -1,4 +1,5 @@
-﻿#include "BlueprintsDlg.h"
+#include "BlueprintsDlg.h"
+#include "RecordDetails.h"
 #include "BlueprintCatalogSubsystem.h"
 #include "MissionUIStyle.h"
 #include "ShipSystemIcon.h"
@@ -103,20 +104,22 @@ void RefreshPreflight(const TWeakObjectPtr<UBlueprintCatalogSubsystem>& Catalog,
     Model->License = Selected->Id;
     Model->CanInstall = Catalog->CanBeginPlayerJob(*Site, Model->License, Model->Runs, Model->Quote, Model->Preflight);
 }
-FText DescribeQuote(const TSharedPtr<FBlueprintTable>& Model)
+FRecordDetails DescribeQuote(const TSharedPtr<FBlueprintTable>& Model)
 {
-    TArray<FText> Lines; Lines.Add(Model->Preflight);
-    if (!Model->Quote.Materials.IsEmpty())
-    {
-        Lines.Add(FText::Format(INVTEXT("{0} RUNS | {1} S TOTAL | INPUT: {2} | OUTPUT: {3}"), FText::AsNumber(Model->Runs),
-            FText::AsNumber(Model->Quote.Duration), FText::FromName(Model->Quote.Input), FText::FromName(Model->Quote.Output)));
-        Lines.Add(FText::Format(INVTEXT("SERVICE: {0} | INSTALLATION: {1} CR"), FText::FromName(Model->Quote.ServiceProfile), FText::AsNumber(Model->Quote.InstallationFee)));
-        for (const auto& Amount : Model->Quote.Materials)
-            Lines.Add(FText::Format(INVTEXT("INPUT  {0}: {1} ({2} T)"), FText::FromName(Amount.Item), FText::AsNumber(Amount.Quantity), FText::AsNumber(Amount.Quantity * Amount.UnitTonnes)));
-        for (const auto& Amount : Model->Quote.Products)
-            Lines.Add(FText::Format(INVTEXT("OUTPUT  {0}: {1} ({2} T)"), FText::FromName(Amount.Item), FText::AsNumber(Amount.Quantity), FText::AsNumber(Amount.Quantity * Amount.UnitTonnes)));
-    }
-    return FText::Join(INVTEXT("\n"), Lines).ToUpper();
+    FRecordDetails D;D.Icon=EShipSystemIcon::Production;
+    D.Title=Model->Selected?FText::FromString(Model->Selected->DisplayName):INVTEXT("SELECT A BLUEPRINT");
+    D.Status=Model->CanInstall?INVTEXT("READY TO INSTALL"):INVTEXT("REQUIREMENTS");D.Description=Model->Preflight;
+    if(!Model->Quote.Materials.IsEmpty()){
+        D.Fact(INVTEXT("BATCH"),FText::Format(INVTEXT("{0} RUNS"),FText::AsNumber(Model->Runs)));
+        D.Fact(INVTEXT("TOTAL TIME"),FText::Format(INVTEXT("{0} S"),FText::AsNumber(Model->Quote.Duration)));
+        D.Fact(INVTEXT("INPUT INVENTORY"),FText::FromName(Model->Quote.Input)).Fact(INVTEXT("OUTPUT INVENTORY"),FText::FromName(Model->Quote.Output));
+        D.Fact(INVTEXT("SERVICE"),FText::FromName(Model->Quote.ServiceProfile));
+        D.Fact(INVTEXT("INSTALLATION"),FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Model->Quote.InstallationFee)));
+        TArray<FText> Inputs,Outputs;
+        for(const auto& A:Model->Quote.Materials)Inputs.Add(FText::Format(INVTEXT("{0} / QTY {1} / {2} T"),FText::FromName(A.Item),FText::AsNumber(A.Quantity),FText::AsNumber(A.Quantity*A.UnitTonnes)));
+        for(const auto& A:Model->Quote.Products)Outputs.Add(FText::Format(INVTEXT("{0} / QTY {1} / {2} T"),FText::FromName(A.Item),FText::AsNumber(A.Quantity),FText::AsNumber(A.Quantity*A.UnitTonnes)));
+        D.Section(INVTEXT("REQUIRED MATERIALS"),FText::Join(INVTEXT("\n"),Inputs));D.Section(INVTEXT("FINISHED PRODUCTS"),FText::Join(INVTEXT("\n"),Outputs));
+    }return D;
 }
 }
 TSharedRef<SWidget> UBlueprintsDlg::RebuildWidget()
@@ -162,7 +165,7 @@ TSharedRef<SWidget> UBlueprintsDlg::RebuildWidget()
         + SVerticalBox::Slot().AutoHeight().Padding(8)
         [MissionUIStyle::MakeDataPane(SNew(SBox).MaxDesiredHeight(170)
             [SNew(SScrollBox)+SScrollBox::Slot()
-                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([Weak,Model]()
+                [SNew(SRecordDetails).Record_Lambda([Weak,Model]()
                     { RefreshPreflight(Weak,Model); return DescribeQuote(Model); })]])]
         + SVerticalBox::Slot().AutoHeight().Padding(8)[SNew(SHorizontalBox)
             + SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).AutoWrapText(true).Text_Lambda([Model]() { return Model->Feedback; })]

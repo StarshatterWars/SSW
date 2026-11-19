@@ -325,11 +325,8 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("Data.MultiplayerMissionTable"),
         TEXT("Data.CustomMissionTable"),
         TEXT("Data.StoryMissionTable"),
-        TEXT("Data.CargoTable"),
 
         TEXT("Data.OrderOfBattleTable"),
-        TEXT("Data.MedalsTable"),
-        TEXT("Data.RanksTable"),
 
         TEXT("Data.RegionsTable"),
         TEXT("Data.ZonesTable"),

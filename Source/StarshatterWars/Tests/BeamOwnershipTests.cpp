@@ -19,9 +19,10 @@ private:
 class FBeamWeaponFixture : public Weapon
 {
 public:
-    explicit FBeamWeaponFixture(WeaponDesign& Design) : Weapon(&Design, 1, nullptr) {}
+    explicit FBeamWeaponFixture(const Weapon& Prototype) : Weapon(Prototype) {}
     void Attach(SimShot* Shot) { beams[0] = Shot; Observe(Shot); }
     void Stop() { KillBeams(); }
+    SimShot* CreateMissingDesign() { return CreateShot(FVector::ZeroVector, Camera(), nullptr, nullptr); }
 };
 class FBeamRegionFixture : public SimRegion
 {
@@ -40,10 +41,12 @@ bool FBeamOwnershipTest::RunTest(const FString&)
     Design.primary = true;
     Design.life = 1;
     Design.graphic_type = Graphic::BOLT;
+    Weapon Prototype(&Design, 1, nullptr);
     int32 Destroyed = 0;
     FBeamRegionFixture Region;
     {
-        FBeamWeaponFixture WeaponFixture(Design);
+        FBeamWeaponFixture WeaponFixture(Prototype);
+        TestNull(TEXT("Missing shot design is rejected before dereferencing it"), WeaponFixture.CreateMissingDesign());
         auto* Shot = new FOwnedBeamShot(Design, Destroyed);
         Region.InsertObject(Shot);
         WeaponFixture.Attach(Shot);
@@ -56,7 +59,7 @@ bool FBeamOwnershipTest::RunTest(const FString&)
         TestEqual(TEXT("No freed pointer remains in region shots"), Region.GetShots().size(), 0);
     }
     {
-        FBeamWeaponFixture WeaponFixture(Design);
+        FBeamWeaponFixture WeaponFixture(Prototype);
         auto* Shot = new FOwnedBeamShot(Design, Destroyed);
         Region.InsertObject(Shot);
         WeaponFixture.Attach(Shot);
@@ -65,7 +68,7 @@ bool FBeamOwnershipTest::RunTest(const FString&)
     Region.AdvanceShots();
     TestEqual(TEXT("Region cleans beam after weapon destruction"), Destroyed, 2);
     {
-        FBeamWeaponFixture WeaponFixture(Design);
+        FBeamWeaponFixture WeaponFixture(Prototype);
         WeaponFixture.Attach(new FOwnedBeamShot(Design, Destroyed));
     }
     TestEqual(TEXT("Uninserted beam is still cleaned locally"), Destroyed, 3);

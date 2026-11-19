@@ -729,8 +729,13 @@ ShipAI::FindObjectiveNavPoint()
 		if (farcaster && distance < 1000)
 		farcaster = 0;
 
-		if (distance <  1000 || (navpt->GetAction() == EInstruction::Launch && distance > 25000))
-		ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
+		// Recovery orders stay active until FighterAI obtains a landing slot.
+		// Completing them as vector waypoints discards the inbound request.
+		const bool RecoveryOrder = navpt->GetAction() == EInstruction::RTB ||
+		    navpt->GetAction() == EInstruction::Dock;
+		if (!RecoveryOrder && (distance < 1000 ||
+		    (navpt->GetAction() == EInstruction::Launch && distance > 25000)))
+		    ship->SetNavptStatus(navpt, INSTRUCTION_STATUS::COMPLETE);
 	}
 }
 

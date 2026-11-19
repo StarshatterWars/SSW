@@ -1,0 +1,856 @@
+{
+  "slides": [
+    {
+      "title": "Reverse engineering EVE Online",
+      "body": [
+        "Evidence, native C++ adaptation, and Starshatter Wars",
+        "Fractal Dev Games • 19 November 2026"
+      ],
+      "refs": [],
+      "code": null,
+      "image": null,
+      "note": "A self-contained lecture. Every code slide is a static example; no live demonstration is required. Native SSW excerpts are our implementation, not claimed CCP server source.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "The research question",
+      "body": [
+        "Which observable EVE behaviors can improve a native space simulation?",
+        "Recover contracts and constraints before reproducing a screen.",
+        "Implement SSW rules in C++; test that money, cargo and state remain consistent."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Four kinds of evidence",
+      "body": [
+        "Client bytecode: function names, constants, control flow and remote calls.",
+        "Published SDE: static types, recipes, requirements and declared modifiers.",
+        "SSW source: the implementation we can inspect and change.",
+        "Tests and recordings: evidence that a particular behavior actually ran."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Research/EVE/SDE/download.json",
+        "D:/SSW/Saved/Analysis/EveWallet_20261118/report.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "Do not substitute one evidence class for another. A client RPC name does not reveal the server transaction or accounting algorithm.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "What the client does not prove",
+      "body": [
+        "Remote service calls do not expose authoritative EVE server code.",
+        "A UI preview is not proof that a transaction can commit.",
+        "Static base prices are not live market prices.",
+        "NPC scheduling and server settlement remain partly unknown; SSW supplies its own rules."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json",
+        "D:/SSW/Saved/Analysis/SDE_SkillsAgentsContracts_20261119/report.txt"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "The shipped artifact",
+      "body": [
+        "Installed client: C:/CCP/EVE Online/tq/code.ccp",
+        "Selected .pyj members contain compressed legacy Python bytecode.",
+        "Record archive identity, member path and SHA-256 before analysis.",
+        "Treat bytecode as data; do not import or execute recovered modules."
+      ],
+      "refs": [
+        "D:/SSW/Tools/ReverseEngineering/read_legacy_bytecode.py",
+        "D:/SSW/Saved/Analysis/EveGateApproach_20261118/report.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "REA and the Python fallback",
+      "body": [
+        "REA provides the artifact investigation workflow and retained evidence.",
+        "The built-in decoder did not support this Python 2.7 bytecode variant.",
+        "A static xdis reader supplied function indexes and disassembly.",
+        "Ghidra is useful for native binaries; it is not the decoder used for these Python modules."
+      ],
+      "refs": [
+        "D:/SSW/Tools/ReverseEngineering/read_legacy_bytecode.py",
+        "D:/SSW/Saved/Analysis/EveWallet_20261118/report.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "Several audit reports explicitly say xdis fallback, not fresh REA semantic decoding. Preserve that distinction in the lecture. Extended expression comments can be unreliable; inspect opcodes and metadata.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Bound decompression before decoding",
+      "body": [
+        "Our reader limits expanded input and rejects truncated streams or trailing data."
+      ],
+      "refs": [
+        "D:/SSW/Tools/ReverseEngineering/read_legacy_bytecode.py:25"
+      ],
+      "code": "    decoder = zlib.decompressobj()\n    data = decoder.decompress(raw, MAX_BYTES + 1)\n    if len(data) > MAX_BYTES or decoder.unconsumed_tail:\n        raise ValueError(\"Decompressed bytecode exceeds 16 MiB\")\n    if not decoder.eof or decoder.unused_data:\n        raise ValueError(\"Incomplete compressed bytecode or trailing data\")\n    return data\n",
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Read metadata without running the module",
+      "body": [
+        "The reader walks code objects and records symbols; it does not call recovered functions."
+      ],
+      "refs": [
+        "D:/SSW/Tools/ReverseEngineering/read_legacy_bytecode.py:37"
+      ],
+      "code": "    loaded = load_module(str(path))\n    version, timestamp, magic, code, is_pypy, source_size, sip_hash = loaded[:7]\n    functions = []\n    def visit(obj, prefix=\"\"):\n        name = prefix + obj.co_name\n        if not match or match.casefold() in name.casefold():\n            functions.append({\"name\": name, \"line\": obj.co_firstlineno,\n                              \"arguments\": list(obj.co_varnames[:obj.co_argcount]),\n                              \"names\": list(obj.co_names),\n                              \"strings\": [v for v in obj.co_consts if isinstance(v, str)]})\n        for item in obj.co_consts:\n            if hasattr(item, \"co_code\") and hasattr(item, \"co_consts\"):\n                visit(item, name + \".\")",
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "A repeatable analysis method",
+      "body": [
+        "Inventory the artifact and select a narrow behavioral question.",
+        "Inspect symbols, call sites and control flow; record uncertainty.",
+        "Compare the result with existing SSW behavior before adding code.",
+        "Write native rules and regression tests; retain source references."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveImplementedSystemsAudit_20261119_agent",
+        "D:/SSW/Saved/Analysis/SDE_Integration_20261119/progress.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Observed bytecode: a repeat-mining command",
+      "body": [
+        "The client obtains a target, then calls an entity service. Server execution remains outside this evidence."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveMiningDrones_20261119/Decoded/000_drone_commands.dis.txt"
+      ],
+      "code": "66  LOAD_FAST      (entity)\n69  LOAD_ATTR      (CmdMineRepeatedly)\n72  LOAD_FAST      (droneIDs)\n75  LOAD_FAST      (targetID)\n78  CALL_FUNCTION  (2 positional, 0 named)\n81  STORE_FAST     (ret)",
+      "image": null,
+      "note": "Short disassembly excerpt from MineRepeatedly, original first line 169. Formatting is reduced to bytecode offset, mnemonic and operand. This proves an observable call shape; it does not recover authoritative server mining or unload implementation.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Asteroid scanning",
+      "body": [
+        "Recovered client data distinguishes asteroid identity, distance and ore knowledge.",
+        "SSW scan tiers separate known ore from unknown remaining quantity.",
+        "Range and scan freshness constrain selection; full coverage is required to declare depletion."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json",
+        "D:/SSW/Source/StarshatterWars/AIAgent/MiningAI.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "The requested asteroid_scanning_service.pyj was a behavioral reference. SSW does not read every live asteroid as fully surveyed anymore.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "A scan result can contain an unknown quantity",
+      "body": [
+        "SSW excerpt: an optional quantity prevents an unscanned deposit from becoming free information."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/MiningAI.cpp:36"
+      ],
+      "code": "        const double Distance = FVector::Dist(Origin, Rock->GetLocation());\n        if (Distance > Range)\n        {\n            bCompleteCoverage = false;\n            continue;\n        }\n\n        const auto& Resource = Rock->GetResource();\n        const TOptional<double> Quantity = Tier == ScanTier::Assay\n            ? TOptional<double>(Resource.AmountTonnes) : TOptional<double>();\n        Scan.Readings.Add({Rock->GetContactId(), Distance, Resource.Mineral, Quantity});\n        if (Quantity && *Quantity > UE_SMALL_NUMBER) Scan.Status = BeltStatus::HasOre;\n    }",
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Mining is a state machine",
+      "body": [
+        "Select a valid scanned deposit, approach and station-keep within beam range.",
+        "Extract at the authored rate while checking remaining ore and free hold space.",
+        "Deliver to the mining station; freighters move stock onward.",
+        "The asteroid base is a base, rather than a mandatory extra ore handoff."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/MiningAI.cpp",
+        "D:/SSW/Source/StarshatterWars/AIAgent/ProductionAI.cpp",
+        "D:/SSW/Source/StarshatterWars/AIAgent/TransportAI.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Mining lasers and crystals",
+      "body": [
+        "Client effect dispatch and crystal attributes informed the presentation and checks.",
+        "SSW uses its own beam actor, deposits, cargo and balance.",
+        "A visual beam alone must not create ore; successful extraction changes inventories.",
+        "Mining equipment is separate from combat damage."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveMiningFx_20261118/report.json",
+        "D:/SSW/Source/StarshatterWars/System/MiningCrystalCatalog.cpp",
+        "D:/SSW/Source/StarshatterWars/Sim/SimRegion.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Mining drone commands",
+      "body": [
+        "Recovered drone functions include mining, repeat mining and return actions.",
+        "SSW separates outbound flight, extraction, return and unload.",
+        "Ore reaches the hold only on return; recall, loss and full holds stop the cycle.",
+        "Prospector capacity: 3 drones. Rockhopper capacity: 10 drones."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveMiningDrones_20261119/report.json",
+        "D:/SSW/Source/StarshatterWars/AIAgent/MiningDroneAI.cpp",
+        "D:/SSW/Content/GameData/Cargo/mining_drones.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "The native capacities are SSW decisions. Check the live JSON path in the source inventory if the content folder differs; the system is not an import of EVE ship capacities.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "A spare drone is real inventory",
+      "body": [
+        "Docked replacement consumes an actual unreserved drone from cargo.",
+        "Replace a lost drone first; otherwise respect bay capacity.",
+        "Save failure restores both the cargo and the bay.",
+        "The model and beam are newly authored SSW assets."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/MiningDroneBayService.h",
+        "D:/SSW/Source/StarshatterWars/Tests/MiningDroneBayServiceTests.cpp"
+      ],
+      "code": null,
+      "image": "D:/SSW/ArtSource/Models/MiningDrone/MiningDrone_Multiview.png",
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Transport and contract responsibilities",
+      "body": [
+        "TransportAI flies and transfers ore or finished goods.",
+        "ContractAI tracks the agreement and cargo reservation.",
+        "Pickup reserves cargo so another hauler cannot take the same stock.",
+        "Jump routes connect systems; destination stock changes only after unloading."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/TransportAI.cpp",
+        "D:/SSW/Source/StarshatterWars/AIAgent/ContractAI.cpp",
+        "D:/SSW/Saved/Analysis/EveRoutes"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Unload through the inventory ledger",
+      "body": [
+        "SSW excerpt: validate the destination and capacity before transferring ownership."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/TransportAI.cpp:170"
+      ],
+      "code": "double TransportAI::Unload(FEconomyState& State, Ship& Freighter, FName Destination, double Limit)\n{\n    if (!FMath::IsFinite(Limit) || Limit <= 0 || !Freighter.GetCargoManifest()) return 0;\n    Freighter.SyncCargoInventory();\n    const auto* To = State.Inventories.Find(Destination);\n    if (!To) return 0;\n    const double Amount = FMath::Min3(Freighter.GetMinedOreTonnes(), Limit, FMath::Max(0.0, To->CapacityTonnes - FEconomyLedger::Used(*To)));\n    if (Amount <= 0 || !FEconomyLedger::Transfer(State, FEconomyRuntime::IndustryOwner(), Freighter.GetCargoInventoryKey(), Destination,\n        DataTableUtils::MakeValidName(Freighter.GetCargoManifest()->Item), Amount)) return 0;\n    return Freighter.UnloadMinedOre(Amount, false);\n}",
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Manufacturing locations are explicit",
+      "body": [
+        "industry/job.pyj distinguishes facilities, inputs and outputs.",
+        "SSW jobs bind separate input and output inventories.",
+        "Reserve capacity and consume inputs once; finish the batch before crediting output.",
+        "ProductionAI supervises facilities; ManufacturingAI handles job rules."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json",
+        "D:/SSW/Source/StarshatterWars/AIAgent/ManufacturingAI.cpp",
+        "D:/SSW/Source/StarshatterWars/AIAgent/ProductionAI.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Reserve output while a batch runs",
+      "body": [
+        "SSW excerpt: consuming input and reserving output are distinct from completing the job."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/ManufacturingAI.cpp:28"
+      ],
+      "code": "        Stock.GetInventory(WorkOrder.InputLocation) -= Inputs;\n        Stock.PendingOutput = WorkOrder.OutputLocation;\n        Stock.ReservedOutput = Recipe.OutputTonnes;\n        Stock.RemainingSeconds = Recipe.SecondsPerBatch;\n    }\n\n    Stock.RemainingSeconds = FMath::Max(0.0, Stock.RemainingSeconds - Seconds);\n    if (Stock.RemainingSeconds > 0.0) return false;\n\n    Stock.GetInventory(Stock.PendingOutput) += Stock.ReservedOutput;\n    Stock.PendingOutput = NAME_None;\n    Stock.ReservedOutput = 0.0;",
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Recipes and blueprint ownership",
+      "body": [
+        "Recipes list input materials, quantities, outputs and batch time.",
+        "Player manufacturing requires the appropriate owned blueprint and skills.",
+        "Facility capabilities and available storage are checked before charging.",
+        "NPC automated production is separate from player blueprint ownership."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/System/BlueprintCatalogSubsystem.cpp",
+        "D:/SSW/Source/StarshatterWars/Util/GameStructs_products.h",
+        "D:/SSW/Content/GameData/Cargo/recipes.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "Recipes and blueprint paths are resolved and included in the evidence index. Blueprint research, copying and invention should not be claimed complete merely because EVE provides those activities.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Market availability and scarcity",
+      "body": [
+        "SSW production is distributed by system to create reasons to transport goods.",
+        "The marketplace searches a catalog and shows availability and route distance.",
+        "Prices are SSW credits; the official SDE is not a feed of live player orders.",
+        "Lawfulness and exotic goods are authored SSW lore, not recovered EVE server policy."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/Display/MarketplaceDlg.cpp",
+        "D:/SSW/Source/StarshatterWars/System/EconomyRuntime.cpp",
+        "D:/SSW/Content/GameData/Cargo/economy.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Contracts: UI state is not settlement",
+      "body": [
+        "contractStruct.pyj helped identify contract fields and validation needs.",
+        "SSW separates AcceptanceAI, BiddingAI and SettlementAI.",
+        "Courier packages consume hold capacity and are removed on delivery.",
+        "Collateral, rewards, outbids, claims and abandonment need explicit accounting."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json",
+        "D:/SSW/Source/StarshatterWars/AIAgent/AcceptanceAI.cpp",
+        "D:/SSW/Source/StarshatterWars/AIAgent/BiddingAI.cpp",
+        "D:/SSW/Source/StarshatterWars/AIAgent/SettlementAI.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Wallet receipts need identity",
+      "body": [
+        "A correct final balance can conceal missing operation history.",
+        "A bid and a refund can have a net delta of zero but are still two transactions.",
+        "SSW records operation IDs and contract references, then rejects duplicate commits.",
+        "Save failure restores the prior balance and inventory state."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/ContractTransactions.h",
+        "D:/SSW/Source/StarshatterWars/AIAgent/ContractLedger.cpp",
+        "D:/SSW/Source/StarshatterWars/AIAgent/TransactionAI.cpp",
+        "D:/SSW/Saved/Analysis/EvePlayerWalletRecheck_20261118/report.txt"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Player wallet and recovery",
+      "body": [
+        "Personal transactions include typed entries, filters, sorting and receipt details.",
+        "The player panel exposes the wallet, assignment, awards and history.",
+        "Destruction keeps the pilot’s progression but loses the ship and cargo.",
+        "Insurance and the starter Falcon recovery path use SSW rules."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/Display/TransactionDlg.cpp",
+        "D:/SSW/Source/StarshatterWars/AIAgent/TransactionAI.cpp",
+        "D:/SSW/Saved/Analysis/EveWallet_20261118/report.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "50,000 cr starting funds and Janek recovery are authored SSW choices. They are not EVE amounts or a reconstruction of EVE server payout code.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Insurance and hangar services",
+      "body": [
+        "The client shows policy offers, coverage state and purchase calls.",
+        "SSW policies bind to owned hulls and distinguish mission loaners.",
+        "Cash-purchased ships receive lifetime insurance by SSW design.",
+        "A quote is revalidated before payment; claims must not be paid twice."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/System/ShipInsuranceSubsystem.cpp",
+        "D:/SSW/Source/StarshatterWars/Display/InsuranceDlg.cpp",
+        "D:/SSW/Source/StarshatterWars/Display/HangarDlg.cpp",
+        "D:/SSW/Saved/Analysis/EveStationServices/evidence.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "Do not present SSW premium percentages or full component coverage as recovered EVE formulas. Authoritative EVE insurance settlement was not available in this client evidence.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Fitting: quality is not damage",
+      "body": [
+        "A component grade changes performance and power demand; damage is a separate state.",
+        "SSW reactor output and native power drains remain authoritative.",
+        "Rank, empire, skills, slots and available power gate a refit.",
+        "Full refits require a shipyard; flight views remain read-only."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/SDE_FittingServices_20261119",
+        "D:/SSW/Source/StarshatterWars/System/ShipInsuranceSubsystem.cpp",
+        "D:/SSW/Source/StarshatterWars/Display/ShipFitDlg.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Skill books and progression",
+      "body": [
+        "Client requirement checks and the SDE informed prerequisite and rank gates.",
+        "SSW uses JSON skills grouped by category with long prerequisite trees.",
+        "Purchasing a book currently grants the complete skill; future levels are provisioned.",
+        "A certification gate is not automatically a passive DPS or sensor modifier."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveSkills/evidence.json",
+        "D:/SSW/Saved/Analysis/SDE_SkillsAgentsContracts_20261119/report.txt",
+        "D:/SSW/Source/StarshatterWars/System/SkillsSubsystem.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "Distinguish eligibility requirements from runtime effects. The SDE comparison identified skill descriptions without a direct combat consumer; do not promise a combat bonus solely because a skill exists.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Agents and mission arcs",
+      "body": [
+        "Agent identity, location, division and level map naturally to a native catalog.",
+        "SSW agents offer training, story and dynamic missions with rank and skill gates.",
+        "Campaign acceptance and active progression belong to the pilot’s journal.",
+        "Short arcs can be sequenced; branching and failure handoff need authored content."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveEpicArcs/evidence.json",
+        "D:/SSW/Saved/Analysis/EveMissionFlow",
+        "D:/SSW/Source/StarshatterWars/AIAgent/AgentAI.cpp",
+        "D:/SSW/Source/StarshatterWars/AIAgent/MissionArcRules.h"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Mission offers and live panels",
+      "body": [
+        "Show the assigned hull, destination and why an offer is unavailable.",
+        "Keep mission briefing, objectives and package information accessible in flight.",
+        "Intel and replay are distinct from accepting the mission.",
+        "Training replays for testing do not imply normal missions can award points repeatedly."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveMissionUIFollowup",
+        "D:/SSW/Source/StarshatterWars/Display/AgentsDlg.cpp",
+        "D:/SSW/Source/StarshatterWars/Display/PlayerDlg.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "The floating SSW interface is an adaptation to this game. Do not describe every SSW panel restyle as recovered EVE application logic.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Gate alignment and travel",
+      "body": [
+        "Movement functions, autopilot and jump checks reveal the client travel contract.",
+        "SSW aligns with the farcaster corridor before entering the gate.",
+        "Routes and next-jump information must agree with the selected destination.",
+        "Quantum and gate screen effects are SSW implementations; proprietary EVE effects were not imported."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveGateApproach_20261118/report.json",
+        "D:/SSW/Saved/Analysis/EveQuantumTravel_20261118",
+        "D:/SSW/Source/StarshatterWars/AIAgent/TransportAI.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "NPC traffic: observed calls and native scheduling",
+      "body": [
+        "Recovered behavior modules include hauling, logistics, combat navigation and fleet actions.",
+        "They do not reveal the complete live server population scheduler.",
+        "TrafficAI supplies SSW routing, endpoints and lifecycle rules.",
+        "Mining, transport and production remain separate handlers with explicit handoffs."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json",
+        "D:/SSW/Source/StarshatterWars/AIAgent/TrafficAI.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "One michelle module failed unmarshalling in the retained investigation. Record that coverage gap rather than treating every EVE movement path as recovered.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Station services are an authority boundary",
+      "body": [
+        "Viewing a station must not grant remote repairs or purchases.",
+        "SSW checks the actual dock against the viewed facility on every action.",
+        "Carriers provide basic support; station roles restrict other services.",
+        "The UI explains unavailable services and the backend checks again."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/StationServicesAI.cpp",
+        "D:/SSW/Source/StarshatterWars/System/StationServiceCatalog.cpp",
+        "D:/SSW/Source/StarshatterWars/Tests/StationServicesAITests.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Career guilds and empire boundaries",
+      "body": [
+        "SSW guilds currently represent career groups and starter-craft choices.",
+        "Listings follow the pilot’s empire; an unloaded profile does not invent an empire.",
+        "EVE corporation roles and shared finances are separate multiplayer concerns.",
+        "Do not claim server-backed organizations from an offline catalog."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveGuilds_20261119",
+        "D:/SSW/Source/StarshatterWars/Display/GuildsDlg.cpp",
+        "D:/SSW/Source/StarshatterWars/System/GuildCatalogSubsystem.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "The official static data export",
+      "body": [
+        "Downloaded build 3714173, published 18 November 2026.",
+        "102 JSONL tables; 678,974 records parsed and inventoried.",
+        "Archive size: 99,763,163 bytes. SHA-256 is retained with the download.",
+        "This is a research input, not a copy of the live EVE economy or server database."
+      ],
+      "refs": [
+        "https://developers.eveonline.com/docs/services/static-data/",
+        "https://developers.eveonline.com/static-data/tranquility/eve-online-static-data-3714173-jsonl.zip",
+        "D:/SSW/Saved/Research/EVE/SDE/inventory.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "Archive SHA-256: 4eabd0c60c4c92e1b82b0302b981c7010191cac3aa68ae2c374f471c16109c20. The record count refers to the inspected archive, not every historical EVE export.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "SDE families used in the comparison",
+      "body": [
+        "types and groups: item identity, category and catalog relationships.",
+        "blueprints, materials and industry activities: recipes and requirements.",
+        "typeDogma, attributes and effects: declared equipment relationships.",
+        "agents, epic arcs, skill plans and accounting types: schema and workflow gaps."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Research/EVE/SDE/table-index.txt",
+        "D:/SSW/Saved/Analysis/SDE_IndustryMining_20261119/report.json",
+        "D:/SSW/Saved/Analysis/SDE_SkillsAgentsContracts_20261119/report.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Price relationships without importing ISK",
+      "body": [
+        "Map an SSW hull role to a reviewed EVE role group.",
+        "Normalize the group median around an SSW anchor, then damp and bound the ratio.",
+        "46 hull prices change; unmapped hulls keep their prior values.",
+        "Physical mass, thrust, reactor output and geometry are not copied."
+      ],
+      "refs": [
+        "D:/SSW/Tools/Research/rebalance_ship_systems_from_sde.py",
+        "D:/SSW/Saved/Research/EVE/SDE/ship-system-calibration-current.json"
+      ],
+      "code": "role_ratio = eve_role_median / eve_frigate_median\nwithin_role = old_price / old_ssw_class_median\ncandidate = 574000 * role_ratio**0.75 * role_factor * within_role\nnew_price = round1000(clamp(candidate, 0.5*old_price, 2*old_price))\n\n# Formula summary; Falcon stays fixed at 574,000 SSW credits",
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "A worked mining-drone ratio",
+      "body": [
+        "EVE Miner I: 10 units per 15 s → 0.6667 units/s.",
+        "EVE Mining Drone I: 25 per 60 s → 0.4167 units/s.",
+        "Relative rate: 0.4167 / 0.6667 = 0.625.",
+        "SSW laser anchor 0.25 t/s × 0.625 = 0.15625 t/s per drone."
+      ],
+      "refs": [
+        "D:/SSW/Tools/Economy/rebalance_sde_mining.py",
+        "D:/SSW/Saved/Analysis/SDE_MiningYieldRebalance_20261119"
+      ],
+      "code": null,
+      "image": null,
+      "note": "A ratio is dimensionless, so it can be applied to an authored SSW tonnes/second anchor. This is an explicit balance choice, not a physical equivalence between EVE ore units and metric tonnes.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Component quality with a fixed midpoint",
+      "body": [
+        "Grade III retains the normal physical baseline.",
+        "Relative performance and power ratios become smooth I–V curves.",
+        "Weapon-specific profiles can override the generic component curve.",
+        "A refit still has to pass the SSW reactor budget."
+      ],
+      "refs": [
+        "D:/SSW/Tools/Research/rebalance_ship_systems_from_sde.py",
+        "D:/SSW/Tools/Research/apply_weapon_component_grade_profiles.py",
+        "D:/SSW/Source/StarshatterWars/System/StarshatterSystemDesignSubsystem.cpp"
+      ],
+      "code": "exponent = (grade - 3) / 4.0\nperformance = reference_performance_ratio ** exponent\npower_demand = reference_power_ratio ** exponent\n\n# At grade III, exponent = 0 → both multipliers = 1\n# Formula summary; actual profiles remain in SSW JSON.",
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "JSON ingestion and parity checks",
+      "body": [
+        "Editable source data enters through native ingestors and existing tables.",
+        "Awards, ranks, mission catalogs, actions and zones are checked against legacy loaders.",
+        "Use full-field comparisons and preserve order when repeated entries are meaningful.",
+        "Campaign headers and galaxy/terrain definitions are intentionally left for later."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/System/SSWDesignIngestionCommandlet.cpp",
+        "D:/SSW/Source/StarshatterWars/Tests/CampaignJsonCatalogTests.cpp",
+        "D:/SSW/Source/StarshatterWars/Tests/AwardsJsonCatalogTests.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "A real failure: two owners of one beam",
+      "body": [
+        "The battle recording crashed in projectile cleanup.",
+        "A weapon deleted its beam, but the region still held the pointer.",
+        "A null check cannot make a freed object valid.",
+        "The repair is ownership: expire the beam, then let its region delete it once."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/Ship/Weapon.cpp",
+        "D:/SSW/Source/StarshatterWars/Tests/BeamOwnershipTests.cpp",
+        "D:/SSW/Saved/Logs/BeamOwnershipFixTests2.log"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Retire a beam without freeing its owner’s pointer",
+      "body": [
+        "SSW excerpt: clear the weapon’s borrowed pointer before deferred region cleanup."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/Ship/Weapon.cpp:217"
+      ],
+      "code": "        SimShot* Beam = beams[i];\n        beams[i] = nullptr;\n        Ignore(Beam);\n        Beam->Destroy();\n        // Inserted projectiles belong to SimRegion. Damage or weapon teardown\n        // can run during UpdateShips, before that region advances its shots.\n        // Defer deletion to its owning list instead of leaving a freed pointer.\n        if (!Beam->GetRegion()) delete Beam;\n    }\n}",
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Tests convert assumptions into contracts",
+      "body": [
+        "Inventory: no ore credit before unload; no reservation can be spent twice.",
+        "Manufacturing: consume once, reserve capacity, complete into the right inventory.",
+        "Services: reject actions while flying or docked at another facility.",
+        "Lifetime: disable a weapon, destroy it, then advance the region without double deletion."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/Tests/MiningDroneTests.cpp",
+        "D:/SSW/Source/StarshatterWars/Tests/IndustrySkillGateTests.cpp",
+        "D:/SSW/Source/StarshatterWars/Tests/StationServicesAITests.cpp",
+        "D:/SSW/Source/StarshatterWars/Tests/BeamOwnershipTests.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "The beam ownership and shield material tests passed in the focused run. Broader build verification is separate; do not present source inspection alone as a successful gameplay test.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Features that remain separate work",
+      "body": [
+        "Server-authoritative persistence and the complete EVE NPC scheduler were not recovered.",
+        "Blueprint copying, research and invention are not automatically implemented.",
+        "Branching story arcs and career skill plans need authored SSW content.",
+        "Corporation roles, shared wallets and online guild governance need their own authority model."
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/SDE_SkillsAgentsContracts_20261119/report.txt",
+        "D:/SSW/Saved/Analysis/SDE_IndustryMining_20261119/report.txt",
+        "D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Static teaching exercise",
+      "body": [
+        "Given a client call named DeliverContract, list what it proves and what it does not.",
+        "Write preconditions for cargo ownership, capacity, collateral and destination.",
+        "Walk through success, duplicate delivery and save failure on paper.",
+        "Use a receipt ID and an inventory invariant to explain why a second payout is rejected."
+      ],
+      "refs": [
+        "D:/SSW/Source/StarshatterWars/AIAgent/ContractSaveTransaction.h",
+        "D:/SSW/Source/StarshatterWars/AIAgent/ContractLedger.cpp"
+      ],
+      "code": null,
+      "image": null,
+      "note": "No live demonstration required. Suggested expected invariant: total cargo across pickup, reservation, in-transit hold and delivered inventory changes only through explicit extraction/consumption/loss rules. Settlement must not infer a second payment from UI retries.",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Research index 1",
+      "body": [
+        "Mining, drones and effects\nEvidence: EveSystemsAudit; EveMiningFx_20261118; EveMiningDrones_20261119\nSSW: MiningAI; MiningDroneAI; MiningDroneSubsystem; MiningDroneActor",
+        "Transport and production\nEvidence: EveRoutes; EveSystemsAudit; SDE_IndustryMining_20261119\nSSW: TransportAI; ContractAI; ProductionAI; ManufacturingAI; ReprocessingAI"
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveSystemsAudit",
+        "D:/SSW/Saved/Analysis/EveMiningFx_20261118",
+        "D:/SSW/Saved/Analysis/EveMiningDrones_20261119",
+        "D:/SSW/Saved/Analysis/EveRoutes",
+        "D:/SSW/Saved/Analysis/EveSystemsAudit",
+        "D:/SSW/Saved/Analysis/SDE_IndustryMining_20261119"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Research index 2",
+      "body": [
+        "Contracts and wallet\nEvidence: EveWallet_20261118; EvePlayerWalletRecheck_20261118; ContractReceiptReview_20261119\nSSW: AcceptanceAI; BiddingAI; SettlementAI; TransactionAI; ContractLedger",
+        "Fitting and station services\nEvidence: EveStationServices; SDE_FittingServices_20261119\nSSW: ShipInsuranceSubsystem; StationServicesAI; StationServiceCatalog; ShipFitDlg"
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveWallet_20261118",
+        "D:/SSW/Saved/Analysis/EvePlayerWalletRecheck_20261118",
+        "D:/SSW/Saved/Analysis/ContractReceiptReview_20261119",
+        "D:/SSW/Saved/Analysis/EveStationServices",
+        "D:/SSW/Saved/Analysis/SDE_FittingServices_20261119"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Research index 3",
+      "body": [
+        "Skills and player progression\nEvidence: EveSkills; EveGuilds_20261119; SDE_SkillsAgentsContracts_20261119\nSSW: SkillsSubsystem; PlayerDlg; GuildCatalogSubsystem; HangarDlg",
+        "Agents, missions and arcs\nEvidence: EveMissionFlow; EveMissionUIFollowup; EveEpicArcs\nSSW: AgentAI; AgentCatalogSubsystem; MissionArcRules; AgentsDlg"
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveSkills",
+        "D:/SSW/Saved/Analysis/EveGuilds_20261119",
+        "D:/SSW/Saved/Analysis/SDE_SkillsAgentsContracts_20261119",
+        "D:/SSW/Saved/Analysis/EveMissionFlow",
+        "D:/SSW/Saved/Analysis/EveMissionUIFollowup",
+        "D:/SSW/Saved/Analysis/EveEpicArcs"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Research index 4",
+      "body": [
+        "Travel and traffic\nEvidence: EveGateApproach_20261118; EveQuantumTravel_20261118; EveNPCMovement_20261118\nSSW: TransportAI; TrafficAI; Farcaster; QuantumEffectsActor",
+        "Native rendering and data\nEvidence: EvePlumes_20261119; ShipSystemSDECalibration_20261119; SDE_Integration_20261119\nSSW: ShipActor; EnginePlumeTuning; JSON ingestors; native regression tests"
+      ],
+      "refs": [
+        "D:/SSW/Saved/Analysis/EveGateApproach_20261118",
+        "D:/SSW/Saved/Analysis/EveQuantumTravel_20261118",
+        "D:/SSW/Saved/Analysis/EveNPCMovement_20261118",
+        "D:/SSW/Saved/Analysis/EvePlumes_20261119",
+        "D:/SSW/Saved/Analysis/ShipSystemSDECalibration_20261119",
+        "D:/SSW/Saved/Analysis/SDE_Integration_20261119"
+      ],
+      "code": null,
+      "image": null,
+      "note": "",
+      "unresolvedRefs": []
+    },
+    {
+      "title": "Source and reproduction references",
+      "body": [
+        "Official export: developers.eveonline.com/docs/services/static-data/",
+        "Local reader: Tools/ReverseEngineering/read_legacy_bytecode.py",
+        "Investigation records: Saved/Analysis/Eve* and Saved/Analysis/SDE*",
+        "Native implementations and tests: Source/StarshatterWars/AIAgent, System and Tests"
+      ],
+      "refs": [
+        "https://developers.eveonline.com/docs/services/static-data/",
+        "D:/SSW/Saved/Research/EVE/SDE/table-index.txt"
+      ],
+      "code": null,
+      "image": null,
+      "note": "The accompanying evidence index lists retained module paths and report locations. External proprietary code is not presented as SSW source. Short C++ excerpts are from the local SSW implementation; formula slides are explicitly explanatory.\n\nRetained module references (module | hash | report):\nD:\\SSW\\Saved\\Analysis\\EveMissionFlow\\1.pyc | a5832aaaa2d27919d904fa600a2290a349dcd6a766bdabfa76819f675bb8c487 | D:/SSW/Saved/Analysis/EveMissionUIFollowup/findings.json\nD:\\SSW\\Saved\\Analysis\\EveMissionFlow\\3.pyc | 0dab4f760ce9c875797b47e3dd32dade332ddb368ba2d48ca6869ca3945346c2 | D:/SSW/Saved/Analysis/EveMissionUIFollowup/findings.json\nD:\\SSW\\Saved\\Analysis\\EveMissionFlow\\4.pyc | 92822f49a3fd299db6cc2df918c496660df814ff1348164208a26354967b3bcd | D:/SSW/Saved/Analysis/EveMissionUIFollowup/findings.json\nagentinteraction/objectivesteps.pyj | 8958edeb88d14300e5dc23469c777aa65a2c44e66d5bd248ec9aa48295a44982 | D:/SSW/Saved/Analysis/EveMissionFlow/evidence.json\nagentinteraction/reward.pyj | 012f2a89f21c0875cb1e34218c57304456ce2ab6c4eb8f5758107ad826b9928a | D:/SSW/Saved/Analysis/EveMissionFlow/evidence.json\nagentinteraction/window.pyj | 3f1be782a12c064ca78e7d0b43ef679cbf17294f2076e96cbe2c11ec943d3e43 | D:/SSW/Saved/Analysis/EveMissionFlow/evidence.json\nbehaviors/actions/ballparks.pyj | ab935f1d344564456127d0f7d94788fd348024021745deb942d783b8f6fa6237 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/actions/ballparks.pyj | ab935f1d344564456127d0f7d94788fd348024021745deb942d783b8f6fa6237 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/actions/combatnavigation.pyj | ef18be77270189c3277f1e9829c63d3bba866d558342158300291622f30a9f29 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/actions/combatnavigation.pyj | ef18be77270189c3277f1e9829c63d3bba866d558342158300291622f30a9f29 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/actions/fleet.pyj | cb746494f4797017dbd1e588442f2522f06df45068944b56538583601d061e22 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/actions/fleet.pyj | cb746494f4797017dbd1e588442f2522f06df45068944b56538583601d061e22 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/actions/hauling.pyj | 6f6a6c0cbf25d080eef34308fdfc35eafab3ebc3b6a76f7fa2a87936aa53ba3a | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/actions/hauling.pyj | 6f6a6c0cbf25d080eef34308fdfc35eafab3ebc3b6a76f7fa2a87936aa53ba3a | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/actions/logistics.pyj | 58457ae4c24cac3b409132617173c4fd33138da0e47a86bed481996c8b47abe2 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/actions/logistics.pyj | 58457ae4c24cac3b409132617173c4fd33138da0e47a86bed481996c8b47abe2 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/behaviortree.pyj | 8eba805b73bb85935a0217ccc9d439fc932ca1da3d8e3e04d6b45765ecba9fe1 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/behaviortree.pyj | 8eba805b73bb85935a0217ccc9d439fc932ca1da3d8e3e04d6b45765ecba9fe1 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/composites/__init__.pyj | 3378e45374da7005b13014f6429cb5b663275cd8a660d746147de377a979a8d2 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/composites/__init__.pyj | 3378e45374da7005b13014f6429cb5b663275cd8a660d746147de377a979a8d2 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/conditions/ballparks.pyj | a1473427db804a54a63077886ae96be21c9e0b5ded32ef0d7e0f94a2c6023dad | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/conditions/ballparks.pyj | a1473427db804a54a63077886ae96be21c9e0b5ded32ef0d7e0f94a2c6023dad | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/monitors/navigation.pyj | f25ee9cf2fe6787e43e683f2c57e9993fb70193f95c05804cd7ec97bf925dcba | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/monitors/navigation.pyj | f25ee9cf2fe6787e43e683f2c57e9993fb70193f95c05804cd7ec97bf925dcba | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/registry/composites.pyj | 6c2933cef50b8c770e79e87aca0b3031f31b455fb76a8d6cb6c73f2174cba210 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/registry/composites.pyj | 6c2933cef50b8c770e79e87aca0b3031f31b455fb76a8d6cb6c73f2174cba210 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/tasks.pyj | fdd64716326e25a1f03a1131c3d8b84e741b1cf6685d442992b5678a3b5f1882 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/tasks.pyj | fdd64716326e25a1f03a1131c3d8b84e741b1cf6685d442992b5678a3b5f1882 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/trees/combat.pyj | 8a000029f61a4d5531fa62be121031ba14f9bad9e3c27f6ad7ccd7c715ef543c | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/trees/combat.pyj | 8a000029f61a4d5531fa62be121031ba14f9bad9e3c27f6ad7ccd7c715ef543c | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/trees/explore.pyj | 525940926cce3234a42e63c475a13062d0e4aee9fa3a2c47a414afa8962fbc9b | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/trees/explore.pyj | 525940926cce3234a42e63c475a13062d0e4aee9fa3a2c47a414afa8962fbc9b | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/trees/harvesting.pyj | 2879ad726283f623d54904ad5684300a5f42c6ab07f394a42c589629c3dca8ff | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/trees/harvesting.pyj | 2879ad726283f623d54904ad5684300a5f42c6ab07f394a42c589629c3dca8ff | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/trees/patrol.pyj | b6665ce64d606eb24de476cb7c0941c088c6e74fe981e8be9c0b3d4c8a0887c3 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/trees/patrol.pyj | b6665ce64d606eb24de476cb7c0941c088c6e74fe981e8be9c0b3d4c8a0887c3 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nbehaviors/trees/travel.pyj | 51b98457e3f6bacc64694eaac70162a96723b7ab90539414601a276a67d7bed8 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nbehaviors/trees/travel.pyj | 51b98457e3f6bacc64694eaac70162a96723b7ab90539414601a276a67d7bed8 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\ncharacterskills/client/purchase.pyj | 7ee3a1e1eb939b66821988aad53533ef626fb394d637d15a521116c48766e172 | D:/SSW/Saved/Analysis/EveSkills/evidence.json\ncharacterskills/common/character_skill_entry.pyj | b904ee53bba25fd5f65f2575a160897f2b052bb2ac6474a2a3ff94d4128224eb | D:/SSW/Saved/Analysis/EveSkills/evidence.json\ncharacterskills/common/purchase.pyj | f167e5285954564c51724534eb120c242235f6ce49c041eab62a1bf65a2a52ea | D:/SSW/Saved/Analysis/EveSkills/evidence.json\ncharacterskills/queue.pyj | 2f0437d1c16a41e4d188cd1149eaffb3c5b85f7fb291d85d48bfd19d6f69ea77 | D:/SSW/Saved/Analysis/EveSkills/evidence.json\ncontracts/contractStruct.pyj | 73f1f8d1db3e6aa0fec23b4738e7bc5764faddd3704b2879366cc4b8b202b78f | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\ncorporation/common/roles.pyj | ed59b740de64f07aa5a0cda5dcdc92449f5277fe974424331cf34486d8ea3b97 | D:/SSW/Saved/Analysis/EveGuilds_20261119/extraction.json\ncorporation/common/roles.pyj | ed59b740de64f07aa5a0cda5dcdc92449f5277fe974424331cf34486d8ea3b97 | D:/SSW/Saved/Analysis/EveGuilds_20261119/report.json\ncorporation/roles/roleChecks.pyj | ed49d11fb43b0a5a63642fe7d275606c4d409dbe1d9fa44ded0d6be9c1bdcc54 | D:/SSW/Saved/Analysis/EveGuilds_20261119/extraction.json\ncorporation/roles/roleChecks.pyj | ed49d11fb43b0a5a63642fe7d275606c4d409dbe1d9fa44ded0d6be9c1bdcc54 | D:/SSW/Saved/Analysis/EveGuilds_20261119/report.json\ndestiny/net/client/_baseticker.pyj | ee5d2a08026d58f2f91ea10037e82f48239218473b8bf74bfedc20bf14adfe1f | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\ndestiny/net/client/_baseticker.pyj | ee5d2a08026d58f2f91ea10037e82f48239218473b8bf74bfedc20bf14adfe1f | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\ndestiny/net/client/_interface.pyj | 22fa8195a86dcda0519d04b4e0ff4b71a9007c5e2492d5e3d44f9d2fafa62fb8 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\ndestiny/net/client/_interface.pyj | 22fa8195a86dcda0519d04b4e0ff4b71a9007c5e2492d5e3d44f9d2fafa62fb8 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\ndestiny/net/client/_ticker.pyj | 147d938d8b138e7a1058cd79063c2bec021044a7e23ba14adfa6826e30ce00da | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\ndestiny/net/client/_ticker.pyj | 147d938d8b138e7a1058cd79063c2bec021044a7e23ba14adfa6826e30ce00da | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\ndogma/attributes/chargedAttribute.pyj | 00228bfca93827e1802d6d077c78b220ffcb90dfa286828f377e053b749639bb | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\ndogma/attributes/stackingNurfedAttribute.pyj | d759ee510ba411e148a0e5b3381cd8e9f0aeb1612cf9e89ac0124ae730b38bd3 | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\ndogma/required_skills.pyj | dacf05c7c4f3d45851040f5ea524e7a3f9408b04544c14d09efa0aeff227f36c | D:/SSW/Saved/Analysis/EveSkills/evidence.json\neve/client/script/dogma/clientDogmaIM.pyj | 8f5dfea89e6b37d91cdc6e2e12a297e82f04f2b405ab56ae6d29e29a1bd64f99 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\neve/client/script/dogma/clientDogmaIM.pyj | 8f5dfea89e6b37d91cdc6e2e12a297e82f04f2b405ab56ae6d29e29a1bd64f99 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\neve/client/script/environment/effects/Jump.pyj | 8b088338d6520fd427cf59960c1998ccf05e9a83d1ac2869fbe605f07d718a1a | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/extraction.json\neve/client/script/environment/effects/Jump.pyj | 8b088338d6520fd427cf59960c1998ccf05e9a83d1ac2869fbe605f07d718a1a | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/report.json\neve/client/script/environment/effects/Warp.pyj | 61ea59c2628d73dee59afe0d11f1f946e1d40f38660d974b02d98edd5da3893b | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/extraction.json\neve/client/script/environment/effects/Warp.pyj | 61ea59c2628d73dee59afe0d11f1f946e1d40f38660d974b02d98edd5da3893b | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/report.json\neve/client/script/environment/effects/WarpFlash.pyj | 519b92c52d0487a6edc01f80989b8f5c315ce1402d840da72f33b7461be0b33a | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/extraction.json\neve/client/script/environment/effects/WarpFlash.pyj | 519b92c52d0487a6edc01f80989b8f5c315ce1402d840da72f33b7461be0b33a | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/report.json\neve/client/script/environment/effects/turrets.pyj |  | D:/SSW/Saved/Analysis/EveMiningFx_20261118/inventory.json\neve/client/script/environment/effects/turrets.pyj |  | D:/SSW/Saved/Analysis/EveMiningFx_20261118/report.json\neve/client/script/environment/invCache.pyj | 6846760610fb763ac8f07cd3af6b66986eaffafb08f891c6df41b3508d3b4db5 | D:/SSW/Saved/Analysis/EveStationServices/evidence.json\neve/client/script/environment/invCache.pyj | 6846760610fb763ac8f07cd3af6b66986eaffafb08f891c6df41b3508d3b4db5 | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\neve/client/script/environment/invControllers.pyj | 04384242dd82feb7e956fcbe64156265f6f54a4d491b02e45b0ac44e6e6a1d67 | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\neve/client/script/environment/sofService.pyj |  | D:/SSW/Saved/Analysis/EvePlumes_20261119/source-hashes.json\neve/client/script/environment/sofService.pyj | efec0482b062c2bcfaaf29157954521d454057c790fc7bd8d77ae8ba4ece61e2 | D:/SSW/Saved/Analysis/EvePlumes_20261119/extraction.json\neve/client/script/environment/spaceObject/entityShip.pyj | 661c1016b7c1754139dbafd0d66b696082061076da0f615f864137726158123f | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\neve/client/script/environment/spaceObject/entityShip.pyj | 661c1016b7c1754139dbafd0d66b696082061076da0f615f864137726158123f | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\neve/client/script/environment/spaceObject/entityShip.pyj | 661c1016b7c1754139dbafd0d66b696082061076da0f615f864137726158123f | D:/SSW/Saved/Analysis/EvePlumes_20261119/extraction.json\neve/client/script/environment/spaceObject/playerShip.pyj | 1557d2f4b6b43923fff817ce827e1fc3c6ba8e94cf98ae68b078670d857da6d8 | D:/SSW/Saved/Analysis/EvePlumes_20261119/extraction.json\neve/client/script/environment/spaceObject/ship.pyj |  | D:/SSW/Saved/Analysis/EvePlumes_20261119/source-hashes.json\neve/client/script/environment/spaceObject/ship.pyj | 3baf170bbdf25c0179b66e97a8ece58ced1b5e1c83702b202823329ee8a28aec | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\neve/client/script/environment/spaceObject/ship.pyj | 3baf170bbdf25c0179b66e97a8ece58ced1b5e1c83702b202823329ee8a28aec | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\neve/client/script/environment/spaceObject/spaceObject.pyj |  | D:/SSW/Saved/Analysis/EvePlumes_20261119/source-hashes.json\neve/client/script/environment/spaceObject/spaceObject.pyj | 78460aae00a69fe3f663a55a0157c1d03a28569ee8318556a59e6a91eca26939 | D:/SSW/Saved/Analysis/EvePlumes_20261119/extraction.json\neve/client/script/parklife/autopilot.pyj | 5afa3c78b3d35203fac5c52240019ecbe9a1d8142ced25e9e89c7b6b14a05d52 | D:/SSW/Saved/Analysis/EveGateApproach_20261118/extraction.json\neve/client/script/parklife/autopilot.pyj | 5afa3c78b3d35203fac5c52240019ecbe9a1d8142ced25e9e89c7b6b14a05d52 | D:/SSW/Saved/Analysis/EveGateApproach_20261118/report.json\neve/client/script/parklife/autopilot.pyj | d00782be46daccc4864c403a91b508422bd7d7bafd160e103b4a307f8a614540 | D:/SSW/Saved/Analysis/EveRoutes/evidence.json\neve/client/script/parklife/autopilot.pyj | d00782be46daccc4864c403a91b508422bd7d7bafd160e103b4a307f8a614540 | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\neve/client/script/remote/michelle.pyj |  | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\neve/client/script/remote/michelle.pyj | e36ff5b6c1806234de713c294d168e39abc6e253a3c94ad410ea0cc316314413 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\neve/client/script/remote/michelle.pyj | e36ff5b6c1806234de713c294d168e39abc6e253a3c94ad410ea0cc316314413 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\neve/client/script/ui/camera/baseSpaceCamera.pyj | a1fdf68010a75745d24537d21e741ec1726600a3acb50ede58a74bf46d279af4 | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/extraction.json\neve/client/script/ui/camera/baseSpaceCamera.pyj | a1fdf68010a75745d24537d21e741ec1726600a3acb50ede58a74bf46d279af4 | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/report.json\neve/client/script/ui/camera/jumpCamera.pyj | 948babf5ed41bd85cb368f49d517fc41f49ed6609f9536c093032e87e2368bf3 | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/extraction.json\neve/client/script/ui/camera/jumpCamera.pyj | 948babf5ed41bd85cb368f49d517fc41f49ed6609f9536c093032e87e2368bf3 | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/report.json\neve/client/script/ui/camera/shipOrbitCamera.pyj | addb926e018c937064ff05bddb571e2ffd02511f56c8cfb468f8a6baadbda379 | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/extraction.json\neve/client/script/ui/camera/shipOrbitCamera.pyj | addb926e018c937064ff05bddb571e2ffd02511f56c8cfb468f8a6baadbda379 | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/report.json\neve/client/script/ui/inflight/bracketsAndTargets/haulerBracket.pyj | 9ed2452f5c28fd46a783e22102857eb36845d92e9bbfde159b5a00553a2b30ba | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/logistics.json\neve/client/script/ui/inflight/bracketsAndTargets/haulerBracket.pyj | 9ed2452f5c28fd46a783e22102857eb36845d92e9bbfde159b5a00553a2b30ba | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/logistics_extraction.json\neve/client/script/ui/inflight/navigation.pyj | f36168132ef96e1bc9b28ac90f68fb1c252449d7d0d1fc711799838b45d9b692 | D:/SSW/Saved/Analysis/EveGateApproach_20261118/extraction.json\neve/client/script/ui/inflight/navigation.pyj | f36168132ef96e1bc9b28ac90f68fb1c252449d7d0d1fc711799838b45d9b692 | D:/SSW/Saved/Analysis/EveGateApproach_20261118/report.json\neve/client/script/ui/inflight/shipModuleButton/__init__.pyj |  | D:/SSW/Saved/Analysis/EveMiningFx_20261118/inventory.json\neve/client/script/ui/inflight/shipModuleButton/attributeValueRowContainer.pyj |  | D:/SSW/Saved/Analysis/EveMiningFx_20261118/inventory.json\neve/client/script/ui/inflight/shipModuleButton/extraBtnShipSlot.pyj |  | D:/SSW/Saved/Analysis/EveMiningFx_20261118/inventory.json\neve/client/script/ui/inflight/shipModuleButton/moduleButtonTooltip.pyj |  | D:/SSW/Saved/Analysis/EveMiningFx_20261118/inventory.json\neve/client/script/ui/inflight/shipModuleButton/moduleButtonTooltip.pyj |  | D:/SSW/Saved/Analysis/EveMiningFx_20261118/report.json\neve/client/script/ui/inflight/shipModuleButton/ramps.pyj |  | D:/SSW/Saved/Analysis/EveMiningFx_20261118/inventory.json\neve/client/script/ui/inflight/shipModuleButton/shipmodulebutton.pyj |  | D:/SSW/Saved/Analysis/EveMiningFx_20261118/inventory.json\neve/client/script/ui/inflight/shipModuleButton/shipmodulebutton.pyj |  | D:/SSW/Saved/Analysis/EveMiningFx_20261118/report.json\neve/client/script/ui/services/careerAgentEntry.pyj | f35ebe1ab712979e30a7b2996b50fa8fc1de666a5940a44fb324eb36ae32eac3 | D:/SSW/Saved/Analysis/EveMissionFlow/evidence.json\neve/client/script/ui/services/corporation/bco_applications.pyj | bb3d0c703cc1d30c81466744854a7114b3112fe81b00f168e3998fbd5deb021e | D:/SSW/Saved/Analysis/EveGuilds_20261119/extraction.json\neve/client/script/ui/services/corporation/bco_applications.pyj | bb3d0c703cc1d30c81466744854a7114b3112fe81b00f168e3998fbd5deb021e | D:/SSW/Saved/Analysis/EveGuilds_20261119/report.json\neve/client/script/ui/services/corporation/bco_members.pyj | 82509ed97061859b985134cca2050b025663156e73e668fc209ec949dd7d5092 | D:/SSW/Saved/Analysis/EveGuilds_20261119/extraction.json\neve/client/script/ui/services/corporation/bco_members.pyj | 82509ed97061859b985134cca2050b025663156e73e668fc209ec949dd7d5092 | D:/SSW/Saved/Analysis/EveGuilds_20261119/report.json\neve/client/script/ui/services/crimewatchSvc.pyj | d90fbb1c0cef188583e7fdbefbb938bf4e48a439d0967f3af56f536e9c22574d | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\neve/client/script/ui/services/marketsvc.pyj | ddf0ffc49e222bbf2628412d869ea37e5eb446ea2d1a6b3b1ecd3c99389bc110 | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\neve/client/script/ui/services/menuSvcExtras/droneFunctions.pyj | c8640981f4a11bf730c6ae38208ec2a78a53d24a26e61a774148181b0dfa117e | D:/SSW/Saved/Analysis/EveMiningDrones_20261119/extraction.json\neve/client/script/ui/services/menuSvcExtras/droneFunctions.pyj | c8640981f4a11bf730c6ae38208ec2a78a53d24a26e61a774148181b0dfa117e | D:/SSW/Saved/Analysis/EveMiningDrones_20261119/report.json\neve/client/script/ui/services/menuSvcExtras/movementFunctions.pyj | f9353a3596f2383a2296e97ca8bdb228a214f1baf9fefd2f26c552efd2e30f25 | D:/SSW/Saved/Analysis/EveGateApproach_20261118/extraction.json\neve/client/script/ui/services/menuSvcExtras/movementFunctions.pyj | f9353a3596f2383a2296e97ca8bdb228a214f1baf9fefd2f26c552efd2e30f25 | D:/SSW/Saved/Analysis/EveGateApproach_20261118/report.json\neve/client/script/ui/services/skillsvc.pyj | 1d83b369d6a3b3d880485b63369963e7fb432b1258679a393b35452b670e2a82 | D:/SSW/Saved/Analysis/EveSkills/evidence.json\neve/client/script/ui/services/standingsvc.pyj | 54fce0fd32b9fb7a377e5d4ac3c0dcc2fa10200be9d3aab10d513a218f29d45e | D:/SSW/Saved/Analysis/EveFinalGapAudit_20261118/extraction.json\neve/client/script/ui/services/standingsvc.pyj | 54fce0fd32b9fb7a377e5d4ac3c0dcc2fa10200be9d3aab10d513a218f29d45e | D:/SSW/Saved/Analysis/EveFinalGapAudit_20261118/report.json\neve/client/script/ui/services/standingsvc.pyj | e65b48b35ed3b37be690e3adeace195bf2eccc8b41339d7505d586fd3cb8f85f | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\neve/client/script/ui/shared/agencyNew/contentPieces/epicArcAgentContentPiece.pyj | b70eb5de409f1a78be9190c0dcdb1fd62e4b8c3c79aef31b80b735f595a85c84 | D:/SSW/Saved/Analysis/EveEpicArcs/evidence.json\neve/client/script/ui/shared/agencyNew/contentProviders/contentProviderEpicArcs.pyj | e6c4da5aee0af6295bb5b2a3ecc50adbf30831f9ec47a8738851bcd3f654c8ab | D:/SSW/Saved/Analysis/EveEpicArcs/evidence.json\neve/client/script/ui/shared/agencyNew/contentProviders/contentProviderStorylineAgents.pyj | 09090350435b4eaff94388eeb707c410e38d1d18f5fffcb87eb7d9d14be0593d | D:/SSW/Saved/Analysis/EveEpicArcs/evidence.json\neve/client/script/ui/shared/epicArcSvc.pyj | 9db000a2f7ddb845ed43400b35c11d7c522aca560041d309a0a0b5a03d678a7c | D:/SSW/Saved/Analysis/EveEpicArcs/evidence.json\neve/client/script/ui/shared/epicArcs/epicArcChapterCont.pyj | 9de4a06b6027a03ee15cb61ce3a7ad400e7035acea92fa3b7228bf853e16af3b | D:/SSW/Saved/Analysis/EveEpicArcs/evidence.json\neve/client/script/ui/shared/epicArcs/epicArcController.pyj | aa20e29d330f07b23a34b4bb06e06e1c393380d4deca862cb1d096b3c65c8f0b | D:/SSW/Saved/Analysis/EveEpicArcs/evidence.json\neve/client/script/ui/shared/epicArcs/epicArcMissionCont.pyj | 5a108aac970a47bf3c1d92ef79255b226d30463157b4452a173b2ec3a4ada33c | D:/SSW/Saved/Analysis/EveEpicArcs/evidence.json\neve/client/script/ui/shared/fitting/fittingController.pyj | 51908182cd03e009b052c857205f8166438ba7e7996dd4852ac876ac1ff3f7df | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\neve/client/script/ui/shared/fitting/fittingSlotController.pyj | 0bff76f09badc2afa4824e0f59976c93b84ff70f189171119825a05aa4c74a9f | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\neve/client/script/ui/shared/infoPanels/infoPanelMissions.pyj | 4d3b693650ba1e654fde586c92dcef02ba4d438635f5e6a541f2003ae632192b | D:/SSW/Saved/Analysis/EveMissionFlow/evidence.json\neve/client/script/ui/shared/infoPanels/infoPanelRoute.pyj | 4e67bb4a0b5759d8ae393bcfcb17b82d2a1a4b80fceafb2182a9f025d06fad84 | D:/SSW/Saved/Analysis/EveRoutes/evidence.json\neve/client/script/ui/shared/neocom/activeMissionController.pyj | 76d2d29f5a7e57611d60575d3f92b8be50083f81de36430bd83eec2bf259513d | D:/SSW/Saved/Analysis/EveMissionFlow/evidence.json\neve/client/script/ui/shared/neocom/contracts/contracts.pyj | 3cd3e0c841829dd25e8cb9a4e78c77037497d5445eb27c81050551474a7f75eb | D:/SSW/Saved/Analysis/EveFinalGapAudit_20261118/extraction.json\neve/client/script/ui/shared/neocom/contracts/contracts.pyj | 3cd3e0c841829dd25e8cb9a4e78c77037497d5445eb27c81050551474a7f75eb | D:/SSW/Saved/Analysis/EveFinalGapAudit_20261118/report.json\neve/client/script/ui/shared/neocom/wallet/panels/baseTransactionsPanel.pyj | 49bb5dc0f800830a14425672b50d69a22ddd0e507909f70a3837f02ad3f271e2 | D:/SSW/Saved/Analysis/EveWallet_20261118/extraction.json\neve/client/script/ui/shared/neocom/wallet/panels/baseTransactionsPanel.pyj | 49bb5dc0f800830a14425672b50d69a22ddd0e507909f70a3837f02ad3f271e2 | D:/SSW/Saved/Analysis/EveWallet_20261118/report.json\neve/client/script/ui/shared/neocom/wallet/panels/marketTransactionsPanel.pyj | 66d123bb4caa3fd05e6830fcd3ca65ce776b62a0dfa3ce44a1d5b5762a0a9fa6 | D:/SSW/Saved/Analysis/EveWallet_20261118/extraction.json\neve/client/script/ui/shared/neocom/wallet/panels/marketTransactionsPanel.pyj | 66d123bb4caa3fd05e6830fcd3ca65ce776b62a0dfa3ce44a1d5b5762a0a9fa6 | D:/SSW/Saved/Analysis/EveWallet_20261118/report.json\neve/client/script/ui/shared/neocom/wallet/panels/personal/personalISKPanel.pyj | 72b89c8681d6d6ced60dee94487ec0e3b8014d80dd4bce925c9ba14f093e57ef | D:/SSW/Saved/Analysis/EveWallet_20261118/extraction.json\neve/client/script/ui/shared/neocom/wallet/panels/personal/personalISKPanel.pyj | 72b89c8681d6d6ced60dee94487ec0e3b8014d80dd4bce925c9ba14f093e57ef | D:/SSW/Saved/Analysis/EveWallet_20261118/report.json\neve/client/script/ui/shared/neocom/wallet/panels/personal/personalTransactionsPanel.pyj | 7c0584b80d4c6a8926fb293733a870f486a852b840d24597abc90cca45210aeb | D:/SSW/Saved/Analysis/EveWallet_20261118/extraction.json\neve/client/script/ui/shared/neocom/wallet/panels/personal/personalTransactionsPanel.pyj | 7c0584b80d4c6a8926fb293733a870f486a852b840d24597abc90cca45210aeb | D:/SSW/Saved/Analysis/EveWallet_20261118/report.json\neve/client/script/ui/shared/neocom/wallet/panels/transactionsPanel.pyj | e7b06853e05c6b7acd962366391fd6fa640414fff3aa40e604355f3a27bbf8e4 | D:/SSW/Saved/Analysis/EveWallet_20261118/extraction.json\neve/client/script/ui/shared/neocom/wallet/panels/transactionsPanel.pyj | e7b06853e05c6b7acd962366391fd6fa640414fff3aa40e604355f3a27bbf8e4 | D:/SSW/Saved/Analysis/EveWallet_20261118/report.json\neve/client/script/ui/shared/neocom/wallet/transactionsUtil.pyj | 66e12314783b41b199f33d7123a4b77402543b4e7dfb86d6ab4b5c9170e55202 | D:/SSW/Saved/Analysis/EveWallet_20261118/extraction.json\neve/client/script/ui/shared/neocom/wallet/transactionsUtil.pyj | 66e12314783b41b199f33d7123a4b77402543b4e7dfb86d6ab4b5c9170e55202 | D:/SSW/Saved/Analysis/EveWallet_20261118/report.json\neve/client/script/ui/shared/neocom/wallet/walletSvc.pyj | 082e4eff6094bcdfcd9aa69cc803441e68f044c3dfe336e9cd9f67b903cdda98 | D:/SSW/Saved/Analysis/EveWallet_20261118/extraction.json\neve/client/script/ui/shared/neocom/wallet/walletSvc.pyj | 082e4eff6094bcdfcd9aa69cc803441e68f044c3dfe336e9cd9f67b903cdda98 | D:/SSW/Saved/Analysis/EveWallet_20261118/report.json\neve/client/script/ui/station/insurance/base_insurance.pyj | 58fe549fd4143c7fa9d410bb2e20e67ad0a5fe77af93c9df7ac400b200cda0a0 | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\neve/client/script/ui/station/repairshop/base_repairshop.pyj | d7f3ae0d393ace22c56e278293fcfcb4982bda400d6f3e39d70f4f1e966be811 | D:/SSW/Saved/Analysis/EveStationServices/evidence.json\neve/devtools/script/crystalDamageTrackerWnd.pyj |  | D:/SSW/Saved/Analysis/EveMiningFx_20261118/inventory.json\nevefisfx/jumptransitioncamera.pyj | d1d4b5520dd3bcd541938341b5b13a975067b61788ac2713ea1dd4f96d72fd1a | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/extraction.json\nevefisfx/jumptransitioncamera.pyj | d1d4b5520dd3bcd541938341b5b13a975067b61788ac2713ea1dd4f96d72fd1a | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/report.json\nevegraphics/controllers/registry.pyj |  | D:/SSW/Saved/Analysis/EvePlumes_20261119/source-hashes.json\nevegraphics/controllers/registry.pyj | d03478aea4cccd084049d6fbfede5e82bb8e609f82f0a09120e5b67c4b97e20b | D:/SSW/Saved/Analysis/EvePlumes_20261119/extraction.json\nevegraphics/validation/validators/locatorValidation.pyj |  | D:/SSW/Saved/Analysis/EvePlumes_20261119/source-hashes.json\nevegraphics/validation/validators/locatorValidation.pyj | a9d786a6a6d317681999c3227b280c87794d122e902b67dd3949005e9f48a98e | D:/SSW/Saved/Analysis/EvePlumes_20261119/extraction.json\nevegraphics/validation/validators/spaceObjectValidation.pyj |  | D:/SSW/Saved/Analysis/EvePlumes_20261119/source-hashes.json\nevemissions/client/mission.pyj | 8dfae6c5e084bbd3652fe39876d589078101f3b58bb2a31d3612cb1b47ee4584 | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\nevemissions/client/mission.pyj | fe80a550c645bda83823dc423195faf31ee80a6835f7dd5ff2ac4a80ae47ad98 | D:/SSW/Saved/Analysis/EveFinalGapAudit_20261118/extraction.json\nevemissions/client/mission.pyj | fe80a550c645bda83823dc423195faf31ee80a6835f7dd5ff2ac4a80ae47ad98 | D:/SSW/Saved/Analysis/EveFinalGapAudit_20261118/report.json\nevemissions/client/missioncontroller.pyj | 132b283d588ad3dac39ab69df900a8424f1582e6b85d25ce4348bc9cd06bfd9e | D:/SSW/Saved/Analysis/EveMissionFlow/evidence.json\nevemissions/client/missioncontroller.pyj | 132b283d588ad3dac39ab69df900a8424f1582e6b85d25ce4348bc9cd06bfd9e | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\nevemissions/client/ui/agentinteractionview.pyj | be3e8646cdb9578dbfd996507e1c10dead3cd5e85fbd2ca193702684347bd3e0 | D:/SSW/Saved/Analysis/EveMissionFlow/evidence.json\nevespacescene/routevisualizer.pyj | 7d0bed18ebdea02bff0c38e82d04acd226cd7ececf5a3cbc432a3e66a188013d | D:/SSW/Saved/Analysis/EveRoutes/evidence.json\nindustry/activities/manufacturing.pyj | ebe83786dcdb030ff522ba9e00a4a093c02a2f83c3ce7507d13e0f8def8849a2 | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\nindustry/blueprint.pyj | 4b49a00abf282f6de0b896f7c93089671afb558b1a6258ab1487b5b079fafdb1 | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\nindustry/facility.pyj | 141cf748fadd066637fc35847326ebbb3cd3f7f49004f29295211949f9b75372 | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\nindustry/job.pyj | 32bb74c64a86b438e7e92aa330acd9c57244112098edb9f0e83f38cd23b819e2 | D:/SSW/Saved/Analysis/EveStationServices/evidence.json\nindustry/job.pyj | 32bb74c64a86b438e7e92aa330acd9c57244112098edb9f0e83f38cd23b819e2 | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\nmenucheckers/droneCheckers.pyj | 6e4465e7b5d9c964594aed2ae891f14cfa6823cec0f6a64e3355e70918a9f512 | D:/SSW/Saved/Analysis/EveMiningDrones_20261119/extraction.json\nmenucheckers/droneCheckers.pyj | 6e4465e7b5d9c964594aed2ae891f14cfa6823cec0f6a64e3355e70918a9f512 | D:/SSW/Saved/Analysis/EveMiningDrones_20261119/report.json\nmining/client/asteroid_scanning_service.pyj | 26ae152f9bacf202ededee4a176c813b1482d39979c5c32ca7ad2c7bd33f75c8 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/logistics.json\nmining/client/asteroid_scanning_service.pyj | 26ae152f9bacf202ededee4a176c813b1482d39979c5c32ca7ad2c7bd33f75c8 | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/logistics_extraction.json\nmining/client/asteroid_scanning_service.pyj | 8b8db23042f043dfd0a4abeac7b79fbbecdef4d76ea757eee5b78bfc3441753f | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\nreprocessing/ui/efficiencyCalculator.pyj | ed8f6c1aba9a0416cfa56d9c139d691d6286dca42e6d0abc1a25feb5817122e6 | D:/SSW/Saved/Analysis/EveSystemsAudit/evidence.json\nresourcewars/client/rwinfopanelhaulertaskentry.pyj | 9a3955f5dc93cedad1d3e6934e1e77dda7eb7c34ed536ee13df1d0573d69d0be | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/logistics.json\nresourcewars/client/rwinfopanelhaulertaskentry.pyj | 9a3955f5dc93cedad1d3e6934e1e77dda7eb7c34ed536ee13df1d0573d69d0be | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/logistics_extraction.json\nskills/client/skillController.pyj | 970c7d7bffa6ed3f16818de6d9910f1f719b4088992af1a3fcb59416f7cf1ac5 | D:/SSW/Saved/Analysis/EveSkills/evidence.json\nspacecomponents/client/components/behavior.pyj | 9cf95b3d8aecef5d64c1ec34ee79b0fddcca2e474636492405931fba57d3c15e | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/extraction.json\nspacecomponents/client/components/behavior.pyj | 9cf95b3d8aecef5d64c1ec34ee79b0fddcca2e474636492405931fba57d3c15e | D:/SSW/Saved/Analysis/EveNPCMovement_20261118/report.json\nstargate/client/gateJumpSvc.pyj | 8d7f8306f3875dcc8ce743e0d2a634e56e28f9609d64c874820b191400ddb7bc | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/extraction.json\nstargate/client/gateJumpSvc.pyj | 8d7f8306f3875dcc8ce743e0d2a634e56e28f9609d64c874820b191400ddb7bc | D:/SSW/Saved/Analysis/EveQuantumTravel_20261118/report.json\nstargate/client/jump_checks.pyj |  | D:/SSW/Saved/Analysis/EveGateApproach_20261118/report.json\nstargate/client/jump_checks.pyj | 0ee2eca81c5176ef8bdd38df34a2842dc9cc4c1a7128778fbb3db7a46ef49886 | D:/SSW/Saved/Analysis/EveGateApproach_20261118/extraction.json\nstargate/client/jump_checks.pyj | 0ee2eca81c5176ef8bdd38df34a2842dc9cc4c1a7128778fbb3db7a46ef49886 | D:/SSW/Saved/Analysis/EveGateApproach_20261118/report.json\nstorylines/client/objectives/controller.pyj | f1cb54e24e1776af45d874bd1dbea73a869aee7c1874231d3e6ea66b20e7ccfa | D:/SSW/Saved/Analysis/EveEpicArcs/evidence.json\n\nOfficial SDE table index:\nEVE official SDE build 3714173 - JSON Lines table index\nResearch archive only; not packaged as SSW gameplay data.\n\n_sde.jsonl                                         1 rows  fields: _key, buildNumber, releaseDate\naccountingEntryTypes.jsonl                       177 rows  fields: _key, internalName, name, journalMessage, description\nagentTypes.jsonl                                  13 rows  fields: _key, name\nagentsInSpace.jsonl                              360 rows  fields: _key, dungeonID, solarSystemID, spawnPointID, typeID\nancestries.jsonl                                  43 rows  fields: _key, bloodlineID, charisma, description, iconID, intelligence, memory, name, perception, shortDescription, willpower\nappliedProximityEffects.jsonl                    119 rows  fields: _key, dbuffs, delaySeconds, radius\narchetypes.jsonl                                  36 rows  fields: _key, description, title\nbloodlines.jsonl                                  18 rows  fields: _key, charisma, corporationID, description, iconID, intelligence, memory, name, perception, raceID, willpower\nblueprints.jsonl                               5,136 rows  fields: _key, activities, maxProductionLimit\ncategories.jsonl                                  48 rows  fields: _key, name, published, iconID\ncertificates.jsonl                               139 rows  fields: _key, description, groupID, name, recommendedFor, skillTypes\ncharacterAttributes.jsonl                          5 rows  fields: _key, description, iconID, name, notes, shortDescription\ncharacterTitles.jsonl                            148 rows  fields: _key, name\ncloneGrades.jsonl                                  4 rows  fields: _key, name, skills\ncompressibleTypes.jsonl                          220 rows  fields: _key, compressedTypeID\ncontrabandTypes.jsonl                              8 rows  fields: _key, factions\ncontrolTowerResources.jsonl                       44 rows  fields: _key, resources\ncorporationActivities.jsonl                       20 rows  fields: _key, name\ncorporationRoleGroups.jsonl                        9 rows  fields: _key, appliesTo, appliesToGrantable, isDivisional, isLocational, name\ncorporationRoles.jsonl                            55 rows  fields: _key, description, name, roleGroupIDs, shortName\ndbuffCollections.jsonl                           373 rows  fields: _key, aggregateMode, developerDescription, itemModifiers, locationGroupModifiers, locationModifiers, locationRequiredSkillModifiers, operationName, showOutputValueInUI, displayName\ndogmaAttributeCategories.jsonl                    37 rows  fields: _key, description, name\ndogmaAttributes.jsonl                          2,929 rows  fields: _key, attributeCategoryID, dataType, defaultValue, description, displayWhenZero, highIsGood, name, published, stackable, displayName, iconID, tooltipDescription, tooltipTitle, unitID, chargeRechargeTimeID, maxAttributeID, minAttributeID\ndogmaEffects.jsonl                             3,499 rows  fields: _key, disallowAutoRepeat, dischargeAttributeID, durationAttributeID, effectCategoryID, electronicChance, guid, isAssistance, isOffensive, isWarpSafe, name, propulsionChance, published, rangeChance, distribution, falloffAttributeID, rangeAttributeID, trackingSpeedAttributeID, description, displayName, iconID, modifierInfo, npcUsageChanceAttributeID, npcActivationChanceAttributeID, fittingUsageChanceAttributeID, resistanceAttributeID\ndogmaUnits.jsonl                                  60 rows  fields: _key, description, displayName, name\ndungeons.jsonl                                 1,517 rows  fields: _key, allowedShipsList, archetypeID, description, factionID, name, gameplayDescription\ndynamicItemAttributes.jsonl                      441 rows  fields: _key, attributeIDs, inputOutputMapping\nepicArcs.jsonl                                    21 rows  fields: _key, arcRestartInterval, factionID, iconID, missions, name\nexpertSystems.jsonl                               59 rows  fields: _key, durationDays, hidden, internalName, retired, skillsGranted, associatedShipTypes\nfactions.jsonl                                    27 rows  fields: _key, corporationID, description, flatLogo, flatLogoWithName, iconID, memberRaces, militiaCorporationID, name, shortDescription, sizeFactor, solarSystemID, uniqueName\nfighterAbilities.jsonl                            36 rows  fields: _key, disallowInHighSec, disallowInLowSec, displayName, iconID, targetMode, tooltipText, turretGraphicID\nfighterAbilitiesByType.jsonl                      94 rows  fields: _key, abilitySlot0, abilitySlot1, abilitySlot2\nfreelanceJobSchemas.jsonl                          1 rows  fields: _key, _value\ngraphicMaterialSets.jsonl                        961 rows  fields: _key, colorHull, colorPrimary, colorSecondary, colorWindow, description, sofFactionName, sofRaceHint, material1, material4, material3, custommaterial1, custommaterial2, sofPatternName, material2, resPathInsert\ngraphics.jsonl                                 6,113 rows  fields: _key, graphicFile, iconFolder, sofFactionName, sofHullName, sofRaceName, sofMaterialSetID, sofLayout\ngroups.jsonl                                   1,633 rows  fields: _key, anchorable, anchored, categoryID, fittableNonSingleton, name, published, useBasePrice, iconID\nicons.jsonl                                    4,908 rows  fields: _key, iconFile\nindustryActivities.jsonl                           6 rows  fields: _key, description, name\nindustryAssemblyLines.jsonl                      146 rows  fields: _key, activityID, baseMaterialMultiplier, baseTimeMultiplier, description, name, detailsPerGroup, baseCostMultiplier, detailsPerCategory, detailsPerTypeList\nindustryInstallationTypes.jsonl                  102 rows  fields: _key, assemblyLines\nindustryModifierSources.jsonl                    220 rows  fields: _key, copying, invention, manufacturing, researchMaterial, researchTime, reaction\nindustryTargetFilters.jsonl                       18 rows  fields: _key, categoryIDs, name, groupIDs\nlandmarks.jsonl                                   45 rows  fields: _key, description, name, position, iconID, locationID\nlinkWithShip.jsonl                                 3 rows  fields: _key, applyPvpFlag, canRelink, characterEnergyCost, dbuffPostLinkDuration, dbuffs, generateCynoInhibitor, keepDbuffDurationOnLinkBreak, linkDuration, linkEffectGraphicIDOverride, linkableShipTypeListID, maxLinkRange, omegaOnly, solarsystemInterferenceCost\nmapAsteroidBelts.jsonl                        40,928 rows  fields: _key, celestialIndex, orbitID, orbitIndex, position, radius, solarSystemID, statistics, typeID, uniqueName\nmapConstellations.jsonl                        1,184 rows  fields: _key, factionID, name, position, regionID, solarSystemIDs, wormholeClassID\nmapMoons.jsonl                               344,457 rows  fields: _key, attributes, celestialIndex, orbitID, orbitIndex, position, radius, solarSystemID, statistics, typeID, npcStationIDs, uniqueName\nmapPlanets.jsonl                              68,407 rows  fields: _key, asteroidBeltIDs, attributes, celestialIndex, moonIDs, orbitID, position, radius, solarSystemID, statistics, typeID, npcStationIDs, uniqueName\nmapRegions.jsonl                                 114 rows  fields: _key, constellationIDs, description, factionID, name, nebulaID, position, wormholeClassID\nmapSecondarySuns.jsonl                         1,038 rows  fields: _key, effectBeaconTypeID, position, solarSystemID, typeID\nmapSolarSystems.jsonl                          8,490 rows  fields: _key, border, constellationID, hub, international, luminosity, name, planetIDs, position, position2D, radius, regionID, regional, securityClass, securityStatus, starID, stargateIDs, corridor, fringe, wormholeClassID, visualEffect, disallowedAnchorCategories, disallowedAnchorGroups, factionID\nmapStargates.jsonl                            13,982 rows  fields: _key, destination, position, solarSystemID, typeID\nmapStars.jsonl                                 8,089 rows  fields: _key, radius, solarSystemID, statistics, typeID\nmarketGroups.jsonl                             2,125 rows  fields: _key, description, hasTypes, iconID, name, parentGroupID\nmasteries.jsonl                                  496 rows  fields: _key, _value\nmercenaryTacticalOperations.jsonl                  3 rows  fields: _key, anarchyImpact, description, developmentImpact, infomorphBonus, name\nmetaGroups.jsonl                                  15 rows  fields: _key, color, name, iconID, iconSuffix, description\nmetenoxMoonDrill.jsonl                             1 rows  fields: _key, miningCycleTime, miningEfficiency, reagentsConsumedPerCycle\nmilitaryCampaignObjectives.jsonl                 192 rows  fields: _key, campaignID, careerPath, contentTags, contributionMethodConfiguration, issuer, maxProgressPerParticipant, presentingCharacterID, rewards, subtitle, targetProgress, title, annotations\nmilitaryCampaigns.jsonl                            8 rows  fields: _key, annotations, issuer, subtitle, targetProgress, title\nmissions.jsonl                                 2,892 rows  fields: _key, hasStandingRewards, killMission, messages, name, expirationTime, factionID, courierMission, missionRewards, corporationID, initialAgentGiftQuantity, initialAgentGiftTypeID, extraStandings, agentTypeID\nnotificationTypes.jsonl                          297 rows  fields: _key, displayName, internalName\nnpcCharacters.jsonl                           11,399 rows  fields: _key, bloodlineID, ceo, corporationID, gender, locationID, name, raceID, startDate, uniqueName, skills, ancestryID, careerID, schoolID, specialityID, agent, description\nnpcCorporationDivisions.jsonl                     10 rows  fields: _key, displayName, internalName, leaderTypeName, name, description\nnpcCorporations.jsonl                            283 rows  fields: _key, ceoID, deleted, description, extent, hasPlayerPersonnelManager, initialPrice, memberLimit, minSecurity, minimumJoinStanding, name, sendCharTerminationMessage, shares, size, stationID, taxRate, tickerName, uniqueName, allowedMemberRaces, corporationTrades, divisions, enemyID, factionID, friendID, iconID, investors, lpOfferTables, mainActivityID, raceID, sizeFactor, solarSystemID, secondaryActivityID, exchangeRates\nnpcStations.jsonl                              5,211 rows  fields: _key, celestialIndex, operationID, orbitID, orbitIndex, ownerID, position, reprocessingEfficiency, reprocessingHangarFlag, reprocessingStationsTake, solarSystemID, typeID, useOperationName\nplanetResources.jsonl                         25,798 rows  fields: _key, power, workforce, reagent\nplanetSchematics.jsonl                            68 rows  fields: _key, cycleTime, name, pins, types\nproximityTrap.jsonl                               24 rows  fields: _key, dbuffDuration, showPerimeterLights, triggerDelay, triggerFilterTypeListID, triggerRange, dbuffs, forceDecloakDuration, resetDelay\nraces.jsonl                                       11 rows  fields: _key, description, iconID, name, shipTypeID, skills\nschoolMap.jsonl                                   12 rows  fields: _key, schoolID, solarSystemID\nschools.jsonl                                     23 rows  fields: _key, careerAgents, careerID, characterDescription, corporationID, description, iconID, name, raceID, startingStations, title, isStarterSpaceSchool\nshipTreeElements.jsonl                            30 rows  fields: _key, description, icon, name\nshipTreeFactions.jsonl                            17 rows  fields: _key, description, elements, icon\nshipTreeGroups.jsonl                              52 rows  fields: _key, description, elements, icon, iconLarge, iconSmall, iconSmallNPC, name, preReqSkills\nskillPlans.jsonl                                  40 rows  fields: _key, careerPathID, description, factionID, internalName, milestones, name, skillRequirements, npcCorporationDivision\nskinLicenses.jsonl                            11,908 rows  fields: _key, duration, skinID, isSingleUse\nskinMaterials.jsonl                              878 rows  fields: _key, displayName, materialSetID\nskinrComponentCategories.jsonl                     3 rows  fields: _key, name\nskinrComponentPointValues.jsonl                    3 rows  fields: _key, _value\nskinrComponentRarities.jsonl                       6 rows  fields: _key, name, rank\nskinrComponents.jsonl                            630 rows  fields: _key, associatedTypeIds, category, finish, iconFile, name, projectionTypeU, projectionTypeV, published, rarity, resourceFile, sequenceBinder\nskinrSlotCategories.jsonl                          3 rows  fields: _key, name\nskinrSlotConfigurations.jsonl                      4 rows  fields: _key, allowAllShips, config, name, priority, ships\nskinrSlotNames.jsonl                               8 rows  fields: _key, name\nskinrSlots.jsonl                                   8 rows  fields: _key, allowedDesignComponentCategories, category, name\nskinrSlotsToMaterials.jsonl                       16 rows  fields: _key, _value\nskinrTierThresholds.jsonl                         49 rows  fields: _key, _value\nskins.jsonl                                    7,079 rows  fields: _key, allowCCPDevs, internalName, skinMaterialID, types, visibleSerenity, visibleTranquility, isStructureSkin\nsovereigntyUpgrades.jsonl                         49 rows  fields: _key, fuel, mutually_exclusive_group, power_allocation, power_production, workforce_allocation, workforce_production\nstationOperations.jsonl                           70 rows  fields: _key, activityID, border, corridor, description, fringe, hub, manufacturingFactor, operationName, ratio, researchFactor, services, stationTypes\nstationServices.jsonl                             27 rows  fields: _key, serviceName, description\nstationStandingsRestrictions.jsonl                 1 rows  fields: _key, services\nsystemDbuffEmitters.jsonl                         85 rows  fields: _key, dbuffs, duration, excludeProtected, interval\nsystemWideEffects.jsonl                          114 rows  fields: _key, dbuffs, eligibleTypeListID, environmentTypeID\ntranslationLanguages.jsonl                         8 rows  fields: _key, name\ntypeBonus.jsonl                                  699 rows  fields: _key, roleBonuses, types, iconID, miscBonuses\ntypeDogma.jsonl                               27,295 rows  fields: _key, dogmaAttributes, dogmaEffects\ntypeElements.jsonl                               443 rows  fields: _key, elements\ntypeLists.jsonl                                  477 rows  fields: _key, includedTypeIDs, name, includedGroupIDs, includedCategoryIDs, excludedGroupIDs, excludedTypeIDs, excludedCategoryIDs, displayDescription, displayName\ntypeMaterials.jsonl                            9,636 rows  fields: _key, materials, randomizedMaterials\ntypes.jsonl                                   53,927 rows  fields: _key, groupID, mass, name, portionSize, published, packagedVolume, volume, radius, description, graphicID, soundID, iconID, raceID, basePrice, marketGroupID, capacity, isRepackable, metaGroupID, techLevel, metaLevel, variationParentTypeID, factionID, shipTreeGroupID, isDynamicType\n",
+      "unresolvedRefs": []
+    }
+  ],
+  "moduleReferenceRows": 187
+}

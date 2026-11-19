@@ -1,6 +1,60 @@
 {
   "entries": [
     {
+      "category": "Next build - awaiting cook and package",
+      "title": "Intel replay stability and clearer record details",
+      "date": "2026-11-19",
+      "body": "Fixed a garbage-collection lifetime issue in Intel replay controls and cleaned up nested mission previews. List details now use compact headers, status badges, labelled facts and separate information sections across production, market, contract, skill, blueprint, agent, wallet, cargo and contact panels. Live replay and narrow/wide rendering checks passed."
+    },
+    {
+      "category": "Latest install build",
+      "title": "Build 20261119-093150Z ready to install",
+      "date": "2026-11-19",
+      "body": "This build adds system-first agent selection with Same System, One Jump and Empire-wide filters. Only neutral and own-empire agents appear. The training intro uses current plumes and confirmed carrier docking. Includes local StarServer and previous mining, production, station services and direct JSON updates."
+    },
+    {
+      "category": "Release notes",
+      "title": "System-first agent directory",
+      "date": "2026-11-19",
+      "body": "Choose a system before choosing an agent. Same System, One Jump and Empire-wide filters include only neutral agents and agents from your own empire. One Jump follows direct farcaster links. Mission rank and skill requirements still apply. Four focused checks passed."
+    },
+    {
+      "category": "Release notes",
+      "title": "Flight effects and refreshed videos",
+      "date": "2026-11-19",
+      "body": "Brighter nozzle-fitted native engine plumes and maneuvering jets use Terellian blue, Dantari orange-yellow and Marakan green, with smooth burn response. The main-menu battle and campaign 2–4 openings have been rebuilt. The training intro has also been re-recorded with current effects and confirmed shuttle docking onto Archon. Campaign 5 and further cinematic action remain deferred. Shield-hit flashes now have soft edges. Region-owned beams are expired and deleted once, with missing-design and retired-owner guards."
+    },
+    {
+      "category": "Release notes",
+      "title": "Mining drones and manufacturing",
+      "date": "2026-11-19",
+      "body": "A new mining-drone model and beam, Repeat Mining, and cargo-backed spare replacements join the mining controls. Prospector bays carry three drones; Rockhopper bays carry ten. Drones return and unload before ore is credited. New cargo, blueprint and recipe entries support drone manufacturing in twenty factory systems. Facilities can offer additional recipes, and player jobs check the required skills."
+    },
+    {
+      "category": "Release notes",
+      "title": "SSW economy and equipment balance",
+      "date": "2026-11-19",
+      "body": "Recalibrated five commodity prices, 46 hull prices, five batch-processing times, mining-drone yields and component quality grades using relative EVE data with SSW credit values and native power calculations. Grade III keeps its physical baseline. Higher grades improve performance while changing power demand and price. Existing hull geometry, mass, thrust and reactor output are retained."
+    },
+    {
+      "category": "Release notes",
+      "title": "Station services and contracts",
+      "date": "2026-11-19",
+      "body": "Inspect station and carrier services while flying; use them only when docked at the station being viewed. Carriers offer basic support, while full refits require a shipyard. Courier contracts gain confirmed abandonment and clearer collateral handling. Wallet receipts identify individual contract operations, with duplicate-identity, stock-ownership and inventory checks. Guild listings follow the pilot’s empire."
+    },
+    {
+      "category": "Release notes",
+      "title": "Editable data and launcher installation",
+      "date": "2026-11-19",
+      "body": "Ranks, awards, cargo and agent catalogs now load directly from JSON without runtime Data Tables. Existing inventory item identifiers are preserved for saved cargo and market stock. Mission/template catalogs, campaign actions and campaign zones use JSON ingestion with their existing table consumers. Campaign headers and galaxy/terrain definitions remain unchanged. The launcher bundles a silent local Apache server for installation testing without XAMPP; signed version and patch checks remain required for online and offline Play. Downloads remain separate from the launcher installer."
+    },
+    {
+      "category": "Release notes",
+      "title": "Build status",
+      "date": "2026-11-19",
+      "body": "The cooked Windows build is packaged with the local StarServer. Its signed manifest and ZIP are ready for installation. All 17 selected agent, catalog, recovery and AI parity checks passed. The new intro recording confirms shuttle recovery onto Archon. StarServer multiplayer testing and cinematic polish remain deferred."
+    },
+    {
       "category": "Patch notes",
       "title": "Nozzle-fitted engine plumes",
       "date": "2026-11-19",

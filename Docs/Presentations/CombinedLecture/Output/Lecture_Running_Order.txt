@@ -1,0 +1,47 @@
+AGENTIC AI & REVERSE ENGINEERING CODE
+Dr. Carlos Bott | Coventry University Kazakhstan
+
+ONE-HOUR RUNNING ORDER
+Part I: Theory - 00:00 to 25:00
+Part II: Practical - 25:00 to 53:00
+Questions and closing - 53:00 to 60:00
+
+35 main slides. Slides 36-49 are hidden backup exhibits.
+Use presenter notes for pacing, evidence references and code walkthrough prompts.
+No live demo is required.
+
+01  00:00-00:45  
+02  00:45-01:45  One hour: theory, practical and discussion
+03  01:45-02:00  PART I  /  THEORY
+04  02:00-03:00  Learning Objectives
+05  03:00-05:30  What is Reverse Engineering?
+06  05:30-07:00  Permission, scope and handling
+07  07:00-09:00  Decompilers & RE Platforms
+08  09:00-11:30  NSA Ghidra
+09  11:30-13:00  ILSpy — .NET Decompiler
+10  13:00-15:00  What is Agentic AI?
+11  15:00-16:30  Traditional Prompting vs Agentic Systems
+12  16:30-20:00  Typical Agentic RE Workflow
+13  20:00-22:00  Decompiler Limitations
+14  22:00-25:00  AI Hallucinations & Verification
+15  25:00-25:30  PART II  /  PRACTICAL
+16  25:30-27:00  The investigation starts with an artifact
+17  27:00-28:30  Three views of the same function
+18  28:30-30:00  Ore scan knowledge: bytecode
+19  30:00-31:30  Ore scan knowledge: recovered source
+20  31:30-33:00  SSW example: scan uncertainty
+21  33:00-34:30  Drone recovery command: bytecode
+22  34:30-36:00  Drone recovery command: recovered source
+23  36:00-37:30  SSW example: drone authority
+24  37:30-39:00  Manufacturing cost: bytecode
+25  39:00-40:30  Manufacturing cost: recovered source
+26  40:30-42:00  SSW example: manufacturing locations
+27  42:00-43:30  Contract service boundary: bytecode
+28  43:30-45:00  Contract service boundary: recovered source
+29  45:00-46:30  Navigation distance: bytecode
+30  46:30-48:00  Navigation distance: recovered source
+31  48:00-49:30  Mission expiry: bytecode
+32  49:30-51:00  Mission expiry: recovered source
+33  51:00-53:00  What the investigation established
+34  53:00-59:45  
+35  59:45-60:00  

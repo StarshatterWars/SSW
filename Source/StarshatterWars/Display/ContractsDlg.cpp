@@ -1,4 +1,5 @@
 #include "ContractsDlg.h"
+#include "RecordDetails.h"
 
 #include "MissionUIStyle.h"
 #include "Sim.h"
@@ -41,47 +42,25 @@ namespace
         return FString::Join(Lines, TEXT("\n"));
     }
 
-    FText DescribeContract(const Sim::FActiveHaul& Haul)
+    FRecordDetails DescribeContract(const Sim::FActiveHaul& Haul)
     {
-        const FSSWContractTerms& Terms = Haul.Terms;
-        TArray<FString> Lines;
-        const auto Add = [&Lines](const TCHAR* Label, const FString& Value)
-        {
-            if (!Value.IsEmpty())
-                Lines.Add(FString::Printf(TEXT("%s  %s"), Label, *Value));
-        };
-        const auto AddStationField = [&Add](const TCHAR* Label, FName Value)
-        {
-            if (!Value.IsNone())
-                Add(Label, Value.ToString());
-        };
-        const auto AddCredits = [&Add](const TCHAR* Label, int64 Credits)
-        {
-            if (Credits > 0)
-                Add(Label, FText::AsNumber(Credits).ToString() + TEXT(" cr"));
-        };
-        Lines.Add(Terms.Title);
-        if (!Terms.Description.IsEmpty()) Lines.Add(Terms.Description);
-        Add(TEXT("TYPE"), StaticEnum<ESSWContractType>()->GetDisplayNameTextByValue(static_cast<int64>(Terms.Type)).ToString());
-        Add(TEXT("STATUS"), Haul.bDelivering ? TEXT("Delivering") : TEXT("Loading"));
-        Add(TEXT("ACCESS"), Terms.bPrivate ? TEXT("Private") : TEXT("Public"));
-        AddStationField(TEXT("ASSIGNED TO"), Terms.AssignedToId);
-        AddStationField(TEXT("PICKUP"), Terms.PickupStationId);
-        AddStationField(TEXT("DIVISION"), Terms.PickupDivisionId);
-        AddStationField(TEXT("DESTINATION"), Terms.DestinationStationId);
-        Add(TEXT("JUMPS"), Haul.Jumps >= 0 ? FString::FromInt(Haul.Jumps) : TEXT("Unavailable"));
-        Add(TEXT("OFFERED CARGO"), DescribeItems(Terms.OfferedItems));
-        Add(TEXT("REQUESTED ITEMS"), DescribeItems(Terms.RequestedItems));
-        AddCredits(TEXT("PRICE"), Terms.PriceCredits);
-        AddCredits(TEXT("REWARD"), Terms.RewardCredits);
-        AddCredits(TEXT("COLLATERAL"), Terms.CollateralCredits);
-        if (Terms.OfferExpiryMinutes > 0)
-            Add(TEXT("OFFER WINDOW"), FString::Printf(TEXT("%d min"), Terms.OfferExpiryMinutes));
-        if (Terms.CompletionDays > 0)
-            Add(TEXT("COMPLETION WINDOW"), FString::Printf(TEXT("%d d"), Terms.CompletionDays));
-        if (Terms.bOnBehalfOfCorporation) Lines.Add(TEXT("Issued on behalf of a corporation"));
-        if (Terms.bMultiContract) Lines.Add(TEXT("Multiple contracts"));
-        return FText::FromString(FString::Join(Lines, TEXT("\n")));
+        const auto& Terms=Haul.Terms;FRecordDetails D;D.Icon=EShipSystemIcon::Contracts;
+        D.Title=FText::FromString(Terms.Title);D.Description=FText::FromString(Terms.Description);
+        D.Status=Haul.bDelivering?INVTEXT("DELIVERING"):INVTEXT("LOADING");
+        D.Subtitle=StaticEnum<ESSWContractType>()->GetDisplayNameTextByValue(static_cast<int64>(Terms.Type));
+        D.Fact(INVTEXT("PICKUP"),FText::FromName(Terms.PickupStationId)).Fact(INVTEXT("DESTINATION"),FText::FromName(Terms.DestinationStationId));
+        D.Fact(INVTEXT("ACCESS"),Terms.bPrivate?INVTEXT("PRIVATE"):INVTEXT("PUBLIC"));
+        D.Fact(INVTEXT("ROUTE"),Haul.Jumps>=0?FText::Format(INVTEXT("{0} JUMPS"),FText::AsNumber(Haul.Jumps)):INVTEXT("UNAVAILABLE"));
+        if(!Terms.AssignedToId.IsNone())D.Fact(INVTEXT("ASSIGNED TO"),FText::FromName(Terms.AssignedToId));
+        if(!Terms.PickupDivisionId.IsNone())D.Fact(INVTEXT("DIVISION"),FText::FromName(Terms.PickupDivisionId));
+        const auto Credits=[&D](const FText& Label,int64 Amount){if(Amount>0)D.Fact(Label,FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Amount)));};
+        Credits(INVTEXT("PRICE"),Terms.PriceCredits);Credits(INVTEXT("REWARD"),Terms.RewardCredits);Credits(INVTEXT("COLLATERAL"),Terms.CollateralCredits);
+        if(Terms.OfferExpiryMinutes>0)D.Fact(INVTEXT("OFFER WINDOW"),FText::Format(INVTEXT("{0} MIN"),FText::AsNumber(Terms.OfferExpiryMinutes)));
+        if(Terms.CompletionDays>0)D.Fact(INVTEXT("COMPLETION WINDOW"),FText::Format(INVTEXT("{0} DAYS"),FText::AsNumber(Terms.CompletionDays)));
+        D.Section(INVTEXT("OFFERED CARGO"),FText::FromString(DescribeItems(Terms.OfferedItems)));
+        D.Section(INVTEXT("REQUESTED ITEMS"),FText::FromString(DescribeItems(Terms.RequestedItems)));
+        if(Terms.bOnBehalfOfCorporation)D.Fact(INVTEXT("ISSUER"),INVTEXT("CORPORATION"));
+        if(Terms.bMultiContract)D.Fact(INVTEXT("BUNDLE"),INVTEXT("MULTIPLE CONTRACTS"));return D;
     }
 }
 
@@ -356,31 +335,23 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
                         SNew(SScrollBox)
                         + SScrollBox::Slot()
                         [
-                            SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).AutoWrapText(true)
-                            .Text_Lambda([Selected, GetSelectedOffer, Tab]()
+                            SNew(SRecordDetails).Record_Lambda([Selected, GetSelectedOffer, Tab]()
                             {
-                                if (*Tab == ETab::Hauls && Selected->IsSet()) return DescribeContract(Selected->GetValue());
-                                const auto* Offer = GetSelectedOffer();
-                                if (!Offer) return INVTEXT("SELECT A CONTRACT");
-                                const auto& Terms = Offer->Terms;
-                                FString Body = FString::Printf(TEXT("%s\n%s\nPickup  %s\n%s"), *Terms.Title,
-                                    *Terms.Description, *Terms.PickupStationId.ToString(), *DescribeItems(Terms.OfferedItems));
-                                const TCHAR* States[] = {TEXT("Draft"), TEXT("Open"), TEXT("In progress"),
-                                    TEXT("Awaiting claims"), TEXT("Completed"), TEXT("Failed"), TEXT("Expired")};
-                                Body += FString::Printf(TEXT("\nStatus  %s"), States[static_cast<uint8>(Offer->State)]);
-                                if (Terms.Type == ESSWContractType::Courier)
-                                    Body += FString::Printf(TEXT("\nDestination  %s\nReward  %lld cr  |  Collateral  %lld cr"),
-                                        *Terms.DestinationStationId.ToString(), Terms.RewardCredits, Terms.CollateralCredits);
-                                else
-                                    Body += FString::Printf(TEXT("\nOpening bid  %lld cr  |  High bid  %lld cr  |  Buyout  %lld cr"),
-                                        Terms.PriceCredits, Offer->HighBid, Offer->Buyout);
-                                if (Terms.Type == ESSWContractType::Auction && Offer->State == EContractState::Open)
-                                {
-                                    const auto Remaining = Offer->ExpiresAt - FDateTime::UtcNow();
-                                    const int32 Seconds = FMath::Max(0, FMath::CeilToInt(Remaining.GetTotalSeconds()));
-                                    Body += FString::Printf(TEXT("\nCloses in  %d:%02d"), Seconds / 60, Seconds % 60);
+                                if(*Tab==ETab::Hauls && Selected->IsSet())return DescribeContract(Selected->GetValue());
+                                const auto* Offer=GetSelectedOffer();
+                                if(!Offer){FRecordDetails Empty;Empty.Icon=EShipSystemIcon::Contracts;Empty.Title=INVTEXT("SELECT A CONTRACT");Empty.Description=INVTEXT("Review the route, cargo and financial terms before accepting or bidding.");return Empty;}
+                                Sim::FActiveHaul View;View.Terms=Offer->Terms;View.Jumps=-1;FRecordDetails D=DescribeContract(View);
+                                const TCHAR* States[]={TEXT("Draft"),TEXT("Open"),TEXT("In progress"),TEXT("Awaiting claims"),TEXT("Completed"),TEXT("Failed"),TEXT("Expired")};
+                                D.Status=FText::FromString(States[FMath::Clamp(int32(Offer->State),0,int32(UE_ARRAY_COUNT(States))-1)]);
+                                if(Offer->Terms.Type!=ESSWContractType::Courier){
+                                    D.Fact(INVTEXT("OPENING BID"),FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Offer->Terms.PriceCredits)));
+                                    D.Fact(INVTEXT("HIGH BID"),FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Offer->HighBid)));
+                                    D.Fact(INVTEXT("BUYOUT"),FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Offer->Buyout)));
                                 }
-                                return FText::FromString(Body);
+                                if(Offer->Terms.Type==ESSWContractType::Auction && Offer->State==EContractState::Open){
+                                    const int32 Seconds=FMath::Max(0,FMath::CeilToInt((Offer->ExpiresAt-FDateTime::UtcNow()).GetTotalSeconds()));
+                                    D.Fact(INVTEXT("CLOSES IN"),FText::FromString(FString::Printf(TEXT("%d:%02d"),Seconds/60,Seconds%60)));
+                                }return D;
                             })
                         ]
                     ]

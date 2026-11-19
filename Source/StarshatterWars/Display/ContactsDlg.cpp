@@ -1,5 +1,6 @@
 
 #include "ContactsDlg.h"
+#include "RecordDetails.h"
 #include "FlightPanelStyle.h"
 #include "MissionUIStyle.h"
 #include "ShipVisualCatalog.h"
@@ -43,6 +44,7 @@ struct FContactRowData {
     FString Description;
     bool bBase = false;
     double Range = 0;
+    double CargoCapacity = 0;
     bool Enemy = false;
     FLinearColor Color = FLinearColor::Yellow;
     TStrongObjectPtr<UTexture2D> Icon;
@@ -93,20 +95,16 @@ public:
                     .BorderBackgroundColor(FLinearColor(.035f,.075f,.115f,1))
                     .Visibility_Lambda([this](){return SelectedDetails() ? EVisibility::Visible : EVisibility::Collapsed;})
                     [SNew(SVerticalBox)
-                        +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,4)
-                        [SNew(STextBlock).Font(MissionUIStyle::GetInfoLabelFont(15)).AutoWrapText(true)
-                            .Text_Lambda([this](){const auto Row = SelectedDetails(); return Row ? FText::FromString(Row->Name) : FText::GetEmpty();})]
                         +SVerticalBox::Slot().AutoHeight()
-                        [SNew(SBox).MaxDesiredHeight(112)
+                        [SNew(SBox).MaxDesiredHeight(190)
                             [SNew(SScrollBox)
                                 +SScrollBox::Slot()
-                                [SNew(STextBlock).AutoWrapText(true)
-                                    .Text_Lambda([this](){
-                                        const auto Row = SelectedDetails();
-                                        if (!Row) return FText::GetEmpty();
-                                        FString Details = Row->Type + TEXT("  |  ") + UFormattingUtils::FormatDistance(Row->Range * 1000);
-                                        if (!Row->Description.IsEmpty()) Details += TEXT("\n\n") + Row->Description;
-                                        return FText::FromString(Details);
+                                [SNew(SRecordDetails).Record_Lambda([this](){
+                                        FRecordDetails D;const auto Row=SelectedDetails();
+                                        if(!Row)return D;
+                                        D.Title=FText::FromString(Row->Name);D.Icon=Row->bBase?EShipSystemIcon::Station:EShipSystemIcon::Ship;D.Description=FText::FromString(Row->Description);
+                                        D.Fact(INVTEXT("CONTACT TYPE"),FText::FromString(Row->Type));D.Fact(INVTEXT("RANGE"),FText::FromString(UFormattingUtils::FormatDistance(Row->Range*1000)));
+                                        if(Row->CargoCapacity>0)D.Fact(INVTEXT("CARGO CAPACITY"),FText::Format(INVTEXT("{0} T"),FText::AsNumber(Row->CargoCapacity)));return D;
                                     })]]]]]]];
         Refresh();
     }
@@ -162,6 +160,7 @@ private:
             Row->Actor=Actor;
             Row->bBase = false;
             Row->Description.Reset();
+            Row->CargoCapacity=0;
             Row->Enemy=false;Row->Color=FLinearColor::Yellow;
             AShipActor* Visual=Cast<AShipActor>(Actor);
             Ship* Data=Visual?Visual->GetRuntimeShip():nullptr;
@@ -175,8 +174,7 @@ private:
                     if (const auto* Design = ShipDesignRegistry::Find(Data->Design()->name))
                         Row->Description = Design->Description;
                     const auto& Capacity = Data->Design()->CargoCapacity;
-                    if (Capacity.Tonnes > 0)
-                        Row->Description += FString::Printf(TEXT("\n\nCargo capacity  %.0f t"), Capacity.Tonnes);
+                    Row->CargoCapacity=Capacity.Tonnes;
                 }
                 Row->Range=FVector::Distance(Data->GetLocation(),Player->GetLocation())/1000.0;
                 const int Team=Player->GetIFF();
