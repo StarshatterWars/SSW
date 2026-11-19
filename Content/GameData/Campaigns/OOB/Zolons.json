@@ -1,0 +1,811 @@
+[
+	{
+		"Row": "1st Force [Zolon Empire]",
+		"Type": "FORCE",
+		"Id": 1,
+		"Name": "Zolon Empire",
+		"DisplayName": "1st Force [Zolon Empire]",
+		"Intel": "SECRET",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Nergal",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "NONE",
+		"ParentId": 0,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "1st Fleet [Nephrys]",
+		"Type": "FLEET",
+		"Id": 1,
+		"Name": "Nephrys",
+		"DisplayName": "1st Fleet [Nephrys]",
+		"Intel": "RESERVE",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Nergal",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "1st DESRON [Zolon]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 1,
+		"Name": "Zolon",
+		"DisplayName": "1st DESRON [Zolon]",
+		"Intel": "SECRET",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Sintar",
+		"Location":
+		{
+			"X": -100000,
+			"Y": -100000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ZD01",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "ZZCA",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZD02",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "ZZDD",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZD03",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "ZZDD",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZD04",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "ZZDD",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZF01",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "ZZFF",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZF02",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "ZZFF",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8th Fighter Squadron [Krill]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 8,
+		"Name": "Krill",
+		"DisplayName": "8th Fighter Squadron [Krill]",
+		"Intel": "SECRET",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Sintar",
+		"Location":
+		{
+			"X": -110000,
+			"Y": -110000,
+			"Z": 6000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Krill",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "ZZF",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "9th Fighter Squadron [Sculpin]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 9,
+		"Name": "Sculpin",
+		"DisplayName": "9th Fighter Squadron [Sculpin]",
+		"Intel": "SECRET",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Sintar",
+		"Location":
+		{
+			"X": 100000,
+			"Y": -100000,
+			"Z": 7000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Sculpin",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "ZZA",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2nd Fleet [Nephrys]",
+		"Type": "FLEET",
+		"Id": 2,
+		"Name": "Nephrys",
+		"DisplayName": "2nd Fleet [Nephrys]",
+		"Intel": "RESERVE",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Nergal",
+		"Location":
+		{
+			"X": 0,
+			"Y": 180000,
+			"Z": 6000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2nd DESRON [Zolon]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 2,
+		"Name": "Zolon",
+		"DisplayName": "2nd DESRON [Zolon]",
+		"Intel": "SECRET",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Sintar",
+		"Location":
+		{
+			"X": 100000,
+			"Y": 100000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ZD11",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "ZZCA",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZD12",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "ZZDD",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZD13",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "ZZDD",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZD14",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "ZZDD",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZF11",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "ZZFF",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZF12",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "ZZFF",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3rd Fighter Squadron [Moray]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 3,
+		"Name": "Moray",
+		"DisplayName": "3rd Fighter Squadron [Moray]",
+		"Intel": "SECRET",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Sintar",
+		"Location":
+		{
+			"X": -110000,
+			"Y": -110000,
+			"Z": 6000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Moray",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "ZZF",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4th Fighter Squadron [Lamprey]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 4,
+		"Name": "Lamprey",
+		"DisplayName": "4th Fighter Squadron [Lamprey]",
+		"Intel": "SECRET",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Sintar",
+		"Location":
+		{
+			"X": 100000,
+			"Y": -100000,
+			"Z": 7000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Lamprey",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "ZZA",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3rd Fleet [Nephrys]",
+		"Type": "FLEET",
+		"Id": 3,
+		"Name": "Nephrys",
+		"DisplayName": "3rd Fleet [Nephrys]",
+		"Intel": "RESERVE",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Nergal",
+		"Location":
+		{
+			"X": 0,
+			"Y": 180000,
+			"Z": 6000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "3rd DESRON [Zolon]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 3,
+		"Name": "Zolon",
+		"DisplayName": "3rd DESRON [Zolon]",
+		"Intel": "SECRET",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Sintar",
+		"Location":
+		{
+			"X": 100000,
+			"Y": 100000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ZD21",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "ZZCA",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZD22",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "ZZDD",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZD23",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "ZZDD",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZD24",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "ZZDD",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZF21",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "ZZFF",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ZF22",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "ZZFF",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "12th Fighter Squadron [Crab]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 12,
+		"Name": "Crab",
+		"DisplayName": "12th Fighter Squadron [Crab]",
+		"Intel": "SECRET",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Sintar",
+		"Location":
+		{
+			"X": -110000,
+			"Y": -110000,
+			"Z": 6000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Moray",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "ZZF",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "15th Fighter Squadron [Steelhead]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 15,
+		"Name": "Steelhead",
+		"DisplayName": "15th Fighter Squadron [Steelhead]",
+		"Intel": "SECRET",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Sintar",
+		"Location":
+		{
+			"X": 100000,
+			"Y": -100000,
+			"Z": 7000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Lamprey",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "ZZA",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "1st Non-Com [Zolon Ambassador]",
+		"Type": "NON_COM",
+		"Id": 1,
+		"Name": "Zolon Ambassador",
+		"DisplayName": "1st Non-Com [Zolon Ambassador]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Tarsus",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Consular Starship",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "ZZCS",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8579th Station [Sintar Orbital Concentrator]",
+		"Type": "STATION",
+		"Id": 8579,
+		"Name": "Sintar Orbital Concentrator",
+		"DisplayName": "8579th Station [Sintar Orbital Concentrator]",
+		"Intel": "KNOWN",
+		"Iff": 4,
+		"EmpireId": "Zolon",
+		"System": "",
+		"Region": "Sintar",
+		"Location":
+		{
+			"X": -106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Sintar Orbital Concentrator",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	}
+]

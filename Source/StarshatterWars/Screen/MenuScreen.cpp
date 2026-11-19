@@ -1,4 +1,5 @@
 #include "MenuScreen.h"
+#include "RuntimeFeaturePolicy.h"
 #include "OfflineCutsceneExport.h"
 #include "PlayerCharacter.h"
 
@@ -14,6 +15,8 @@
 #include "Ship.h"
 #include "ShipDesign.h"
 #include "FreeFlightHullRules.h"
+#include "LocalGameStateSubsystem.h"
+#include "DynamicMissionAI.h"
 #include "ExitDlg.h"
 #include "ConfirmDlg.h"
 #include "FirstTimeDlg.h"
@@ -482,6 +485,7 @@ bool UMenuScreen::CanOpenMainMenu()
 }
 void UMenuScreen::ShowModEditorDlg()
 {
+    if(!FSSWFeaturePolicy::ModEditor())return;
     if(!CanOpenMainMenu())return;
     APlayerController* PC=GetOwningPlayer();if(!PC)return;
     bModMissionToolsActive=false;bReturnToCustomMissionsAfterEditor=false;
@@ -707,6 +711,11 @@ void UMenuScreen::StartFreeFlight()
 
     // Normal career entry: agent assignments and outcomes use the persistent pilot journal.
     Game->EndTrainingTest();
+    if(auto* State=Game->GetSubsystem<ULocalGameStateSubsystem>())
+    {
+        const int32 Resume=State->ResumeMissionId();
+        if(Resume!=INDEX_NONE && Resume!=Mission::FreeFlightId && OpenQueuedAssignment(Resume,false))return;
+    }
 
     if (!Game->FreeFlightMission)
     {
@@ -766,6 +775,7 @@ bool UMenuScreen::OpenQueuedAssignment(int32 MissionId, bool bFromFreeFlight)
     if (!Queued || Queued->MissionId != MissionId || Queued->State != AgentAI::EState::Accepted ||
         !Catalog->CanAccept(MissionId, Queued->Issuer)) return false;
 
+    if(DynamicMissionAI::IsDynamic(MissionId)){FText Reason;return Catalog->StartIndependentAssignment(MissionId,Reason);}
     Mission* Model = Catalog->GetMission(MissionId);
     Campaign* Repository = Catalog->GetRepository(MissionId);
     if (!Model || !Repository) return false;
@@ -970,6 +980,7 @@ void UMenuScreen::ShowMissionSelectDlg()
 
 void UMenuScreen::ShowMultiplayerMissionDlg()
 {
+    if(!FSSWFeaturePolicy::Multiplayer())return;
     APlayerController* PC = GetOwningPlayer();
     if (!PC) return;
     if (!MultiplayerMissionDlg)

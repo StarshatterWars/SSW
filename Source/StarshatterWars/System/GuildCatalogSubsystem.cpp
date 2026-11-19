@@ -1,4 +1,5 @@
 #include "GuildCatalogSubsystem.h"
+#include "PlayerCharacter.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "StationServices.h"
 #include "ShipDesignRegistry.h"
@@ -213,6 +214,7 @@ bool UGuildCatalogSubsystem::ClaimStarter(FName Id,FText& Reason)
         FName Design;if(!GuildAI::ClaimStarterShip(State,*Definition,Pilot,Design,Message))return false;
         auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();auto& Profile=Players->GetMutablePlayerInfo();const auto* Row=ShipDesignRegistry::Find(Design);
         if(!Row || Profile.HangarShips.Num()>=128){Message=INVTEXT("The starter hull design is unavailable or your hangar is full. No entitlement was consumed.");return false;}
+        if(Pilot.Rank<PlayerCharacter::HullRankRequired(Row->ShipType,Row->ShipName)){Message=INVTEXT("Reach Ensign before claiming this career craft. Training fighters remain available to cadets.");return false;}
         if(FName(*StaticEnum<EShipEmpire>()->GetNameStringByValue(static_cast<int64>(Row->ShipEmpire)))!=Pilot.Empire)
         {Message=INVTEXT("This starter hull is not available to your empire.");return false;}
         FPlayerHangarShip Hull;Hull.HullId=FGuid::NewGuid();Hull.Design=Design;Hull.Name=Definition->DisplayName+TEXT(" starter");Hull.HullValue=FMath::Clamp(Row->BaseCost,0LL,1000000000000000LL);

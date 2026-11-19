@@ -17,6 +17,30 @@ USSWExhaustTuningCommandlet::USSWExhaustTuningCommandlet(){IsClient=true;IsServe
 int32 USSWExhaustTuningCommandlet::Main(const FString& Params)
 {
 #if WITH_EDITOR
+    if(FParse::Param(*Params,TEXT("Bolts")))
+    {
+        for(const TCHAR* Variant:{TEXT("Blue"),TEXT("OrangeYellow"),TEXT("Green"),TEXT("Red")})
+        {
+            const FString SourceName=FString::Printf(TEXT("/Game/Effects/Engines/NS_SSW_Nozzle_%s.NS_SSW_Nozzle_%s"),Variant,Variant);
+            auto* Source=LoadObject<UNiagaraSystem>(nullptr,*SourceName);if(!Source)return 30;Source->EnsureFullyLoaded();
+            const FString Name=FString::Printf(TEXT("NS_SSW_Bolt_%s"),Variant),PackageName=TEXT("/Game/Effects/Weapons/")+Name;
+            auto* FX=LoadObject<UNiagaraSystem>(nullptr,*(PackageName+TEXT(".")+Name));
+            if(!FX){FX=DuplicateObject<UNiagaraSystem>(Source,CreatePackage(*PackageName),*Name);if(!FX)return 31;FX->SetFlags(RF_Public|RF_Standalone);FAssetRegistryModule::AssetCreated(FX);}
+            FX->EnsureFullyLoaded();auto& Store=FX->GetExposedParameters();bool Valid=true;
+            const auto Float=[&](const TCHAR* Key,float Value){const FNiagaraVariable V(FNiagaraTypeDefinition::GetFloatDef(),FName(Key));if(!Store.GetParameterData(V)){Valid=false;return;}Store.SetParameterValue(Value,V);};
+            const auto Size=[&](const TCHAR* Key,FVector2f Value){const FNiagaraVariable V(FNiagaraTypeDefinition::GetVec2Def(),FName(Key));if(!Store.GetParameterData(V)){Valid=false;return;}Store.SetParameterValue(Value,V);};
+            Float(TEXT("User.Thrusters_Radius"),.35f);Float(TEXT("User.Thrusters_Life"),.045f);Float(TEXT("User.Thrusters_Speed"),240.f);
+            Float(TEXT("User.Thrusters_AttractionPower"),0);Float(TEXT("User.Thrusters_NoiseStrength"),0);Float(TEXT("User.Thrusters_ConeAngle"),.5f);Float(TEXT("User.Thrusters_SpawnRate"),220.f);
+            Size(TEXT("User.Thrusters_SpriteSize"),FVector2f(.65f,2.4f));Float(TEXT("User.EnergyCore_Radius"),.3f);Float(TEXT("User.EnergyCore_SpriteSize"),1.1f);
+            Float(TEXT("User.EnergyCore_Speed"),0);Float(TEXT("User.EnergyCore_Life"),.035f);Float(TEXT("User.EnergyCore_SpawnRate"),140.f);
+            Float(TEXT("User.Particulate_SpawnRate"),0);Float(TEXT("User.HeatHaze_SpawnRate"),0);Float(TEXT("User.Smoke_SpawnRate"),0);Float(TEXT("User.Emissive_Boost"),16.f);
+            if(!Valid)return 32;FX->PostEditChange();FX->RequestCompile(true);FX->WaitForCompilationComplete(false,false);
+            auto* Package=FX->GetOutermost();Package->MarkPackageDirty();const FString File=FPackageName::LongPackageNameToFilename(PackageName,FPackageName::GetAssetPackageExtension());
+            IFileManager::Get().MakeDirectory(*FPaths::GetPath(File),true);FSavePackageArgs Save;Save.TopLevelFlags=RF_Public|RF_Standalone;Save.SaveFlags=SAVE_NoError;
+            if(!UPackage::SavePackage(Package,FX,*File,Save))return 33;UE_LOG(LogTemp,Display,TEXT("Native HDR bolt saved %s"),*PackageName);
+        }
+        return 0;
+    }
     if (FParse::Param(*Params,TEXT("Nozzles")))
     {
         for(const TCHAR* Variant:{TEXT("Blue"),TEXT("OrangeYellow"),TEXT("Green"),TEXT("Red")})

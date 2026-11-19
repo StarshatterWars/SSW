@@ -1,4 +1,5 @@
 #include "ProductionDlg.h"
+#include "ProductionCatalog.h"
 #include "RecordDetails.h"
 #include "BlueprintsDlg.h"
 #include "IndustryJobsPanel.h"
@@ -90,7 +91,8 @@ public:
         else if (Column == "Planet") Label = FText::FromString(Facility->Planet);
         else if (Column == "Region") Label = FText::FromString(Facility->Region);
         else if (Column == "Empire") Label = FText::FromString(Facility->Empire);
-        else if (Column == "Type") Label = Facility->bSurface ? INVTEXT("SURFACE") : INVTEXT("ORBITAL");
+        else if (Column == "Type") Label = FText::FromString(StaticEnum<ESSWProductionFacilityType>()->GetNameStringByValue(int64(Facility->FacilityType)));
+        else if (Column == "Location") Label = Facility->bSurface ? INVTEXT("SURFACE") : INVTEXT("ORBITAL");
         else if (Column == "Minerals") Label = Minerals;
         else if (Column == "Product") Label = Product;
         else if (Column == "ProcessingTime") Label = ProcessingTime;
@@ -113,14 +115,7 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
 {
     const auto Rows = MakeShared<TArray<FFacilityPtr>>();
     const auto RecipeLabels = MakeShared<TMap<FName, FRecipeLabels>>();
-    const auto* Table = LoadObject<UDataTable>(nullptr,
-        TEXT("/Game/Game/DT_ProductionFacilities.DT_ProductionFacilities"));
-    if (Table && Table->GetRowStruct() == FSSWProductionFacility::StaticStruct())
-        Table->ForeachRow<FSSWProductionFacility>(TEXT("Production facilities"),
-            [&Rows](const FName&, const FSSWProductionFacility& Row)
-            {
-                Rows->Add(MakeShared<FSSWProductionFacility>(Row));
-            });
+    for(const auto& Pair:SSWProductionCatalog::Facilities())Rows->Add(MakeShared<FSSWProductionFacility>(Pair.Value));
     if (Rows->IsEmpty())
         return SNew(STextBlock).Margin(FMargin(12)).Text(INVTEXT("NO PRODUCTION FACILITIES AVAILABLE"));
 
@@ -129,12 +124,10 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
         const int32 SystemOrder = A->System.Compare(B->System);
         return SystemOrder == 0 ? A->Facility < B->Facility : SystemOrder < 0;
     });
-    const auto* Recipes = LoadObject<UDataTable>(nullptr,
-        TEXT("/Game/Game/DT_ProductionRecipes.DT_ProductionRecipes"));
-    if (Recipes && Recipes->GetRowStruct() == FSSWProductionRecipe::StaticStruct())
-        Recipes->ForeachRow<FSSWProductionRecipe>(TEXT("Production outputs"),
-            [&RecipeLabels](const FName& Name, const FSSWProductionRecipe& Recipe)
-            {
+    for(const auto& Pair:SSWProductionCatalog::Recipes())
+    {
+        const FName Name=Pair.Key;const auto& Recipe=Pair.Value;
+
                 TArray<FText> Minerals;
                 for (const ESSWMineral Mineral : Recipe.Minerals)
                 {
@@ -161,12 +154,28 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                     FText::Format(INVTEXT("{0} s | {1} t residue"), FText::AsNumber(Recipe.SecondsPerBatch),
                         FText::AsNumber(ReprocessingAI::Calculate(Recipe).WasteTonnes)), Recipe.Image
                 });
-            });
+        }
 
+    const auto VisibleRows=MakeShared<TArray<FFacilityPtr>>(*Rows);
+    const auto ListHandle=MakeShared<TWeakPtr<SListView<FFacilityPtr>>>();
+    const auto SortColumn=MakeShared<FName>(TEXT("System"));const auto SortMode=MakeShared<EColumnSortMode::Type>(EColumnSortMode::Ascending);
     auto Header = SNew(SHeaderRow);
-    const auto Column = [&Header](FName Id, FText Label, float Weight)
+    const auto Column = [&Header,VisibleRows,ListHandle,SortColumn,SortMode](FName Id, FText Label, float Weight)
     {
         Header->AddColumn(SHeaderRow::Column(Id).DefaultLabel(Label).FillWidth(Weight)
+            .SortMode_Lambda([Id,SortColumn,SortMode](){return *SortColumn==Id?*SortMode:EColumnSortMode::None;})
+            .OnSort_Lambda([VisibleRows,ListHandle,SortColumn,SortMode](EColumnSortPriority::Type,const FName& Id,EColumnSortMode::Type Mode)
+            {
+                *SortColumn=Id;*SortMode=Mode;
+                VisibleRows->Sort([Id,Mode](const FFacilityPtr& A,const FFacilityPtr& B)
+                {
+                    const auto Key=[Id](const auto& S)->FString
+                    {if(Id=="Type")return StaticEnum<ESSWProductionFacilityType>()->GetNameStringByValue(int64(S.FacilityType));if(Id=="System")return S.System;if(Id=="Planet")return S.Planet;if(Id=="Region")return S.Region;if(Id=="Empire")return S.Empire;if(Id=="Location")return S.bSurface?TEXT("SURFACE"):TEXT("ORBITAL");if(Id=="Product" || Id=="Minerals" || Id=="ProcessingTime")return S.Recipe.ToString();if(Id=="Status")return GetProductionStatus(GetLiveStock(S)).ToString();return S.Facility;};
+                    int32 Order=Id=="Capacity"?(A->CapacityTonnes<B->CapacityTonnes?-1:(A->CapacityTonnes>B->CapacityTonnes?1:0)):Key(*A).Compare(Key(*B));
+                    if(Order==0)Order=A->Facility.Compare(B->Facility);return Mode==EColumnSortMode::Descending?Order>0:Order<0;
+                });
+                if(const auto View=ListHandle->Pin())View->RequestListRefresh();
+            })
             [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(Label.ToUpper())]);
     };
     Column("Facility", INVTEXT("FACILITY"), 2.5f);
@@ -174,7 +183,8 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
     Column("Planet", INVTEXT("PLANET"), 1.f);
     Column("Region", INVTEXT("REGION"), 1.f);
     Column("Empire", INVTEXT("EMPIRE"), 1.6f);
-    Column("Type", INVTEXT("TYPE"), 0.8f);
+    Column("Type", INVTEXT("FACILITY TYPE"), 1.1f);
+    Column("Location", INVTEXT("LOCATION"), .8f);
     Column("Minerals", INVTEXT("INPUT / BATCH"), 2.1f);
     Column("Product", INVTEXT("OUTPUT / BATCH"), 2.1f);
     Column("ProcessingTime", INVTEXT("BATCH TIME"), 1.1f);
@@ -192,7 +202,7 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
             if (const auto View = WeakScreens.Pin()) View->SetActiveWidgetIndex(1);
         }
     };
-    const auto VisibleRows = MakeShared<TArray<FFacilityPtr>>(*Rows);
+
     auto List = SNew(SListView<FFacilityPtr>).ListItemsSource(&*VisibleRows).HeaderRow(Header)
         .SelectionMode(ESelectionMode::Single)
         .OnMouseButtonDoubleClick_Lambda(OpenFactory)
@@ -211,6 +221,7 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                 .ProcessingTime(Recipe ? Recipe->ProcessingTime : INVTEXT("—"));
         });
 
+    *ListHandle=List;
     const auto ApplyRange = [Rows, VisibleRows, Selected, WeakList = TWeakPtr<SListView<FFacilityPtr>>(List)](int32 Range)
     {
         const auto View = WeakList.Pin();
@@ -278,6 +289,7 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                     D.Title=FText::FromString(Site.Facility);D.Status=GetProductionStatus(Stock);
                     D.Subtitle=FText::Format(INVTEXT("{0} / {1} / {2}"),FText::FromString(Site.System),FText::FromString(Site.Planet),FText::FromString(Site.Region));
                     D.Fact(INVTEXT("EMPIRE"),FText::FromString(Site.Empire)).Fact(INVTEXT("FACILITY"),Site.bSurface?INVTEXT("SURFACE"):INVTEXT("ORBITAL"));
+                    D.Fact(INVTEXT("TYPE"),FText::FromString(StaticEnum<ESSWProductionFacilityType>()->GetNameStringByValue(int64(Site.FacilityType))));
                     D.Fact(INVTEXT("MAX STORAGE"),FText::Format(INVTEXT("{0} T"),FText::AsNumber(Site.CapacityTonnes)));
                     D.Fact(INVTEXT("INSTALLATION"),FText::Format(INVTEXT("{0} CR + {1} CR / RUN"),FText::AsNumber(Site.InstallationFeeCredits),FText::AsNumber(Site.PerRunFeeCredits)));
                     D.Fact(INVTEXT("SERVICE PROFILE"),FText::FromName(Site.ServiceProfile)).Fact(INVTEXT("MAX BATCH"),FText::Format(INVTEXT("{0} RUNS"),FText::AsNumber(Site.MaximumPlayerRuns)));
@@ -382,7 +394,8 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::MissionPackage)]]]
         + SVerticalBox::Slot().FillHeight(1)[Screens];
 }
-
+
+
 void UProductionDlg::ShowBlueprints()
 {
     if(auto Pages=ProductionPages.Pin();Pages && Pages->GetNumWidgets()>2)Pages->SetActiveWidgetIndex(2);

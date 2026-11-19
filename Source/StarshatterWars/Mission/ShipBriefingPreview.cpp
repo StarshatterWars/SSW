@@ -141,8 +141,9 @@ FBox BriefingShipPreview::CalculateBounds(const TArray<FBriefingShipPreviewPart>
 }
 
 bool BriefingShipPreview::ResolveParts(const FShipDesign& Design, TArray<FBriefingShipPreviewPart>& OutParts,
-    const TArray<const FWeaponDesign*>& Stores)
+    const TArray<const FWeaponDesign*>& Stores, FTransform* ModelToPreview)
 {
+    if (ModelToPreview) *ModelToPreview=FTransform::Identity;
     OutParts.Empty();
     UClass* VisualClass = nullptr;
     if (!Design.ShipName.IsEmpty() && (!Stores.IsEmpty() || Design.Mesh.IsNull()))
@@ -222,6 +223,7 @@ bool BriefingShipPreview::ResolveParts(const FShipDesign& Design, TArray<FBriefi
         return false;
     }
     const double Scale = 100. / Radius;
+    if(ModelToPreview) *ModelToPreview=FTransform(FQuat::Identity,-Bounds.GetCenter()*Scale,FVector(Scale));
     for (FBriefingShipPreviewPart& Part : OutParts)
     {
         Part.Transform.SetTranslation((Part.Transform.GetTranslation() - Bounds.GetCenter()) * Scale);

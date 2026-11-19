@@ -55,7 +55,7 @@
         "high_res": "Jarnell/lanos_hi.pcx",
         "radius": 2300000,
         "mass": 1.39e+24,
-        "orbit": 46700000000,
+        "orbit": 47000000000.0,
         "rotation": 95,
         "region": {
           "name": "Talistar",
@@ -64,7 +64,9 @@
           "orbit": 10000000,
           "inclination": 0.6,
           "link": []
-        }
+        },
+        "eccentricity": 0.219,
+        "inclination": 2.41
       },
       {
         "name": "Maraner",
@@ -73,7 +75,7 @@
         "high_res": "Borova/maraner_hi.pcx",
         "radius": 3500000,
         "mass": 2.18e+24,
-        "orbit": 89000000000,
+        "orbit": 89000000000.0,
         "rotation": 35,
         "region": {
           "name": "Maraner",
@@ -82,7 +84,9 @@
           "orbit": 11000000,
           "inclination": 0.7,
           "link": []
-        }
+        },
+        "eccentricity": 0.122,
+        "inclination": 3.0
       },
       {
         "name": "Borova",
@@ -98,7 +102,7 @@
           160,
           210
         ],
-        "orbit": 210000000000,
+        "orbit": 210000000000.0,
         "rotation": 29,
         "region": {
           "name": "Borova",
@@ -116,7 +120,7 @@
             "high_res": "Renser/garana_hi.pcx",
             "radius": 1770000,
             "mass": 1.22e+23,
-            "orbit": 51000000,
+            "orbit": 51000000.0,
             "region": {
               "name": "Bolus",
               "radius": 480000,
@@ -124,7 +128,9 @@
               "orbit": 11000000,
               "inclination": 0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 7.71
           },
           {
             "name": "Kalan",
@@ -133,7 +139,7 @@
             "high_res": "Jarnell/lanos_hi.pcx",
             "radius": 770000,
             "mass": 4.2e+22,
-            "orbit": 81000000,
+            "orbit": 81000000.0,
             "region": {
               "name": "Bolus",
               "radius": 480000,
@@ -141,7 +147,9 @@
               "orbit": 11000000,
               "inclination": 0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 16.35
           }
         ],
         "terrain": {
@@ -186,17 +194,19 @@
           "weather_overcast": 10,
           "weather_fog": 5,
           "weather_storm": 5
-        }
+        },
+        "eccentricity": 0.127,
+        "inclination": -16.12
       },
       {
         "name": "Danova",
         "map": "Giants/GasGiant2_map.pcx",
         "image": "Giants/GasGiant2.jpg",
-		"high_res": "Giants/GasGiant2.jpg",
+        "high_res": "Giants/GasGiant2.jpg",
         "radius": 17100000,
         "mass": 3.6e+26,
         "tilt": 0.13,
-        "orbit": 395000000000,
+        "orbit": 395000000000.0,
         "rotation": 31.3,
         "region": {
           "name": "Danova",
@@ -215,7 +225,7 @@
             "radius": 5300000,
             "rotation": 16.4,
             "mass": 5.98e+24,
-            "orbit": 411000000,
+            "orbit": 411000000.0,
             "region": {
               "name": "Dana I",
               "radius": 480000,
@@ -223,7 +233,9 @@
               "orbit": 11000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 16.89
           },
           {
             "name": "Dana II",
@@ -233,7 +245,7 @@
             "radius": 6100000,
             "rotation": 28.4,
             "mass": 5.98e+24,
-            "orbit": 624000000,
+            "orbit": 624000000.0,
             "region": {
               "name": "Dana I",
               "radius": 480000,
@@ -241,18 +253,22 @@
               "orbit": 11000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 2.85
           }
-        ]
+        ],
+        "eccentricity": 0.08908782311392405,
+        "inclination": -2.32
       },
       {
         "name": "Zhalisal",
         "map": "Giants/GasGiant3_map.pcx",
         "image": "Giants/GasGiant3.jpg",
-		"high_res": "Giants/GasGiant3.jpg",
+        "high_res": "Giants/GasGiant3.jpg",
         "radius": 20000000,
         "mass": 4.81e+26,
-        "orbit": 475000000000,
+        "orbit": 475000000000.0,
         "tscale": 2,
         "tilt": 0.21,
         "rotation": 46.2,
@@ -272,7 +288,7 @@
             "high_res": "Moons/rock_hi.pcx",
             "radius": 3000000,
             "mass": 3e+22,
-            "orbit": 565000000,
+            "orbit": 565000000.0,
             "rotation": 100,
             "region": {
               "name": "Vanna",
@@ -281,7 +297,9 @@
               "orbit": 11000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 5.01
           },
           {
             "name": "Mara",
@@ -290,9 +308,9 @@
             "high_res": "Moons/lunar_hi.pcx",
             "radius": 5200000,
             "rotation": 19,
-            "inclination": 0,
+            "inclination": 0.0,
             "mass": 6e+24,
-            "orbit": 631000000,
+            "orbit": 631000000.0,
             "region": {
               "name": "Mara",
               "radius": 480000,
@@ -300,7 +318,8 @@
               "orbit": 11000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           },
           {
             "name": "Folla",
@@ -310,7 +329,7 @@
             "radius": 6000000,
             "rotation": 18.4,
             "mass": 5.98e+24,
-            "orbit": 914000000,
+            "orbit": 914000000.0,
             "region": {
               "name": "Folla",
               "radius": 480000,
@@ -318,7 +337,9 @@
               "orbit": 11000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 18.78
           },
           {
             "name": "Amina",
@@ -328,7 +349,7 @@
             "radius": 4000000,
             "rotation": 32.6,
             "mass": 3.28e+24,
-            "orbit": 1114000000,
+            "orbit": 1114000000.0,
             "region": {
               "name": "Amina",
               "radius": 480000,
@@ -336,9 +357,13 @@
               "orbit": 11000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 14.46
           }
-        ]
+        ],
+        "eccentricity": 0.07408355816842105,
+        "inclination": -22.26
       }
     ]
   }

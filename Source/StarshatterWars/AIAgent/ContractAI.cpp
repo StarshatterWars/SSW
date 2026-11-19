@@ -43,3 +43,9 @@ void ContractAI::Release(FEconomyState& State)
     if (ContractId.IsValid()) FEconomyLedger::Release(State, FEconomyRuntime::IndustryOwner(), ContractId);
     *this = {};
 }
+
+bool ContractAI::RestoreReservation(const FEconomyState& State,FGuid Id)
+{
+    const auto* R=State.Reservations.Find(Id);if(!R || R->Owner!=FEconomyRuntime::IndustryOwner() || !State.Inventories.Contains(R->Inventory))return false;
+    ContractId=Id;SourceInventory=R->Inventory;CargoItem=R->Item.ToString();ReservedTonnes=R->Quantity;return true;
+}

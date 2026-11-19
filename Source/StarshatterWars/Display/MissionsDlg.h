@@ -11,6 +11,7 @@ class STARSHATTERWARS_API UMissionsDlg : public UBaseScreen
 public:
     void SetDetails(FText InTitle, FText InBrief, FSimpleDelegate InAccept, FSimpleDelegate InDecline, FSimpleDelegate InClose);
 
+    void SetAssignmentMetadata(FText InAgent,FText InStatus,FText InExpiry) { MetadataAgent=MoveTemp(InAgent);MetadataStatus=MoveTemp(InStatus);MetadataExpiry=MoveTemp(InExpiry); }
     void SetStartMission(FSimpleDelegate Action, TDelegate<bool()> CanStart) { StartMission=MoveTemp(Action); CanStartMission=MoveTemp(CanStart); }
 
     void SetSupplement(TSharedRef<SWidget> Content) { Supplement=Content; }
@@ -22,6 +23,7 @@ protected:
 
 private:
     TSharedPtr<SWidget> Supplement;
+    FText MetadataAgent,MetadataStatus,MetadataExpiry;
     FText Title;
     FText Brief;
     FSimpleDelegate Accept;

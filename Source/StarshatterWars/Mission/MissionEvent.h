@@ -50,6 +50,7 @@ class USound;
 
 class MissionEvent
 {
+    friend class FLocalWorldStateCodec;
     friend class Mission;
     friend class MissionTemplate;
     friend class MissionEditorDlg;

@@ -1,4 +1,5 @@
 #include "StarshatterPlayerSubsystem.h"
+#include "LocalGameStateSubsystem.h"
 #include "PlayerCharacter.h"
 #include "PlayerProgressSaveTransaction.h"
 #include "OwnedHullCondition.h"
@@ -195,6 +196,7 @@ bool UStarshatterPlayerSubsystem::LoadPlayer()
             bDirty = false;
         }
 
+        if(auto* State=GetGameInstance()->GetSubsystem<ULocalGameStateSubsystem>())State->RestoreAccount(PlayerInfo,GetActiveSavedPlayerSlot().IsEmpty()?GetSlotName():GetActiveSavedPlayerSlot());
         if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->GetPersistentTrainingAgent().RestoreJournal(PlayerInfo.AgentJournalJson);
         PlayerCharacter::Initialize();
         PlayerCharacter::SetWorldContext(GetGameInstance());
@@ -226,9 +228,11 @@ bool UStarshatterPlayerSubsystem::SavePlayer(bool bForce)
     if (!bForce && !bDirty)
         return true;
 
-    const bool bOk = SaveGameInternal(SlotName, UserIndex, PlayerInfo, CURRENT_SAVE_VERSION);
+    auto CandidateInfo=PlayerInfo;CandidateInfo.LocalStateRevision=FMath::Min(PlayerInfo.LocalStateRevision,MAX_int64-1)+1;
+    const bool bOk = SaveGameInternal(SlotName, UserIndex, CandidateInfo, CURRENT_SAVE_VERSION);
     if (bOk)
     {
+        PlayerInfo.LocalStateRevision=CandidateInfo.LocalStateRevision;
         bHadExistingSave = true;
         bLoaded = true;
         bDirty = false;
@@ -263,6 +267,7 @@ bool UStarshatterPlayerSubsystem::SaveActivePlayerProgress()
     auto* Save = NewObject<UPlayerSaveGame>();
     Save->SaveVersion = CURRENT_SAVE_VERSION;
     Save->PlayerInfo = PlayerInfo;
+    Save->PlayerInfo.LocalStateRevision=FMath::Min(PlayerInfo.LocalStateRevision,MAX_int64-1)+1;
     TArray<uint8> Candidate;
     if (!UGameplayStatics::SaveGameToMemory(Save, Candidate)) return false;
     FPlayerSlotIO IO(UserIndex);
@@ -271,6 +276,7 @@ bool UStarshatterPlayerSubsystem::SaveActivePlayerProgress()
         bDirty = true;
         return false;
     }
+    PlayerInfo.LocalStateRevision=Save->PlayerInfo.LocalStateRevision;
     bHadExistingSave = true;
     bLoaded = true;
     bDirty = false;
@@ -483,6 +489,7 @@ bool UStarshatterPlayerSubsystem::LoadSavedPlayer(const FString& SavedSlot)
     // Commit only a successfully decoded profile. A missing/corrupt selection leaves the pilot intact.
     if(!SaveGameInternal(SlotName,UserIndex,Loaded,CURRENT_SAVE_VERSION)) return false;
     PlayerInfo=MoveTemp(Loaded);bLoaded=true;bDirty=false;bHadExistingSave=true;
+    if(PlayerProgressSaveTransaction::IsMutableProfile(SlotName,SavedSlot))if(auto* State=GetGameInstance()->GetSubsystem<ULocalGameStateSubsystem>())State->RestoreAccount(PlayerInfo,SavedSlot);
     if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->GetPersistentTrainingAgent().RestoreJournal(PlayerInfo.AgentJournalJson);
     Index->ActiveSlot=SavedSlot;
     if(!WritePlayerIndex(Index)) UE_LOG(LogStarshatterPlayerSubsystem,Warning,TEXT("Player loaded, but active-save selection could not be recorded."));

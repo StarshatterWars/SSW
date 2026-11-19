@@ -138,6 +138,7 @@ public:
 
 private:
     friend class USSWDesignIngestionCommandlet;
+    friend class FOOBJsonParityTest;
     void BuildIndexes();
     void ClearCombatGroupData();
 

@@ -30,7 +30,7 @@ struct FBriefingShipPreviewPart
 namespace BriefingShipPreview
 {
     STARSHATTERWARS_API bool ResolveParts(const FShipDesign& Design, TArray<FBriefingShipPreviewPart>& OutParts,
-        const TArray<const FWeaponDesign*>& Stores = {});
+        const TArray<const FWeaponDesign*>& Stores = {}, FTransform* ModelToPreview = nullptr);
     STARSHATTERWARS_API FBox CalculateBounds(const TArray<FBriefingShipPreviewPart>& Parts);
     STARSHATTERWARS_API float FitDistance(float Radius, const FVector2D& ViewSize);
     // Rejects main Game/PIE worlds. Only isolated preview worlds are accepted.

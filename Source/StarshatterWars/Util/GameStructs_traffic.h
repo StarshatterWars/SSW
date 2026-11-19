@@ -26,6 +26,21 @@ struct FGalaxyTrafficJourney
     UPROPERTY(SaveGame) double Age=0;
     UPROPERTY(SaveGame) FString BlockedReason;
     UPROPERTY(SaveGame) bool bDestinationReserved=false;
+    UPROPERTY(SaveGame) FName Buyer;
+    UPROPERTY(SaveGame) FName Seller;
+    UPROPERTY(SaveGame) int64 TradeCredits=0;
+    UPROPERTY(SaveGame) bool bTradeSettled=false;
+    UPROPERTY(SaveGame) double BlockedSeconds=0;
+    UPROPERTY(SaveGame) bool bReturning=false;
+    UPROPERTY(SaveGame) bool bPatrol=false;
+    UPROPERTY(SaveGame) FName ShipDesign;
+    UPROPERTY(SaveGame) FString PilotName;
+    UPROPERTY(SaveGame) int32 PatrolIFF=0;
+    UPROPERTY(SaveGame) double HullFraction=1;
+    UPROPERTY(SaveGame) FVector PatrolPosition=FVector::ZeroVector;
+    UPROPERTY(SaveGame) FVector PatrolVelocity=FVector::ZeroVector;
+    UPROPERTY(SaveGame) bool bHasPatrolPosition=false;
+    UPROPERTY(SaveGame) TArray<int32> PatrolAmmo;
     bool IsCargo()const{return !Item.IsNone();}
     bool IsFinished()const{return Phase==EGalaxyTrafficPhase::Completed || Phase==EGalaxyTrafficPhase::Lost;}
 };

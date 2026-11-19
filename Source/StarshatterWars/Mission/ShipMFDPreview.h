@@ -20,6 +20,7 @@ public:
     bool SetStation(const AActor& Station);
     bool SetAsteroid(const UStaticMeshComponent* Source);
     void SetView(const FQuat& TargetRotation,const FVector& ToObserver,const FVector& ObserverUp);
+    bool ProjectSystemLocation(const FVector& LegacyMount, FVector2D& UV) const;
     bool IsReady() const { return Visual.IsValid() && Target.IsValid(); }
     const FSlateBrush& GetBrush() const { return Brush; }
 private:
@@ -35,6 +36,8 @@ private:
     void Clear();
     void RefreshStaticCapture();
     bool BeginCapture(const FString& NextKey, const FBox& Bounds);
+    FTransform ModelToPreview=FTransform::Identity;
+    double DesignScale=1;
     FString Key;
     TUniquePtr<FPreviewScene> Scene;
     TWeakObjectPtr<AActor> Visual;

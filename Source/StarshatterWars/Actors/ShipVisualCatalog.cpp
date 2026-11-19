@@ -1,5 +1,6 @@
 #include "ShipVisualCatalog.h"
 #include "ProductionActor.h"
+#include "ShipyardActor.h"
 #include "ShipActor.h"
 #include "Misc/PackageName.h"
 namespace {
@@ -63,6 +64,7 @@ const ShipVisualCatalog::FEntry Definitions[] = {
     { TEXT("Fortress"), TEXT("Station3"), TEXT("Fortress"), TEXT("FortressShipActor"), TEXT("station") },
     { TEXT("MiningStation"), TEXT("Mining Station"), TEXT("Xfer"), TEXT("MiningStationActor"), TEXT("station") },
     { TEXT("AsteroidBase"), TEXT("Asteroid Base"), TEXT("Xfer"), TEXT("AsteroidBaseActor"), TEXT("station") },
+    { TEXT("Shipyard"), TEXT("Shipyard"), TEXT("Xfer"), TEXT("ShipyardActor"), TEXT("station") },
     { TEXT("ProcessingFacility"), TEXT("Processing Facility"), TEXT("Xfer"), TEXT("ProductionActor"), TEXT("station") },
     { TEXT("FreightXfer"), TEXT("Station1"), TEXT("Xfer"), TEXT("FreightXferShipActor"), TEXT("station") },
     { TEXT("Goliath"), TEXT("Goliath"), TEXT("Goliath"), TEXT("GoliathShipActor"), TEXT("carrier") },
@@ -165,12 +167,14 @@ UClass* ShipVisualCatalog::Resolve(const FString& DesignName, const FString& Mod
         if (UClass* Class = LoadClass<AShipActor>(nullptr, *ClassPath(Name))) return Class;
     }
     // Prefer the authored Blueprint; retain the original native fallback for older packs.
+    if (Names[0] == TEXT("Shipyard")) return AShipyardActor::StaticClass();
     if (Names[0] == TEXT("ProcessingFacility")) return AProductionActor::StaticClass();
     return nullptr;
 }
 
 FString ShipVisualCatalog::IconFolder(const FString& DesignName)
 {
+    if (DesignName.Equals(TEXT("Shipyard"))) return TEXT("Station1");
     if (DesignName.Equals(TEXT("Prospector"))) return TEXT("Zodiac");
     if (DesignName.Equals(TEXT("Rockhopper"))) return TEXT("CargoA");
     if (DesignName.Equals(TEXT("Asteroid Base"), ESearchCase::IgnoreCase) ||

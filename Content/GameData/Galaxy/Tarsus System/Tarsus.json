@@ -3,7 +3,7 @@
   "sky": {
     "nebula": "Nebula-Tarsus.mag",
     "poly_stars": "stars.mag",
-	"haze": ""
+    "haze": ""
   },
   "stars": 500,
   "dust": 220,
@@ -20,9 +20,9 @@
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 150000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,	
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -65,7 +65,9 @@
           "inclination": 0.45,
           "link": []
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.014,
+        "inclination": 0.8
       },
       {
         "name": "Tarsus II",
@@ -88,7 +90,9 @@
             "Cavenda"
           ]
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.015,
+        "inclination": 6.3
       }
     ]
   }

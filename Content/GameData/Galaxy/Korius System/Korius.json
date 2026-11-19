@@ -20,9 +20,9 @@
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 160000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -53,10 +53,10 @@
         "name": "Moneta",
         "map": "Paragon/bryn_map.pcx",
         "image": "Paragon/bryn_lo.pcx",
-		"high_res": "Paragon/bryn_hi.jpg",
+        "high_res": "Paragon/bryn_hi.jpg",
         "radius": 3600000,
         "mass": 3.96e+26,
-        "orbit": 97000000000,
+        "orbit": 97000000000.0,
         "rotation": 15.13,
         "region": {
           "name": "Moneta",
@@ -73,9 +73,9 @@
             "high_res": "Thralis/benares_hi.pcx",
             "radius": 1100000,
             "rotation": 19,
-            "inclination": 0,
+            "inclination": 0.0,
             "mass": 1.6e+24,
-            "orbit": 34300000,
+            "orbit": 34300000.0,
             "region": {
               "name": "Covana",
               "radius": 480000,
@@ -83,20 +83,23 @@
               "orbit": 11000000,
               "inclination": 0.02,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           }
-        ]
+        ],
+        "eccentricity": 0.229,
+        "inclination": -10.8
       },
       {
         "name": "Rhomin",
         "map": "Giants/GasGiant11_map.pcx",
         "image": "Giants/GasGiant11.jpg",
-		"high_res": "Giants/GasGiant11.jpg",
+        "high_res": "Giants/GasGiant11.jpg",
         "radius": 38200000,
         "mass": 4e+26,
         "tilt": 0.1,
         "tscale": 2,
-        "orbit": 161000000000,
+        "orbit": 161000000000.0,
         "rotation": 31.3,
         "region": {
           "name": "Romin",
@@ -121,7 +124,7 @@
               130,
               130
             ],
-            "orbit": 232000000,
+            "orbit": 232000000.0,
             "rotation": 24.3,
             "region": {
               "name": "Korius",
@@ -129,7 +132,9 @@
               "grid": 20000,
               "orbit": 15000000,
               "inclination": 0.4
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 7.71
           },
           {
             "name": "Adantar",
@@ -143,7 +148,7 @@
               100,
               90
             ],
-            "orbit": 356000000,
+            "orbit": 356000000.0,
             "rotation": 17.8,
             "region": {
               "name": "Adantar",
@@ -195,7 +200,9 @@
               "weather_overcast": 0,
               "weather_fog": 0,
               "weather_storm": 2
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 10.68
           },
           {
             "name": "Alita",
@@ -213,9 +220,13 @@
               "orbit": 15000000,
               "inclination": 0.4,
               "link": []
-            }
+            },
+            "eccentricity": 0.017,
+            "inclination": 14.73
           }
-        ]
+        ],
+        "eccentricity": 0.151,
+        "inclination": 6.09
       }
     ]
   }

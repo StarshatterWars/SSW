@@ -1,5 +1,6 @@
 
 #include "SSWRuntimeSubsystem.h"
+#include "LocalGameStateSubsystem.h"
 #include "SSWSessionLobbyGameMode.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "WeaponBlueprintResolver.h"
@@ -124,6 +125,7 @@ void USSWRuntimeSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 void USSWRuntimeSubsystem::Deinitialize()
 {
+    if(GetGameInstance())if(auto* State=GetGameInstance()->GetSubsystem<ULocalGameStateSubsystem>())State->SaveAtExit();
     EndMissionPresentation();
     UE_LOG(LogSSWRuntime, Log, TEXT("[RUNTIME] Deinitialize"));
 

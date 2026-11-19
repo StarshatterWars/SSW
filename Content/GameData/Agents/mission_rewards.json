@@ -1,0 +1,101 @@
+{
+  "Default": {
+    "BaseCredits": 25000,
+    "RecoveryBonus": 0,
+    "SecondaryObjectiveBonus": 0,
+    "TimeBonus": 0,
+    "TimeLimitSeconds": 0
+  },
+  "Missions": [
+    {
+      "BaseCredits": 300000,
+      "RecoveryBonus": 25000,
+      "SecondaryObjectiveBonus": 0,
+      "TimeBonus": 0,
+      "TimeLimitSeconds": 0,
+      "CampaignId": 1,
+      "MissionId": 101
+    },
+    {
+      "BaseCredits": 350000,
+      "RecoveryBonus": 25000,
+      "SecondaryObjectiveBonus": 0,
+      "TimeBonus": 0,
+      "TimeLimitSeconds": 0,
+      "CampaignId": 1,
+      "MissionId": 102
+    },
+    {
+      "BaseCredits": 100000,
+      "RecoveryBonus": 25000,
+      "SecondaryObjectiveBonus": 0,
+      "TimeBonus": 0,
+      "TimeLimitSeconds": 0,
+      "CampaignId": 1,
+      "MissionId": 103
+    },
+    {
+      "BaseCredits": 150000,
+      "RecoveryBonus": 25000,
+      "SecondaryObjectiveBonus": 10000,
+      "TimeBonus": 25000,
+      "TimeLimitSeconds": 1200,
+      "CampaignId": 1,
+      "MissionId": 104
+    },
+    {
+      "BaseCredits": 200000,
+      "RecoveryBonus": 25000,
+      "SecondaryObjectiveBonus": 0,
+      "TimeBonus": 0,
+      "TimeLimitSeconds": 0,
+      "CampaignId": 1,
+      "MissionId": 105
+    },
+    {
+      "BaseCredits": 250000,
+      "RecoveryBonus": 25000,
+      "SecondaryObjectiveBonus": 0,
+      "TimeBonus": 0,
+      "TimeLimitSeconds": 0,
+      "CampaignId": 1,
+      "MissionId": 106
+    },
+    {
+      "BaseCredits": 300000,
+      "RecoveryBonus": 25000,
+      "SecondaryObjectiveBonus": 0,
+      "TimeBonus": 0,
+      "TimeLimitSeconds": 0,
+      "CampaignId": 1,
+      "MissionId": 107
+    },
+    {
+      "BaseCredits": 50000,
+      "RecoveryBonus": 10000,
+      "SecondaryObjectiveBonus": 5000,
+      "TimeBonus": 0,
+      "TimeLimitSeconds": 0,
+      "CampaignId": 1000,
+      "MissionId": 910015
+    },
+    {
+      "BaseCredits": 50000,
+      "RecoveryBonus": 10000,
+      "SecondaryObjectiveBonus": 5000,
+      "TimeBonus": 0,
+      "TimeLimitSeconds": 0,
+      "CampaignId": 1000,
+      "MissionId": 910018
+    },
+    {
+      "BaseCredits": 50000,
+      "RecoveryBonus": 10000,
+      "SecondaryObjectiveBonus": 5000,
+      "TimeBonus": 0,
+      "TimeLimitSeconds": 0,
+      "CampaignId": 1000,
+      "MissionId": 910030
+    }
+  ]
+}

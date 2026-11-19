@@ -1,4 +1,5 @@
 #include "MarketplaceDlg.h"
+#include "EconomyAI.h"
 #include "RecordDetails.h"
 #include "ShipSystemIcon.h"
 #include "StationServices.h"
@@ -608,7 +609,20 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                             if(!Offer.Producer.IsEmpty()){
                                 D.Fact(INVTEXT("ROUTE"),FText::Format(INVTEXT("{0} JUMPS"),FText::AsNumber(Offer.ProducerJumps)));
                                 D.Fact(INVTEXT("PRODUCER STOCK"),FText::Format(INVTEXT("{0} {1}"),FText::AsNumber(Offer.ProducerStock),FText::FromString(Offer.Unit())));
-                            }return D;
+                            }
+                            D.Fact(INVTEXT("FREIGHT ESTIMATE / UNIT"),FText::Format(INVTEXT("{0} CR"),FText::AsNumber(EconomyAI::FreightEstimate(Offer.Goods.Size,Offer.PurchaseJumps()))));
+                            if(auto* Simulation=Sim::GetSim())if(auto* Region=Simulation->GetActiveRegion())if(auto* System=Region->GetSystem())
+                                if(const auto* H=EconomyAI::History(Simulation->ReadEconomy(),FName(UTF8_TO_TCHAR(System->GetName())),DataTableUtils::MakeValidName(Offer.Name));H && !H->Samples.IsEmpty())
+                                {
+                                    const auto& Last=H->Samples.Last();double Low=Last.Price,High=Last.Price;for(const auto& S:H->Samples){Low=FMath::Min(Low,S.Price);High=FMath::Max(High,S.Price);}
+                                    D.Fact(INVTEXT("REGIONAL ASK RANGE"),FText::Format(INVTEXT("{0} - {1} CR"),FText::AsNumber(Low),FText::AsNumber(High)));
+                                    D.Fact(INVTEXT("SUPPLY / DEMAND"),FText::Format(INVTEXT("{0} / {1}"),FText::AsNumber(Last.Supply),FText::AsNumber(Last.Demand)));
+                                    double Volume=0,Value=0;int32 Count=0;for(const auto& Sample:H->Samples){Volume+=Sample.TradeVolume;Value+=Sample.TradeValue;Count+=Sample.TradeCount;}
+                                    D.Fact(INVTEXT("RECORDED TRADE VOLUME"),FText::Format(INVTEXT("{0} {1} / {2} TRADES"),FText::AsNumber(Volume),FText::FromString(Offer.Unit()),FText::AsNumber(Count)));
+                                    if(Volume>0)D.Fact(INVTEXT("ACTUAL AVERAGE PRICE"),FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Value/Volume)));
+
+                                }
+                            return D;
                         })]]
                 + SVerticalBox::Slot().AutoHeight().Padding(0,8)
                 [SNew(SHorizontalBox)

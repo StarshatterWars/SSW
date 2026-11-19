@@ -1,5 +1,6 @@
 #pragma once
 #include "GameStructs.h"
+#include "PlayerCharacter.h"
 #include "Mission.h"
 #include "MissionElement.h"
 #include "MissionLoad.h"
@@ -14,6 +15,7 @@ namespace FreeFlightHullRules
         const auto* Hull=Pilot.HangarShips.FindByPredicate([&](const FPlayerHangarShip& Row)
         {return Row.HullId==Pilot.SelectedHangarHull && Row.HullId.IsValid() && !Row.bAssigned && !Row.bLost;});
         const FShipDesign* Design=Hull?ShipDesignRegistry::Find(Hull->Design):nullptr;
+        if(Design && Pilot.Rank<PlayerCharacter::HullRankRequired(Design->ShipType,Design->ShipName))Design=nullptr;
         if(!Design)Design=ShipDesignRegistry::Find(FName(TEXT("Falcon")));
         if(!Design)return false;
         auto* Player=Model.GetPlayer();Player->SetShipDesign(Design);

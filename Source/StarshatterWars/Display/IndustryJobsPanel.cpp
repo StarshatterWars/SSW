@@ -1,4 +1,4 @@
-﻿#include "IndustryJobsPanel.h"
+#include "IndustryJobsPanel.h"
 #include "BlueprintCatalogSubsystem.h"
 #include "MissionUIStyle.h"
 #include "ShipSystemIcon.h"
@@ -111,6 +111,10 @@ private:
             FText::FromString(Job->Id.ToString()),FText::FromName(Job->Facility),FText::FromName(Job->Recipe),FText::AsNumber(Job->Runs),JobState(*Job),FText::FromName(Job->Input),FText::FromName(Job->Output),FText::AsNumber(Job->Duration),FText::AsNumber(FMath::CeilToInt(Job->Remaining))));
         if(Job->State!=EIndustryJobState::Completed && Job->State!=EIndustryJobState::Cancelled)
         {FText Reason;FEconomyLedger::CanStartJob(Simulation->ReadEconomy(),*Job,Operational(*Job),Reason);Lines.Add(Reason);}
+        double Reserved=0;for(const auto& Pair:Simulation->ReadEconomy().Reservations)
+            if(Pair.Value.Inventory==Job->Input && Pair.Value.Owner==Job->Owner)Reserved+=Pair.Value.Quantity;
+        Lines.Add(FText::Format(INVTEXT("RESERVED AT INPUT: {0} CATALOG UNITS\nOUTPUT DESTINATION: {1}"),FText::AsNumber(Reserved),FText::FromName(Job->Output)));
+        if(Job->State==EIndustryJobState::Cancelled)Lines.Add(INVTEXT("CANCELLED: UNCONSUMED RESERVATIONS RELEASED. CONSUMED MATERIALS, FEES AND LICENSED RUNS ARE NOT REFUNDED."));
         for(const auto& Amount:Job->Materials)Lines.Add(FText::Format(INVTEXT("INPUT {0}: {1} ({2} T)"),FText::FromName(Amount.Item),FText::AsNumber(Amount.Quantity),FText::AsNumber(Amount.Quantity*Amount.UnitTonnes)));
         for(const auto& Amount:Job->Products)Lines.Add(FText::Format(INVTEXT("OUTPUT {0}: {1} ({2} T)"),FText::FromName(Amount.Item),FText::AsNumber(Amount.Quantity),FText::AsNumber(Amount.Quantity*Amount.UnitTonnes)));
         Lines.Add(INVTEXT("OUTPUT IS DEPOSITED AUTOMATICALLY. RUNNING-JOB INPUTS AND LICENSED RUNS ARE NOT REFUNDED ON CANCELLATION."));

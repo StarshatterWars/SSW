@@ -20,9 +20,9 @@
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 160000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -46,7 +46,7 @@
           140,
           120
         ],
-        "orbit": 75000000000,
+        "orbit": 75000000000.0,
         "rotation": 24.3,
         "region": {
           "name": "Senna",
@@ -73,9 +73,13 @@
               "orbit": 11000000,
               "inclination": 0.23,
               "link": []
-            }
+            },
+            "eccentricity": 0.031,
+            "inclination": 15.81
           }
-        ]
+        ],
+        "eccentricity": 0.137,
+        "inclination": -9.27
       },
       {
         "name": "Radix",
@@ -90,7 +94,7 @@
           160,
           150
         ],
-        "orbit": 130000000000,
+        "orbit": 130000000000.0,
         "rotation": 16.3,
         "region": {
           "name": "Radix",
@@ -109,7 +113,7 @@
             "radius": 2900000,
             "rotation": 310.4,
             "mass": 5.18e+23,
-            "orbit": 53200000,
+            "orbit": 53200000.0,
             "region": {
               "name": "Ariadne",
               "radius": 480000,
@@ -117,7 +121,9 @@
               "orbit": 11000000,
               "inclination": 0.23,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 17.43
           }
         ],
         "terrain": {
@@ -162,17 +168,19 @@
           "weather_overcast": 0,
           "weather_fog": 0,
           "weather_storm": 0
-        }
+        },
+        "eccentricity": 0.143,
+        "inclination": -1.47
       },
       {
         "name": "Cavenda",
         "map": "Giants/GasGiant5_map.pcx",
         "image": "Giants/GasGiant5.jpg",
-		"high_res": "Giants/GasGiant5.jpg",
+        "high_res": "Giants/GasGiant5.jpg",
         "radius": 13700000,
         "mass": 3.6e+26,
         "tscale": 2,
-        "orbit": 251000000000,
+        "orbit": 251000000000.0,
         "rotation": 43.7,
         "region": {
           "name": "Cavenda",
@@ -201,7 +209,7 @@
               255
             ],
             "mass": 5.98e+24,
-            "orbit": 311000000,
+            "orbit": 311000000.0,
             "region": {
               "name": "Oberon",
               "radius": 480000,
@@ -209,7 +217,9 @@
               "orbit": 18000000,
               "inclination": 0.21,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 17.97
           },
           {
             "name": "Titania",
@@ -224,7 +234,7 @@
               255
             ],
             "mass": 3.28e+24,
-            "orbit": 524000000,
+            "orbit": 524000000.0,
             "region": {
               "name": "Titania",
               "radius": 480000,
@@ -232,9 +242,13 @@
               "orbit": 32000000,
               "inclination": 0.21,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 15.0
           }
-        ]
+        ],
+        "eccentricity": 0.124,
+        "inclination": 10.67
       }
     ]
   }

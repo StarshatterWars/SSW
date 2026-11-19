@@ -3,7 +3,7 @@
   "sky": {
     "nebula": "Nebula-Paragon.mag",
     "poly_stars": "stars.mag",
-	"haze": ""
+    "haze": ""
   },
   "stars": 500,
   "dust": 300,
@@ -20,9 +20,9 @@
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 160000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -41,7 +41,7 @@
         "high_res": "Paragon/dorrath_hi.pcx",
         "radius": 3900000,
         "mass": 2.58e+24,
-        "orbit": 72300000000,
+        "orbit": 72000000000.0,
         "atmosphere": [
           121,
           120,
@@ -64,7 +64,7 @@
             "high_res": "Borova/maraner_hi.pcx",
             "radius": 850000,
             "mass": 8e+22,
-            "orbit": 43000000,
+            "orbit": 43000000.0,
             "retro": true,
             "region": {
               "name": "Altos",
@@ -73,9 +73,13 @@
               "orbit": 11000000,
               "inclination": 0.25,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 1.77
           }
-        ]
+        ],
+        "eccentricity": 0.222,
+        "inclination": -8.34
       },
       {
         "name": "Paragon",
@@ -91,7 +95,7 @@
           170,
           200
         ],
-        "orbit": 140000000000,
+        "orbit": 140000000000.0,
         "rotation": 27,
         "region": {
           "name": "Paragon",
@@ -109,7 +113,7 @@
             "high_res": "Jarnell/lanos_hi.pcx",
             "radius": 1100000,
             "mass": 8e+22,
-            "orbit": 39000000,
+            "orbit": 39000000.0,
             "region": {
               "name": "Porthos",
               "radius": 480000,
@@ -117,7 +121,9 @@
               "orbit": 11000000,
               "inclination": 0.05,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 18.24
           },
           {
             "name": "Aramis",
@@ -126,7 +132,7 @@
             "high_res": "Jarnell/lanos_hi.pcx",
             "radius": 500000,
             "mass": 8e+22,
-            "orbit": 51000000,
+            "orbit": 51000000.0,
             "region": {
               "name": "Aramis",
               "radius": 480000,
@@ -134,18 +140,22 @@
               "orbit": 11000000,
               "inclination": 0.35,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 9.06
           }
-        ]
+        ],
+        "eccentricity": 0.123,
+        "inclination": -6.14
       },
       {
         "name": "Bryn Mawr",
         "map": "Paragon/bryn_map.pcx",
         "image": "Paragon/bryn_lo.pcx",
-		"high_res": "Paragon/bryn_hi.jpg",
+        "high_res": "Paragon/bryn_hi.jpg",
         "radius": 3300000,
         "mass": 2.45e+24,
-        "orbit": 257000000000,
+        "orbit": 257000000000.0,
         "rotation": 35,
         "region": {
           "name": "Bryn",
@@ -155,16 +165,18 @@
           "inclination": 0.7,
           "link": []
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.143,
+        "inclination": 15.27
       },
       {
         "name": "Atlan",
         "map": "Giants/GasGiant4_map.pcx",
         "image": "Giants/GasGiant4.jpg",
-		"high_res": "Giants/GasGiant4.jpg",
+        "high_res": "Giants/GasGiant4.jpg",
         "radius": 19000000,
         "mass": 2.1e+26,
-        "orbit": 480000000000,
+        "orbit": 480000000000.0,
         "tscale": 2,
         "tilt": 0.23,
         "ring": "Giants/Ring3.pcx",
@@ -199,7 +211,9 @@
               "orbit": 11000000,
               "inclination": 0.09,
               "link": []
-            }
+            },
+            "eccentricity": 0.008,
+            "inclination": 9.6
           },
           {
             "name": "Olan",
@@ -218,9 +232,12 @@
               "orbit": 11000000,
               "inclination": -0.09,
               "link": []
-            }
+            },
+            "eccentricity": 0.024
           }
-        ]
+        ],
+        "eccentricity": 0.20883894091875,
+        "inclination": -22.26
       }
     ]
   }

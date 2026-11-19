@@ -3378,5 +3378,83 @@
     "Rarity": "Uncommon",
     "bIllicit": false,
     "Image": "MiningDrone"
+  },
+  {
+    "Name": "falcon assembled hull",
+    "DisplayName": "Falcon assembled hull",
+    "Type": "FinishedGoods",
+    "Unit": "hulls",
+    "Size": 14.5,
+    "Value": 574000,
+    "Description": "Completed Falcon hull built at a dedicated shipyard. Stored for sale or distribution; equipment, ownership and launch clearance are managed separately.",
+    "PreviewQuantity": 1,
+    "Rarity": "Rare",
+    "bIllicit": false,
+    "Image": "Ship"
+  },
+  {
+    "Name": "stormhawk assembled hull",
+    "DisplayName": "Stormhawk assembled hull",
+    "Type": "FinishedGoods",
+    "Unit": "hulls",
+    "Size": 15.100000381469727,
+    "Value": 574000,
+    "Description": "Completed Stormhawk hull built at a dedicated shipyard. Stored for sale or distribution; equipment, ownership and launch clearance are managed separately.",
+    "PreviewQuantity": 1,
+    "Rarity": "Rare",
+    "bIllicit": false,
+    "Image": "Ship"
+  },
+  {
+    "Name": "prospector assembled hull",
+    "DisplayName": "Prospector assembled hull",
+    "Type": "FinishedGoods",
+    "Unit": "hulls",
+    "Size": 87.0,
+    "Value": 463000,
+    "Description": "Completed Prospector hull built at a dedicated shipyard. Stored for sale or distribution; equipment, ownership and launch clearance are managed separately.",
+    "PreviewQuantity": 1,
+    "Rarity": "Rare",
+    "bIllicit": false,
+    "Image": "Ship"
+  },
+  {
+    "Name": "raptor assembled hull",
+    "DisplayName": "Raptor assembled hull",
+    "Type": "FinishedGoods",
+    "Unit": "hulls",
+    "Size": 25.0,
+    "Value": 587000,
+    "Description": "Completed Raptor hull built at a dedicated shipyard. Stored for sale or distribution; equipment, ownership and launch clearance are managed separately.",
+    "PreviewQuantity": 1,
+    "Rarity": "Rare",
+    "bIllicit": false,
+    "Image": "Ship"
+  },
+  {
+    "Name": "viper assembled hull",
+    "DisplayName": "Viper assembled hull",
+    "Type": "FinishedGoods",
+    "Unit": "hulls",
+    "Size": 14.0,
+    "Value": 572000,
+    "Description": "Completed Viper hull built at a dedicated shipyard. Stored for sale or distribution; equipment, ownership and launch clearance are managed separately.",
+    "PreviewQuantity": 1,
+    "Rarity": "Rare",
+    "bIllicit": false,
+    "Image": "Ship"
+  },
+  {
+    "Name": "goliath assembled hull",
+    "DisplayName": "Goliath assembled hull",
+    "Type": "FinishedGoods",
+    "Unit": "hulls",
+    "Size": 782000.0,
+    "Value": 459161000,
+    "Description": "Completed Goliath hull built at a dedicated shipyard. Stored for sale or distribution; equipment, ownership and launch clearance are managed separately.",
+    "PreviewQuantity": 1,
+    "Rarity": "Exotic",
+    "bIllicit": false,
+    "Image": "Ship"
   }
 ]

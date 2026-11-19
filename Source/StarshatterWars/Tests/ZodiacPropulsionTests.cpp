@@ -6,6 +6,7 @@
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/ChildActorComponent.h"
 #include "StarshatterShipDesignSubsystem.h"
 #include "ShipDesignRegistry.h"
 #include "WeaponDesignRegistry.h"
@@ -50,6 +51,10 @@ bool FZodiacPropulsionTest::RunTest(const FString& Parameters)
     UClass* Class=LoadClass<AZodiacShipActor>(nullptr,TEXT("/Game/Models/Zodiac/BP_Zodiac.BP_Zodiac_C"));
     if(!TestNotNull(TEXT("Saved Zodiac Blueprint"),Class))return false;
     auto* Actor=World->SpawnActor<AZodiacShipActor>(Class);
+    TestTrue(TEXT("Zodiac has a fitted cockpit assembly"),Actor->CockpitComponent && Actor->CockpitComponent->GetChildActor());
+    TestTrue(TEXT("Shuttle cockpit uses independent native scale"),FMath::IsNearlyEqual(Actor->AuthoredCockpitScale,.02f));
+    TestTrue(TEXT("Shuttle cockpit is mounted forward, not vertically above hull"),Actor->FighterCockpitRoot->GetRelativeLocation().Equals(FVector(145,0,8),.1f));
+    TestEqual(TEXT("Definition supplies cockpit"),Row->CockpitName,FString(TEXT("FalconPit")));
     Actor->BindRuntimeShip(&Runtime);
     ON_SCOPE_EXIT {Actor->BindRuntimeShip(nullptr);};
     TArray<USceneComponent*> Components;Actor->GetComponents(Components);

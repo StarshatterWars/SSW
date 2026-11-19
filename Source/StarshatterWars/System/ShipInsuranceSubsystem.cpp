@@ -1,4 +1,8 @@
 #include "ShipInsuranceSubsystem.h"
+#include "ShipyardAI.h"
+#include "StationServices.h"
+#include "StarSystem.h"
+#include "EconomyRuntime.h"
 #include "StationServiceCatalog.h"
 #include "TransactionAI.h"
 #include "OwnedHullCondition.h"
@@ -332,7 +336,7 @@ bool UShipInsuranceSubsystem::SelectHull(FGuid Hull, FText& Result)
     { Result = INVTEXT("Dock to select an available hull."); return false; }
     const auto* Design = ShipDesignRegistry::Find(Entry->Design);
     const auto* PilotCharacter = PlayerCharacter::GetCurrentPlayer();
-    if (!Design || !PilotCharacter || PilotCharacter->GetRank() < PlayerCharacter::CommandRankRequired(Design->ShipType))
+    if (!Design || !PilotCharacter || PilotCharacter->GetRank() < PlayerCharacter::HullRankRequired(Design->ShipType,Design->ShipName))
     { Result = INVTEXT("Your rank does not permit selecting this hull."); return false; }
     const auto* EmpireEnum = StaticEnum<EShipEmpire>();
     const int64 Empire = EmpireEnum->GetValueByNameString(
@@ -542,4 +546,33 @@ void UShipInsuranceSubsystem::Tick(float DeltaTime)
         else Pilot=Previous; // Retried while docked; never discard damage or charge anything.
     }
     else FOwnedHullCondition::Capture(*Craft,*Owned);
+}
+
+namespace
+{
+FName DockedHullStock()
+{
+    auto* S=Sim::GetSim();const auto* Craft=S?S->GetPlayerShip():nullptr;const auto* Base=Craft?Craft->GetCarrier():nullptr;
+    return Base && Craft->GetRegion() && Craft->GetRegion()->GetSystem()?FEconomyRuntime::Warehouse(UTF8_TO_TCHAR(Craft->GetRegion()->GetSystem()->GetName()),UTF8_TO_TCHAR(Base->GetName()),TEXT("Output")):NAME_None;
+}
+}
+double UShipInsuranceSubsystem::HullStock(FName Design)const
+{
+    const auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();return P?ShipyardAI::Stock(P->GetPlayerInfo().Economy,DockedHullStock(),Design):0;
+}
+bool UShipInsuranceSubsystem::CanPurchaseHull(FName Design,FText& Reason)const
+{
+    const auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* Hull=ShipDesignRegistry::Find(Design);
+    if(!P || !Hull || !FStationServices::Offers(ESSWStationService::Refit)){Reason=INVTEXT("Dock at a friendly shipyard to purchase a completed hull.");return false;}
+    if(!ShipyardAI::Eligible(P->GetPlayerInfo(),*Hull,Reason))return false;
+    if(HullStock(Design)<1){Reason=INVTEXT("This shipyard has no completed hull of that design.");return false;}
+    if(GetBalance()<Hull->BaseCost){Reason=INVTEXT("Insufficient credits.");return false;}
+    Reason=FText::Format(INVTEXT("Purchase completed hull for {0} CR."),FText::AsNumber(Hull->BaseCost));return true;
+}
+bool UShipInsuranceSubsystem::PurchaseHull(FName Design,FText& Reason)
+{
+    if(!CanPurchaseHull(Design,Reason))return false;auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* Hull=ShipDesignRegistry::Find(Design);const auto Before=P->GetPlayerInfo();
+    auto& Pilot=P->GetMutablePlayerInfo();const auto* Craft=Sim::GetSim()->GetPlayerShip();
+    if(!ShipyardAI::Purchase(Pilot,*Hull,DockedHullStock(),UTF8_TO_TCHAR(Craft->GetRegion()->GetName()),FGuid::NewGuid(),Reason))return false;
+    if(!P->SaveActivePlayerProgress()){Pilot=Before;Reason=INVTEXT("Could not save the purchase. Hull stock and credits restored.");return false;}return true;
 }

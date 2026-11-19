@@ -1,6 +1,8 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
 #include "RecordDetails.h"
+#include "MissionsDlg.h"
+#include "Widgets/SNullWidget.h"
 #include "RecordedCutsceneDlg.h"
 #include "MediaPlayer.h"
 #include "Engine/World.h"
@@ -85,5 +87,24 @@ bool FRecordDetailsRenderTest::RunTest(const FString&) {
     TestTrue(TEXT("Wide detail cards render"),CaptureWidget(Layout,FVector2D(1440,520),TEXT("RecordDetailsWide.png")));
     TestTrue(TEXT("Narrow detail card renders"),CaptureWidget(Tile(Contract),FVector2D(480,620),TEXT("RecordDetailsNarrow.png")));
     return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAgentBriefingLayoutTest,"Starshatter.UI.AgentMissionLayout",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FAgentBriefingLayoutTest::RunTest(const FString&)
+{
+    if(!GDynamicRHI){AddError(TEXT("Render device required"));return false;}
+    const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false);
+    TStrongObjectPtr<UWorld> World(UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options));
+    if(!World.IsValid())return false;World->SetGameInstance(NewObject<UGameInstance>());
+    TStrongObjectPtr<UMissionsDlg> Panel(NewObject<UMissionsDlg>(World.Get()));Panel->UUserWidget::Initialize();
+    Panel->SetDetails(INVTEXT("BASIC SPACE FLIGHT"),INVTEXT("OBJECTIVES\nPractice spaceborne fighter operations. Complete the patrol route and recover safely aboard Archon.\n\nBRIEFING\nYour training officer will guide you through the flight. Training assignments remain available until completed."),FSimpleDelegate::CreateLambda([](){}),FSimpleDelegate(),FSimpleDelegate());
+    Panel->SetAssignmentMetadata(INVTEXT("Cmdr. Janek Flight Training"),INVTEXT("OFFERED  /  REWARD 300,000 CR + ELIGIBLE BONUSES"),INVTEXT("NO EXPIRY"));
+    auto Widget=Panel->TakeWidget();
+    TestTrue(TEXT("Training briefing paints at normal panel size"),CaptureWidget(Widget,FVector2D(960,640),TEXT("MissionBriefingTraining.png")));
+    Panel->SetAssignmentMetadata(INVTEXT("Lt. Anika Merrow"),INVTEXT("OFFERED  /  REWARD 50,000 CR + ELIGIBLE BONUSES"),INVTEXT("EXPIRES 19 NOV 18:30 GMT"));
+    // Metadata is immutable until the panel is rebuilt, as when selecting another assignment.
+    static_cast<UWidget*>(Panel.Get())->ReleaseSlateResources(true);Widget=Panel->TakeWidget();
+    TestTrue(TEXT("Expiry stays on the right at narrow width"),CaptureWidget(Widget,FVector2D(720,640),TEXT("MissionBriefingExpiry.png")));
+    Widget=SNullWidget::NullWidget;static_cast<UWidget*>(Panel.Get())->ReleaseSlateResources(true);Panel.Reset();World->DestroyWorld(false);return true;
 }
 #endif

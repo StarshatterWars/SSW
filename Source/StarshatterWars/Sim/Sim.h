@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright © 2025–2026. All Rights Reserved.
 
@@ -87,6 +87,9 @@ class SimModel;
 
 class Sim : public SimUniverse
 {
+    friend class FLocalWorldStateCodec;
+    friend class FLiveWorldResumeTest;
+    friend class FIndependentSurveyFlowTest;
 public:
     // NOTE: Keep only if Sim uses these directly.
     // Otherwise, prefer SimRegion::REAL_SPACE / SimRegion::AIR_SPACE.
@@ -347,6 +350,7 @@ protected:
     FContractAccounts TrainingContractAccounts;
     TMap<FName, FContractTransaction> TrainingContracts;
     TMap<FName, FSSWProductionStock> ProductionViews;
+    TUniquePtr<class EconomyAI> EconomyController;
     double IndustrySeconds = 0;
     double MarketSeconds = 0;
     FEconomyState LocalEconomy;

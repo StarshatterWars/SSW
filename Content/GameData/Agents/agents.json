@@ -21,7 +21,9 @@
       106,
       107
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": []
   },
   {
     "Name": "SolusPatrol",
@@ -41,7 +43,21 @@
       3,
       11
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "TelmeraLiaison",
@@ -60,7 +76,20 @@
       3,
       12
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "ESCORT",
+      "ESCORT_FREIGHT",
+      "ESCORT_SHUTTLE",
+      "TRANSPORT",
+      "CARGO",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Civil",
+      "Exploration"
+    ]
   },
   {
     "Name": "ParagonWatch",
@@ -79,7 +108,21 @@
       9,
       13
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "LorisWatch",
@@ -97,7 +140,21 @@
     "MissionIds": [
       14
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "JanekTraffic",
@@ -115,7 +172,21 @@
     "MissionIds": [
       15
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "JanekMaterials",
@@ -133,7 +204,20 @@
     "MissionIds": [
       16
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "ESCORT",
+      "ESCORT_FREIGHT",
+      "ESCORT_SHUTTLE",
+      "TRANSPORT",
+      "CARGO",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Industry",
+      "Civil"
+    ]
   },
   {
     "Name": "JanekFleet",
@@ -151,7 +235,21 @@
     "MissionIds": [
       17
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "JarnellWatch",
@@ -169,7 +267,21 @@
     "MissionIds": [
       18
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "JarnellEnvoy",
@@ -187,7 +299,20 @@
     "MissionIds": [
       19
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "ESCORT",
+      "ESCORT_FREIGHT",
+      "ESCORT_SHUTTLE",
+      "TRANSPORT",
+      "CARGO",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Civil",
+      "Exploration"
+    ]
   },
   {
     "Name": "BorovaPatrol",
@@ -206,7 +331,21 @@
       7,
       20
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "BorovaCommand",
@@ -224,7 +363,21 @@
     "MissionIds": [
       21
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "AthenarWatch",
@@ -242,7 +395,21 @@
     "MissionIds": [
       22
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "AthenarEnvoy",
@@ -260,7 +427,20 @@
     "MissionIds": [
       23
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "ESCORT",
+      "ESCORT_FREIGHT",
+      "ESCORT_SHUTTLE",
+      "TRANSPORT",
+      "CARGO",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Civil",
+      "Exploration"
+    ]
   },
   {
     "Name": "ParagonCommand",
@@ -279,7 +459,21 @@
       9,
       24
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "ThraleWatch",
@@ -297,7 +491,21 @@
     "MissionIds": [
       25
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "ThraleLiaison",
@@ -315,7 +523,20 @@
     "MissionIds": [
       26
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "ESCORT",
+      "ESCORT_FREIGHT",
+      "ESCORT_SHUTTLE",
+      "TRANSPORT",
+      "CARGO",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Civil",
+      "Exploration"
+    ]
   },
   {
     "Name": "SolusEnvoy",
@@ -333,7 +554,20 @@
     "MissionIds": [
       27
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "ESCORT",
+      "ESCORT_FREIGHT",
+      "ESCORT_SHUTTLE",
+      "TRANSPORT",
+      "CARGO",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Civil",
+      "Exploration"
+    ]
   },
   {
     "Name": "TrellisWatch",
@@ -351,7 +585,21 @@
     "MissionIds": [
       28
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "KalonLiaison",
@@ -369,7 +617,20 @@
     "MissionIds": [
       29
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "ESCORT",
+      "ESCORT_FREIGHT",
+      "ESCORT_SHUTTLE",
+      "TRANSPORT",
+      "CARGO",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Industry",
+      "Civil"
+    ]
   },
   {
     "Name": "HaicheWatch",
@@ -387,7 +648,21 @@
     "MissionIds": [
       30
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "HaicheEnvoy",
@@ -405,7 +680,20 @@
     "MissionIds": [
       31
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "ESCORT",
+      "ESCORT_FREIGHT",
+      "ESCORT_SHUTTLE",
+      "TRANSPORT",
+      "CARGO",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Civil",
+      "Exploration"
+    ]
   },
   {
     "Name": "SilessiaWatch",
@@ -423,7 +711,21 @@
     "MissionIds": [
       32
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "SilessiaEnvoy",
@@ -441,7 +743,20 @@
     "MissionIds": [
       33
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "ESCORT",
+      "ESCORT_FREIGHT",
+      "ESCORT_SHUTTLE",
+      "TRANSPORT",
+      "CARGO",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Civil",
+      "Exploration"
+    ]
   },
   {
     "Name": "MarakWatch",
@@ -459,7 +774,21 @@
     "MissionIds": [
       34
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "MarakCommand",
@@ -477,7 +806,21 @@
     "MissionIds": [
       35
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "GarrisonWatch",
@@ -495,7 +838,21 @@
     "MissionIds": [
       36
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "LorisCommand",
@@ -513,7 +870,21 @@
     "MissionIds": [
       37
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "RenserWatch",
@@ -531,7 +902,21 @@
     "MissionIds": [
       38
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "AramWatch",
@@ -549,7 +934,21 @@
     "MissionIds": [
       39
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "KolchevWatch",
@@ -567,7 +966,21 @@
     "MissionIds": [
       40
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "AdantarWatch",
@@ -583,7 +996,21 @@
     "Level": 3,
     "Description": "Coordinates squadron coverage around Adantar.",
     "MissionIds": [],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "TarsusWatch",
@@ -599,7 +1026,21 @@
     "Level": 2,
     "Description": "Oversees fleet and civilian transfers at Tarsus.",
     "MissionIds": [],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "NergalWatch",
@@ -615,7 +1056,21 @@
     "Level": 1,
     "Description": "Patrol contact for the Nephrys transfer hub at Nergal.",
     "MissionIds": [],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "RadixCommand",
@@ -631,7 +1086,21 @@
     "Level": 4,
     "Description": "Coordinates fleet movements and clearance in Radix.",
     "MissionIds": [],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "RamekEnvoy",
@@ -647,7 +1116,20 @@
     "Level": 3,
     "Description": "Processes freight movements through the transfer station at Ramek.",
     "MissionIds": [],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "ESCORT",
+      "ESCORT_FREIGHT",
+      "ESCORT_SHUTTLE",
+      "TRANSPORT",
+      "CARGO",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Civil",
+      "Exploration"
+    ]
   },
   {
     "Name": "VolanteWatch",
@@ -663,7 +1145,21 @@
     "Level": 5,
     "Description": "Oversees Hegemony security at the Volante transfer hub.",
     "MissionIds": [],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "FortTalasWatch",
@@ -679,7 +1175,21 @@
     "Level": 1,
     "Description": "Coordinates patrols from the Dantari position at Fort Talas.",
     "MissionIds": [],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "JalahCell",
@@ -695,7 +1205,20 @@
     "Level": 3,
     "Description": "Arranges resupply through trusted traffic at Jalah.",
     "MissionIds": [],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "ESCORT",
+      "ESCORT_FREIGHT",
+      "ESCORT_SHUTTLE",
+      "TRANSPORT",
+      "CARGO",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Civil",
+      "Exploration"
+    ]
   },
   {
     "Name": "FoothillCommand",
@@ -711,7 +1234,21 @@
     "Level": 5,
     "Description": "Operates the restricted Dantari command link from Foothill.",
     "MissionIds": [],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "OstaraExpedition",
@@ -729,7 +1266,21 @@
     "MissionIds": [
       1
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "LorisExpedition",
@@ -747,7 +1298,21 @@
     "MissionIds": [
       2
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "HaicheExpedition",
@@ -765,7 +1330,21 @@
     "MissionIds": [
       4
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "RenserExpedition",
@@ -783,7 +1362,21 @@
     "MissionIds": [
       5
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "RadixExpedition",
@@ -801,7 +1394,21 @@
     "MissionIds": [
       6
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "KoriusExpedition",
@@ -819,7 +1426,21 @@
     "MissionIds": [
       10
     ],
-    "CampaignIds": []
+    "CampaignIds": [],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
+    ]
   },
   {
     "Name": "MeridianFleetCommand",
@@ -837,6 +1458,20 @@
     "MissionIds": [],
     "CampaignIds": [
       2
+    ],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
     ]
   },
   {
@@ -855,6 +1490,20 @@
     "MissionIds": [],
     "CampaignIds": [
       3
+    ],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
     ]
   },
   {
@@ -874,6 +1523,20 @@
     "CampaignIds": [
       4,
       5
+    ],
+    "MissionTypes": [
+      "PATROL",
+      "SWEEP",
+      "INTERCEPT",
+      "STRIKE",
+      "ASSAULT",
+      "DEFEND",
+      "RECON",
+      "SCOUT"
+    ],
+    "DynamicPools": [
+      "Security",
+      "Exploration"
     ]
   }
 ]

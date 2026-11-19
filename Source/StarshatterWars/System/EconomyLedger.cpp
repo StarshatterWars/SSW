@@ -1,4 +1,5 @@
-﻿#include "GameStructs_economy.h"
+#include "EconomyAI.h"
+#include "GameStructs_economy.h"
 #include "Misc/DateTime.h"
 
 namespace
@@ -174,6 +175,7 @@ bool FEconomyLedger::Trade(FEconomyState& State, FName Buyer, FName Seller, FNam
     State.Wallets.FindOrAdd(Buyer) -= Price; State.Wallets.FindOrAdd(Seller) += Price;
     Record(State, Id, TEXT("Market purchase"), Buyer, Seller, Price);
     auto& Entry=State.Journal.Last();Entry.Item=Item;Entry.Quantity=Count;Entry.UnitPrice=Count>0?double(Price)/Count:0;Entry.Source=Source;Entry.Destination=Destination;
+    EconomyAI::RecordTrade(State,SourceInventory.System,Item,Count,double(Price));
     return true;
 }
 FGuid FEconomyLedger::QueueJob(FEconomyState& State, FName Owner, FName Facility, FName Input, FName Output, FName Recipe,
@@ -391,6 +393,7 @@ bool FillOrders(FEconomyState& State,FMarketOrder& Buy,FMarketOrder& Sell,int64 
     Entry.WalletDeltas.Reset();Entry.WalletDeltas.Add(Buy.Owner,Refund);Entry.WalletDeltas.Add(Sell.Owner,Cost);
     Entry.Category=EWalletTransactionCategory::Market;
     Entry.Source=Sell.Inventory;Entry.Destination=Buy.Inventory;Entry.BuyOrder=Buy.Id;Entry.SellOrder=Sell.Id;
+    EconomyAI::RecordTrade(State,Source->System,Buy.Item,Quantity,double(Cost));
     return true;
 }
 }

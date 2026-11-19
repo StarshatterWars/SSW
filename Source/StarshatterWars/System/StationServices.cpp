@@ -1,4 +1,7 @@
 #include "StationServices.h"
+#include "ProductionCatalog.h"
+#include "EconomyAI.h"
+#include "StationServicesAI.h"
 #include "OwnedHullCondition.h"
 #include "EconomyRuntime.h"
 #include "CargoCatalogSubsystem.h"
@@ -24,7 +27,7 @@ bool FStationServices::IsDocked()
     auto* Simulation = Sim::GetSim(); const auto* Craft = Simulation ? Simulation->GetPlayerShip() : nullptr;
     const auto* Base = Craft ? Craft->GetCarrier() : nullptr;
     return Simulation && !Simulation->IsNetworked() && Simulation->HasSimulationAuthority() && Craft && !Craft->IsDead() && !Craft->IsDying() &&
-        Craft->GetFlightPhase() <= EOPSMode::ALERT && Base && !Base->IsDead() && !Base->IsDying() && !Base->HasNetworkPilot();
+        Craft->GetFlightPhase() <= EOPSMode::ALERT && Base && StationServicesAI::FactionAllows(Craft,Base) && !Base->IsDead() && !Base->IsDying() && !Base->HasNetworkPilot();
 }
 bool FStationServices::Offers(ESSWStationService Service)
 {
@@ -39,11 +42,9 @@ const FSSWProductionFacility* DockedFacility()
 {
     if (!FStationServices::IsDocked()) return nullptr;
     auto* Craft = Sim::GetSim()->GetPlayerShip();
-    const auto* Table = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionFacilities.DT_ProductionFacilities"));
-    if (!Table || Table->GetRowStruct() != FSSWProductionFacility::StaticStruct()) return nullptr;
-    for (const auto& Pair : Table->GetRowMap())
+    for(const auto& Pair:SSWProductionCatalog::Facilities())
     {
-        const auto* Site = reinterpret_cast<const FSSWProductionFacility*>(Pair.Value);
+        const auto* Site=&Pair.Value;
         auto* Region = Craft->GetRegion();
         if (Site->Facility == UTF8_TO_TCHAR(Craft->GetCarrier()->GetName()) && Region && Region->GetSystem() &&
             Site->System == UTF8_TO_TCHAR(Region->GetSystem()->GetName())) return Site;
@@ -186,7 +187,7 @@ bool FStationServices::QuoteMarket(UGameInstance* Instance,FName Item,double Qua
     Quote.Balance=State.Wallets.FindRef(FEconomyLedger::Pilot());
     const int32 Base=FMath::Max(1,FMath::Min(Goods->PreviewQuantity,160>>FMath::Clamp(int32(Goods->Rarity),0,7)));
     const double Demand=FMath::Max(1.0,FMath::RoundToDouble(Base*.15*Rule.DemandScale));
-    const double Ask=Goods->Value*FMath::Clamp(.8+Demand/FMath::Max(1.0,Quote.Available),.85,3.0);
+    const double Ask=Goods->Value*EconomyAI::PriceFactor(Quote.Available,Demand);
     Quote.UnitPrice=Buy?Ask:Ask*.8;
     const auto* Destination=State.Inventories.Find(Quote.Destination);
     const double Free=Destination?FMath::Max(0.0,Destination->CapacityTonnes-FEconomyLedger::Used(*Destination)):0;

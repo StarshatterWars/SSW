@@ -1270,4 +1270,9 @@ group: {
 
 
 
-group: { type: station, id: 8578, name: "Jalah Orbital Concentrator", intel: known, iff: 2, empire_id: 3, region: "Jalah", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Jalah Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+group: { type: station, id: 8578, name: "Jalah Orbital Concentrator", intel: known, iff: 2, empire_id: 3, region: "Jalah", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Jalah Orbital Concentrator", type: "Station", design: "Processing Facility" } 
+
+
+}
+
+group: { type: station, id: 8906, name: "Jalah Heavy Shipworks", intel: known, iff: 2, empire_id: 3, region: "Jalah", loc: (190e3, 82e3, 34e3), parent_type: force, parent_id: 1, unit: { name: "Jalah Heavy Shipworks", type: "Station", design: "Shipyard", regnum: "SY-8906" } }

@@ -32,6 +32,14 @@ TSharedRef<SWidget> UMissionsDlg::RebuildWidget()
                 .OnClicked_Lambda([Action = Close]() { Action.ExecuteIfBound(); return FReply::Handled(); })
                 [SNew(SPanelCloseIcon)]]
         ]
+        + SVerticalBox::Slot().AutoHeight().Padding(0,0,0,12)
+        [SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)
+            [SNew(SVerticalBox)
+                + SVerticalBox::Slot().AutoHeight()[SNew(STextBlock).Text(MetadataAgent).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true)]
+                + SVerticalBox::Slot().AutoHeight().Padding(0,4)[SNew(STextBlock).Text(MetadataStatus).Font(MissionUIStyle::GetRowFont(11)).ColorAndOpacity(FLinearColor(.4f,.8f,.9f)).AutoWrapText(true)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(16,0,0,0).VAlign(VAlign_Center)
+            [SNew(STextBlock).Text(MetadataExpiry).Justification(ETextJustify::Right).Font(MissionUIStyle::GetRowFont(11)).ColorAndOpacity(FLinearColor(.65f,.75f,.8f))]]
         + SVerticalBox::Slot().FillHeight(1)
         [SNew(SVerticalBox)
             + SVerticalBox::Slot().FillHeight(Supplement.IsValid() ? .35f : 1.f)

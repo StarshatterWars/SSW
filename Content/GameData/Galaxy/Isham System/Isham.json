@@ -20,9 +20,9 @@
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 160000000000,
-	"rotation": 0,
-	"retro": false,	
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -47,7 +47,7 @@
           170,
           190
         ],
-        "orbit": 180000000000,
+        "orbit": 180000000000.0,
         "rotation": 26.3,
         "region": {
           "name": "Garden",
@@ -101,20 +101,22 @@
           "weather_overcast": 0,
           "weather_fog": 0,
           "weather_storm": 0
-        }
+        },
+        "eccentricity": 0.146,
+        "inclination": 15.64
       },
       {
         "name": "Senesca",
         "map": "Giants/GasGiant10_map.pcx",
         "image": "Giants/GasGiant10.jpg",
-		"high_res": "Giants/GasGiant10.jpg",
+        "high_res": "Giants/GasGiant10.jpg",
         "radius": 14100000,
         "mass": 3.6e+26,
         "tilt": 0.2,
         "ring": "Giants/Ring2.pcx",
         "minrad": 1.5,
         "maxrad": 1.8,
-        "orbit": 265000000000,
+        "orbit": 265000000000.0,
         "rotation": 61.3,
         "region": {
           "name": "Senesca",
@@ -138,7 +140,7 @@
               255
             ],
             "mass": 5.98e+24,
-            "orbit": 411000000,
+            "orbit": 411000000.0,
             "region": {
               "name": "Tarawa",
               "radius": 480000,
@@ -146,7 +148,9 @@
               "orbit": 11000000,
               "inclination": 0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 18.24
           },
           {
             "name": "Maia",
@@ -161,7 +165,7 @@
               255
             ],
             "mass": 3.28e+24,
-            "orbit": 624000000,
+            "orbit": 624000000.0,
             "region": {
               "name": "Maia",
               "radius": 480000,
@@ -169,20 +173,24 @@
               "orbit": 11000000,
               "inclination": 0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 7.71
           }
-        ]
+        ],
+        "eccentricity": 0.11544243520754717,
+        "inclination": -10.72
       },
       {
         "name": "Ramek",
         "map": "Giants/GasGiant9_map.pcx",
         "image": "Giants/GasGiant9.jpg",
-		"high_res": "Giants/GasGiant9.jpg",
+        "high_res": "Giants/GasGiant9.jpg",
         "radius": 18100000,
         "mass": 3.6e+26,
         "tscale": 2,
         "tilt": 0.13,
-        "orbit": 335000000000,
+        "orbit": 335000000000.0,
         "rotation": 31.3,
         "region": {
           "name": "Ramek",
@@ -206,7 +214,7 @@
               255
             ],
             "mass": 5.98e+24,
-            "orbit": 411000000,
+            "orbit": 411000000.0,
             "region": {
               "name": "Alin",
               "radius": 480000,
@@ -214,7 +222,9 @@
               "orbit": 11000000,
               "inclination": 0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 6.63
           },
           {
             "name": "Orpheus",
@@ -229,7 +239,7 @@
               255
             ],
             "mass": 3.28e+24,
-            "orbit": 624000000,
+            "orbit": 624000000.0,
             "region": {
               "name": "Orpheus",
               "radius": 480000,
@@ -237,7 +247,9 @@
               "orbit": 11000000,
               "inclination": -0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 2.04
           },
           {
             "name": "Tenebrus",
@@ -247,7 +259,7 @@
             "radius": 6100000,
             "rotation": 38.4,
             "mass": 5.98e+24,
-            "orbit": 1324000000,
+            "orbit": 1324000000.0,
             "region": {
               "name": "Tenebrus",
               "radius": 480000,
@@ -255,9 +267,13 @@
               "orbit": 11000000,
               "inclination": -0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 17.97
           }
-        ]
+        ],
+        "eccentricity": 0.09132013531343283,
+        "inclination": 5.52
       },
       {
         "name": "Relay",
@@ -272,7 +288,7 @@
           120,
           110
         ],
-        "orbit": 418000000000,
+        "orbit": 418000000000.0,
         "rotation": 14.3,
         "region": {
           "name": "Relay",
@@ -288,7 +304,9 @@
             "Path"
           ]
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.08787560458133971,
+        "inclination": 13.67
       }
     ]
   }

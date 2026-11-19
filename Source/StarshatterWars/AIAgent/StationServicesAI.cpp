@@ -8,6 +8,10 @@
 #include "ShipInsuranceSubsystem.h"
 #include "Engine/GameInstance.h"
 
+bool StationServicesAI::FactionAllows(const Ship* Craft,const Ship* Base)
+{
+    return Craft && Base && !Craft->IsHostileTo(Base);
+}
 FStationDockContext StationServicesAI::Context(FName Viewed)
 {
     FStationDockContext Result;auto* Simulation=Sim::GetSim();
@@ -18,6 +22,7 @@ FStationDockContext StationServicesAI::Context(FName Viewed)
     // An explicit viewed station never silently switches to the current docking location.
     if(!Base || Base->IsDead() || Base->IsDying() || !Base->Design())
     {Result.Facility=Viewed;Result.Name=Viewed.IsNone()?TEXT(""):Viewed.ToString();return Result;}
+    Result.bFactionAllowed=FactionAllows(Craft,Base);
     Result.Design=FName(UTF8_TO_TCHAR(Base->Design()->name));Result.Facility=FName(UTF8_TO_TCHAR(Base->GetName()));
     Result.Name=UTF8_TO_TCHAR(Base->GetName());Result.bDocked=FStationServices::IsDocked() && Base==Dock;
     if(auto* Region=Base->GetRegion())
@@ -45,6 +50,7 @@ TConstArrayView<FStationServiceDescriptor> StationServicesAI::Descriptors()
 }
 bool StationServicesAI::CanUse(const FStationDockContext& Context,ESSWStationService Service,FText& Reason)
 {
+    if(!Context.bFactionAllowed){Reason=INVTEXT("This facility denies services to hostile factions.");return false;}
     if(!Context.bDocked || Context.Facility.IsNone() || Context.ActualDock!=Context.Facility)
     {Reason=Context.Name.IsEmpty()?INVTEXT("Dock at the selected NPC station to use services."):
         FText::Format(INVTEXT("Dock at {0} to use this service."),FText::FromString(Context.Name));return false;}

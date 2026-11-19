@@ -3,7 +3,7 @@
   "sky": {
     "nebula": "Nebula-Athenar.mag",
     "poly_stars": "stars.mag",
-	"haze": "Janus/Janek/TerrainHaze.mag"
+    "haze": "Janus/Janek/TerrainHaze.mag"
   },
   "stars": 500,
   "dust": 300,
@@ -20,9 +20,9 @@
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 160000000000,
-	"orbit": 0,
-	"rotation": 0,
-	"retro": false,
+    "orbit": 0,
+    "rotation": 0,
+    "retro": false,
     "color": [
       255,
       250,
@@ -47,7 +47,7 @@
           160,
           210
         ],
-        "orbit": 195000000000,
+        "orbit": 195000000000.0,
         "region": {
           "name": "Athenar",
           "radius": 480000,
@@ -64,8 +64,8 @@
             "high_res": "Jarnell/lanos_hi.pcx",
             "radius": 720000,
             "mass": 4.1e+22,
-            "orbit": 81000000,
-            "inclination": 0,
+            "orbit": 81000000.0,
+            "inclination": 7.71,
             "retro": false,
             "region": {
               "name": "Nike",
@@ -74,9 +74,12 @@
               "orbit": 20000000,
               "inclination": 0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           }
-        ]
+        ],
+        "eccentricity": 0.246,
+        "inclination": -5.08
       },
       {
         "name": "Pallas",
@@ -90,7 +93,7 @@
           120,
           150
         ],
-        "orbit": 425000000000,
+        "orbit": 425000000000.0,
         "region": {
           "name": "Pallas",
           "radius": 480000,
@@ -102,7 +105,9 @@
             "Dawn"
           ]
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.206,
+        "inclination": -15.33
       }
     ]
   }

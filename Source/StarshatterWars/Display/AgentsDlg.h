@@ -21,6 +21,8 @@ public:
 
 protected:
     void NativeConstruct() override;
+    void NativeDestruct() override;
+    void NativeTick(const FGeometry&,float) override;
     TSharedRef<SWidget> RebuildWidget() override;
     FReply NativeOnKeyDown(const FGeometry& Geometry, const FKeyEvent& Event) override;
     void ReleaseSlateResources(bool bReleaseChildren) override;
@@ -28,11 +30,14 @@ protected:
 private:
     void RequestMission(bool bCampaign = false);
     void StartMission(int32 MissionId);
+    bool CanStartMission(int32 MissionId) const;
     void OpenDetails(int32 MissionId, bool bOffer);
     void CloseDetails();
     void RefreshDirectory();
     void SelectDirectoryAgent();
 
+    FDelegateHandle JournalChangedHandle;
+    bool bJournalDirty=false;
     bool bStandaloneFrame = false;
     TDelegate<bool()> CanLaunch;
     FText Feedback;

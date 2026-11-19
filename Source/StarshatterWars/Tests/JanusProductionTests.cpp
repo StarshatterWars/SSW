@@ -28,8 +28,9 @@ bool FJanusProductionTest::RunTest(const FString&)
     if (!TestNotNull(TEXT("Facility design"), Facility)) return false;
     const auto* Recipe = Recipes->FindRow<FSSWProductionRecipe>(Facility->ProductionRecipe, TEXT("Test"));
     if (!TestNotNull(TEXT("Authored recipe"), Recipe)) return false;
-    TestTrue(TEXT("Production actor resolves"),
-        ShipVisualCatalog::Resolve(TEXT("Processing Facility"), TEXT("Xfer")) == AProductionActor::StaticClass());
+    const auto* ProductionClass=ShipVisualCatalog::Resolve(TEXT("Processing Facility"),TEXT("Xfer"));
+    if(!TestNotNull(TEXT("Production actor resolves"),ProductionClass))return false;
+    TestTrue(TEXT("Production Blueprint retains native production behavior"),ProductionClass->IsChildOf(AProductionActor::StaticClass()));
     const auto* Janus = Galaxy->FindRow<FS_Galaxy>(TEXT("Janus"), TEXT("Test"));
     if (TestNotNull(TEXT("Janus"), Janus))
         TestTrue(TEXT("Janus has both production sites"), Janus->ProductionSites.Contains(TEXT("Janek Orbital Materials Works")) && Janus->ProductionSites.Contains(TEXT("Dante Orbital Concentrator")));

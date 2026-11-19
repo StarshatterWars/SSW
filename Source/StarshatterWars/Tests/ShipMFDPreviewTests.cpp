@@ -1,6 +1,8 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
 #include "ShipMFDPreview.h"
+#include "WaypointActor.h"
+#include "ProceduralMeshComponent.h"
 #include "GameStructs_System.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/DataTable.h"
@@ -48,6 +50,22 @@ bool FPlayerMFDRenderTest::RunTest(const FString& Parameters)
     if(!TestNotNull(TEXT("Falcon design"),Design))return false;
     FShipMFDPreview Player(true),Target(true);
     if(!TestTrue(TEXT("Player preview created"),Player.SetDesign(Design)))return false;
+    FVector2D Projected;
+    const FVector RawCenter=Player.ModelToPreview.InverseTransformPosition(FVector::ZeroVector);
+    const FVector Mount(RawCenter.Y*Player.DesignScale,RawCenter.Z*Player.DesignScale,RawCenter.X*Player.DesignScale);
+    TestTrue(TEXT("Component locations project into the model image"),Player.ProjectSystemLocation(Mount,Projected));
+    TestTrue(TEXT("Component origin aligns with the centered model"),Projected.Equals(FVector2D(.5,.5),.001));
+    TestFalse(TEXT("Out-of-frame component locations are rejected"),Player.ProjectSystemLocation(FVector(1e12,1e12,1e12),Projected));
+    FShipMFDPreview Nav(true);TestTrue(TEXT("Target MFD waypoint preview exists"),Nav.SetWaypoint());
+    Nav.NextStaticCaptureAt=0;Nav.SetWaypoint();
+    auto* Waypoint=Cast<AWaypointActor>(Nav.Visual.Get());
+    if(TestNotNull(TEXT("MFD uses the native waypoint actor"),Waypoint))
+    {
+        TestTrue(TEXT("MFD waypoint remains upright while rotating"),Waypoint->WaypointMarker->GetUpVector().Equals(FVector::UpVector,.001));
+        float Intensity=0;auto* Glow=Cast<UMaterialInstanceDynamic>(Waypoint->WaypointMarker->GetMaterial(0));
+        TestTrue(TEXT("MFD waypoint has pulsing material brightness"),Glow && Glow->GetScalarParameterValue(FMaterialParameterInfo(TEXT("Intensity")),Intensity));
+        TestTrue(TEXT("MFD pulse uses the same gentle brightness range"),Intensity>=1.875f-.001f && Intensity<=2.5f+.001f);
+    }
     TestTrue(TEXT("Player uses full-width capture"),Player.GetBrush().ImageSize.Equals(FVector2D(512,256)));
     auto* Material=Cast<UMaterialInstanceDynamic>(Player.GetBrush().GetResourceObject());
     TestTrue(TEXT("Player UI blends transparent background"),Material && Material->GetBlendMode()==BLEND_Translucent);
@@ -88,6 +106,8 @@ bool FPlayerMFDRenderTest::RunTest(const FString& Parameters)
         const FQuat ActualHeading=FRotator(5.f,110.f,12.f).Quaternion();
         Target.SetView(ActualHeading,FVector(0,-3,1),FVector::UpVector);
         TestTrue(TEXT("Target preview uses live ship orientation"),Target.Visual->GetActorQuat().Equals(ActualHeading,0.001));
+        // Live captures are bounded to 30 Hz; move the fixture to its next eligible frame.
+        Target.NextLiveCaptureAt=0;
         Target.SetView(FRotator(5.f,160.f,12.f).Quaternion(),FVector(0,-3,1),FVector::UpVector);
         TestFalse(TEXT("Heading change updates the preview"),Target.Visual->GetActorQuat().Equals(ActualHeading,0.001));
         TestTrue(TEXT("Player view remains unchanged"),Player.Visual->GetActorQuat().Equals(FQuat::Identity,0.001));

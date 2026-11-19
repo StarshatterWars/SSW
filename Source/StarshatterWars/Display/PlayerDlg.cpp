@@ -22,6 +22,9 @@
 =============================================================================*/
 
 #include "PlayerDlg.h"
+#include "GuildCatalogSubsystem.h"
+#include "TransactionAI.h"
+#include "AgentAI.h"
 #include "AgentCatalogSubsystem.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Layout/SBorder.h"
@@ -1055,13 +1058,13 @@ TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
         Rows->AddSlot().AutoHeight().Padding(0, 1)
         [
             SNew(SBorder).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
-            .BorderBackgroundColor(MissionUIStyle::RowBG).Padding(FMargin(10, 5))
+            .BorderBackgroundColor(MissionUIStyle::RowBG).Padding(FMargin(10, 6))
             [
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot().FillWidth(.45f).Padding(0, 0, 10, 0)
-            [SNew(STextBlock).Text(Label).Font(MissionUIStyle::GetRowFont(13)).AutoWrapText(true)]
+            [SNew(STextBlock).Text(Label).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true)]
             + SHorizontalBox::Slot().FillWidth(.55f)
-            [SNew(STextBlock).Text(Value).Font(MissionUIStyle::GetRowFont(13))
+            [SNew(STextBlock).Text(Value).Font(MissionUIStyle::GetRowFont(12))
                 .Justification(ETextJustify::Right).AutoWrapText(true)]
             ]
         ];
@@ -1078,6 +1081,19 @@ TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
     AddStat(INVTEXT("Faction"), EmpireEnum->IsValidEnumValue(Pilot.Empire)
         ? EmpireEnum->GetDisplayNameTextByValue(Pilot.Empire) : INVTEXT("Unassigned"));
     const TWeakObjectPtr<UGameInstance> WeakInstance(Instance);
+    AddStat(INVTEXT("Guild"),TAttribute<FText>::CreateLambda([WeakInstance]()
+    {
+        const auto* Guilds=WeakInstance.IsValid()?WeakInstance->GetSubsystem<UGuildCatalogSubsystem>():nullptr;
+        TArray<FString> Names;
+        if(Guilds){const auto Pilot=Guilds->GetContext();for(const auto& Pair:Guilds->GetState().Organizations)
+            if(!Pair.Value.bDisbanded && Pair.Value.Members.Contains(Pilot.Pilot))Names.Add(Pair.Value.DisplayName);}
+        Names.Sort();return Names.IsEmpty()?INVTEXT("No guild membership"):FText::FromString(FString::Join(Names,TEXT(" / ")));
+    }));
+    AddStat(INVTEXT("Wallet"),TAttribute<FText>::CreateLambda([WeakInstance]()
+    {
+        const auto* Players=WeakInstance.IsValid()?WeakInstance->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+        return FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Players?TransactionAI::BalanceIncludingLegacy(Players->GetPlayerInfo().Economy,Players->GetPlayerInfo().InsuranceCredits):0));
+    }));
     AddStat(INVTEXT("Universe time (GMT)"), TAttribute<FText>::CreateLambda([WeakInstance]()
     {
         const auto* Timer = WeakInstance.IsValid() ? WeakInstance->GetSubsystem<UTimerSubsystem>() : nullptr;
@@ -1146,7 +1162,7 @@ TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
             FMedalInfo Medal;
             if ((Medals & Flag) && Data->GetMedalInfoByFlag(Flag, Medal) && !Medal.Name.IsEmpty())
                 Rows->AddSlot().AutoHeight().Padding(0, 3)
-                    [SNew(STextBlock).Text(Display(Medal.Name)).Font(MissionUIStyle::GetRowFont(13))];
+                    [SNew(STextBlock).Text(Display(Medal.Name)).Font(MissionUIStyle::GetRowFont(12))];
         }
 
     if (!Pilot.CompletedMissions.IsEmpty())

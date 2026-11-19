@@ -23,6 +23,7 @@
 =============================================================================*/
 
 #include "MenuDlg.h"
+#include "RuntimeFeaturePolicy.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "Dom/JsonObject.h"
@@ -544,7 +545,7 @@ void UMenuDlg::Show()
     BindMenuClock();
     ApplyMenuGating();
     // Multiplayer mission selection is available independently of the legacy filesystem mode.
-    if (BtnMulti) BtnMulti->SetIsEnabled(true);
+    if (BtnMulti) BtnMulti->SetIsEnabled(false);
     StartAttractVideo();
 
     ClearDescription();
@@ -602,6 +603,7 @@ void UMenuDlg::OnPlayer()
 
 void UMenuDlg::OnMultiplayer()
 {
+    if(!FSSWFeaturePolicy::Multiplayer())return;
     ClearDescription();
     UE_LOG(LogMenuDlg, Warning, TEXT("[MultiplayerNav] CLICK: OnMultiplayer; Manager=%s; enabled=%d"),
         *GetNameSafe(Manager.Get()), BtnMulti && BtnMulti->GetIsEnabled() ? 1 : 0);
@@ -761,7 +763,7 @@ void UMenuDlg::EnableMenuButtons(bool bEnable)
     SetButtonEnabled(BtnPlayer, bEnable);
 
     // No legacy filesystem gate.
-    SetButtonEnabled(BtnMulti, bEnable);
+    SetButtonEnabled(BtnMulti, false);
 
     // Options is a top-level menu entry now (single entry point to all sub-options):
     SetButtonEnabled(BtnOptions, bEnable);
@@ -782,6 +784,7 @@ void UMenuDlg::ApplyMenuGating()
     // Default: enable everything (except multiplayer rule inside EnableMenuButtons)
     EnableMenuButtons(true);
 
+    if(BtnMulti){BtnMulti->SetIsEnabled(false);BtnMulti->SetToolTipText(INVTEXT("Multiplayer temporarily disabled during universe integration"));}
     // New pilots can enter Janek before accepting a campaign from an agent.
     if (!bHasCampaignSelected)
     {
@@ -799,12 +802,12 @@ void UMenuDlg::ApplyMenuGating()
         SetButtonEnabled(BtnQuit, true);
 
         // Multiplayer missions do not depend on an existing campaign selection.
-        SetButtonEnabled(BtnMulti, true);
+        SetButtonEnabled(BtnMulti, false);
     }
     if(BtnMission)
     {
-        BtnMission->SetIsEnabled(UMenuScreen::CanOpenMainMenu());
-        BtnMission->SetToolTipText(UMenuScreen::CanOpenMainMenu()?INVTEXT("Mod Editor: custom missions and single-player mod packs"):INVTEXT("Mod Editor is available only while docked"));
+        BtnMission->SetIsEnabled(false);
+        BtnMission->SetToolTipText(INVTEXT("Mod Editor temporarily disabled during universe integration"));
     }
 
 }

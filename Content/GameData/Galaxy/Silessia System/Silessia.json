@@ -3,7 +3,7 @@
   "sky": {
     "nebula": "Nebula-Silessia.mag",
     "poly_stars": "stars.mag",
-	"haze": ""
+    "haze": ""
   },
   "stars": 500,
   "dust": 300,
@@ -20,9 +20,9 @@
     "radius": 1200000000,
     "mass": 1e+30,
     "light": 70000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,	
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       232,
@@ -48,7 +48,7 @@
           120,
           150
         ],
-        "orbit": 97000000000,
+        "orbit": 97000000000.0,
         "rotation": 19,
         "region": {
           "name": "Silessia",
@@ -66,7 +66,7 @@
             "high_res": "Jarnell/lanos_hi.pcx",
             "radius": 1000000,
             "mass": 8e+22,
-            "orbit": 95000000,
+            "orbit": 95000000.0,
             "region": {
               "name": "Tannis",
               "radius": 480000,
@@ -74,22 +74,26 @@
               "orbit": 11000000,
               "inclination": -0.05,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 19.59
           }
-        ]
+        ],
+        "eccentricity": 0.127,
+        "inclination": -16.5
       },
       {
         "name": "Prosenar",
         "map": "Giants/GasGiant8_map.pcx",
         "image": "Giants/GasGiant8.jpg",
-		"high_res": "Giants/GasGiant8.jpg",
+        "high_res": "Giants/GasGiant8.jpg",
         "radius": 14100000,
         "mass": 3.6e+26,
         "tilt": 0.2,
         "ring": "Giants/Ring3.pcx",
         "minrad": 1.5,
         "maxrad": 1.9,
-        "orbit": 185000000000,
+        "orbit": 185000000000.0,
         "rotation": 61.3,
         "region": {
           "name": "Prosenar",
@@ -113,7 +117,7 @@
               255
             ],
             "mass": 5.98e+24,
-            "orbit": 411000000,
+            "orbit": 411000000.0,
             "region": {
               "name": "Proson I",
               "radius": 480000,
@@ -121,7 +125,9 @@
               "orbit": 19000000,
               "inclination": 0.45,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 8.79
           },
           {
             "name": "Proson II",
@@ -136,7 +142,7 @@
               255
             ],
             "mass": 3.28e+24,
-            "orbit": 624000000,
+            "orbit": 624000000.0,
             "region": {
               "name": "Proson II",
               "radius": 480000,
@@ -144,19 +150,23 @@
               "orbit": 19000000,
               "inclination": 0.45,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 8.79
           }
-        ]
+        ],
+        "eccentricity": 0.21223954264864864,
+        "inclination": -5.8
       },
       {
         "name": "Vesta",
         "map": "Giants/GasGiant2_map.pcx",
         "image": "Giants/GasGiant2.jpg",
-		"high_res": "Giants/GasGiant2.jpg",
+        "high_res": "Giants/GasGiant2.jpg",
         "radius": 18100000,
         "mass": 3.6e+26,
         "tilt": 0.13,
-        "orbit": 315000000000,
+        "orbit": 315000000000.0,
         "rotation": 31.3,
         "region": {
           "name": "Vesta",
@@ -179,7 +189,7 @@
               255
             ],
             "mass": 5.98e+24,
-            "orbit": 411000000,
+            "orbit": 411000000.0,
             "region": {
               "name": "Vesta I",
               "radius": 480000,
@@ -187,7 +197,9 @@
               "orbit": 19000000,
               "inclination": 0.05,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 7.98
           },
           {
             "name": "Vesta II",
@@ -202,7 +214,7 @@
               255
             ],
             "mass": 3.28e+24,
-            "orbit": 624000000,
+            "orbit": 624000000.0,
             "region": {
               "name": "Vesta II",
               "radius": 480000,
@@ -210,7 +222,9 @@
               "orbit": 19000000,
               "inclination": 0.25,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 13.11
           },
           {
             "name": "Vesta III",
@@ -220,7 +234,7 @@
             "radius": 6100000,
             "rotation": 38.4,
             "mass": 5.98e+24,
-            "orbit": 1324000000,
+            "orbit": 1324000000.0,
             "region": {
               "name": "Vesta III",
               "radius": 480000,
@@ -228,9 +242,13 @@
               "orbit": 19000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 10.95
           }
-        ]
+        ],
+        "eccentricity": 0.18283252485714285,
+        "inclination": -3.4
       },
       {
         "name": "Nero",
@@ -239,7 +257,7 @@
         "high_res": "Silessia/nero_hi.jpg",
         "radius": 2640000,
         "mass": 1.48e+24,
-        "orbit": 518000000000,
+        "orbit": 518000000000.0,
         "rotation": 219,
         "region": {
           "name": "Nero",
@@ -254,7 +272,9 @@
             "Casalle"
           ]
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.136,
+        "inclination": -9.98
       }
     ]
   }

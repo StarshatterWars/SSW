@@ -1412,7 +1412,10 @@ struct FS_PlayerGameInfo : public FTableRowBase
     UPROPERTY(BlueprintReadWrite, SaveGame) int64 InsuranceCredits = 0; // Legacy save migration only.
     UPROPERTY(SaveGame) FEconomyState Economy;
     UPROPERTY(SaveGame) FString AgentJournalJson;
+    UPROPERTY(SaveGame) FString DynamicAssignmentsJson;
+    UPROPERTY(SaveGame) int64 LocalStateRevision=0;
     UPROPERTY(SaveGame) TMap<FName, FSkillProgress> Skills;
+    UPROPERTY(SaveGame) TArray<FSkillTrainingEntry> SkillQueue;
     UPROPERTY(BlueprintReadWrite, SaveGame) bool bTrainingGraduate = false;
     UPROPERTY(SaveGame) bool bStartedAsEnsign = false;
     /** Successful assignments, scoped by campaign; additive for existing saves. */

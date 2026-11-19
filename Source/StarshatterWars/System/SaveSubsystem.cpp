@@ -1,4 +1,5 @@
 #include "SaveSubsystem.h"
+#include "LocalGameStateSubsystem.h"
 #include "SSWGameInstance.h"
 
 #include "TimerSubsystem.h"
@@ -79,7 +80,7 @@ void USaveSubsystem::HandleUniverseMinute(uint64 UniverseSecondsNow)
 	SaveCampaign(false);
 
 	// Only save player if we have a valid slot name already
-	if (!PlayerSlotName.IsEmpty())
+	if (!GetGameInstance()->GetSubsystem<ULocalGameStateSubsystem>() && !PlayerSlotName.IsEmpty())
 	{
 		SavePlayer(PlayerSlotName, false);
 	}

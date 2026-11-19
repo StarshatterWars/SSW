@@ -9,6 +9,10 @@
 #include "Misc/FileHelper.h"
 #include "AssetCompilingManager.h"
 #include "ContentStreaming.h"
+#include "Engine/DataTable.h"
+#include "GameStructs_System.h"
+#include "HAL/FileManager.h"
+#include "Misc/Paths.h"
 #include "ShaderCompiler.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FThirdPersonMiniHUDTest,"Starshatter.HUD.ThirdPersonMiniHUD",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
@@ -20,12 +24,16 @@ bool FThirdPersonMiniHUDTest::RunTest(const FString&)
     Details->NextSample=DBL_MAX;Details->bHasPlayer=true;Details->PlayerName=TEXT("Delta 1");Details->PlayerClass=TEXT("Falcon");
     Details->Primary=TEXT("GUNS: DELTA");Details->Secondary=TEXT("SRM 4");Details->FlightSpeed=500;Details->HeadingDegrees=90;
     Details->NavReadouts={TEXT("AUTO NAV 1"),TEXT("VECTOR SPD 500")};Details->CompactNavLabel=TEXT("NAV 01  JANEK");Details->StatusRows={{TEXT("THRUST"),50},{TEXT("FUEL"),100},{TEXT("HULL"),100},{TEXT("GUNS"),99}};
+    auto* PreviewTable=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign"));
+    const auto* PreviewDesign=PreviewTable?PreviewTable->FindRow<FShipDesign>(TEXT("Falcon"),TEXT("Damage preview fixture")):nullptr;
+    if(PreviewDesign){Details->PlayerHull=83;Details->PlayerMFDPreview=MakeUnique<FShipMFDPreview>(true);Details->PlayerMFDPreview->SetDesign(PreviewDesign);}
     auto Root=SNew(SOverlay)
         +SOverlay::Slot()[SNew(SFighterHUDPanels).ShowPanels_Lambda([&]{return !ThirdPerson;})]
         +SOverlay::Slot()[Details];
     FlushAsyncLoading();FAssetCompilingManager::Get().FinishAllCompilation();
     if(GShaderCompilingManager)GShaderCompilingManager->FinishAllCompilation();
     IStreamingManager::Get().StreamAllResources(0);FlushRenderingCommands();
+    if(PreviewDesign){FPlatformProcess::Sleep(1.1f);Details->PlayerMFDPreview->SetDesign(PreviewDesign);FlushRenderingCommands();}
     FWidgetRenderer* Renderer=new FWidgetRenderer(true);
     TArray<FColor> Frames[2];
     FString Capture;FParse::Value(FCommandLine::Get(),TEXT("MiniHUDCapture="),Capture);
@@ -57,6 +65,35 @@ bool FThirdPersonMiniHUDTest::RunTest(const FString&)
     TestTrue(TEXT("Full HUD retains the bottom status and sensor panels"),FullLeftMFD>1000 && FullSensorMFD>1000);
     TestEqual(TEXT("Third-person HUD removes the separate ship status panel"),MiniLeftMFD,0);
     TestEqual(TEXT("Third-person HUD preserves the sensor panel"),SensorDifferences,0);
+    Details->CycleMFD(0);TestTrue(TEXT("Consolidated left information cannot be cycled away"),Details->Modes[0]==SFighterHUDDetails::EMode::Ship);
+    const auto SensorMode=Details->Modes[1];Details->CycleMFD(1);TestTrue(TEXT("Right sensor retains its cycling control"),Details->Modes[1]!=SensorMode);
+    bool CameraScrolled=false;Details->OnOverviewWheel.BindLambda([&](float){CameraScrolled=true;return true;});
+    const FGeometry Geometry=FGeometry::MakeRoot(FVector2D(1280,720),FSlateLayoutTransform());
+    const FVector2D OverModel(850,65);FPointerEvent Hover(0,OverModel,OverModel,TSet<FKey>(),FKey(),0,FModifierKeysState());
+    TestTrue(TEXT("Hover opens damage inspection"),Details->OnMouseMove(Geometry,Hover).IsEventHandled());
+    auto* Designs=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign"));
+    const auto* Falcon=Designs?Designs->FindRow<FShipDesign>(TEXT("Falcon"),TEXT("Damage inspection")):nullptr;
+    if(TestNotNull(TEXT("Inspection uses the real Falcon model"),Falcon))
+    {
+        Details->PlayerHull=83;
+        TestTrue(TEXT("Damage model renders"),Details->PlayerMFDPreview->SetDesign(Falcon));
+        Details->DamagePoints.Add({FVector2D(.3,.5),35,TEXT("Engine"),EShipSystemIcon::Engine});
+        Details->DamagePoints.Add({FVector2D(.7,.5),100,TEXT("Sensor"),EShipSystemIcon::Sensor});
+        FAssetCompilingManager::Get().FinishAllCompilation();if(GShaderCompilingManager)GShaderCompilingManager->FinishAllCompilation();
+        Details->PlayerMFDPreview->SetDesign(Falcon);FlushRenderingCommands();
+        TStrongObjectPtr<UTextureRenderTarget2D> Inspection(FWidgetRenderer::CreateTargetFor(FVector2D(1280,720),TF_Bilinear,true));
+        Renderer->DrawWidget(Inspection.Get(),Root,FVector2D(1280,720),0);FlushRenderingCommands();TArray<FColor> Image;
+        Inspection->GameThread_GetRenderTargetResource()->ReadPixels(Image);
+        TArray64<uint8> PNG;FImageUtils::PNGCompressImageArray(1280,720,Image,PNG);
+        IFileManager::Get().MakeDirectory(*(FPaths::ProjectSavedDir()/TEXT("Review")),true);
+        TestTrue(TEXT("Damage inspection screenshot saved"),FFileHelper::SaveArrayToFile(PNG,*(FPaths::ProjectSavedDir()/TEXT("Review/MiniHUDDamage.png"))));
+    }
+    const float Zoom=Details->DamagePreviewZoom;FPointerEvent Wheel(0,OverModel,OverModel,TSet<FKey>(),FKey(),1,FModifierKeysState());
+    TestTrue(TEXT("Model wheel is handled"),Details->OnMouseWheel(Geometry,Wheel).IsEventHandled());
+    TestTrue(TEXT("Model wheel magnifies inspection"),Details->DamagePreviewZoom>Zoom);TestFalse(TEXT("Inspection wheel cannot zoom the flight camera"),CameraScrolled);
+    const FVector2D Outside(100,400);FPointerEvent OutsideWheel(0,Outside,Outside,TSet<FKey>(),FKey(),1,FModifierKeysState());
+    Details->OnMouseMove(Geometry,OutsideWheel);TestFalse(TEXT("Leaving inspection dismisses it"),Details->bDamagePreviewHovered);
+    Details->OnMouseWheel(Geometry,OutsideWheel);TestTrue(TEXT("Wheel outside inspection still reaches flight camera"),CameraScrolled);
     BeginCleanup(Renderer);return true;
 }
 #endif

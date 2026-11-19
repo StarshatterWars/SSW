@@ -42,7 +42,9 @@ FMissionDebriefEvidence CollectMissionDebriefEvidence(const Mission* MissionPtr,
         for (int32 I=0; I<Element->NumObjectives(); ++I)
         {
             Instruction* O=Element->GetObjective(I);
-            if (!O || O->GetPriority()!=Instruction::PRIMARY) continue;
+            if(!O)continue;
+            if(O->GetPriority()==Instruction::SECONDARY && O->GetStatus()==INSTRUCTION_STATUS::COMPLETE)++E.CompletedSecondaryObjectives;
+            if(O->GetPriority()!=Instruction::PRIMARY)continue;
             ++E.RequiredObjectives;
             if (MissionPtr && MissionPtr->IsStoryMission() && O->GetAction() == EInstruction::Defend)
             {

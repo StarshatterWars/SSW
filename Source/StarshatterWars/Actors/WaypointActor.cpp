@@ -11,6 +11,14 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
+namespace
+{
+float WaypointPulse()
+{
+    // Real-time phase keeps accelerated travel from turning this into a strobe.
+    return float(.875+.125*FMath::Sin(2.0*PI*FMath::Fmod(FPlatformTime::Seconds(),2.2)/2.2));
+}
+}
 AWaypointActor::AWaypointActor()
 {
     PrimaryActorTick.bCanEverTick = true;
@@ -62,7 +70,7 @@ void AWaypointActor::RefreshAppearance(bool Visible){
  SetActorHiddenInGame(!Visible);SetActorEnableCollision(false);WaypointMesh->SetVisibility(false);WaypointMesh->SetHiddenInGame(true);
  WaypointLabel->SetText(FText::FromString(CompactLabel()));WaypointLabel->SetVisibility(Visible && bShowWorldLabel);WaypointMarker->SetVisibility(Visible);
  if(!MarkerMaterial){if(auto* Base=LoadObject<UMaterialInterface>(nullptr,TEXT("/Game/Models/Waypoint/M_WaypointMarker.M_WaypointMarker"))){MarkerMaterial=UMaterialInstanceDynamic::Create(Base,this);WaypointMarker->SetMaterial(0,MarkerMaterial);}}
- if(MarkerMaterial){MarkerMaterial->SetVectorParameterValue(TEXT("MarkerColor"),FLinearColor(.18f,1.f,.4f));MarkerMaterial->SetScalarParameterValue(TEXT("Intensity"),bNextWaypoint?2.5f:1.2f);MarkerMaterial->SetScalarParameterValue(TEXT("Opacity"),bNextWaypoint?.85f:.35f);}
+ if(MarkerMaterial){MarkerMaterial->SetVectorParameterValue(TEXT("MarkerColor"),FLinearColor(.18f,1.f,.4f));MarkerMaterial->SetScalarParameterValue(TEXT("Intensity"),(bNextWaypoint?2.5f:1.2f)*WaypointPulse());MarkerMaterial->SetScalarParameterValue(TEXT("Opacity"),bNextWaypoint?.85f:.35f);}
  WaypointLabel->SetTextRenderColor(bNextWaypoint?FColor(125,255,175):FColor(50,150,85));
 }
-void AWaypointActor::Tick(float Delta){Super::Tick(Delta);if(IsHidden())return;WaypointMarker->AddLocalRotation(FRotator(10*Delta,0,0));if(auto* W=GetWorld())if(auto* PC=W->GetFirstPlayerController())if(PC->PlayerCameraManager)WaypointLabel->SetWorldRotation((PC->PlayerCameraManager->GetCameraLocation()-WaypointLabel->GetComponentLocation()).Rotation());}
+void AWaypointActor::Tick(float Delta){Super::Tick(Delta);if(IsHidden())return;WaypointMarker->AddLocalRotation(FRotator(0,10*Delta,0));if(MarkerMaterial)MarkerMaterial->SetScalarParameterValue(TEXT("Intensity"),(bNextWaypoint?2.5f:1.2f)*WaypointPulse());if(auto* W=GetWorld())if(auto* PC=W->GetFirstPlayerController())if(PC->PlayerCameraManager)WaypointLabel->SetWorldRotation((PC->PlayerCameraManager->GetCameraLocation()-WaypointLabel->GetComponentLocation()).Rotation());}

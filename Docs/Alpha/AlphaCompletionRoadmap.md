@@ -1,6 +1,6 @@
 # Starshatter Wars — Alpha completion roadmap
 
-Updated 2026-11-12. Branch abc. This records the requested scope; unchecked work is not declared complete. Preserve legacy simulation coordinates, AI, damage, energy, mission progression and dialogue unless an explicit requirement changes them. Do not modify Starshatter.cpp/.h. Deliver complete replacement files and assets in stage ZIPs.
+Updated 2026-11-19. Branch abc. This records the requested scope; unchecked work is not declared complete. Preserve legacy simulation coordinates, AI, damage, energy, mission progression and dialogue unless an explicit requirement changes them. Do not modify Starshatter.cpp/.h. Deliver complete replacement files and assets in stage ZIPs.
 
 ## Alpha Phase 1 — completion stages
 
@@ -77,12 +77,26 @@ The launcher signs the player in through Epic Account Portal, checks the install
 
 Distribute patches from a signed release manifest over HTTPS. Download only changed files, verify them before replacing the installed build, and preserve the prior working build and pilot saves if an update is interrupted or fails. The release host and signing key still need to be selected. Use Epic’s supported authentication handoff and keep player credentials out of command-line arguments and logs. [Epic launcher integration](https://dev.epicgames.com/docs/epic-online-services/accounts-and-social/eos-epic-account-services/auth-interface/integrate-a-third-party-launcher-with-egs)
 
-## Alpha 6 — full-scale conversion
+## Alpha 6 — authoritative FractalVerse universe
+
+**Planned after Phase 5 verification; introduced 2026-11-19. Not yet started as a server integration phase.** StarServer remains the multiplayer match server. FractalVerse is a separate persistent universe server, initially local, with a future dedicated host using the same authority rules.
+
+- Native system records exist independently of UE levels: systems, stars, planets, moons, fixed stations, deposits, NPC craft and routes. Nearby presentation uses those records; unloading presentation must not reset state or destroy cargo.
+- Mining, manufacturing, transport, NPC market budgets, supply/demand, price history and shipyard output continue in unloaded systems. T1 is a temporary test fixture and must not be required by the universe.
+- FractalVerse is to own authoritative ships, inventories, wallet transactions, contracts, production, skills and universe time. Clients send validated commands and render confirmed snapshots. A local client must never run a competing economy.
+- Persistent IDs, transaction receipts, coherent sequential checkpoints and normal-exit saves must prevent duplicate deliveries or payouts and recover unfinished journeys.
+- Keplerian native orbits use authored masses, eccentricities and inclinations. Radial clearance includes body sizes and moon envelopes. Maps must sample the same orbits.
+- Shipyards exist only at selected capital/strategic worlds, accept material deliveries and build stocked hulls. Purchase and hangar fulfillment must consume actual stock and preserve rank, empire, skill and docking gates.
+- Multiplayer and Mod Editor access are temporarily disabled while the authoritative universe work is verified.
+
+Acceptance requires local FractalVerse/client operation, rejection of client-side state changes, unloaded-system mining-to-manufacturing-to-delivery, ship purchase fulfillment, failure/retry and restart recovery, and passing compilation and automated regression checks. Initial native model tests alone do not complete this phase. Later phases move down one number: full scale is Phase 7; expanded faction missions are Phase 8. Future unnumbered Free Verse work remains deferred.
+
+## Alpha 7 — full-scale conversion
 
 Start the asset and presentation conversion with Falcon and Orion. Preserve legacy simulation distances and timing. Verify camera framing, launch and recovery, terrain contact, attachment points, and collision alignment before extending full scale to the fleet and mission environments.
 
 
-## Alpha 7 - faction missions
+## Alpha 8 - faction missions
 
 Author a full mission list for the Marakan Hegemony and a full Dantari mission list for Campaign 2.
 

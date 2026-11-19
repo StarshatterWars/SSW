@@ -3,7 +3,7 @@
   "sky": {
     "nebula": "Nebula-Marak.mag",
     "poly_stars": "stars.mag",
-	"haze": ""
+    "haze": ""
   },
   "stars": 500,
   "dust": 300,
@@ -20,9 +20,9 @@
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 160000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       255,
@@ -49,7 +49,7 @@
         "name": "Marak",
         "map": "Marak/marak_map.pcx",
         "image": "Marak/marak_lo.pcx",
-		"high_res": "Marak/marak_hi.jpg",
+        "high_res": "Marak/marak_hi.jpg",
         "gloss": "Marak/marak_gloss.jpg",
         "atmosphere": [
           90,
@@ -58,7 +58,7 @@
         ],
         "radius": 6100000,
         "mass": 5.3e+24,
-        "orbit": 110000000000,
+        "orbit": 110000000000.0,
         "rotation": 23.7,
         "region": {
           "name": "Marak",
@@ -73,10 +73,10 @@
             "name": "Manarkan",
             "map": "Moons/Moon3_map.pcx",
             "image": "Moons/Moon3.jpg",
-			"high_res": "Moons/Moon3.jpg",
+            "high_res": "Moons/Moon3.jpg",
             "radius": 1000000,
             "mass": 8e+22,
-            "orbit": 42000000,
+            "orbit": 42000000.0,
             "region": {
               "name": "Manarkan",
               "radius": 480000,
@@ -84,9 +84,13 @@
               "orbit": 11000000,
               "inclination": -0.15,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 9.06
           }
-        ]
+        ],
+        "eccentricity": 0.125,
+        "inclination": 9.99
       }
     ]
   }

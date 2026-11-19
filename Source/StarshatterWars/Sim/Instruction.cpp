@@ -41,6 +41,7 @@ Instruction::Instruction(EInstruction act, const char* tgt)
 	formation(INSTRUCTION_FORMATION::DIAMOND),
 	tgt_name(tgt),
 	status(INSTRUCTION_STATUS::PENDING),
+	RadioAction(RadioMessageAction::NONE),
 	speed(0),
 	target(0),
 	emcon(0),
@@ -56,6 +57,7 @@ Instruction::Instruction(const char* rgn, FVector loc, EInstruction act)
 	action(act),
 	formation(INSTRUCTION_FORMATION::DIAMOND),
 	status(INSTRUCTION_STATUS::PENDING),
+	RadioAction(RadioMessageAction::NONE),
 	speed(0),
 	target(0),
 	emcon(0),
@@ -74,6 +76,7 @@ Instruction::Instruction(SimRegion* rgn, FVector loc, EInstruction act)
 	action(act),
 	formation(INSTRUCTION_FORMATION::DIAMOND),
 	status(INSTRUCTION_STATUS::PENDING),
+	RadioAction(RadioMessageAction::NONE),
 	speed(0),
 	target(0),
 	emcon(0),
@@ -94,6 +97,7 @@ Instruction::Instruction(const Instruction& instr)
 	action(instr.action),
 	formation(instr.formation),
 	status(instr.status),
+	RadioAction(instr.RadioAction),
 	speed(instr.speed),
 	target(0),
 	tgt_name(instr.tgt_name),
@@ -122,6 +126,7 @@ Instruction::operator=(const Instruction& n)
 	action = n.action;
 	formation = n.formation;
 	status = n.status;
+	RadioAction = n.RadioAction;
 	speed = n.speed;
 
 	tgt_name = n.tgt_name;

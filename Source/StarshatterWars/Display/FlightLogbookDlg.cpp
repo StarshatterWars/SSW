@@ -1,4 +1,6 @@
 #include "FlightLogbookDlg.h"
+#include "AgentAI.h"
+#include "Widgets/Layout/SBox.h"
 #include "PlayerDlg.h"
 #include "ShipSystemIcon.h"
 #include "Widgets/Input/SButton.h"
@@ -6,7 +8,7 @@
 
 TSharedRef<SWidget> UFlightLogbookDlg::RebuildWidget()
 {
-    return BuildPanelContent(GetGameInstance());
+    return SAssignNew(ContentHost,SBox)[BuildPanelContent(GetGameInstance())];
 }
 
 TSharedRef<SWidget> UFlightLogbookDlg::BuildPanelContent(UGameInstance* Instance) const
@@ -37,4 +39,19 @@ TSharedRef<SWidget> UFlightLogbookDlg::BuildPanelContent(UGameInstance* Instance
             [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Hangar)]]
         ]
         + SVerticalBox::Slot().FillHeight(1)[UPlayerDlg::BuildFlightStatistics(Instance)];
+}
+
+void UFlightLogbookDlg::NativeConstruct()
+{
+    Super::NativeConstruct();AgentAI::OnJournalChanged().Remove(JournalChangedHandle);
+    JournalChangedHandle=AgentAI::OnJournalChanged().AddWeakLambda(this,[this](){bJournalDirty=true;});
+}
+void UFlightLogbookDlg::NativeDestruct()
+{
+    AgentAI::OnJournalChanged().Remove(JournalChangedHandle);JournalChangedHandle.Reset();Super::NativeDestruct();
+}
+void UFlightLogbookDlg::NativeTick(const FGeometry& Geometry,float Delta)
+{
+    Super::NativeTick(Geometry,Delta);
+    if(bJournalDirty){bJournalDirty=false;if(ContentHost)ContentHost->SetContent(BuildPanelContent(GetGameInstance()));}
 }

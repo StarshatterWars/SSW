@@ -1,7 +1,9 @@
 [
   {
     "Name": "JanusConcentrate",
-    "RequiredSkillLevels": {"reprocessing": 1},
+    "RequiredSkillLevels": {
+      "reprocessing": 1
+    },
     "Minerals": [
       "Olivine",
       "Pyroxene",
@@ -50,11 +52,14 @@
     "OutputUnit": "t",
     "OutputQuantity": 1,
     "Image": "Cargo",
-    "Inputs": []
+    "Inputs": [],
+    "ShipDesign": "None"
   },
   {
     "Name": "OrbitalConcentrate",
-    "RequiredSkillLevels": {"reprocessing": 1},
+    "RequiredSkillLevels": {
+      "reprocessing": 1
+    },
     "Minerals": [
       "Magnetite",
       "Hematite",
@@ -69,11 +74,14 @@
     "OutputUnit": "t",
     "OutputQuantity": 2,
     "Image": "Cargo",
-    "Inputs": []
+    "Inputs": [],
+    "ShipDesign": "None"
   },
   {
     "Name": "StructuralAlloy",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Taenite",
@@ -107,11 +115,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "ConductiveMetal",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite"
     ],
@@ -131,11 +142,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "IndustrialCeramics",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite",
@@ -169,11 +183,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "OpticalGlass",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -193,11 +210,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "ConstructionMaterials",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Calcite",
       "Dolomite",
@@ -231,11 +251,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "WaterRecovery",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "WaterIce"
     ],
@@ -255,11 +278,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_avionics",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -286,11 +312,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_carbon_composite",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Graphite"
     ],
@@ -310,11 +339,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_engine_assembly",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -341,11 +373,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_field_medical_supplies",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "WaterIce",
       "Apatite"
@@ -372,11 +407,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_finished_electronics",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -403,11 +441,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_food",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "WaterIce",
       "Apatite"
@@ -434,11 +475,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_hull_section",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -465,11 +509,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_life_support_supplies",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "WaterIce",
       "Apatite"
@@ -496,11 +543,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_machine_parts",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -527,11 +577,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_medical_supplies",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "WaterIce",
       "Apatite"
@@ -558,11 +611,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_military_rations",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "WaterIce",
       "Apatite"
@@ -589,11 +645,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_military_spare_parts",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -620,11 +679,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_navigation_computer",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -651,11 +713,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_reactor_fuel",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "WaterIce"
     ],
@@ -675,11 +740,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_repair_kit",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -706,11 +774,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_sealed_documents",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "WaterIce",
       "Apatite"
@@ -737,11 +808,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_sensor_assembly",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -768,11 +842,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_shield_components",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -799,11 +876,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_thruster_propellant",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "WaterIce"
     ],
@@ -823,11 +903,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_atmosphere_filter",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -860,11 +943,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_atmosphere_filter",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -897,11 +983,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_atmosphere_filter",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -934,11 +1024,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_atmosphere_filter",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -971,11 +1065,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_carbon_dioxide_scrubber",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -1008,11 +1105,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_carbon_dioxide_scrubber",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -1045,11 +1145,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_carbon_dioxide_scrubber",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -1082,11 +1186,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_carbon_dioxide_scrubber",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -1119,11 +1227,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_oxygen_regulator",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1156,11 +1267,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_oxygen_regulator",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1193,11 +1307,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_oxygen_regulator",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1230,11 +1348,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_oxygen_regulator",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1267,11 +1389,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_water_purifier",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -1304,11 +1429,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_water_purifier",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -1341,11 +1469,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_water_purifier",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -1378,11 +1510,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_water_purifier",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -1415,11 +1551,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_humidity_separator",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -1452,11 +1591,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_humidity_separator",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -1489,11 +1631,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_humidity_separator",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -1526,11 +1672,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_humidity_separator",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -1563,11 +1713,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_thermal_radiator",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1600,11 +1753,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_thermal_radiator",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1637,11 +1793,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_thermal_radiator",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1674,11 +1834,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_thermal_radiator",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1711,11 +1875,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_heat_exchanger_core",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1748,11 +1915,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_heat_exchanger_core",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1785,11 +1955,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_heat_exchanger_core",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1822,11 +1996,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_heat_exchanger_core",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1859,11 +2037,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_coolant_pump",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1896,11 +2077,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_coolant_pump",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1933,11 +2117,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_coolant_pump",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -1970,11 +2158,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_coolant_pump",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -2007,11 +2199,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_thermal_insulation_panel",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -2044,11 +2239,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_thermal_insulation_panel",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -2081,11 +2279,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_thermal_insulation_panel",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -2118,11 +2320,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_thermal_insulation_panel",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Plagioclase",
       "Calcite"
@@ -2155,11 +2361,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_cryogenic_valve",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -2192,11 +2401,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_cryogenic_valve",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -2229,11 +2441,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_cryogenic_valve",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -2266,11 +2482,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_cryogenic_valve",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -2303,11 +2523,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_propellant_feed_pump",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "WaterIce"
     ],
@@ -2339,11 +2562,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_propellant_feed_pump",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "WaterIce"
     ],
@@ -2375,11 +2601,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_propellant_feed_pump",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "WaterIce"
     ],
@@ -2411,11 +2641,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_propellant_feed_pump",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "WaterIce"
     ],
@@ -2447,11 +2681,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_pressure_relief_valve",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -2484,11 +2721,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_pressure_relief_valve",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -2521,11 +2761,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_pressure_relief_valve",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -2558,11 +2802,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_pressure_relief_valve",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -2595,11 +2843,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_vacuum_seal_kit",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Graphite"
     ],
@@ -2631,11 +2882,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_vacuum_seal_kit",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Graphite"
     ],
@@ -2667,11 +2921,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_vacuum_seal_kit",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Graphite"
     ],
@@ -2703,11 +2961,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_vacuum_seal_kit",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Graphite"
     ],
@@ -2739,11 +3001,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_docking_collar_gasket",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Graphite"
     ],
@@ -2775,11 +3040,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_docking_collar_gasket",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Graphite"
     ],
@@ -2811,11 +3079,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_docking_collar_gasket",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Graphite"
     ],
@@ -2847,11 +3119,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_docking_collar_gasket",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Graphite"
     ],
@@ -2883,11 +3159,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_cargo_restraint_set",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -2920,11 +3199,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_cargo_restraint_set",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -2957,11 +3239,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_cargo_restraint_set",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -2994,11 +3280,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_cargo_restraint_set",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3031,11 +3321,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_cargo_lift_actuator",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3068,11 +3361,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_cargo_lift_actuator",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3105,11 +3401,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_cargo_lift_actuator",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3142,11 +3442,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_cargo_lift_actuator",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3179,11 +3483,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_bay_door_motor",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3216,11 +3523,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_bay_door_motor",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3253,11 +3563,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_bay_door_motor",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3290,11 +3604,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_bay_door_motor",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3327,11 +3645,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_landing_gear_damper",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3364,11 +3685,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_landing_gear_damper",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3401,11 +3725,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_landing_gear_damper",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3438,11 +3766,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_landing_gear_damper",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3475,11 +3807,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_landing_gear_bearing",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3512,11 +3847,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_landing_gear_bearing",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3549,11 +3887,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_landing_gear_bearing",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3586,11 +3928,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_landing_gear_bearing",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3623,11 +3969,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_inertial_reference_unit",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3660,11 +4009,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_inertial_reference_unit",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3697,11 +4049,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_inertial_reference_unit",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3734,11 +4090,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_inertial_reference_unit",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -3771,11 +4131,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_star_tracker",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -3807,11 +4170,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_star_tracker",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -3843,11 +4209,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_star_tracker",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -3879,11 +4249,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_star_tracker",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -3915,11 +4289,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_navigation_beacon_receiver",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -3952,11 +4329,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_navigation_beacon_receiver",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -3989,11 +4369,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_navigation_beacon_receiver",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4026,11 +4410,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_navigation_beacon_receiver",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4063,11 +4451,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_transponder_module",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4100,11 +4491,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_transponder_module",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4137,11 +4531,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_transponder_module",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4174,11 +4572,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_transponder_module",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4211,11 +4613,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_optical_sensor_array",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4248,11 +4653,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_optical_sensor_array",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4285,11 +4693,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_optical_sensor_array",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4322,11 +4734,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_optical_sensor_array",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4359,11 +4775,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_infrared_detector",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -4395,11 +4814,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_infrared_detector",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -4431,11 +4853,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_infrared_detector",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -4467,11 +4893,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_infrared_detector",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -4503,11 +4933,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_radio_receiver_module",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4540,11 +4973,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_radio_receiver_module",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4577,11 +5013,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_radio_receiver_module",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4614,11 +5054,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_radio_receiver_module",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4651,11 +5095,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_antenna_gimbal",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4688,11 +5135,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_antenna_gimbal",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4725,11 +5175,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_antenna_gimbal",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4762,11 +5216,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_antenna_gimbal",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4799,11 +5257,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_signal_processor",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4836,11 +5297,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_signal_processor",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4873,11 +5337,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_signal_processor",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4910,11 +5378,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_signal_processor",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -4947,11 +5419,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_fiber_data_harness",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -4983,11 +5458,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_fiber_data_harness",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -5019,11 +5497,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_fiber_data_harness",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -5055,11 +5537,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_fiber_data_harness",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -5091,11 +5577,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_circuit_breaker_bank",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5128,11 +5617,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_circuit_breaker_bank",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5165,11 +5657,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_circuit_breaker_bank",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5202,11 +5698,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_circuit_breaker_bank",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5239,11 +5739,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_voltage_converter",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5276,11 +5779,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_voltage_converter",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5313,11 +5819,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_voltage_converter",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5350,11 +5860,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_voltage_converter",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5387,11 +5901,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_power_bus_coupler",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5424,11 +5941,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_power_bus_coupler",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5461,11 +5981,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_power_bus_coupler",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5498,11 +6022,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_power_bus_coupler",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5535,11 +6063,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_reactor_control_relay",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5572,11 +6103,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_reactor_control_relay",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5609,11 +6143,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_reactor_control_relay",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5646,11 +6184,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_reactor_control_relay",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5683,11 +6225,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_battery_cell_pack",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5720,11 +6265,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_battery_cell_pack",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5757,11 +6305,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_battery_cell_pack",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5794,11 +6346,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_battery_cell_pack",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5831,11 +6387,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_flux_sensor",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5868,11 +6427,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_flux_sensor",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5905,11 +6467,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_flux_sensor",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5942,11 +6508,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_flux_sensor",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -5979,11 +6549,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_thruster_control_valve",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6016,11 +6589,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_thruster_control_valve",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6053,11 +6629,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_thruster_control_valve",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6090,11 +6670,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_thruster_control_valve",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6127,11 +6711,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_gyroscope_assembly",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6164,11 +6751,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_gyroscope_assembly",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6201,11 +6791,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_gyroscope_assembly",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6238,11 +6832,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_gyroscope_assembly",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6275,11 +6873,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_servo_controller",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -6312,11 +6913,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_servo_controller",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -6349,11 +6953,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_servo_controller",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -6386,11 +6994,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_servo_controller",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -6423,11 +7035,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_machine_tool_spindle",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6460,11 +7075,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_machine_tool_spindle",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6497,11 +7115,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_machine_tool_spindle",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6534,11 +7156,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_machine_tool_spindle",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6571,11 +7197,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_ore_sampler",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6608,11 +7237,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_ore_sampler",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6645,11 +7277,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_ore_sampler",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6682,11 +7318,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_ore_sampler",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6719,11 +7359,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_ore_sorting_sensor",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -6756,11 +7399,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_ore_sorting_sensor",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -6793,11 +7439,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_ore_sorting_sensor",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -6830,11 +7480,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_ore_sorting_sensor",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Chalcopyrite",
       "Quartz"
@@ -6867,11 +7521,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_conveyor_drive",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6904,11 +7561,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_conveyor_drive",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6941,11 +7601,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_conveyor_drive",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -6978,11 +7642,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_conveyor_drive",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -7015,11 +7683,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_refinery_crucible",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -7052,11 +7723,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_refinery_crucible",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -7089,11 +7763,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_refinery_crucible",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -7126,11 +7804,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_refinery_crucible",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -7163,11 +7845,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_survey_drill_head",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -7200,11 +7885,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_survey_drill_head",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -7237,11 +7925,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_survey_drill_head",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -7274,11 +7966,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_survey_drill_head",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Kamacite",
       "Chromite"
@@ -7311,11 +8007,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_standard_hull_inspection_scanner",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -7347,11 +8046,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_heavy_duty_hull_inspection_scanner",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -7383,11 +8085,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_precision_hull_inspection_scanner",
-    "RequiredSkillLevels": {"manufacturing": 1, "precision_manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "precision_manufacturing": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -7419,11 +8125,15 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_prototype_hull_inspection_scanner",
-    "RequiredSkillLevels": {"manufacturing": 1, "advanced_industrial_integration": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1,
+      "advanced_industrial_integration": 1
+    },
     "Minerals": [
       "Quartz"
     ],
@@ -7455,11 +8165,14 @@
         "UnitTonnes": 0.15,
         "bWholeUnits": true
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_Cipher_Relays",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz",
       "Graphite"
@@ -7486,11 +8199,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_Ghost_Navigation_Charts",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz",
       "Graphite"
@@ -7517,11 +8233,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_Unregistered_Survey_Cores",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz",
       "Graphite"
@@ -7548,11 +8267,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_Restricted_Memory_Crystals",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz",
       "Graphite"
@@ -7579,11 +8301,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_Colorado_Tegridy",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "WaterIce",
       "Graphite"
@@ -7610,11 +8335,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_Dust",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz",
       "Graphite"
@@ -7641,11 +8369,14 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_Ketracel_White",
-    "RequiredSkillLevels": {"manufacturing": 1},
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
     "Minerals": [
       "Quartz",
       "Graphite"
@@ -7672,7 +8403,8 @@
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
-    ]
+    ],
+    "ShipDesign": "None"
   },
   {
     "Name": "Make_mining_drone",
@@ -7720,6 +8452,235 @@
     "OutputQuantity": 1,
     "OutputUnit": "units",
     "OutputDisplayName": "Mining Drone",
-    "Image": "MiningDrone"
+    "Image": "MiningDrone",
+    "ShipDesign": "None"
+  },
+  {
+    "Name": "Build_Falcon",
+    "ShipDesign": "Falcon",
+    "Minerals": [],
+    "Inputs": [
+      {
+        "Item": "structural alloy",
+        "Quantity": 13.2,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      },
+      {
+        "Item": "hull section",
+        "Quantity": 4,
+        "UnitTonnes": 1,
+        "bWholeUnits": true
+      },
+      {
+        "Item": "avionics",
+        "Quantity": 1,
+        "UnitTonnes": 0.2,
+        "bWholeUnits": true
+      }
+    ],
+    "CargoItem": "falcon assembled hull",
+    "OutputDisplayName": "Falcon assembled hull",
+    "OutputQuantity": 1,
+    "OutputUnit": "hulls",
+    "InputTonnes": 17.4,
+    "OutputTonnes": 14.5,
+    "SecondsPerBatch": 3600,
+    "Product": "None",
+    "Image": "Ship",
+    "RequiredSkillLevels": {
+      "manufacturing": 2
+    }
+  },
+  {
+    "Name": "Build_Stormhawk",
+    "ShipDesign": "Stormhawk",
+    "Minerals": [],
+    "Inputs": [
+      {
+        "Item": "structural alloy",
+        "Quantity": 13.92,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      },
+      {
+        "Item": "hull section",
+        "Quantity": 4,
+        "UnitTonnes": 1,
+        "bWholeUnits": true
+      },
+      {
+        "Item": "avionics",
+        "Quantity": 1,
+        "UnitTonnes": 0.2,
+        "bWholeUnits": true
+      }
+    ],
+    "CargoItem": "stormhawk assembled hull",
+    "OutputDisplayName": "Stormhawk assembled hull",
+    "OutputQuantity": 1,
+    "OutputUnit": "hulls",
+    "InputTonnes": 18.12,
+    "OutputTonnes": 15.100000381469727,
+    "SecondsPerBatch": 3600,
+    "Product": "None",
+    "Image": "Ship",
+    "RequiredSkillLevels": {
+      "manufacturing": 2
+    }
+  },
+  {
+    "Name": "Build_Prospector",
+    "ShipDesign": "Prospector",
+    "Minerals": [],
+    "Inputs": [
+      {
+        "Item": "structural alloy",
+        "Quantity": 82.2,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      },
+      {
+        "Item": "hull section",
+        "Quantity": 22,
+        "UnitTonnes": 1,
+        "bWholeUnits": true
+      },
+      {
+        "Item": "avionics",
+        "Quantity": 1,
+        "UnitTonnes": 0.2,
+        "bWholeUnits": true
+      }
+    ],
+    "CargoItem": "prospector assembled hull",
+    "OutputDisplayName": "Prospector assembled hull",
+    "OutputQuantity": 1,
+    "OutputUnit": "hulls",
+    "InputTonnes": 104.4,
+    "OutputTonnes": 87.0,
+    "SecondsPerBatch": 3600,
+    "Product": "None",
+    "Image": "Ship",
+    "RequiredSkillLevels": {
+      "manufacturing": 2
+    }
+  },
+  {
+    "Name": "Build_Raptor",
+    "ShipDesign": "Raptor",
+    "Minerals": [],
+    "Inputs": [
+      {
+        "Item": "structural alloy",
+        "Quantity": 22.8,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      },
+      {
+        "Item": "hull section",
+        "Quantity": 7,
+        "UnitTonnes": 1,
+        "bWholeUnits": true
+      },
+      {
+        "Item": "avionics",
+        "Quantity": 1,
+        "UnitTonnes": 0.2,
+        "bWholeUnits": true
+      }
+    ],
+    "CargoItem": "raptor assembled hull",
+    "OutputDisplayName": "Raptor assembled hull",
+    "OutputQuantity": 1,
+    "OutputUnit": "hulls",
+    "InputTonnes": 30.0,
+    "OutputTonnes": 25.0,
+    "SecondsPerBatch": 3600,
+    "Product": "None",
+    "Image": "Ship",
+    "RequiredSkillLevels": {
+      "manufacturing": 2
+    }
+  },
+  {
+    "Name": "Build_Viper",
+    "ShipDesign": "Viper",
+    "Minerals": [],
+    "Inputs": [
+      {
+        "Item": "structural alloy",
+        "Quantity": 12.6,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      },
+      {
+        "Item": "hull section",
+        "Quantity": 4,
+        "UnitTonnes": 1,
+        "bWholeUnits": true
+      },
+      {
+        "Item": "avionics",
+        "Quantity": 1,
+        "UnitTonnes": 0.2,
+        "bWholeUnits": true
+      }
+    ],
+    "CargoItem": "viper assembled hull",
+    "OutputDisplayName": "Viper assembled hull",
+    "OutputQuantity": 1,
+    "OutputUnit": "hulls",
+    "InputTonnes": 16.8,
+    "OutputTonnes": 14.0,
+    "SecondsPerBatch": 3600,
+    "Product": "None",
+    "Image": "Ship",
+    "RequiredSkillLevels": {
+      "manufacturing": 2
+    }
+  },
+  {
+    "Name": "Build_Goliath",
+    "ShipDesign": "Goliath",
+    "Minerals": [],
+    "Inputs": [
+      {
+        "Item": "structural alloy",
+        "Quantity": 508300.0,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      },
+      {
+        "Item": "hull section",
+        "Quantity": 3910,
+        "UnitTonnes": 1,
+        "bWholeUnits": true
+      },
+      {
+        "Item": "avionics",
+        "Quantity": 782,
+        "UnitTonnes": 0.2,
+        "bWholeUnits": true
+      },
+      {
+        "Item": "magnetite",
+        "Quantity": 308733.6,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      }
+    ],
+    "CargoItem": "goliath assembled hull",
+    "OutputDisplayName": "Goliath assembled hull",
+    "OutputQuantity": 1,
+    "OutputUnit": "hulls",
+    "InputTonnes": 821100.0,
+    "OutputTonnes": 782000.0,
+    "SecondsPerBatch": 345600,
+    "Product": "None",
+    "Image": "Ship",
+    "RequiredSkillLevels": {
+      "manufacturing": 5
+    }
   }
 ]

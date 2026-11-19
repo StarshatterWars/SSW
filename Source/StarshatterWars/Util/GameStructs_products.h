@@ -7,6 +7,9 @@
 #include "GameStructs_economy.h"
 #include "GameStructs_products.generated.h"
 
+UENUM(BlueprintType)
+enum class ESSWProductionFacilityType : uint8 { Refinery, Factory, Shipyard };
+
 USTRUCT(BlueprintType)
 struct FSSWProductionFacility : public FTableRowBase
 {
@@ -14,6 +17,7 @@ struct FSSWProductionFacility : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     FString Facility;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) ESSWProductionFacilityType FacilityType=ESSWProductionFacilityType::Factory;
     // Player service terms; NPC background batches retain their authored recipe.
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FName ServiceProfile = TEXT("Standard");
     UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bPlayerManufacturing = true;
@@ -49,6 +53,8 @@ struct FSSWProductionRecipe : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TArray<ESSWMineral> Minerals;
+    // An assembled hull is stock, not a spawned combat ship or a free player grant.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FName ShipDesign;
 
     // Player installation gates use native SSW skill keys. Empty keeps legacy recipes unrestricted.
     // NPC background production does not depend on the player's qualifications.

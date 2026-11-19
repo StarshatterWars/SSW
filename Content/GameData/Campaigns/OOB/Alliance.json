@@ -1,0 +1,9197 @@
+[
+	{
+		"Row": "1st Force [Terellian Alliance]",
+		"Type": "FORCE",
+		"Id": 1,
+		"Name": "Terellian Alliance",
+		"DisplayName": "1st Force [Terellian Alliance]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "NONE",
+		"ParentId": 0,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "1st Fleet [Orion]",
+		"Type": "FLEET",
+		"Id": 1,
+		"Name": "Orion",
+		"DisplayName": "1st Fleet [Orion]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "4th CVBG [Orion]",
+		"Type": "CARRIER_GROUP",
+		"Id": 4,
+		"Name": "Orion",
+		"DisplayName": "4th CVBG [Orion]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": -130000,
+			"Y": 50000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Orion",
+				"UnitRegnum": "69",
+				"UnitRegion": "",
+				"UnitClass": "Carrier",
+				"UnitDesign": "Orion",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Courageous",
+				"UnitRegnum": "521",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Asher",
+				"UnitRegnum": "708",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Shaw",
+				"UnitRegnum": "713",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "15th Tactical Fighter Wing [Tigers]",
+		"Type": "WING",
+		"Id": 15,
+		"Name": "Tigers",
+		"DisplayName": "15th Tactical Fighter Wing [Tigers]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": -130000,
+			"Y": 50000,
+			"Z": 0
+		},
+		"ParentType": "CARRIER_GROUP",
+		"ParentId": 4,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "17th Intercept Squadron [Tigers]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 17,
+		"Name": "Tigers",
+		"DisplayName": "17th Intercept Squadron [Tigers]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": -130000,
+			"Y": 50000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 15,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Tiger",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Falcon",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "25th Fighter Squadron [Nighthawks]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 25,
+		"Name": "Nighthawks",
+		"DisplayName": "25th Fighter Squadron [Nighthawks]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": -130000,
+			"Y": 50000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 15,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Nighthawk",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Stormhawk",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "28th Fighter Squadron [Pirates]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 28,
+		"Name": "Pirates",
+		"DisplayName": "28th Fighter Squadron [Pirates]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": -130000,
+			"Y": 50000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 15,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Pirate",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Eagle",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "91st Attack Squadron [Starknights]",
+		"Type": "ATTACK_SQUADRON",
+		"Id": 91,
+		"Name": "Starknights",
+		"DisplayName": "91st Attack Squadron [Starknights]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": -130000,
+			"Y": 50000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 15,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Starknight",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "Thunderbolt",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 16,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "88th LCA Squadron [Rhinos]",
+		"Type": "LCA_SQUADRON",
+		"Id": 88,
+		"Name": "Rhinos",
+		"DisplayName": "88th LCA Squadron [Rhinos]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": -130000,
+			"Y": 50000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 15,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Rhino",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Zodiac",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5th BG [Devastator]",
+		"Type": "BATTLE_GROUP",
+		"Id": 5,
+		"Name": "Devastator",
+		"DisplayName": "5th BG [Devastator]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 80000,
+			"Y": -90000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Devastator",
+				"UnitRegnum": "400",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Steadfast",
+				"UnitRegnum": "526",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Dauntless",
+				"UnitRegnum": "531",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Vance",
+				"UnitRegnum": "718",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "6th BG [Havoc]",
+		"Type": "BATTLE_GROUP",
+		"Id": 6,
+		"Name": "Havoc",
+		"DisplayName": "6th BG [Havoc]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Adonis",
+		"Location":
+		{
+			"X": -30000,
+			"Y": 180000,
+			"Z": -6000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Havoc",
+				"UnitRegnum": "415",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Braveheart",
+				"UnitRegnum": "536",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Integrity",
+				"UnitRegnum": "541",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Douglas",
+				"UnitRegnum": "723",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "50th DESRON [Spectre]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 50,
+		"Name": "Spectre",
+		"DisplayName": "50th DESRON [Spectre]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Dawn",
+		"Location":
+		{
+			"X": 110000,
+			"Y": 138000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Spectre",
+				"UnitRegnum": "350",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Charon",
+				"UnitRegnum": "355",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Berents",
+				"UnitRegnum": "922",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Clarkeston",
+				"UnitRegnum": "927",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "53rd DESRON [Morlock]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 53,
+		"Name": "Morlock",
+		"DisplayName": "53rd DESRON [Morlock]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Dawn",
+		"Location":
+		{
+			"X": 93000,
+			"Y": -91000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Morlock",
+				"UnitRegnum": "360",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Phantasm",
+				"UnitRegnum": "365",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Darvon",
+				"UnitRegnum": "932",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Avalon",
+				"UnitRegnum": "937",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "68th DESRON [Robinson]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 68,
+		"Name": "Robinson",
+		"DisplayName": "68th DESRON [Robinson]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 157000,
+			"Y": 89000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Robinson",
+				"UnitRegnum": "728",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Keller",
+				"UnitRegnum": "733",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Malory",
+				"UnitRegnum": "942",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Sorrel",
+				"UnitRegnum": "947",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2nd Fleet [Antares]",
+		"Type": "FLEET",
+		"Id": 2,
+		"Name": "Antares",
+		"DisplayName": "2nd Fleet [Antares]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Thrale",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "5th CVBG [Antares]",
+		"Type": "CARRIER_GROUP",
+		"Id": 5,
+		"Name": "Antares",
+		"DisplayName": "5th CVBG [Antares]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Thrale",
+		"Location":
+		{
+			"X": 110000,
+			"Y": -220000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Antares",
+				"UnitRegnum": "70",
+				"UnitRegion": "",
+				"UnitClass": "Carrier",
+				"UnitDesign": "Orion",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Fearless",
+				"UnitRegnum": "522",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Ryan",
+				"UnitRegnum": "709",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Card",
+				"UnitRegnum": "714",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "12th Tactical Fighter Wing [Thrale]",
+		"Type": "WING",
+		"Id": 12,
+		"Name": "Thrale",
+		"DisplayName": "12th Tactical Fighter Wing [Thrale]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 110000,
+			"Y": -220000,
+			"Z": 0
+		},
+		"ParentType": "CARRIER_GROUP",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "91st Intercept Squadron [Bearcats]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 91,
+		"Name": "Bearcats",
+		"DisplayName": "91st Intercept Squadron [Bearcats]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Thrale",
+		"Location":
+		{
+			"X": 110000,
+			"Y": -220000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 12,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Bearcat",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Falcon",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 32,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "30th Fighter Squadron [Mustangs]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 30,
+		"Name": "Mustangs",
+		"DisplayName": "30th Fighter Squadron [Mustangs]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Thrale",
+		"Location":
+		{
+			"X": 110000,
+			"Y": -220000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 12,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Mustang",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Stormhawk",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "37th Fighter Squadron [Vipers]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 37,
+		"Name": "Vipers",
+		"DisplayName": "37th Fighter Squadron [Vipers]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Thrale",
+		"Location":
+		{
+			"X": 110000,
+			"Y": -220000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 12,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Viper",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Eagle",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "45th Attack Squadron [Lancers]",
+		"Type": "ATTACK_SQUADRON",
+		"Id": 45,
+		"Name": "Lancers",
+		"DisplayName": "45th Attack Squadron [Lancers]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Thrale",
+		"Location":
+		{
+			"X": 110000,
+			"Y": -220000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 12,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Lancer",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "Thunderbolt",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 16,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "120th LCA Squadron [Taurus]",
+		"Type": "LCA_SQUADRON",
+		"Id": 120,
+		"Name": "Taurus",
+		"DisplayName": "120th LCA Squadron [Taurus]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Thrale",
+		"Location":
+		{
+			"X": 110000,
+			"Y": -220000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 12,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Taurus",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Zodiac",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "7th BG [Annihilator]",
+		"Type": "BATTLE_GROUP",
+		"Id": 7,
+		"Name": "Annihilator",
+		"DisplayName": "7th BG [Annihilator]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Pollux",
+		"Location":
+		{
+			"X": 30000,
+			"Y": 150000,
+			"Z": -6000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Annihilator",
+				"UnitRegnum": "401",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Assurance",
+				"UnitRegnum": "527",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Vanguard",
+				"UnitRegnum": "532",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Gibson",
+				"UnitRegnum": "719",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8th BG [Vortex]",
+		"Type": "BATTLE_GROUP",
+		"Id": 8,
+		"Name": "Vortex",
+		"DisplayName": "8th BG [Vortex]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Hera",
+		"Location":
+		{
+			"X": 110000,
+			"Y": 140000,
+			"Z": -6000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Vortex",
+				"UnitRegnum": "411",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Defiant",
+				"UnitRegnum": "537",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Capable",
+				"UnitRegnum": "542",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Mahan",
+				"UnitRegnum": "724",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "40th DESRON [Wraith]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 40,
+		"Name": "Wraith",
+		"DisplayName": "40th DESRON [Wraith]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Zeus",
+		"Location":
+		{
+			"X": -80000,
+			"Y": 40000,
+			"Z": -6000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Wraith",
+				"UnitRegnum": "351",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Nemesis",
+				"UnitRegnum": "356",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Bosporus",
+				"UnitRegnum": "923",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Carlisle",
+				"UnitRegnum": "928",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "41st DESRON [Demon]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 41,
+		"Name": "Demon",
+		"DisplayName": "41st DESRON [Demon]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Thrale",
+		"Location":
+		{
+			"X": 0,
+			"Y": -90000,
+			"Z": -3000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Demon",
+				"UnitRegnum": "361",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Revenant",
+				"UnitRegnum": "366",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Leyte",
+				"UnitRegnum": "933",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Argiles",
+				"UnitRegnum": "938",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "59th DESRON [Clarke]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 59,
+		"Name": "Clarke",
+		"DisplayName": "59th DESRON [Clarke]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Sparta",
+		"Location":
+		{
+			"X": -160000,
+			"Y": -180000,
+			"Z": -7000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Clarke",
+				"UnitRegnum": "729",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Jackson",
+				"UnitRegnum": "734",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Parker",
+				"UnitRegnum": "943",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Suffolk",
+				"UnitRegnum": "948",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3rd Fleet [Archon]",
+		"Type": "FLEET",
+		"Id": 3,
+		"Name": "Archon",
+		"DisplayName": "3rd Fleet [Archon]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "6th CVBG [Archon]",
+		"Type": "CARRIER_GROUP",
+		"Id": 6,
+		"Name": "Archon",
+		"DisplayName": "6th CVBG [Archon]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -130000,
+			"Y": 160000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Archon",
+				"UnitRegnum": "71",
+				"UnitRegion": "",
+				"UnitClass": "Carrier",
+				"UnitDesign": "Orion",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Stalwart",
+				"UnitRegnum": "524",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Gerson",
+				"UnitRegnum": "682",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Simmons",
+				"UnitRegnum": "687",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "18th Tactical Fighter Wing [Trellis]",
+		"Type": "WING",
+		"Id": 18,
+		"Name": "Trellis",
+		"DisplayName": "18th Tactical Fighter Wing [Trellis]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "CARRIER_GROUP",
+		"ParentId": 6,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "37th Intercept Squadron [Avengers]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 37,
+		"Name": "Avengers",
+		"DisplayName": "37th Intercept Squadron [Avengers]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -163000,
+			"Y": 107000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 18,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Avenger",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Falcon",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 32,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "36th Fighter Squadron [Stallions]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 36,
+		"Name": "Stallions",
+		"DisplayName": "36th Fighter Squadron [Stallions]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -169000,
+			"Y": 60000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 18,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Stallion",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Stormhawk",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "39th Fighter Squadron [Diamondbacks]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 39,
+		"Name": "Diamondbacks",
+		"DisplayName": "39th Fighter Squadron [Diamondbacks]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -169000,
+			"Y": 60000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 18,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Diamondback",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Eagle",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "112th Attack Squadron [Warbirds]",
+		"Type": "ATTACK_SQUADRON",
+		"Id": 112,
+		"Name": "Warbirds",
+		"DisplayName": "112th Attack Squadron [Warbirds]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -144000,
+			"Y": 45000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 18,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Warbird",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "Thunderbolt",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 16,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "101st LCA Squadron [Starlifters]",
+		"Type": "LCA_SQUADRON",
+		"Id": 101,
+		"Name": "Starlifters",
+		"DisplayName": "101st LCA Squadron [Starlifters]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -71000,
+			"Y": 136000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 18,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Starlifters",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Zodiac",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "9th BG [Onslaught]",
+		"Type": "BATTLE_GROUP",
+		"Id": 9,
+		"Name": "Onslaught",
+		"DisplayName": "9th BG [Onslaught]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Borova",
+		"Location":
+		{
+			"X": -109000,
+			"Y": -77000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Onslaught",
+				"UnitRegnum": "402",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Protector",
+				"UnitRegnum": "528",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Redstone",
+				"UnitRegnum": "533",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Raven",
+				"UnitRegnum": "720",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "10th BG [Predator]",
+		"Type": "BATTLE_GROUP",
+		"Id": 10,
+		"Name": "Predator",
+		"DisplayName": "10th BG [Predator]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Danova",
+		"Location":
+		{
+			"X": 30000,
+			"Y": 180000,
+			"Z": -6000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Predator",
+				"UnitRegnum": "412",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Audacious",
+				"UnitRegnum": "538",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Fortitude",
+				"UnitRegnum": "543",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Brunner",
+				"UnitRegnum": "725",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "43rd DESRON [Shadow]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 43,
+		"Name": "Shadow",
+		"DisplayName": "43rd DESRON [Shadow]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 210000,
+			"Y": 38000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Shadow",
+				"UnitRegnum": "352",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Necromancer",
+				"UnitRegnum": "357",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Belfast",
+				"UnitRegnum": "924",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Canton",
+				"UnitRegnum": "929",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "44th DESRON [Hydra]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 44,
+		"Name": "Hydra",
+		"DisplayName": "44th DESRON [Hydra]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Alystra",
+		"Location":
+		{
+			"X": 93000,
+			"Y": -101000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Hydra",
+				"UnitRegnum": "362",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Banshee",
+				"UnitRegnum": "367",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Hemmet",
+				"UnitRegnum": "934",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Essex",
+				"UnitRegnum": "939",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "60th DESRON [Gerrond]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 60,
+		"Name": "Gerrond",
+		"DisplayName": "60th DESRON [Gerrond]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 157000,
+			"Y": 89000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Gerrond",
+				"UnitRegnum": "730",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Radix",
+				"UnitRegnum": "735",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Rainier",
+				"UnitRegnum": "944",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Tanner",
+				"UnitRegnum": "949",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4th Fleet [Titan]",
+		"Type": "FLEET",
+		"Id": 4,
+		"Name": "Titan",
+		"DisplayName": "4th Fleet [Titan]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Borova",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "7th CVBG [Titan]",
+		"Type": "CARRIER_GROUP",
+		"Id": 7,
+		"Name": "Titan",
+		"DisplayName": "7th CVBG [Titan]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Danova",
+		"Location":
+		{
+			"X": 157000,
+			"Y": -202000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 4,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Titan",
+				"UnitRegnum": "72",
+				"UnitRegion": "",
+				"UnitClass": "Carrier",
+				"UnitDesign": "Orion",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Defender",
+				"UnitRegnum": "524",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Reynolds",
+				"UnitRegnum": "711",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Hawker",
+				"UnitRegnum": "716",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "21st Tactical Fighter Wing [Danova]",
+		"Type": "WING",
+		"Id": 21,
+		"Name": "Danova",
+		"DisplayName": "21st Tactical Fighter Wing [Danova]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Danova",
+		"Location":
+		{
+			"X": 147000,
+			"Y": -192000,
+			"Z": 0
+		},
+		"ParentType": "CARRIER_GROUP",
+		"ParentId": 7,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "93rd Intercept Squadron [Windriders]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 93,
+		"Name": "Windriders",
+		"DisplayName": "93rd Intercept Squadron [Windriders]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Danova",
+		"Location":
+		{
+			"X": 177000,
+			"Y": -212000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 21,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Windrider",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Falcon",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 32,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "33rd Fighter Squadron [Chargers]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 33,
+		"Name": "Chargers",
+		"DisplayName": "33rd Fighter Squadron [Chargers]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Danova",
+		"Location":
+		{
+			"X": 165000,
+			"Y": -202000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 21,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Charger",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Stormhawk",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "51st Fighter Squadron [Wolfhounds]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 51,
+		"Name": "Wolfhounds",
+		"DisplayName": "51st Fighter Squadron [Wolfhounds]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Danova",
+		"Location":
+		{
+			"X": 165000,
+			"Y": -202000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 21,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Wolfhound",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Eagle",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "45th Attack Squadron [Razorbacks]",
+		"Type": "ATTACK_SQUADRON",
+		"Id": 45,
+		"Name": "Razorbacks",
+		"DisplayName": "45th Attack Squadron [Razorbacks]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Danova",
+		"Location":
+		{
+			"X": 157000,
+			"Y": -182000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 21,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Razorback",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "Thunderbolt",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 20,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "103rd LCA Squadron [Artemis]",
+		"Type": "LCA_SQUADRON",
+		"Id": 103,
+		"Name": "Artemis",
+		"DisplayName": "103rd LCA Squadron [Artemis]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Danova",
+		"Location":
+		{
+			"X": 157000,
+			"Y": -182000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 21,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Artemis",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Zodiac",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "12th CVBG [Chronos]",
+		"Type": "CARRIER_GROUP",
+		"Id": 12,
+		"Name": "Chronos",
+		"DisplayName": "12th CVBG [Chronos]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 157000,
+			"Y": -202000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 4,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Chronos",
+				"UnitRegnum": "77",
+				"UnitRegion": "",
+				"UnitClass": "Carrier",
+				"UnitDesign": "Orion",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Impervious",
+				"UnitRegnum": "524",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Galland",
+				"UnitRegnum": "711",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Pascal",
+				"UnitRegnum": "716",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "29th Tactical Fighter Wing [Jarnell]",
+		"Type": "WING",
+		"Id": 29,
+		"Name": "Jarnell",
+		"DisplayName": "29th Tactical Fighter Wing [Jarnell]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 147000,
+			"Y": -192000,
+			"Z": 0
+		},
+		"ParentType": "CARRIER_GROUP",
+		"ParentId": 12,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "133rd Intercept Squadron [Windriders]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 133,
+		"Name": "Windriders",
+		"DisplayName": "133rd Intercept Squadron [Windriders]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 177000,
+			"Y": -212000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 29,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Windrider",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Falcon",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 20,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "53rd Fighter Squadron [Chargers]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 53,
+		"Name": "Chargers",
+		"DisplayName": "53rd Fighter Squadron [Chargers]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 165000,
+			"Y": -202000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 29,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Charger",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Stormhawk",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 20,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "75th Attack Squadron [Razorbacks]",
+		"Type": "ATTACK_SQUADRON",
+		"Id": 75,
+		"Name": "Razorbacks",
+		"DisplayName": "75th Attack Squadron [Razorbacks]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 157000,
+			"Y": -182000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 29,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Razorback",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "Thunderbolt",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 10,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "113th LCA Squadron [Artemis]",
+		"Type": "LCA_SQUADRON",
+		"Id": 113,
+		"Name": "Artemis",
+		"DisplayName": "113th LCA Squadron [Artemis]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 157000,
+			"Y": -182000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 29,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Artemis",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Zodiac",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 6,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "14th BG [Relentless]",
+		"Type": "BATTLE_GROUP",
+		"Id": 14,
+		"Name": "Relentless",
+		"DisplayName": "14th BG [Relentless]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Borova",
+		"Location":
+		{
+			"X": -67000,
+			"Y": 102000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 4,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Relentless",
+				"UnitRegnum": "403",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Heroic",
+				"UnitRegnum": "529",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Victorious",
+				"UnitRegnum": "534",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Hale",
+				"UnitRegnum": "721",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "15th BG [Huntress]",
+		"Type": "BATTLE_GROUP",
+		"Id": 15,
+		"Name": "Huntress",
+		"DisplayName": "15th BG [Huntress]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Zhalisal",
+		"Location":
+		{
+			"X": -30000,
+			"Y": 180000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 4,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Huntress",
+				"UnitRegnum": "417",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Valorous",
+				"UnitRegnum": "539",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Intrepid",
+				"UnitRegnum": "544",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Weber",
+				"UnitRegnum": "726",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "45th DESRON [Warlock]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 45,
+		"Name": "Warlock",
+		"DisplayName": "45th DESRON [Warlock]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Maraner",
+		"Location":
+		{
+			"X": 21000,
+			"Y": 58000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 4,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Warlock",
+				"UnitRegnum": "353",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Merlin",
+				"UnitRegnum": "358",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Bering",
+				"UnitRegnum": "925",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Davis",
+				"UnitRegnum": "930",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "46th DESRON [Typhon]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 46,
+		"Name": "Typhon",
+		"DisplayName": "46th DESRON [Typhon]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Danova",
+		"Location":
+		{
+			"X": -93000,
+			"Y": -141000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 4,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Typhon",
+				"UnitRegnum": "363",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Chimaera",
+				"UnitRegnum": "368",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Messina",
+				"UnitRegnum": "935",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Nalu",
+				"UnitRegnum": "940",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "61st DESRON [Gamma]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 61,
+		"Name": "Gamma",
+		"DisplayName": "61st DESRON [Gamma]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Tulkas",
+		"Location":
+		{
+			"X": 157000,
+			"Y": -29000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 4,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Gamma",
+				"UnitRegnum": "731",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Lawrence",
+				"UnitRegnum": "736",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Kelvin",
+				"UnitRegnum": "945",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Trieste",
+				"UnitRegnum": "950",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5th Fleet [Hyperion]",
+		"Type": "FLEET",
+		"Id": 5,
+		"Name": "Hyperion",
+		"DisplayName": "5th Fleet [Hyperion]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "8th CVBG [Hyperion]",
+		"Type": "CARRIER_GROUP",
+		"Id": 8,
+		"Name": "Hyperion",
+		"DisplayName": "8th CVBG [Hyperion]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Athenar",
+		"Location":
+		{
+			"X": 157000,
+			"Y": -162000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Hyperion",
+				"UnitRegnum": "73",
+				"UnitRegion": "",
+				"UnitClass": "Carrier",
+				"UnitDesign": "Orion",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Guardian",
+				"UnitRegnum": "525",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Nordic",
+				"UnitRegnum": "712",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Hughes",
+				"UnitRegnum": "717",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "27th Tactical Fighter Wing [Athenar]",
+		"Type": "WING",
+		"Id": 27,
+		"Name": "Athenar",
+		"DisplayName": "27th Tactical Fighter Wing [Athenar]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Athenar",
+		"Location":
+		{
+			"X": 147000,
+			"Y": -162000,
+			"Z": 0
+		},
+		"ParentType": "CARRIER_GROUP",
+		"ParentId": 8,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "95th Intercept Squadron [Wizards]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 95,
+		"Name": "Wizards",
+		"DisplayName": "95th Intercept Squadron [Wizards]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Athenar",
+		"Location":
+		{
+			"X": 167000,
+			"Y": -152000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 27,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Wizard",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Falcon",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "38th Fighter Squadron [Hunters]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 38,
+		"Name": "Hunters",
+		"DisplayName": "38th Fighter Squadron [Hunters]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Athenar",
+		"Location":
+		{
+			"X": 147000,
+			"Y": -152000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 27,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Hunter",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Stormhawk",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "46th Attack Squadron [Rangers]",
+		"Type": "ATTACK_SQUADRON",
+		"Id": 46,
+		"Name": "Rangers",
+		"DisplayName": "46th Attack Squadron [Rangers]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Athenar",
+		"Location":
+		{
+			"X": 137000,
+			"Y": -162000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 27,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Rangers",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "Thunderbolt",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 20,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "109th LCA Squadron [Capricorn]",
+		"Type": "LCA_SQUADRON",
+		"Id": 109,
+		"Name": "Capricorn",
+		"DisplayName": "109th LCA Squadron [Capricorn]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Athenar",
+		"Location":
+		{
+			"X": 147000,
+			"Y": -142000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 27,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Capricorn",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Zodiac",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "17th BG [Furious]",
+		"Type": "BATTLE_GROUP",
+		"Id": 17,
+		"Name": "Furious",
+		"DisplayName": "17th BG [Furious]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek",
+		"Location":
+		{
+			"X": -247000,
+			"Y": -122000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Furious",
+				"UnitRegnum": "404",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Valiant",
+				"UnitRegnum": "530",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Honorable",
+				"UnitRegnum": "535",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Salas",
+				"UnitRegnum": "722",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "47th DESRON [Phantom]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 47,
+		"Name": "Phantom",
+		"DisplayName": "47th DESRON [Phantom]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Pallas",
+		"Location":
+		{
+			"X": -217000,
+			"Y": 302000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Phantom",
+				"UnitRegnum": "354",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Nightshade",
+				"UnitRegnum": "359",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Dalton",
+				"UnitRegnum": "926",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Delmar",
+				"UnitRegnum": "931",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "48th DESRON [Enigma]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 48,
+		"Name": "Enigma",
+		"DisplayName": "48th DESRON [Enigma]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Alystra",
+		"Location":
+		{
+			"X": -247000,
+			"Y": 102000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Enigma",
+				"UnitRegnum": "364",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Gorgon",
+				"UnitRegnum": "369",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Morgan",
+				"UnitRegnum": "936",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Normandy",
+				"UnitRegnum": "941",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5th Battalion [Janek Station]",
+		"Type": "BATTALION",
+		"Id": 5,
+		"Name": "Janek Station",
+		"DisplayName": "5th Battalion [Janek Station]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek Station",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "3rd Starbase [Janek]",
+		"Type": "STARBASE",
+		"Id": 3,
+		"Name": "Janek",
+		"DisplayName": "3rd Starbase [Janek]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek Station",
+		"Location":
+		{
+			"X": 20000,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Janek Station",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Starbase",
+				"UnitDesign": "Airbase1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": -90
+			}
+		]
+	},
+	{
+		"Row": "7th Intercept Squadron [Altair]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 7,
+		"Name": "Altair",
+		"DisplayName": "7th Intercept Squadron [Altair]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek Station",
+		"Location":
+		{
+			"X": 25000,
+			"Y": -4000,
+			"Z": 0
+		},
+		"ParentType": "STARBASE",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Altair",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Falcon",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 20,
+				"UnitDamage": 0,
+				"UnitDead": 10,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5th Attack Squadron [Bristol]",
+		"Type": "ATTACK_SQUADRON",
+		"Id": 5,
+		"Name": "Bristol",
+		"DisplayName": "5th Attack Squadron [Bristol]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek Station",
+		"Location":
+		{
+			"X": 30000,
+			"Y": 4000,
+			"Z": 0
+		},
+		"ParentType": "STARBASE",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Bristol",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "Thunderbolt",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 20,
+				"UnitDamage": 0,
+				"UnitDead": 10,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "1st Battery [Telmera SAM]",
+		"Type": "BATTERY",
+		"Id": 1,
+		"Name": "Telmera SAM",
+		"DisplayName": "1st Battery [Telmera SAM]",
+		"Intel": "SECRET",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 45000,
+			"Y": -36000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "SAM",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "SAM",
+				"UnitDesign": "SAM 1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "AAA",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "SAM",
+				"UnitDesign": "AAA 1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2nd Battery [Telmera SAM]",
+		"Type": "BATTERY",
+		"Id": 2,
+		"Name": "Telmera SAM",
+		"DisplayName": "2nd Battery [Telmera SAM]",
+		"Intel": "SECRET",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 10000,
+			"Y": 10000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "AAA",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "SAM",
+				"UnitDesign": "AAA 1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 2,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3rd Battery [Telmera SAM]",
+		"Type": "BATTERY",
+		"Id": 3,
+		"Name": "Telmera SAM",
+		"DisplayName": "3rd Battery [Telmera SAM]",
+		"Intel": "SECRET",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -32000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "SAM",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "SAM",
+				"UnitDesign": "SAM 1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "6th Fleet [Atlas]",
+		"Type": "FLEET",
+		"Id": 6,
+		"Name": "Atlas",
+		"DisplayName": "6th Fleet [Atlas]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "9th CVBG [Atlas]",
+		"Type": "CARRIER_GROUP",
+		"Id": 9,
+		"Name": "Atlas",
+		"DisplayName": "9th CVBG [Atlas]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 207000,
+			"Y": -362000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 6,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Atlas",
+				"UnitRegnum": "74",
+				"UnitRegion": "",
+				"UnitClass": "Carrier",
+				"UnitDesign": "Orion",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Loyalty",
+				"UnitRegnum": "546",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Vernor",
+				"UnitRegnum": "739",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Nichols",
+				"UnitRegnum": "741",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "22nd Tactical Fighter Wing [Paragon]",
+		"Type": "WING",
+		"Id": 22,
+		"Name": "Paragon",
+		"DisplayName": "22nd Tactical Fighter Wing [Paragon]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 0,
+			"Y": -20000,
+			"Z": 7000
+		},
+		"ParentType": "CARRIER_GROUP",
+		"ParentId": 9,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "94th Intercept Squadron [Warriors]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 94,
+		"Name": "Warriors",
+		"DisplayName": "94th Intercept Squadron [Warriors]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 179000,
+			"Y": -300000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 22,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Warrior",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Falcon",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "35th Fighter Squadron [Broncos]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 35,
+		"Name": "Broncos",
+		"DisplayName": "35th Fighter Squadron [Broncos]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 125000,
+			"Y": -318000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 22,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Bronco",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Stormhawk",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "55th Fighter Squadron [Black Angels]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 55,
+		"Name": "Black Angels",
+		"DisplayName": "55th Fighter Squadron [Black Angels]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 125000,
+			"Y": -318000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 22,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Angel",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Eagle",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "101st Attack Squadron [Sabres]",
+		"Type": "ATTACK_SQUADRON",
+		"Id": 101,
+		"Name": "Sabres",
+		"DisplayName": "101st Attack Squadron [Sabres]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 246000,
+			"Y": -379000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 22,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Sabre",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "Thunderbolt",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 20,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "104th LCA Squadron [Selene]",
+		"Type": "LCA_SQUADRON",
+		"Id": 104,
+		"Name": "Selene",
+		"DisplayName": "104th LCA Squadron [Selene]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 195000,
+			"Y": -400000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 22,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Selene",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Zodiac",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "14th BG [Stormwind]",
+		"Type": "BATTLE_GROUP",
+		"Id": 14,
+		"Name": "Stormwind",
+		"DisplayName": "14th BG [Stormwind]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": -109000,
+			"Y": -77000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 6,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Stormwind",
+				"UnitRegnum": "420",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Justice",
+				"UnitRegnum": "548",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Truth",
+				"UnitRegnum": "550",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Hoffman",
+				"UnitRegnum": "742",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "15th BG [Typhoon]",
+		"Type": "BATTLE_GROUP",
+		"Id": 15,
+		"Name": "Typhoon",
+		"DisplayName": "15th BG [Typhoon]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Dorrath",
+		"Location":
+		{
+			"X": 30000,
+			"Y": 180000,
+			"Z": -6000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 6,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Typhoon",
+				"UnitRegnum": "422",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Response",
+				"UnitRegnum": "552",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Daring",
+				"UnitRegnum": "554",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Deforest",
+				"UnitRegnum": "744",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "45th DESRON [Nightmare]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 45,
+		"Name": "Nightmare",
+		"DisplayName": "45th DESRON [Nightmare]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Bryn",
+		"Location":
+		{
+			"X": 210000,
+			"Y": 38000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 6,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Nightmare",
+				"UnitRegnum": "370",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Ghola",
+				"UnitRegnum": "375",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Surrey",
+				"UnitRegnum": "952",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Kent",
+				"UnitRegnum": "954",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "46th DESRON [Orknies]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 46,
+		"Name": "Orknies",
+		"DisplayName": "46th DESRON [Orknies]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Atlan",
+		"Location":
+		{
+			"X": 93000,
+			"Y": -101000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 6,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Orknies",
+				"UnitRegnum": "383",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Secret Fire",
+				"UnitRegnum": "379",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Durham",
+				"UnitRegnum": "956",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Kingston",
+				"UnitRegnum": "958",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "61st DESRON [Bear]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 61,
+		"Name": "Bear",
+		"DisplayName": "61st DESRON [Bear]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 157000,
+			"Y": 89000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 6,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Bear",
+				"UnitRegnum": "746",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Chance",
+				"UnitRegnum": "748",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Gamma",
+				"UnitRegnum": "960",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Lawrence",
+				"UnitRegnum": "962",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "7th Fleet [Heracles]",
+		"Type": "FLEET",
+		"Id": 7,
+		"Name": "Heracles",
+		"DisplayName": "7th Fleet [Heracles]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": -390000,
+			"Y": 10000,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "11th CVBG [Heracles]",
+		"Type": "CARRIER_GROUP",
+		"Id": 11,
+		"Name": "Heracles",
+		"DisplayName": "11th CVBG [Heracles]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 207000,
+			"Y": -362000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 7,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Heracles",
+				"UnitRegnum": "77",
+				"UnitRegion": "",
+				"UnitClass": "Carrier",
+				"UnitDesign": "Orion",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "FOrionhright",
+				"UnitRegnum": "547",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Arthur",
+				"UnitRegnum": "739",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Smith",
+				"UnitRegnum": "741",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "24th Tactical Fighter Wing [Paragon]",
+		"Type": "WING",
+		"Id": 24,
+		"Name": "Paragon",
+		"DisplayName": "24th Tactical Fighter Wing [Paragon]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 0,
+			"Y": -20000,
+			"Z": 7000
+		},
+		"ParentType": "CARRIER_GROUP",
+		"ParentId": 11,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "99th Intercept Squadron [Aces]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 99,
+		"Name": "Aces",
+		"DisplayName": "99th Intercept Squadron [Aces]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 179000,
+			"Y": -300000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 24,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Ace",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Falcon",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "39th Fighter Squadron [Trailblazers]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 39,
+		"Name": "Trailblazers",
+		"DisplayName": "39th Fighter Squadron [Trailblazers]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 125000,
+			"Y": -318000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 24,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Trailblazer",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Stormhawk",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "54th Fighter Squadron [Gunfighters]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 54,
+		"Name": "Gunfighters",
+		"DisplayName": "54th Fighter Squadron [Gunfighters]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 127000,
+			"Y": -318000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 24,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Gunfighter",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Eagle",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "49th Attack Squadron [Kings]",
+		"Type": "ATTACK_SQUADRON",
+		"Id": 49,
+		"Name": "Kings",
+		"DisplayName": "49th Attack Squadron [Kings]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 246000,
+			"Y": -379000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 24,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "King",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "Thunderbolt",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 16,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "113th LCA Squadron [Perseus]",
+		"Type": "LCA_SQUADRON",
+		"Id": 113,
+		"Name": "Perseus",
+		"DisplayName": "113th LCA Squadron [Perseus]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 195000,
+			"Y": -400000,
+			"Z": 0
+		},
+		"ParentType": "WING",
+		"ParentId": 24,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Perseus",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Zodiac",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "19th BG [Demolisher]",
+		"Type": "BATTLE_GROUP",
+		"Id": 19,
+		"Name": "Demolisher",
+		"DisplayName": "19th BG [Demolisher]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": -109000,
+			"Y": -77000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 7,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Demolisher",
+				"UnitRegnum": "421",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Honesty",
+				"UnitRegnum": "549",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Gallantry",
+				"UnitRegnum": "551",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Parks",
+				"UnitRegnum": "753",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "20th BG [Shrike]",
+		"Type": "BATTLE_GROUP",
+		"Id": 20,
+		"Name": "Shrike",
+		"DisplayName": "20th BG [Shrike]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Dorrath",
+		"Location":
+		{
+			"X": 30000,
+			"Y": 180000,
+			"Z": -6000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 7,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Shrike",
+				"UnitRegnum": "423",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Devastator",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Resolve",
+				"UnitRegnum": "553",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Bold",
+				"UnitRegnum": "555",
+				"UnitRegion": "",
+				"UnitClass": "Cruiser",
+				"UnitDesign": "Courageous",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Standish",
+				"UnitRegnum": "755",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "52nd DESRON [Mysterious]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 52,
+		"Name": "Mysterious",
+		"DisplayName": "52nd DESRON [Mysterious]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Bryn",
+		"Location":
+		{
+			"X": 210000,
+			"Y": 38000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 7,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Mysterious",
+				"UnitRegnum": "388",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Aegis",
+				"UnitRegnum": "393",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Halston",
+				"UnitRegnum": "953",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Portsmouth",
+				"UnitRegnum": "955",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "54th DESRON [Ogre]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 54,
+		"Name": "Ogre",
+		"DisplayName": "54th DESRON [Ogre]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Atlan",
+		"Location":
+		{
+			"X": 93000,
+			"Y": -101000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 7,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Ogre",
+				"UnitRegnum": "372",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Chaos",
+				"UnitRegnum": "373",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Spectre",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Bristol",
+				"UnitRegnum": "957",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Oxford",
+				"UnitRegnum": "959",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "69th DESRON [Drayton]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 69,
+		"Name": "Drayton",
+		"DisplayName": "69th DESRON [Drayton]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 157000,
+			"Y": 89000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 7,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Drayton",
+				"UnitRegnum": "747",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Cavanaugh",
+				"UnitRegnum": "749",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Asher",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Columbia",
+				"UnitRegnum": "961",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Orleans",
+				"UnitRegnum": "963",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Berents",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "1000th Civilian [Civilian Forces]",
+		"Type": "CIVILIAN",
+		"Id": 1000,
+		"Name": "Civilian Forces",
+		"DisplayName": "1000th Civilian [Civilian Forces]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2000th War Production [War Production]",
+		"Type": "WAR_PRODUCTION",
+		"Id": 2000,
+		"Name": "War Production",
+		"DisplayName": "2000th War Production [War Production]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 1000,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2100th Civilian [Janek Industries]",
+		"Type": "CIVILIAN",
+		"Id": 2100,
+		"Name": "Janek Industries",
+		"DisplayName": "2100th Civilian [Janek Industries]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek Station",
+		"Location":
+		{
+			"X": 55000,
+			"Y": 35000,
+			"Z": 0
+		},
+		"ParentType": "WAR_PRODUCTION",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2101st Infrastructure [Reactor]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2101,
+		"Name": "Reactor",
+		"DisplayName": "2101st Infrastructure [Reactor]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek Station",
+		"Location":
+		{
+			"X": 55000,
+			"Y": 36000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2100,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Reactor",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Factory",
+				"UnitDesign": "Reac01",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2102nd Factory [Factory 1]",
+		"Type": "FACTORY",
+		"Id": 2102,
+		"Name": "Factory 1",
+		"DisplayName": "2102nd Factory [Factory 1]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek Station",
+		"Location":
+		{
+			"X": 56000,
+			"Y": 35000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2100,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Factory 1",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Factory",
+				"UnitDesign": "Fact04",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2103rd Factory [Factory 2]",
+		"Type": "FACTORY",
+		"Id": 2103,
+		"Name": "Factory 2",
+		"DisplayName": "2103rd Factory [Factory 2]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek Station",
+		"Location":
+		{
+			"X": 58000,
+			"Y": 36000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2100,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Factory 2",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Factory",
+				"UnitDesign": "Fact02",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2104th Civilian [Office Block]",
+		"Type": "CIVILIAN",
+		"Id": 2104,
+		"Name": "Office Block",
+		"DisplayName": "2104th Civilian [Office Block]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek Station",
+		"Location":
+		{
+			"X": -30000,
+			"Y": 15000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2100,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Office Block",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Bldg00",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 3,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2105th Civilian [Office Block]",
+		"Type": "CIVILIAN",
+		"Id": 2105,
+		"Name": "Office Block",
+		"DisplayName": "2105th Civilian [Office Block]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek Station",
+		"Location":
+		{
+			"X": -20000,
+			"Y": 10000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2100,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Office Block",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Bldg01",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 3,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4000th Non-Com [Freight]",
+		"Type": "NON_COM",
+		"Id": 4000,
+		"Name": "Freight",
+		"DisplayName": "4000th Non-Com [Freight]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 1000,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "3000th Freight [Roika Starlift]",
+		"Type": "FREIGHT",
+		"Id": 3000,
+		"Name": "Roika Starlift",
+		"DisplayName": "3000th Freight [Roika Starlift]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 77000,
+			"Y": 57000,
+			"Z": 0
+		},
+		"ParentType": "NON_COM",
+		"ParentId": 4000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Adventure",
+				"UnitRegnum": "1919",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Endurance",
+				"UnitRegnum": "2211",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Mariner",
+				"UnitRegnum": "2234",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Vantage",
+				"UnitRegnum": "2241",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Wayfarer",
+				"UnitRegnum": "2243",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3001st Freight [Roika Starlift]",
+		"Type": "FREIGHT",
+		"Id": 3001,
+		"Name": "Roika Starlift",
+		"DisplayName": "3001st Freight [Roika Starlift]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 77000,
+			"Y": 57000,
+			"Z": 0
+		},
+		"ParentType": "NON_COM",
+		"ParentId": 4000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Challenger",
+				"UnitRegnum": "1921",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Explorer",
+				"UnitRegnum": "1937",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Seeker",
+				"UnitRegnum": "2216",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Viking",
+				"UnitRegnum": "2320",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Wanderer",
+				"UnitRegnum": "2405",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3002nd Freight [Roika Starlift]",
+		"Type": "FREIGHT",
+		"Id": 3002,
+		"Name": "Roika Starlift",
+		"DisplayName": "3002nd Freight [Roika Starlift]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 77000,
+			"Y": 57000,
+			"Z": 0
+		},
+		"ParentType": "NON_COM",
+		"ParentId": 4000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Discovery",
+				"UnitRegnum": "2117",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Harvester",
+				"UnitRegnum": "2225",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Sojourner",
+				"UnitRegnum": "1875",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Voyager",
+				"UnitRegnum": "2109",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Windward",
+				"UnitRegnum": "2046",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3100th Freight [ChemStar]",
+		"Type": "FREIGHT",
+		"Id": 3100,
+		"Name": "ChemStar",
+		"DisplayName": "3100th Freight [ChemStar]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "NON_COM",
+		"ParentId": 4000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ChemStar 1",
+				"UnitRegnum": "1101",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1912",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ChemStar 2",
+				"UnitRegnum": "1102",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1912",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ChemStar 3",
+				"UnitRegnum": "1103",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1912",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ChemStar 4",
+				"UnitRegnum": "1104",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1906",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ChemStar 5",
+				"UnitRegnum": "1105",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1906",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ChemStar 6",
+				"UnitRegnum": "1106",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1912",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3101st Freight [ChemStar]",
+		"Type": "FREIGHT",
+		"Id": 3101,
+		"Name": "ChemStar",
+		"DisplayName": "3101st Freight [ChemStar]",
+		"Intel": "RESERVE",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "NON_COM",
+		"ParentId": 4000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ChemStar 7",
+				"UnitRegnum": "1107",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1906",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ChemStar 8",
+				"UnitRegnum": "1108",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1906",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ChemStar 9",
+				"UnitRegnum": "1109",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1906",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ChemStar 10",
+				"UnitRegnum": "1110",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1912",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ChemStar 11",
+				"UnitRegnum": "1111",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1912",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "ChemStar 12",
+				"UnitRegnum": "1112",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1912",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5000th Infrastructure [Alliance Farcaster Network]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5000,
+		"Name": "Alliance Farcaster Network",
+		"DisplayName": "5000th Infrastructure [Alliance Farcaster Network]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "5001st Infrastructure [Jarnell-Adonis]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5001,
+		"Name": "Jarnell-Adonis",
+		"DisplayName": "5001st Infrastructure [Jarnell-Adonis]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 80000,
+			"Y": 20000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Jarnell-Adonis",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5002nd Infrastructure [Adonis-Jarnell]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5002,
+		"Name": "Adonis-Jarnell",
+		"DisplayName": "5002nd Infrastructure [Adonis-Jarnell]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Adonis",
+		"Location":
+		{
+			"X": 90000,
+			"Y": -54000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Adonis-Jarnell",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5003rd Infrastructure [Jarnell-Dawn]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5003,
+		"Name": "Jarnell-Dawn",
+		"DisplayName": "5003rd Infrastructure [Jarnell-Dawn]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": -30000,
+			"Y": 10000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Jarnell-Dawn",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5004th Infrastructure [Dawn-Jarnell]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5004,
+		"Name": "Dawn-Jarnell",
+		"DisplayName": "5004th Infrastructure [Dawn-Jarnell]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Dawn",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Dawn-Jarnell",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5011th Infrastructure [Borova-Danova]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5011,
+		"Name": "Borova-Danova",
+		"DisplayName": "5011th Infrastructure [Borova-Danova]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Borova",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Borova-Danova",
+				"UnitRegnum": "5011",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5012th Infrastructure [Danova-Borova]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5012,
+		"Name": "Danova-Borova",
+		"DisplayName": "5012th Infrastructure [Danova-Borova]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Danova",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Danova-Borova",
+				"UnitRegnum": "5012",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5013th Infrastructure [Danova-Tulkas]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5013,
+		"Name": "Danova-Tulkas",
+		"DisplayName": "5013th Infrastructure [Danova-Tulkas]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Danova",
+		"Location":
+		{
+			"X": 50000,
+			"Y": -120000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Danova-Tulkas",
+				"UnitRegnum": "5013",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5014th Infrastructure [Tulkas-Danova]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5014,
+		"Name": "Tulkas-Danova",
+		"DisplayName": "5014th Infrastructure [Tulkas-Danova]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Tulkas",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Tulkas-Danova",
+				"UnitRegnum": "5014",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5015th Infrastructure [Borova-Maraner]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5015,
+		"Name": "Borova-Maraner",
+		"DisplayName": "5015th Infrastructure [Borova-Maraner]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Borova",
+		"Location":
+		{
+			"X": -30000,
+			"Y": 110000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Borova-Maraner",
+				"UnitRegnum": "5015",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5016th Infrastructure [Maraner-Borova]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5016,
+		"Name": "Maraner-Borova",
+		"DisplayName": "5016th Infrastructure [Maraner-Borova]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Maraner",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Maraner-Borova",
+				"UnitRegnum": "5016",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2200th Civilian [Vestapol]",
+		"Type": "CIVILIAN",
+		"Id": 2200,
+		"Name": "Vestapol",
+		"DisplayName": "2200th Civilian [Vestapol]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Vestapol",
+		"Location":
+		{
+			"X": -54000,
+			"Y": 30000,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2201st Civilian [Vestapol]",
+		"Type": "CIVILIAN",
+		"Id": 2201,
+		"Name": "Vestapol",
+		"DisplayName": "2201st Civilian [Vestapol]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Vestapol",
+		"Location":
+		{
+			"X": -10000,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Downtown",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "City03",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2202nd Civilian [Vestapol]",
+		"Type": "CIVILIAN",
+		"Id": 2202,
+		"Name": "Vestapol",
+		"DisplayName": "2202nd Civilian [Vestapol]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Vestapol",
+		"Location":
+		{
+			"X": -16000,
+			"Y": 5000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Crosstown",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "City03",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 270
+			}
+		]
+	},
+	{
+		"Row": "2203rd Civilian [Museum District]",
+		"Type": "CIVILIAN",
+		"Id": 2203,
+		"Name": "Museum District",
+		"DisplayName": "2203rd Civilian [Museum District]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Vestapol",
+		"Location":
+		{
+			"X": -10000,
+			"Y": 5000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Museum",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Bldg01",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5021st Infrastructure [Janek-Alystra]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5021,
+		"Name": "Janek-Alystra",
+		"DisplayName": "5021st Infrastructure [Janek-Alystra]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Janek-Alystra",
+				"UnitRegnum": "5021",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5022nd Infrastructure [Alystra-Janek]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5022,
+		"Name": "Alystra-Janek",
+		"DisplayName": "5022nd Infrastructure [Alystra-Janek]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Alystra",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Alystra-Janek",
+				"UnitRegnum": "5022",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5023rd Infrastructure [Alystra-Navara]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5023,
+		"Name": "Alystra-Navara",
+		"DisplayName": "5023rd Infrastructure [Alystra-Navara]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Alystra",
+		"Location":
+		{
+			"X": -50000,
+			"Y": 120000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Alystra-Navara",
+				"UnitRegnum": "5023",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5024th Infrastructure [Navara-Alystra]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 5024,
+		"Name": "Navara-Alystra",
+		"DisplayName": "5024th Infrastructure [Navara-Alystra]",
+		"Intel": "LOCATED",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Navara",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Navara-Alystra",
+				"UnitRegnum": "5024",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8501st Station [Jarnell Transfer Station]",
+		"Type": "STATION",
+		"Id": 8501,
+		"Name": "Jarnell Transfer Station",
+		"DisplayName": "8501st Station [Jarnell Transfer Station]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 150000,
+			"Y": -50000,
+			"Z": 12000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Jarnell Transfer Station",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8502nd Station [Borova Transfer Station]",
+		"Type": "STATION",
+		"Id": 8502,
+		"Name": "Borova Transfer Station",
+		"DisplayName": "8502nd Station [Borova Transfer Station]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Borova",
+		"Location":
+		{
+			"X": 100000,
+			"Y": -50000,
+			"Z": 12000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Borova Transfer Station",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8503rd Station [Athenar Transfer Station]",
+		"Type": "STATION",
+		"Id": 8503,
+		"Name": "Athenar Transfer Station",
+		"DisplayName": "8503rd Station [Athenar Transfer Station]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Athenar",
+		"Location":
+		{
+			"X": 72000,
+			"Y": -46000,
+			"Z": 12000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Athenar Transfer Station",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8504th Station [Paragon Transfer Station]",
+		"Type": "STATION",
+		"Id": 8504,
+		"Name": "Paragon Transfer Station",
+		"DisplayName": "8504th Station [Paragon Transfer Station]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 72000,
+			"Y": -46000,
+			"Z": 12000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Paragon Transfer Station",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8505th Station [Thralis Transfer Station]",
+		"Type": "STATION",
+		"Id": 8505,
+		"Name": "Thralis Transfer Station",
+		"DisplayName": "8505th Station [Thralis Transfer Station]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Thrale",
+		"Location":
+		{
+			"X": 72000,
+			"Y": -46000,
+			"Z": 12000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Thralis Transfer Station",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8506th Station [Janus Transfer Station]",
+		"Type": "STATION",
+		"Id": 8506,
+		"Name": "Janus Transfer Station",
+		"DisplayName": "8506th Station [Janus Transfer Station]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek",
+		"Location":
+		{
+			"X": 125000,
+			"Y": 0,
+			"Z": 12000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Janus Transfer Station",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8521st Station [Janek Orbital Materials Works]",
+		"Type": "STATION",
+		"Id": 8521,
+		"Name": "Janek Orbital Materials Works",
+		"DisplayName": "8521st Station [Janek Orbital Materials Works]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek",
+		"Location":
+		{
+			"X": -56000,
+			"Y": 0,
+			"Z": 10000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Janek Orbital Materials Works",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8522nd Station [Adonis Alloy Works]",
+		"Type": "STATION",
+		"Id": 8522,
+		"Name": "Adonis Alloy Works",
+		"DisplayName": "8522nd Station [Adonis Alloy Works]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Adonis",
+		"Location":
+		{
+			"X": 92000,
+			"Y": -26000,
+			"Z": 16000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Adonis Alloy Works",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8523rd Station [Maraner Materials Refinery]",
+		"Type": "STATION",
+		"Id": 8523,
+		"Name": "Maraner Materials Refinery",
+		"DisplayName": "8523rd Station [Maraner Materials Refinery]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Maraner",
+		"Location":
+		{
+			"X": 90000,
+			"Y": 32000,
+			"Z": -14000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Maraner Materials Refinery",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8524th Station [Pallas Industrial Works]",
+		"Type": "STATION",
+		"Id": 8524,
+		"Name": "Pallas Industrial Works",
+		"DisplayName": "8524th Station [Pallas Industrial Works]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Pallas",
+		"Location":
+		{
+			"X": -87000,
+			"Y": 25000,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Pallas Industrial Works",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8525th Station [Dorrath Metals Works]",
+		"Type": "STATION",
+		"Id": 8525,
+		"Name": "Dorrath Metals Works",
+		"DisplayName": "8525th Station [Dorrath Metals Works]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Dorrath",
+		"Location":
+		{
+			"X": 101000,
+			"Y": -29000,
+			"Z": 20000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Dorrath Metals Works",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8526th Station [Hera Mineral Processing Works]",
+		"Type": "STATION",
+		"Id": 8526,
+		"Name": "Hera Mineral Processing Works",
+		"DisplayName": "8526th Station [Hera Mineral Processing Works]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Hera",
+		"Location":
+		{
+			"X": -96000,
+			"Y": -32000,
+			"Z": 16000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Hera Mineral Processing Works",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8701st Freight [Athenar Civilian Freight]",
+		"Type": "FREIGHT",
+		"Id": 8701,
+		"Name": "Athenar Civilian Freight",
+		"DisplayName": "8701st Freight [Athenar Civilian Freight]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Athenar",
+		"Location":
+		{
+			"X": 125000,
+			"Y": -50000,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Athenar Merchant 1",
+				"UnitRegnum": "8701-1",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Athenar Merchant 2",
+				"UnitRegnum": "8701-2",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8702nd Freight [Borova Civilian Freight]",
+		"Type": "FREIGHT",
+		"Id": 8702,
+		"Name": "Borova Civilian Freight",
+		"DisplayName": "8702nd Freight [Borova Civilian Freight]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Borova",
+		"Location":
+		{
+			"X": 100000,
+			"Y": -100000,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Borova Merchant 1",
+				"UnitRegnum": "8702-1",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Borova Merchant 2",
+				"UnitRegnum": "8702-2",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8703rd Freight [Borova Military Sealift]",
+		"Type": "FREIGHT",
+		"Id": 8703,
+		"Name": "Borova Military Sealift",
+		"DisplayName": "8703rd Freight [Borova Military Sealift]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Borova",
+		"Location":
+		{
+			"X": 100000,
+			"Y": 0,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Borova Fleet 1",
+				"UnitRegnum": "8703-1",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Borova Fleet 2",
+				"UnitRegnum": "8703-2",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1912",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8708th Freight [Janus Civilian Freight]",
+		"Type": "FREIGHT",
+		"Id": 8708,
+		"Name": "Janus Civilian Freight",
+		"DisplayName": "8708th Freight [Janus Civilian Freight]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek",
+		"Location":
+		{
+			"X": 125000,
+			"Y": 50000,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Janus Merchant 1",
+				"UnitRegnum": "8708-1",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Janus Merchant 2",
+				"UnitRegnum": "8708-2",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8709th Freight [Janus Military Sealift]",
+		"Type": "FREIGHT",
+		"Id": 8709,
+		"Name": "Janus Military Sealift",
+		"DisplayName": "8709th Freight [Janus Military Sealift]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek",
+		"Location":
+		{
+			"X": 175000,
+			"Y": 0,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Janus Fleet 1",
+				"UnitRegnum": "8709-1",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Janus Fleet 2",
+				"UnitRegnum": "8709-2",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1912",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8710th Freight [Jarnell Civilian Freight]",
+		"Type": "FREIGHT",
+		"Id": 8710,
+		"Name": "Jarnell Civilian Freight",
+		"DisplayName": "8710th Freight [Jarnell Civilian Freight]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 150000,
+			"Y": -100000,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Jarnell Merchant 1",
+				"UnitRegnum": "8710-1",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Jarnell Merchant 2",
+				"UnitRegnum": "8710-2",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8711th Freight [Jarnell Military Sealift]",
+		"Type": "FREIGHT",
+		"Id": 8711,
+		"Name": "Jarnell Military Sealift",
+		"DisplayName": "8711th Freight [Jarnell Military Sealift]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 150000,
+			"Y": 0,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Jarnell Fleet 1",
+				"UnitRegnum": "8711-1",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Jarnell Fleet 2",
+				"UnitRegnum": "8711-2",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM1912",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8719th Freight [Paragon Civilian Freight]",
+		"Type": "FREIGHT",
+		"Id": 8719,
+		"Name": "Paragon Civilian Freight",
+		"DisplayName": "8719th Freight [Paragon Civilian Freight]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Paragon",
+		"Location":
+		{
+			"X": 125000,
+			"Y": -50000,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Paragon Merchant 1",
+				"UnitRegnum": "8719-1",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Paragon Merchant 2",
+				"UnitRegnum": "8719-2",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8726th Freight [Thralis Civilian Freight]",
+		"Type": "FREIGHT",
+		"Id": 8726,
+		"Name": "Thralis Civilian Freight",
+		"DisplayName": "8726th Freight [Thralis Civilian Freight]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Thrale",
+		"Location":
+		{
+			"X": 125000,
+			"Y": -50000,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Thralis Merchant 1",
+				"UnitRegnum": "8726-1",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Thralis Merchant 2",
+				"UnitRegnum": "8726-2",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8796th Civilian [Janek Civilian Mining]",
+		"Type": "CIVILIAN",
+		"Id": 8796,
+		"Name": "Janek Civilian Mining",
+		"DisplayName": "8796th Civilian [Janek Civilian Mining]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek",
+		"Location":
+		{
+			"X": -36000,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Janek Ore Shuttle",
+				"UnitRegnum": "MSC-7101",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Prospector",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Janek Mining Freighter 1",
+				"UnitRegnum": "MF-7102",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "Rockhopper",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Janek Mining Freighter 2",
+				"UnitRegnum": "MF-7103",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "Rockhopper",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8541st Station [Adonis Orbital Concentrator]",
+		"Type": "STATION",
+		"Id": 8541,
+		"Name": "Adonis Orbital Concentrator",
+		"DisplayName": "8541st Station [Adonis Orbital Concentrator]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Adonis",
+		"Location":
+		{
+			"X": -106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Adonis Orbital Concentrator",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8542nd Station [Maraner Orbital Concentrator]",
+		"Type": "STATION",
+		"Id": 8542,
+		"Name": "Maraner Orbital Concentrator",
+		"DisplayName": "8542nd Station [Maraner Orbital Concentrator]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Maraner",
+		"Location":
+		{
+			"X": -106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Maraner Orbital Concentrator",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8543rd Station [Pallas Orbital Concentrator]",
+		"Type": "STATION",
+		"Id": 8543,
+		"Name": "Pallas Orbital Concentrator",
+		"DisplayName": "8543rd Station [Pallas Orbital Concentrator]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Pallas",
+		"Location":
+		{
+			"X": -106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Pallas Orbital Concentrator",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8544th Station [Dorrath Orbital Concentrator]",
+		"Type": "STATION",
+		"Id": 8544,
+		"Name": "Dorrath Orbital Concentrator",
+		"DisplayName": "8544th Station [Dorrath Orbital Concentrator]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Dorrath",
+		"Location":
+		{
+			"X": -106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Dorrath Orbital Concentrator",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8545th Station [Hera Orbital Concentrator]",
+		"Type": "STATION",
+		"Id": 8545,
+		"Name": "Hera Orbital Concentrator",
+		"DisplayName": "8545th Station [Hera Orbital Concentrator]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Hera",
+		"Location":
+		{
+			"X": -106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Hera Orbital Concentrator",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8546th Station [Dante Orbital Concentrator]",
+		"Type": "STATION",
+		"Id": 8546,
+		"Name": "Dante Orbital Concentrator",
+		"DisplayName": "8546th Station [Dante Orbital Concentrator]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Dante",
+		"Location":
+		{
+			"X": -106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Dante Orbital Concentrator",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8900th Station [Jarnell Fleet Construction Yard]",
+		"Type": "STATION",
+		"Id": 8900,
+		"Name": "Jarnell Fleet Construction Yard",
+		"DisplayName": "8900th Station [Jarnell Fleet Construction Yard]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Jarnell",
+		"Location":
+		{
+			"X": 190000,
+			"Y": 82000,
+			"Z": 34000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Jarnell Fleet Construction Yard",
+				"UnitRegnum": "SY-8900",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Shipyard",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8901st Station [Maraner Aerospace Works]",
+		"Type": "STATION",
+		"Id": 8901,
+		"Name": "Maraner Aerospace Works",
+		"DisplayName": "8901st Station [Maraner Aerospace Works]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Maraner",
+		"Location":
+		{
+			"X": 190000,
+			"Y": 82000,
+			"Z": 34000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Maraner Aerospace Works",
+				"UnitRegnum": "SY-8901",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Shipyard",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8902nd Station [Janek Orbital Shipworks]",
+		"Type": "STATION",
+		"Id": 8902,
+		"Name": "Janek Orbital Shipworks",
+		"DisplayName": "8902nd Station [Janek Orbital Shipworks]",
+		"Intel": "KNOWN",
+		"Iff": 1,
+		"EmpireId": "Terellian",
+		"System": "",
+		"Region": "Janek",
+		"Location":
+		{
+			"X": 190000,
+			"Y": 82000,
+			"Z": 34000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Janek Orbital Shipworks",
+				"UnitRegnum": "SY-8902",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Shipyard",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	}
+]

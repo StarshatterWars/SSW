@@ -12,8 +12,8 @@
 void UMissionObjectivesDlg::SetMissionBriefing(const Mission& Mission,FText InTitle,FText Agent,FText Status,
     FSimpleDelegate OnAccept,FSimpleDelegate OnDecline,FSimpleDelegate OnClose)
 {
-    const FText BriefingText = FText::Format(INVTEXT("AGENT: {0}\nSTATUS: {1}\n\n{2}"),
-        Agent,Status,FText::FromString(MissionBriefingContent::Build(Mission)));
+    SetAssignmentMetadata(Agent,Status,FText::GetEmpty());
+    const FText BriefingText=FText::FromString(MissionBriefingContent::Build(Mission));
     if(auto* PC=GetOwningPlayer())
     {
         Rehearsal=CreateWidget<UShipBriefingPreview>(PC);

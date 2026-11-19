@@ -1,16 +1,100 @@
 {
   "entries": [
     {
-      "category": "Next build - awaiting cook and package",
+      "category": "Latest install build",
+      "title": "Build 20261119-180552Z ready to install",
+      "date": "2026-11-19",
+      "body": "Capital-ship order fix, miniHUD damage icons with hover zoom, outlined pulsing waypoints, native economy and traffic, safer saves, independent agent work and rank/medal credit bonuses. Includes the existing local StarServer package."
+    },
+    {
+      "category": "Release notes",
+      "title": "Outlined, pulsing waypoints",
+      "date": "2026-11-19",
+      "body": "Waypoints now have fine illuminated facet edges and a gentle brightness pulse. Both the in-space marker and target-MFD preview rotate upright. Pulse speed stays steady during accelerated travel."
+    },
+    {
+      "category": "Release notes",
+      "title": "Promotion and medal payments",
+      "date": "2026-11-19",
+      "body": "Newly earned ranks and medals grant configurable credit bonuses, recorded once in the pilot wallet. Reloading or replaying cannot pay the same award twice."
+    },
+    {
+      "category": "Release notes",
+      "title": "Independent agent work",
+      "date": "2026-11-19",
+      "body": "Agents can offer paid independent work based on their role, your rank and usable craft in your hangar. Generated offers persist with the pilot. The survey acceptance, save, restart and completion flow has automated coverage."
+    },
+    {
+      "category": "Release notes",
+      "title": "NPC patrols, freight recovery and saves",
+      "date": "2026-11-19",
+      "body": "Free flight gains regional friendly, neutral and hostile fighter patrols. Blocked freight can seek another buyer while protecting reserved cargo and payments. Save tests cover interrupted checkpoints, exit during autosave and native mission-state restoration."
+    },
+    {
+      "category": "Release notes",
+      "title": "Legacy form cleanup",
+      "date": "2026-11-19",
+      "body": "Removed the obsolete FRM form files and their parser calls from panel initialization. Current panels continue to use their Unreal widgets."
+    },
+    {
+      "category": "Release notes",
+      "title": "Offline regression checks",
+      "date": "2026-11-19",
+      "body": "The editor build compiled successfully. The full offline suite passed 301 checks with no failures, followed by four passing checks for the final MFD and waypoint adjustments. This package is ready for hands-on flight testing."
+    },
+    {
+      "category": "Release notes",
+      "title": "Reliable capital-ship orders",
+      "date": "2026-11-19",
+      "body": "Fixed uninitialized radio orders that could make capital ships hold position or follow an unintended travel command. New instructions start without an order, while copied instructions retain deliberate orders. All 13 AI checks passed."
+    },
+    {
+      "category": "Release notes",
+      "title": "Compact flight instruments and damage inspection",
+      "date": "2026-11-19",
+      "body": "The left information view stays fixed, with native system icons, wider gauges and aligned values. The miniHUD ship model carries live component damage icons and opens an enlarged inspection view on hover. Scrolling there magnifies the inspection rather than zooming the flight camera. The existing caution panel remains available."
+    },
+    {
+      "category": "Release notes",
+      "title": "Faction OOB JSON ingestion",
+      "date": "2026-11-19",
+      "body": "All eight faction orders of battle now have editable JSON catalogs. Conversion preserved 644 groups and 967 nested unit rows, exact row names, enums, counts and coordinates. The current runtime still uses DT_CombatGroup as a verified transition step."
+    },
+    {
+      "category": "Release notes",
+      "title": "Native economy and NPC trade",
+      "date": "2026-11-19",
+      "body": "Mining, hauling and production continue in unloaded systems while SSW is open. Finite deposits, real pickup reservations, cargo holds and unload completion prevent early or duplicate delivery credit. Separate NPC businesses have budgets, buy/sell quotes, payment escrow, executed trade history and recovery when destinations close."
+    },
+    {
+      "category": "Release notes",
+      "title": "Industry and shipyards",
+      "date": "2026-11-19",
+      "body": "Production facilities and recipes now load directly into native catalogs. Seven selected worlds host shipyards using the transfer-station hull as a placeholder. Six hull recipes connect material stock to completed ships, rank/empire/skill eligibility, wallet payment and hangar delivery. Shipyard hull stock cannot become fractional freighter cargo."
+    },
+    {
+      "category": "Release notes",
+      "title": "Local saves and timed skills",
+      "date": "2026-11-19",
+      "body": "Five-minute sequential checkpoints preserve pilot, economy, skills and universe data as matching generations, with normal-exit saves and fallback to the previous complete checkpoint. Skills use UTC end times, individual level queue entries, standard levels I–V and advanced books for VI–X."
+    },
+    {
+      "category": "Release notes",
+      "title": "Orbits and flight effects",
+      "date": "2026-11-19",
+      "body": "Native planet and moon paths use eccentricity, inclination and Kepler motion, with conservative body and moon-envelope clearance. Perspective maps sample these paths. Cannon bolts use brighter native Niagara effects. Waypoint markers turn upright about the vertical axis."
+    },
+    {
+      "category": "Release notes",
+      "title": "Regression fixes and current limits",
+      "date": "2026-11-19",
+      "body": "Added the shipyard Blueprint and refreshed ship designs. Fixed a freight inventory pointer lifetime and uninitialized radio orders. Offline regressions now include native patrols, alternative freight buyers, save recovery, paid awards and waypoint rendering. Multiplayer and Mod Editor remain disabled; FractalVerse authority and the remaining catalog migrations are future work."
+    },
+    {
+      "category": "Release notes",
       "title": "Intel replay stability and clearer record details",
       "date": "2026-11-19",
       "body": "Fixed a garbage-collection lifetime issue in Intel replay controls and cleaned up nested mission previews. List details now use compact headers, status badges, labelled facts and separate information sections across production, market, contract, skill, blueprint, agent, wallet, cargo and contact panels. Live replay and narrow/wide rendering checks passed."
-    },
-    {
-      "category": "Latest install build",
-      "title": "Build 20261119-093150Z ready to install",
-      "date": "2026-11-19",
-      "body": "This build adds system-first agent selection with Same System, One Jump and Empire-wide filters. Only neutral and own-empire agents appear. The training intro uses current plumes and confirmed carrier docking. Includes local StarServer and previous mining, production, station services and direct JSON updates."
     },
     {
       "category": "Release notes",
@@ -52,7 +136,7 @@
       "category": "Release notes",
       "title": "Build status",
       "date": "2026-11-19",
-      "body": "The cooked Windows build is packaged with the local StarServer. Its signed manifest and ZIP are ready for installation. All 17 selected agent, catalog, recovery and AI parity checks passed. The new intro recording confirms shuttle recovery onto Archon. StarServer multiplayer testing and cinematic polish remain deferred."
+      "body": "The packaged Windows client and existing local StarServer are ready to install. Compilation, 301 offline regression checks and four follow-up MFD/waypoint checks passed. Multiplayer server testing remains deferred."
     },
     {
       "category": "Patch notes",

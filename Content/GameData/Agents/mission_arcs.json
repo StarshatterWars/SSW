@@ -12,7 +12,11 @@
         "Issuer": "Cmdr. Tomas Hale",
         "System": "Janus",
         "Region": "Janek",
-        "Brief": "Map the patrol corridor and identify threats to civilian traffic."
+        "Brief": "Map the patrol corridor and identify threats to civilian traffic.",
+        "Chapter": "Chapter 1",
+        "NextMissionIds": [
+          910015
+        ]
       },
       {
         "MissionId": 910015,
@@ -21,7 +25,11 @@
         "Issuer": "Lt. Anika Merrow",
         "System": "Janus",
         "Region": "Janek",
-        "Brief": "Escort the convoy through the corridor secured by the preceding patrol."
+        "Brief": "Escort the convoy through the corridor secured by the preceding patrol.",
+        "Chapter": "Chapter 2",
+        "NextMissionIds": [
+          910016
+        ]
       },
       {
         "MissionId": 910016,
@@ -30,7 +38,9 @@
         "Issuer": "Liaison Elian Corv",
         "System": "Janus",
         "Region": "Janek",
-        "Brief": "Intercept the raider group identified during the convoy attack."
+        "Brief": "Intercept the raider group identified during the convoy attack.",
+        "Chapter": "Chapter 3",
+        "NextMissionIds": []
       }
     ]
   },
@@ -47,7 +57,11 @@
         "Issuer": "Lt. Soren Calis",
         "System": "Jarnell",
         "Region": "Jarnell",
-        "Brief": "Keep the convoy intact and report the hostile approach vector."
+        "Brief": "Keep the convoy intact and report the hostile approach vector.",
+        "Chapter": "Chapter 1",
+        "NextMissionIds": [
+          910019
+        ]
       },
       {
         "MissionId": 910019,
@@ -56,7 +70,9 @@
         "Issuer": "Envoy Rhea Voss",
         "System": "Jarnell",
         "Region": "Jarnell",
-        "Brief": "Use the convoy report to intercept the raiders before their next attack."
+        "Brief": "Use the convoy report to intercept the raiders before their next attack.",
+        "Chapter": "Chapter 2",
+        "NextMissionIds": []
       }
     ]
   },
@@ -73,7 +89,11 @@
         "Issuer": "Cmdr. Varek Dorr",
         "System": "Marak",
         "Region": "Marak",
-        "Brief": "Establish a patrol picture around Marak and report unauthorized ships."
+        "Brief": "Establish a patrol picture around Marak and report unauthorized ships.",
+        "Chapter": "Chapter 1",
+        "NextMissionIds": [
+          910034
+        ]
       },
       {
         "MissionId": 910034,
@@ -82,7 +102,9 @@
         "Issuer": "Lt. Karesh Tol",
         "System": "Marak",
         "Region": "Marak",
-        "Brief": "Intercept the hostile force identified by the patrol."
+        "Brief": "Intercept the hostile force identified by the patrol.",
+        "Chapter": "Chapter 2",
+        "NextMissionIds": []
       }
     ]
   },
@@ -99,7 +121,11 @@
         "Issuer": "Lt. Iven Karr",
         "System": "Loris",
         "Region": "Loris",
-        "Brief": "Patrol the border lanes and confirm the intrusion."
+        "Brief": "Patrol the border lanes and confirm the intrusion.",
+        "Chapter": "Chapter 1",
+        "NextMissionIds": [
+          910037
+        ]
       },
       {
         "MissionId": 910037,
@@ -108,7 +134,9 @@
         "Issuer": "Capt. Terek Maal",
         "System": "Loris",
         "Region": "Loris",
-        "Brief": "Respond to the patrol report and intercept the intruding force."
+        "Brief": "Respond to the patrol report and intercept the intruding force.",
+        "Chapter": "Chapter 2",
+        "NextMissionIds": []
       }
     ]
   },
@@ -125,7 +153,11 @@
         "Issuer": "Capt. Iona Tres",
         "System": "Haiche",
         "Region": "Haiche",
-        "Brief": "Escort the threatened freighters and collect the attack report."
+        "Brief": "Escort the threatened freighters and collect the attack report.",
+        "Chapter": "Chapter 1",
+        "NextMissionIds": [
+          910031
+        ]
       },
       {
         "MissionId": 910031,
@@ -134,7 +166,9 @@
         "Issuer": "Envoy Oren Sal",
         "System": "Haiche",
         "Region": "Haiche",
-        "Brief": "Intercept the force exposed by the convoy encounter."
+        "Brief": "Intercept the force exposed by the convoy encounter.",
+        "Chapter": "Chapter 2",
+        "NextMissionIds": []
       }
     ]
   },
@@ -151,7 +185,11 @@
         "Issuer": "Lt. Lysa Corin",
         "System": "Silessia",
         "Region": "Silessia",
-        "Brief": "Patrol the trade approaches and clear the route for the next convoy."
+        "Brief": "Patrol the trade approaches and clear the route for the next convoy.",
+        "Chapter": "Chapter 1",
+        "NextMissionIds": [
+          910033
+        ]
       },
       {
         "MissionId": 910033,
@@ -160,7 +198,9 @@
         "Issuer": "Envoy Perin Das",
         "System": "Silessia",
         "Region": "Silessia",
-        "Brief": "Escort the convoy through the surveyed trade corridor."
+        "Brief": "Escort the convoy through the surveyed trade corridor.",
+        "Chapter": "Chapter 2",
+        "NextMissionIds": []
       }
     ]
   }

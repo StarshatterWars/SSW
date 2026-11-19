@@ -17,7 +17,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Adonis_Alloy_Works",
@@ -39,7 +40,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Maraner_Orbital_Concentrator",
@@ -59,7 +61,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Maraner_Materials_Refinery",
@@ -81,7 +84,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Pallas_Orbital_Concentrator",
@@ -101,7 +105,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Pallas_Industrial_Works",
@@ -123,7 +128,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Dorrath_Orbital_Concentrator",
@@ -143,7 +149,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Dorrath_Metals_Works",
@@ -165,7 +172,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Hera_Orbital_Concentrator",
@@ -185,7 +193,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Hera_Mineral_Processing_Works",
@@ -207,7 +216,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Dante_Orbital_Concentrator",
@@ -227,7 +237,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Janek_Orbital_Materials_Works",
@@ -247,7 +258,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Jalah_Orbital_Concentrator",
@@ -267,7 +279,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Kalon_Orbital_Concentrator",
@@ -287,7 +300,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Kalon_Materials_Works",
@@ -309,7 +323,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Prosenar_Orbital_Concentrator",
@@ -329,7 +344,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Silessia_Orbital_Concentrator",
@@ -349,7 +365,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Silessia_Materials_Works",
@@ -371,7 +388,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Tal_Amin_Orbital_Concentrator",
@@ -391,7 +409,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Tal_Amin_Materials_Works",
@@ -413,7 +432,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Renser_Orbital_Concentrator",
@@ -433,7 +453,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Renser_Materials_Works",
@@ -455,7 +476,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Loris_Orbital_Concentrator",
@@ -475,7 +497,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Loris_Materials_Works",
@@ -497,7 +520,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Aram_Orbital_Concentrator",
@@ -517,7 +541,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Aram_Materials_Works",
@@ -539,7 +564,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Kolchev_Orbital_Concentrator",
@@ -559,7 +585,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Kolchev_Materials_Works",
@@ -581,7 +608,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Adantar_Orbital_Concentrator",
@@ -601,7 +629,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Adantar_Materials_Works",
@@ -623,7 +652,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Tarsus_Orbital_Concentrator",
@@ -643,7 +673,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Tarsus_Materials_Works",
@@ -665,7 +696,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Sintar_Orbital_Concentrator",
@@ -685,7 +717,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Nergal_Orbital_Concentrator",
@@ -705,7 +738,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Nergal_Materials_Works",
@@ -727,7 +761,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Radix_Orbital_Concentrator",
@@ -747,7 +782,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Radix_Materials_Works",
@@ -769,7 +805,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Ramek_Orbital_Concentrator",
@@ -789,7 +826,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Ramek_Materials_Works",
@@ -811,7 +849,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Marak_Orbital_Concentrator",
@@ -831,7 +870,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Marak_Materials_Works",
@@ -853,7 +893,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Garrison_Orbital_Concentrator",
@@ -873,7 +914,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Garrison_Materials_Works",
@@ -895,7 +937,8 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
   },
   {
     "Name": "Volante_Orbital_Concentrator",
@@ -915,7 +958,8 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": []
+    "AdditionalRecipes": [],
+    "FacilityType": "Refinery"
   },
   {
     "Name": "Volante_Materials_Works",
@@ -937,6 +981,154 @@
     "PlayerTimeMultiplier": 0.95,
     "InstallationFeeCredits": 100,
     "PerRunFeeCredits": 5,
-    "MaximumPlayerRuns": 1000
+    "MaximumPlayerRuns": 1000,
+    "FacilityType": "Factory"
+  },
+  {
+    "Name": "Jarnell_Fleet_Construction_Yard",
+    "Facility": "Jarnell Fleet Construction Yard",
+    "System": "Jarnell",
+    "Planet": "Jarnell",
+    "Region": "Jarnell",
+    "Empire": "Terellian Alliance",
+    "bSurface": false,
+    "Recipe": "Build_Falcon",
+    "CapacityTonnes": 2000000,
+    "Image": "Production",
+    "ServiceProfile": "Shipyard",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": [],
+    "FacilityType": "Shipyard"
+  },
+  {
+    "Name": "Maraner_Aerospace_Works",
+    "Facility": "Maraner Aerospace Works",
+    "System": "Borova",
+    "Planet": "Maraner",
+    "Region": "Maraner",
+    "Empire": "Terellian Alliance",
+    "bSurface": false,
+    "Recipe": "Build_Stormhawk",
+    "CapacityTonnes": 2000000,
+    "Image": "Production",
+    "ServiceProfile": "Shipyard",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": [],
+    "FacilityType": "Shipyard"
+  },
+  {
+    "Name": "Janek_Orbital_Shipworks",
+    "Facility": "Janek Orbital Shipworks",
+    "System": "Janus",
+    "Planet": "Janek",
+    "Region": "Janek",
+    "Empire": "Terellian Alliance",
+    "bSurface": false,
+    "Recipe": "Build_Prospector",
+    "CapacityTonnes": 2000000,
+    "Image": "Production",
+    "ServiceProfile": "Shipyard",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": [],
+    "FacilityType": "Shipyard"
+  },
+  {
+    "Name": "Imperial_Marak_Naval_Yard",
+    "Facility": "Imperial Marak Naval Yard",
+    "System": "Marak",
+    "Planet": "Marak",
+    "Region": "Marak",
+    "Empire": "Marakan Hegemony",
+    "bSurface": false,
+    "Recipe": "Build_Raptor",
+    "CapacityTonnes": 2000000,
+    "Image": "Production",
+    "ServiceProfile": "Shipyard",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": [],
+    "FacilityType": "Shipyard"
+  },
+  {
+    "Name": "Adantar_Strikecraft_Yard",
+    "Facility": "Adantar Strikecraft Yard",
+    "System": "Korius",
+    "Planet": "Adantar",
+    "Region": "Adantar",
+    "Empire": "Marakan Hegemony",
+    "bSurface": false,
+    "Recipe": "Build_Viper",
+    "CapacityTonnes": 2000000,
+    "Image": "Production",
+    "ServiceProfile": "Shipyard",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": [],
+    "FacilityType": "Shipyard"
+  },
+  {
+    "Name": "Renser_Ship_Assembly_Works",
+    "Facility": "Renser Ship Assembly Works",
+    "System": "Renser",
+    "Planet": "Renser",
+    "Region": "Renser",
+    "Empire": "Marakan Hegemony",
+    "bSurface": false,
+    "Recipe": "Build_Raptor",
+    "CapacityTonnes": 2000000,
+    "Image": "Production",
+    "ServiceProfile": "Shipyard",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": [],
+    "FacilityType": "Shipyard"
+  },
+  {
+    "Name": "Jalah_Heavy_Shipworks",
+    "Facility": "Jalah Heavy Shipworks",
+    "System": "Solus",
+    "Planet": "Jalah",
+    "Region": "Jalah",
+    "Empire": "Dantari Separatists",
+    "bSurface": false,
+    "Recipe": "Build_Goliath",
+    "CapacityTonnes": 2000000,
+    "Image": "Production",
+    "ServiceProfile": "Shipyard",
+    "bPlayerManufacturing": true,
+    "PlayerMaterialMultiplier": 1.0,
+    "PlayerTimeMultiplier": 1.0,
+    "InstallationFeeCredits": 25,
+    "PerRunFeeCredits": 2,
+    "MaximumPlayerRuns": 10000,
+    "AdditionalRecipes": [],
+    "FacilityType": "Shipyard"
   }
 ]

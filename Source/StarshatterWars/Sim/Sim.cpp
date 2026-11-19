@@ -1,4 +1,4 @@
-﻿/*  Project Starshatter Wars
+/*  Project Starshatter Wars
 	Fractal Dev Studios
 	Copyright (C) 2025-2026. All Rights Reserved.
 
@@ -13,6 +13,8 @@
 */
 
 #include "Sim.h"
+#include "ProductionCatalog.h"
+#include "LocalGameStateSubsystem.h"
 #include "SplashDamageRules.h"
 #include "RadioView.h"
 #include "PlayerFlightAccess.h"
@@ -23,6 +25,7 @@
 #include "StarshatterPlayerSubsystem.h"
 #include "CargoCatalogSubsystem.h"
 #include "EconomyRuntime.h"
+#include "EconomyAI.h"
 #include "Misc/ScopeExit.h"
 #include "BiddingAI.h"
 #include "SettlementAI.h"
@@ -522,6 +525,7 @@ void Sim::UnloadMission()
             if (auto* Instance = Cast<USSWGameInstance>(Runtime->GetGameInstance()))
                 Instance->GetTrainingAgent().Interrupt(AssignedAgentPilot, AssignedAgentMissionId);
     }
+    if(auto* Runtime=GetSSWRuntimeSubsystem())if(auto* Instance=Runtime->GetGameInstance())if(auto* State=Instance->GetSubsystem<ULocalGameStateSubsystem>())State->CaptureBeforeMissionUnload();
     AssignedAgentPilot = NAME_None;
     AssignedAgentMissionId = INDEX_NONE;
     bPlayerDocked = false;
@@ -842,11 +846,11 @@ Sim::ExecMission()
         if (!Region || !Region->IsOrbital()) continue;
         for (const FS_CombatGroup* Group : CombatGroupRegistry::FindByRegion(UTF8_TO_TCHAR(Region->GetName())))
         {
-            if (!Group || !Ship::IsTransferStationName(Group->Name)) continue;
+            if (!Group) continue;
             const FString& Name = Group->Name;
             const auto* Unit = Group->Unit.FindByPredicate([](const FS_CombatGroupUnit& Entry)
             {
-                return Entry.UnitDesign.Equals(TEXT("Station1"), ESearchCase::IgnoreCase);
+                return Entry.UnitDesign.StartsWith(TEXT("Station"),ESearchCase::IgnoreCase) || Entry.UnitDesign.Equals(TEXT("Processing Facility"),ESearchCase::IgnoreCase) || Entry.UnitDesign.Equals(TEXT("Shipyard"),ESearchCase::IgnoreCase);
             });
             if (!Unit) continue;
             const auto StationName = StringCast<ANSICHAR>(*Name);
@@ -983,6 +987,10 @@ Sim::ExecMission()
                         }
                     }
                 }
+
+    if(auto* Runtime=GetSSWRuntimeSubsystem())if(auto* Instance=Runtime->GetGameInstance())if(auto* State=Instance->GetSubsystem<ULocalGameStateSubsystem>())
+        if(State->RestoreWorld(*this) && GetPlayerShip() && GetPlayerShip()->GetFlightPhase()>EOPSMode::ALERT)
+        {PendingLaunchPlayer=nullptr;DeferredLaunchPlayer=nullptr;bPlayerLaunchRequested=true;}
 
 	UE_LOG(LogTemp, Warning,
 		TEXT("[Sim::ExecMission] COMPLETE Mission='%hs' Regions=%d Elements=%d"),
@@ -2965,21 +2973,8 @@ void Sim::TickLegacyJanusActors(double DeltaSeconds)
         if (Refinery && Refinery->Design())
         {
             RefineryCapacity = Refinery->Design()->CargoCapacity.Tonnes;
-            static TWeakObjectPtr<UDataTable> Facilities;
-            if (!Facilities.IsValid())
-                Facilities = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionFacilities.DT_ProductionFacilities"));
-            if (Facilities.IsValid())
-            {
-                const auto* Facility = Facilities->FindRow<FSSWProductionFacility>(
-                    TEXT("Janek_Orbital_Materials_Works"), TEXT("Janus industry"), false);
-                if (Facility && Facility->CapacityTonnes > 0)
-                    RefineryCapacity = Facility->CapacityTonnes;
-            }
-            static TWeakObjectPtr<UDataTable> Recipes;
-            if (!Recipes.IsValid())
-                Recipes = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionRecipes.DT_ProductionRecipes"));
-            if (Recipes.IsValid())
-                Recipe = Recipes->FindRow<FSSWProductionRecipe>(Refinery->Design()->ProductionRecipe, TEXT("Janus industry"), false);
+            if(const auto* Facility=SSWProductionCatalog::Facilities().Find(TEXT("Janek_Orbital_Materials_Works"));Facility && Facility->CapacityTonnes>0)RefineryCapacity=Facility->CapacityTonnes;
+            Recipe=SSWProductionCatalog::Recipes().Find(Refinery->Design()->ProductionRecipe);
         }
         auto& Economy = GetEconomy();
         const FName DepotInventory = FEconomyRuntime::Warehouse(TEXT("Janus"), TEXT("Janek Mining Station"), TEXT("Ore"));
@@ -3280,33 +3275,18 @@ void Sim::TickIndustrialActors(double Seconds)
             }
         }
     }
-    IndustrySeconds += Seconds;
-    if (IndustrySeconds < 0.25) return;
-    const double Step = IndustrySeconds; IndustrySeconds = 0;
-    if (!TrainingContracts.IsEmpty()) GetTrainingContracts();
-    static TWeakObjectPtr<UDataTable> Facilities, Recipes;
-    if (!Facilities.IsValid()) Facilities = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionFacilities.DT_ProductionFacilities"));
-    if (!Recipes.IsValid()) Recipes = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionRecipes.DT_ProductionRecipes"));
-    if (!Facilities.IsValid() || !Recipes.IsValid()) return;
-    auto& Economy = GetEconomy();
+    IndustrySeconds+=Seconds;if(IndustrySeconds<.25)return;IndustrySeconds=0;
+    // Native galaxy economy advances jobs independently of scene visibility.
+    // This adapter only provides loaded-facility status and panel views.
     ProductionViews.Reset();
-    for (const auto& Row : Facilities->GetRowMap())
+    auto& Economy=GetEconomy();
+    for(const auto& Row:SSWProductionCatalog::Facilities())
     {
-        const auto& Facility = *reinterpret_cast<const FSSWProductionFacility*>(Row.Value);
-        Ship* Station = FindShip(TCHAR_TO_UTF8(*Facility.Facility), TCHAR_TO_UTF8(*Facility.Region));
-        if (!Station || !Station->Design() || !Station->GetRegion() || !Station->GetRegion()->GetSystem() ||
-            !Facility.System.Equals(UTF8_TO_TCHAR(Station->GetRegion()->GetSystem()->GetName()), ESearchCase::IgnoreCase)) continue;
-        const auto* Recipe = Recipes->FindRow<FSSWProductionRecipe>(Facility.Recipe, TEXT("Live industry"), false);
-        if (!Recipe) continue;
-        const double Capacity = Facility.CapacityTonnes > 0 ? Facility.CapacityTonnes : Station->Design()->CargoCapacity.Tonnes;
-        const FName Input = FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("Input"));
-        const FName Output = FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("Output"));
-        FEconomyRuntime::EnsureWarehouse(Economy, Input, FName(*Facility.System), Capacity);
-        FEconomyRuntime::EnsureWarehouse(Economy, Output, FName(*Facility.System), Capacity, true);
-        ManufacturingAI::AdvanceLive(Economy, FName(*Facility.Facility), Input, Output, Facility.Recipe, *Recipe,
-            !Station->IsDead() && !Station->IsDying(), Step);
-        ProductionViews.Add(FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("View")),
-            ManufacturingAI::Describe(Economy, FName(*Facility.Facility), Input, Output));
+        const auto& Site=Row.Value;
+        if(auto* Station=FindShip(TCHAR_TO_UTF8(*Site.Facility),TCHAR_TO_UTF8(*Site.Region)))
+        {if(Station->IsDead() || Station->IsDying())Economy.OfflineFacilities.Add(Row.Key);}
+        const FName Input=FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("Input")),Output=FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("Output"));
+        ProductionViews.Add(FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("View")),ManufacturingAI::Describe(Economy,FName(*Site.Facility),Input,Output));
     }
 }
 
@@ -3315,10 +3295,6 @@ Sim::ExecFrame(double DeltaSeconds)
 {
     if (PreparedSceneGate.Blocks(mission)) return;
     if (!HasSimulationAuthority()) return;
-    if (auto* World = NetworkWorld.Get())
-        if (auto* Instance = World->GetGameInstance())
-            if (auto* Catalog = Instance->GetSubsystem<UCargoCatalogSubsystem>())
-                FEconomyRuntime::InitializeMarkets(GetEconomy(), *Catalog);
     UE_LOG(LogTemp, VeryVerbose,
 		TEXT("[Sim::ExecFrame] Seconds=%.4f GameTime=%u Regions=%d"),
 		DeltaSeconds,

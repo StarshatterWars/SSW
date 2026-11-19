@@ -35,7 +35,7 @@ public:
 	// Config
 	// ------------------------
 	UPROPERTY()
-	EAutosavePolicy AutosavePolicy = EAutosavePolicy::EveryMinute;
+	EAutosavePolicy AutosavePolicy = EAutosavePolicy::Every5Minutes;
 
 	UPROPERTY()
 	int32 UserIndex = 0;

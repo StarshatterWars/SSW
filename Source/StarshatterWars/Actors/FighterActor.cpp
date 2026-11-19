@@ -59,8 +59,8 @@ void AFighterActor::InitializeNativeFighterAttachments(const TCHAR* CockpitModel
 {
     AuthoredCockpitModel = CockpitModel;
     AuthoredCockpitScale = CockpitScale;
-    ConfigureCockpitBlueprint();
     FighterCockpitRoot->SetRelativeLocation(CockpitPosition);
+    ConfigureCockpitBlueprint();
     GearDefinitions = Definitions;
     for (int32 Index = 0; Index < Definitions.Num(); ++Index)
     {
@@ -172,7 +172,7 @@ void AFighterActor::ConfigureCockpitBlueprint()
     // Legacy loads hull and cockpit models at independent DEF scales. The
     // cockpit inherits the hull's scale here, so compensate once at its mount.
     const ShipDesign* Design = Runtime ? Runtime->Design() : nullptr;
-    if (FighterCockpitRoot)
+    if (FighterCockpitRoot && !bUseAuthoredCockpitMount)
     {
         // DEF bridge axes are lateral, forward, up; model-local UE axes are forward, lateral, up.
         const FVector Bridge = Design && Design->scale > SMALL_NUMBER
@@ -186,8 +186,13 @@ void AFighterActor::ConfigureCockpitBlueprint()
             ? FVector(-0.287, 0.015, 0.438) : FVector::ZeroVector;
         CockpitComponent->SetRelativeLocation(FalconCockpitVisualOffset + ImportCorrection);
     }
-    const float HullScale = Design ? Design->scale : 0.27f;
-    const float CockpitScale = Design ? Design->cockpit_scale : 0.02f;
+    if(bUseAuthoredCockpitMount)
+    {
+        if(Design && Design->scale>SMALL_NUMBER)FighterCockpitRoot->SetRelativeLocation(FVector(Design->bridge_vec.Y,Design->bridge_vec.X,Design->bridge_vec.Z)/Design->scale);
+        CockpitComponent->SetRelativeLocation(FVector::ZeroVector);
+    }
+    const float HullScale = Design ? Design->scale : GetActorScale3D().X;
+    const float CockpitScale = bUseAuthoredCockpitMount?AuthoredCockpitScale:(Design ? Design->cockpit_scale : 0.02f);
     if (FMath::IsFinite(HullScale) && FMath::IsFinite(CockpitScale)
         && HullScale > SMALL_NUMBER && CockpitScale > 0.f)
         CockpitComponent->SetRelativeScale3D(FVector(CockpitScale / HullScale));

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "CoreMinimal.h"
 #include "GameStructs_contractstate.h"
 #include "MiningCrystalTypes.h"
@@ -34,7 +34,16 @@ struct FEconomyInventory
     UPROPERTY(SaveGame) FGuid Id;
     UPROPERTY(SaveGame) FName Owner;
     UPROPERTY(SaveGame) FName System;
+    // Owner is the trusted inventory custodian; TradingOwner owns the NPC business budget.
+    UPROPERTY(SaveGame) FName TradingOwner;
+    UPROPERTY(SaveGame) TMap<FName,int64> AskPrices;
+    UPROPERTY(SaveGame) TMap<FName,int64> BidPrices;
+    UPROPERTY(SaveGame) TSet<FName> WholeUnitItems;
+    UPROPERTY(SaveGame) bool bOperational=true;
     UPROPERTY(SaveGame) bool bMarket = false;
+    UPROPERTY(SaveGame) bool bSupplyOnly = false;
+    UPROPERTY(SaveGame) bool bHullStorage = false;
+    UPROPERTY(SaveGame) TMap<FName,double> DesiredStock;
     UPROPERTY(SaveGame) double CapacityTonnes = 0;
     UPROPERTY(SaveGame) double ReservedOutputTonnes = 0;
     UPROPERTY(SaveGame) TArray<FEconomyItem> Items;
@@ -115,7 +124,7 @@ struct FMarketOrder
     UPROPERTY(SaveGame) int64 Sequence = 0;
 };
 UENUM()
-enum class EWalletTransactionCategory : uint8 { General, Market, Escrow, Manufacturing, Insurance, Shipyard, Skill, Blueprint, Contract, OpeningBalance };
+enum class EWalletTransactionCategory : uint8 { General, Market, Escrow, Manufacturing, Insurance, Shipyard, Skill, Blueprint, Contract, OpeningBalance, MissionReward };
 
 USTRUCT()
 struct FEconomyTransaction
@@ -143,6 +152,31 @@ struct FEconomyTransaction
     UPROPERTY(SaveGame) FGuid Reference;
 };
 USTRUCT()
+struct FRegionalPriceSample
+{
+    GENERATED_BODY()
+    UPROPERTY(SaveGame) int64 TimestampUtc=0;
+    UPROPERTY(SaveGame) double Price=0;
+    UPROPERTY(SaveGame) double Supply=0;
+    UPROPERTY(SaveGame) double Demand=0;
+    UPROPERTY(SaveGame) double TradeVolume=0;
+    UPROPERTY(SaveGame) double TradeValue=0;
+    UPROPERTY(SaveGame) int32 TradeCount=0;
+};
+USTRUCT()
+struct FRegionalMarketHistory
+{
+    GENERATED_BODY()
+    UPROPERTY(SaveGame) FName System;
+    UPROPERTY(SaveGame) FName Item;
+    UPROPERTY(SaveGame) double InitialSupply=0;
+    UPROPERTY(SaveGame) double ConsumptionRemainder=0;
+    UPROPERTY(SaveGame) double PendingTradeVolume=0;
+    UPROPERTY(SaveGame) double PendingTradeValue=0;
+    UPROPERTY(SaveGame) int32 PendingTradeCount=0;
+    UPROPERTY(SaveGame) TArray<FRegionalPriceSample> Samples;
+};
+USTRUCT()
 struct FEconomyState
 {
     GENERATED_BODY()
@@ -162,6 +196,12 @@ struct FEconomyState
     UPROPERTY(SaveGame) int64 NextMarketSequence = 0;
     UPROPERTY(SaveGame) TMap<FName, FMiningCrystalEquipment> MiningOptics;
     UPROPERTY(SaveGame) TMap<FName, FMiningDroneFleetState> MiningDrones;
+    UPROPERTY(SaveGame) TMap<FName,FRegionalMarketHistory> RegionalMarkets;
+    UPROPERTY(SaveGame) double EconomyStepSeconds=0;
+    UPROPERTY(SaveGame) double EconomyClockSeconds=0;
+    UPROPERTY(SaveGame) double NPCIncomeSeconds=0;
+    UPROPERTY(SaveGame) TMap<FName,double> BackgroundOreRemaining;
+    UPROPERTY(SaveGame) TSet<FName> OfflineFacilities;
     UPROPERTY(SaveGame) bool bLegacyWalletMigrated = false;
 };
 

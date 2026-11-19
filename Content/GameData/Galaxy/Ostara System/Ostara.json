@@ -3,7 +3,7 @@
   "sky": {
     "nebula": "Nebula-Ostara.mag",
     "poly_stars": "stars.mag",
-	"haze": ""
+    "haze": ""
   },
   "stars": 500,
   "dust": 300,
@@ -15,14 +15,14 @@
   "star": {
     "name": "Ostara",
     "image": "Suns/M1.pcx",
-	"map": "Suns/StarM_map.pcx",
+    "map": "Suns/StarM_map.pcx",
     "tscale": 6,
     "radius": 1200000000,
     "mass": 1e+30,
     "light": 50000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       170,
@@ -37,7 +37,7 @@
       {
         "name": "Aram",
         "image": "Ostara/aram_lo.pcx",
-		"map": "Ostara/ostara_map.pcx",
+        "map": "Ostara/ostara_map.pcx",
         "high_res": "Ostara/aram_hi.pcx",
         "radius": 6400000,
         "mass": 5.98e+24,
@@ -46,7 +46,7 @@
           90,
           60
         ],
-        "orbit": 103400000000,
+        "orbit": 103000000000.0,
         "rotation": 15,
         "region": {
           "name": "Aram",
@@ -64,11 +64,11 @@
           {
             "name": "Ur",
             "image": "Moons/lunar_lo.pcx",
-			"map": "Moons/lunar_map.pcx",
+            "map": "Moons/lunar_map.pcx",
             "high_res": "Moons/lunar_hi.pcx",
             "radius": 1000000,
             "mass": 8e+22,
-            "orbit": 85000000,
+            "orbit": 85000000.0,
             "region": {
               "name": "Ur",
               "radius": 480000,
@@ -76,9 +76,13 @@
               "orbit": 11000000,
               "inclination": -0.05,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 6.63
           }
-        ]
+        ],
+        "eccentricity": 0.137,
+        "inclination": -13.22
       }
     ]
   }

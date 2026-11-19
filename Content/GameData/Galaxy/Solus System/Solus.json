@@ -20,9 +20,9 @@
     "radius": 1597000000,
     "mass": 2.13e+30,
     "light": 160000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,	
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -46,7 +46,7 @@
           185,
           165
         ],
-        "orbit": 68000000000,
+        "orbit": 68000000000.0,
         "rotation": 15.35,
         "region": {
           "name": "Meridian",
@@ -56,7 +56,9 @@
           "inclination": 0.7,
           "link": []
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.172,
+        "inclination": -6.49
       },
       {
         "name": "Solus",
@@ -72,7 +74,7 @@
           175,
           220
         ],
-        "orbit": 140000000000,
+        "orbit": 140000000000.0,
         "rotation": 21.3,
         "region": {
           "name": "Solus",
@@ -90,7 +92,7 @@
             "high_res": "Solus/omane_hi.pcx",
             "radius": 1830000,
             "mass": 8.12e+22,
-            "orbit": 45000000,
+            "orbit": 45000000.0,
             "rotation": 8,
             "region": {
               "name": "Kalon",
@@ -99,7 +101,9 @@
               "orbit": 7800000,
               "inclination": 0.5,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 13.11
           },
           {
             "name": "Alar",
@@ -108,7 +112,7 @@
             "high_res": "Moons/lunar_hi.pcx",
             "radius": 500000,
             "mass": 4.3e+22,
-            "orbit": 59500000,
+            "orbit": 59500000.0,
             "region": {
               "name": "Alar",
               "radius": 480000,
@@ -116,7 +120,9 @@
               "orbit": 8800000,
               "inclination": 0.23,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 12.03
           }
         ],
         "terrain": {
@@ -161,18 +167,20 @@
           "weather_overcast": 0,
           "weather_fog": 0,
           "weather_storm": 0
-        }
+        },
+        "eccentricity": 0.142,
+        "inclination": -3.17
       },
       {
         "name": "Jalah",
         "map": "Solus/jalah_map.pcx",
         "image": "Solus/jalah.pcx",
-		"high_res": "Solus/jalah.pcx",
+        "high_res": "Solus/jalah.pcx",
         "radius": 19100000,
         "mass": 3.6e+26,
         "tscale": 2,
         "tilt": 0.13,
-        "orbit": 295000000000,
+        "orbit": 295000000000.0,
         "rotation": 29.3,
         "region": {
           "name": "Jalah",
@@ -182,16 +190,18 @@
           "inclination": 0.2,
           "link": []
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.12071603318644068,
+        "inclination": -5.65
       },
       {
         "name": "Trellis",
         "map": "Giants/GasGiant9_map.pcx",
         "image": "Giants/GasGiant9.jpg",
-		"high_res": "Giants/GasGiant9.jpg",
+        "high_res": "Giants/GasGiant9.jpg",
         "radius": 30000000,
         "mass": 5.42e+26,
-        "orbit": 375000000000,
+        "orbit": 375000000000.0,
         "tscale": 2,
         "tilt": 0.125,
         "ring": "Giants/Ring2.pcx",
@@ -218,7 +228,7 @@
             "high_res": "Moons/rock_hi.pcx",
             "radius": 3000000,
             "mass": 3e+22,
-            "orbit": 265000000,
+            "orbit": 265000000.0,
             "rotation": 100,
             "region": {
               "name": "Ovid",
@@ -227,7 +237,9 @@
               "orbit": 7800000,
               "inclination": 0.02,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 9.33
           },
           {
             "name": "Archimedes",
@@ -236,9 +248,9 @@
             "high_res": "Moons/lunar_hi.pcx",
             "radius": 5200000,
             "rotation": 19,
-            "inclination": 0,
+            "inclination": 0.0,
             "mass": 6e+24,
-            "orbit": 431000000,
+            "orbit": 431000000.0,
             "region": {
               "name": "Archimedes",
               "radius": 480000,
@@ -246,7 +258,8 @@
               "orbit": 7800000,
               "inclination": 0.02,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           },
           {
             "name": "Flor",
@@ -261,7 +274,7 @@
               255
             ],
             "mass": 5.98e+24,
-            "orbit": 814000000,
+            "orbit": 814000000.0,
             "region": {
               "name": "Flor",
               "radius": 480000,
@@ -269,9 +282,13 @@
               "orbit": 7800000,
               "inclination": 0.02,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 2.85
           }
-        ]
+        ],
+        "eccentricity": 0.09496327944,
+        "inclination": 1.54
       }
     ]
   }

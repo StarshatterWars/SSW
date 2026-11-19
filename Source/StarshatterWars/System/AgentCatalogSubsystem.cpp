@@ -1,4 +1,8 @@
 #include "AgentCatalogSubsystem.h"
+#include "DynamicMissionAI.h"
+#include "AgentJournalTransaction.h"
+#include "Sim.h"
+#include "MissionArcRules.h"
 #include "JsonRecordCatalog.h"
 #include "TrainingTestRules.h"
 #include "AgentMissionRules.h"
@@ -46,6 +50,22 @@ void UAgentCatalogSubsystem::LoadCatalog()
     }
     Catalog = MoveTemp(Imported);
     UE_LOG(LogTemp, Display, TEXT("Imported %d agents from %s"), Catalog.Num(), *Path);
+}
+
+bool UAgentCatalogSubsystem::PrepareIndependentOffer(FName Id,FText& Reason)
+{
+ auto* Game=Cast<USSWGameInstance>(GetGameInstance());auto* Players=Game?Game->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;const auto* Agent=FindAgent(Id);
+ if(!Game || Game->IsTrainingTestSession() || !Players || !Agent || !CanContact(Id) || Agent->Class==EAgentClass::Training)return false;
+ FDynamicAgentContext Context;Context.Id=Id;Context.Name=Agent->DisplayName;Context.System=Agent->System;Context.Region=Agent->Region;Context.Station=Agent->Station;Context.Pools=Agent->DynamicPools;Context.Level=Agent->Level;
+ return DynamicMissionAI::Generate(Players->GetMutablePlayerInfo(),Context,FDateTime::UtcNow().ToUnixTimestamp(),Reason);
+}
+bool UAgentCatalogSubsystem::StartIndependentAssignment(int32 Id,FText& Reason)
+{
+ auto* Game=Cast<USSWGameInstance>(GetGameInstance());auto* Players=Game?Game->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;auto* Simulation=Sim::GetSim();auto* Pilot=PlayerCharacter::GetCurrentPlayer();
+ if(!Game || !Players || !Simulation || !Simulation->GetMission() || !Simulation->GetMission()->IsFreeFlight() || !Pilot)return false;
+ const auto Result=AgentJournalTransaction::Commit(Game->GetTrainingAgent(),Players->GetMutablePlayerInfo(),[&](){return DynamicMissionAI::Start(*Simulation,Players->GetMutablePlayerInfo(),Game->GetTrainingAgent(),AgentAI::PilotKey(*Pilot),Id,Reason);},[&](){return Players->SaveActivePlayerProgress();});
+ if(Result==AgentJournalTransaction::EResult::SaveFailed)Reason=INVTEXT("Unable to save job start; the accepted assignment was retained.");
+ return Result==AgentJournalTransaction::EResult::Committed;
 }
 
 const FS_AgentCatalogRow* UAgentCatalogSubsystem::FindAgent(FName Id) const
@@ -121,7 +141,9 @@ TArray<int32> UAgentCatalogSubsystem::GetEligibleMissions(FName AgentId) const
         return Eligible;
     }
 
-    // Orders and dynamic assignments remain owned by the active SSW campaign.
+    if(Players && !Game->IsTrainingTestSession())
+        for(int32 Id:DynamicMissionAI::Offers(Players->GetPlayerInfo(),AgentId,FDateTime::UtcNow().ToUnixTimestamp()))Eligible.AddUnique(Id);
+    // Authored campaign assignments remain owned by their original campaign.
     if (!Game->IsTrainingTestSession())
         if (auto* Active = Campaign::GetCampaign(); Active && Active->IsActive() && IsCampaignIssuer(AgentId, Active->GetCampaignId()))
         {
@@ -144,15 +166,22 @@ TArray<int32> UAgentCatalogSubsystem::GetEligibleMissions(FName AgentId) const
             }
         }
 
+    const auto LocalPool=[&](int32 Id)
+    {
+        for(const auto& Pair:Catalog)if(Pair.Value.Empire==Agent->Empire && Pair.Value.System.Equals(Agent->System,ESearchCase::IgnoreCase) && Pair.Value.MissionIds.Contains(Id))return true;
+        return false;
+    };
     if (const auto* Data = Game->GetSubsystem<UStarshatterGameDataSubsystem>())
         for (const auto& Scenario : Data->GetSingleMissionScenarios())
         {
             if (Scenario.Id <= 0 || Scenario.Id >= 1000000 - Mission::RegionalAgentMissionOffset || Scenario.StoryCampaignId > 0 ||
-                !Agent->MissionIds.Contains(Scenario.Id) ||
+                !(Agent->MissionIds.Contains(Scenario.Id) || (Agent->MissionTypes.Contains(Scenario.MissionType) && LocalPool(Scenario.Id))) ||
                 !AgentMissionRules::LocalSystem(Agent->System, Scenario.MissionSystem) ||
                 !MissionRankRules::Unlocked(MissionRankRules::Required(Scenario))) continue;
 
             const int32 Id = Mission::RegionalAgentMissionOffset + Scenario.Id;
+            const auto Arc=FMissionArcCatalog::Get().Evaluate(Id,[](int32){return false;});
+            if(Arc.Arc && !Arc.Arc->Steps[Arc.Selected].AgentId.IsNone() && Arc.Arc->Steps[Arc.Selected].AgentId!=AgentId)continue;
             if (!Game->GetTrainingAgent().ArcRequirement(Key, Id,
                 [Players](int32 PreviousId) { return Players && Players->GetPlayerInfo().HasCompletedMission(Campaign::SINGLE_MISSIONS, PreviousId); }).IsEmpty()) continue;
             if (!Players || !Players->GetPlayerInfo().HasCompletedMission(Campaign::SINGLE_MISSIONS, Id))
@@ -182,6 +211,13 @@ bool UAgentCatalogSubsystem::CanAccept(int32 MissionId, FName AgentId) const
     const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
     const auto* Agent = FindAgent(AgentId);
     if (!Game || !Pilot || !Agent || Pilot->GetRank() < Agent->MinimumRank) return false;
+    if(DynamicMissionAI::IsDynamic(MissionId))
+    {
+        const auto* Players=Game->GetSubsystem<UStarshatterPlayerSubsystem>();FText Reason;
+        if(!Players)return false;bool Accepted=false;
+        for(const auto& Item:Game->GetTrainingAgent().GetQueue(AgentAI::PilotKey(*Pilot)))if(Item.MissionId==MissionId && Item.Issuer==AgentId && (Item.State==AgentAI::EState::Accepted || Item.State==AgentAI::EState::InProgress))Accepted=true;
+        return DynamicMissionAI::Offers(Players->GetPlayerInfo(),AgentId,Accepted?0:FDateTime::UtcNow().ToUnixTimestamp()).Contains(MissionId) && DynamicMissionAI::CanUse(Players->GetPlayerInfo(),MissionId,Reason);
+    }
     if (FindScenario(MissionId))
     {
         const auto* Players = Game->GetSubsystem<UStarshatterPlayerSubsystem>();
@@ -227,6 +263,8 @@ const FS_CampaignMission* UAgentCatalogSubsystem::FindScenario(int32 Id) const
 
 FText UAgentCatalogSubsystem::GetMissionTitle(int32 MissionId) const
 {
+    if(DynamicMissionAI::IsDynamic(MissionId))if(auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>())return DynamicMissionAI::Title(Players->GetPlayerInfo(),MissionId);
+
     int32 CampaignId, OriginalId;
     if (AgentMissionRules::Decode(MissionId, CampaignId, OriginalId))
         if (auto* Active = Campaign::GetCampaign(); Active && Active->GetCampaignId() == CampaignId)
@@ -259,6 +297,14 @@ Campaign* UAgentCatalogSubsystem::GetRepository(int32 MissionId)
 
 Mission* UAgentCatalogSubsystem::GetMission(int32 MissionId)
 {
+    if(DynamicMissionAI::IsDynamic(MissionId))
+    {
+        auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();FS_CampaignMission Row;
+        if(!Players || !DynamicMissionAI::Preview(Players->GetPlayerInfo(),MissionId,Row))return nullptr;
+        if(auto* Existing=RegionalMissions.Find(MissionId)){(*Existing)->SetObjective(TCHAR_TO_UTF8(*Row.Objective));(*Existing)->SetSituation(TCHAR_TO_UTF8(*Row.Sitrep));return Existing->Get();}
+        auto Model=MakeShared<Mission>(MissionId);if(!Model->LoadFromCampaignMissionData(Row))return nullptr;Model->SetIdentity(MissionId);return RegionalMissions.Add(MissionId,MoveTemp(Model)).Get();
+    }
+
     int32 CampaignId, OriginalId;
     if (AgentMissionRules::Decode(MissionId, CampaignId, OriginalId))
     {

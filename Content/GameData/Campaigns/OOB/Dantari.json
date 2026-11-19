@@ -1,0 +1,2763 @@
+[
+	{
+		"Row": "1st Force [Dantari Separatists]",
+		"Type": "FORCE",
+		"Id": 1,
+		"Name": "Dantari Separatists",
+		"DisplayName": "1st Force [Dantari Separatists]",
+		"Intel": "TRACKED",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "NONE",
+		"ParentId": 0,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "1st Fleet [First]",
+		"Type": "FLEET",
+		"Id": 1,
+		"Name": "First",
+		"DisplayName": "1st Fleet [First]",
+		"Intel": "TRACKED",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "5th CVBG [Goliath]",
+		"Type": "CARRIER_GROUP",
+		"Id": 5,
+		"Name": "Goliath",
+		"DisplayName": "5th CVBG [Goliath]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": 207000,
+			"Y": -362000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Goliath",
+				"UnitRegnum": "67",
+				"UnitRegion": "",
+				"UnitClass": "Carrier",
+				"UnitDesign": "Goliath",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Lanner",
+				"UnitRegnum": "321",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Connel",
+				"UnitRegnum": "326",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Ganat",
+				"UnitRegnum": "112",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Olan",
+				"UnitRegnum": "113",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3rd Tactical Fighter Wing [Talon]",
+		"Type": "WING",
+		"Id": 3,
+		"Name": "Talon",
+		"DisplayName": "3rd Tactical Fighter Wing [Talon]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": 0,
+			"Y": -20000,
+			"Z": 7000
+		},
+		"ParentType": "CARRIER_GROUP",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "14th Intercept Squadron [Blood Hawks]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 14,
+		"Name": "Blood Hawks",
+		"DisplayName": "14th Intercept Squadron [Blood Hawks]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": -60000,
+			"Y": -210000,
+			"Z": -6000
+		},
+		"ParentType": "WING",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Blood Hawk",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Viper",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 40,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "16th Fighter Squadron [Red Claws]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 16,
+		"Name": "Red Claws",
+		"DisplayName": "16th Fighter Squadron [Red Claws]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": -30000,
+			"Y": -210000,
+			"Z": -9000
+		},
+		"ParentType": "WING",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Red Claw",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Razor",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 40,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5th DESRON [Wolf]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 5,
+		"Name": "Wolf",
+		"DisplayName": "5th DESRON [Wolf]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": -280000,
+			"Y": -120000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Wolf",
+				"UnitRegnum": "305",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Halas",
+				"UnitRegnum": "306",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Baikal",
+				"UnitRegnum": "101",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Kyren",
+				"UnitRegnum": "102",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "6th DESRON [Kitts]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 6,
+		"Name": "Kitts",
+		"DisplayName": "6th DESRON [Kitts]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -100000,
+			"Y": -270000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Kitts",
+				"UnitRegnum": "307",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Tomal",
+				"UnitRegnum": "308",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Lovo",
+				"UnitRegnum": "103",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Udel",
+				"UnitRegnum": "104",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "7th DESRON [Kendra]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 7,
+		"Name": "Kendra",
+		"DisplayName": "7th DESRON [Kendra]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Meridian",
+		"Location":
+		{
+			"X": -100000,
+			"Y": 70000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Kendra",
+				"UnitRegnum": "307",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Sayal",
+				"UnitRegnum": "308",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Baionne",
+				"UnitRegnum": "103",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Pelorat",
+				"UnitRegnum": "104",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "1st Minefield [Minefield A]",
+		"Type": "MINEFIELD",
+		"Id": 1,
+		"Name": "Minefield A",
+		"DisplayName": "1st Minefield [Minefield A]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -140000,
+			"Y": -100000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Minefield A",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "MINE",
+				"UnitDesign": "BlockadeMine",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 6,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2nd Minefield [Minefield B]",
+		"Type": "MINEFIELD",
+		"Id": 2,
+		"Name": "Minefield B",
+		"DisplayName": "2nd Minefield [Minefield B]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -120000,
+			"Y": -110000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Minefield B",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "MINE",
+				"UnitDesign": "BlockadeMine",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 6,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3rd Minefield [Minefield C]",
+		"Type": "MINEFIELD",
+		"Id": 3,
+		"Name": "Minefield C",
+		"DisplayName": "3rd Minefield [Minefield C]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -70000,
+			"Y": -130000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Minefield C",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "MINE",
+				"UnitDesign": "BlockadeMine",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 6,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4th Minefield [Minefield D]",
+		"Type": "MINEFIELD",
+		"Id": 4,
+		"Name": "Minefield D",
+		"DisplayName": "4th Minefield [Minefield D]",
+		"Intel": "RESERVE",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -110000,
+			"Y": -125000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Minefield D",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "MINE",
+				"UnitDesign": "BlockadeMine",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 6,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5th Minefield [Minefield E]",
+		"Type": "MINEFIELD",
+		"Id": 5,
+		"Name": "Minefield E",
+		"DisplayName": "5th Minefield [Minefield E]",
+		"Intel": "RESERVE",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -75000,
+			"Y": -110000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Minefield E",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "MINE",
+				"UnitDesign": "BlockadeMine",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 6,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2nd Fleet [Second]",
+		"Type": "FLEET",
+		"Id": 2,
+		"Name": "Second",
+		"DisplayName": "2nd Fleet [Second]",
+		"Intel": "RESERVE",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Adantar",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "7th CVBG [Leviathan]",
+		"Type": "CARRIER_GROUP",
+		"Id": 7,
+		"Name": "Leviathan",
+		"DisplayName": "7th CVBG [Leviathan]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Adantar",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Leviathan",
+				"UnitRegnum": "68",
+				"UnitRegion": "",
+				"UnitClass": "Carrier",
+				"UnitDesign": "Goliath",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Vance",
+				"UnitRegnum": "351",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Shannon",
+				"UnitRegnum": "355",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Oronis",
+				"UnitRegnum": "120",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Ashala",
+				"UnitRegnum": "122",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5th Tactical Fighter Wing [Spearhead]",
+		"Type": "WING",
+		"Id": 5,
+		"Name": "Spearhead",
+		"DisplayName": "5th Tactical Fighter Wing [Spearhead]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Adantar",
+		"Location":
+		{
+			"X": 0,
+			"Y": -20000,
+			"Z": 7000
+		},
+		"ParentType": "CARRIER_GROUP",
+		"ParentId": 7,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "17th Intercept Squadron [Dragons]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 17,
+		"Name": "Dragons",
+		"DisplayName": "17th Intercept Squadron [Dragons]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Adantar",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "WING",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Dragon",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Viper",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 40,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "19th Fighter Squadron [Lions]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 19,
+		"Name": "Lions",
+		"DisplayName": "19th Fighter Squadron [Lions]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Adantar",
+		"Location":
+		{
+			"X": 0,
+			"Y": -20000,
+			"Z": 7000
+		},
+		"ParentType": "WING",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Lion",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Razor",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 40,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "9th DESRON [Tarkis]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 9,
+		"Name": "Tarkis",
+		"DisplayName": "9th DESRON [Tarkis]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Adantar",
+		"Location":
+		{
+			"X": 80000,
+			"Y": -120000,
+			"Z": 7000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Tarkis",
+				"UnitRegnum": "312",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Kinch",
+				"UnitRegnum": "315",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Kolos",
+				"UnitRegnum": "110",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Merin",
+				"UnitRegnum": "118",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "10th DESRON [Salver]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 10,
+		"Name": "Salver",
+		"DisplayName": "10th DESRON [Salver]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Adantar",
+		"Location":
+		{
+			"X": 0,
+			"Y": -30000,
+			"Z": -9000
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Salver",
+				"UnitRegnum": "321",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Wolf",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Regent",
+				"UnitRegnum": "324",
+				"UnitRegion": "",
+				"UnitClass": "Destroyer",
+				"UnitDesign": "Volnaris",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Rhotan",
+				"UnitRegnum": "114",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Palan",
+				"UnitRegnum": "134",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Baikal",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "1st Battalion [Jalah]",
+		"Type": "BATTALION",
+		"Id": 1,
+		"Name": "Jalah",
+		"DisplayName": "1st Battalion [Jalah]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": -150000,
+			"Y": -150000,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "5th Station [Fort Talas]",
+		"Type": "STATION",
+		"Id": 5,
+		"Name": "Fort Talas",
+		"DisplayName": "5th Station [Fort Talas]",
+		"Intel": "SECRET",
+		"Iff": 0,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": -150000,
+			"Y": -150000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Fort Talas",
+				"UnitRegnum": "000",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station3",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5th Intercept Squadron [Rapiers]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 5,
+		"Name": "Rapiers",
+		"DisplayName": "5th Intercept Squadron [Rapiers]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": -140000,
+			"Y": -140000,
+			"Z": 0
+		},
+		"ParentType": "STATION",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Rapiers",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Viper",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "6th Fighter Squadron [Sabers]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 6,
+		"Name": "Sabers",
+		"DisplayName": "6th Fighter Squadron [Sabers]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": -130000,
+			"Y": -130000,
+			"Z": 0
+		},
+		"ParentType": "STATION",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Saber",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Razor",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "7th Attack Squadron [Long Lance]",
+		"Type": "ATTACK_SQUADRON",
+		"Id": 7,
+		"Name": "Long Lance",
+		"DisplayName": "7th Attack Squadron [Long Lance]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": -120000,
+			"Y": -120000,
+			"Z": 0
+		},
+		"ParentType": "STATION",
+		"ParentId": 5,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Long Lance",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "Cobra",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2nd Battalion [Vantage]",
+		"Type": "BATTALION",
+		"Id": 2,
+		"Name": "Vantage",
+		"DisplayName": "2nd Battalion [Vantage]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 0,
+			"Y": -30000,
+			"Z": -9000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "1st Battery [SAM]",
+		"Type": "BATTERY",
+		"Id": 1,
+		"Name": "SAM",
+		"DisplayName": "1st Battery [SAM]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 45000,
+			"Y": -36000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "SAM",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "SAM",
+				"UnitDesign": "SAM 1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2nd Battery [SAM]",
+		"Type": "BATTERY",
+		"Id": 2,
+		"Name": "SAM",
+		"DisplayName": "2nd Battery [SAM]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 40000,
+			"Y": -60000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "AAA",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "SAM",
+				"UnitDesign": "AAA 1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 2,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3rd Battery [SAM]",
+		"Type": "BATTERY",
+		"Id": 3,
+		"Name": "SAM",
+		"DisplayName": "3rd Battery [SAM]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -32000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "SAM",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "SAM",
+				"UnitDesign": "SAM 1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4th Battery [SAM]",
+		"Type": "BATTERY",
+		"Id": 4,
+		"Name": "SAM",
+		"DisplayName": "4th Battery [SAM]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 40000,
+			"Y": -35000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "AAA",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "SAM",
+				"UnitDesign": "AAA 1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "1st Starbase [Foothill]",
+		"Type": "STARBASE",
+		"Id": 1,
+		"Name": "Foothill",
+		"DisplayName": "1st Starbase [Foothill]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 56000,
+			"Y": -49000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Foothill Base",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Starbase",
+				"UnitDesign": "Airbase2",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3rd Intercept Squadron [Adanis]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 3,
+		"Name": "Adanis",
+		"DisplayName": "3rd Intercept Squadron [Adanis]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 55000,
+			"Y": -49000,
+			"Z": 0
+		},
+		"ParentType": "STARBASE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Adani",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Viper",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4th Attack Squadron [Cobra Fangs]",
+		"Type": "ATTACK_SQUADRON",
+		"Id": 4,
+		"Name": "Cobra Fangs",
+		"DisplayName": "4th Attack Squadron [Cobra Fangs]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 55000,
+			"Y": -49000,
+			"Z": 0
+		},
+		"ParentType": "STARBASE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Cobra Fang",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "Cobra",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "1st War Production [Telmera Compound]",
+		"Type": "WAR_PRODUCTION",
+		"Id": 1,
+		"Name": "Telmera Compound",
+		"DisplayName": "1st War Production [Telmera Compound]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 80000,
+			"Y": -120000,
+			"Z": 7000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2100th Civilian [Foothill Ridge]",
+		"Type": "CIVILIAN",
+		"Id": 2100,
+		"Name": "Foothill Ridge",
+		"DisplayName": "2100th Civilian [Foothill Ridge]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 55000,
+			"Y": -55000,
+			"Z": 0
+		},
+		"ParentType": "WAR_PRODUCTION",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2101st Infrastructure [Telmera Reactor]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2101,
+		"Name": "Telmera Reactor",
+		"DisplayName": "2101st Infrastructure [Telmera Reactor]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 55000,
+			"Y": -57000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2100,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Reactor",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Factory",
+				"UnitDesign": "Reac01",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2102nd Factory [Telmera Factory 1]",
+		"Type": "FACTORY",
+		"Id": 2102,
+		"Name": "Telmera Factory 1",
+		"DisplayName": "2102nd Factory [Telmera Factory 1]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 56000,
+			"Y": -55000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2100,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Factory 1",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Factory",
+				"UnitDesign": "Fact04",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2103rd Factory [Telmera Factory 2]",
+		"Type": "FACTORY",
+		"Id": 2103,
+		"Name": "Telmera Factory 2",
+		"DisplayName": "2103rd Factory [Telmera Factory 2]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 58000,
+			"Y": -56000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2100,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Factory 2",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Factory",
+				"UnitDesign": "Fact02",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3rd Battalion [Tanis]",
+		"Type": "BATTALION",
+		"Id": 3,
+		"Name": "Tanis",
+		"DisplayName": "3rd Battalion [Tanis]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": -60000,
+			"Y": -3000,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "31st Battery [Tanis SAM]",
+		"Type": "BATTERY",
+		"Id": 31,
+		"Name": "Tanis SAM",
+		"DisplayName": "31st Battery [Tanis SAM]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": -60000,
+			"Y": -3000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "SAM",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "SAM",
+				"UnitDesign": "SAM 1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": -60000,
+					"Y": -3000,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "AAA",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "SAM",
+				"UnitDesign": "AAA 1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": -60000,
+					"Y": -1000,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "32nd Battery [SAM]",
+		"Type": "BATTERY",
+		"Id": 32,
+		"Name": "SAM",
+		"DisplayName": "32nd Battery [SAM]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": -40000,
+			"Y": -100000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "AAA",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "SAM",
+				"UnitDesign": "AAA 1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 2,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "33rd Battery [SAM]",
+		"Type": "BATTERY",
+		"Id": 33,
+		"Name": "SAM",
+		"DisplayName": "33rd Battery [SAM]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": 60000,
+			"Y": 12000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "SAM",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "SAM",
+				"UnitDesign": "SAM 1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2nd Starbase [Tanis Base]",
+		"Type": "STARBASE",
+		"Id": 2,
+		"Name": "Tanis Base",
+		"DisplayName": "2nd Starbase [Tanis Base]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": -54000,
+			"Y": 5000,
+			"Z": 0
+		},
+		"ParentType": "BATTALION",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Tanis Base",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Starbase",
+				"UnitDesign": "Airbase3",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3rd Intercept Squadron [Istari]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 3,
+		"Name": "Istari",
+		"DisplayName": "3rd Intercept Squadron [Istari]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": -50000,
+			"Y": 7000,
+			"Z": 0
+		},
+		"ParentType": "STARBASE",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Istar",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Viper",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 40,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4th Attack Squadron [Sandstorm]",
+		"Type": "ATTACK_SQUADRON",
+		"Id": 4,
+		"Name": "Sandstorm",
+		"DisplayName": "4th Attack Squadron [Sandstorm]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": -50000,
+			"Y": 9000,
+			"Z": 0
+		},
+		"ParentType": "STARBASE",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Sandstorm",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Attack",
+				"UnitDesign": "Cobra",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 40,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2300th Non-Com [Dantari Freight]",
+		"Type": "NON_COM",
+		"Id": 2300,
+		"Name": "Dantari Freight",
+		"DisplayName": "2300th Non-Com [Dantari Freight]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Unknown",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 0,
+			"Y": -20000,
+			"Z": 7000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "3000th Freight [Logistics Support]",
+		"Type": "FREIGHT",
+		"Id": 3000,
+		"Name": "Logistics Support",
+		"DisplayName": "3000th Freight [Logistics Support]",
+		"Intel": "SECRET",
+		"Iff": 2,
+		"EmpireId": "Unknown",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 80000,
+			"Y": -120000,
+			"Z": 7000
+		},
+		"ParentType": "NON_COM",
+		"ParentId": 2300,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "DTS Sarn Mellor",
+				"UnitRegnum": "798",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "DTS Rannat",
+				"UnitRegnum": "780",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "DTS Landa",
+				"UnitRegnum": "354",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "DTS Gaal Barat",
+				"UnitRegnum": "843",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "DTS Jaim Cole",
+				"UnitRegnum": "235",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "DTS Seleno",
+				"UnitRegnum": "493",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "DTS Ecliptic",
+				"UnitRegnum": "219",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "DTS Transfer",
+				"UnitRegnum": "381",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "DTS Rapid",
+				"UnitRegnum": "521",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "DTS Caravel",
+				"UnitRegnum": "617",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3000th War Production [War Production - Tanis]",
+		"Type": "WAR_PRODUCTION",
+		"Id": 3000,
+		"Name": "War Production - Tanis",
+		"DisplayName": "3000th War Production [War Production - Tanis]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Unknown",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "3000th Resource [Tanis Mining Station]",
+		"Type": "RESOURCE",
+		"Id": 3000,
+		"Name": "Tanis Mining Station",
+		"DisplayName": "3000th Resource [Tanis Mining Station]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Unknown",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": 0,
+			"Y": -67000,
+			"Z": 0
+		},
+		"ParentType": "WAR_PRODUCTION",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "3001st Resource [Mining Station]",
+		"Type": "RESOURCE",
+		"Id": 3001,
+		"Name": "Mining Station",
+		"DisplayName": "3001st Resource [Mining Station]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Unknown",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": 0,
+			"Y": -67000,
+			"Z": 0
+		},
+		"ParentType": "RESOURCE",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Mining Station",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Dsrt05",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3002nd Resource [Administration]",
+		"Type": "RESOURCE",
+		"Id": 3002,
+		"Name": "Administration",
+		"DisplayName": "3002nd Resource [Administration]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Unknown",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": 3000,
+			"Y": -70000,
+			"Z": 0
+		},
+		"ParentType": "RESOURCE",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Administration",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Dsrt01",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3003rd Refinery [Refinery]",
+		"Type": "REFINERY",
+		"Id": 3003,
+		"Name": "Refinery",
+		"DisplayName": "3003rd Refinery [Refinery]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Unknown",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": -4000,
+			"Y": -67000,
+			"Z": 0
+		},
+		"ParentType": "RESOURCE",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Refinery",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Dsrt00",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Cooling Tower",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Cool00",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 3,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Cryo Tank",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Factory",
+				"UnitDesign": "Tank00",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 2,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3004th Resource [Reactor]",
+		"Type": "RESOURCE",
+		"Id": 3004,
+		"Name": "Reactor",
+		"DisplayName": "3004th Resource [Reactor]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Unknown",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": 5000,
+			"Y": -67000,
+			"Z": 0
+		},
+		"ParentType": "RESOURCE",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Reactor",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Factory",
+				"UnitDesign": "Reac01",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3005th Habitat [Downtown]",
+		"Type": "HABITAT",
+		"Id": 3005,
+		"Name": "Downtown",
+		"DisplayName": "3005th Habitat [Downtown]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Unknown",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": 9000,
+			"Y": -9000,
+			"Z": 0
+		},
+		"ParentType": "RESOURCE",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Downtown",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Dsrt04",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3006th Habitat [Outpost]",
+		"Type": "HABITAT",
+		"Id": 3006,
+		"Name": "Outpost",
+		"DisplayName": "3006th Habitat [Outpost]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Unknown",
+		"System": "",
+		"Region": "Tanis",
+		"Location":
+		{
+			"X": 10000,
+			"Y": -12000,
+			"Z": 0
+		},
+		"ParentType": "RESOURCE",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Outpost",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Dsrt04",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8578th Station [Jalah Orbital Concentrator]",
+		"Type": "STATION",
+		"Id": 8578,
+		"Name": "Jalah Orbital Concentrator",
+		"DisplayName": "8578th Station [Jalah Orbital Concentrator]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": -106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Jalah Orbital Concentrator",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8906th Station [Jalah Heavy Shipworks]",
+		"Type": "STATION",
+		"Id": 8906,
+		"Name": "Jalah Heavy Shipworks",
+		"DisplayName": "8906th Station [Jalah Heavy Shipworks]",
+		"Intel": "KNOWN",
+		"Iff": 2,
+		"EmpireId": "Dantari",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": 190000,
+			"Y": 82000,
+			"Z": 34000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Jalah Heavy Shipworks",
+				"UnitRegnum": "SY-8906",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Shipyard",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	}
+]

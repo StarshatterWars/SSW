@@ -38,7 +38,7 @@ bool FSkillBooksTest::RunTest(const FString&)
     TestFalse(TEXT("Prerequisites cannot bypass rank"),FSkillRules::Purchase(State,Learned,*Frigate,2,TEXT("Terellian"),100,Reason));
     TestEqual(TEXT("Blocked purchase does not charge"),State.Wallets.FindRef(FEconomyLedger::Pilot()),1000000LL);
     TestTrue(TEXT("Qualified pilot buys complete skill"),FSkillRules::Purchase(State,Learned,*Frigate,3,TEXT("Terellian"),100,Reason));
-    TestTrue(TEXT("Book grants full skill immediately"),Learned.FindChecked(Frigate->Name).bComplete);
+    TestFalse(TEXT("Book ownership does not grant a trained level"),Learned.FindChecked(Frigate->Name).bComplete);
     TestEqual(TEXT("No level-training timer starts"),Learned.FindChecked(Frigate->Name).TrainingFinishesUtc,0LL);
     TestEqual(TEXT("Book costs SSW credits"),State.Wallets.FindRef(FEconomyLedger::Pilot()),1000000LL-Frigate->BookPrice);
     TestEqual(TEXT("Wallet identifies the purchased skill"),State.Journal.Last().Item,Frigate->Name);
@@ -49,7 +49,7 @@ bool FSkillBooksTest::RunTest(const FString&)
     TestTrue(TEXT("Skills save with pilot"),UGameplayStatics::SaveGameToMemory(Save,Bytes));
     const auto* Loaded=Cast<UPlayerSaveGame>(UGameplayStatics::LoadGameFromMemory(Bytes));
     if (!TestNotNull(TEXT("Reload pilot skills"),Loaded)) return false;
-    TestTrue(TEXT("Completed skill survives reload"),Loaded->PlayerInfo.Skills.FindChecked(Frigate->Name).bComplete);
+    TestTrue(TEXT("Book ownership survives reload"),Loaded->PlayerInfo.Skills.FindChecked(Frigate->Name).Id.IsValid());
     TestEqual(TEXT("Skill purchase identity survives reload"),Loaded->PlayerInfo.Economy.Journal.Last().Item,Frigate->Name);
     return true;
 }

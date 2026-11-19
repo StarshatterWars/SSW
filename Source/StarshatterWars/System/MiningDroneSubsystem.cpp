@@ -232,3 +232,17 @@ void UMiningDroneSubsystem::Tick(float DeltaTime)
     if(!MiningDroneSaveTransaction::Commit(State,Before,Extracted,[&](){return Players && Players->SaveActivePlayerProgress();},[&](){Owner->ApplyCargoInventoryToManifest();}))
         LastStatus=INVTEXT("Could not save mining drones; asteroid, drone cargo and owner hold were restored.");
 }
+
+FText UMiningDroneSubsystem::GetStatusText() const
+{
+    auto* Simulation=Sim::GetSim();auto* Owner=Simulation?Simulation->GetPlayerShip():nullptr;if(!Owner)return LastStatus;
+    const auto& E=Simulation->ReadEconomy();const FName Key=Owner->GetCargoInventoryKey();const auto* Hold=E.Inventories.Find(Key);
+    TArray<FText> Lines;if(Hold){const double Free=FMath::Max(0.0,Hold->CapacityTonnes-FEconomyLedger::Used(*Hold));
+        Lines.Add(Free<=UE_SMALL_NUMBER?INVTEXT("HOLD FULL — UNLOAD BEFORE MINING"):FText::Format(INVTEXT("HOLD: {0} / {1} T"),FText::AsNumber(FEconomyLedger::Used(*Hold)),FText::AsNumber(Hold->CapacityTonnes)));}
+    if(const auto* Crystal=E.MiningOptics.Find(Key);Crystal && Crystal->bSelected)
+        Lines.Add(FText::Format(INVTEXT("CRYSTAL: {0} / {1}% LIFE REMAINING"),FText::FromName(Crystal->Crystal),FText::AsNumber(Crystal->ServiceLifeTonnes>0?100*FMath::Clamp(1-Crystal->ExtractedTonnes/Crystal->ServiceLifeTonnes,0.0,1.0):0)));
+    if(auto* Region=Owner->GetRegion())for(ListIter<Asteroid> Rocks=Region->GetRoids();++Rocks;)
+        if(Rocks.value() && static_cast<SimObject*>(Rocks.value())==Owner->GetTarget())
+        {const auto& R=Rocks.value()->GetResource();Lines.Add(R.AmountTonnes<=UE_SMALL_NUMBER?INVTEXT("SELECTED DEPOSIT DEPLETED"):FText::Format(INVTEXT("DEPOSIT: {0} / {1} T REMAINING"),R.GetMineralName(),FText::AsNumber(R.AmountTonnes)));break;}
+    if(!LastStatus.IsEmpty())Lines.Add(LastStatus);return FText::Join(INVTEXT("\n"),Lines);
+}

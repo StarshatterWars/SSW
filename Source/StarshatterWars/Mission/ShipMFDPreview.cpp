@@ -56,7 +56,8 @@ bool FShipMFDPreview::SetDesign(const FShipDesign* Design)
     }
     Clear();
     TArray<FBriefingShipPreviewPart> Parts;
-    if(!BriefingShipPreview::ResolveParts(*Design,Parts))return false;
+    if(!BriefingShipPreview::ResolveParts(*Design,Parts,{},&ModelToPreview))return false;
+    DesignScale=FMath::Abs(Design->Scale)>SMALL_NUMBER?Design->Scale:1.0;
     Scene=MakeUnique<FPreviewScene>(FPreviewScene::ConstructionValues().SetEditor(false)
         .SetCreatePhysicsScene(false).SetLightBrightness(4.f).SetSkyBrightness(0.f));
     UWorld* World=Scene->GetWorld();
@@ -139,7 +140,10 @@ bool FShipMFDPreview::SetWaypoint()
         if (Now>=NextStaticCaptureAt)
         {
             if (auto* Marker=Cast<AWaypointActor>(Visual.Get()); Marker && Marker->WaypointMarker)
-                Marker->WaypointMarker->SetRelativeRotation(FRotator(FMath::Fmod(Now*10.0,360.0),0,0));
+            {
+                Marker->WaypointMarker->SetRelativeRotation(FRotator(0,FMath::Fmod(Now*10.0,360.0),0));
+                Marker->RefreshAppearance(true);
+            }
             StaticWarmupCaptures=1;
             RefreshStaticCapture();
             NextStaticCaptureAt=Now+1.0/30.0;
@@ -253,4 +257,17 @@ void FShipMFDPreview::SetView(const FQuat& TargetRotation,const FVector& ToObser
     Scene->GetWorld()->UpdateWorldComponents(false,false);
     Scene->GetWorld()->SendAllEndOfFrameUpdates();
     if(!GUsingNullRHI)Component->CaptureScene();
+}
+
+bool FShipMFDPreview::ProjectSystemLocation(const FVector& LegacyMount,FVector2D& UV) const
+{
+    if(!bPlayerPanel || !Capture.IsValid() || LegacyMount.ContainsNaN()) return false;
+    const auto* Camera=Capture->GetCaptureComponent2D();
+    if(Camera->ProjectionType!=ECameraProjectionMode::Orthographic || Camera->OrthoWidth<=SMALL_NUMBER)return false;
+    const FVector ModelPoint(LegacyMount.Z/DesignScale,LegacyMount.X/DesignScale,LegacyMount.Y/DesignScale);
+    const FVector Delta=ModelToPreview.TransformPosition(ModelPoint)-Capture->GetActorLocation();
+    const FQuat View=Capture->GetActorQuat();
+    UV=FVector2D(.5+FVector::DotProduct(Delta,View.GetAxisY())/Camera->OrthoWidth,
+        .5-FVector::DotProduct(Delta,View.GetAxisZ())/(Camera->OrthoWidth*.5));
+    return UV.X>=0 && UV.X<=1 && UV.Y>=0 && UV.Y<=1;
 }

@@ -26,6 +26,7 @@
 
 class Asteroid : public Debris
 {
+    friend class FLocalWorldStateCodec;
 public:
 	Asteroid(int type, const FVector& pos, double mass, TOptional<ESSWAsteroidType> DominantType = {});
 

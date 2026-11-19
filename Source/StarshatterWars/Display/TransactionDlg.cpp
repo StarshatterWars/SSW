@@ -33,7 +33,7 @@ public:
         // Perform the existing one-time legacy-wallet migration, then keep view reads const.
         if (Players.IsValid()) Players->GetEconomy();
         Categories.Add(MakeShared<FString>(TEXT("ALL CATEGORIES")));
-        for (int32 Index=0;Index<=static_cast<int32>(EWalletTransactionCategory::OpeningBalance);++Index)
+        for (int32 Index=0;Index<=static_cast<int32>(EWalletTransactionCategory::MissionReward);++Index)
             Categories.Add(MakeShared<FString>(StaticEnum<EWalletTransactionCategory>()->GetNameStringByValue(Index).ToUpper()));
         auto Actions = SNew(SHorizontalBox);
         auto AddAction = [&](const FText& Label, const FText& Tip, TFunction<void()> Action)

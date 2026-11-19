@@ -35,7 +35,9 @@ struct FS_AgentCatalogRow : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadOnly) int32 Level = 1;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FString Description;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<int32> MissionIds;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<EMissionType> MissionTypes;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<int32> CampaignIds;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<FName> DynamicPools;
 
     bool ServesEmpire(EEMPIRE_NAME PilotEmpire) const
     {
@@ -52,6 +54,8 @@ class STARSHATTERWARS_API UAgentCatalogSubsystem : public UGameInstanceSubsystem
 
 public:
     void LoadCatalog();
+    bool PrepareIndependentOffer(FName Agent,FText& Reason);
+    bool StartIndependentAssignment(int32 Id,FText& Reason);
     const TMap<FName, FS_AgentCatalogRow>& GetCatalog() const { return Catalog; }
     const FS_AgentCatalogRow* FindAgent(FName Id) const;
     bool CanContact(FName Id) const;

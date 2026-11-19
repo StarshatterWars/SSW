@@ -9,6 +9,7 @@ struct FMissionDebriefEvidence
     bool bLost = false;
     int32 RoutePoints = 0;
     int32 CompletedRoutePoints = 0;
+    int32 CompletedSecondaryObjectives = 0;
     int32 RequiredObjectives = 0;
     int32 CompletedObjectives = 0;
     bool bFailedObjective = false;

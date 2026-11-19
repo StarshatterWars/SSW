@@ -1,0 +1,58 @@
+[
+  {
+    "Design": "Avenger",
+    "IFF": 2
+  },
+  {
+    "Design": "Cobra",
+    "IFF": 2
+  },
+  {
+    "Design": "Cutlass",
+    "IFF": 3
+  },
+  {
+    "Design": "Eagle",
+    "IFF": 1
+  },
+  {
+    "Design": "Falcon",
+    "IFF": 1
+  },
+  {
+    "Design": "Intruder",
+    "IFF": 2
+  },
+  {
+    "Design": "Jackal",
+    "IFF": 2
+  },
+  {
+    "Design": "Raptor",
+    "IFF": 2
+  },
+  {
+    "Design": "Razor",
+    "IFF": 2
+  },
+  {
+    "Design": "Saber",
+    "IFF": 2
+  },
+  {
+    "Design": "Stormhawk",
+    "IFF": 1
+  },
+  {
+    "Design": "Thunderbolt",
+    "IFF": 1
+  },
+  {
+    "Design": "Viper",
+    "IFF": 2
+  },
+  {
+    "Design": "Zodiac",
+    "IFF": 1
+  }
+]

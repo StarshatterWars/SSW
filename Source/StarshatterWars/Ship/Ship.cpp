@@ -7848,3 +7848,12 @@ void Ship::BindNativePresentation(AShipActor* Actor) { NativePresentation=Actor;
 AShipActor* Ship::GetNativePresentation() const { return NativePresentation.Get(); }
 bool Ship::GetNativeWeaponMuzzle(const Weapon* W,int32 Index,FVector& Position,Camera& Frame) const
 { auto* Actor=GetNativePresentation();return Actor&&Actor->GetSimulationWeaponMuzzle(GetCam(),W,Index,Position,Frame); }
+
+bool Ship::RestoreSavedCargoInventory(FGuid Id)
+{
+    auto* Simulation=Sim::GetSim();if(!Simulation || Simulation->IsNetworked() || !Id.IsValid())return false;
+    auto& State=Simulation->GetEconomy();const FName Key(*(TEXT("Ship/")+Id.ToString(EGuidFormats::Digits)));
+    if(!State.Inventories.Contains(Key))return false;
+    if(CargoInventoryId!=Id)State.Inventories.Remove(GetCargoInventoryKey());
+    CargoInventoryId=Id;ApplyCargoInventoryToManifest();RestoreCourierPackageFromInventory(State);return true;
+}

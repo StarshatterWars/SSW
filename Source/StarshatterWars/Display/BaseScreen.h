@@ -11,7 +11,7 @@
     UBaseScreen
     - Unreal base widget for Starshatter menu/dialog screens.
     - Provides FORM-style ID binding + helper ops (SetLabelText, SetVisible, etc).
-    - Includes legacy .frm parse structures (form/ctrl/defctrl) and merge support.
+    - Keeps serialized widget binding metadata; external FRM ingestion is retired.
     - Adds unified dialog input hooks: HandleAccept() / HandleCancel()
       so every dialog behaves identically (Enter/Escape).
     - Adds RichText support for legacy FORM type: text (URichTextBlock).
@@ -520,7 +520,7 @@ protected:
     // ----------------------------------------------------------------
     // Legacy FORM parse + defaults application (supports defctrl)
     // ----------------------------------------------------------------
-    bool ParseLegacyForm(const FString& InText, FParsedForm& OutForm, FString& OutError) const;
+
     void ApplyLegacyFormDefaults(const FParsedForm& Parsed);
 
 protected:

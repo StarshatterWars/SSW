@@ -28,7 +28,7 @@ public:
     bool Dock(FGuid,FText&);
     bool CanLoadSpare(FText&) const;
     bool LoadSpare(FText&);
-    FText GetStatusText() const {return LastStatus;}
+    FText GetStatusText() const;
 private:
     TMap<FName,FMiningDroneBayDefinition> Bays;
     TMap<FGuid,TWeakObjectPtr<class AMiningDroneActor>> Visuals;

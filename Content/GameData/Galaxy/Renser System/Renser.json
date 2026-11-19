@@ -3,7 +3,7 @@
   "sky": {
     "nebula": "Nebula-Renser.mag",
     "poly_stars": "stars.mag",
-	"haze": ""
+    "haze": ""
   },
   "stars": 500,
   "dust": 220,
@@ -20,9 +20,9 @@
     "radius": 1597000000,
     "mass": 2.13e+30,
     "light": 160000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,	
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -56,7 +56,7 @@
         "high_res": "Renser/garana_hi.pcx",
         "radius": 4318000,
         "mass": 3.15e+24,
-        "orbit": 61900000000,
+        "orbit": 62000000000.0,
         "rotation": 13.19,
         "region": {
           "name": "Garana",
@@ -66,7 +66,9 @@
           "inclination": 0.62,
           "link": []
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.193,
+        "inclination": 6.15
       },
       {
         "name": "Rhomindal",
@@ -75,7 +77,7 @@
         "high_res": "Renser/rhomindal_hi.pcx",
         "radius": 5735000,
         "mass": 4.95e+24,
-        "orbit": 115300000000,
+        "orbit": 1153000000000.0,
         "rotation": 29.3,
         "region": {
           "name": "Rhomindal",
@@ -85,7 +87,9 @@
           "inclination": 0.55,
           "link": []
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.22441080381439724,
+        "inclination": 9.98
       },
       {
         "name": "Renser",
@@ -101,7 +105,7 @@
           170,
           200
         ],
-        "orbit": 196400000000,
+        "orbit": 20000000000.0,
         "rotation": 17,
         "region": {
           "name": "Renser",
@@ -111,16 +115,18 @@
           "inclination": 0.49,
           "link": []
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.219,
+        "inclination": 9.97
       },
       {
         "name": "Marisol",
         "map": "Renser/marisol_map.pcx",
         "image": "Renser/marisol.jpg",
-		"high_res": "Renser/marisol.jpg",
+        "high_res": "Renser/marisol.jpg",
         "radius": 27489000,
         "mass": 4.21e+26,
-        "orbit": 375000000000,
+        "orbit": 375000000000.0,
         "tilt": 0.2,
         "rotation": 39.2,
         "region": {
@@ -139,7 +145,7 @@
             "high_res": "Moons/rock_hi.pcx",
             "radius": 3541000,
             "mass": 3e+22,
-            "orbit": 265000000,
+            "orbit": 265000000.0,
             "rotation": 100,
             "region": {
               "name": "Asur",
@@ -148,7 +154,9 @@
               "orbit": 75000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 15.0
           },
           {
             "name": "Malinus",
@@ -157,9 +165,9 @@
             "high_res": "Moons/lunar_hi.pcx",
             "radius": 5211000,
             "rotation": 19,
-            "inclination": 0,
+            "inclination": 7.53,
             "mass": 6e+24,
-            "orbit": 371000000,
+            "orbit": 371000000.0,
             "region": {
               "name": "Malinus",
               "radius": 480000,
@@ -167,7 +175,8 @@
               "orbit": 75000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           },
           {
             "name": "Florina",
@@ -182,7 +191,7 @@
               255
             ],
             "mass": 3.98e+24,
-            "orbit": 624000000,
+            "orbit": 624000000.0,
             "region": {
               "name": "Florina",
               "radius": 480000,
@@ -190,9 +199,13 @@
               "orbit": 75000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 9.87
           }
-        ]
+        ],
+        "eccentricity": 0.127,
+        "inclination": 3.55
       },
       {
         "name": "Khaital",
@@ -207,7 +220,7 @@
           160,
           190
         ],
-        "orbit": 578000000000,
+        "orbit": 578000000000.0,
         "rotation": 28,
         "region": {
           "name": "Khaital",
@@ -218,7 +231,9 @@
           "link": [
             "Trellis"
           ]
-        }
+        },
+        "eccentricity": 0.15753857848442906,
+        "inclination": 7.53
       }
     ]
   }

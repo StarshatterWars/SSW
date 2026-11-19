@@ -1,4 +1,5 @@
-﻿#include "BlueprintCatalogSubsystem.h"
+#include "BlueprintCatalogSubsystem.h"
+#include "ProductionCatalog.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "TransactionAI.h"
 #include "Engine/GameInstance.h"
@@ -34,14 +35,14 @@ bool UBlueprintCatalogSubsystem::LoadCatalog()
     if (!FFileHelper::LoadFileToString(Json, *(FPaths::ProjectContentDir() / TEXT("GameData/Production/blueprints.json"))) ||
         !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Rows)) return false;
     TMap<FName, FBlueprintOffer> Imported;
-    const auto* Recipes = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionRecipes.DT_ProductionRecipes"));
+    const auto& Recipes = SSWProductionCatalog::Recipes();
     for (const auto& Value : Rows)
     {
         const TSharedPtr<FJsonObject>* Object = nullptr; FBlueprintOffer Row;
         if (!Value->TryGetObject(Object) || !Object || !Object->IsValid() || !FJsonObjectConverter::JsonObjectToUStruct(Object->ToSharedRef(), &Row) ||
             Row.Recipe.IsNone() || Row.DisplayName.IsEmpty() || Imported.Contains(Row.Recipe) || Row.OriginalPrice <= 0 ||
             Row.OriginalPrice > 1000000000000LL || Row.CopyPrice <= 0 || Row.CopyPrice >= Row.OriginalPrice || Row.CopyRuns <= 0 || Row.CopyRuns > 1000000 ||
-            !Recipes || !Recipes->FindRow<FSSWProductionRecipe>(Row.Recipe, TEXT("Blueprint catalog"), false)) return false;
+            !Recipes.Contains(Row.Recipe)) return false;
         Imported.Add(Row.Recipe, Row);
     }
     Offers = MoveTemp(Imported); UE_LOG(LogTemp, Display, TEXT("[Blueprints] Loaded %d NPC blueprint offers."), Offers.Num());
@@ -113,6 +114,7 @@ bool UBlueprintCatalogSubsystem::QuotePlayerJob(const FEconomyState& State, cons
     const TMap<FName, FSkillProgress>* PilotSkills, const TMap<FName, FSkillDefinition>* SkillCatalog)
 {
     Quote = {};
+    if(!Recipe.ShipDesign.IsNone() && Site.FacilityType!=ESSWProductionFacilityType::Shipyard){Reason=INVTEXT("Ships can only be constructed at a shipyard.");return false;}
     if (!MeetsRecipeSkills(Recipe, PilotSkills, Reason, SkillCatalog)) return false;
     if (!Site.bPlayerManufacturing) { Reason=INVTEXT("This facility does not offer player manufacturing."); return false; }
     if (!FMath::IsFinite(Site.PlayerMaterialMultiplier) || Site.PlayerMaterialMultiplier<.5 || Site.PlayerMaterialMultiplier>2 ||
@@ -199,8 +201,7 @@ bool UBlueprintCatalogSubsystem::CanBeginPlayerJob(const FSSWProductionFacility&
     const FName RecipeId = BlueprintRow ? BlueprintRow->Recipe : NAME_None;
     if (!Local->SupportsRecipe(RecipeId))
     { Reason = INVTEXT("This facility does not manufacture the selected recipe."); return false; }
-    const auto* Table = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_ProductionRecipes.DT_ProductionRecipes"));
-    const auto* Recipe = Table ? Table->FindRow<FSSWProductionRecipe>(RecipeId, TEXT("Player industry"), false) : nullptr;
+    const auto* Recipe = SSWProductionCatalog::Recipes().Find(RecipeId);
     if (!Players || !Recipe) { Reason = INVTEXT("Player industry data is unavailable."); return false; }
     const auto* Skills = GetGameInstance()->GetSubsystem<USkillsSubsystem>();
     if (!Recipe->RequiredSkillLevels.IsEmpty() && (!Skills || Skills->GetCatalog().IsEmpty()))

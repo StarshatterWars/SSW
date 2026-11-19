@@ -18,4 +18,11 @@ public:
 
 protected:
     TSharedRef<SWidget> RebuildWidget() override;
+    void NativeConstruct() override;
+    void NativeDestruct() override;
+    void NativeTick(const FGeometry&,float) override;
+private:
+    FDelegateHandle JournalChangedHandle;
+    bool bJournalDirty=false;
+    TSharedPtr<class SBox> ContentHost;
 };

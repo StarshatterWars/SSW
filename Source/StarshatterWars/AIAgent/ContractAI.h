@@ -10,6 +10,7 @@ public:
     bool Reserve(const FString& Item, double& Available, double Requested);
     bool Reserve(FEconomyState&, FName Source, const FString& Item, double Requested);
     void Release(FEconomyState&);
+    bool RestoreReservation(const FEconomyState&,FGuid);
     FName GetSource() const { return SourceInventory; }
     void CommitPickup(double LoadedTonnes);
     void Release(double& Available);

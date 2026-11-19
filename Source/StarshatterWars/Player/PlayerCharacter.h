@@ -192,6 +192,7 @@ public:
     static const char* MedalDescription(int32 MedalBit);
 
     static int32 CommandRankRequired(int32 ShipClassMask);
+    static int32 HullRankRequired(int32 ShipClassMask,const FString& Design);
 
     // ------------------------------------------------------------------
     // Roster + persistence (List<> kept)

@@ -1,0 +1,2082 @@
+[
+	{
+		"Row": "1st Force [Independent System of Solus]",
+		"Type": "FORCE",
+		"Id": 1,
+		"Name": "Independent System of Solus",
+		"DisplayName": "1st Force [Independent System of Solus]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Solus",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "NONE",
+		"ParentId": 0,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "1st Civilian [Solus Civilian Infrastructure]",
+		"Type": "CIVILIAN",
+		"Id": 1,
+		"Name": "Solus Civilian Infrastructure",
+		"DisplayName": "1st Civilian [Solus Civilian Infrastructure]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2000th Infrastructure [Solus Farcaster Network]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2000,
+		"Name": "Solus Farcaster Network",
+		"DisplayName": "2000th Infrastructure [Solus Farcaster Network]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2001st Infrastructure [Solus-Kalon]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2001,
+		"Name": "Solus-Kalon",
+		"DisplayName": "2001st Infrastructure [Solus-Kalon]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Solus",
+		"Location":
+		{
+			"X": 80000,
+			"Y": 20000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Solus-Kalon",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2002nd Infrastructure [Kalon-Solus]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2002,
+		"Name": "Kalon-Solus",
+		"DisplayName": "2002nd Infrastructure [Kalon-Solus]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Kalon",
+		"Location":
+		{
+			"X": 90000,
+			"Y": -54000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Kalon-Solus",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2003rd Infrastructure [Solus-Trellis]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2003,
+		"Name": "Solus-Trellis",
+		"DisplayName": "2003rd Infrastructure [Solus-Trellis]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Solus",
+		"Location":
+		{
+			"X": -200000,
+			"Y": -100000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Solus-Trellis",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2004th Infrastructure [Trellis-Solus]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2004,
+		"Name": "Trellis-Solus",
+		"DisplayName": "2004th Infrastructure [Trellis-Solus]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -100000,
+			"Y": -150000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Trellis-Solus",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2005th Infrastructure [Solus-Jalah]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2005,
+		"Name": "Solus-Jalah",
+		"DisplayName": "2005th Infrastructure [Solus-Jalah]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Solus",
+		"Location":
+		{
+			"X": 150000,
+			"Y": -180000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Solus-Jalah",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2006th Infrastructure [Jalah-Solus]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2006,
+		"Name": "Jalah-Solus",
+		"DisplayName": "2006th Infrastructure [Jalah-Solus]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Jalah-Solus",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2007th Infrastructure [Trellis-Jalah]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2007,
+		"Name": "Trellis-Jalah",
+		"DisplayName": "2007th Infrastructure [Trellis-Jalah]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 50000,
+			"Y": -100000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Trellis-Jalah",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2008th Infrastructure [Jalah-Trellis]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2008,
+		"Name": "Jalah-Trellis",
+		"DisplayName": "2008th Infrastructure [Jalah-Trellis]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Jalah",
+		"Location":
+		{
+			"X": 120000,
+			"Y": -200000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Jalah-Trellis",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2100th Transport [Solus Port Authority]",
+		"Type": "TRANSPORT",
+		"Id": 2100,
+		"Name": "Solus Port Authority",
+		"DisplayName": "2100th Transport [Solus Port Authority]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2101st Station [Trellis Docks]",
+		"Type": "STATION",
+		"Id": 2101,
+		"Name": "Trellis Docks",
+		"DisplayName": "2101st Station [Trellis Docks]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "TRANSPORT",
+		"ParentId": 2100,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Trellis Docks",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2110th Intercept Squadron [Trellis Guest 1]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 2110,
+		"Name": "Trellis Guest 1",
+		"DisplayName": "2110th Intercept Squadron [Trellis Guest 1]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "STATION",
+		"ParentId": 2101,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Trellis Guest 1",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Falcon",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 8,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2111th Fighter Squadron [Trellis Guest 2]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 2111,
+		"Name": "Trellis Guest 2",
+		"DisplayName": "2111th Fighter Squadron [Trellis Guest 2]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "STATION",
+		"ParentId": 2101,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Trellis Guest 2",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Stormhawk",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 8,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2112th LCA Squadron [Trellis Guest 3]",
+		"Type": "LCA_SQUADRON",
+		"Id": 2112,
+		"Name": "Trellis Guest 3",
+		"DisplayName": "2112th LCA Squadron [Trellis Guest 3]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "STATION",
+		"ParentId": 2101,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Trellis Guest 3",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Zodiac",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 8,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2102nd Station [Harmony Station]",
+		"Type": "STATION",
+		"Id": 2102,
+		"Name": "Harmony Station",
+		"DisplayName": "2102nd Station [Harmony Station]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Kalon",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "TRANSPORT",
+		"ParentId": 2100,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Harmony Station",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station2",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2120th Intercept Squadron [Harmony Guest 1]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 2120,
+		"Name": "Harmony Guest 1",
+		"DisplayName": "2120th Intercept Squadron [Harmony Guest 1]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Kalon",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "STATION",
+		"ParentId": 2102,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Harmony Guest 1",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Falcon",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 8,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2121st Fighter Squadron [Harmony Guest 2]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 2121,
+		"Name": "Harmony Guest 2",
+		"DisplayName": "2121st Fighter Squadron [Harmony Guest 2]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Kalon",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "STATION",
+		"ParentId": 2102,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Harmony Guest 2",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Stormhawk",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 8,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2122nd LCA Squadron [Harmony Guest 3]",
+		"Type": "LCA_SQUADRON",
+		"Id": 2122,
+		"Name": "Harmony Guest 3",
+		"DisplayName": "2122nd LCA Squadron [Harmony Guest 3]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Kalon",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "STATION",
+		"ParentId": 2102,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Harmony Guest 3",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Zodiac",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 8,
+				"UnitDamage": 0,
+				"UnitDead": 8,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2200th Civilian [Telmera City]",
+		"Type": "CIVILIAN",
+		"Id": 2200,
+		"Name": "Telmera City",
+		"DisplayName": "2200th Civilian [Telmera City]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -54000,
+			"Y": 30000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2201st Civilian [Admin]",
+		"Type": "CIVILIAN",
+		"Id": 2201,
+		"Name": "Admin",
+		"DisplayName": "2201st Civilian [Admin]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -53000,
+			"Y": 29500,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Admin",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Bldg00",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2202nd Civilian [Office]",
+		"Type": "CIVILIAN",
+		"Id": 2202,
+		"Name": "Office",
+		"DisplayName": "2202nd Civilian [Office]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -52500,
+			"Y": 28000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Office",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Bldg01",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2203rd Civilian [Tower]",
+		"Type": "CIVILIAN",
+		"Id": 2203,
+		"Name": "Tower",
+		"DisplayName": "2203rd Civilian [Tower]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -54600,
+			"Y": 32800,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Tower",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Bldg02",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2204th Civilian [Alton]",
+		"Type": "CIVILIAN",
+		"Id": 2204,
+		"Name": "Alton",
+		"DisplayName": "2204th Civilian [Alton]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -56000,
+			"Y": 26000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Alton",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "Bldg03",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2210th Civilian [City Block]",
+		"Type": "CIVILIAN",
+		"Id": 2210,
+		"Name": "City Block",
+		"DisplayName": "2210th Civilian [City Block]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -60000,
+			"Y": 28000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "City Block",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "City00",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2211th Civilian [City Block]",
+		"Type": "CIVILIAN",
+		"Id": 2211,
+		"Name": "City Block",
+		"DisplayName": "2211th Civilian [City Block]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -56000,
+			"Y": 30000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "City Block",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "City02",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2212th Civilian [City Block]",
+		"Type": "CIVILIAN",
+		"Id": 2212,
+		"Name": "City Block",
+		"DisplayName": "2212th Civilian [City Block]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -51000,
+			"Y": 30700,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "City Block",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "City00",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2215th Civilian [City Block]",
+		"Type": "CIVILIAN",
+		"Id": 2215,
+		"Name": "City Block",
+		"DisplayName": "2215th Civilian [City Block]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 52600,
+			"Y": -52000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "City Block",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "City00",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2216th Civilian [City Block]",
+		"Type": "CIVILIAN",
+		"Id": 2216,
+		"Name": "City Block",
+		"DisplayName": "2216th Civilian [City Block]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": 53000,
+			"Y": -55000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "City Block",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Building",
+				"UnitDesign": "City01",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2207th War Production [Factory 2]",
+		"Type": "WAR_PRODUCTION",
+		"Id": 2207,
+		"Name": "Factory 2",
+		"DisplayName": "2207th War Production [Factory 2]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -53000,
+			"Y": 30500,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Factory 2",
+				"UnitRegnum": "000",
+				"UnitRegion": "",
+				"UnitClass": "Factory",
+				"UnitDesign": "Fact04",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "1st Starbase [Telmera Starport]",
+		"Type": "STARBASE",
+		"Id": 1,
+		"Name": "Telmera Starport",
+		"DisplayName": "1st Starbase [Telmera Starport]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -55000,
+			"Y": 22000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 2200,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Telmera Starport",
+				"UnitRegnum": "000",
+				"UnitRegion": "",
+				"UnitClass": "Starbase",
+				"UnitDesign": "Airbase1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2223rd Intercept Squadron [Telmera Guest 1]",
+		"Type": "INTERCEPT_SQUADRON",
+		"Id": 2223,
+		"Name": "Telmera Guest 1",
+		"DisplayName": "2223rd Intercept Squadron [Telmera Guest 1]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -55000,
+			"Y": 22000,
+			"Z": 0
+		},
+		"ParentType": "STARBASE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Telmera Guest 1",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Falcon",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 10,
+				"UnitDamage": 0,
+				"UnitDead": 10,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2224th Fighter Squadron [Telmera Guest 2]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 2224,
+		"Name": "Telmera Guest 2",
+		"DisplayName": "2224th Fighter Squadron [Telmera Guest 2]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -55000,
+			"Y": 22000,
+			"Z": 0
+		},
+		"ParentType": "STARBASE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Telmera Guest 2",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Stormhawk",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 10,
+				"UnitDamage": 0,
+				"UnitDead": 10,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2225th LCA Squadron [Telmera Guest 3]",
+		"Type": "LCA_SQUADRON",
+		"Id": 2225,
+		"Name": "Telmera Guest 3",
+		"DisplayName": "2225th LCA Squadron [Telmera Guest 3]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Telmera",
+		"Location":
+		{
+			"X": -55000,
+			"Y": 22000,
+			"Z": 0
+		},
+		"ParentType": "STARBASE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Telmera Guest 3",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Zodiac",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 10,
+				"UnitDamage": 0,
+				"UnitDead": 10,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2300th Non-Com [Solus Freight]",
+		"Type": "NON_COM",
+		"Id": 2300,
+		"Name": "Solus Freight",
+		"DisplayName": "2300th Non-Com [Solus Freight]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 0,
+			"Y": -20000,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "3000th Freight [Trellis Independent Shipping]",
+		"Type": "FREIGHT",
+		"Id": 3000,
+		"Name": "Trellis Independent Shipping",
+		"DisplayName": "3000th Freight [Trellis Independent Shipping]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 80000,
+			"Y": -120000,
+			"Z": 0
+		},
+		"ParentType": "NON_COM",
+		"ParentId": 2300,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "3798th Freight [Trellis ISS White Dawn]",
+		"Type": "FREIGHT",
+		"Id": 3798,
+		"Name": "Trellis ISS White Dawn",
+		"DisplayName": "3798th Freight [Trellis ISS White Dawn]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 90000,
+			"Y": -130000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS White Dawn",
+				"UnitRegnum": "798",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "Green",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3780th Freight [Trellis ISS Fairlight]",
+		"Type": "FREIGHT",
+		"Id": 3780,
+		"Name": "Trellis ISS Fairlight",
+		"DisplayName": "3780th Freight [Trellis ISS Fairlight]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 110000,
+			"Y": -120000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Fairlight",
+				"UnitRegnum": "780",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "Green",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3354th Freight [Trellis ISS Turimo]",
+		"Type": "FREIGHT",
+		"Id": 3354,
+		"Name": "Trellis ISS Turimo",
+		"DisplayName": "3354th Freight [Trellis ISS Turimo]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 175000,
+			"Y": 200000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Turimo",
+				"UnitRegnum": "354",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "Green",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3843rd Freight [Trellis ISS Farlook]",
+		"Type": "FREIGHT",
+		"Id": 3843,
+		"Name": "Trellis ISS Farlook",
+		"DisplayName": "3843rd Freight [Trellis ISS Farlook]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": 160000,
+			"Y": 211000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Farlook",
+				"UnitRegnum": "843",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "Green",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3235th Freight [Trellis ISS Grayhawke]",
+		"Type": "FREIGHT",
+		"Id": 3235,
+		"Name": "Trellis ISS Grayhawke",
+		"DisplayName": "3235th Freight [Trellis ISS Grayhawke]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -20000,
+			"Y": 228000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Grayhawke",
+				"UnitRegnum": "235",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "Blue",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3493rd Freight [Trellis ISS Ulmo]",
+		"Type": "FREIGHT",
+		"Id": 3493,
+		"Name": "Trellis ISS Ulmo",
+		"DisplayName": "3493rd Freight [Trellis ISS Ulmo]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Kalon",
+		"Location":
+		{
+			"X": -90000,
+			"Y": 160000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Ulmo",
+				"UnitRegnum": "493",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "Blue",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3219th Freight [Trellis ISS Wayward]",
+		"Type": "FREIGHT",
+		"Id": 3219,
+		"Name": "Trellis ISS Wayward",
+		"DisplayName": "3219th Freight [Trellis ISS Wayward]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Kalon",
+		"Location":
+		{
+			"X": -102000,
+			"Y": 138000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Wayward",
+				"UnitRegnum": "219",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM4300",
+				"UnitSkin": "Blue",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3381st Freight [Trellis ISS Sutter]",
+		"Type": "FREIGHT",
+		"Id": 3381,
+		"Name": "Trellis ISS Sutter",
+		"DisplayName": "3381st Freight [Trellis ISS Sutter]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Kalon",
+		"Location":
+		{
+			"X": 99000,
+			"Y": -128000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Sutter",
+				"UnitRegnum": "381",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "Blue",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3521st Freight [Trellis ISS Alen Carl]",
+		"Type": "FREIGHT",
+		"Id": 3521,
+		"Name": "Trellis ISS Alen Carl",
+		"DisplayName": "3521st Freight [Trellis ISS Alen Carl]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Solus",
+		"Location":
+		{
+			"X": 79000,
+			"Y": 228000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Alen Carl",
+				"UnitRegnum": "521",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "Blue",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3617th Freight [Trellis ISS Hal Bennet]",
+		"Type": "FREIGHT",
+		"Id": 3617,
+		"Name": "Trellis ISS Hal Bennet",
+		"DisplayName": "3617th Freight [Trellis ISS Hal Bennet]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Meridian",
+		"Location":
+		{
+			"X": 75000,
+			"Y": -150000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Hal Bennet",
+				"UnitRegnum": "617",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "Blue",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5000th Civilian [University]",
+		"Type": "CIVILIAN",
+		"Id": 5000,
+		"Name": "University",
+		"DisplayName": "5000th Civilian [University]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Meridian",
+		"Location":
+		{
+			"X": 75000,
+			"Y": 80000,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "5001st Habitat [Tal Vesta Stellar Observatory]",
+		"Type": "HABITAT",
+		"Id": 5001,
+		"Name": "Tal Vesta Stellar Observatory",
+		"DisplayName": "5001st Habitat [Tal Vesta Stellar Observatory]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Meridian",
+		"Location":
+		{
+			"X": 75000,
+			"Y": 75000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Tal Vesta Stellar Observatory",
+				"UnitRegnum": "000",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Observatory",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5002nd Freight [Logistics]",
+		"Type": "FREIGHT",
+		"Id": 5002,
+		"Name": "Logistics",
+		"DisplayName": "5002nd Freight [Logistics]",
+		"Intel": "SECRET",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Meridian",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 0
+		},
+		"ParentType": "HABITAT",
+		"ParentId": 5001,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Loader",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "LCA",
+				"UnitDesign": "Zodiac",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 2,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8724th Freight [Solus Civilian Freight]",
+		"Type": "FREIGHT",
+		"Id": 8724,
+		"Name": "Solus Civilian Freight",
+		"DisplayName": "8724th Freight [Solus Civilian Freight]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Trellis",
+		"Location":
+		{
+			"X": -100000,
+			"Y": 0,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Solus Merchant 1",
+				"UnitRegnum": "8724-1",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Solus Merchant 2",
+				"UnitRegnum": "8724-2",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8547th Station [Kalon Materials Works]",
+		"Type": "STATION",
+		"Id": 8547,
+		"Name": "Kalon Materials Works",
+		"DisplayName": "8547th Station [Kalon Materials Works]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Kalon",
+		"Location":
+		{
+			"X": -106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Kalon Materials Works",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8548th Station [Kalon Orbital Concentrator]",
+		"Type": "STATION",
+		"Id": 8548,
+		"Name": "Kalon Orbital Concentrator",
+		"DisplayName": "8548th Station [Kalon Orbital Concentrator]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Kalon",
+		"Location":
+		{
+			"X": 106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Kalon Orbital Concentrator",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8549th Station [Solus Transfer Station]",
+		"Type": "STATION",
+		"Id": 8549,
+		"Name": "Solus Transfer Station",
+		"DisplayName": "8549th Station [Solus Transfer Station]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Solus",
+		"System": "",
+		"Region": "Solus",
+		"Location":
+		{
+			"X": 125000,
+			"Y": 0,
+			"Z": 12000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Solus Transfer Station",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	}
+]

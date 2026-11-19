@@ -1,4 +1,5 @@
 #include "SSWDesignIngestionCommandlet.h"
+#include "OOBJsonCatalog.h"
 
 #if WITH_EDITOR
 #include "Algo/Find.h"
@@ -433,6 +434,37 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
         UE_LOG(LogTemp,Display,TEXT("[AwardsJson] %d ranks, %d medals; every legacy field preserved"),Ranks->GetRowMap().Num(),Medals->GetRowMap().Num());
         return 0;
     }
+    if(FParse::Param(*Params,TEXT("ConvertOOBJson")) || FParse::Param(*Params,TEXT("WriteOOBJsonTables")))
+    {
+        const FString Base=FPaths::ProjectContentDir()/TEXT("GameData/Campaigns"),Directory=Base/TEXT("OOB");
+        const bool Export=FParse::Param(*Params,TEXT("ConvertOOBJson"));
+        if(Export)IFileManager::Get().MakeDirectory(*Directory,true);
+        auto* Context=NewObject<USSWGameInstance>();auto* Roster=NewObject<USSWCombatGroupSubsystem>(Context);
+        auto* Expected=NewObject<UDataTable>();Expected->RowStruct=FS_CombatGroup::StaticStruct();
+        int32 Files=0,Units=0;
+        for(const TCHAR* Faction:{TEXT("Alliance"),TEXT("Dantari"),TEXT("Haiche"),TEXT("Hegemony"),TEXT("Pirates"),TEXT("Silessia"),TEXT("Solus"),TEXT("Zolons")})
+        {
+            auto* Part=NewObject<UDataTable>();Part->RowStruct=FS_CombatGroup::StaticStruct();Roster->CombatGroupDataTable=Part;
+            const FTCHARToUTF8 Def(*(Base/(FString(Faction)+TEXT(".def"))));Roster->LoadCombatRoster(Def.Get(),-1);
+            if(Part->GetRowMap().IsEmpty())return 50;
+            const FString Path=Directory/(FString(Faction)+TEXT(".json"));FString Json;
+            if(Export && (!DesignTableJson::Export(*Part,Json) || !FFileHelper::SaveStringToFile(Json,*Path,FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM)))return 51;
+            auto* Imported=NewObject<UDataTable>();
+            if(!DesignTableJson::Import(*Imported,*FS_CombatGroup::StaticStruct(),Path) || !DesignTableJson::Compare(*Part,*Imported))return 52;
+            for(const auto& Pair:Part->GetRowMap())
+            {
+                if(Expected->FindRowUnchecked(Pair.Key)){UE_LOG(LogTemp,Error,TEXT("Cross-faction duplicate OOB row %s"),*Pair.Key.ToString());return 53;}
+                const auto& Group=*reinterpret_cast<const FS_CombatGroup*>(Pair.Value);Expected->AddRow(Pair.Key,Group);Units+=Group.Unit.Num();
+            }
+            ++Files;
+        }
+        auto* Combined=NewObject<UDataTable>();FString Error;
+        if(!OOBJsonCatalog::ImportDirectory(*Combined,Directory,Error) || !DesignTableJson::Compare(*Expected,*Combined))
+        {UE_LOG(LogTemp,Error,TEXT("[OOBJson] %s"),*Error);return 54;}
+        if(!SaveOutputTable(*Combined,TEXT("DT_CombatGroup"),false))return 55;
+        UE_LOG(LogTemp,Display,TEXT("[OOBJson] PASS: %d factions, %d groups, %d unit rows; every reflected DEF field preserved; DT_CombatGroup saved"),Files,Combined->GetRowMap().Num(),Units);
+        return 0;
+    }
     if(FParse::Param(*Params,TEXT("ConvertCampaignJson")) || FParse::Param(*Params,TEXT("WriteCampaignJsonTables")))
     {
         const bool Export=FParse::Param(*Params,TEXT("ConvertCampaignJson"));
@@ -722,6 +754,7 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
                 const FString Key = Row.Name.TrimStartAndEnd();
                 if (const FBody* Source = Authored.Find(Key))
                 {
+                    Row.Orbit=Source->Orbit;Row.Inclination=Source->Inclination;Row.Eccentricity=Source->Eccentricity;
                     Row.Population = Source->Population;
                     Row.Production = Source->Production;
                     Row.WorldScapeProfile = Source->WorldScapeProfile;

@@ -3,7 +3,7 @@
   "sky": {
     "nebula": "Nebula-Loris.mag",
     "poly_stars": "stars.mag",
-	"haze": ""
+    "haze": ""
   },
   "stars": 500,
   "dust": 300,
@@ -20,9 +20,9 @@
     "radius": 1500000000,
     "mass": 1.8e+30,
     "light": 110000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -38,12 +38,12 @@
         "name": "Duna",
         "map": "Loris/duna_map.pcx",
         "image": "Loris/duna.jpg",
-		"high_res": "Loris/duna.jpg",
+        "high_res": "Loris/duna.jpg",
         "radius": 25100000,
         "mass": 1.38e+25,
         "tilt": 0.125,
         "tscale": 2,
-        "orbit": 81000000000,
+        "orbit": 81000000000.0,
         "rotation": 36.3,
         "region": {
           "name": "Duna",
@@ -58,10 +58,10 @@
             "name": "Ansel",
             "map": "Paragon/bryn_map.pcx",
             "image": "Paragon/bryn_lo.pcx",
-			"high_res": "Paragon/bryn_hi.jpg",
+            "high_res": "Paragon/bryn_hi.jpg",
             "radius": 2400000,
             "mass": 1.2e+22,
-            "orbit": 84000000,
+            "orbit": 84000000.0,
             "rotation": 30,
             "region": {
               "name": "Ansel",
@@ -70,7 +70,9 @@
               "orbit": 11000000,
               "inclination": -0.05,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 7.17
           },
           {
             "name": "Kaius",
@@ -79,9 +81,9 @@
             "high_res": "Thralis/benares_hi.pcx",
             "radius": 3100000,
             "rotation": 19,
-            "inclination": 0,
+            "inclination": 0.0,
             "mass": 1.6e+24,
-            "orbit": 130100000,
+            "orbit": 130100000.0,
             "region": {
               "name": "Kaius",
               "radius": 480000,
@@ -89,9 +91,12 @@
               "orbit": 11000000,
               "inclination": 0.05,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           }
-        ]
+        ],
+        "eccentricity": 0.135,
+        "inclination": -3.21
       },
       {
         "name": "Loris",
@@ -107,7 +112,7 @@
           180,
           160
         ],
-        "orbit": 154000000000,
+        "orbit": 154000000000.0,
         "rotation": 26.3,
         "region": {
           "name": "Loris",
@@ -125,7 +130,7 @@
             "high_res": "Moons/rock_hi.pcx",
             "radius": 400000,
             "mass": 4.3e+23,
-            "orbit": 35000000,
+            "orbit": 35000000.0,
             "rotation": 9.2,
             "region": {
               "name": "Loris I",
@@ -134,7 +139,9 @@
               "orbit": 11000000,
               "inclination": 0.12,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 20.13
           },
           {
             "name": "Loris II",
@@ -143,9 +150,9 @@
             "high_res": "Moons/rock_hi.pcx",
             "radius": 250000,
             "rotation": 19,
-            "inclination": 0,
+            "inclination": 0.0,
             "mass": 6e+23,
-            "orbit": 61000000,
+            "orbit": 61000000.0,
             "region": {
               "name": "Loris II",
               "radius": 480000,
@@ -153,18 +160,21 @@
               "orbit": 11000000,
               "inclination": 0.06,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           }
-        ]
+        ],
+        "eccentricity": 0.161,
+        "inclination": -16.94
       },
       {
         "name": "Casalle",
         "map": "Giants/GasGiant5_map.pcx",
         "image": "Giants/GasGiant5.jpg",
-		"high_res": "Giants/GasGiant5.jpg",
+        "high_res": "Giants/GasGiant5.jpg",
         "radius": 38200000,
         "mass": 4e+26,
-        "orbit": 295000000000,
+        "orbit": 295000000000.0,
         "tilt": 0.1,
         "tscale": 2,
         "ring": "Giants/Ring3.pcx",
@@ -192,7 +202,7 @@
             "high_res": "Haiche/kala_hi.pcx",
             "radius": 2200000,
             "mass": 1.9e+22,
-            "orbit": 144000000,
+            "orbit": 144000000.0,
             "rotation": 30,
             "region": {
               "name": "Demeter",
@@ -201,7 +211,9 @@
               "orbit": 11000000,
               "inclination": -0.13,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 17.97
           },
           {
             "name": "Thoraine",
@@ -210,9 +222,9 @@
             "high_res": "Moons/lunar_hi.pcx",
             "radius": 3200000,
             "rotation": 19,
-            "inclination": 0,
+            "inclination": 0.0,
             "mass": 1.7e+24,
-            "orbit": 225100000,
+            "orbit": 225100000.0,
             "region": {
               "name": "Thoraine",
               "radius": 480000,
@@ -220,9 +232,12 @@
               "orbit": 11000000,
               "inclination": -0.03,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           }
-        ]
+        ],
+        "eccentricity": 0.21462982669830508,
+        "inclination": 6.61
       }
     ]
   }

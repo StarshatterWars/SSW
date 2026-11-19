@@ -1976,7 +1976,7 @@ Orbital::Orbital(StarSystem* s, const char* n, OrbitalType t, double m, double r
 	, regions()
 {
 	if (system && primary && orbit > 0) {
-		velocity = sqrt(GRAV * primary->Mass() / orbit);
+		velocity = sqrt(GRAV * (primary->Mass() + FMath::Max(0.0,mass)) / orbit);
 		period = 2 * PI * orbit / velocity;
 	}
 
@@ -1998,16 +1998,18 @@ Orbital::~Orbital()
 
 void Orbital::SetOrbitShape(double AuthoredEccentricity, double InclinationDegrees)
 {
-    authored_eccentricity = FMath::IsFinite(AuthoredEccentricity) && AuthoredEccentricity > 0
-        ? FMath::Min(AuthoredEccentricity, 0.75) : 0.02;
+    authored_eccentricity = FMath::IsFinite(AuthoredEccentricity)
+        ? FMath::Clamp(AuthoredEccentricity, 0.0, 0.75) : 0.0;
     eccentricity = authored_eccentricity;
     orbit_inclination = FMath::IsFinite(InclinationDegrees)
-        ? FMath::DegreesToRadians(InclinationDegrees) : 0.0;
+        ? FMath::DegreesToRadians(FMath::Clamp(InclinationDegrees,-180.0,180.0)) : 0.0;
 }
 
 void Orbital::BoundOrbit(ListIter<OrbitalBody> Siblings)
 {
     eccentricity = authored_eccentricity;
+    if(primary && orbit>0)
+        eccentricity=FMath::Min(eccentricity,FMath::Max(0.0,1.0-(primary->Radius()+ClearanceRadius()+FMath::Max(1000.0,(primary->Radius()+ClearanceRadius())*.01))/orbit));
     if (orbit <= 0)
         return;
 
@@ -2017,18 +2019,21 @@ void Orbital::BoundOrbit(ListIter<OrbitalBody> Siblings)
         if (Sibling && Sibling != this && Sibling->Orbit() > 0)
         {
             const double Gap = FMath::Abs(Sibling->Orbit() - orbit);
-            eccentricity = FMath::Min(eccentricity, 0.45 * Gap / orbit);
+            const double Radii=ClearanceRadius()+Sibling->ClearanceRadius();
+            const double Free=FMath::Max(0.0,Gap-Radii-FMath::Max(1000.0,Radii*.01));
+            eccentricity = FMath::Min(eccentricity, 0.45 * Free / orbit);
         }
     }
 }
 
 FVector Orbital::OrbitOffset(double MeanAnomaly) const
 {
+    if(!FMath::IsFinite(MeanAnomaly) || !FMath::IsFinite(orbit) || orbit<=0)return FVector::ZeroVector;
     const double Mean = FMath::Fmod(MeanAnomaly, 2.0 * PI);
     double Anomaly = Mean;
     if (eccentricity > 0.0)
     {
-        for (int Iteration = 0; Iteration < 8; ++Iteration)
+        for (int Iteration = 0; Iteration < 16; ++Iteration)
         {
             Anomaly -= (Anomaly - eccentricity * FMath::Sin(Anomaly) - Mean) /
                 (1.0 - eccentricity * FMath::Cos(Anomaly));
@@ -2225,45 +2230,38 @@ void StarSystem::AddRegion(OrbitalRegion* Region)
 
 void StarSystem::RecalculateRadius()
 {
-	radius = 0.0;
-
-	ListIter<OrbitalBody> StarIter = bodies;
-	while (++StarIter)
-	{
-		OrbitalBody* Star = StarIter.value();
-		if (!Star)
-		{
-			continue;
-		}
-
-		radius = FMath::Max(radius, Star->Orbit());
-
-		ListIter<OrbitalBody> PlanetIter = Star->Satellites();
-		while (++PlanetIter)
-		{
-			OrbitalBody* Planet = PlanetIter.value();
-			if (!Planet)
-			{
-				continue;
-			}
-
-			Planet->BoundOrbit(Star->Satellites());
-			radius = FMath::Max(radius, Planet->Apoapsis());
-
-			ListIter<OrbitalBody> MoonIter = Planet->Satellites();
-			while (++MoonIter)
-			{
-				OrbitalBody* Moon = MoonIter.value();
-				if (!Moon)
-				{
-					continue;
-				}
-
-				Moon->BoundOrbit(Planet->Satellites());
-				radius = FMath::Max(radius, Moon->Apoapsis());
-			}
-		}
-	}
+    radius=0;
+    const auto BoundGroup=[&](OrbitalBody* Parent)
+    {
+        TArray<OrbitalBody*> Children;for(auto It=Parent->Satellites();++It;)if(It.value())Children.Add(It.value());
+        Children.Sort([](const OrbitalBody& A,const OrbitalBody& B){return A.Orbit()==B.Orbit()?FCStringAnsi::Strcmp(A.GetName(),B.GetName())<0:A.Orbit()<B.Orbit();});
+        OrbitalBody* Previous=nullptr;
+        for(auto* Body:Children)
+        {
+            const double ParentRadii=Parent->Radius()+Body->ClearanceRadius();
+            double Minimum=ParentRadii+FMath::Max(1000.0,ParentRadii*.01);
+            if(Previous){const double Radii=Previous->ClearanceRadius()+Body->ClearanceRadius();Minimum=FMath::Max(Minimum,Previous->Orbit()+Radii+FMath::Max(1000.0,Radii*.01));}
+            if(!FMath::IsFinite(Body->orbit) || Body->orbit<Minimum)
+            {UE_LOG(LogTemp,Warning,TEXT("[Orbit] Corrected %hs/%hs semi-major axis from %.0f to %.0f m for clearance."),GetName(),Body->GetName(),Body->orbit,Minimum);Body->orbit=Minimum;}
+            const double Mu=GRAV*(Parent->Mass()+FMath::Max(0.0,Body->Mass()));
+            Body->velocity=Mu>0?FMath::Sqrt(Mu/Body->orbit):0;
+            Body->period=Body->velocity>0?2*PI*Body->orbit/Body->velocity:0;Previous=Body;
+        }
+        for(auto* Body:Children){Body->BoundOrbit(Parent->Satellites());Body->Update();}
+    };
+    for(ListIter<OrbitalBody> Stars=bodies;++Stars;)
+    {
+        auto* Star=Stars.value();if(!Star)continue;
+        for(auto Planets=Star->Satellites();++Planets;)
+        {
+            auto* Planet=Planets.value();if(!Planet)continue;
+            BoundGroup(Planet);Planet->clearance_radius=Planet->Radius();
+            for(auto Moons=Planet->Satellites();++Moons;)if(Moons.value())Planet->clearance_radius=FMath::Max(Planet->clearance_radius,Moons->Apoapsis()+Moons->Radius());
+        }
+        BoundGroup(Star);radius=FMath::Max(radius,Star->Apoapsis()+Star->Radius());
+        for(auto Planets=Star->Satellites();++Planets;)if(Planets.value())
+        {Planets->Update();radius=FMath::Max(radius,Planets->Apoapsis()+Planets->ClearanceRadius());for(auto Moons=Planets->Satellites();++Moons;)if(Moons.value())Moons->Update();}
+    }
 
 	ListIter<OrbitalRegion> RegionIter = all_regions;
 	while (++RegionIter)

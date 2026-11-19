@@ -26,7 +26,7 @@ bool FFreeFlightOwnedHullTest::RunTest(const FString&)
     FString Definition;
     if(!TestTrue(TEXT("Career entry definition readable"),FFileHelper::LoadFileToString(Definition,*(FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/01/Scenes/FreeFlight.def")))))return false;
     Mission Free(Mission::FreeFlightId);if(!TestTrue(TEXT("Career entry parses"),Free.ParseMission(TCHAR_TO_UTF8(*Definition))))return false;
-    FS_PlayerGameInfo Pilot;auto& Hull=Pilot.HangarShips.AddDefaulted_GetRef();Hull.HullId=FGuid::NewGuid();Hull.Design=TEXT("Prospector");Pilot.SelectedHangarHull=Hull.HullId;
+    FS_PlayerGameInfo Pilot;Pilot.Rank=PlayerCharacter::HullRankRequired(Miner.ShipType,Miner.ShipName);auto& Hull=Pilot.HangarShips.AddDefaulted_GetRef();Hull.HullId=FGuid::NewGuid();Hull.Design=TEXT("Prospector");Pilot.SelectedHangarHull=Hull.HullId;
     TestTrue(TEXT("Owned starter selection applies"),FreeFlightHullRules::Apply(Free,Pilot));
     TestTrue(TEXT("Career entry uses selected mining shuttle"),Free.GetPlayer()->GetShipDesign()==ShipDesignRegistry::Find(FName(TEXT("Prospector"))));
     Hull.bLost=true;FreeFlightHullRules::Apply(Free,Pilot);

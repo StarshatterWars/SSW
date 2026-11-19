@@ -15,14 +15,14 @@
   "star": {
     "name": "BlackStar",
     "image": "Suns/G3.pcx",
-	"map": "Suns/StarG_map.pcx",
+    "map": "Suns/StarG_map.pcx",
     "tscale": 6,
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 160000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -37,8 +37,8 @@
       {
         "name": "Blackout",
         "image": "Moons/rock_lo.pcx",
-		"map": "Moons/rock_map.pcx",
-        "high_res": "Moons/rock_hi.pcx",	
+        "map": "Moons/rock_map.pcx",
+        "high_res": "Moons/rock_hi.pcx",
         "radius": 3000,
         "mass": 5.6e+26,
         "orbit": 180000000000,
@@ -52,7 +52,9 @@
           "inclination": 0.4,
           "link": []
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.018,
+        "inclination": 1.8
       }
     ]
   }

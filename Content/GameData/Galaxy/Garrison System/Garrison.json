@@ -3,7 +3,7 @@
   "sky": {
     "nebula": "Nebula-Garrison.mag",
     "poly_stars": "stars.mag",
-	"haze": ""
+    "haze": ""
   },
   "stars": 500,
   "dust": 300,
@@ -20,9 +20,9 @@
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 260000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -42,7 +42,7 @@
         "radius": 3100000,
         "tilt": 0.03,
         "mass": 3.1e+24,
-        "orbit": 94000000000,
+        "orbit": 94000000000.0,
         "rotation": 32.7,
         "region": {
           "name": "Rhofar",
@@ -51,7 +51,9 @@
           "orbit": 16000000,
           "inclination": 0.4,
           "link": []
-        }
+        },
+        "eccentricity": 0.155,
+        "inclination": 15.39
       },
       {
         "name": "Garrison",
@@ -66,7 +68,7 @@
         "minrad": 1.5,
         "maxrad": 1.75,
         "mass": 5.1e+24,
-        "orbit": 140000000000,
+        "orbit": 140000000000.0,
         "rotation": 21.7,
         "region": {
           "name": "Garrison",
@@ -75,20 +77,22 @@
           "orbit": 20000000,
           "inclination": 0.4,
           "link": []
-        }
+        },
+        "eccentricity": 0.14782760035714285,
+        "inclination": 4.4
       },
       {
         "name": "Korul",
         "map": "Giants/GasGiant10_map.pcx",
         "image": "Giants/GasGiant10.jpg",
-		"high_res": "Giants/GasGiant10.jpg",
+        "high_res": "Giants/GasGiant10.jpg",
         "radius": 23000000,
         "tilt": 0.19,
         "ring": "Giants/Ring2.pcx",
         "minrad": 1.6,
         "maxrad": 1.666,
         "mass": 5.1e+24,
-        "orbit": 240000000000,
+        "orbit": 240000000000.0,
         "rotation": 21.7,
         "region": {
           "name": "Korul",
@@ -97,7 +101,9 @@
           "orbit": 100000000,
           "inclination": 0.3,
           "link": []
-        }
+        },
+        "eccentricity": 0.122,
+        "inclination": 4.38
       },
       {
         "name": "Nerasil",
@@ -107,7 +113,7 @@
         "radius": 4000000,
         "tilt": 0.15,
         "mass": 3.7e+24,
-        "orbit": 420000000000,
+        "orbit": 420000000000.0,
         "rotation": 17.2,
         "region": {
           "name": "Nerasil",
@@ -119,7 +125,9 @@
             "Relay",
             "Cavenda"
           ]
-        }
+        },
+        "eccentricity": 0.192827925,
+        "inclination": -14.43
       }
     ]
   }

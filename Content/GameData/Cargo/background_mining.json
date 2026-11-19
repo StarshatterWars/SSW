@@ -1,0 +1,623 @@
+[
+  {
+    "Id": "Jarnell/Jarnell Outer Belt/olivine",
+    "System": "Jarnell",
+    "Region": "Jarnell Outer Belt",
+    "Item": "olivine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Jarnell/Jarnell Outer Belt/pyroxene",
+    "System": "Jarnell",
+    "Region": "Jarnell Outer Belt",
+    "Item": "pyroxene",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Jarnell/Jarnell Outer Belt/plagioclase",
+    "System": "Jarnell",
+    "Region": "Jarnell Outer Belt",
+    "Item": "plagioclase",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Borova/Tulkas/kamacite",
+    "System": "Borova",
+    "Region": "Tulkas",
+    "Item": "kamacite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Borova/Tulkas/taenite",
+    "System": "Borova",
+    "Region": "Tulkas",
+    "Item": "taenite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Borova/Tulkas/schreibersite",
+    "System": "Borova",
+    "Region": "Tulkas",
+    "Item": "schreibersite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Athenar/Athenar Outer Belt/olivine",
+    "System": "Athenar",
+    "Region": "Athenar Outer Belt",
+    "Item": "olivine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Athenar/Athenar Outer Belt/pyroxene",
+    "System": "Athenar",
+    "Region": "Athenar Outer Belt",
+    "Item": "pyroxene",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Athenar/Athenar Outer Belt/plagioclase",
+    "System": "Athenar",
+    "Region": "Athenar Outer Belt",
+    "Item": "plagioclase",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Paragon/Paragon Outer Belt/serpentine",
+    "System": "Paragon",
+    "Region": "Paragon Outer Belt",
+    "Item": "serpentine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Paragon/Paragon Outer Belt/saponite",
+    "System": "Paragon",
+    "Region": "Paragon Outer Belt",
+    "Item": "saponite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Paragon/Paragon Outer Belt/magnetite",
+    "System": "Paragon",
+    "Region": "Paragon Outer Belt",
+    "Item": "magnetite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Paragon/Paragon Outer Belt/troilite",
+    "System": "Paragon",
+    "Region": "Paragon Outer Belt",
+    "Item": "troilite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Thralis/Sparta/serpentine",
+    "System": "Thralis",
+    "Region": "Sparta",
+    "Item": "serpentine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Thralis/Sparta/saponite",
+    "System": "Thralis",
+    "Region": "Sparta",
+    "Item": "saponite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Thralis/Sparta/magnetite",
+    "System": "Thralis",
+    "Region": "Sparta",
+    "Item": "magnetite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Thralis/Sparta/troilite",
+    "System": "Thralis",
+    "Region": "Sparta",
+    "Item": "troilite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Janus/Janus Outer Belt/olivine",
+    "System": "Janus",
+    "Region": "Janus Outer Belt",
+    "Item": "olivine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Janus/Janus Outer Belt/pyroxene",
+    "System": "Janus",
+    "Region": "Janus Outer Belt",
+    "Item": "pyroxene",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Janus/Janus Outer Belt/plagioclase",
+    "System": "Janus",
+    "Region": "Janus Outer Belt",
+    "Item": "plagioclase",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Solus/Solus Outer Belt/serpentine",
+    "System": "Solus",
+    "Region": "Solus Outer Belt",
+    "Item": "serpentine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Solus/Solus Outer Belt/saponite",
+    "System": "Solus",
+    "Region": "Solus Outer Belt",
+    "Item": "saponite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Solus/Solus Outer Belt/magnetite",
+    "System": "Solus",
+    "Region": "Solus Outer Belt",
+    "Item": "magnetite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Solus/Solus Outer Belt/troilite",
+    "System": "Solus",
+    "Region": "Solus Outer Belt",
+    "Item": "troilite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Silessia/Silessia Outer Belt/serpentine",
+    "System": "Silessia",
+    "Region": "Silessia Outer Belt",
+    "Item": "serpentine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Silessia/Silessia Outer Belt/saponite",
+    "System": "Silessia",
+    "Region": "Silessia Outer Belt",
+    "Item": "saponite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Silessia/Silessia Outer Belt/magnetite",
+    "System": "Silessia",
+    "Region": "Silessia Outer Belt",
+    "Item": "magnetite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Silessia/Silessia Outer Belt/troilite",
+    "System": "Silessia",
+    "Region": "Silessia Outer Belt",
+    "Item": "troilite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Haiche/Haiche Outer Belt/serpentine",
+    "System": "Haiche",
+    "Region": "Haiche Outer Belt",
+    "Item": "serpentine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Haiche/Haiche Outer Belt/saponite",
+    "System": "Haiche",
+    "Region": "Haiche Outer Belt",
+    "Item": "saponite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Haiche/Haiche Outer Belt/magnetite",
+    "System": "Haiche",
+    "Region": "Haiche Outer Belt",
+    "Item": "magnetite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Haiche/Haiche Outer Belt/troilite",
+    "System": "Haiche",
+    "Region": "Haiche Outer Belt",
+    "Item": "troilite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Renser/Lornas/kamacite",
+    "System": "Renser",
+    "Region": "Lornas",
+    "Item": "kamacite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Renser/Lornas/taenite",
+    "System": "Renser",
+    "Region": "Lornas",
+    "Item": "taenite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Renser/Lornas/schreibersite",
+    "System": "Renser",
+    "Region": "Lornas",
+    "Item": "schreibersite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Loris/Loris Outer Belt/kamacite",
+    "System": "Loris",
+    "Region": "Loris Outer Belt",
+    "Item": "kamacite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Loris/Loris Outer Belt/taenite",
+    "System": "Loris",
+    "Region": "Loris Outer Belt",
+    "Item": "taenite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Loris/Loris Outer Belt/schreibersite",
+    "System": "Loris",
+    "Region": "Loris Outer Belt",
+    "Item": "schreibersite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Ostara/Ostara Outer Belt/olivine",
+    "System": "Ostara",
+    "Region": "Ostara Outer Belt",
+    "Item": "olivine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Ostara/Ostara Outer Belt/pyroxene",
+    "System": "Ostara",
+    "Region": "Ostara Outer Belt",
+    "Item": "pyroxene",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Ostara/Ostara Outer Belt/plagioclase",
+    "System": "Ostara",
+    "Region": "Ostara Outer Belt",
+    "Item": "plagioclase",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Kolchev/Kolchev Outer Belt/kamacite",
+    "System": "Kolchev",
+    "Region": "Kolchev Outer Belt",
+    "Item": "kamacite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Kolchev/Kolchev Outer Belt/taenite",
+    "System": "Kolchev",
+    "Region": "Kolchev Outer Belt",
+    "Item": "taenite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Kolchev/Kolchev Outer Belt/schreibersite",
+    "System": "Kolchev",
+    "Region": "Kolchev Outer Belt",
+    "Item": "schreibersite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Korius/Solnas/olivine",
+    "System": "Korius",
+    "Region": "Solnas",
+    "Item": "olivine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Korius/Solnas/pyroxene",
+    "System": "Korius",
+    "Region": "Solnas",
+    "Item": "pyroxene",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Korius/Solnas/plagioclase",
+    "System": "Korius",
+    "Region": "Solnas",
+    "Item": "plagioclase",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Tarsus/Sintar/kamacite",
+    "System": "Tarsus",
+    "Region": "Sintar",
+    "Item": "kamacite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Tarsus/Sintar/taenite",
+    "System": "Tarsus",
+    "Region": "Sintar",
+    "Item": "taenite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Tarsus/Sintar/schreibersite",
+    "System": "Tarsus",
+    "Region": "Sintar",
+    "Item": "schreibersite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Nephrys/Nephrys Outer Belt/olivine",
+    "System": "Nephrys",
+    "Region": "Nephrys Outer Belt",
+    "Item": "olivine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Nephrys/Nephrys Outer Belt/pyroxene",
+    "System": "Nephrys",
+    "Region": "Nephrys Outer Belt",
+    "Item": "pyroxene",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Nephrys/Nephrys Outer Belt/plagioclase",
+    "System": "Nephrys",
+    "Region": "Nephrys Outer Belt",
+    "Item": "plagioclase",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Radix/Radix Outer Belt/olivine",
+    "System": "Radix",
+    "Region": "Radix Outer Belt",
+    "Item": "olivine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Radix/Radix Outer Belt/pyroxene",
+    "System": "Radix",
+    "Region": "Radix Outer Belt",
+    "Item": "pyroxene",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Radix/Radix Outer Belt/plagioclase",
+    "System": "Radix",
+    "Region": "Radix Outer Belt",
+    "Item": "plagioclase",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Isham/Isham Outer Belt/serpentine",
+    "System": "Isham",
+    "Region": "Isham Outer Belt",
+    "Item": "serpentine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Isham/Isham Outer Belt/saponite",
+    "System": "Isham",
+    "Region": "Isham Outer Belt",
+    "Item": "saponite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Isham/Isham Outer Belt/magnetite",
+    "System": "Isham",
+    "Region": "Isham Outer Belt",
+    "Item": "magnetite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Isham/Isham Outer Belt/troilite",
+    "System": "Isham",
+    "Region": "Isham Outer Belt",
+    "Item": "troilite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Marak/Xanthe/kamacite",
+    "System": "Marak",
+    "Region": "Xanthe",
+    "Item": "kamacite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Marak/Xanthe/taenite",
+    "System": "Marak",
+    "Region": "Xanthe",
+    "Item": "taenite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Marak/Xanthe/schreibersite",
+    "System": "Marak",
+    "Region": "Xanthe",
+    "Item": "schreibersite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Garrison/Garrison Outer Belt/kamacite",
+    "System": "Garrison",
+    "Region": "Garrison Outer Belt",
+    "Item": "kamacite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Garrison/Garrison Outer Belt/taenite",
+    "System": "Garrison",
+    "Region": "Garrison Outer Belt",
+    "Item": "taenite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Garrison/Garrison Outer Belt/schreibersite",
+    "System": "Garrison",
+    "Region": "Garrison Outer Belt",
+    "Item": "schreibersite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Trocanther/Trocanther Outer Belt/olivine",
+    "System": "Trocanther",
+    "Region": "Trocanther Outer Belt",
+    "Item": "olivine",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Trocanther/Trocanther Outer Belt/pyroxene",
+    "System": "Trocanther",
+    "Region": "Trocanther Outer Belt",
+    "Item": "pyroxene",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Trocanther/Trocanther Outer Belt/plagioclase",
+    "System": "Trocanther",
+    "Region": "Trocanther Outer Belt",
+    "Item": "plagioclase",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  }
+]

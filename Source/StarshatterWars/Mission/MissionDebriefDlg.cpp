@@ -12,6 +12,7 @@
 */
 
 #include "MissionDebriefDlg.h"
+#include "MissionRewardRules.h"
 #include "DebriefProgressSnapshot.h"
 #include "AgentMissionRules.h"
 
@@ -772,11 +773,13 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
             MissionPtr->GetIdentity()>=101 && MissionPtr->GetIdentity()<=107;
         const bool bRecordCampaignMission = CampaignPtr && (bStoryMission || CampaignPtr->OwnsMission(MissionPtr))
             && !CampaignPtr->IsCutsceneMission(MissionPtr->GetIdentity());
-        if (DebriefResult.bSuccess && (bRecordCampaignMission || bRegionalAssignment || bTrainingAssignment))
+        const bool bPlayableAssignment=MissionPtr->GetPlayer()!=nullptr && MissionPtr->GetIdentity()>0 && !MissionPtr->IsFreeFlight()
+            && (!CampaignPtr || !CampaignPtr->IsCutsceneMission(MissionPtr->GetIdentity()));
+        if (DebriefResult.bSuccess && (bRecordCampaignMission || bRegionalAssignment || bTrainingAssignment || bPlayableAssignment))
             if (auto* Players=GI->GetSubsystem<UStarshatterPlayerSubsystem>())
             {
                 auto& Info=Players->GetMutablePlayerInfo();
-                const int32 CampaignId = bRegionalAssignment ? Campaign::SINGLE_MISSIONS : bTrainingAssignment ? Campaign::TRAINING_CAMPAIGN : CampaignPtr->GetCampaignId();
+                const int32 CampaignId = bRegionalAssignment ? Campaign::SINGLE_MISSIONS : bTrainingAssignment ? Campaign::TRAINING_CAMPAIGN : bRecordCampaignMission ? CampaignPtr->GetCampaignId() : Campaign::SINGLE_MISSIONS;
                 const bool bFirstCompletion = Info.MarkMissionCompleted(CampaignId, MissionPtr->GetIdentity());
                 if (bStoryMission && bFirstCompletion)
                 {
@@ -795,6 +798,14 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
                 {
                     Info.bTrainingGraduate=true;
                     if(auto* Pilot=PlayerCharacter::GetCurrentPlayer()){Pilot->CompleteFlightTraining();Info.Rank=Pilot->GetRank();}
+                }
+                if(bFirstCompletion && !SimPtr->IsNetworked())
+                {
+                    const auto Quote=FMissionRewardCatalog::Get().Quote(CampaignId,MissionPtr->GetIdentity(),E.bDocked,E.CompletedSecondaryObjectives,
+                        double(Game::GetGameTime()-SimPtr->StartTime())/1000.0);
+                    if(!FMissionRewardCatalog::Get().Award(Players->GetEconomy(),CampaignId,MissionPtr->GetIdentity(),Quote,true,true,false)){Failed();return;}
+                    if(UTextBlock* Score=GetLabel(211))Score->SetText(FText::Format(INVTEXT("{0} POINTS  |  {1} CR  (BONUS {2} CR)"),FText::AsNumber(Points),FText::AsNumber(Quote.Total()),FText::AsNumber(Quote.Total()-Quote.Base)));
+                    UE_LOG(LogTemp,Display,TEXT("[MissionReward] Campaign=%d Mission=%d Base=%lld Bonuses=%lld Total=%lld"),CampaignId,MissionPtr->GetIdentity(),Quote.Base,Quote.Total()-Quote.Base,Quote.Total());
                 }
                 Players->MarkDirty();
                 if (!Players->SaveActivePlayerProgress()) { Failed(); return; }

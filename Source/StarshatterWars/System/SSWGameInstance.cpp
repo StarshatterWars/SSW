@@ -2,6 +2,7 @@
 
 
 #include "SSWGameInstance.h"
+#include "LocalGameStateSubsystem.h"
 #include "SSWSessionLobbyGameMode.h"
 #include "SSWBootSubsystem.h"
 #include "StarshatterEnvironmentSubsystem.h"
@@ -732,6 +733,8 @@ Campaign* USSWGameInstance::GetAgentTrainingCampaign()
 
 void USSWGameInstance::Shutdown()
 {
+    if(auto* State=GetSubsystem<ULocalGameStateSubsystem>())State->SaveAtExit();
+    if(!IsRunningCommandlet() && !IsTrainingTestSession()){SaveCampaign();SaveUniverse();}
     ClearPlatformSignInRequest();
     if (PlatformSignInView)
         PlatformSignInView->RemoveFromParent();

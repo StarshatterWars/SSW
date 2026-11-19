@@ -1,0 +1,1032 @@
+[
+	{
+		"Row": "1st Force [Haiche Protectorate]",
+		"Type": "FORCE",
+		"Id": 1,
+		"Name": "Haiche Protectorate",
+		"DisplayName": "1st Force [Haiche Protectorate]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Haiche",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "NONE",
+		"ParentId": 0,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "1st Civilian [Haiche Civilian Infrastructure]",
+		"Type": "CIVILIAN",
+		"Id": 1,
+		"Name": "Haiche Civilian Infrastructure",
+		"DisplayName": "1st Civilian [Haiche Civilian Infrastructure]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Haiche",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2000th Infrastructure [Haiche Farcaster Network]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2000,
+		"Name": "Haiche Farcaster Network",
+		"DisplayName": "2000th Infrastructure [Haiche Farcaster Network]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Haiche",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2001st Infrastructure [Haiche-Tal Amin]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2001,
+		"Name": "Haiche-Tal Amin",
+		"DisplayName": "2001st Infrastructure [Haiche-Tal Amin]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Haiche",
+		"Location":
+		{
+			"X": 131000,
+			"Y": 60000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Haiche-Tal Amin",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2002nd Infrastructure [Tal Amin-Haiche]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2002,
+		"Name": "Tal Amin-Haiche",
+		"DisplayName": "2002nd Infrastructure [Tal Amin-Haiche]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Tal Amin",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Tal Amin-Haiche",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2003rd Infrastructure [Tal Amin-Cygnus]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2003,
+		"Name": "Tal Amin-Cygnus",
+		"DisplayName": "2003rd Infrastructure [Tal Amin-Cygnus]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Tal Amin",
+		"Location":
+		{
+			"X": -176000,
+			"Y": 71000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Tal Amin-Cygnus",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2004th Infrastructure [Cygnus-Tal Amin]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2004,
+		"Name": "Cygnus-Tal Amin",
+		"DisplayName": "2004th Infrastructure [Cygnus-Tal Amin]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Cygnus",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Cygnus-Tal Amin",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2005th Infrastructure [Haiche-Kala]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2005,
+		"Name": "Haiche-Kala",
+		"DisplayName": "2005th Infrastructure [Haiche-Kala]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Haiche",
+		"Location":
+		{
+			"X": -163000,
+			"Y": -63000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Haiche-Kala",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2006th Transport [Kala-Haiche]",
+		"Type": "TRANSPORT",
+		"Id": 2006,
+		"Name": "Kala-Haiche",
+		"DisplayName": "2006th Transport [Kala-Haiche]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Kala",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Kala-Haiche",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2007th Infrastructure [Cygnus-Kala]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2007,
+		"Name": "Cygnus-Kala",
+		"DisplayName": "2007th Infrastructure [Cygnus-Kala]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Cygnus",
+		"Location":
+		{
+			"X": -150000,
+			"Y": -50000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Cygnus-Kala",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2008th Transport [Kala-Cygnus]",
+		"Type": "TRANSPORT",
+		"Id": 2008,
+		"Name": "Kala-Cygnus",
+		"DisplayName": "2008th Transport [Kala-Cygnus]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Kala",
+		"Location":
+		{
+			"X": -120000,
+			"Y": 170000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Kala-Cygnus",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3000th Non-Com [Freight]",
+		"Type": "NON_COM",
+		"Id": 3000,
+		"Name": "Freight",
+		"DisplayName": "3000th Non-Com [Freight]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Haiche",
+		"Location":
+		{
+			"X": 0,
+			"Y": -20000,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "3001st Freight [Independent Shipping]",
+		"Type": "FREIGHT",
+		"Id": 3001,
+		"Name": "Independent Shipping",
+		"DisplayName": "3001st Freight [Independent Shipping]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Haiche",
+		"Location":
+		{
+			"X": 80000,
+			"Y": -120000,
+			"Z": 0
+		},
+		"ParentType": "NON_COM",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "3498th Freight [ISS Silent Forest]",
+		"Type": "FREIGHT",
+		"Id": 3498,
+		"Name": "ISS Silent Forest",
+		"DisplayName": "3498th Freight [ISS Silent Forest]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Haiche",
+		"Location":
+		{
+			"X": 90000,
+			"Y": -130000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3001,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Silent Forest",
+				"UnitRegnum": "498",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3480th Freight [ISS Peralta]",
+		"Type": "FREIGHT",
+		"Id": 3480,
+		"Name": "ISS Peralta",
+		"DisplayName": "3480th Freight [ISS Peralta]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Cygnus",
+		"Location":
+		{
+			"X": 110000,
+			"Y": -120000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3001,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Peralta",
+				"UnitRegnum": "480",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3254th Freight [ISS Bright Horizon]",
+		"Type": "FREIGHT",
+		"Id": 3254,
+		"Name": "ISS Bright Horizon",
+		"DisplayName": "3254th Freight [ISS Bright Horizon]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Tal Amin",
+		"Location":
+		{
+			"X": 175000,
+			"Y": 200000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3001,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Bright Horizon",
+				"UnitRegnum": "254",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3443rd Freight [ISS Stardust]",
+		"Type": "FREIGHT",
+		"Id": 3443,
+		"Name": "ISS Stardust",
+		"DisplayName": "3443rd Freight [ISS Stardust]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Kala",
+		"Location":
+		{
+			"X": 160000,
+			"Y": 211000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3001,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Stardust",
+				"UnitRegnum": "443",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3535th Freight [ISS Distant Shore]",
+		"Type": "FREIGHT",
+		"Id": 3535,
+		"Name": "ISS Distant Shore",
+		"DisplayName": "3535th Freight [ISS Distant Shore]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Haiche",
+		"Location":
+		{
+			"X": -20000,
+			"Y": 228000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3001,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Distant Shore",
+				"UnitRegnum": "535",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3693rd Freight [ISS Silver Mountain]",
+		"Type": "FREIGHT",
+		"Id": 3693,
+		"Name": "ISS Silver Mountain",
+		"DisplayName": "3693rd Freight [ISS Silver Mountain]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Cygnus",
+		"Location":
+		{
+			"X": -90000,
+			"Y": 160000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3001,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Silver Mountain",
+				"UnitRegnum": "693",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3519th Freight [ISS Cloud Walker]",
+		"Type": "FREIGHT",
+		"Id": 3519,
+		"Name": "ISS Cloud Walker",
+		"DisplayName": "3519th Freight [ISS Cloud Walker]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Tal Amin",
+		"Location":
+		{
+			"X": -102000,
+			"Y": 138000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3001,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Cloud Walker",
+				"UnitRegnum": "519",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3581st Freight [ISS Mount Hastings]",
+		"Type": "FREIGHT",
+		"Id": 3581,
+		"Name": "ISS Mount Hastings",
+		"DisplayName": "3581st Freight [ISS Mount Hastings]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Kala",
+		"Location":
+		{
+			"X": 99000,
+			"Y": -128000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3001,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Mount Hastings",
+				"UnitRegnum": "581",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3321st Freight [ISS Sato]",
+		"Type": "FREIGHT",
+		"Id": 3321,
+		"Name": "ISS Sato",
+		"DisplayName": "3321st Freight [ISS Sato]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Haiche",
+		"Location":
+		{
+			"X": 79000,
+			"Y": 228000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3001,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Sato",
+				"UnitRegnum": "321",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3714th Freight [ISS Everest]",
+		"Type": "FREIGHT",
+		"Id": 3714,
+		"Name": "ISS Everest",
+		"DisplayName": "3714th Freight [ISS Everest]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Cygnus",
+		"Location":
+		{
+			"X": 75000,
+			"Y": -150000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3001,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Everest",
+				"UnitRegnum": "714",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8520th Station [Haiche Transfer Station]",
+		"Type": "STATION",
+		"Id": 8520,
+		"Name": "Haiche Transfer Station",
+		"DisplayName": "8520th Station [Haiche Transfer Station]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Haiche",
+		"Location":
+		{
+			"X": 72000,
+			"Y": -46000,
+			"Z": 12000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Haiche Transfer Station",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8706th Freight [Haiche Civilian Freight]",
+		"Type": "FREIGHT",
+		"Id": 8706,
+		"Name": "Haiche Civilian Freight",
+		"DisplayName": "8706th Freight [Haiche Civilian Freight]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Haiche",
+		"Location":
+		{
+			"X": 125000,
+			"Y": -50000,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Haiche Merchant 1",
+				"UnitRegnum": "8706-1",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Haiche Merchant 2",
+				"UnitRegnum": "8706-2",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8552nd Station [Tal Amin Materials Works]",
+		"Type": "STATION",
+		"Id": 8552,
+		"Name": "Tal Amin Materials Works",
+		"DisplayName": "8552nd Station [Tal Amin Materials Works]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Tal Amin",
+		"Location":
+		{
+			"X": -106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Tal Amin Materials Works",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8553rd Station [Tal Amin Orbital Concentrator]",
+		"Type": "STATION",
+		"Id": 8553,
+		"Name": "Tal Amin Orbital Concentrator",
+		"DisplayName": "8553rd Station [Tal Amin Orbital Concentrator]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Haiche",
+		"System": "",
+		"Region": "Tal Amin",
+		"Location":
+		{
+			"X": 106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Tal Amin Orbital Concentrator",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	}
+]

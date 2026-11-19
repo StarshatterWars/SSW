@@ -257,22 +257,7 @@ void UCmdDlg::NativeConstruct()
     Stars = Starshatter::GetInstance();
     CampaignPtr = Campaign::GetCampaign();
 
-    const FString Frm = GetLegacyFormText();
-    if (!Frm.IsEmpty())
-    {
-        FString Err;
-        FParsedForm Parsed;
 
-        if (ParseLegacyForm(Frm, Parsed, Err))
-        {
-            ParsedForm = Parsed;
-            ApplyLegacyFormDefaults(ParsedForm);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Warning, TEXT("[CmdDlg] ParseLegacyForm failed: %s"), *Err);
-        }
-    }
 }
 
 void UCmdDlg::BuildOperationsChrome()

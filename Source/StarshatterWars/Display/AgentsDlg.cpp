@@ -9,6 +9,9 @@
 #include "StarshatterPlayerSubsystem.h"
 
 #include "AgentAI.h"
+#include "DynamicMissionAI.h"
+#include "MissionArcRules.h"
+#include "MissionRewardRules.h"
 #include "AgentJournalTransaction.h"
 #include "AgentMissionRules.h"
 #include "AgentCatalogSubsystem.h"
@@ -64,12 +67,16 @@ namespace
 
 void UAgentsDlg::RefreshBoard()
 {
+    bJournalDirty=false;
     if (!Board) return;
     Board->ClearChildren();
     auto* Game = Cast<USSWGameInstance>(GetGameInstance());
     auto* Catalog = Game ? Game->GetSubsystem<UAgentCatalogSubsystem>() : nullptr;
     if (!Catalog || PilotId().IsNone()) return;
     auto& Agent = Game->GetTrainingAgent();
+    Board->AddSlot().AutoHeight().Padding(8,4,8,8)[SNew(SHorizontalBox)
+        + SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).Text(INVTEXT("ASSIGNMENT / STATUS")).Font(MissionUIStyle::GetRowFont(10))]
+        + SHorizontalBox::Slot().AutoWidth()[SNew(STextBlock).Text(INVTEXT("OFFER EXPIRY (GMT)")).Font(MissionUIStyle::GetRowFont(10))]];
     if (const auto* Officer = Catalog->FindAgent(SelectedAgent))
     {
         Board->AddSlot().AutoHeight().Padding(0,4,0,12)
@@ -108,9 +115,11 @@ void UAgentsDlg::RefreshBoard()
                             .ButtonColorAndOpacity(bCompleted?FLinearColor(.08f,.28f,.12f):FLinearColor::White)
                             .OnClicked(FOnClicked::CreateWeakLambda(this,[this,Id](){OpenDetails(Id,true);return FReply::Handled();}))
                             [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).ColorAndOpacity(RowColor)
-                                .Text(FText::Format(INVTEXT("T{0}  {1}"),FText::AsNumber(Id-100),Catalog->GetMissionTitle(Id)))]]
+                                .AutoWrapText(true).Text(FText::Format(INVTEXT("T{0}  {1}"),FText::AsNumber(Id-100),Catalog->GetMissionTitle(Id)))]]
                         + SHorizontalBox::Slot().FillWidth(.56f).VAlign(VAlign_Center)
-                        [SNew(STextBlock).Text(Reason).ColorAndOpacity(RowColor).AutoWrapText(true).Font(MissionUIStyle::GetRowFont(12))]];
+                        [SNew(STextBlock).Text(Reason).ColorAndOpacity(RowColor).AutoWrapText(true).Font(MissionUIStyle::GetRowFont(11))]
+                        + SHorizontalBox::Slot().AutoWidth().Padding(12,0,4,0).VAlign(VAlign_Center)
+                        [SNew(STextBlock).Text(INVTEXT("NO EXPIRY")).Font(MissionUIStyle::GetRowFont(10)).ColorAndOpacity(FLinearColor(.65f,.75f,.8f))]];
             }
         const FText Orders = Catalog->GetCampaignOrders(SelectedAgent);
         if (!Orders.IsEmpty())
@@ -147,26 +156,29 @@ void UAgentsDlg::RefreshBoard()
     }
 
 
-    const auto AddMission = [this, Catalog](int32 Id, FText Status, bool bOffer, bool bHead)
+    const auto AddMission = [this, Catalog, Game](int32 Id, FText Status, bool bOffer, bool bHead)
     {
+        FText Expiry=INVTEXT("NO DEADLINE");
+        if(bOffer)if(const auto* Offer=Game->GetTrainingAgent().FindOffer(PilotId(),SelectedAgent);Offer && Offer->ExpiresUtc>0)
+            Expiry=FText::FromString(FDateTime::FromUnixTimestamp(Offer->ExpiresUtc).ToString(TEXT("%d %b %H:%M")));
         const FText Title = Catalog->GetMissionTitle(Id);
         if (Title.IsEmpty()) return;
         Board->AddSlot().AutoHeight().Padding(0, 3)
         [
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot().FillWidth(1).Padding(0, 0, 8, 0)
-            [SNew(SButton).Text(Title)
+            [SNew(SButton)
                 .OnClicked(FOnClicked::CreateWeakLambda(this, [this, Id, bOffer]()
                 {
                     OpenDetails(Id, bOffer);
                     return FReply::Handled();
-                }))]
+                }))[SNew(STextBlock).Text(Title).AutoWrapText(true).Font(MissionUIStyle::GetRowFont(12))]]
             + SHorizontalBox::Slot().AutoWidth().Padding(0,0,8,0)
             [SNew(SButton).ToolTipText(INVTEXT("Mission briefing and objectives"))
                 .OnClicked(FOnClicked::CreateWeakLambda(this,[this,Id,bOffer](){OpenDetails(Id,bOffer);return FReply::Handled();}))
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Computer)]]
             + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
-            [SNew(STextBlock).Text(Status).Font(MissionUIStyle::GetRowFont(13))]
+            [SNew(STextBlock).Text(Status).Font(MissionUIStyle::GetRowFont(11)).ColorAndOpacity(FLinearColor(.4f,.8f,.9f))]
             + SHorizontalBox::Slot().AutoWidth().Padding(8, 0, 0, 0)
             [SNew(SButton).ToolTipText_Lambda([this]()
                 {
@@ -176,18 +188,45 @@ void UAgentsDlg::RefreshBoard()
                         : INVTEXT("Dock before starting the next queued mission");
                 })
                 .Visibility(bHead ? EVisibility::Visible : EVisibility::Collapsed)
-                .IsEnabled_Lambda([this]() { return CanLaunch.IsBound() && CanLaunch.Execute(); })
+                .IsEnabled_Lambda([this, Id]() { return CanStartMission(Id); })
                 .ContentPadding(FMargin(12,6))
                 .OnClicked(FOnClicked::CreateWeakLambda(this, [this, Id]()
                 {
                     StartMission(Id);
                     return FReply::Handled();
                 }))[SNew(SHorizontalBox) + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Play)] + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(6,0)[SNew(STextBlock).Text(INVTEXT("MISSION")).Font(MissionUIStyle::GetRowFont(13))]]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(12,0,4,0).VAlign(VAlign_Center)
+            [SNew(STextBlock).Text(Expiry).Justification(ETextJustify::Right).Font(MissionUIStyle::GetRowFont(10)).ColorAndOpacity(FLinearColor(.65f,.75f,.8f))]
         ];
     };
 
     if (const auto* Offer = Agent.FindOffer(PilotId(), SelectedAgent); Offer && Catalog->FindAgent(SelectedAgent) && Catalog->FindAgent(SelectedAgent)->Class != EAgentClass::Training)
         AddMission(Offer->MissionId, INVTEXT("OFFERED"), true, false);
+    if(const auto* Outcome=Agent.LatestOutcome(PilotId());Outcome && Outcome->State==State::Completed)
+    {
+        const auto Progress=FMissionArcCatalog::Get().Evaluate(Outcome->MissionId,[&](int32 Id){return Agent.IsCompleted(PilotId(),Id) || RegionalHistory(Game)(Id);},[&](int32 Id){return Agent.HasChosen(PilotId(),Id);});
+        if(Progress.Arc)for(int32 Index:Progress.Available)
+        {
+            const auto& Next=Progress.Arc->Steps[Index];const FName Target=Next.AgentId;
+            Board->AddSlot().AutoHeight().Padding(0,8)[SNew(SButton)
+                .IsEnabled(Catalog->FindAgent(Target)!=nullptr)
+                .ToolTipText(FText::FromString(Next.Title))
+                .OnClicked_Lambda([this,Target](){DirectoryScope=EAgentDirectoryScope::EmpireWide;SelectedAgent=Target;if(const auto* C=GetGameInstance()->GetSubsystem<UAgentCatalogSubsystem>())if(const auto* A=C->FindAgent(Target))SelectedSystem=FName(*A->System);RefreshDirectory();return FReply::Handled();})
+                [SNew(STextBlock).AutoWrapText(true).Font(MissionUIStyle::GetRowFont(12))
+                    .Text(FText::FromString(FString::Printf(TEXT("NEXT AGENT: %s  /  %s - %s"),*Next.Issuer,*Next.System,*Next.Region)))]];
+        }
+    }
+    const auto Journal=Agent.GetHistory(PilotId());int32 Shown=0;
+    for(int32 Index=Journal.Num()-1;Index>=0 && Shown<3;--Index)
+    {
+        const auto& Item=Journal[Index];if(Item.Issuer!=SelectedAgent)continue;++Shown;
+        const TCHAR* Label=Item.State==State::Completed?TEXT("COMPLETED"):Item.State==State::Failed?TEXT("FAILED"):TEXT("ABANDONED");
+        const int64 Date=Item.AbandonedUtc>0?Item.AbandonedUtc:Item.CompletedUtc;
+        const FString When=Date>0?FDateTime::FromUnixTimestamp(Date).ToString(TEXT("%d %b %H:%M GMT")):TEXT("DATE NOT RECORDED");
+        Board->AddSlot().AutoHeight().Padding(8,4)[SNew(SHorizontalBox)
+            + SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).Text(FText::Format(INVTEXT("{0}  /  {1}"),Catalog->GetMissionTitle(Item.MissionId),FText::FromString(Label))).AutoWrapText(true).Font(MissionUIStyle::GetRowFont(10))]
+            + SHorizontalBox::Slot().AutoWidth().Padding(12,0)[SNew(STextBlock).Text(FText::FromString(When)).Font(MissionUIStyle::GetRowFont(10))]];
+    }
     bool bHead = true;
     for (const auto& Mission : Agent.GetQueue(PilotId()))
     {
@@ -197,15 +236,26 @@ void UAgentsDlg::RefreshBoard()
     }
 }
 
+bool UAgentsDlg::CanStartMission(int32 MissionId) const
+{
+    if (!DynamicMissionAI::IsDynamic(MissionId)) return CanLaunch.IsBound() && CanLaunch.Execute();
+    auto* Simulation = Sim::GetSim();
+    auto* Game = Cast<USSWGameInstance>(GetGameInstance());
+    auto* Players = Game ? Game->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    FText Reason;
+    return Simulation && Simulation->GetMission() && Simulation->GetMission()->IsFreeFlight()
+        && Players && DynamicMissionAI::CanUse(Players->GetPlayerInfo(), MissionId, Reason);
+}
+
 void UAgentsDlg::StartMission(int32 MissionId)
 {
-    if (!CanLaunch.IsBound() || !CanLaunch.Execute()) return;
+    if (!CanStartMission(MissionId)) return;
     auto* Menu = GetMenuManager();
     auto* World = GetWorld();
     if (!Menu || !World) return;
     World->GetTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this, [this, Menu, MissionId]()
     {
-        if (!CanLaunch.IsBound() || !CanLaunch.Execute()) return;
+        if (!CanStartMission(MissionId)) return;
         if (bStandaloneFrame) RemoveFromParent();
         Menu->OpenQueuedAssignment(MissionId, !bStandaloneFrame);
     }));
@@ -271,15 +321,24 @@ void UAgentsDlg::OpenDetails(int32 MissionId, bool bOffer)
     FName Issuer=SelectedAgent; FText Status=Catalog->CanReplayTrainingTest(MissionId,Issuer)?INVTEXT("TEST REPLAY - NO POINTS OR PROGRESSION"):bOffer ? INVTEXT("OFFERED") : INVTEXT("QUEUED");
     for (const auto& Assignment : Game->GetTrainingAgent().GetQueue(PilotId()))
         if (Assignment.MissionId==MissionId) { Issuer=Assignment.Issuer; if(Assignment.State==State::InProgress)Status=INVTEXT("IN PROGRESS"); break; }
-    if(bOffer)
-        if(const auto* Offer=Game->GetTrainingAgent().FindOffer(PilotId(),Issuer); Offer && Offer->ExpiresUtc>0)
-            Status=FText::Format(INVTEXT("{0} | OFFER EXPIRES {1} GMT"),Status,FText::FromString(FDateTime::FromUnixTimestamp(Offer->ExpiresUtc).ToString(TEXT("%H:%M:%S"))));
+    FText Expiry=AgentAI::IsTrainingMission(MissionId)?INVTEXT("NO EXPIRY"):INVTEXT("NO DEADLINE");
+    if(bOffer && !AgentAI::IsTrainingMission(MissionId))
+        if(const auto* Offer=Game->GetTrainingAgent().FindOffer(PilotId(),Issuer);Offer && Offer->ExpiresUtc>0)
+            Expiry=FText::Format(INVTEXT("EXPIRES {0} GMT"),FText::FromString(FDateTime::FromUnixTimestamp(Offer->ExpiresUtc).ToString(TEXT("%d %b %H:%M"))));
     const auto* Officer=Catalog->FindAgent(Issuer);
     CastChecked<UMissionObjectivesDlg>(Details)->SetMissionBriefing(*Mission,Catalog->GetMissionTitle(MissionId),
         Officer ? FText::FromString(Officer->DisplayName) : INVTEXT("Mission Control"),Status,
         MoveTemp(Accept),MoveTemp(Decline),FSimpleDelegate::CreateUObject(this,&UAgentsDlg::CloseDetails));
+    int32 RewardCampaign=AgentAI::IsTrainingMission(MissionId)?1:1000,RewardMission=MissionId;
+    AgentMissionRules::Decode(MissionId,RewardCampaign,RewardMission);
+    auto Reward=FMissionRewardCatalog::Get().Quote(RewardCampaign,RewardMission,false,0,0);
+    if(DynamicMissionAI::IsDynamic(MissionId))if(auto* Players=Game->GetSubsystem<UStarshatterPlayerSubsystem>()){Reward.Base=DynamicMissionAI::Reward(Players->GetPlayerInfo(),MissionId);Reward.Recovery=Reward.Objectives=Reward.Time=0;}
+    Status=FText::Format(INVTEXT("{0}  /  REWARD {1} CR + ELIGIBLE BONUSES"),Status,FText::AsNumber(Reward.Base));
+    for(const auto& Assignment:Queue)if(Assignment.MissionId==MissionId && Assignment.AcceptedUtc>0)
+        Status=FText::Format(INVTEXT("{0}\nACCEPTED {1} GMT"),Status,FText::FromString(FDateTime::FromUnixTimestamp(Assignment.AcceptedUtc).ToString(TEXT("%d %b %H:%M"))));
+    Details->SetAssignmentMetadata(Officer?FText::FromString(Officer->DisplayName):INVTEXT("Mission Control"),Status,Expiry);
     if (!Queue.IsEmpty() && Queue[0].MissionId == MissionId && Queue[0].State == State::Accepted)
-        Details->SetStartMission(FSimpleDelegate::CreateWeakLambda(this,[this,MissionId](){StartMission(MissionId);}),CanLaunch);
+        Details->SetStartMission(FSimpleDelegate::CreateWeakLambda(this,[this,MissionId](){StartMission(MissionId);}),TDelegate<bool()>::CreateWeakLambda(this,[this,MissionId](){return CanStartMission(MissionId);}));
     DetailLayer->SetContent(Details->TakeWidget());
     DetailLayer->SetVisibility(EVisibility::Visible);
 }
@@ -305,6 +364,13 @@ void UAgentsDlg::RequestMission(bool bCampaign)
     Feedback=INVTEXT("No assignments are available for this agent and rank.");
     const bool Saved=CommitAgentCommand(Game,[&]()
     {
+        if(!bCampaign)
+        {
+            FText Why;Catalog->PrepareIndependentOffer(SelectedAgent,Why);Eligible=Catalog->GetEligibleMissions(SelectedAgent);
+            const bool HasDynamic=Eligible.ContainsByPredicate([](int32 Id){return DynamicMissionAI::IsDynamic(Id);});
+            Eligible.RemoveAll([HasDynamic](int32 Id){return Id>=AgentMissionRules::CampaignBase || (HasDynamic && !DynamicMissionAI::IsDynamic(Id));});
+            if(Eligible.IsEmpty() && !Why.IsEmpty())Feedback=Why;
+        }
         const auto* Offer=Game->GetTrainingAgent().Request(PilotId(),Eligible,SelectedAgent,true,RegionalHistory(Game));
         if (Offer) OfferId=Offer->MissionId;
         return Offer!=nullptr;
@@ -316,6 +382,8 @@ void UAgentsDlg::RequestMission(bool bCampaign)
 
 void UAgentsDlg::NativeConstruct()
 {
+    AgentAI::OnJournalChanged().Remove(JournalChangedHandle);
+    JournalChangedHandle=AgentAI::OnJournalChanged().AddWeakLambda(this,[this](){bJournalDirty=true;});
     Super::NativeConstruct();
     RefreshDirectory();
     RefreshBoard();
@@ -519,4 +587,15 @@ void UAgentsDlg::ReleaseSlateResources(bool bReleaseChildren)
     Board.Reset();
     SystemPicker.Reset(); AgentPicker.Reset();
     DetailLayer.Reset();
+}
+
+void UAgentsDlg::NativeDestruct()
+{
+    AgentAI::OnJournalChanged().Remove(JournalChangedHandle);JournalChangedHandle.Reset();
+    CloseDetails();Super::NativeDestruct();
+}
+void UAgentsDlg::NativeTick(const FGeometry& Geometry,float Delta)
+{
+    Super::NativeTick(Geometry,Delta);
+    if(bJournalDirty){CloseDetails();RefreshBoard();}
 }

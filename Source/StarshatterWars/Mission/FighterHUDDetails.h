@@ -46,6 +46,8 @@ public:
             ContactIFF==0 ? FLinearColor(1.f,0.85f,0.f) :
             ContactIFF==ObserverIFF ? FLinearColor(0.25f,0.65f,1.f) : FLinearColor::Red;
     }
+    virtual FReply OnMouseMove(const FGeometry&, const FPointerEvent&) override;
+    virtual void OnMouseLeave(const FPointerEvent&) override;
     virtual FReply OnMouseWheel(const FGeometry& Geometry, const FPointerEvent& Event) override;
     void BuildRadioRows(TArray<FString>& Labels, TArray<int32>& Commands, TArray<bool>& Enabled, FString& Title) const;
     void ToggleRadio();
@@ -147,6 +149,10 @@ private:
     FString HomeCarrierReadout;
     TArray<FString> NavReadouts, MissileReadouts;
     FString DefenseReadout;
+    bool bDamagePreviewHovered=false;
+    float DamagePreviewZoom=1.f;
+    struct FDamagePoint { FVector2D UV; double Health=100; FString Name; EShipSystemIcon Icon=EShipSystemIcon::Auxiliary; };
+    TArray<FDamagePoint> DamagePoints;
     double FlightSpeed = 0, HeadingDegrees = 0, ClosingSpeed = 0, JumpSeconds = 0;
     double PitchDegrees = 0, BankRadians = 0;
     int32 ThreatLevel = 0;

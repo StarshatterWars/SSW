@@ -14,6 +14,8 @@ degrees:       true
 hud_icon:      "ZodiacHud"
 
 model:         "Zodiac"
+cockpit_model: "FalconPit"
+cockpit_scale: 0.02
 
 mass:       87
 integrity:  5250

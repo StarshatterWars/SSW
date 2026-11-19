@@ -1,0 +1,1031 @@
+[
+	{
+		"Row": "1st Force [Brotherhood of Iron]",
+		"Type": "FORCE",
+		"Id": 1,
+		"Name": "Brotherhood of Iron",
+		"DisplayName": "1st Force [Brotherhood of Iron]",
+		"Intel": "SECRET",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "NONE",
+		"ParentId": 0,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "1st Fleet [Eastern Fire]",
+		"Type": "FLEET",
+		"Id": 1,
+		"Name": "Eastern Fire",
+		"DisplayName": "1st Fleet [Eastern Fire]",
+		"Intel": "RESERVE",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "5th DESRON [Marauders]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 5,
+		"Name": "Marauders",
+		"DisplayName": "5th DESRON [Marauders]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": -280000,
+			"Y": -120000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Marauder",
+				"UnitRegnum": "305",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Punisher",
+				"UnitRegnum": "306",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "6th DESRON [Raiders]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 6,
+		"Name": "Raiders",
+		"DisplayName": "6th DESRON [Raiders]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Vesta",
+		"Location":
+		{
+			"X": -100000,
+			"Y": -270000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Widow Maker",
+				"UnitRegnum": "103",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Murder of Crows",
+				"UnitRegnum": "104",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "7th DESRON [Vengeance]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 7,
+		"Name": "Vengeance",
+		"DisplayName": "7th DESRON [Vengeance]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Nero",
+		"Location":
+		{
+			"X": -100000,
+			"Y": 70000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Blinding Flash",
+				"UnitRegnum": "103",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Hellhound",
+				"UnitRegnum": "104",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "1st Station [Skull Cove]",
+		"Type": "STATION",
+		"Id": 1,
+		"Name": "Skull Cove",
+		"DisplayName": "1st Station [Skull Cove]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Vesta",
+		"Location":
+		{
+			"X": 230000,
+			"Y": 320000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Skull Cove",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station5",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8th Fighter Squadron [Storm Bringers]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 8,
+		"Name": "Storm Bringers",
+		"DisplayName": "8th Fighter Squadron [Storm Bringers]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "STATION",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Storm Bringer",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Cutlass",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 24,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "9th Fighter Squadron [Flaming Arrows]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 9,
+		"Name": "Flaming Arrows",
+		"DisplayName": "9th Fighter Squadron [Flaming Arrows]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Vesta",
+		"Location":
+		{
+			"X": 0,
+			"Y": -20000,
+			"Z": 7000
+		},
+		"ParentType": "STATION",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Flaming Arrow",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Cutlass",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 18,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2nd Fleet [Southern Cross]",
+		"Type": "FLEET",
+		"Id": 2,
+		"Name": "Southern Cross",
+		"DisplayName": "2nd Fleet [Southern Cross]",
+		"Intel": "RESERVE",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Duna",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "15th DESRON [Royals]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 15,
+		"Name": "Royals",
+		"DisplayName": "15th DESRON [Royals]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Duna",
+		"Location":
+		{
+			"X": -280000,
+			"Y": -120000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Count Rugen",
+				"UnitRegnum": "305",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Swordsman",
+				"UnitRegnum": "306",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "16th DESRON [Crossbones]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 16,
+		"Name": "Crossbones",
+		"DisplayName": "16th DESRON [Crossbones]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Duna",
+		"Location":
+		{
+			"X": -100000,
+			"Y": -270000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Vandal",
+				"UnitRegnum": "103",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Ruin",
+				"UnitRegnum": "104",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "17th DESRON [Terror]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 17,
+		"Name": "Terror",
+		"DisplayName": "17th DESRON [Terror]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Duna",
+		"Location":
+		{
+			"X": -100000,
+			"Y": 70000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Deathbringer",
+				"UnitRegnum": "103",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Terror",
+				"UnitRegnum": "104",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2nd Station [Dead Reef]",
+		"Type": "STATION",
+		"Id": 2,
+		"Name": "Dead Reef",
+		"DisplayName": "2nd Station [Dead Reef]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Casalle",
+		"Location":
+		{
+			"X": 130000,
+			"Y": -420000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Dead Reef",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station5",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "18th Fighter Squadron [Hellforge]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 18,
+		"Name": "Hellforge",
+		"DisplayName": "18th Fighter Squadron [Hellforge]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Duna",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "STATION",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Hellforge",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Cutlass",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 16,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "19th Fighter Squadron [Daggers]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 19,
+		"Name": "Daggers",
+		"DisplayName": "19th Fighter Squadron [Daggers]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Duna",
+		"Location":
+		{
+			"X": 0,
+			"Y": -20000,
+			"Z": 7000
+		},
+		"ParentType": "STATION",
+		"ParentId": 2,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Dagger",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Cutlass",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 16,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3rd Fleet [North Wind]",
+		"Type": "FLEET",
+		"Id": 3,
+		"Name": "North Wind",
+		"DisplayName": "3rd Fleet [North Wind]",
+		"Intel": "RESERVE",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Casalle",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "25th DESRON [Marauders]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 25,
+		"Name": "Marauders",
+		"DisplayName": "25th DESRON [Marauders]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Casalle",
+		"Location":
+		{
+			"X": -280000,
+			"Y": -120000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Rapacious",
+				"UnitRegnum": "305",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Claw",
+				"UnitRegnum": "306",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "26th DESRON [Hook]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 26,
+		"Name": "Hook",
+		"DisplayName": "26th DESRON [Hook]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Duna",
+		"Location":
+		{
+			"X": -100000,
+			"Y": -270000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Insanity",
+				"UnitRegnum": "103",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Vorpal",
+				"UnitRegnum": "104",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "27th DESRON [Thunder]",
+		"Type": "DESTROYER_SQUADRON",
+		"Id": 27,
+		"Name": "Thunder",
+		"DisplayName": "27th DESRON [Thunder]",
+		"Intel": "SECRET",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Nergal",
+		"Location":
+		{
+			"X": -100000,
+			"Y": 70000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Thunderous",
+				"UnitRegnum": "103",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Agony",
+				"UnitRegnum": "104",
+				"UnitRegion": "",
+				"UnitClass": "Frigate",
+				"UnitDesign": "Marauder",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3rd Station [Blackhand]",
+		"Type": "STATION",
+		"Id": 3,
+		"Name": "Blackhand",
+		"DisplayName": "3rd Station [Blackhand]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Loris",
+		"Location":
+		{
+			"X": 130000,
+			"Y": -420000,
+			"Z": 0
+		},
+		"ParentType": "FLEET",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Blackhand",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station5",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "28th Fighter Squadron [Spawn]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 28,
+		"Name": "Spawn",
+		"DisplayName": "28th Fighter Squadron [Spawn]",
+		"Intel": "SECRET",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Loris",
+		"Location":
+		{
+			"X": 30000,
+			"Y": -180000,
+			"Z": 6000
+		},
+		"ParentType": "STATION",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Spawn",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Saber",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 18,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "29th Fighter Squadron [Blades]",
+		"Type": "FIGHTER_SQUADRON",
+		"Id": 29,
+		"Name": "Blades",
+		"DisplayName": "29th Fighter Squadron [Blades]",
+		"Intel": "SECRET",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Loris",
+		"Location":
+		{
+			"X": 0,
+			"Y": -20000,
+			"Z": 7000
+		},
+		"ParentType": "STATION",
+		"ParentId": 3,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Blade",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Fighter",
+				"UnitDesign": "Saber",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 18,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8580th Station [Prosenar Orbital Concentrator]",
+		"Type": "STATION",
+		"Id": 8580,
+		"Name": "Prosenar Orbital Concentrator",
+		"DisplayName": "8580th Station [Prosenar Orbital Concentrator]",
+		"Intel": "KNOWN",
+		"Iff": 3,
+		"EmpireId": "Pirate",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": -106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Prosenar Orbital Concentrator",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	}
+]

@@ -1,4 +1,5 @@
 #include "TrafficAI.h"
+#include "EconomyAI.h"
 #include "EconomyRuntime.h"
 #include "Algo/Reverse.h"
 #include "Ship.h"
@@ -6,6 +7,33 @@
 #include "Starshatter.h"
 #include "OfflineCutsceneExport.h"
 
+namespace
+{
+FName FreightEscrow(const FGalaxyTrafficJourney& Job){return FName(*(TEXT("NPC freight escrow/")+Job.Id.ToString(EGuidFormats::Digits)));}
+bool RefundFreight(FGalaxyTrafficJourney& Job,FEconomyState& State)
+{
+    if(Job.TradeCredits>0 && !Job.bTradeSettled)
+        if(!FEconomyLedger::Pay(State,FreightEscrow(Job),Job.Buyer,Job.TradeCredits,FGuid::NewGuid(),TEXT("Undelivered NPC freight refund")))return false;
+    Job.TradeCredits=0;return true;
+}
+}
+bool TrafficAI::PatrolAllowed(bool FreeFlight,bool Training,bool Networked,bool Cinematic)
+{return FreeFlight && !Training && !Networked && !Cinematic;}
+FGuid TrafficAI::SchedulePatrol(FGalaxyTrafficState& State,const FGalaxyTrafficSector& Sector,const TArray<FPatrolHull>& Hulls,int32 Maximum)
+{
+ if(Sector.bSurface || Hulls.IsEmpty() || Maximum<=0)return {};
+ int32 Count=0;for(const auto& Job:State.Journeys)if(Job.bPatrol && !Job.IsFinished()){++Count;if(Job.CurrentSector==Sector.Id)return {};}
+ if(Count>=Maximum || State.Journeys.Num()>=512)return {};
+ FRandomStream Random(HashCombine(GetTypeHash(Sector.Id),uint32(++State.Sequence)));
+ const int32 Roll=Random.RandRange(0,99);const int32 IFF=Roll<15?0:Roll<30?3:Sector.Affiliation;
+ TArray<FPatrolHull> Eligible;for(const auto& Hull:Hulls)if(Hull.IFF==IFF || (IFF==0 && Hull.IFF!=3))Eligible.Add(Hull);
+ if(Eligible.IsEmpty())return {};
+ const auto& Hull=Eligible[Random.RandRange(0,Eligible.Num()-1)];
+ static const TCHAR* Names[]={TEXT("Vega"),TEXT("Morrow"),TEXT("Hale"),TEXT("Orlov"),TEXT("Kade"),TEXT("Sen"),TEXT("Voss"),TEXT("Renn")};
+ FGalaxyTrafficJourney Job;Job.Id=FGuid::NewGuid();Job.bPatrol=true;Job.ShipDesign=Hull.Design;Job.PatrolIFF=IFF;Job.PilotName=Names[Random.RandRange(0,7)];
+ Job.CurrentSector=Sector.Id;Job.Route={Sector.Id};Job.Origin=FName(*(Sector.Id.ToString()+TEXT("/TransitA")));Job.Destination=FName(*(Sector.Id.ToString()+TEXT("/TransitB")));
+ Job.Phase=EGalaxyTrafficPhase::Traveling;Job.Remaining=900;State.Journeys.Add(Job);return Job.Id;
+}
 void TrafficAI::TickLegacyIndustry(Sim& Simulation,double Seconds)
 {
     const auto* Director=Starshatter::GetInstance();
@@ -40,16 +68,26 @@ FGuid TrafficAI::Schedule(FGalaxyTrafficState& Traffic,FEconomyState& Economy,co
     if(!Item.IsNone())
     {
         const auto* Pickup=Economy.Inventories.Find(Source);const auto* Drop=Economy.Inventories.Find(Destination);
-        if(!Pickup || !Drop || Pickup->Owner!=FEconomyRuntime::IndustryOwner() || Drop->Owner!=Pickup->Owner || Source==Destination ||
+        if(!Pickup || !Drop || !Pickup->bOperational || !Drop->bOperational || Pickup->Owner!=FEconomyRuntime::IndustryOwner() || Drop->Owner!=Pickup->Owner || Source==Destination ||
             !FMath::IsFinite(Quantity) || Quantity<=0 || !FMath::IsFinite(Mass) || Mass<=0 || Quantity*Mass>1000 ||
             Drop->CapacityTonnes-FEconomyLedger::Used(*Drop)<Quantity*Mass)return {};
         const auto* Stock=Pickup->Items.FindByPredicate([Item](const auto& Stack){return Stack.Type==Item;});
         const auto* Existing=Drop->Items.FindByPredicate([Item](const auto& Stack){return Stack.Type==Item;});
         if(!Stock || !FMath::IsNearlyEqual(Stock->UnitTonnes,Mass) || (Existing && !FMath::IsNearlyEqual(Existing->UnitTonnes,Mass)))return {};
-        Job.Reservation=FEconomyLedger::Reserve(Economy,Pickup->Owner,Source,Item,Quantity);
+        if(!Pickup->TradingOwner.IsNone() && !Drop->TradingOwner.IsNone() && Pickup->TradingOwner!=Drop->TradingOwner)
+        {
+            const int64 Ask=Pickup->AskPrices.FindRef(Item),Bid=Drop->BidPrices.FindRef(Item);const double Total=Quantity*Ask;
+            if(Ask<=0 || Bid<Ask || !FMath::IsFinite(Total) || Total>9.e15)return {};
+            Job.Buyer=Drop->TradingOwner;Job.Seller=Pickup->TradingOwner;Job.TradeCredits=FMath::CeilToInt64(Total);
+            if(Economy.Wallets.FindRef(Job.Buyer)<Job.TradeCredits)return {};
+        }
+        const FName Custodian=Pickup->Owner;
+        Job.Reservation=FEconomyLedger::Reserve(Economy,Custodian,Source,Item,Quantity);
         if(!Job.Reservation.IsValid())return {};
-        if(!FEconomyLedger::CreateInventory(Economy,Job.Hold,Pickup->Owner,From.System,1000))
-        {FEconomyLedger::Release(Economy,Pickup->Owner,Job.Reservation);return {};}
+        if(!FEconomyLedger::CreateInventory(Economy,Job.Hold,Custodian,From.System,1000))
+        {FEconomyLedger::Release(Economy,Custodian,Job.Reservation);return {};}
+        if(Job.TradeCredits>0 && !FEconomyLedger::Pay(Economy,Job.Buyer,FreightEscrow(Job),Job.TradeCredits,FGuid::NewGuid(),TEXT("NPC freight escrow")))
+        {FEconomyLedger::Release(Economy,Custodian,Job.Reservation);Economy.Inventories.Remove(Job.Hold);return {};}
         Job.Item=Item;Job.Quantity=Quantity;Job.UnitTonnes=Mass;Job.SourceInventory=Source;Job.DestinationInventory=Destination;
         Economy.Inventories.FindChecked(Destination).ReservedOutputTonnes+=Quantity*Mass;Job.bDestinationReserved=true;
     }
@@ -59,9 +97,25 @@ bool TrafficAI::Advance(FGalaxyTrafficJourney& Job,FEconomyState& Economy,double
 {
     if(Job.IsFinished() || !FMath::IsFinite(Seconds) || Seconds<=0 || !FMath::IsFinite(HopSeconds) || HopSeconds<=0 || !FMath::IsFinite(Rate) || Rate<=0)return false;
     Job.Age+=Seconds;
+    if(Job.bPatrol)
+    {
+        Job.Remaining=FMath::Max(0.0,Job.Remaining-Seconds);
+        if(Job.Remaining<=0){Job.Phase=EGalaxyTrafficPhase::Completed;return true;}
+        return false;
+    }
     const FName Owner=FEconomyRuntime::IndustryOwner();
+    if(Job.IsCargo() && (Job.Phase==EGalaxyTrafficPhase::Traveling || Job.Phase==EGalaxyTrafficPhase::Unloading))
+        if(const auto* Drop=Economy.Inventories.Find(Job.DestinationInventory);!Drop || !Drop->bOperational)
+        {Job.Phase=EGalaxyTrafficPhase::Blocked;Job.BlockedReason=TEXT("Destination offline. Cargo retained pending reroute.");}
     if(Job.Phase==EGalaxyTrafficPhase::Blocked)
-    {if(FEconomyLedger::Quantity(Economy,Job.Hold,Job.Item)>=Job.Quantity){Job.Phase=EGalaxyTrafficPhase::Unloading;Job.Remaining=5;}else Lose(Job,Economy);return false;}
+    {
+        Job.BlockedSeconds+=Seconds;const auto* Drop=Economy.Inventories.Find(Job.DestinationInventory);
+        const double Reserved=Job.bDestinationReserved?Job.Quantity*Job.UnitTonnes:0;
+        if(FEconomyLedger::Quantity(Economy,Job.Hold,Job.Item)+UE_SMALL_NUMBER<Job.Quantity){Lose(Job,Economy);return false;}
+        if(Drop && Drop->bOperational && Drop->CapacityTonnes-FEconomyLedger::Used(*Drop)+Reserved+UE_SMALL_NUMBER>=Job.Quantity*Job.UnitTonnes)
+        {Job.Phase=EGalaxyTrafficPhase::Unloading;Job.Remaining=FMath::Max(1.0,Job.Quantity*Job.UnitTonnes/Rate);Job.BlockedSeconds=0;}
+        return false;
+    }
     if((Job.Phase==EGalaxyTrafficPhase::Loading || Job.Phase==EGalaxyTrafficPhase::Unloading) && Realized && !Arrived)return false;
     Job.Remaining=FMath::Max(0.0,Job.Remaining-Seconds);
     if(Job.Remaining>0)return false;
@@ -71,6 +125,7 @@ bool TrafficAI::Advance(FGalaxyTrafficJourney& Job,FEconomyState& Economy,double
         Job.Phase=Job.IsCargo()?EGalaxyTrafficPhase::Loading:EGalaxyTrafficPhase::Traveling;
         Job.Remaining=Job.IsCargo()?FMath::Max(1.0,Job.Quantity*Job.UnitTonnes/Rate):HopSeconds;break;
     case EGalaxyTrafficPhase::Loading:
+        if(const auto* Pickup=Economy.Inventories.Find(Job.SourceInventory);!Pickup || !Pickup->bOperational){Job.BlockedReason=TEXT("Pickup offline; reservation cancelled.");Lose(Job,Economy);return false;}
         if(!FEconomyLedger::Transfer(Economy,Owner,Job.SourceInventory,Job.Hold,Job.Item,Job.Quantity,Job.Reservation))
         {Job.BlockedReason=TEXT("Pickup stock or reservation unavailable.");Lose(Job,Economy);return false;}
         Job.Reservation.Invalidate();Job.Phase=EGalaxyTrafficPhase::Traveling;Job.Remaining=HopSeconds;break;
@@ -82,6 +137,8 @@ bool TrafficAI::Advance(FGalaxyTrafficJourney& Job,FEconomyState& Economy,double
         Job.Phase=Job.IsCargo()?EGalaxyTrafficPhase::Unloading:EGalaxyTrafficPhase::Completed;
         Job.Remaining=FMath::Max(1.0,Job.Quantity*Job.UnitTonnes/Rate);break;
     case EGalaxyTrafficPhase::Unloading:
+        if(Job.TradeCredits>0 && !Job.bTradeSettled && (Economy.Wallets.FindRef(FreightEscrow(Job))<Job.TradeCredits || Economy.Wallets.FindRef(Job.Seller)>MAX_int64-Job.TradeCredits))
+        {Job.Phase=EGalaxyTrafficPhase::Blocked;Job.BlockedReason=TEXT("NPC settlement unavailable; cargo remains aboard.");return false;}
         if(Job.bDestinationReserved)
         {
             if(auto* Drop=Economy.Inventories.Find(Job.DestinationInventory))Drop->ReservedOutputTonnes=FMath::Max(0.0,Drop->ReservedOutputTonnes-Job.Quantity*Job.UnitTonnes);
@@ -89,14 +146,35 @@ bool TrafficAI::Advance(FGalaxyTrafficJourney& Job,FEconomyState& Economy,double
         }
         if(!FEconomyLedger::Transfer(Economy,Owner,Job.Hold,Job.DestinationInventory,Job.Item,Job.Quantity))
         {Job.Phase=EGalaxyTrafficPhase::Blocked;Job.BlockedReason=TEXT("Destination storage unavailable; cargo remains aboard.");return false;}
+        if(Job.TradeCredits>0 && !Job.bTradeSettled)
+        {
+            if(!FEconomyLedger::Pay(Economy,FreightEscrow(Job),Job.Seller,Job.TradeCredits,FGuid::NewGuid(),TEXT("NPC freight delivery settlement")))
+            {FEconomyLedger::Transfer(Economy,Owner,Job.DestinationInventory,Job.Hold,Job.Item,Job.Quantity);Job.Phase=EGalaxyTrafficPhase::Blocked;return false;}
+            Job.bTradeSettled=true;
+            if(const auto* Destination=Economy.Inventories.Find(Job.DestinationInventory))EconomyAI::RecordTrade(Economy,Destination->System,Job.Item,Job.Quantity,double(Job.TradeCredits));
+        }
         Job.Phase=EGalaxyTrafficPhase::Completed;Economy.Inventories.Remove(Job.Hold);return true;
     default:break;
     }
     return Job.Phase==EGalaxyTrafficPhase::Completed;
 }
+bool TrafficAI::AbstractCargo(FGalaxyTrafficJourney& Job,FEconomyState& State,FName System)
+{
+    if(!Job.IsCargo() || Job.IsFinished())return true;
+    const FName Hold(*(TEXT("Traffic/")+Job.Id.ToString(EGuidFormats::Digits)));
+    if(Job.Hold==Hold)return State.Inventories.Contains(Hold);
+    const auto* Source=State.Inventories.Find(Job.Hold);
+    if(!Source || Source->Owner!=FEconomyRuntime::IndustryOwner() || Source->Items.ContainsByPredicate([&](const auto& S){return S.Type!=Job.Item && S.Quantity>0;}))return false;
+    const double Amount=FEconomyLedger::Quantity(State,Job.Hold,Job.Item);
+    auto* Target=FEconomyLedger::CreateInventory(State,Hold,FEconomyRuntime::IndustryOwner(),System,1000);
+    if(!Target || Target->Owner!=FEconomyRuntime::IndustryOwner() || Target->System!=System)return false;
+    if(Amount>0 && !FEconomyLedger::Transfer(State,FEconomyRuntime::IndustryOwner(),Job.Hold,Hold,Job.Item,Amount))return false;
+    State.Inventories.Remove(Job.Hold);Job.Hold=Hold;return true;
+}
 void TrafficAI::Lose(FGalaxyTrafficJourney& Job,FEconomyState& Economy)
 {
     if(Job.IsFinished())return;
+    RefundFreight(Job,Economy);
     if(Job.Reservation.IsValid())FEconomyLedger::Release(Economy,FEconomyRuntime::IndustryOwner(),Job.Reservation);
     if(Job.bDestinationReserved)
         if(auto* Drop=Economy.Inventories.Find(Job.DestinationInventory))Drop->ReservedOutputTonnes=FMath::Max(0.0,Drop->ReservedOutputTonnes-Job.Quantity*Job.UnitTonnes);
@@ -121,7 +199,7 @@ const FGalaxyTrafficEndpoint* TrafficAI::EndpointForInventory(const TMap<FName,F
 {
     const FString Text=Key.ToString();const FGalaxyTrafficEndpoint* Transfer=nullptr;
     for(const auto& Pair:Endpoints)
-        if(Pair.Value.bPhysical && Pair.Value.System==Inventory.System)
+        if(!Pair.Value.Station.IsNone() && Pair.Value.System==Inventory.System)
         {
             if(Text.StartsWith(Pair.Value.System.ToString()+TEXT("/")+Pair.Value.Station.ToString()+TEXT("/")))return &Pair.Value;
             if(Ship::IsTransferStationName(Pair.Value.Station.ToString()) && (!Transfer || Pair.Key.LexicalLess(Transfer->Id)))Transfer=&Pair.Value;
@@ -135,19 +213,28 @@ void TrafficAI::ScheduleSector(FGalaxyTrafficState& Traffic,FEconomyState& Econo
     for(FName Source:Keys)
     {
         const auto& Inventory=Economy.Inventories.FindChecked(Source);
-        if(Inventory.Owner!=FEconomyRuntime::IndustryOwner())continue;
+        if(Inventory.Owner!=FEconomyRuntime::IndustryOwner() || Inventory.bHullStorage || !Inventory.bOperational || Inventory.TradingOwner.IsNone())continue;
         const auto* From=EndpointForInventory(Endpoints,Source,Inventory);if(!From || From->Sector!=Sector)continue;
         for(const auto& Item:Inventory.Items)
         {
             if(++Examined>256)break;
-            const double Available=FEconomyLedger::Available(Economy,Source,Item.Type);if(Available<=0)continue;
+            const double Available=FMath::Max(0.0,FEconomyLedger::Available(Economy,Source,Item.Type)-Inventory.DesiredStock.FindRef(Item.Type));if(Available<=0)continue;
             for(FName Destination:Keys)
             {
                 if(Destination==Source)continue;const auto& Drop=Economy.Inventories.FindChecked(Destination);
-                if(Drop.Owner!=Inventory.Owner || FEconomyLedger::Quantity(Economy,Destination,Item.Type)>=Available*.25)continue;
+                if(Drop.Owner!=Inventory.Owner || Drop.bSupplyOnly || !Drop.bOperational)continue;
+                const double Desired=Drop.DesiredStock.IsEmpty()?Available*.25:Drop.DesiredStock.FindRef(Item.Type);
+                double Incoming=0;for(const auto& Journey:Traffic.Journeys)if(!Journey.IsFinished() && Journey.DestinationInventory==Destination && Journey.Item==Item.Type)Incoming+=Journey.Quantity;
+                const double Deficit=Desired-FEconomyLedger::Quantity(Economy,Destination,Item.Type)-Incoming;
+                if(Deficit<=UE_SMALL_NUMBER)continue;
                 const auto* To=EndpointForInventory(Endpoints,Destination,Drop);if(!To || To->Id==From->Id)continue;
                 const auto Path=TrafficAI::Route(Sectors,From->Sector,To->Sector);if(Path.IsEmpty())continue;
-                const double Count=FMath::Min3(Available,100.0/Item.UnitTonnes,FMath::Max(0.0,Drop.CapacityTonnes-FEconomyLedger::Used(Drop))/Item.UnitTonnes);
+                double Count=FMath::Min3(FMath::Min(Available,Deficit),100.0/Item.UnitTonnes,FMath::Max(0.0,Drop.CapacityTonnes-FEconomyLedger::Used(Drop))/Item.UnitTonnes);
+                if(Inventory.WholeUnitItems.Contains(Item.Type))Count=FMath::FloorToDouble(Count);
+                // A declining market does not justify expensive speculative imports above its target.
+                const double Trend=EconomyAI::PriceTrend(Economy,Drop.System,Item.Type);
+                if(Trend<.9)Count=FMath::Min(Count,FMath::Max(0.0,Deficit*.5));
+                if(Inventory.WholeUnitItems.Contains(Item.Type))Count=FMath::FloorToDouble(Count);
                 if(Count>0 && TrafficAI::Schedule(Traffic,Economy,*From,*To,Path,Source,Destination,Item.Type,Count,Item.UnitTonnes).IsValid())return;
             }
         }
@@ -157,6 +244,61 @@ void TrafficAI::ScheduleSector(FGalaxyTrafficState& Traffic,FEconomyState& Econo
     if(const auto* From=Endpoints.Find(FromId))if(const auto* To=Endpoints.Find(ToId))TrafficAI::Schedule(Traffic,Economy,*From,*To,{Sector});
 }
 
+int32 TrafficAI::RecoverBlocked(FGalaxyTrafficState& Traffic,FEconomyState& Economy,const TMap<FName,FGalaxyTrafficSector>& Sectors,const TMap<FName,FGalaxyTrafficEndpoint>& Endpoints)
+{
+    int32 Recovered=0;
+    for(auto& Job:Traffic.Journeys)
+    {
+        if(Job.Phase!=EGalaxyTrafficPhase::Blocked || Job.BlockedSeconds<60 || Job.bReturning)continue;
+        // Cargo already aboard is offered to another reachable business first.
+        // Work on a candidate ledger so refund, replacement escrow and storage
+        // reservation either all commit together or leave the original job intact.
+        if(FEconomyLedger::Quantity(Economy,Job.Hold,Job.Item)+UE_SMALL_NUMBER<Job.Quantity)continue;
+        TArray<FName> Keys;Economy.Inventories.GetKeys(Keys);Keys.Sort([](FName A,FName B){return A.LexicalLess(B);});
+        FName Best;TArray<FName> BestPath;int64 BestBid=0;const FGalaxyTrafficEndpoint* BestEndpoint=nullptr;
+        const double Mass=Job.Quantity*Job.UnitTonnes;
+        for(FName Key:Keys)
+        {
+            if(Key==Job.SourceInventory || Key==Job.DestinationInventory || Key==Job.Hold)continue;
+            const auto& Store=Economy.Inventories.FindChecked(Key);
+            if(!Store.bOperational || Store.bSupplyOnly || Store.bHullStorage || Store.Owner!=FEconomyRuntime::IndustryOwner() || Store.TradingOwner.IsNone())continue;
+            const double Need=Store.DesiredStock.FindRef(Job.Item)-FEconomyLedger::Quantity(Economy,Key,Job.Item);
+            double Incoming=0;for(const auto& Other:Traffic.Journeys)if(Other.Id!=Job.Id && !Other.IsFinished() && Other.DestinationInventory==Key && Other.Item==Job.Item)Incoming+=Other.Quantity;
+            const int64 Bid=Store.BidPrices.FindRef(Job.Item);
+            if(Need-Incoming+UE_SMALL_NUMBER<Job.Quantity || Store.CapacityTonnes-FEconomyLedger::Used(Store)+UE_SMALL_NUMBER<Mass || Bid<=0 || double(Bid)*Job.Quantity+UE_SMALL_NUMBER<Job.TradeCredits)continue;
+            const int64 Refund=Store.TradingOwner==Job.Buyer?Job.TradeCredits:0;
+            if(double(Economy.Wallets.FindRef(Store.TradingOwner))+Refund<Job.TradeCredits)continue;
+            const auto* Point=EndpointForInventory(Endpoints,Key,Store);if(!Point || Point->bSurface)continue;
+            auto Path=Route(Sectors,Job.CurrentSector,Point->Sector);if(Path.IsEmpty())continue;
+            if(Best.IsNone() || Bid>BestBid || (Bid==BestBid && Path.Num()<BestPath.Num())){Best=Key;BestBid=Bid;BestPath=MoveTemp(Path);BestEndpoint=Point;}
+        }
+        if(!Best.IsNone() && BestEndpoint)
+        {
+            FEconomyState Candidate=Economy;auto Replacement=Job;const int64 Price=Job.TradeCredits;
+            if(RefundFreight(Replacement,Candidate))
+            {
+                Replacement.Buyer=Candidate.Inventories.FindChecked(Best).TradingOwner;Replacement.TradeCredits=Price;Replacement.bTradeSettled=false;
+                if(Price==0 || FEconomyLedger::Pay(Candidate,Replacement.Buyer,FreightEscrow(Replacement),Price,FGuid::NewGuid(),TEXT("Rerouted NPC freight escrow")))
+                {
+                    if(Replacement.bDestinationReserved)if(auto* Old=Candidate.Inventories.Find(Replacement.DestinationInventory))Old->ReservedOutputTonnes=FMath::Max(0.0,Old->ReservedOutputTonnes-Mass);
+                    Candidate.Inventories.FindChecked(Best).ReservedOutputTonnes+=Mass;
+                    Replacement.Destination=BestEndpoint->Id;Replacement.DestinationInventory=Best;Replacement.Route=BestPath;Replacement.RouteIndex=0;Replacement.Remaining=90;
+                    Replacement.Phase=EGalaxyTrafficPhase::Traveling;Replacement.BlockedSeconds=0;Replacement.bDestinationReserved=true;Replacement.BlockedReason=TEXT("Replacement buyer reserved; delivering retained cargo.");
+                    Economy=MoveTemp(Candidate);Job=MoveTemp(Replacement);++Recovered;continue;
+                }
+            }
+        }
+        const auto* Origin=Endpoints.Find(Job.Origin);auto* Source=Economy.Inventories.Find(Job.SourceInventory);
+        if(!Origin || !Source || !Source->bOperational || Source->CapacityTonnes-FEconomyLedger::Used(*Source)+UE_SMALL_NUMBER<Job.Quantity*Job.UnitTonnes)continue;
+        const auto Path=Route(Sectors,Job.CurrentSector,Origin->Sector);if(Path.IsEmpty()){Job.BlockedReason=TEXT("No return route. Cargo retained until a route is restored.");continue;}
+        if(!RefundFreight(Job,Economy))continue;
+        if(Job.bDestinationReserved)if(auto* Old=Economy.Inventories.Find(Job.DestinationInventory))Old->ReservedOutputTonnes=FMath::Max(0.0,Old->ReservedOutputTonnes-Job.Quantity*Job.UnitTonnes);
+        Job.bDestinationReserved=true;Source->ReservedOutputTonnes+=Job.Quantity*Job.UnitTonnes;
+        Job.Destination=Origin->Id;Job.DestinationInventory=Job.SourceInventory;Job.Route=Path;Job.RouteIndex=0;Job.Remaining=90;Job.Phase=EGalaxyTrafficPhase::Traveling;Job.bReturning=true;Job.BlockedSeconds=0;
+        Job.BlockedReason=TEXT("Destination unavailable; returning cargo to origin.");++Recovered;
+    }
+    return Recovered;
+}
 void TrafficAI::Dispatch(FGalaxyTrafficState& Traffic,FEconomyState& Economy,const TMap<FName,FGalaxyTrafficSector>& Sectors,const TMap<FName,FGalaxyTrafficEndpoint>& Endpoints,FName Active,int32 MaxJourneys)
 {
     if(Traffic.Journeys.Num()>=MaxJourneys)return;

@@ -20,9 +20,9 @@
     "radius": 1200000000,
     "mass": 1.5e+30,
     "light": 78000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       232,
@@ -46,7 +46,7 @@
           180,
           160
         ],
-        "orbit": 94000000000,
+        "orbit": 94000000000.0,
         "rotation": 17.3,
         "region": {
           "name": "Haiche",
@@ -64,7 +64,7 @@
             "high_res": "Moons/lunar_hi.pcx",
             "radius": 1000000,
             "mass": 8e+22,
-            "orbit": 85000000,
+            "orbit": 85000000.0,
             "region": {
               "name": "Eiller",
               "radius": 480000,
@@ -72,7 +72,9 @@
               "orbit": 11000000,
               "inclination": 0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 3.12
           }
         ],
         "terrain": {
@@ -117,18 +119,20 @@
           "weather_overcast": 0,
           "weather_fog": 0,
           "weather_storm": 5
-        }
+        },
+        "eccentricity": 0.223,
+        "inclination": -10.66
       },
       {
         "name": "Cygnus",
         "map": "Giants/GasGiant5_map.pcx",
         "image": "Giants/GasGiant5.jpg",
-		"high_res": "Giants/GasGiant5.jpg",
+        "high_res": "Giants/GasGiant5.jpg",
         "radius": 27100000,
         "mass": 2.6e+26,
         "tscale": 2,
         "tilt": 0.13,
-        "orbit": 235000000000,
+        "orbit": 235000000000.0,
         "rotation": 31.3,
         "region": {
           "name": "Cygnus",
@@ -147,7 +151,7 @@
             "radius": 1300000,
             "rotation": 16.4,
             "mass": 5.98e+24,
-            "orbit": 481000000,
+            "orbit": 481000000.0,
             "region": {
               "name": "Corvus",
               "radius": 480000,
@@ -155,7 +159,9 @@
               "orbit": 11000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 9.33
           },
           {
             "name": "Aquilae",
@@ -165,7 +171,7 @@
             "radius": 2100000,
             "rotation": 28.4,
             "mass": 5.98e+24,
-            "orbit": 614000000,
+            "orbit": 614000000.0,
             "region": {
               "name": "Aquilae",
               "radius": 480000,
@@ -173,20 +179,24 @@
               "orbit": 11000000,
               "inclination": 0.2,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 14.46
           }
-        ]
+        ],
+        "eccentricity": 0.20062545778723404,
+        "inclination": 15.6
       },
       {
         "name": "Tal Amin",
         "map": "Giants/GasGiant11_map.pcx",
         "image": "Giants/GasGiant11.jpg",
-		"high_res": "Giants/GasGiant11.jpg",
+        "high_res": "Giants/GasGiant11.jpg",
         "radius": 38200000,
         "mass": 4e+26,
         "tscale": 2,
         "tilt": 0.13,
-        "orbit": 341000000000,
+        "orbit": 341000000000.0,
         "rotation": 31.3,
         "region": {
           "name": "Tal Amin",
@@ -205,7 +215,7 @@
             "radius": 2300000,
             "rotation": 26.4,
             "mass": 5.98e+24,
-            "orbit": 421000000,
+            "orbit": 421000000.0,
             "region": {
               "name": "Benares",
               "radius": 480000,
@@ -213,7 +223,9 @@
               "orbit": 11000000,
               "inclination": 0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 14.73
           },
           {
             "name": "Kala",
@@ -223,7 +235,7 @@
             "radius": 2900000,
             "rotation": 18.4,
             "mass": 5.98e+24,
-            "orbit": 574000000,
+            "orbit": 574000000.0,
             "region": {
               "name": "Kala",
               "radius": 480000,
@@ -236,9 +248,13 @@
                 "Aram",
                 "Volova"
               ]
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 3.39
           }
-        ]
+        ],
+        "eccentricity": 0.12,
+        "inclination": -17.21
       }
     ]
   }

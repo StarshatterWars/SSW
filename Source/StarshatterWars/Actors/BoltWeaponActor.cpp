@@ -162,6 +162,9 @@ void ABoltWeaponActor::ApplyPresentationDefaults()
         BoltWake->SetRelativeLocation(FVector(-GlowWorldRadius * 0.9f, 0, 0));
     }
 
+    const TCHAR* Variant=BoltColor.G>BoltColor.R*1.2f && BoltColor.G>BoltColor.B*1.2f?TEXT("Green"):(BoltColor.R>BoltColor.B*1.3f?(BoltColor.G>BoltColor.R*.45f?TEXT("OrangeYellow"):TEXT("Red")):TEXT("Blue"));
+    const FString NativePath=FString::Printf(TEXT("/Game/Effects/Weapons/NS_SSW_Bolt_%s.NS_SSW_Bolt_%s"),Variant,Variant);
+    if(auto* Native=LoadObject<UNiagaraSystem>(nullptr,*NativePath,nullptr,LOAD_NoWarn))CoreSystem=Native;
     if (CoreFX) CoreFX->SetAsset(CoreSystem);
     if (TrailFX) TrailFX->SetAsset(BoltSystem);
 }
@@ -224,29 +227,22 @@ void ABoltWeaponActor::BeginSimulationFlight(bool bDeltaBolt)
 
 void ABoltWeaponActor::ActivateVisuals()
 {
-    // The emissive halo is the visible energy projectile. Avoid rendering
-    // the opaque placeholder sphere over it in flight.
-    if (ProjectileMesh && PhotonGlowMID)
-        ProjectileMesh->SetHiddenInGame(true);
-    bFlightVisualsActive = true;
-    SetActorHiddenInGame(false);
-    if (CoreFX && CoreSystem && !PhotonGlowMID)
+    bFlightVisualsActive=true;SetActorHiddenInGame(false);
+    const bool Native=CoreSystem && CoreSystem->GetPathName().StartsWith(TEXT("/Game/Effects/Weapons/NS_SSW_Bolt_"));
+    if(Native && CoreFX)
     {
-        CoreFX->SetAsset(CoreSystem);
-        CoreFX->SetVariableLinearColor(TEXT("User.Color"), BoltColor);
-        CoreFX->SetVariableFloat(TEXT("EnginePower"), 1.f);
-        CoreFX->SetVariableFloat(TEXT("Throttle"), 100.f);
-        CoreFX->Activate(true);
+        if(ProjectileMesh)ProjectileMesh->SetHiddenInGame(true);
+        if(PhotonGlow)PhotonGlow->SetHiddenInGame(true);
+        if(BoltWake)BoltWake->SetHiddenInGame(true);
+        if(TrailFX)TrailFX->DeactivateImmediate();
+        CoreFX->SetAsset(CoreSystem);CoreFX->SetRelativeRotation(FRotator(0,180,0));CoreFX->SetRelativeScale3D(FVector(FMath::Clamp(GlowWorldRadius*.8f,4.f,12.f)));
+        CoreFX->SetVariableFloat(TEXT("User.Emissive_Boost"),FMath::Max(16.f,GlowIntensity*2));
+        CoreFX->SetVariableLinearColor(TEXT("User.Color"),BoltColor);CoreFX->SetHiddenInGame(false);CoreFX->Activate(true);return;
     }
-    if (TrailFX && !PhotonGlowMID)
-    {
-        if (BoltSystem) TrailFX->SetAsset(BoltSystem);
-        TrailFX->SetVariableFloat(TEXT("EnginePower"), 1.f);
-        TrailFX->SetVariableFloat(TEXT("Throttle"), 100.f);
-        TrailFX->SetVariableLinearColor(TEXT("User.Color"), BoltColor);
-        TrailFX->SetVariableFloat(TEXT("User.Scale"), BoltScale);
-        TrailFX->Activate(true);
-    }
+    // Missing cooked presentation assets must not make a simulated shot invisible.
+    if(ProjectileMesh && PhotonGlowMID)ProjectileMesh->SetHiddenInGame(true);
+    if(PhotonGlow)PhotonGlow->SetHiddenInGame(false);
+    if(BoltWake)BoltWake->SetHiddenInGame(false);
 }
 
 void ABoltWeaponActor::Tick(float DeltaSeconds)

@@ -20,9 +20,9 @@
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 160000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       252,
@@ -41,7 +41,7 @@
         "high_res": "Kolchev/ilya_hi.pcx",
         "radius": 3600000,
         "mass": 4.1e+26,
-        "orbit": 103000000000,
+        "orbit": 103000000000.0,
         "rotation": 19.3,
         "region": {
           "name": "Ilya",
@@ -50,7 +50,9 @@
           "orbit": 18000000,
           "inclination": 0.5,
           "link": []
-        }
+        },
+        "eccentricity": 0.134,
+        "inclination": -9.4
       },
       {
         "name": "Kolchev",
@@ -66,7 +68,7 @@
         ],
         "radius": 4800000,
         "mass": 3.9e+24,
-        "orbit": 195000000000,
+        "orbit": 195000000000.0,
         "rotation": 23.3,
         "region": {
           "name": "Kolchev",
@@ -84,7 +86,7 @@
             "high_res": "Borova/maraner_hi.pcx",
             "radius": 1400000,
             "mass": 4.3e+23,
-            "orbit": 40000000,
+            "orbit": 40000000.0,
             "rotation": 9.2,
             "region": {
               "name": "Odin",
@@ -93,18 +95,20 @@
               "orbit": 11000000,
               "inclination": 0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 16.62
           },
           {
             "name": "Dva",
             "map": "Moons/Moon2_map.pcx",
-			"image": "Moons/Moon2.jpg",
+            "image": "Moons/Moon2.jpg",
             "high_res": "Moons/Moon2.jpg",
             "radius": 850000,
             "rotation": 19,
-            "inclination": 0,
+            "inclination": 0.0,
             "mass": 6e+23,
-            "orbit": 71000000,
+            "orbit": 71000000.0,
             "region": {
               "name": "Dva",
               "radius": 480000,
@@ -155,20 +159,23 @@
               "weather_overcast": 0,
               "weather_fog": 0,
               "weather_storm": 0
-            }
+            },
+            "eccentricity": 0.02
           }
-        ]
+        ],
+        "eccentricity": 0.2121285260769231,
+        "inclination": -2.33
       },
       {
         "name": "Anatoly",
         "map": "Giants/GasGiant6_map.pcx",
         "image": "Giants/GasGiant6.jpg",
-		"high_res": "Giants/GasGiant6.jpg",
+        "high_res": "Giants/GasGiant6.jpg",
         "radius": 29100000,
         "mass": 3.6e+26,
         "tscale": 2,
         "tilt": 0.13,
-        "orbit": 295000000000,
+        "orbit": 295000000000.0,
         "rotation": 29.3,
         "region": {
           "name": "Anatoly",
@@ -178,16 +185,18 @@
           "inclination": 0.2,
           "link": []
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.12070062640677966,
+        "inclination": 15.35
       },
       {
         "name": "Volova",
         "map": "Giants/GasGiant9_map.pcx",
         "image": "Giants/GasGiant9.jpg",
-		"high_res": "Giants/GasGiant9.jpg",
+        "high_res": "Giants/GasGiant9.jpg",
         "radius": 20000000,
         "mass": 5.42e+26,
-        "orbit": 375000000000,
+        "orbit": 375000000000.0,
         "tilt": 0.25,
         "ring": "Giants/Ring2.pcx",
         "minrad": 1.2,
@@ -216,7 +225,7 @@
             "high_res": "Silessia/nero_hi.jpg",
             "radius": 3000000,
             "mass": 3e+22,
-            "orbit": 265000000,
+            "orbit": 265000000.0,
             "rotation": 100,
             "region": {
               "name": "Anya",
@@ -225,7 +234,9 @@
               "orbit": 11000000,
               "inclination": 0.12,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 10.41
           },
           {
             "name": "Vlad",
@@ -234,9 +245,9 @@
             "high_res": "Moons/Moon1.jpg",
             "radius": 5200000,
             "rotation": 19,
-            "inclination": 0,
+            "inclination": 0.0,
             "mass": 6e+24,
-            "orbit": 431000000,
+            "orbit": 431000000.0,
             "region": {
               "name": "Vlad",
               "radius": 480000,
@@ -244,7 +255,8 @@
               "orbit": 11000000,
               "inclination": 0.22,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           },
           {
             "name": "Dmitri",
@@ -259,7 +271,7 @@
               255
             ],
             "mass": 5.98e+24,
-            "orbit": 814000000,
+            "orbit": 814000000.0,
             "region": {
               "name": "Dmitri",
               "radius": 480000,
@@ -267,9 +279,13 @@
               "orbit": 11000000,
               "inclination": 0.02,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 18.24
           }
-        ]
+        ],
+        "eccentricity": 0.09495115944,
+        "inclination": -5.62
       }
     ]
   }

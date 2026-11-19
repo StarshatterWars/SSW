@@ -101,7 +101,11 @@ bool FEngineNozzleFactionTest::RunTest(const FString&)
         }
         Actor->UpdateSnapshotPropulsion(1,0,0,{},0xffffffff);
         for(auto* Emitter:Emitters)if(Emitter->GetName().StartsWith(TEXT("RuntimeMainEngineEmitter_")))
-            TestFalse(TEXT("Engine-off plume stops emitting"),Emitter->IsActive());
+        {
+            bool Valid=false;const float Spawn=Emitter->GetVariableFloat(TEXT("User.Thrusters_SpawnRate"),Valid);
+            TestTrue(TEXT("Engine-off plume emits no new particles while the tail retires"),Valid && Spawn==0.f);
+            TestFalse(TEXT("Engine-off plume is hidden"),Emitter->IsVisible());
+        }
         Actor->Destroy();
     }
     return true;

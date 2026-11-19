@@ -2,8 +2,8 @@
   "name": "Museum",
   "sky": {
     "nebula": "Nebula-Nephrys.mag",
-	"poly_stars": "Museum.mag",
-	"haze": ""
+    "poly_stars": "Museum.mag",
+    "haze": ""
   },
   "stars": 0,
   "dust": 0,
@@ -15,14 +15,14 @@
   "star": {
     "name": "Musette",
     "image": "Suns/G3.pcx",
-	"map": "Suns/StarG_map.pcx",
+    "map": "Suns/StarG_map.pcx",
     "tscale": 6,
     "radius": 16,
     "mass": 2e+30,
     "light": 160000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -52,7 +52,9 @@
           "inclination": 0.4,
           "link": []
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.008,
+        "inclination": 1.2
       }
     ]
   }

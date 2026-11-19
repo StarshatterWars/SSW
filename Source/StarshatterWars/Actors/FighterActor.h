@@ -33,6 +33,8 @@ public:
     void UseNetworkChaseView();
     bool bCockpitViewActive = false;
     bool bNetworkChaseView = false;
+    // Shuttles reuse a cockpit assembly without the Falcon-specific canopy alignment.
+    bool bUseAuthoredCockpitMount = false;
     // Assign meshes and relative transforms directly in each fighter Blueprint.
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Meshes") TObjectPtr<UStaticMeshComponent> LeftGear;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Fighter|Meshes") TObjectPtr<UStaticMeshComponent> RightGear;

@@ -1,5 +1,6 @@
 #include "ShipStoreDlg.h"
 #include "SkillsSubsystem.h"
+#include "ShipInsuranceSubsystem.h"
 
 #include "Engine/GameInstance.h"
 #include "GameStructs.h"
@@ -22,6 +23,7 @@ namespace
 struct FStoreEntry
 {
     FString Name;
+    FName Design;
     FText Category;
     FText Grade;
     FText Access;
@@ -65,7 +67,7 @@ private:
     FStoreRow Entry;
 };
 
-TSharedRef<SWidget> MakeCatalog(const TSharedRef<FStoreRows>& Rows, bool bComponents)
+TSharedRef<SWidget> MakeCatalog(const TSharedRef<FStoreRows>& Rows, bool bComponents,const TSharedRef<FName>& Selected)
 {
     if (Rows->IsEmpty())
         return SNew(STextBlock).Margin(FMargin(8)).Text(INVTEXT("No catalog entries available."));
@@ -131,6 +133,7 @@ TSharedRef<SWidget> MakeCatalog(const TSharedRef<FStoreRows>& Rows, bool bCompon
     Sort();
     auto List = SNew(SListView<FStoreRow>).ListItemsSource(&*Rows).HeaderRow(Header)
         .SelectionMode(ESelectionMode::Single)
+        .OnSelectionChanged_Lambda([Selected,bComponents](FStoreRow Row,ESelectInfo::Type){*Selected=Row && !bComponents?Row->Design:NAME_None;})
         .OnGenerateRow_Lambda([Rows](FStoreRow Entry, const TSharedRef<STableViewBase>& Owner) -> TSharedRef<ITableRow>
         {
             return SNew(SStoreRow, Owner).Entry(Entry);
@@ -162,12 +165,13 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
                 Hull->Category != EShipCategory::Transport))
                 continue;
 
-            const int32 RequiredRank = PlayerCharacter::CommandRankRequired(Hull->ShipType);
+            const int32 RequiredRank = PlayerCharacter::HullRankRequired(Hull->ShipType,Hull->ShipName);
             if (Rank < RequiredRank || Hull->BaseCost <= 0 ||
                 (Hull->ShipEmpire != EShipEmpire::All && static_cast<int64>(Hull->ShipEmpire) != PilotEmpire))
                 continue;
 
             auto Row = MakeShared<FStoreEntry>();
+            Row->Design=FName(*Hull->ShipName);
             Row->Name = Hull->DisplayName.IsEmpty() ? Hull->ShipName : Hull->DisplayName;
             Row->Category = FText::FromString(Hull->ShipClass);
             Row->Empire = EmpireEnum->GetDisplayNameTextByValue(static_cast<int64>(Hull->ShipEmpire));
@@ -220,9 +224,10 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
         ? FText::Format(INVTEXT("Current ship: {0}"), FText::FromString(ANSI_TO_TCHAR(ActiveShip->GetObserverName())))
         : INVTEXT("No active ship");
 
+    const auto Selected=MakeShared<FName>();const auto Feedback=MakeShared<FText>();
     auto Tabs = SNew(SWidgetSwitcher)
-        + SWidgetSwitcher::Slot()[MakeCatalog(Hulls, false)]
-        + SWidgetSwitcher::Slot()[MakeCatalog(Components, true)];
+        + SWidgetSwitcher::Slot()[MakeCatalog(Hulls, false,Selected)]
+        + SWidgetSwitcher::Slot()[MakeCatalog(Components, true,Selected)];
 
     const auto SelectTab = [Switcher = TWeakPtr<SWidgetSwitcher>(Tabs)](int32 Index)
     {
@@ -235,7 +240,7 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
         + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
         [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(14)).Text(CurrentHull)]
         + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
-        [SNew(STextBlock).Text(INVTEXT("Reference prices. Construction and refits require a shipyard."))]
+        [SNew(STextBlock).Text(INVTEXT("Purchase completed hulls while docked at a shipyard. Construction and refits require shipyard services."))]
         + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
         [
             SNew(SHorizontalBox)
@@ -249,12 +254,16 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
         [
             SNew(SHorizontalBox)
             + SHorizontalBox::Slot()
-            [SNew(SButton).IsEnabled(false).Text(INVTEXT("Purchase"))]
+            [SNew(SButton).Text(INVTEXT("PURCHASE HULL"))
+                .IsEnabled_Lambda([this,Selected,WeakTabs=TWeakPtr<SWidgetSwitcher>(Tabs)](){FText Why;const auto T=WeakTabs.Pin();const auto* Service=GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>();return T && T->GetActiveWidgetIndex()==0 && Service && Service->CanPurchaseHull(*Selected,Why);})
+                .ToolTipText_Lambda([this,Selected](){FText Why;if(const auto* Service=GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>())Service->CanPurchaseHull(*Selected,Why);return Why;})
+                .OnClicked_Lambda([this,Selected,Feedback](){if(auto* Service=GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>())Service->PurchaseHull(*Selected,*Feedback);return FReply::Handled();})]
             + SHorizontalBox::Slot().Padding(6, 0)
             [SNew(SButton).IsEnabled(false).Text(INVTEXT("Refit Current Ship"))]
             + SHorizontalBox::Slot()
             [SNew(SButton).IsEnabled(false).Text(INVTEXT("Insure Current Ship"))]
         ]
+        + SVerticalBox::Slot().AutoHeight().Padding(8,4)[SNew(STextBlock).AutoWrapText(true).Text_Lambda([Feedback](){return *Feedback;})]
         + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
         [
             MissionUIStyle::MakeDataPane(

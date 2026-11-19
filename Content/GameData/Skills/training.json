@@ -1,0 +1,16 @@
+{
+  "LevelSeconds": [
+    1500,
+    3067,
+    6272,
+    12825,
+    26224,
+    53624,
+    109651,
+    224215,
+    458477,
+    937500
+  ],
+  "MaximumQueueEntries": 128,
+  "MaximumQueueSeconds": 2592000
+}

@@ -1,4 +1,5 @@
 #include "ZodiacShipActor.h"
+#include "Components/SceneComponent.h"
 AZodiacShipActor::AZodiacShipActor()
 {
 
@@ -6,7 +7,9 @@ AZodiacShipActor::AZodiacShipActor()
 
     ApplyAuthoredAttachmentDefaults();
     InitializeNativeAuthoredAttachments(TEXT("Zodiac"));
-    InitializeNativeFighterAttachments(TEXT(""), 1.000000f, FVector(8.000000f, 0.000000f, 145.000000f), {
+    bUseAuthoredCockpitMount=true;
+    FalconCockpitVisualOffset=FVector::ZeroVector;
+    InitializeNativeFighterAttachments(TEXT("FalconPit"), 0.020000f, FVector(145.000000f, 0.000000f, 8.000000f), {
         FFighterLandingGearDefinition(TEXT("ZGearRight"), FVector(-10.000000f, 44.000000f, -25.000000f), FVector(-10.000000f, 74.000000f, -60.000000f)),
         FFighterLandingGearDefinition(TEXT("ZGearLeft"), FVector(-10.000000f, -44.000000f, -25.000000f), FVector(-10.000000f, -74.000000f, -60.000000f)),
         FFighterLandingGearDefinition(TEXT("ZGearRight"), FVector(-128.000000f, 44.000000f, -25.000000f), FVector(-128.000000f, 74.000000f, -60.000000f)),
@@ -32,4 +35,14 @@ void AZodiacShipActor::ApplyAuthoredAttachmentDefaults()
       Point.LocalRotation = FRotator(0.000000f, 180.000000f, 0.0f);
       TurretBasePointDefs.Add(Point); }
     SyncShipAttachmentCounts();
+}
+
+void AZodiacShipActor::OnConstruction(const FTransform& Transform)
+{
+    // Migrate saved Zodiac BP defaults that explicitly serialized the old missing cockpit.
+    bUseAuthoredCockpitMount=true;
+    if(AuthoredCockpitModel.IsEmpty()){AuthoredCockpitModel=TEXT("FalconPit");AuthoredCockpitScale=.02f;}
+    if(FighterCockpitRoot && (FighterCockpitRoot->GetRelativeLocation().IsNearlyZero() || FighterCockpitRoot->GetRelativeLocation().Equals(FVector(8,0,145))))
+        FighterCockpitRoot->SetRelativeLocation(FVector(145,0,8));
+    Super::OnConstruction(Transform);
 }

@@ -19,6 +19,7 @@
 =============================================================================*/
 
 #include "SSWCombatGroupSubsystem.h"
+#include "OOBJsonCatalog.h"
 
 #include "StarshatterAssetRegistrySubsystem.h"
 #include "SSWGameInstance.h"
@@ -193,6 +194,12 @@ void USSWCombatGroupSubsystem::LoadAll(bool bFull /*= false*/)
         return;
     }
 
+    const FString JsonDirectory=FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/OOB");
+    if(FPaths::DirectoryExists(JsonDirectory))
+    {
+        FString Error;if(!OOBJsonCatalog::ImportDirectory(*CombatGroupDataTable,JsonDirectory,Error))
+        {UE_LOG(LogTemp,Error,TEXT("[OOBJson] %s; previous table retained"),*Error);return;}
+    }
     // Older campaign tables still contain the spaced design identifier.
     for (const FName RowName : CombatGroupDataTable->GetRowNames())
     {
@@ -206,7 +213,7 @@ void USSWCombatGroupSubsystem::LoadAll(bool bFull /*= false*/)
     }
 
     //InitializeCombatRoster();
-    //ReadCombatRosterData();
+    ReadCombatRosterData();
 
     const int32 TableRows = CombatGroupDataTable ? CombatGroupDataTable->GetRowNames().Num() : -1;
     const int32 CacheRows = CombatRosterData.Num();
@@ -267,6 +274,12 @@ void USSWCombatGroupSubsystem::InitializeCombatRoster()
         return;
     }
 
+    const FString JsonDirectory=FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/OOB");
+    if(FPaths::DirectoryExists(JsonDirectory))
+    {
+        FString Error;if(!OOBJsonCatalog::ImportDirectory(*CombatGroupDataTable,JsonDirectory,Error))UE_LOG(LogTemp,Error,TEXT("[OOBJson] %s"),*Error);
+        return;
+    }
     CombatGroupDataTable->EmptyTable();
 
     ProjectPath = FPaths::ProjectContentDir();

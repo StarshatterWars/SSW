@@ -1,0 +1,1363 @@
+[
+	{
+		"Row": "1st Force [Silessian Confederacy]",
+		"Type": "FORCE",
+		"Id": 1,
+		"Name": "Silessian Confederacy",
+		"DisplayName": "1st Force [Silessian Confederacy]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "NONE",
+		"ParentId": 0,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "1st Civilian [Silessian Civilian Infrastructure]",
+		"Type": "CIVILIAN",
+		"Id": 1,
+		"Name": "Silessian Civilian Infrastructure",
+		"DisplayName": "1st Civilian [Silessian Civilian Infrastructure]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2000th Infrastructure [Silessian Farcaster Network]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2000,
+		"Name": "Silessian Farcaster Network",
+		"DisplayName": "2000th Infrastructure [Silessian Farcaster Network]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "2001st Infrastructure [Silessia-Prosenar]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2001,
+		"Name": "Silessia-Prosenar",
+		"DisplayName": "2001st Infrastructure [Silessia-Prosenar]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 131000,
+			"Y": 60000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Silessia-Prosenar",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2002nd Infrastructure [Prosenar-Silessia]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2002,
+		"Name": "Prosenar-Silessia",
+		"DisplayName": "2002nd Infrastructure [Prosenar-Silessia]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Prosenar-Silessia",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2003rd Infrastructure [Prosenar-Vesta]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2003,
+		"Name": "Prosenar-Vesta",
+		"DisplayName": "2003rd Infrastructure [Prosenar-Vesta]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": -176000,
+			"Y": 71000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Prosenar-Vesta",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2004th Infrastructure [Vesta-Prosenar]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2004,
+		"Name": "Vesta-Prosenar",
+		"DisplayName": "2004th Infrastructure [Vesta-Prosenar]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Vesta",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Vesta-Prosenar",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2005th Infrastructure [Silessia-Nero]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2005,
+		"Name": "Silessia-Nero",
+		"DisplayName": "2005th Infrastructure [Silessia-Nero]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": -163000,
+			"Y": -63000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Silessia-Nero",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2006th Transport [Nero-Silessia]",
+		"Type": "TRANSPORT",
+		"Id": 2006,
+		"Name": "Nero-Silessia",
+		"DisplayName": "2006th Transport [Nero-Silessia]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Nero",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Nero-Silessia",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2007th Infrastructure [Vesta-Nero]",
+		"Type": "INFRASTRUCTURE",
+		"Id": 2007,
+		"Name": "Vesta-Nero",
+		"DisplayName": "2007th Infrastructure [Vesta-Nero]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Vesta",
+		"Location":
+		{
+			"X": -150000,
+			"Y": -50000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Vesta-Nero",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2008th Transport [Nero-Vesta]",
+		"Type": "TRANSPORT",
+		"Id": 2008,
+		"Name": "Nero-Vesta",
+		"DisplayName": "2008th Transport [Nero-Vesta]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Nero",
+		"Location":
+		{
+			"X": -120000,
+			"Y": 170000,
+			"Z": 0
+		},
+		"ParentType": "INFRASTRUCTURE",
+		"ParentId": 2000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Nero-Vesta",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Farcaster",
+				"UnitDesign": "Farcaster",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4000th Network [COMNET]",
+		"Type": "NETWORK",
+		"Id": 4000,
+		"Name": "COMNET",
+		"DisplayName": "4000th Network [COMNET]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": 0,
+			"Y": 30000,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "4001st Network [Relay 105/AX]",
+		"Type": "NETWORK",
+		"Id": 4001,
+		"Name": "Relay 105/AX",
+		"DisplayName": "4001st Network [Relay 105/AX]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": 80000,
+			"Y": -120000,
+			"Z": 7000
+		},
+		"ParentType": "NETWORK",
+		"ParentId": 4000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Relay 105/AX",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "COMSAT",
+				"UnitDesign": "Relay1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4002nd Network [Relay 208/HB]",
+		"Type": "NETWORK",
+		"Id": 4002,
+		"Name": "Relay 208/HB",
+		"DisplayName": "4002nd Network [Relay 208/HB]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Vesta",
+		"Location":
+		{
+			"X": -40000,
+			"Y": 60000,
+			"Z": 0
+		},
+		"ParentType": "NETWORK",
+		"ParentId": 4000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Relay 208/HB",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "COMSAT",
+				"UnitDesign": "Relay1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4003rd Network [Relay 038/AZ]",
+		"Type": "NETWORK",
+		"Id": 4003,
+		"Name": "Relay 038/AZ",
+		"DisplayName": "4003rd Network [Relay 038/AZ]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Nero",
+		"Location":
+		{
+			"X": -60000,
+			"Y": -180000,
+			"Z": 0
+		},
+		"ParentType": "NETWORK",
+		"ParentId": 4000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Relay 038/AZ",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "COMSAT",
+				"UnitDesign": "Relay1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4004th Network [Relay 530/UN]",
+		"Type": "NETWORK",
+		"Id": 4004,
+		"Name": "Relay 530/UN",
+		"DisplayName": "4004th Network [Relay 530/UN]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": -160000,
+			"Y": -140000,
+			"Z": 0
+		},
+		"ParentType": "NETWORK",
+		"ParentId": 4000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Relay 530/UN",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "COMSAT",
+				"UnitDesign": "Relay1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4005th Network [Relay 573/JD]",
+		"Type": "NETWORK",
+		"Id": 4005,
+		"Name": "Relay 573/JD",
+		"DisplayName": "4005th Network [Relay 573/JD]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Vesta",
+		"Location":
+		{
+			"X": 130000,
+			"Y": -180000,
+			"Z": 0
+		},
+		"ParentType": "NETWORK",
+		"ParentId": 4000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Relay 573/JD",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "COMSAT",
+				"UnitDesign": "Relay1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "4006th Network [Relay 831/UN]",
+		"Type": "NETWORK",
+		"Id": 4006,
+		"Name": "Relay 831/UN",
+		"DisplayName": "4006th Network [Relay 831/UN]",
+		"Intel": "LOCATED",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Nero",
+		"Location":
+		{
+			"X": 210000,
+			"Y": 50000,
+			"Z": 0
+		},
+		"ParentType": "NETWORK",
+		"ParentId": 4000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Relay 831/UN",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "COMSAT",
+				"UnitDesign": "Relay1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "2300th Non-Com [Freight]",
+		"Type": "NON_COM",
+		"Id": 2300,
+		"Name": "Freight",
+		"DisplayName": "2300th Non-Com [Freight]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 0,
+			"Y": -20000,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "3000th Freight [Independent Shipping]",
+		"Type": "FREIGHT",
+		"Id": 3000,
+		"Name": "Independent Shipping",
+		"DisplayName": "3000th Freight [Independent Shipping]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 80000,
+			"Y": -120000,
+			"Z": 0
+		},
+		"ParentType": "NON_COM",
+		"ParentId": 2300,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "3798th Freight [ISS White Dawn]",
+		"Type": "FREIGHT",
+		"Id": 3798,
+		"Name": "ISS White Dawn",
+		"DisplayName": "3798th Freight [ISS White Dawn]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 90000,
+			"Y": -130000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS White Dawn",
+				"UnitRegnum": "798",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3780th Freight [ISS Fairlight]",
+		"Type": "FREIGHT",
+		"Id": 3780,
+		"Name": "ISS Fairlight",
+		"DisplayName": "3780th Freight [ISS Fairlight]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": 110000,
+			"Y": -120000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Fairlight",
+				"UnitRegnum": "780",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3354th Freight [ISS Turimo]",
+		"Type": "FREIGHT",
+		"Id": 3354,
+		"Name": "ISS Turimo",
+		"DisplayName": "3354th Freight [ISS Turimo]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Vesta",
+		"Location":
+		{
+			"X": 175000,
+			"Y": 200000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Turimo",
+				"UnitRegnum": "354",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3843rd Freight [ISS Farlook]",
+		"Type": "FREIGHT",
+		"Id": 3843,
+		"Name": "ISS Farlook",
+		"DisplayName": "3843rd Freight [ISS Farlook]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Nero",
+		"Location":
+		{
+			"X": 160000,
+			"Y": 211000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Farlook",
+				"UnitRegnum": "843",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3235th Freight [ISS Grayhawke]",
+		"Type": "FREIGHT",
+		"Id": 3235,
+		"Name": "ISS Grayhawke",
+		"DisplayName": "3235th Freight [ISS Grayhawke]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": -20000,
+			"Y": 228000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Grayhawke",
+				"UnitRegnum": "235",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3493rd Freight [ISS Ulmo]",
+		"Type": "FREIGHT",
+		"Id": 3493,
+		"Name": "ISS Ulmo",
+		"DisplayName": "3493rd Freight [ISS Ulmo]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": -90000,
+			"Y": 160000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Ulmo",
+				"UnitRegnum": "493",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3219th Freight [ISS Wayward]",
+		"Type": "FREIGHT",
+		"Id": 3219,
+		"Name": "ISS Wayward",
+		"DisplayName": "3219th Freight [ISS Wayward]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Vesta",
+		"Location":
+		{
+			"X": -102000,
+			"Y": 138000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Wayward",
+				"UnitRegnum": "219",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3381st Freight [ISS Sutter]",
+		"Type": "FREIGHT",
+		"Id": 3381,
+		"Name": "ISS Sutter",
+		"DisplayName": "3381st Freight [ISS Sutter]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Vesta",
+		"Location":
+		{
+			"X": 99000,
+			"Y": -128000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Sutter",
+				"UnitRegnum": "381",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3521st Freight [ISS Alen Carl]",
+		"Type": "FREIGHT",
+		"Id": 3521,
+		"Name": "ISS Alen Carl",
+		"DisplayName": "3521st Freight [ISS Alen Carl]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 79000,
+			"Y": 228000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Alen Carl",
+				"UnitRegnum": "521",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "3617th Freight [ISS Hal Bennet]",
+		"Type": "FREIGHT",
+		"Id": 3617,
+		"Name": "ISS Hal Bennet",
+		"DisplayName": "3617th Freight [ISS Hal Bennet]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Prosenar",
+		"Location":
+		{
+			"X": 75000,
+			"Y": -150000,
+			"Z": 0
+		},
+		"ParentType": "FREIGHT",
+		"ParentId": 3000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "ISS Hal Bennet",
+				"UnitRegnum": "617",
+				"UnitRegion": "",
+				"UnitClass": "Cargo",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "5000th Civilian [Colonial Authority]",
+		"Type": "CIVILIAN",
+		"Id": 5000,
+		"Name": "Colonial Authority",
+		"DisplayName": "5000th Civilian [Colonial Authority]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": []
+	},
+	{
+		"Row": "5001st Passenger [Far Horizon]",
+		"Type": "PASSENGER",
+		"Id": 5001,
+		"Name": "Far Horizon",
+		"DisplayName": "5001st Passenger [Far Horizon]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 0,
+			"Y": 0,
+			"Z": 0
+		},
+		"ParentType": "CIVILIAN",
+		"ParentId": 5000,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Far Horizon",
+				"UnitRegnum": "XJ-1",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Colony",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8519th Station [Silessia Transfer Station]",
+		"Type": "STATION",
+		"Id": 8519,
+		"Name": "Silessia Transfer Station",
+		"DisplayName": "8519th Station [Silessia Transfer Station]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 150000,
+			"Y": -25000,
+			"Z": 12000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Silessia Transfer Station",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Station1",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8723rd Freight [Silessia Civilian Freight]",
+		"Type": "FREIGHT",
+		"Id": 8723,
+		"Name": "Silessia Civilian Freight",
+		"DisplayName": "8723rd Freight [Silessia Civilian Freight]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 150000,
+			"Y": -75000,
+			"Z": 18000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Silessia Merchant 1",
+				"UnitRegnum": "8723-1",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM3500",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			},
+			{
+				"UnitName": "Silessia Merchant 2",
+				"UnitRegnum": "8723-2",
+				"UnitRegion": "",
+				"UnitClass": "Freighter",
+				"UnitDesign": "IM2800",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8550th Station [Silessia Materials Works]",
+		"Type": "STATION",
+		"Id": 8550,
+		"Name": "Silessia Materials Works",
+		"DisplayName": "8550th Station [Silessia Materials Works]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": -106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Silessia Materials Works",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	},
+	{
+		"Row": "8551st Station [Silessia Orbital Concentrator]",
+		"Type": "STATION",
+		"Id": 8551,
+		"Name": "Silessia Orbital Concentrator",
+		"DisplayName": "8551st Station [Silessia Orbital Concentrator]",
+		"Intel": "KNOWN",
+		"Iff": 0,
+		"EmpireId": "Silessian",
+		"System": "",
+		"Region": "Silessia",
+		"Location":
+		{
+			"X": 106000,
+			"Y": 66000,
+			"Z": 24000
+		},
+		"ParentType": "FORCE",
+		"ParentId": 1,
+		"UnitIndex": 0,
+		"Unit": [
+			{
+				"UnitName": "Silessia Orbital Concentrator",
+				"UnitRegnum": "",
+				"UnitRegion": "",
+				"UnitClass": "Station",
+				"UnitDesign": "Processing Facility",
+				"UnitSkin": "",
+				"UnitLoc":
+				{
+					"X": 1000000000,
+					"Y": 0,
+					"Z": 0
+				},
+				"UnitCount": 1,
+				"UnitDamage": 0,
+				"UnitDead": 0,
+				"UnitHeading": 0
+			}
+		]
+	}
+]

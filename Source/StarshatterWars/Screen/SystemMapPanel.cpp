@@ -683,11 +683,11 @@ void USystemMapPanel::BuildMissionProjection(const FVector2D& Size,
         const FVector2D Center = Project(Position, Depth);
         Bodies.Add({Body, Center, static_cast<float>(FocalLength * Diameter / Depth), Depth});
     };
-    auto OrbitPosition = [](const FVector& Parent, double Radius, double Phase)
+    auto OrbitPosition = [](const FVector& Parent, double Radius, const OrbitalBody* Body,double Phase)
     {
-        return Parent + FVector(FMath::Cos(Phase) * Radius, FMath::Sin(Phase) * Radius, 0);
+        return Parent + Body->SampleOrbit(Phase)*(Radius/FMath::Max(1.0,Body->Orbit()));
     };
-    auto AddOrbit = [&](const FVector& Parent, double Radius, int32 Segments)
+    auto AddOrbit = [&](const FVector& Parent, double Radius,const OrbitalBody* Body, int32 Segments)
     {
         if (!Orbits) return;
         auto& Points = Orbits->AddDefaulted_GetRef();
@@ -695,7 +695,7 @@ void USystemMapPanel::BuildMissionProjection(const FVector2D& Size,
         for (int32 Index = 0; Index <= Segments; ++Index)
         {
             double Depth = 0;
-            Points.Add(Project(OrbitPosition(Parent, Radius, 2.0 * PI * Index / Segments), Depth));
+            Points.Add(Project(OrbitPosition(Parent, Radius,Body, 2.0 * PI * Index / Segments), Depth));
         }
     };
 
@@ -707,27 +707,26 @@ void USystemMapPanel::BuildMissionProjection(const FVector2D& Size,
 
     double MaxPlanetOrbit = 0;
     for (const OrbitalBody* Planet : CachedPlanetBodies)
-        if (Planet) MaxPlanetOrbit = FMath::Max(MaxPlanetOrbit, Planet->Orbit());
+        if (Planet) MaxPlanetOrbit = FMath::Max(MaxPlanetOrbit, Planet->Apoapsis()+Planet->ClearanceRadius());
 
     if (!FocusedPlanet) AddBody(CachedPrimaryStarBody, FVector::ZeroVector, 0.20);
     for (int32 PlanetIndex = 0; PlanetIndex < CachedPlanetBodies.Num(); ++PlanetIndex)
     {
         OrbitalBody* Planet = CachedPlanetBodies[PlanetIndex];
         if (!Planet || (FocusedPlanet && Planet != FocusedPlanet)) continue;
-        const double Radius = FMath::Lerp(0.28, 1.0,
-            FMath::Sqrt(FMath::Clamp(Planet->Orbit() / FMath::Max(1.0, MaxPlanetOrbit), 0.0, 1.0)));
+        const double Radius = .95 * Planet->Orbit() / FMath::Max(1.0,MaxPlanetOrbit);
         const FVector PlanetPosition = FocusedPlanet ? FVector::ZeroVector
-            : OrbitPosition(FVector::ZeroVector, Radius, ComputePlanetAngleRadians(Planet, PlanetIndex));
+            : OrbitPosition(FVector::ZeroVector, Radius,Planet,Planet->Phase());
         const double PlanetDiameter = FocusedPlanet ? 0.63
             : FMath::Clamp(static_cast<double>(ComputePlanetDrawSize(Planet)) / 310.0, 0.065, 0.19);
-        if (!FocusedPlanet) AddOrbit(FVector::ZeroVector, Radius, 96);
+        if (!FocusedPlanet) AddOrbit(FVector::ZeroVector, Radius,Planet, 96);
         AddBody(Planet, PlanetPosition, PlanetDiameter);
 
         double MaxMoonOrbit = 0;
         ListIter<OrbitalBody> Satellites = Planet->Satellites();
         while (++Satellites)
             if (const OrbitalBody* Moon = Satellites.value())
-                MaxMoonOrbit = FMath::Max(MaxMoonOrbit, Moon->Orbit());
+                MaxMoonOrbit = FMath::Max(MaxMoonOrbit, Moon->Apoapsis()+Moon->Radius());
 
         int32 MoonIndex = 0;
         ListIter<OrbitalBody> Moons = Planet->Satellites();
@@ -735,13 +734,10 @@ void USystemMapPanel::BuildMissionProjection(const FVector2D& Size,
         {
             OrbitalBody* Moon = Moons.value();
             if (!Moon) continue;
-            const double Fraction = FMath::Sqrt(FMath::Clamp(
-                Moon->Orbit() / FMath::Max(1.0, MaxMoonOrbit), 0.0, 1.0));
-            const double MoonRadius = FocusedPlanet ? FMath::Lerp(0.48, 0.94, Fraction)
-                : PlanetDiameter * FMath::Lerp(0.78, 1.27, Fraction);
-            AddOrbit(PlanetPosition, MoonRadius, 48);
-            AddBody(Moon, OrbitPosition(PlanetPosition, MoonRadius,
-                ComputeMoonAngleRadians(Moon, MoonIndex++)), FocusedPlanet ? 0.12 : 0.027);
+            const double Fraction=Moon->Orbit()/FMath::Max(1.0,MaxMoonOrbit);
+            const double MoonRadius=FocusedPlanet?.94*Fraction:PlanetDiameter*1.27*Fraction;
+            AddOrbit(PlanetPosition, MoonRadius,Moon, 48);
+            AddBody(Moon, OrbitPosition(PlanetPosition, MoonRadius,Moon,Moon->Phase()), FocusedPlanet ? 0.12 : 0.027);
         }
     }
 }

@@ -6070,4 +6070,15 @@ group: { type: station, id: 8575, name: "Garrison Orbital Concentrator", intel: 
 group: { type: station, id: 8576, name: "Volante Materials Works", intel: known, iff: 2, empire_id: 1, region: "Volante", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Volante Materials Works", type: "Station", design: "Processing Facility" } }
 
 
-group: { type: station, id: 8577, name: "Volante Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Volante", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Volante Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+group: { type: station, id: 8577, name: "Volante Orbital Concentrator", intel: known, iff: 2, empire_id: 1, region: "Volante", loc: (106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Volante Orbital Concentrator", type: "Station", design: "Processing Facility" } 
+
+
+
+
+}
+
+group: { type: station, id: 8903, name: "Imperial Marak Naval Yard", intel: known, iff: 2, empire_id: 1, region: "Marak", loc: (190e3, 82e3, 34e3), parent_type: force, parent_id: 1, unit: { name: "Imperial Marak Naval Yard", type: "Station", design: "Shipyard", regnum: "SY-8903" } }
+
+group: { type: station, id: 8904, name: "Adantar Strikecraft Yard", intel: known, iff: 2, empire_id: 1, region: "Adantar", loc: (190e3, 82e3, 34e3), parent_type: force, parent_id: 1, unit: { name: "Adantar Strikecraft Yard", type: "Station", design: "Shipyard", regnum: "SY-8904" } }
+
+group: { type: station, id: 8905, name: "Renser Ship Assembly Works", intel: known, iff: 2, empire_id: 1, region: "Renser", loc: (190e3, 82e3, 34e3), parent_type: force, parent_id: 1, unit: { name: "Renser Ship Assembly Works", type: "Station", design: "Shipyard", regnum: "SY-8905" } }

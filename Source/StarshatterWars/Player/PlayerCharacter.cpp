@@ -12,6 +12,7 @@
 #include <string>
 
 #include "AwardInfoRegistry.h"
+#include "AwardCreditAI.h"
 #include "MedalEligibility.h"
 #include "Campaign.h"
 #include "Engine/GameInstance.h"
@@ -22,6 +23,17 @@
 #include "GameStructs.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "PlayerData.h"
+
+namespace
+{
+void GrantEarnedCredit(UObject* Context,PlayerCharacter* Pilot,bool Rank,int32 Id)
+{
+    if(!IsValid(Context) || Pilot!=PlayerCharacter::GetCurrentPlayer())return;
+    auto* World=Context->GetWorld();auto* GI=World?World->GetGameInstance():nullptr;
+    auto* Players=GI?GI->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+    if(Players && Players->HasLoaded())AwardCreditAI::Get().Grant(Players->GetEconomy(),Rank,Id);
+}
+}
 
 // ------------------------------------------------------------------
 // Static globals (legacy style)
@@ -277,6 +289,7 @@ void PlayerCharacter::CompleteFlightTraining()
     const int32 EnsignRank = UAwardInfoRegistry::RankFromName(TEXT("Ensign"));
     if (EnsignRank > 0 && Rank == EnsignRank)
     {
+        GrantEarnedCredit(GWorldContextForSave,this,true,EnsignRank);
         PendingAwardId = EnsignRank;
         bPendingAwardIsRank = true;
     }
@@ -367,6 +380,7 @@ void PlayerCharacter::AddPoints(int32 InPoints)
         Rank = GetRank();
         if (Rank > PreviousRank)
         {
+            for(int32 Earned=PreviousRank+1;Earned<=Rank;++Earned)GrantEarnedCredit(GWorldContextForSave,this,true,Earned);
             PendingAwardId = Rank;
             bPendingAwardIsRank = true;
         }
@@ -378,6 +392,8 @@ void PlayerCharacter::AddMedal(int32 MedalBit)
 {
     if (MedalBit != 0)
     {
+        const uint32 NewBits=uint32(MedalBit)&~uint32(MedalsMask);
+        for(uint32 Bit=1;Bit && Bit<=0x40000000u;Bit<<=1)if(NewBits&Bit)GrantEarnedCredit(GWorldContextForSave,this,false,int32(Bit));
         MedalsMask |= MedalBit;
         bDirty = true;
     }
@@ -488,6 +504,12 @@ const char* PlayerCharacter::RankDescription(int32 Id) {return AwardText(2,Id,UA
 const char* PlayerCharacter::MedalName(int32 Id) {return AwardText(3,Id,UAwardInfoRegistry::MedalName(Id));}
 const char* PlayerCharacter::MedalDescription(int32 Id) {return AwardText(4,Id,UAwardInfoRegistry::MedalDescription(Id));}
 
+
+int32 PlayerCharacter::HullRankRequired(int32 Mask,const FString& Design)
+{
+    const bool TrainingHull=Design.Equals(TEXT("Falcon"),ESearchCase::IgnoreCase) || Design.Equals(TEXT("Stormhawk"),ESearchCase::IgnoreCase);
+    return FMath::Max(CommandRankRequired(Mask),TrainingHull?0:FMath::Max(1,RankFromName(TEXT("Ensign"))));
+}
 
 int32 PlayerCharacter::CommandRankRequired(int32 Mask)
 {

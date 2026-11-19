@@ -95,6 +95,26 @@ bool FRemainingCameraTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("10000 camera steps match legacy matrix forwarding"),Error<1.e-12);return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FInstructionRadioOrderTest,"Starshatter.AIParity.Remaining.InstructionRadioOrderInitialization",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FInstructionRadioOrderTest::RunTest(const FString&)
+{
+    // Recycled instruction storage must never become an unsolicited hold/travel order.
+    alignas(Instruction) uint8 Memory[sizeof(Instruction)];
+    FMemory::Memset(Memory,0xcd,sizeof(Memory));
+    auto* ByName=new(Memory) Instruction("",FVector::ZeroVector);
+    TestTrue(TEXT("Named-region constructor has no radio order"),ByName->GetRadioAction()==RadioMessageAction::NONE);ByName->~Instruction();
+    SimRegion Region(nullptr,"Radio order fixture",SimRegion::REAL_SPACE);
+    FMemory::Memset(Memory,0xcd,sizeof(Memory));auto* ByRegion=new(Memory) Instruction(&Region,FVector::ZeroVector);
+    TestTrue(TEXT("Region constructor has no radio order"),ByRegion->GetRadioAction()==RadioMessageAction::NONE);ByRegion->~Instruction();
+    FMemory::Memset(Memory,0xcd,sizeof(Memory));auto* ByAction=new(Memory) Instruction(EInstruction::None,"");
+    TestTrue(TEXT("Action constructor has no radio order"),ByAction->GetRadioAction()==RadioMessageAction::NONE);
+    ByAction->SetRadioAction(RadioMessageAction::WEP_HOLD);Instruction Copy(*ByAction);
+    TestTrue(TEXT("Copy retains an intentional hold order"),Copy.GetRadioAction()==RadioMessageAction::WEP_HOLD);
+    Instruction Assigned("",FVector::ZeroVector);Assigned=*ByAction;
+    TestTrue(TEXT("Assignment retains an intentional hold order"),Assigned.GetRadioAction()==RadioMessageAction::WEP_HOLD);
+    ByAction->~Instruction();return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FRemainingRouteTest,"Starshatter.AIParity.Remaining.AuthoredRoutesAndArrival",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FRemainingRouteTest::RunTest(const FString& Parameters)
 {
@@ -110,6 +130,7 @@ bool FRemainingRouteTest::RunTest(const FString& Parameters)
     FCapitalProbe Capital(S);Capital.ThrottleAt(&Route,FVector(3000,0,0),3000);Capital.Follow(&Route);
     TestTrue(TEXT("Farcast route does not auto-complete at 3000 units"),Route.GetStatus()!=INSTRUCTION_STATUS::COMPLETE);
     Capital.SetTarget(Named);Capital.FindObjective();
+    AddInfo(FString::Printf(TEXT("Capital target=%p expected=%p objective=%s position=%s yaw=%g pitch=%g"),Capital.GetTarget(),Named,*Capital.GetObjective().ToString(),*S->GetLocation().ToString(),S->GetFlightPathYawAngle(),S->GetFlightPathPitchAngle()));
     TestTrue(TEXT("Capital can acquire combat goal after previous waypoint completion"),Capital.GetTarget()==Named && !Capital.GetObjective().IsNearlyZero());
     return true;
 }

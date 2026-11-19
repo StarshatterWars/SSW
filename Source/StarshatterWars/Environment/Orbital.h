@@ -95,6 +95,11 @@ public:
     double      Rotation() const { return rotation; }
     double      RotationPhase() const { return theta; }
     double      Orbit() const { return orbit; }
+    double      Periapsis() const { return orbit * (1.0 - eccentricity); }
+    double      Eccentricity() const { return eccentricity; }
+    double      InclinationDegrees() const { return orbit_inclination * 180.0 / 3.14159265358979323846; }
+    double      ClearanceRadius() const { return clearance_radius > radius ? clearance_radius : radius; }
+    FVector     SampleOrbit(double MeanAnomaly) const { return OrbitOffset(MeanAnomaly); }
     double      Apoapsis() const { return orbit * (1.0 + eccentricity); }
     void SetOrbitShape(double AuthoredEccentricity, double InclinationDegrees);
     void BoundOrbit(ListIter<OrbitalBody> Siblings);
@@ -141,6 +146,7 @@ protected:
     double      period;
     double      velocity;
 
+    double clearance_radius = 0.0;
     double authored_eccentricity = 0.0;
     double eccentricity = 0.0;
     double orbit_inclination = 0.0;

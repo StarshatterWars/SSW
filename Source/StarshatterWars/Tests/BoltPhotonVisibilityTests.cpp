@@ -5,6 +5,8 @@
 #include "Components/MaterialBillboardComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/World.h"
+#include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBoltPhotonVisibilityTest,"Starshatter.Weapons.BoltPhotonVisibility",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FBoltPhotonVisibilityTest::RunTest(const FString&)
 {
@@ -12,6 +14,14 @@ bool FBoltPhotonVisibilityTest::RunTest(const FString&)
  auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);if(!TestNotNull(TEXT("World"),World))return false;
  const TCHAR* Names[]={TEXT("Alpha Cannon"),TEXT("Delta Cannon"),TEXT("Heavy Cannon"),TEXT("Fighter Turret"),TEXT("LCA Turret"),TEXT("Blockade Cannon"),TEXT("Vulcan Cannon"),TEXT("Phalanx Cannon"),TEXT("Viking Cannon"),TEXT("Ursa Cannon"),TEXT("Orca Cannon"),TEXT("Orca Inverted"),TEXT("Orca 2 Cannon"),TEXT("Orca 2 Inverted"),TEXT("Vanguard"),TEXT("Helicon"),TEXT("Light-PDB"),TEXT("Rail-5"),TEXT("Rail-12"),TEXT("Rail-12 Inverted"),TEXT("Rail-15"),TEXT("Mag-18"),TEXT("AAA Cannon"),TEXT("Quad AAA"),TEXT("Zolon Cannon"),TEXT("Plasma Cannon")};
  for(auto* Name:Names){auto* B=World->SpawnActor<ABoltWeaponActor>(ABoltWeaponActor::BlueprintClassForWeapon(Name));if(!TestNotNull(Name,B))continue;B->BeginSimulationFlight();
+  TArray<UNiagaraComponent*> FX;B->GetComponents(FX);bool NativeBolt=false;
+  for(auto* Emitter:FX)if(Emitter->GetAsset() && Emitter->GetAsset()->GetPathName().StartsWith(TEXT("/Game/Effects/Weapons/NS_SSW_Bolt_")))
+  {
+   NativeBolt=true;bool Valid=false;const float HDR=Emitter->GetVariableFloat(TEXT("User.Emissive_Boost"),Valid);
+   TestTrue(TEXT("Native bolt carries HDR emission"),Valid && HDR>=16.f);
+   TestTrue(TEXT("Native bolt is active in flight"),Emitter->IsActive());
+  }
+  TestTrue(TEXT("Every cannon routes to native Niagara"),NativeBolt);
   auto* Glow=B->FindComponentByClass<UMaterialBillboardComponent>();if(!TestNotNull(TEXT("Photon halo inherited by saved Blueprint"),Glow))continue;
   if(auto* Core=B->FindComponentByClass<UStaticMeshComponent>())TestTrue(TEXT("Saved bolt uses compact core scale"),Core->GetRelativeScale3D().Equals(FVector(.04f),.00001));
   TestTrue(TEXT("Saved bolt has no enlarged actor scale"),B->GetActorScale3D().Equals(FVector::OneVector,.00001));

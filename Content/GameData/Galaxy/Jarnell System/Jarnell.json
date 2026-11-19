@@ -20,9 +20,9 @@
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 140000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -38,10 +38,10 @@
         "name": "Adonis",
         "map": "Giants/GasGiant7_map.pcx",
         "image": "Giants/GasGiant7.jpg",
-		"high_res": "Giants/GasGiant7.jpg",
+        "high_res": "Giants/GasGiant7.jpg",
         "radius": 18000000,
         "mass": 2.1e+26,
-        "orbit": 80000000000,
+        "orbit": 80000000000.0,
         "tscale": 2,
         "tilt": 0.2,
         "ring": "Giants/Ring3.pcx",
@@ -54,7 +54,7 @@
           "grid": 20000,
           "orbit": 115000000,
           "inclination": 0.45,
-		  "link": []
+          "link": []
         },
         "moon": [
           {
@@ -64,9 +64,9 @@
             "high_res": "Moons/rock_hi.pcx",
             "radius": 2200000,
             "rotation": 30,
-            "inclination": 0,
+            "inclination": 9.6,
             "mass": 1.9e+22,
-            "orbit": 144000000,
+            "orbit": 144000000.0,
             "region": {
               "name": "Synad",
               "radius": 480000,
@@ -74,7 +74,8 @@
               "orbit": 11000000,
               "inclination": 0.3,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           },
           {
             "name": "Olan",
@@ -83,9 +84,9 @@
             "high_res": "Moons/lunar_hi.pcx",
             "radius": 3200000,
             "rotation": 19,
-            "inclination": 0,
+            "inclination": 0.0,
             "mass": 1.7e+24,
-            "orbit": 225100000,
+            "orbit": 225100000.0,
             "region": {
               "name": "Olan",
               "radius": 480000,
@@ -93,7 +94,8 @@
               "orbit": 11000000,
               "inclination": 0.2,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           },
           {
             "name": "Amnia",
@@ -102,9 +104,9 @@
             "high_res": "Moons/lunar_hi.pcx",
             "radius": 1200000,
             "rotation": 19,
-            "inclination": 0,
+            "inclination": 0.0,
             "mass": 1e+24,
-            "orbit": 377100000,
+            "orbit": 377100000.0,
             "region": {
               "name": "Amnia",
               "radius": 480000,
@@ -112,9 +114,12 @@
               "orbit": 11000000,
               "inclination": 0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           }
-        ]
+        ],
+        "eccentricity": 0.19,
+        "inclination": 16.6
       },
       {
         "name": "Jarnell",
@@ -125,14 +130,14 @@
         "glow_high_res": "Jarnell/jarnell_lights.jpg",
         "radius": 5800000,
         "mass": 4.98e+24,
-		"orbit": 140000000000,
+        "orbit": 140000000000.0,
         "rotation": 27,
-		"tscale": 1,
+        "tscale": 1,
         "atmosphere": [
           100,
           180,
           220
-        ],   
+        ],
         "region": {
           "name": "Jarnell",
           "radius": 480000,
@@ -149,7 +154,7 @@
             "high_res": "Jarnell/lanos_hi.pcx",
             "radius": 1000000,
             "mass": 8e+22,
-            "orbit": 42000000,
+            "orbit": 42000000.0,
             "region": {
               "name": "Lanora",
               "radius": 480000,
@@ -157,9 +162,13 @@
               "orbit": 11000000,
               "inclination": -0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 17.16
           }
-        ]
+        ],
+        "eccentricity": 0.157,
+        "inclination": 12.54
       },
       {
         "name": "Caladan",
@@ -168,9 +177,9 @@
         "high_res": "Jarnell/caladan_hi.pcx",
         "radius": 3800000,
         "mass": 2.98e+24,
-		"orbit": 201000000000,
+        "orbit": 201000000000.0,
         "rotation": 32,
-		"tscale": 1,
+        "tscale": 1,
         "atmosphere": [
           50,
           80,
@@ -182,7 +191,7 @@
           "grid": 20000,
           "orbit": 12000000,
           "inclination": 0.35,
-		  "link": []
+          "link": []
         },
         "moon": [
           {
@@ -192,7 +201,7 @@
             "high_res": "Jarnell/lanos_hi.pcx",
             "radius": 720000,
             "mass": 6e+22,
-            "orbit": 32000000,
+            "orbit": 32000000.0,
             "region": {
               "name": "Malta",
               "radius": 480000,
@@ -200,19 +209,23 @@
               "orbit": 11000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 2.04
           }
-        ]
+        ],
+        "eccentricity": 0.1363926,
+        "inclination": -4.65
       },
       {
         "name": "Dawn",
         "map": "Giants/GasGiant6_map.pcx",
         "image": "Giants/GasGiant6.jpg",
-		"high_res": "Giants/GasGiant6.jpg",
+        "high_res": "Giants/GasGiant6.jpg",
         "radius": 28000000,
         "mass": 5.1e+26,
-        "orbit": 430000000000,
-		"rotation": 27.3,
+        "orbit": 430000000000.0,
+        "rotation": 27.3,
         "tscale": 2,
         "tilt": 0.12,
         "region": {
@@ -236,7 +249,7 @@
             "high_res": "Moons/rock_hi.pcx",
             "radius": 3000000,
             "mass": 3e+22,
-            "orbit": 214000000,
+            "orbit": 214000000.0,
             "rotation": 100,
             "region": {
               "name": "Kash",
@@ -245,7 +258,9 @@
               "orbit": 11000000,
               "inclination": 0.23,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 10.95
           },
           {
             "name": "Kara",
@@ -254,9 +269,9 @@
             "high_res": "Moons/lunar_hi.pcx",
             "radius": 5200000,
             "rotation": 19,
-            "inclination": 0,
+            "inclination": 0.0,
             "mass": 6e+24,
-            "orbit": 455100000,
+            "orbit": 455100000.0,
             "region": {
               "name": "Kara",
               "radius": 480000,
@@ -264,7 +279,8 @@
               "orbit": 11000000,
               "inclination": 0.11,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           },
           {
             "name": "Soma",
@@ -279,7 +295,7 @@
               255
             ],
             "mass": 5.98e+24,
-            "orbit": 711000000,
+            "orbit": 711000000.0,
             "region": {
               "name": "Soma",
               "radius": 480000,
@@ -287,7 +303,9 @@
               "orbit": 11000000,
               "inclination": 0.03,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 19.59
           },
           {
             "name": "Tarina",
@@ -302,7 +320,7 @@
               255
             ],
             "mass": 3.28e+24,
-            "orbit": 934000000,
+            "orbit": 934000000.0,
             "region": {
               "name": "Tarina",
               "radius": 480000,
@@ -310,9 +328,13 @@
               "orbit": 11000000,
               "inclination": 0.03,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 11.76
           }
-        ]
+        ],
+        "eccentricity": 0.18,
+        "inclination": 10.4
       }
     ]
   }

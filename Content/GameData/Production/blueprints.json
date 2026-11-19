@@ -1718,5 +1718,53 @@
     "CopyPrice": 1119216,
     "CopyRuns": 10,
     "Image": "MiningDrone"
+  },
+  {
+    "Recipe": "Build_Falcon",
+    "DisplayName": "Falcon Construction Blueprint",
+    "OriginalPrice": 1722000,
+    "CopyPrice": 57400,
+    "CopyRuns": 1,
+    "Image": "Ship"
+  },
+  {
+    "Recipe": "Build_Stormhawk",
+    "DisplayName": "Stormhawk Construction Blueprint",
+    "OriginalPrice": 1722000,
+    "CopyPrice": 57400,
+    "CopyRuns": 1,
+    "Image": "Ship"
+  },
+  {
+    "Recipe": "Build_Prospector",
+    "DisplayName": "Prospector Construction Blueprint",
+    "OriginalPrice": 1389000,
+    "CopyPrice": 46300,
+    "CopyRuns": 1,
+    "Image": "Ship"
+  },
+  {
+    "Recipe": "Build_Raptor",
+    "DisplayName": "Raptor Construction Blueprint",
+    "OriginalPrice": 1761000,
+    "CopyPrice": 58700,
+    "CopyRuns": 1,
+    "Image": "Ship"
+  },
+  {
+    "Recipe": "Build_Viper",
+    "DisplayName": "Viper Construction Blueprint",
+    "OriginalPrice": 1716000,
+    "CopyPrice": 57200,
+    "CopyRuns": 1,
+    "Image": "Ship"
+  },
+  {
+    "Recipe": "Build_Goliath",
+    "DisplayName": "Goliath Construction Blueprint",
+    "OriginalPrice": 1377483000,
+    "CopyPrice": 45916100,
+    "CopyRuns": 1,
+    "Image": "Ship"
   }
 ]

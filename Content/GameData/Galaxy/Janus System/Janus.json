@@ -20,9 +20,9 @@
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 160000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       250,
@@ -41,7 +41,7 @@
         "high_res": "Janus/ilon_hi.pcx",
         "radius": 3500000,
         "mass": 2.18e+24,
-        "orbit": 58000000000,
+        "orbit": 58000000000.0,
         "rotation": 11,
         "region": {
           "name": "Ilon",
@@ -51,7 +51,9 @@
           "inclination": 0.75,
           "link": []
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.10839511660344828,
+        "inclination": 4.24
       },
       {
         "name": "Dante",
@@ -65,7 +67,7 @@
           128
         ],
         "mass": 4.18e+24,
-        "orbit": 72000000000,
+        "orbit": 72000000000.0,
         "rotation": 8,
         "region": {
           "name": "Dante",
@@ -89,8 +91,8 @@
               0,
               0
             ],
-            "orbit": 24300000,
-            "inclination": 0,
+            "orbit": 24300000.0,
+            "inclination": 12.03,
             "retro": true,
             "region": {
               "name": "Hermes",
@@ -99,9 +101,12 @@
               "orbit": 24300000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           }
-        ]
+        ],
+        "eccentricity": 0.087318288375,
+        "inclination": 3.23
       },
       {
         "name": "Janek",
@@ -117,7 +122,7 @@
           150,
           220
         ],
-        "orbit": 140000000000,
+        "orbit": 140000000000.0,
         "region": {
           "name": "Janek",
           "radius": 480000,
@@ -140,8 +145,8 @@
               0,
               0
             ],
-            "orbit": 42000000,
-            "inclination": 0,
+            "orbit": 42000000.0,
+            "inclination": 10.95,
             "retro": false,
             "region": {
               "name": "Lanos",
@@ -150,7 +155,8 @@
               "orbit": 20000000,
               "inclination": 0,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           }
         ],
         "terrain": {
@@ -190,22 +196,24 @@
           "fog_density": 0.4,
           "fog_scale": 5,
           "weather_period": 659876,
-		  "weather_clear": 25,
+          "weather_clear": 25,
           "weather_high_clouds": 25,
           "weather_moderate_clouds": 40,
           "weather_overcast": 10,
           "weather_fog": 0,
           "weather_storm": 0
-        }
+        },
+        "eccentricity": 0.21834701595,
+        "inclination": -16.56
       },
       {
         "name": "Alystra",
         "map": "Giants/GasGiant12_map.pcx",
         "image": "Giants/GasGiant12.jpg",
-		"high_res": "Giants/GasGiant12.jpg",
+        "high_res": "Giants/GasGiant12.jpg",
         "radius": 36000000,
         "mass": 5.6e+26,
-        "orbit": 284000000000,
+        "orbit": 284000000000.0,
         "tscale": 2,
         "tilt": 0.2,
         "ring": "Giants/Ring.pcx",
@@ -234,8 +242,8 @@
               0,
               0
             ],
-            "orbit": 245000000,
-            "inclination": 0.1,
+            "orbit": 245000000.0,
+            "inclination": 17.7,
             "retro": false,
             "region": {
               "name": "Fenris",
@@ -244,7 +252,8 @@
               "orbit": 20000000,
               "inclination": 0.1,
               "link": []
-            }
+            },
+            "eccentricity": 0.02
           },
           {
             "name": "Navara",
@@ -259,8 +268,8 @@
               0,
               0
             ],
-            "orbit": 410000000,
-            "inclination": 0,
+            "orbit": 410000000.0,
+            "inclination": 0.0,
             "retro": false,
             "region": {
               "name": "Navara",
@@ -275,7 +284,8 @@
                 "Kala",
                 "Nero"
               ]
-            }
+            },
+            "eccentricity": 0.02
           },
           {
             "name": "Cassandra",
@@ -300,9 +310,12 @@
               "orbit": 20000000,
               "inclination": 0.2,
               "link": []
-            }
+            },
+            "eccentricity": 0.008
           }
-        ]
+        ],
+        "eccentricity": 0.165,
+        "inclination": -17.56
       }
     ]
   }

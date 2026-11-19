@@ -20,9 +20,9 @@
     "radius": 1600000000,
     "mass": 2e+30,
     "light": 160000000000,
-	"rotation": 0,
-	"retro": false,
-	"orbit": 0,	
+    "rotation": 0,
+    "retro": false,
+    "orbit": 0,
     "color": [
       255,
       240,
@@ -41,7 +41,7 @@
         "high_res": "Trocanther/volante_hi.jpg",
         "radius": 6000000,
         "mass": 5.1e+24,
-        "orbit": 140000000000,
+        "orbit": 140000000000.0,
         "rotation": 21.7,
         "region": {
           "name": "Volante",
@@ -94,16 +94,18 @@
           "weather_overcast": 0,
           "weather_fog": 0,
           "weather_storm": 100
-        }
+        },
+        "eccentricity": 0.152,
+        "inclination": 5.1
       },
       {
         "name": "Narcissus",
         "map": "Giants/GasGiant1_map.pcx",
         "image": "Giants/GasGiant1.jpg",
-		"high_res": "Giants/GasGiant1.jpg",
+        "high_res": "Giants/GasGiant1.jpg",
         "radius": 13700000,
         "mass": 3.6e+26,
-        "orbit": 251000000000,
+        "orbit": 251000000000.0,
         "rotation": 43.7,
         "region": {
           "name": "Narcissus",
@@ -126,7 +128,7 @@
               255
             ],
             "mass": 5.98e+24,
-            "orbit": 311000000,
+            "orbit": 311000000.0,
             "region": {
               "name": "Liriope",
               "radius": 480000,
@@ -134,7 +136,9 @@
               "orbit": 18000000,
               "inclination": 0.22,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 12.03
           },
           {
             "name": "Echo",
@@ -149,7 +153,7 @@
               255
             ],
             "mass": 3.28e+24,
-            "orbit": 524000000,
+            "orbit": 524000000.0,
             "region": {
               "name": "Echo",
               "radius": 480000,
@@ -157,9 +161,13 @@
               "orbit": 18000000,
               "inclination": 0.11,
               "link": []
-            }
+            },
+            "eccentricity": 0.02,
+            "inclination": 5.01
           }
-        ]
+        ],
+        "eccentricity": 0.134,
+        "inclination": 15.83
       },
       {
         "name": "Path",
@@ -168,7 +176,7 @@
         "high_res": "Trocanther/path_hi.pcx",
         "radius": 4100000,
         "mass": 3.5e+24,
-        "orbit": 440000000000,
+        "orbit": 440000000000.0,
         "rotation": 51.7,
         "region": {
           "name": "Path",
@@ -181,7 +189,9 @@
             "Relay"
           ]
         },
-        "moon": []
+        "moon": [],
+        "eccentricity": 0.171,
+        "inclination": 16.49
       }
     ]
   }

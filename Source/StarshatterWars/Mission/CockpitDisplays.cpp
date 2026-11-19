@@ -417,7 +417,7 @@ bool FCockpitDisplaysTest::RunTest(const FString&)
         AActor* Cockpit = Other->CockpitComponent->GetChildActor();
         TArray<UWidgetComponent*> Instruments;
         if (Cockpit) Cockpit->GetComponents(Instruments);
-        const bool bHasSuppliedCockpit = FCString::Stricmp(Name, TEXT("Zodiac")) != 0;
+        const bool bHasSuppliedCockpit = true; // Zodiac now carries the provisioned Alliance cockpit.
         TestEqual(FString(Name) + TEXT(" physical instruments"), Instruments.Num(), bHasSuppliedCockpit ? 6 : 0);
         for (auto* Instrument : Instruments)
         {

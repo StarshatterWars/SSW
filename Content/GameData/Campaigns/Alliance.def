@@ -4108,4 +4108,15 @@ group: { type: station, id: 8544, name: "Dorrath Orbital Concentrator", intel: k
 group: { type: station, id: 8545, name: "Hera Orbital Concentrator", intel: known, iff: 1, empire_id: 0, region: "Hera", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Hera Orbital Concentrator", type: "Station", design: "Processing Facility" } }
 
 
-group: { type: station, id: 8546, name: "Dante Orbital Concentrator", intel: known, iff: 1, empire_id: 0, region: "Dante", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Dante Orbital Concentrator", type: "Station", design: "Processing Facility" } }
+group: { type: station, id: 8546, name: "Dante Orbital Concentrator", intel: known, iff: 1, empire_id: 0, region: "Dante", loc: (-106e3, 66e3, 24e3), parent_type: force, parent_id: 1, unit: { name: "Dante Orbital Concentrator", type: "Station", design: "Processing Facility" } 
+
+
+
+
+}
+
+group: { type: station, id: 8900, name: "Jarnell Fleet Construction Yard", intel: known, iff: 1, empire_id: 0, region: "Jarnell", loc: (190e3, 82e3, 34e3), parent_type: force, parent_id: 1, unit: { name: "Jarnell Fleet Construction Yard", type: "Station", design: "Shipyard", regnum: "SY-8900" } }
+
+group: { type: station, id: 8901, name: "Maraner Aerospace Works", intel: known, iff: 1, empire_id: 0, region: "Maraner", loc: (190e3, 82e3, 34e3), parent_type: force, parent_id: 1, unit: { name: "Maraner Aerospace Works", type: "Station", design: "Shipyard", regnum: "SY-8901" } }
+
+group: { type: station, id: 8902, name: "Janek Orbital Shipworks", intel: known, iff: 1, empire_id: 0, region: "Janek", loc: (190e3, 82e3, 34e3), parent_type: force, parent_id: 1, unit: { name: "Janek Orbital Shipworks", type: "Station", design: "Shipyard", regnum: "SY-8902" } }

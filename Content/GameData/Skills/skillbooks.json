@@ -6,7 +6,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510002,
@@ -15,7 +15,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510003,
@@ -24,7 +24,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510004,
@@ -33,7 +33,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510005,
@@ -42,7 +42,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510006,
@@ -51,7 +51,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510007,
@@ -60,7 +60,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510008,
@@ -69,7 +69,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510009,
@@ -78,7 +78,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510010,
@@ -87,7 +87,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510011,
@@ -96,7 +96,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510012,
@@ -105,7 +105,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510013,
@@ -114,7 +114,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510014,
@@ -123,7 +123,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510015,
@@ -132,7 +132,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510016,
@@ -141,7 +141,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510017,
@@ -150,7 +150,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510018,
@@ -159,7 +159,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510019,
@@ -168,7 +168,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510020,
@@ -177,7 +177,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510021,
@@ -186,7 +186,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510022,
@@ -195,7 +195,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510023,
@@ -204,7 +204,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510024,
@@ -213,7 +213,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510025,
@@ -222,7 +222,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510026,
@@ -231,7 +231,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510027,
@@ -240,7 +240,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510028,
@@ -249,7 +249,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510029,
@@ -258,7 +258,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510030,
@@ -267,7 +267,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510031,
@@ -276,7 +276,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510032,
@@ -285,7 +285,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510033,
@@ -294,7 +294,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510034,
@@ -303,7 +303,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510035,
@@ -312,7 +312,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510036,
@@ -321,7 +321,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510037,
@@ -330,7 +330,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510038,
@@ -339,7 +339,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510039,
@@ -348,7 +348,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510040,
@@ -357,7 +357,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510041,
@@ -366,7 +366,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510042,
@@ -375,7 +375,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510043,
@@ -384,7 +384,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510044,
@@ -393,7 +393,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510045,
@@ -402,7 +402,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510046,
@@ -411,7 +411,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510047,
@@ -420,7 +420,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510048,
@@ -429,7 +429,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510049,
@@ -438,7 +438,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510050,
@@ -447,7 +447,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510051,
@@ -456,7 +456,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510052,
@@ -465,7 +465,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510053,
@@ -474,7 +474,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510054,
@@ -483,7 +483,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510055,
@@ -492,7 +492,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510056,
@@ -501,7 +501,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510057,
@@ -510,7 +510,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510058,
@@ -519,7 +519,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510059,
@@ -528,7 +528,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510060,
@@ -537,7 +537,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510061,
@@ -546,7 +546,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510062,
@@ -555,7 +555,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510063,
@@ -564,7 +564,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510064,
@@ -573,7 +573,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510065,
@@ -582,7 +582,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510066,
@@ -591,7 +591,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510067,
@@ -600,7 +600,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510068,
@@ -609,7 +609,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510069,
@@ -618,7 +618,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510070,
@@ -627,7 +627,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510071,
@@ -636,7 +636,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510072,
@@ -645,7 +645,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510073,
@@ -654,7 +654,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510074,
@@ -663,7 +663,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510075,
@@ -672,7 +672,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510076,
@@ -681,7 +681,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510077,
@@ -690,7 +690,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510078,
@@ -699,7 +699,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510079,
@@ -708,7 +708,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510080,
@@ -717,7 +717,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510081,
@@ -726,7 +726,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510082,
@@ -735,7 +735,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510083,
@@ -744,7 +744,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510084,
@@ -753,7 +753,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510085,
@@ -762,7 +762,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510086,
@@ -771,7 +771,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510087,
@@ -780,7 +780,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510088,
@@ -789,7 +789,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510089,
@@ -798,7 +798,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510090,
@@ -807,7 +807,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510091,
@@ -816,7 +816,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510092,
@@ -825,7 +825,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510093,
@@ -834,7 +834,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510094,
@@ -843,7 +843,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510095,
@@ -852,7 +852,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510096,
@@ -861,7 +861,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510097,
@@ -870,7 +870,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510098,
@@ -879,7 +879,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510099,
@@ -888,7 +888,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510100,
@@ -897,7 +897,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510101,
@@ -906,7 +906,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510102,
@@ -915,7 +915,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510103,
@@ -924,7 +924,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510104,
@@ -933,7 +933,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510105,
@@ -942,7 +942,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510106,
@@ -951,7 +951,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510107,
@@ -960,7 +960,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510108,
@@ -969,7 +969,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510109,
@@ -978,7 +978,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510110,
@@ -987,7 +987,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510111,
@@ -996,7 +996,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510112,
@@ -1005,7 +1005,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510113,
@@ -1014,7 +1014,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510114,
@@ -1023,7 +1023,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510115,
@@ -1032,7 +1032,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510116,
@@ -1041,7 +1041,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510117,
@@ -1050,7 +1050,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510118,
@@ -1059,7 +1059,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510119,
@@ -1068,7 +1068,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510120,
@@ -1077,7 +1077,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510121,
@@ -1086,7 +1086,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510122,
@@ -1095,7 +1095,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510123,
@@ -1104,7 +1104,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510124,
@@ -1113,7 +1113,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510125,
@@ -1122,7 +1122,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510126,
@@ -1131,7 +1131,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510127,
@@ -1140,7 +1140,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510128,
@@ -1149,7 +1149,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510129,
@@ -1158,7 +1158,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510130,
@@ -1167,7 +1167,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510131,
@@ -1176,7 +1176,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510132,
@@ -1185,7 +1185,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510133,
@@ -1194,7 +1194,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510134,
@@ -1203,7 +1203,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510135,
@@ -1212,7 +1212,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510136,
@@ -1221,7 +1221,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510137,
@@ -1230,7 +1230,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510138,
@@ -1239,7 +1239,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510139,
@@ -1248,7 +1248,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510140,
@@ -1257,7 +1257,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510141,
@@ -1266,7 +1266,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510142,
@@ -1275,7 +1275,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510143,
@@ -1284,7 +1284,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510144,
@@ -1293,7 +1293,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510145,
@@ -1302,7 +1302,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510146,
@@ -1311,7 +1311,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510147,
@@ -1320,7 +1320,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510148,
@@ -1329,7 +1329,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510149,
@@ -1338,7 +1338,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510150,
@@ -1347,7 +1347,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510151,
@@ -1356,7 +1356,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510152,
@@ -1365,7 +1365,7 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   },
   {
     "SkillTypeID": 510153,
@@ -1374,6 +1374,6 @@
     "PurchaseTaxRate": 0,
     "IsPublished": true,
     "IsAvailableForPurchase": true,
-    "GrantCompleteSkill": true
+    "GrantCompleteSkill": false
   }
 ]

@@ -22,7 +22,8 @@
         "HullSelection",
         "Refit",
         "Blueprints",
-        "SkillBooks"
+        "SkillBooks",
+        "Manufacturing"
       ]
     },
     {
@@ -177,6 +178,10 @@
     {
       "design": "Observatory",
       "profile": "NoServices"
+    },
+    {
+      "design": "Shipyard",
+      "profile": "Shipyard"
     }
   ]
 }

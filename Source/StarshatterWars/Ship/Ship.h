@@ -388,6 +388,7 @@ public:
     void SyncCargoInventory();
     void ApplyCargoInventoryToManifest();
     void BindCargoInventory(FGuid Hull);
+    bool RestoreSavedCargoInventory(FGuid Id);
     bool RepairAtStation();
     double LoadMinedOre(const FString& Mineral, double Tonnes, bool bRecordInventory = true);
     double UnloadMinedOre(double Tonnes, bool bRecordInventory = true);

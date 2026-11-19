@@ -1,0 +1,920 @@
+[
+  {
+    "SkillTypeID": 510001,
+    "Name": "Advanced Gunnery Skill Book",
+    "BasePrice": 7500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510002,
+    "Name": "Advanced Missile Operations Skill Book",
+    "BasePrice": 10000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510003,
+    "Name": "Advanced Target Analysis Skill Book",
+    "BasePrice": 15000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510004,
+    "Name": "Advanced Point Defence Skill Book",
+    "BasePrice": 30000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510005,
+    "Name": "Advanced Navigation Skill Book",
+    "BasePrice": 5000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510006,
+    "Name": "Advanced Quantum Navigation Skill Book",
+    "BasePrice": 25000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510007,
+    "Name": "Advanced Farcaster Navigation Skill Book",
+    "BasePrice": 37500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510008,
+    "Name": "Advanced Formation Operations Skill Book",
+    "BasePrice": 12500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510009,
+    "Name": "Advanced Engineering Skill Book",
+    "BasePrice": 5000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510010,
+    "Name": "Advanced Reactor Operations Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510011,
+    "Name": "Advanced Shield Operations Skill Book",
+    "BasePrice": 30000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510012,
+    "Name": "Advanced Damage Control Skill Book",
+    "BasePrice": 17500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510013,
+    "Name": "Advanced Component Fitting Skill Book",
+    "BasePrice": 25000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510014,
+    "Name": "Advanced Surveying Skill Book",
+    "BasePrice": 7500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510015,
+    "Name": "Advanced Ore Assaying Skill Book",
+    "BasePrice": 17500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510016,
+    "Name": "Advanced Mining Operations Skill Book",
+    "BasePrice": 12500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510017,
+    "Name": "Advanced Advanced Mining Skill Book",
+    "BasePrice": 50000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510018,
+    "Name": "Advanced Reprocessing Skill Book",
+    "BasePrice": 17500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510019,
+    "Name": "Advanced Manufacturing Skill Book",
+    "BasePrice": 25000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510020,
+    "Name": "Advanced Material Efficiency Skill Book",
+    "BasePrice": 60000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510021,
+    "Name": "Advanced Production Management Skill Book",
+    "BasePrice": 75000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510022,
+    "Name": "Advanced Blueprint Research Skill Book",
+    "BasePrice": 100000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510023,
+    "Name": "Advanced Cargo Handling Skill Book",
+    "BasePrice": 7500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510024,
+    "Name": "Advanced Freight Operations Skill Book",
+    "BasePrice": 22500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510025,
+    "Name": "Advanced Intersystem Logistics Skill Book",
+    "BasePrice": 60000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510026,
+    "Name": "Advanced Contract Administration Skill Book",
+    "BasePrice": 12500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510027,
+    "Name": "Advanced Trade Skill Book",
+    "BasePrice": 7500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510028,
+    "Name": "Advanced Procurement Skill Book",
+    "BasePrice": 25000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510029,
+    "Name": "Advanced Risk Management Skill Book",
+    "BasePrice": 30000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510030,
+    "Name": "Advanced Fleet Logistics Skill Book",
+    "BasePrice": 100000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510031,
+    "Name": "Advanced Weapon Calibration Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510032,
+    "Name": "Advanced Fire Control Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510033,
+    "Name": "Advanced Tracking Solutions Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510034,
+    "Name": "Advanced Ballistic Analysis Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510035,
+    "Name": "Advanced Precision Gunnery Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510036,
+    "Name": "Advanced Turret Coordination Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510037,
+    "Name": "Advanced Concentrated Fire Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510038,
+    "Name": "Advanced Capital Fire Control Skill Book",
+    "BasePrice": 492500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510039,
+    "Name": "Advanced Fleet Gunnery Doctrine Skill Book",
+    "BasePrice": 620000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510040,
+    "Name": "Advanced Seeker Calibration Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510041,
+    "Name": "Advanced Missile Guidance Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510042,
+    "Name": "Advanced Launch Coordination Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510043,
+    "Name": "Advanced Electronic Counter-Countermeasures Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510044,
+    "Name": "Advanced Salvo Planning Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510045,
+    "Name": "Advanced Long Range Ordnance Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510046,
+    "Name": "Advanced Capital Missile Control Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510047,
+    "Name": "Advanced Fleet Ordnance Doctrine Skill Book",
+    "BasePrice": 492500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510048,
+    "Name": "Advanced Orbital Navigation Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510049,
+    "Name": "Advanced Approach Planning Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510050,
+    "Name": "Advanced High Velocity Navigation Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510051,
+    "Name": "Advanced Transit Coordination Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510052,
+    "Name": "Advanced Farcaster Cartography Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510053,
+    "Name": "Advanced Hazardous Route Analysis Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510054,
+    "Name": "Advanced Deep Space Navigation Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510055,
+    "Name": "Advanced Fleet Transit Planning Skill Book",
+    "BasePrice": 492500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510056,
+    "Name": "Advanced System Diagnostics Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510057,
+    "Name": "Advanced Power Routing Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510058,
+    "Name": "Advanced Capacitor Management Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510059,
+    "Name": "Advanced Thermal Management Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510060,
+    "Name": "Advanced Advanced Reactor Safety Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510061,
+    "Name": "Advanced Emergency Power Control Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510062,
+    "Name": "Advanced Capital Power Management Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510063,
+    "Name": "Advanced Integrated Ship Engineering Skill Book",
+    "BasePrice": 492500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510064,
+    "Name": "Advanced Hull Repair Procedures Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510065,
+    "Name": "Advanced Component Fault Isolation Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510066,
+    "Name": "Advanced Structural Assessment Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510067,
+    "Name": "Advanced Damage Containment Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510068,
+    "Name": "Advanced Distributed Repair Control Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510069,
+    "Name": "Advanced Capital Damage Control Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510070,
+    "Name": "Advanced Fleet Recovery Engineering Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510071,
+    "Name": "Advanced Laser Focusing Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510072,
+    "Name": "Advanced Extraction Cycles Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510073,
+    "Name": "Advanced Ore Face Analysis Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510074,
+    "Name": "Advanced Selective Extraction Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510075,
+    "Name": "Advanced Dense Field Operations Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510076,
+    "Name": "Advanced Multi Beam Extraction Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510077,
+    "Name": "Advanced Remote Deposit Coordination Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510078,
+    "Name": "Advanced Deep Belt Extraction Skill Book",
+    "BasePrice": 492500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510079,
+    "Name": "Advanced Spectral Surveying Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510080,
+    "Name": "Advanced Deposit Classification Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510081,
+    "Name": "Advanced Trace Mineral Analysis Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510082,
+    "Name": "Advanced Deep Ore Assaying Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510083,
+    "Name": "Advanced Exotic Deposit Analysis Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510084,
+    "Name": "Advanced Dilithium Handling Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510085,
+    "Name": "Advanced Quantium-40 Handling Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510086,
+    "Name": "Advanced Exotic Extraction Safety Skill Book",
+    "BasePrice": 492500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510087,
+    "Name": "Advanced Industrial Planning Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510088,
+    "Name": "Advanced Batch Control Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510089,
+    "Name": "Advanced Production Optimization Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510090,
+    "Name": "Advanced Blueprint Interpretation Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510091,
+    "Name": "Advanced Assembly Coordination Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510092,
+    "Name": "Advanced Precision Manufacturing Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510093,
+    "Name": "Advanced Advanced Industrial Integration Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510094,
+    "Name": "Advanced Orbital Factory Management Skill Book",
+    "BasePrice": 492500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510095,
+    "Name": "Advanced Ore Separation Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510096,
+    "Name": "Advanced Concentrate Grading Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510097,
+    "Name": "Advanced Metal Recovery Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510098,
+    "Name": "Advanced Residue Management Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510099,
+    "Name": "Advanced Rare Mineral Recovery Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510100,
+    "Name": "Advanced Exotic Materials Processing Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510101,
+    "Name": "Advanced Closed Cycle Reprocessing Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510102,
+    "Name": "Advanced Integrated Refinery Management Skill Book",
+    "BasePrice": 492500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510103,
+    "Name": "Advanced Technical Documentation Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510104,
+    "Name": "Advanced Material Research Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510105,
+    "Name": "Advanced Process Research Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510106,
+    "Name": "Advanced Blueprint Duplication Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510107,
+    "Name": "Advanced Prototype Evaluation Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510108,
+    "Name": "Advanced Advanced Blueprint Research Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510109,
+    "Name": "Advanced Industrial Design Integration Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510110,
+    "Name": "Advanced Freight Scheduling Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510111,
+    "Name": "Advanced Load Balancing Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510112,
+    "Name": "Advanced Bulk Handling Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510113,
+    "Name": "Advanced Hazardous Cargo Procedures Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510114,
+    "Name": "Advanced Supply Route Planning Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510115,
+    "Name": "Advanced Multi System Distribution Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510116,
+    "Name": "Advanced Strategic Stockpiles Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510117,
+    "Name": "Advanced Fleet Supply Coordination Skill Book",
+    "BasePrice": 492500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510118,
+    "Name": "Advanced Market Analysis Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510119,
+    "Name": "Advanced Inventory Accounting Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510120,
+    "Name": "Advanced Purchase Planning Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510121,
+    "Name": "Advanced Supply Forecasting Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510122,
+    "Name": "Advanced Wholesale Procurement Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510123,
+    "Name": "Advanced Regional Trade Analysis Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510124,
+    "Name": "Advanced Interstellar Trade Planning Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510125,
+    "Name": "Advanced Strategic Procurement Skill Book",
+    "BasePrice": 492500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510126,
+    "Name": "Advanced Courier Planning Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510127,
+    "Name": "Advanced Collateral Assessment Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510128,
+    "Name": "Advanced Auction Procedures Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510129,
+    "Name": "Advanced Contract Risk Analysis Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510130,
+    "Name": "Advanced Multi Region Contracting Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510131,
+    "Name": "Advanced Industrial Procurement Contracts Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510132,
+    "Name": "Advanced Strategic Supply Contracts Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510133,
+    "Name": "Advanced Squadron Coordination Skill Book",
+    "BasePrice": 20000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510134,
+    "Name": "Advanced Escort Coordination Skill Book",
+    "BasePrice": 42500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510135,
+    "Name": "Advanced Tactical Communications Skill Book",
+    "BasePrice": 80000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510136,
+    "Name": "Advanced Task Group Coordination Skill Book",
+    "BasePrice": 132500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510137,
+    "Name": "Advanced Capital Formation Planning Skill Book",
+    "BasePrice": 200000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510138,
+    "Name": "Advanced Battle Group Logistics Skill Book",
+    "BasePrice": 282500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510139,
+    "Name": "Advanced Operational Fleet Planning Skill Book",
+    "BasePrice": 380000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510140,
+    "Name": "Advanced Fleet Command Doctrine Skill Book",
+    "BasePrice": 492500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510141,
+    "Name": "Advanced Spacecraft Command Skill Book",
+    "BasePrice": 10000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510142,
+    "Name": "Advanced Capital Operations Skill Book",
+    "BasePrice": 250000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510143,
+    "Name": "Advanced Corvette Operations Skill Book",
+    "BasePrice": 70000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510144,
+    "Name": "Advanced Frigate Operations Skill Book",
+    "BasePrice": 550000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510145,
+    "Name": "Advanced Destroyer Operations Skill Book",
+    "BasePrice": 250000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510146,
+    "Name": "Advanced Cruiser Operations Skill Book",
+    "BasePrice": 550000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510147,
+    "Name": "Advanced Carrier Operations Skill Book",
+    "BasePrice": 550000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510148,
+    "Name": "Advanced Battleship Operations Skill Book",
+    "BasePrice": 970000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510149,
+    "Name": "Advanced Dreadnought Operations Skill Book",
+    "BasePrice": 1510000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510150,
+    "Name": "Advanced Sensor Operations Skill Book",
+    "BasePrice": 7500,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510151,
+    "Name": "Advanced Signal Analysis Skill Book",
+    "BasePrice": 25000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510152,
+    "Name": "Advanced Fleet Telemetry Skill Book",
+    "BasePrice": 25000,
+    "UnlockLevel": 10
+  },
+  {
+    "SkillTypeID": 510153,
+    "Name": "Advanced Sensor Networking Skill Book",
+    "BasePrice": 100000,
+    "UnlockLevel": 10
+  }
+]
