@@ -1,5 +1,6 @@
-#include "FactionTrainingCatalog.h"
+
 #include "AgentCatalogSubsystem.h"
+#include "FactionTrainingCatalog.h"
 #include "DynamicMissionAI.h"
 #include "AgentJournalTransaction.h"
 #include "Sim.h"

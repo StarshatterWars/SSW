@@ -1,5 +1,6 @@
-#include "OOBJsonCatalog.h"
+
 #include "StarshatterGameDataSubsystem.h"
+#include "OOBJsonCatalog.h"
 #include "StandaloneMissionCatalog.h"
 #include "CampaignStoryRules.h"
 #include "CampaignJsonCatalog.h"

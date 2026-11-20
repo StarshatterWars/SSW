@@ -108,6 +108,12 @@ Faction training and the documented Marakan and Dantari mission additions are in
 
 MP4 production and cinematic polish are a separate deferred workstream, with no rendering required for this build. Mod Editor remains deferred. No additional phase number is assigned to these workstreams here.
 
+## Phase 4 release status — 2026-11-20
+
+The owner completed cooking and packaging. Build 20261120-053210Z is archived as Build/Windows.zip with the existing StarServer, custom icon and anti-cheat bootstrapper. All 145 archived files were verified against the signed manifest, and the verified release was published to the launcher feed. Phase 4 remains open until the owner confirms a successful update through the launcher.
+
+Pre-Phase 5 work is direct JSON ingestion into native records with parity and regression testing. Retain the agreed campaign portions and galaxy/environment conversion for later. This migration is separate from Phase 5 local dedicated FractalVerse authority.
+
 ## Phase 4 build checkpoint — 2026-11-20
 
 Work included in this build:

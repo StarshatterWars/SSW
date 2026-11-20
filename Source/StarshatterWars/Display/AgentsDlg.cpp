@@ -1,5 +1,6 @@
-#include "FactionTrainingCatalog.h"
+
 #include "AgentsDlg.h"
+#include "FactionTrainingCatalog.h"
 #include "RecordDetails.h"
 #include "StarshatterEnvironmentSubsystem.h"
 #include "Sim.h"

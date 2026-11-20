@@ -1,8 +1,10 @@
-#include "FactionTrainingCatalog.h"
+
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "SSWGameInstance.h"
+
+#include "FactionTrainingCatalog.h"
 #include "LocalGameStateSubsystem.h"
 #include "SSWSessionLobbyGameMode.h"
 #include "SSWBootSubsystem.h"
