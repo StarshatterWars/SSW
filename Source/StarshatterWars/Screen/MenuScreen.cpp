@@ -1,3 +1,4 @@
+#include "HUDView.h"
 #include "MenuScreen.h"
 #include "RuntimeFeaturePolicy.h"
 #include "OfflineCutsceneExport.h"
@@ -775,6 +776,15 @@ bool UMenuScreen::OpenQueuedAssignment(int32 MissionId, bool bFromFreeFlight)
     if (!Queued || Queued->MissionId != MissionId || Queued->State != AgentAI::EState::Accepted ||
         !Catalog->CanAccept(MissionId, Queued->Issuer)) return false;
 
+    if(bFromFreeFlight && Pilot->GetEmpire()==EEMPIRE_NAME::Terellian && (MissionId==103 || MissionId==104))
+    {
+        if(auto* Simulation=Sim::GetSim()) if(!Simulation->AtSurfaceTrainingDestination())
+        {
+            FText Reason;const bool Started=Simulation->BeginSurfaceTrainingTransit(MissionId,Reason);
+            HUDView::Message("%s",TCHAR_TO_UTF8(*Reason.ToString()));
+            return Started;
+        }
+    }
     if(DynamicMissionAI::IsDynamic(MissionId)){FText Reason;return Catalog->StartIndependentAssignment(MissionId,Reason);}
     Mission* Model = Catalog->GetMission(MissionId);
     Campaign* Repository = Catalog->GetRepository(MissionId);

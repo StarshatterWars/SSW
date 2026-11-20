@@ -1,6 +1,6 @@
 # Starshatter Wars — Alpha completion roadmap
 
-Updated 2026-11-19. Branch abc. This records the requested scope; unchecked work is not declared complete. Preserve legacy simulation coordinates, AI, damage, energy, mission progression and dialogue unless an explicit requirement changes them. Do not modify Starshatter.cpp/.h. Deliver complete replacement files and assets in stage ZIPs.
+Updated 2026-11-20. Branch abc. This records the requested scope; unchecked work is not declared complete. Preserve legacy simulation coordinates, AI, damage, energy, mission progression and dialogue unless an explicit requirement changes them. Do not modify Starshatter.cpp/.h. Deliver complete replacement files and assets in stage ZIPs.
 
 ## Alpha Phase 1 — completion stages
 
@@ -9,7 +9,7 @@ Updated 2026-11-19. Branch abc. This records the requested scope; unchecked work
 | A1.1 Fleet coverage and turrets | Inventory all remaining space ships/fighters and their source models; import missing visuals; native/BP class, hull, cockpit, gear, propulsion, weapons/hardpoints, turret bases and guns. Ground structures tracked for Phase 2. | Every space design resolves to the correct visible actor at legacy scale/orientation; all authored mounts present; every barrel fires from its muzzle; aim/range/timing/damage verified. No placeholders counted as completed models. |
 | A1.2 Campaign cinematics and moving briefings | Verify every Campaign 1–5 cutscene; legacy entry flow and loading gate; dialogue/VO, camera tracks, captions, environments, model scale; animated 3D mission briefing staging. | Every scene parses, required assets resolve, playback starts after readiness and ends/skips into the correct mission/hub; 3D briefings depict the selected mission and clean up actors/captures. |
 | A1.3 System/sector map and travel | Improve sector view with a spatial system-map presentation inspired by Star Citizen: hierarchy, readable orbit/route geometry, pan/zoom/focus and selection. EVE-inspired Farcaster activation/transit effects; integrate installed Procedural Vortex Generator for quantum tunnel. | Correct legacy positions, active campaign selection rules and route destinations; effects begin/end at simulation transitions, survive interruption and do not change travel timing or coordinates; scalable quality settings. |
-| A1.4 Multiplayer foundation | Native session and lobby work carried forward into Alpha 4. | See Alpha 4 for multiplayer acceptance. |
+| A1.4 Multiplayer foundation | Native session and lobby work carried forward into Alpha 6. | See Alpha 6 for multiplayer acceptance. |
 | A1.5 UI and integrated acceptance | Empty Mods screen using modern options shell. Campaign 1 missions 2 and 3 full playthroughs. Regress T1 launch/ILS/docking, IFF, weapons and debrief persistence. | T2/T3 objectives, drones, combat, success, debrief, save/reload and T3 Ensign promotion verified. No blocking regressions or unverified critical assets. |
 
 The earlier unresolved physical-waypoint render capture remains an open regression item. Green geometry and concise NAV labels exist; live-flight visibility is not yet verified.
@@ -47,21 +47,15 @@ Account sign-in and saves are closed at the project owner's direction. Look and 
 
 Keep the current 1/100 presentation scale and legacy simulation coordinates for this milestone.
 
-## Alpha 4 — optimization, cleanup, bug fixes and multiplayer
+## Alpha 4 — gameplay, economy, optimization and legacy completeness
 
-**Partial — deferred on 2026-11-12.** Phase 4 opened on 2026-11-09. Completed work remains available. Resume the remaining profiling, gameplay regression checks, and multiplayer validation when the phase reopens.
+**Active. Renumbered by the project owner on 2026-11-20.** This is the current additions and verification phase, including the documented EVE comparison work. Earlier Phase 5 build logs retain their historical names; they are evidence for this current phase, not proof of server completion.
 
-Integrate Unreal Engine multiplayer across gameplay, building on the native session and lobby work. Use the legacy simulation on the authoritative host or server, with UE handling player ownership, input, and replication. Cover the galaxy and orbital state, flight controls, ships, weapons, damage, AI, objectives, mission flow, HUD, debrief, chat, and results. Verify standalone play as each system moves to the multiplayer architecture.
+Scope includes native mining, production, transport, market and shipyard behavior; inventory and wallet consistency; contracts, skills and player progression; agents and campaign handoffs; faction missions and training; JSON migrations; launcher installation and recovery; UI, propulsion, carrier travel and planet regressions. Use recovered client evidence and public data to identify gaps, while retaining SSW rules unless a change has been authorized. Distinguish client behavior from inferred server behavior.
 
-Hawk Match has launched in the Borova sector with two local LAN processes. Both players received fighters, steered, applied throttle, and saw live speed on their mini-HUDs. Matching hit counts and hull damage after a landed shot are still unverified. The propulsion and cockpit presentation fixes passed build and attachment checks and await a live rerun.
+Current closeout includes direct JSON OOB loading and parity, faction training and campaign-specific mission checks, Marakan Campaign 5 against the non-playable Zolon threat, Orion lights and surface transit, native skins and full Janek WorldScape material checks. These remain subject to compilation and automated verification; passing data tests does not replace a live visual flight check.
 
-StarServer built as a Windows dedicated server on the UE 5.7.4 source engine. SSW launched it, registered a four-slot Hawk Match session in EOS Dev, and connected one pilot to the Borova lobby. The dedicated two-pilot run is deferred until a second Epic account is available.
-
-Remaining Phase 4 verification includes a supported match with matching combat state and results on both clients, EOS and Steam create/join, reconnects, mission travel, and match-end server and EOS session cleanup.
-
-## Alpha 5 — additions
-
-Add presentation at the current scale. This pass covers freight and resource readouts, transfer station and jump route displays, and Tactical Reference lore. Mining, trading, cargo objectives, and component effects are outside this pass. Freighters, cargo ships, couriers, and transports show their assigned load on the single-player target HUD within sensor scan range. Cargo options and capacity are authored in ship DEFs and imported into the ship design DataTable. Each ship stores its spawn sector and authored destination for the life of its manifest. Campaign freight serves as background activity. Free play belongs to a later alpha.
+Acceptance requires successful compilation, focused tests for each change and the broad offline regression suite. The owner performs cooking and packaging, then live installation and flight checks. Do not mark this phase complete while required failures remain. Multiplayer, Mod Editor and cinematic MP4 production are deferred.
 
 ### Background mineral deliveries
 
@@ -77,9 +71,9 @@ The launcher signs the player in through Epic Account Portal, checks the install
 
 Distribute patches from a signed release manifest over HTTPS. Download only changed files, verify them before replacing the installed build, and preserve the prior working build and pilot saves if an update is interrupted or fails. The release host and signing key still need to be selected. Use Epic’s supported authentication handoff and keep player credentials out of command-line arguments and logs. [Epic launcher integration](https://dev.epicgames.com/docs/epic-online-services/accounts-and-social/eos-epic-account-services/auth-interface/integrate-a-third-party-launcher-with-egs)
 
-## Alpha 6 — authoritative FractalVerse universe
+## Alpha 5 — local dedicated FractalVerse server
 
-**Planned after Phase 5 verification; introduced 2026-11-19. Not yet started as a server integration phase.** StarServer remains the multiplayer match server. FractalVerse is a separate persistent universe server, initially local, with a future dedicated host using the same authority rules.
+**Planned after Phase 4 verification; renumbered 2026-11-20. Not yet completed as a server integration phase.** StarServer remains the multiplayer match server. FractalVerse is a separate persistent universe server, initially local, with a future dedicated host using the same authority rules.
 
 - Native system records exist independently of UE levels: systems, stars, planets, moons, fixed stations, deposits, NPC craft and routes. Nearby presentation uses those records; unloading presentation must not reset state or destroy cargo.
 - Mining, manufacturing, transport, NPC market budgets, supply/demand, price history and shipyard output continue in unloaded systems. T1 is a temporary test fixture and must not be required by the universe.
@@ -89,16 +83,51 @@ Distribute patches from a signed release manifest over HTTPS. Download only chan
 - Shipyards exist only at selected capital/strategic worlds, accept material deliveries and build stocked hulls. Purchase and hangar fulfillment must consume actual stock and preserve rank, empire, skill and docking gates.
 - Multiplayer and Mod Editor access are temporarily disabled while the authoritative universe work is verified.
 
-Acceptance requires local FractalVerse/client operation, rejection of client-side state changes, unloaded-system mining-to-manufacturing-to-delivery, ship purchase fulfillment, failure/retry and restart recovery, and passing compilation and automated regression checks. Initial native model tests alone do not complete this phase. Later phases move down one number: full scale is Phase 7; expanded faction missions are Phase 8. Future unnumbered Free Verse work remains deferred.
+Acceptance requires local FractalVerse/client operation, rejection of client-side state changes, unloaded-system mining-to-manufacturing-to-delivery, ship purchase fulfillment, failure/retry and restart recovery, and passing compilation and automated regression checks. Initial native model tests alone do not complete this phase. Arena multiplayer follows in Phase 6; full scale remains Phase 7. Future unnumbered Free Verse work remains deferred.
+
+## Alpha 6 — arena multiplayer
+
+**Deferred until after the local dedicated server phase. Renumbered 2026-11-20.** Existing multiplayer work is retained; its outstanding acceptance checks are not waived. StarServer remains the arena match server, separate from FractalVerse.
+
+Integrate Unreal Engine multiplayer across gameplay, building on the native session and lobby work. Use the legacy simulation on the authoritative host or server, with UE handling player ownership, input, and replication. Cover the galaxy and orbital state, flight controls, ships, weapons, damage, AI, objectives, mission flow, HUD, debrief, chat, and results. Verify standalone play as each system moves to the multiplayer architecture.
+
+Hawk Match has launched in the Borova sector with two local LAN processes. Both players received fighters, steered, applied throttle, and saw live speed on their mini-HUDs. Matching hit counts and hull damage after a landed shot are still unverified. The propulsion and cockpit presentation fixes passed build and attachment checks and await a live rerun.
+
+StarServer built as a Windows dedicated server on the UE 5.7.4 source engine. SSW launched it, registered a four-slot Hawk Match session in EOS Dev, and connected one pilot to the Borova lobby. The dedicated two-pilot run is deferred until a second Epic account is available.
+
+Remaining arena multiplayer verification includes a supported match with matching combat state and results on both clients, EOS and Steam create/join, reconnects, mission travel, and match-end server and EOS session cleanup.
 
 ## Alpha 7 — full-scale conversion
 
 Start the asset and presentation conversion with Falcon and Orion. Preserve legacy simulation distances and timing. Verify camera framing, launch and recovery, terrain contact, attachment points, and collision alignment before extending full scale to the fleet and mission environments.
 
 
-## Alpha 8 - faction missions
+## Faction content and cinematic scheduling
 
-Author a full mission list for the Marakan Hegemony and a full Dantari mission list for Campaign 2.
+Faction training and the documented Marakan and Dantari mission additions are included in the active Phase 4 closeout, subject to progression and regression checks. Zolons remain non-playable. Do not declare faction content complete based only on file presence.
+
+MP4 production and cinematic polish are a separate deferred workstream, with no rendering required for this build. Mod Editor remains deferred. No additional phase number is assigned to these workstreams here.
+
+## Phase 4 build checkpoint — 2026-11-20
+
+Work included in this build:
+
+- Carrier fighter sales use eligible OOB squadrons, finite stock and the training Stormhawk price; T1 is Carrier Qualifications.
+- Live Orion-to-Janek surface training transit, recovered craft restaging, hull-occluded Orion navigation lights, full Janek WorldScape terrain material and 23 native UE skin materials.
+- Direct native JSON OOB loading; Marakan and Dantari seven-lesson training catalogs; expanded Marakan Campaigns 3/4 missions and chapter jobs; Campaign 5's non-playable Zolon opponents.
+- Independent-job state, current rank and campaign-system checks; refresh/start commands cannot duplicate or reset running work.
+- C++ beam classes have native Niagara defaults. Gun muzzle flashes are 25% smaller. Seven stock missile classes use nozzle-fitted native Niagara exhaust driven by simulation thrust, release, pause and lifetime.
+- Flight Ops permits player commands only while piloting that carrier; other pilots retain read-only roster inspection. Autonomous simulation operations are unchanged.
+- Production recipe eligibility follows existing regional production and exclusive supply. Previously 206 recipes had no supported facility; all 221 now have an installation route. Primary background recipes and SSW balance are retained.
+- Launcher 1.0.15 Store prototype, separate News view and supported Epic authorization. Purchasing remains inactive.
+
+The cook gate passed: editor and Windows Development game compilation succeeded, and the final rendering-enabled regression passed all 314 tests (191 successes, 123 successes with warnings, zero failed or skipped). Launcher checks passed 18/18. The final menu placement passed a focused render rerun after the full suite. The content audit covers 266 cargo entries, 221 recipes, 52 facilities, 221 blueprints and 153 skills, with no broken links or missing recipe installation sites. Ready for the owner to cook and package to Build/Windows. Packaged visual checks and full faction playthroughs remain owner verification; automated data/loading checks do not declare them complete.
+
+Ships, weapons and systems remain JSON-sourced but use runtime DataTable bridges. Campaign collections, galaxy/environment/regions and separate force-summary OOB tables remain. Direct faction combat-group JSON loading does not remove that separate summary table. See Saved/RuntimeIngestionAudit-20261120.json.
+
+The launcher and game share Alpha 4 release metadata, warning text and game build labels. Phase 4 closure is pending the final owner cook/package and packaged release verification.
+
+The simulation remains the source of gameplay state. Unreal weapon/engine effects are visualization and do not own hits, damage, inventories, thrust or timing.
 
 ## Current evidence and limitations
 

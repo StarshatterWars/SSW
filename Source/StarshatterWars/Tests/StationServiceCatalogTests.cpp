@@ -13,6 +13,7 @@ bool FStationServiceRolesTest::RunTest(const FString&)
     TestFalse(TEXT("Carrier does not provide shipyard refit"),Catalog.HasService(TEXT("Orion"),TEXT("Archon"),ESSWStationService::Refit));
     TestFalse(TEXT("Carrier does not provide a commercial market"),Catalog.HasService(TEXT("Orion"),TEXT("Archon"),ESSWStationService::Market));
     TestTrue(TEXT("Carrier retains basic repair"),Catalog.HasService(TEXT("Orion"),TEXT("Archon"),ESSWStationService::Repair));
+    TestTrue(TEXT("Orion offers reserve fighter purchases"),Catalog.HasService(TEXT("Orion"),TEXT("Archon"),ESSWStationService::HullSales));
     TestTrue(TEXT("Fortress drydock offers refit"),Catalog.HasService(TEXT("Station4"),NAME_None,ESSWStationService::Refit));
     TestFalse(TEXT("Mining station cannot refit"),Catalog.HasService(TEXT("Mining Station"),NAME_None,ESSWStationService::Refit));
     TestFalse(TEXT("Transfer point cannot refit"),Catalog.HasService(TEXT("Station1"),NAME_None,ESSWStationService::Refit));

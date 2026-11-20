@@ -26,6 +26,13 @@ bool FBeamWeaponPresentationTest::RunTest(const FString&)
   TestEqual(TEXT("Min range unchanged"),double(Design->min_range),10000.0);TestEqual(TEXT("Max range unchanged"),double(Design->max_range),50000.0);TestEqual(TEXT("Minimum firing charge unchanged"),double(Design->min_charge),500.0);
   const FString Path=WeaponBlueprintResolver::ProjectileClassPath(Row->Projectile);TestEqual(TEXT("New field resolves organized beam path"),Path,ABeamWeaponActor::BlueprintPathForWeapon(Name));
   UClass* Class=WeaponBlueprintResolver::ResolveProjectile(Row->Projectile);if(!TestNotNull(TEXT("Per-weapon Blueprint"),Class))continue;TestTrue(TEXT("Correct native child"),Class->IsChildOf(ABeamWeaponActor::ClassForWeapon(Name)));
+  auto* NativeBeam=World->SpawnActor<ABeamWeaponActor>(ABeamWeaponActor::ClassForWeapon(Name));
+  if(TestNotNull(TEXT("Native beam works without a Blueprint"),NativeBeam))
+  {
+   NativeBeam->BeginSimulationBeam(Name);
+   TestNotNull(TEXT("C++ beam has a Niagara system"),NativeBeam->FindComponentByClass<UNiagaraComponent>()->GetAsset());
+   TestFalse(TEXT("Niagara cannot collide or simulate weapon damage"),NativeBeam->GetActorEnableCollision());NativeBeam->Destroy();
+  }
   auto* Beam=World->SpawnActor<ABeamWeaponActor>(Class);Beam->BeginSimulationBeam(Name);TestFalse(TEXT("Noncolliding presentation"),Beam->GetActorEnableCollision());TestFalse(TEXT("Simulation owns lifetime"),Beam->IsActorTickEnabled());
   auto* FX=Beam->FindComponentByClass<UNiagaraComponent>();if(!TestNotNull(TEXT("Niagara"),FX))continue;TestNotNull(TEXT("Pack system assigned"),FX->GetAsset());
   Beam->SetActorRotation(FRotator(10,45,15));const FVector Start(1000,-2000,3000),Impact(4000,5000,-1000);Beam->SetBeamPoints(Start,Impact);

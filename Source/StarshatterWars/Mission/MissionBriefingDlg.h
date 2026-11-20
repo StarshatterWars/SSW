@@ -278,6 +278,7 @@ protected:
     void StartLiveSessionUpdates();
     void UpdateLiveMission();
     friend class FMissionHiddenLiveTickTest;
+    friend class FAutolandTargetSelectionTest;
     void ClearTravelPresentation(bool bStopUpdates = true);
     UFUNCTION() void HandleTravelSystemShown();
     UPROPERTY(Transient) TObjectPtr<UInputAction> QuantumMenuAction;

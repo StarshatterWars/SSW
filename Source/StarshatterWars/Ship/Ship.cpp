@@ -389,9 +389,12 @@ FName Ship::GetCargoInventoryKey() const
 
 void Ship::SyncCargoInventory()
 {
+    if(auto* Simulation=Sim::GetSim())SyncCargoInventory(Simulation->GetEconomy());
+}
+void Ship::SyncCargoInventory(FEconomyState& State)
+{
     auto* Simulation = Sim::GetSim();
     if (!Simulation || !Simulation->HasSimulationAuthority() || !design) return;
-    auto& State = Simulation->GetEconomy();
     const FName SystemName(GetRegion() && GetRegion()->GetSystem() ? UTF8_TO_TCHAR(GetRegion()->GetSystem()->GetName()) : TEXT(""));
     auto* Inventory = State.Inventories.Find(GetCargoInventoryKey());
     if (!Inventory) Inventory = FEconomyLedger::CreateInventory(State, GetCargoInventoryKey(), (Simulation->GetPlayerShip() == this ? FEconomyLedger::Pilot() : FEconomyRuntime::IndustryOwner()), SystemName, design->CargoCapacity.Tonnes);
@@ -474,9 +477,12 @@ bool Ship::RestoreCourierPackageFromInventory(const FEconomyState& State)
 
 void Ship::ApplyCargoInventoryToManifest()
 {
+    if(auto* Simulation=Sim::GetSim())ApplyCargoInventoryToManifest(Simulation->ReadEconomy());
+}
+void Ship::ApplyCargoInventoryToManifest(const FEconomyState& State)
+{
     auto* Simulation = Sim::GetSim();
     if (!Simulation) return;
-    auto& State = Simulation->GetEconomy();
     // Owned-hull binding calls this before synchronization. Restore the sealed adapter even on empty fighters.
     if (Simulation->GetPlayerShip() == this && !Simulation->IsNetworked()) RestoreCourierPackageFromInventory(State);
     if (!CargoManifest || CargoManifest->bPassengers) return;
@@ -4011,11 +4017,18 @@ Ship::ExecFrame(double seconds)
 			MakeOrbit();
 	}
 
+    else if (IsDropship() && GetFlightPhase()==EOPSMode::ACTIVE && sim && region)
+    {
+        auto* Nearby=sim->FindNearestTerrainRegion(this);
+        const auto* Surface=Nearby?static_cast<const TerrainRegion*>(Nearby->GetOrbitalRegion()):nullptr;
+        if(Surface && Surface->HasSurfaceSite()) DropOrbit();
+    }
+
 	if (!InTransition()) {
 		ExecSensors(seconds);
 		ExecThrottle(seconds);
 	}
-	else if (IsDropping() || IsAttaining() || IsSkipping()) {
+	else if (((IsDropping() || IsAttaining()) && transition_time > 0.001f) || IsSkipping()) {
 		throttle = 100;
 	}
 
@@ -5423,12 +5436,12 @@ Ship::DropOrbit()
                     FMath::Abs(Local.X) > 32000.0 || FMath::Abs(Local.Z) > 32000.0) return;
             }
 
-			transition_time = 10.0f;
+			transition_time = Surface->HasSurfaceSite() ? 0.001f : 10.0f;
 			transition_type = TRANSITION_DROP_ORBIT;
 			transition_loc = GetLocation() + GetHeading() * (float)(-2 * GetRadius());
 
 			RadioTraffic::SendQuickMessage(this, RadioMessageAction::BREAK_ORBIT);
-			SetControls(0);
+			if (!Surface->HasSurfaceSite()) SetControls(0);
 		}
 	}
 }
@@ -5437,12 +5450,14 @@ void
 Ship::MakeOrbit()
 {
 	if (IsDropship() && transition_type == TRANSITION_NONE && IsAirborne()) {
-		transition_time = 5.0f;
+        const auto* Origin = region ? region->GetOrbitalRegion() : nullptr;
+        const bool Continuous = Origin && Origin->GetType()==Orbital::TERRAIN && static_cast<const TerrainRegion*>(Origin)->HasSurfaceSite();
+		transition_time = Continuous ? 0.001f : 5.0f;
 		transition_type = TRANSITION_MAKE_ORBIT;
 		transition_loc = GetLocation() + GetHeading() * (float)(-2 * GetRadius());
 
 		RadioTraffic::SendQuickMessage(this, RadioMessageAction::MAKE_ORBIT);
-		SetControls(0);
+		if (!Continuous) SetControls(0);
 	}
 }
 
@@ -5644,7 +5659,6 @@ Ship::CompleteTransition()
 
 	case TRANSITION_DROP_ORBIT:
 	{
-		SetControls(0);
 
 		SimRegion* DstRegion =
 			sim ? sim->FindNearestTerrainRegion(this) : nullptr;
@@ -5667,6 +5681,7 @@ Ship::CompleteTransition()
 			RandomDirection() * 2000.0f;
 
         const auto* Surface = static_cast<const TerrainRegion*>(DstRegion->GetOrbitalRegion());
+        if (!Surface || !Surface->HasSurfaceSite()) SetControls(0);
         if (Surface && Surface->HasSurfaceSite() && region)
         {
             const FVector Offset = region->GetLocation() + OtherHand(GetLocation()) - Surface->Location();
@@ -5696,7 +5711,6 @@ Ship::CompleteTransition()
 
 	case TRANSITION_MAKE_ORBIT:
 	{
-		SetControls(0);
 
 		SimRegion* DstRegion =
 			sim ? sim->FindNearestSpaceRegion(this) : nullptr;
@@ -5709,6 +5723,7 @@ Ship::CompleteTransition()
         const OrbitalRegion* Origin = region ? region->GetOrbitalRegion() : nullptr;
         const auto* Surface = Origin && Origin->GetType() == Orbital::TERRAIN
             ? static_cast<const TerrainRegion*>(Origin) : nullptr;
+        if (!Surface || !Surface->HasSurfaceSite()) SetControls(0);
         const OrbitalRegion* Destination = DstRegion->GetOrbitalRegion();
         if (!Destination || !Destination->Primary()) return;
 

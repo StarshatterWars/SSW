@@ -69,6 +69,7 @@ public:
 
     void SetShip(Ship* InShip);
     void ExecFrame();
+    bool CanIssueOrders() const;
 
 protected:
     virtual TSharedRef<SWidget> CreatePanelContent() override;

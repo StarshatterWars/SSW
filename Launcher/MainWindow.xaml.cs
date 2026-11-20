@@ -21,12 +21,15 @@ public partial class MainWindow : Window
     private static readonly string InstallRecord = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StarshatterWars", "LauncherInstall.txt");
     private bool busy;
+    private bool pilotRecoveryActive;
     private readonly CancellationTokenSource closing = new();
     private readonly LocalFeedServer localFeedServer = new();
 
     public MainWindow()
     {
         InitializeComponent();
+        ReleaseStage.Text=ReleasePresentation.Stage.ToUpperInvariant();
+        AlphaWarning.Text=ReleasePresentation.Warning;
         LauncherVersion.Text = $"Launcher {typeof(MainWindow).Assembly.GetName().Version!.ToString(3)}";
         sourceGame = FindGame();
         string installed = Path.Combine(@"C:\SSW", "StarshatterWars.exe");
@@ -64,6 +67,12 @@ public partial class MainWindow : Window
             if (!closing.IsCancellationRequested) await Task.WhenAll(LoadFeedAsync(), LoadPatchNotesAsync());
         };
         Closed += (_, _) => { closing.Cancel(); localFeedServer.Dispose(); music.Close(); NewsView.Dispose(); };
+        Closing += (_, e) =>
+        {
+            if (!pilotRecoveryActive) return;
+            e.Cancel = true;
+            LaunchStatus.Text = "Please wait for pilot recovery to finish before closing the launcher.";
+        };
     }
 
     private Task EnsureLocalFeedServerAsync(LauncherSettings? config, CancellationToken token) =>
@@ -84,6 +93,43 @@ public partial class MainWindow : Window
             if (!closing.IsCancellationRequested)
                 LaunchStatus.Text = $"Local update feed unavailable. {ex.Message} Play requires a verified current release.";
         }
+    }
+
+    private Uri? storeUri;
+    private void NewsTab_Click(object sender, RoutedEventArgs e)
+    {
+        NewsPanel.Visibility=Visibility.Visible;StorePanel.Visibility=Visibility.Collapsed;
+        NewsTabButton.Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(36,70,90));
+        StoreTabButton.Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(23,43,59));
+    }
+    internal Task StoreRefresh { get; private set; } = Task.CompletedTask;
+    private void StoreTab_Click(object sender, RoutedEventArgs e)
+    {
+        StoreRefresh = RefreshStoreAsync();
+    }
+    private async Task RefreshStoreAsync()
+    {
+        NewsPanel.Visibility=Visibility.Collapsed;StorePanel.Visibility=Visibility.Visible;
+        StoreTabButton.Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(36,70,90));
+        NewsTabButton.Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(23,43,59));
+        try
+        {
+            var config=JsonSerializer.Deserialize<LauncherSettings>(await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory,"launcher.json"),closing.Token),JsonOptions);
+            storeUri=StoreNavigation.Website(config?.StoreUrl);
+            StoreVisitButton.IsEnabled=storeUri is not null;
+            StoreStatus.Text=storeUri is null
+                ? "The store is being prepared. No products are on sale and no payment details are collected by this launcher."
+                : "Visit the official store in your browser to review current offers. Checkout and account ownership will be handled by the store provider.";
+        }
+        catch(Exception ex) when(ex is IOException or UnauthorizedAccessException or JsonException or OperationCanceledException)
+        {storeUri=null;StoreVisitButton.IsEnabled=false;StoreStatus.Text="Store details are unavailable. Install, update and play remain available.";}
+    }
+    private void StoreVisit_Click(object sender, RoutedEventArgs e)
+    {
+        if(storeUri is null)return;
+        try{Process.Start(new ProcessStartInfo(storeUri.AbsoluteUri){UseShellExecute=true});}
+        catch(Exception ex) when(ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {StoreStatus.Text="The browser could not open. Please try again.";}
     }
 
     private void Music_Click(object sender, RoutedEventArgs e)
@@ -124,12 +170,24 @@ public partial class MainWindow : Window
         string directory = Path.GetDirectoryName(game)!;
         string binary = Path.Combine(directory, "StarshatterWars", "Binaries", "Win64", "StarshatterWars.exe");
         if (!File.Exists(binary)) binary = game;
-        string version = FileVersionInfo.GetVersionInfo(binary).ProductVersion ?? "unknown";
-        DateTime buildTime = File.GetLastWriteTimeUtc(binary);
         string versionFile = Path.Combine(directory, ".ssw-version");
         if (File.Exists(versionFile))
-            return $"Installed {File.ReadAllText(versionFile).Trim()}  ·  UE {version}";
-        return $"Installed build {buildTime:yyyy-MM-dd HH:mm} UTC  ·  UE {version}";
+        {
+            string release=File.ReadAllText(versionFile).Trim();
+            if(!string.IsNullOrEmpty(release))return ReleasePresentation.Version(release);
+        }
+        string buildFile=Path.Combine(directory,"StarshatterWars","Content","Build","build-version.json");
+        if(File.Exists(buildFile))
+        {
+            try
+            {
+                using var record=JsonDocument.Parse(File.ReadAllText(buildFile));
+                string? build=record.RootElement.GetProperty("version").GetString();
+                if(!string.IsNullOrWhiteSpace(build))return ReleasePresentation.Version(build);
+            }
+            catch(Exception ex) when(ex is IOException or JsonException or KeyNotFoundException or InvalidOperationException) { }
+        }
+        return $"{ReleasePresentation.Stage} | Game build not recorded";
     }
 
     private async void Play_Click(object sender, RoutedEventArgs e) => await SignInAndLaunchAsync("EOS");
@@ -206,9 +264,43 @@ public partial class MainWindow : Window
     private void SetBusy(bool value)
     {
         busy = value;
+        RepairButton.IsEnabled = !value && game is not null;
         InstallButton.IsEnabled = !value;
         UpdateButton.IsEnabled = !value;
         PlayButton.IsEnabled = SteamButton.IsEnabled = OfflineButton.IsEnabled = !value && game is not null;
+    }
+
+    private void Repair_Click(object sender, RoutedEventArgs e)
+    {
+        RepairButton.ContextMenu.PlacementTarget = RepairButton;
+        RepairButton.ContextMenu.IsOpen = true;
+    }
+
+    private async void RecoverPilot_Click(object sender, RoutedEventArgs e)
+    {
+        if (busy || game is null) return;
+        if (GameIsRunning()) { LaunchStatus.Text = "Close Starshatter Wars before recovering a pilot save."; return; }
+        SetBusy(true);
+        pilotRecoveryActive = true;
+        try
+        {
+            string root = Path.GetDirectoryName(game)!;
+            using var installLock = new FileStream(Path.Combine(root, LocalInstaller.LockName), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            LaunchStatus.Text = "Checking pilot recovery checkpoints…";
+            var available = await PilotRecovery.RunAsync(game, null, closing.Token);
+            if (available.Checkpoints is not { Length: > 0 })
+            { LaunchStatus.Text = "No complete, valid pilot recovery checkpoints were found."; return; }
+            var dialog = new PilotRecoveryWindow(available.Checkpoints) { Owner = this };
+            if (dialog.ShowDialog() != true || dialog.Selected is null) { LaunchStatus.Text = "Recovery cancelled. Saves were not changed."; return; }
+            if (GameIsRunning()) throw new IOException("Close Starshatter Wars before restoring the checkpoint.");
+            LaunchStatus.Text = "Backing up saves, verifying the checkpoint and restoring the pilot…";
+            var restored = await PilotRecovery.RunAsync(game, dialog.Selected, closing.Token);
+            LaunchStatus.Text = $"Pilot restored. Backup: {restored.Backup}";
+            MessageBox.Show(this, $"Pilot save restored successfully.\n\nYour previous saves are backed up here:\n{restored.Backup}", "Recover Pilot Save", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or OperationCanceledException or System.ComponentModel.Win32Exception)
+        { LaunchStatus.Text = $"Recovery unavailable. {ex.Message}"; }
+        finally { pilotRecoveryActive = false; SetBusy(false); }
     }
 
     private async void LocateGame_Click(object sender, RoutedEventArgs e)
@@ -590,7 +682,7 @@ public partial class MainWindow : Window
         return html.Append("</html>").ToString();
     }
 
-    private sealed record LauncherSettings(string? FeedUrl, uint SteamAppId, string? PatchManifestUrl, string? PatchPublicKeyPem, string? GameArchiveUrl, bool UseEasyAntiCheatBootstrapper, LocalFeedServerSettings? LocalFeedServer = null);
+    private sealed record LauncherSettings(string? FeedUrl, uint SteamAppId, string? PatchManifestUrl, string? PatchPublicKeyPem, string? GameArchiveUrl, bool UseEasyAntiCheatBootstrapper, LocalFeedServerSettings? LocalFeedServer = null, string? StoreUrl = null);
     private sealed record Feed(FeedEntry[]? Entries);
     private sealed record FeedEntry(string? Category, string? Title, string? Date, string? Body);
 }

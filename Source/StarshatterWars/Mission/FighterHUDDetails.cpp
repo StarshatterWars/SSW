@@ -1,5 +1,6 @@
 
 #include "FighterHUDDetails.h"
+#include "MiniHUDLayout.h"
 #include "MiningCrystalEquipment.h"
 #include "HUDView.h"
 #include "SSWSessionLobbyGameMode.h"
@@ -168,21 +169,9 @@ namespace
 }
 // Match GEAR DOWN width; double its height for a larger launch target.
 // GEAR DOWN is at HUD center +126; LAUNCH is below it at +158.
-static FVector2D MiniHUDOrigin(const FVector2D& Size, float Scale)
-{
-    return FVector2D(Size.X * .5 - 330 * Scale - 16, 20 * Scale);
-}
-
-static FSlateRect DamageImageRect(const FVector2D& Size,float Scale)
-{
-    const FVector2D P=MiniHUDOrigin(Size,Scale)+FVector2D(531,23)*Scale;
-    return FSlateRect(P.X,P.Y,P.X+108*Scale,P.Y+54*Scale);
-}
-static FSlateRect DamagePopupRect(const FVector2D& Size,float Scale)
-{
-    const FVector2D P(FMath::Clamp(MiniHUDOrigin(Size,Scale).X+440*Scale,8.0,FMath::Max(8.0,Size.X-428*Scale)),138*Scale);
-    return FSlateRect(P.X,P.Y,P.X+420*Scale,P.Y+260*Scale);
-}
+static FVector2D MiniHUDOrigin(const FVector2D& Size,float Scale){return SSWMiniHUDLayout::Origin(Size,Scale);}
+static FSlateRect DamageImageRect(const FVector2D& Size,float Scale){return SSWMiniHUDLayout::DamageImage(Size,Scale);}
+static FSlateRect DamagePopupRect(const FVector2D& Size,float Scale){return SSWMiniHUDLayout::DamagePopup(Size,Scale);}
 
 static FVector2D RadioPanelOrigin(const FVector2D& Size, float Scale)
 {
@@ -317,7 +306,7 @@ void SFighterHUDDetails::LoadShipHUDIcon(const FString& Path, FString& Cached, T
 }
 void SFighterHUDDetails::Refresh()
 {
-    StatusRows.Reset(); DamageRows.Reset(); Contacts.Reset();
+    StatusRows.Reset(); MissionReadouts.Reset(); DamageRows.Reset(); Contacts.Reset();
     bAugmenterActive = false;
     TargetDisplayColor = FLinearColor::Yellow;
     TargetMineral.Reset();
@@ -407,6 +396,7 @@ void SFighterHUDDetails::Refresh()
         return;
     }
     Ship* P = PlayerShip(); bHasPlayer = P != nullptr;
+    MissionReadouts = MissionStatusRows(P);
     JumpReadout = {};
     if (P && Sim::GetSim())
     {
@@ -742,12 +732,12 @@ FReply SFighterHUDDetails::OnMouseMove(const FGeometry& Geometry,const FPointerE
     const FVector2D Cursor=Geometry.AbsoluteToLocal(Event.GetScreenSpacePosition());
     const bool Hover=ShowHUD.Get() && ThirdPerson.Get() && !IsCockpitDisplayActive() && bHasPlayer &&
         (DamageImageRect(Size,Scale).ContainsPoint(Cursor) || (bDamagePreviewHovered && FSlateRect(FMath::Min(DamageImageRect(Size,Scale).Left,DamagePopupRect(Size,Scale).Left),DamageImageRect(Size,Scale).Top,FMath::Max(DamageImageRect(Size,Scale).Right,DamagePopupRect(Size,Scale).Right),DamagePopupRect(Size,Scale).Bottom).ContainsPoint(Cursor)));
-    if(Hover!=bDamagePreviewHovered){bDamagePreviewHovered=Hover;Invalidate(EInvalidateWidgetReason::Paint);}
+    if(Hover!=bDamagePreviewHovered){if(Hover)DamagePreviewZoom=1.f;bDamagePreviewHovered=Hover;Invalidate(EInvalidateWidgetReason::Paint);}
     return Hover?FReply::Handled():SCompoundWidget::OnMouseMove(Geometry,Event);
 }
 void SFighterHUDDetails::OnMouseLeave(const FPointerEvent& Event)
 {
-    bDamagePreviewHovered=false;Invalidate(EInvalidateWidgetReason::Paint);SCompoundWidget::OnMouseLeave(Event);
+    bDamagePreviewHovered=false;DamagePreviewZoom=1.f;Invalidate(EInvalidateWidgetReason::Paint);SCompoundWidget::OnMouseLeave(Event);
 }
 FReply SFighterHUDDetails::OnMouseWheel(const FGeometry& Geometry, const FPointerEvent& Event)
 {
@@ -1021,7 +1011,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         const FLinearColor Muted(.48,.72,.82,.95),White(.88,.96,1,1),Green(.25,1,.58,1);
         const auto Measure = FSlateApplication::Get().GetRenderer()->GetFontMeasureService();
         auto MiniText=[&](double X,double Y,FString Value,int SizeIn,FLinearColor Tint,double Width=0){
-            const FSlateFontInfo Font=SizeIn>=20?FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(10,int(SizeIn*Scale))):MissionUIStyle::GetInfoLabelFont(FMath::Max(9,int(SizeIn*Scale)));
+            const FSlateFontInfo Font=SizeIn>=20?FCoreStyle::GetDefaultFontStyle("Bold",FMath::Max(10,int(SizeIn*Scale))):MissionUIStyle::GetInfoLabelFont(FMath::Max(6,int(SizeIn*Scale)));
             if (Width > 0 && Measure->Measure(Value,Font).X > Width*Scale)
             {
                 while (!Value.IsEmpty() && Measure->Measure(Value+TEXT("..."),Font).X > Width*Scale)
@@ -1033,28 +1023,25 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         for (double X : {-12.0, 104.0, 228.0, 350.0, 510.0})
             Box(P+FVector2D(X,18)*Scale,FVector2D(Scale,76*Scale),FLinearColor(.2,.4,.5,.35));
 
-        const bool bMissionStatus = Modes[0] == EMode::Mission && HUDPlayer;
-        MiniText(-204,10,bMissionStatus ? TEXT("MISSION STATUS") : TEXT("SHIP STATUS"),10,Muted);
-        if (bMissionStatus)
+        MiniText(-204,9,TEXT("SHIP STATUS"),8,Muted);
+        const int32 Emcon=HUDPlayer?HUDPlayer->GetEMCON():NetworkEmcon;
+        MiniText(-73,10,FString::Printf(TEXT("EMCON %d"),Emcon),7,Muted,54);
+        // Six systems fit in two compact columns; leave the footer for mission/navigation text.
+        for(int32 I=0;I<FMath::Min(StatusRows.Num(),6);++I)
         {
-            const auto Rows = MissionStatusRows(HUDPlayer);
-            for (int32 Index = 0; Index < Rows.Num(); ++Index)
-                MiniText(-204,31+Index*19,Rows[Index],10,White,177);
+            const auto& Row=StatusRows[I];
+            const double X=-204+94*(I/3),Y=24+18*(I%3);
+            const FLinearColor Tint=Row.Label==TEXT("THRUST")?InstrumentColor:DamageColor(Row.Percent);
+            SShipSystemIcon::PaintIcon(E,L+2,G,P+FVector2D(X,Y)*Scale,StatusIcon(Row.Label),Tint,Scale*.78f);
+            Box(P+FVector2D(X+23,Y+6)*Scale,FVector2D(36,3)*Scale,FLinearColor(.07,.16,.23,.9));
+            if(Row.Percent>=0)Box(P+FVector2D(X+23,Y+6)*Scale,FVector2D(36*FMath::Clamp(Row.Percent/100.0,0.0,1.0),3)*Scale,Tint);
+            MiniText(X+64,Y+3,FormatStatusReadout(Row.Label,Row.Percent,Row.Label==TEXT("THRUST")&&bAugmenterActive),7,Tint,28);
         }
-        else if (HUDPlayer || NetworkController.IsValid())
-            MiniText(-78,10,FString::Printf(TEXT("EMCON %d"),HUDPlayer ? HUDPlayer->GetEMCON() : NetworkEmcon),10,Muted);
-        for (int32 I=0; !bMissionStatus && I<StatusRows.Num(); ++I)
-        {
-            const auto& Row = StatusRows[I];
-            const bool bThrust = Row.Label == TEXT("THRUST");
-            const FLinearColor Tint = bThrust ? InstrumentColor : DamageColor(Row.Percent);
-            const double Y = 24 + I*13.0;
-            SShipSystemIcon::PaintIcon(E,L+2,G,P+FVector2D(-204,Y)*Scale,StatusIcon(Row.Label),Tint,Scale*.48f);
-            Box(P+FVector2D(-183,Y+4)*Scale,FVector2D(88,4)*Scale,FLinearColor(.07,.16,.23,.9));
-            if (Row.Percent >= 0)
-                Box(P+FVector2D(-183,Y+4)*Scale,FVector2D(88*FMath::Clamp(Row.Percent/100.0,0.0,1.0),4)*Scale,Tint);
-            MiniText(-82,Y,FormatStatusReadout(Row.Label,Row.Percent,bThrust && bAugmenterActive),10,Tint,65);
-        }
+        if(MissionReadouts.Num()>0)MiniText(-204,78,MissionReadouts[0],7,Muted,180);
+        if(MissionReadouts.Num()>1)
+            MiniText(-204,87,MissionReadouts[1]+(MissionReadouts.Num()>2?TEXT(" / ")+MissionReadouts[2]:FString()),7,Muted,180);
+        if(NavReadouts.Num()>0 || bAugmenterActive)
+            MiniText(-204,96,(NavReadouts.Num()>0?NavReadouts[0]:FString())+(bAugmenterActive?TEXT(" / AUG ON"):TEXT("")),7,Muted,180);
 
         MiniText(120,14,TEXT("VELOCITY"),10,Muted);
         if (!CurrentCameraMode.IsEmpty()) MiniText(120,73,CurrentCameraMode,10,Muted,105);
@@ -1074,7 +1061,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         const bool bAtmospheric = Snapshot ? Snapshot->bAirborne : HUDPlayer && HUDPlayer->IsAirborne();
         if (bAtmospheric)
         {
-            const FVector2D DialCenter = P + FVector2D(56,48)*Scale;
+            const FVector2D DialCenter = SSWMiniHUDLayout::GizmoCenter(Size,Scale);
             constexpr double Radius = 36.0;
             const double Horizon = FMath::Clamp(PitchDegrees*1.35,-Radius,Radius);
             const double BankCos = FMath::Cos(BankRadians);
@@ -1135,10 +1122,10 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
         const FString Attitude = FString::Printf(TEXT("%03d MARK %d"),
             (FMath::RoundToInt(HeadingDegrees) % 360 + 360) % 360, FMath::RoundToInt(PitchDegrees));
-        const auto AttitudeFont = MissionUIStyle::GetInfoLabelFont(FMath::Max(9, int(10 * Scale)));
+        const auto AttitudeFont = MissionUIStyle::GetInfoLabelFont(FMath::Max(7, int(8 * Scale)));
         const FVector2D AttitudeExtent = Measure->Measure(Attitude, AttitudeFont);
-        constexpr double AttitudeReadoutY = 92.0;
-        const FVector2D AttitudePosition(P.X + 56 * Scale - AttitudeExtent.X * .5, P.Y + AttitudeReadoutY * Scale);
+        constexpr double AttitudeReadoutY = 96.0;
+        const FVector2D AttitudePosition(SSWMiniHUDLayout::GizmoCenter(Size,Scale).X - AttitudeExtent.X * .5, P.Y + AttitudeReadoutY * Scale);
         FSlateDrawElement::MakeText(E, L + 2,
             G.ToPaintGeometry(FVector2f(AttitudeExtent), FSlateLayoutTransform(FVector2f(AttitudePosition))),
             Attitude, AttitudeFont, ESlateDrawEffect::None, InstrumentColor);
@@ -1147,16 +1134,16 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         const bool bAutoTrack = (HUDPlayer && HUDPlayer->IsAutoTrackEngaged()) || (Snapshot && Snapshot->bAutoTracking);
         MiniText(366,14,bAutoTrack ? TEXT("AUTO TRACK") : bAutoland ? TEXT("AUTOLAND") :
             bAutoAvailable ? TEXT("AUTO NAV") : TEXT("MANUAL FLIGHT CONTROL"),
-            10,(bAutoTrack || bAutoland || bAutoAvailable) ? Green : Muted,138);
-        MiniText(366,43,CompactNavLabel,13,White,138);
+            8,(bAutoTrack || bAutoland || bAutoAvailable) ? Green : Muted,138);
+        MiniText(366,40,CompactNavLabel,9,White,138);
         if (Snapshot)
-            MiniText(366,62,FString::Printf(TEXT("RESPAWNS %d"),Snapshot->RespawnsRemaining),10,Muted,138);
+            MiniText(366,62,FString::Printf(TEXT("RESPAWNS %d"),Snapshot->RespawnsRemaining),8,Muted,138);
         if (NavReadouts.Num() > 0)
-            MiniText(366,62,NavReadouts[0],10,Muted,138);
+            MiniText(366,58,NavReadouts[0],8,Muted,138);
         if (const Instruction* Waypoint = HUDPlayer && !bAutoTrack && !HUDPlayer->GetInbound() ? HUDPlayer->GetNextNavPoint() : nullptr)
         {
             if (Waypoint->GetSpeed() > 0)
-                MiniText(366,80,FString::Printf(TEXT("SPD %d m/s"), Waypoint->GetSpeed()),10,Muted,138);
+                MiniText(366,80,FString::Printf(TEXT("SPD %d m/s"), Waypoint->GetSpeed()),8,Muted,138);
         }
         if (HUDPlayer && HUDPlayer->IsAirborne())
             MiniText(120,AttitudeReadoutY,FString::Printf(TEXT("MSL %.0f m"),HUDPlayer->GetAltitudeMSL()),10,Muted);
@@ -1182,7 +1169,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             Text(At+FVector2D(12,238)*Scale,FString::Printf(TEXT("HULL %.0f%%   /   WHEEL ZOOM %.2fx"),PlayerHull,DamagePreviewZoom),ShipHealthColor(PlayerHull),10);
             const FVector2D Area=At+FVector2D(12,32)*Scale,AreaSize=FVector2D(396,198)*Scale;
             const FVector2D ImageSize=AreaSize*DamagePreviewZoom,ImageAt=Area+(AreaSize-ImageSize)*.5;
-            E.PushClip(FSlateClippingZone(FSlateRect(Area.X,Area.Y,Area.X+AreaSize.X,Area.Y+AreaSize.Y)));
+            E.PushClip(FSlateClippingZone(G.ToPaintGeometry(FVector2f(AreaSize),FSlateLayoutTransform(FVector2f(Area)))));
             FSlateDrawElement::MakeBox(E,L+10,G.ToPaintGeometry(FVector2f(ImageSize),FSlateLayoutTransform(FVector2f(ImageAt))),
                 &PlayerMFDPreview->GetBrush(),ESlateDrawEffect::None,ShipHealthColor(PlayerHull));
             for(const auto& Point:DamagePoints)
@@ -1365,7 +1352,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         };
         PanelFill(FVector2D(-22, -5), FVector2D(220, 215), FLinearColor(.016f,.036f,.052f,.91f));
         PanelFill(FVector2D(-22, -5), FVector2D(2, 22), TargetDisplayColor);
-        PanelFill(FVector2D(0, 19), FVector2D(176, 1), FLinearColor(.15f,.27f,.34f,.7f));
+        PanelFill(FVector2D(-22, -5), FVector2D(220, 24), FLinearColor(.035f,.07f,.095f,.95f));
         PanelFill(FVector2D(-22, 186), FVector2D(220, 24), FLinearColor(.035f,.07f,.095f,.95f));
         FString WaypointFirst, WaypointSecond;
         auto TargetText = [&](FVector2D Position, const FString& Label, FLinearColor Color)
@@ -1383,20 +1370,28 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             TargetName.Split(TEXT(" - "), &WaypointFirst, &WaypointSecond);
         if (WrapWaypoint) {
             TargetText(P,WaypointFirst.TrimStartAndEnd(),TargetDisplayColor);
-            TargetText(P+FVector2D(0,10)*Scale,WaypointSecond.TrimStartAndEnd(),TargetDisplayColor);
+            TargetText(P+FVector2D(0,24)*Scale,WaypointSecond.TrimStartAndEnd(),TargetDisplayColor);
         }
         else TargetText(P,TargetName,TargetDisplayColor);
         if(TargetMFDPreview && TargetMFDPreview->IsReady())
             FSlateDrawElement::MakeBox(E,L+1,
-                G.ToPaintGeometry(FVector2f(176*Scale,88*Scale),FSlateLayoutTransform(FVector2f(P+FVector2D(0,22)*Scale))),
+                G.ToPaintGeometry(FVector2f((WrapWaypoint?140:176)*Scale,(WrapWaypoint?70:88)*Scale),FSlateLayoutTransform(FVector2f(P+FVector2D(WrapWaypoint?18:0,WrapWaypoint?40:22)*Scale))),
                 &TargetMFDPreview->GetBrush(),ESlateDrawEffect::None,TargetHull < 0 ? FLinearColor::White : ShipHealthColor(TargetHull));
         else if(TargetHull<0)
-            Icon(P+FVector2D(48,24)*Scale,TargetBrush,TargetTexture.IsValid(),TargetHull);
+            Icon(P+FVector2D(48,WrapWaypoint?40:24)*Scale,TargetBrush,TargetTexture.IsValid(),TargetHull);
         TargetText(P+FVector2D(0,112)*Scale,
             bTargetTracking ? TargetClass + TEXT("   TRACKING") :
             bTargetLocked ? TargetClass + TEXT("   LOCKED") : TargetClass, TargetDisplayColor);
+        const auto TargetDefenseBar=[&](double X,double Health)
+        {
+            if(Health<0 || !FMath::IsFinite(Health))return;
+            const double Fraction=FMath::Clamp(Health*.01,0.,1.);
+            PanelFill(FVector2D(X,24),FVector2D(4,84),FLinearColor(.36f,.045f,.035f,.9f));
+            PanelFill(FVector2D(X,24+84*(1-Fraction)),FVector2D(4,84*Fraction),TargetDisplayColor);
+        };
+        TargetDefenseBar(-12,TargetShield);TargetDefenseBar(184,TargetHull);
         if (TargetHull >= 0) TargetText(P+FVector2D(0,132)*Scale,FString(TEXT("HULL  "))+FormatStatusReadout(TEXT("HULL"),TargetHull),TargetDisplayColor);
-        if (TargetHull >= 0) TargetText(P+FVector2D(0,TargetMiningFocus.IsEmpty()?152:145)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),TargetShield),TargetDisplayColor);
+        if (TargetShield >= 0) TargetText(P+FVector2D(0,TargetMiningFocus.IsEmpty()?152:145)*Scale,FString(TEXT("SHIELD  "))+FormatStatusReadout(TEXT("SHIELD"),TargetShield),TargetDisplayColor);
         if (!TargetMiningFocus.IsEmpty()) TargetText(P+FVector2D(0,159)*Scale,TargetMiningFocus,TargetDisplayColor);
         if (!TargetMineral.IsEmpty())
         {

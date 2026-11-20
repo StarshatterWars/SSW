@@ -2,6 +2,8 @@
 #include "RecordedCutsceneDlg.h"
 #include "StarshatterGameDataSubsystem.h"
 #include "CampaignSave.h"
+#include "FactionBriefingCatalog.h"
+#include "StarshatterPlayerSubsystem.h"
 // +----------------------------------------------------------------------+
 // | UCmdIntelDlg                                                         |
 // +----------------------------------------------------------------------+
@@ -30,6 +32,37 @@
 #include "IntelLVElement.h"
 #include "MissionUIStyle.h"
 #include "ShipSystemIcon.h"
+#include "Brushes/SlateRoundedBoxBrush.h"
+
+namespace
+{
+    class SIntelActionIcon final : public SShipSystemIcon
+    {
+    public:
+        int32 OnPaint(const FPaintArgs&, const FGeometry& Geometry, const FSlateRect&,
+            FSlateWindowElementList& Elements, int32 Layer, const FWidgetStyle&, bool) const override
+        {
+            PaintIcon(Elements, Layer, Geometry, (Geometry.GetLocalSize()-FVector2D(22,22))*.5,
+                Symbol, FLinearColor(.25f,.85f,1.f));
+            return Layer;
+        }
+        EShipSystemIcon Symbol = EShipSystemIcon::Back;
+    };
+
+    void StyleIntelAction(UButton* Button)
+    {
+        FButtonStyle Style;
+        Style.Normal = FSlateRoundedBoxBrush(FLinearColor(.12f,.14f,.16f),4.f);
+        Style.Hovered = FSlateRoundedBoxBrush(FLinearColor(.20f,.24f,.27f),4.f);
+        Style.Pressed = FSlateRoundedBoxBrush(FLinearColor(.08f,.11f,.13f),4.f);
+        Style.Disabled = Style.Normal;
+        Style.Disabled.TintColor=FLinearColor(1,1,1,.35f);
+        Button->SetStyle(Style);
+        Button->SetBackgroundColor(FLinearColor::White);
+        Button->SetColorAndOpacity(FLinearColor::White);
+    }
+}
+
 #include "Components/NativeWidgetHost.h"
 #include "CmpnScreen.h"
 #include "Campaign.h"
@@ -294,8 +327,11 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
     if (bReportSubpanels)
     {
         ReplayButton=WidgetTree->ConstructWidget<UButton>();
-        auto* ReplayLabel=WidgetTree->ConstructWidget<UTextBlock>();ReplayLabel->SetText(INVTEXT("\u25B6"));ReplayLabel->SetFont(MissionUIStyle::GetHeaderFont(16));
-        ReplayButton->SetContent(ReplayLabel);ReplayButton->SetToolTipText(INVTEXT("Replay this cutscene in a window"));
+        auto* ReplayIcon=WidgetTree->ConstructWidget<UNativeWidgetHost>();
+        auto PlaySymbol=SNew(SIntelActionIcon); PlaySymbol->Symbol=EShipSystemIcon::Play;
+        ReplayIcon->SetContent(PlaySymbol);
+        StyleIntelAction(ReplayButton);
+        ReplayButton->SetContent(ReplayIcon);ReplayButton->SetToolTipText(INVTEXT("Replay this cutscene in a window"));
         ReplayButton->OnClicked.AddUniqueDynamic(this,&UCmdIntelDlg::OnReplayClicked);
         ReplayButton->SetVisibility(ESlateVisibility::Collapsed);
         RightContents->AddChildToVerticalBox(ReplayButton);
@@ -312,7 +348,8 @@ void UCmdIntelDlg::BuildTwoPanelLayout()
         auto* DetailHeader = WidgetTree->ConstructWidget<UHorizontalBox>();
         auto* Back = WidgetTree->ConstructWidget<UButton>();
         auto* BackIcon = WidgetTree->ConstructWidget<UNativeWidgetHost>();
-        BackIcon->SetContent(SNew(SShipSystemIcon).Icon(EShipSystemIcon::Back));
+        BackIcon->SetContent(SNew(SIntelActionIcon));
+        StyleIntelAction(Back);
         Back->SetContent(BackIcon); Back->SetToolTipText(INVTEXT("Back to intel reports"));
         Back->OnClicked.AddUniqueDynamic(this,&UCmdIntelDlg::BackToIntelList);
         DetailHeader->AddChildToHorizontalBox(Back)->SetPadding(FMargin(0,0,10,0));
@@ -424,6 +461,26 @@ void UCmdIntelDlg::ExecFrame()
 // | RebuildNewsListIfCampaignChanged                                     |
 // +----------------------------------------------------------------------+
 
+int32 UCmdIntelDlg::FactionBriefingCount() const
+{
+    auto* Players=GetGameInstance()?GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+    if(!Players)return 0;int32 Count=0;
+    for(const auto& Row:FactionBriefingCatalog::All())if(FactionBriefingCatalog::Available(Row,Players->GetPlayerInfo()))++Count;
+    return Count;
+}
+void UCmdIntelDlg::AppendFactionBriefings()
+{
+    auto* Players=GetGameInstance()?GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+    if(!Players || !IntelList)return;
+    for(const auto& Row:FactionBriefingCatalog::All())
+    {
+        if(!FactionBriefingCatalog::Available(Row,Players->GetPlayerInfo()))continue;
+        auto* Item=NewObject<UIntelListObject>(this);Item->FactionBriefingId=Row.Id;Item->NewsTitle=Row.Title;
+        Item->NewsInfoText=Row.Body;Item->NewsSource=TEXT("FLEET COMMAND");Item->NewsLocation=StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(int64(Row.Empire));
+        Item->NewsDate=FString::Printf(TEXT("CAMPAIGN %d"),Row.CampaignId);
+        Item->NewsVisited=Players->GetPlayerInfo().ViewedFactionBriefings.Contains(Row.Id);IntelList->AddItem(Item);
+    }
+}
 void UCmdIntelDlg::EnsureTrainingIntroduction(Campaign* Story)
 {
     // Training is agent-driven now; it no longer visits the Operations screen
@@ -457,10 +514,10 @@ void UCmdIntelDlg::RebuildNewsListIfCampaignChanged()
     if(auto* Game=Cast<USSWGameInstance>(GetGameInstance());Game && Game->IsTrainingTestSession())Current=Game->GetAgentTrainingCampaign();
 	if (!Current)
     {
+        const bool bHadCampaign=CampaignPtr!=nullptr;
         CampaignPtr = nullptr;
-        if (IntelList) IntelList->ClearListItems();
-        ClearNewsDetails();
-        RefreshIntelRows();
+        if(IntelList && (bHadCampaign || IntelList->GetNumItems()!=FactionBriefingCount()))
+        {IntelList->ClearListItems();ClearNewsDetails();AppendFactionBriefings();RefreshIntelRows();}
         return;
     }
 
@@ -468,7 +525,7 @@ void UCmdIntelDlg::RebuildNewsListIfCampaignChanged()
 	const double CurrentUpdateTime = Current->GetUpdateTime();
 
 	if (CampaignPtr != Current || UpdateTime != CurrentUpdateTime ||
-        (IntelList && IntelList->GetNumItems() != Current->GetEvents().size()))
+        (IntelList && IntelList->GetNumItems() != Current->GetEvents().size()+FactionBriefingCount()))
 	{
         if (CampaignPtr != Current)
         {
@@ -525,6 +582,7 @@ void UCmdIntelDlg::AppendNewEventsIfAny()
 		if (Info == PreviousEvent) IntelList->SetSelectedItem(Item);
 	}
 
+    AppendFactionBriefings();
 	AutoScrollToFirstUnreadIfNeeded();
 	RefreshIntelRows();
 	if (GetVisibility() == ESlateVisibility::Visible) AutoSelectFirstItemIfNeeded();
@@ -632,6 +690,9 @@ void UCmdIntelDlg::OnNewsSelectionChanged(UObject* Item)
     if (ReportPages) ReportPages->SetActiveWidgetIndex(1);
 
 	IntelItem->NewsVisited = true;
+    if(!IntelItem->FactionBriefingId.IsNone())
+        if(auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>())
+        {Players->GetMutablePlayerInfo().ViewedFactionBriefings.AddUnique(IntelItem->FactionBriefingId);Players->MarkDirty();}
 	if (IntelItem->EventPtr)
 	{
 		IntelItem->EventPtr->SetVisited(true);

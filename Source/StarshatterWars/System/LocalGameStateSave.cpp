@@ -18,6 +18,7 @@
 #include "OwnedHullCondition.h"
 #include "Game.h"
 #include "FlightDeck.h"
+#include "DeckResumeState.h"
 void FLocalWorldStateCodec::Capture(Sim& Simulation,ULocalUniverseState& Out)
 {
     if(!Simulation.mission || Simulation.IsNetworked() || !Simulation.GetPlayerShip())return;
@@ -89,11 +90,28 @@ bool FLocalWorldStateCodec::Restore(Sim& Simulation,const ULocalUniverseState& I
         if(auto* Element=Vessel->GetElement())for(int32 I=0;I<Element->NumObjectives() && I<Row.Objectives.Num();++I)if(Element->GetObjective(I))Element->GetObjective(I)->SetStatus(static_cast<INSTRUCTION_STATUS>(Row.Objectives[I]));
         if(!Row.Element.IsEmpty() && !Vessel->GetElement()){auto* Element=Simulation.FindElement(TCHAR_TO_UTF8(*Row.Element));if(!Element)Element=Simulation.CreateElement(TCHAR_TO_UTF8(*Row.Element),Row.IFF);if(Element)Element->AddShip(Vessel);}
     }
+    // Remove provisioned slot ownership before applying saved flight phases.
+    // Otherwise READY slots teleport an already-airborne saved fighter into the bay.
+    for(const auto& Row:In.Ships)if(auto* Vessel=Simulation.FindShip(TCHAR_TO_UTF8(*Row.Name)))
+        if(auto* Carrier=Vessel->GetCarrier())
+            for(int32 I=0;I<Carrier->NumFlightDecks();++I)
+                DeckResumeState::Release(*Carrier->GetFlightDeck(I),*Vessel);
     for(const auto& Row:In.Ships)if(auto* Vessel=Simulation.FindShip(TCHAR_TO_UTF8(*Row.Name));Vessel && !Row.bDestroyed)
     {
         if(auto* Carrier=Simulation.FindShip(TCHAR_TO_UTF8(*Row.Carrier));Carrier && Row.Deck>=0 && Row.Deck<Carrier->NumFlightDecks())Vessel->SetCarrier(Carrier,Carrier->GetFlightDeck(Row.Deck));
         else if(Row.FlightPhase>static_cast<int32>(EOPSMode::ALERT))Vessel->SetCarrier(nullptr,nullptr);
         Vessel->SetFlightPhase(static_cast<EOPSMode>(FMath::Clamp(Row.FlightPhase,0,int32(EOPSMode::DOCKING))));Vessel->SetThrottle(FMath::Clamp(Row.Throttle,0.0,100.0));
+        // Deck-controlled snapshots restart safely at their authored spot, using
+        // the restored carrier transform and landing-gear clearance.
+        if(Row.FlightPhase>=int32(EOPSMode::DOCKED) && Row.FlightPhase<=int32(EOPSMode::LOCKED))
+        {
+            if(auto* Deck=Vessel->GetDock();Deck && Deck->IsLaunchDeck())
+                if(!DeckResumeState::Park(*Deck,*Vessel))
+                    UE_LOG(LogTemp,Warning,TEXT("[LocalState] No compatible deck spot for resumed ship '%hs'"),Vessel->GetName());
+        }
+        else if(Row.FlightPhase==int32(EOPSMode::LAUNCH) || Row.FlightPhase==int32(EOPSMode::TAKEOFF))
+            Vessel->BeginCarrierLaunchClearance();
+
     }
     for(const auto& Row:In.Asteroids)if(auto* Region=Simulation.FindRegion(Row.Region))
     {int32 Index=0;for(ListIter<Asteroid> A=Region->GetRoids();++A;){if(Index++!=Row.Index)continue;if(FMath::IsFinite(Row.Resource.AmountTonnes) && Row.Resource.AmountTonnes>=0){A->Resource=Row.Resource;A->InitialResourceTonnes=FMath::Max(Row.Resource.AmountTonnes,Row.InitialTonnes);A->integrity=FMath::Max(0.0,Row.Integrity);A->ContactId=Row.ContactId;A->MoveTo(Row.Position);}break;}}

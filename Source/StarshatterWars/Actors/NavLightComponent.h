@@ -56,6 +56,9 @@ struct FShipNavLightDef
     float Radius = 300.0f;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
+    bool bHullOccluded = false;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")
     EShipNavLightMode Mode = EShipNavLightMode::Steady;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ship|NavLights")

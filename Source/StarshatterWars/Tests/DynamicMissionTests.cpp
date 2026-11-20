@@ -20,7 +20,7 @@ bool FDynamicMissionOfferTest::RunTest(const FString&)
  TestTrue(TEXT("Repeated request retains same outstanding job"),DynamicMissionAI::Generate(P,A,100001,Reason));TestEqual(TEXT("No duplicate generated job"),DynamicMissionAI::Offers(P,A.Id,100001)[0],Id);
  TArray<uint8> Bytes;TestTrue(TEXT("Offers serialize with player"),UGameplayStatics::SaveGameToMemory(Save,Bytes));auto* Reload=Cast<ULocalPilotState>(UGameplayStatics::LoadGameFromMemory(Bytes));if(!TestNotNull(TEXT("Offers reload"),Reload))return false;TestEqual(TEXT("Offer ID survives reload"),DynamicMissionAI::Offers(Reload->Pilot,A.Id,100001)[0],Id);
  H.bLost=true;TestFalse(TEXT("Destroyed hull invalidates acceptance"),DynamicMissionAI::CanUse(P,Id,Reason));H.bLost=false;
- P.Rank=0;A.Id=TEXT("CadetFixture");TestFalse(TEXT("Independent work cannot bypass training rank gate"),DynamicMissionAI::Generate(P,A,100002,Reason));
+ P.Rank=0;TestFalse(TEXT("Saved job cannot bypass a reduced rank"),DynamicMissionAI::CanUse(P,Id,Reason));A.Id=TEXT("CadetFixture");TestFalse(TEXT("Independent work cannot bypass training rank gate"),DynamicMissionAI::Generate(P,A,100002,Reason));
  P.Rank=1;auto& M=P.HangarShips.AddDefaulted_GetRef();M.HullId=FGuid::NewGuid();M.Design=TEXT("Prospector");P.SelectedHangarHull=M.HullId;TSet<int32> Ids;
  for(int32 I=0;I<64;++I){A.Id=FName(*FString::Printf(TEXT("IndependentAgent%d"),I));if(DynamicMissionAI::Generate(P,A,200000+I,Reason)){const auto Offers=DynamicMissionAI::Offers(P,A.Id,200000+I);if(Offers.Num()){TestFalse(TEXT("Distinct jobs cannot reuse a payout identity"),Ids.Contains(Offers[0]));Ids.Add(Offers[0]);}}}
  TestTrue(TEXT("Jobs spread across distinct agents"),Ids.Num()>40);return true;
@@ -51,6 +51,11 @@ bool FIndependentSurveyFlowTest::RunTest(const FString&)
  FDynamicAgentContext Agent;Agent.Id=TEXT("IndependentSurveyAgent");Agent.System=TEXT("Independent Janus");Agent.Region=TEXT("Independent Janek");Agent.Station=TEXT("Orion");Agent.Pools={TEXT("Exploration")};Agent.Level=1;FText Reason;
  if(!TestTrue(TEXT("Independent survey generated with no campaign"),DynamicMissionAI::Generate(P,Agent,FDateTime::UtcNow().ToUnixTimestamp(),Reason)))return false;const auto Offers=DynamicMissionAI::Offers(P,Agent.Id,FDateTime::UtcNow().ToUnixTimestamp());if(!TestEqual(TEXT("Survey offer"),Offers.Num(),1))return false;const int32 Id=Offers[0];const FName Pilot(TEXT("Independent pilot"));AgentAI Journal;
  TestNotNull(TEXT("Agent presents job"),Journal.Request(Pilot,Offers,Agent.Id));TestTrue(TEXT("Accept"),Journal.Accept(Pilot,Id));if(!TestTrue(TEXT("Start uses owned craft without loading a campaign"),DynamicMissionAI::Start(S,P,Journal,Pilot,Id,Reason)))return false;
+ TestFalse(TEXT("Repeated Start cannot reset running objectives"),DynamicMissionAI::Start(S,P,Journal,Pilot,Id,Reason));
+ TestTrue(TEXT("Active job remains visible after original offer expiry"),DynamicMissionAI::Offers(P,Agent.Id,FDateTime::UtcNow().ToUnixTimestamp()+86400).Contains(Id));
+ const FString BeforeRefresh=P.DynamicAssignmentsJson;
+ TestTrue(TEXT("Expired original offer cannot generate a duplicate while job runs"),DynamicMissionAI::Generate(P,Agent,FDateTime::UtcNow().ToUnixTimestamp()+86400,Reason));
+ TestEqual(TEXT("Refresh preserves active objectives exactly"),P.DynamicAssignmentsJson,BeforeRefresh);
  const FVector Origin=Craft->GetLocation();DynamicMissionAI::Advance(S,P,Journal,Pilot,1);
  // Reload the job and journal after the first point is provisioned.
  P.AgentJournalJson=Journal.SaveJournal();TArray<uint8> Bytes;TestTrue(TEXT("Active independent job saves"),UGameplayStatics::SaveGameToMemory(Save,Bytes));auto* Reload=Cast<ULocalPilotState>(UGameplayStatics::LoadGameFromMemory(Bytes));if(!TestNotNull(TEXT("Job reload"),Reload))return false;P=Reload->Pilot;TestTrue(TEXT("Journal reload"),Journal.RestoreJournal(P.AgentJournalJson));

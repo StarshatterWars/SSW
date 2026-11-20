@@ -148,6 +148,8 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
     auto Hulls = MakeShared<FStoreRows>();
     auto Components = MakeShared<FStoreRows>();
     auto* Game = GetGameInstance();
+    FText ReserveReason;
+    if(auto* Sales=Game?Game->GetSubsystem<UShipInsuranceSubsystem>():nullptr)Sales->PrepareCarrierFighterSales(ReserveReason);
     const auto* ShipCatalog = Game ? Game->GetSubsystem<UStarshatterShipDesignSubsystem>() : nullptr;
     const auto* SystemCatalog = Game ? Game->GetSubsystem<UStarshatterSystemDesignSubsystem>() : nullptr;
     if (ShipCatalog)
@@ -167,7 +169,7 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
 
             const int32 RequiredRank = PlayerCharacter::HullRankRequired(Hull->ShipType,Hull->ShipName);
             if (Rank < RequiredRank || Hull->BaseCost <= 0 ||
-                (Hull->ShipEmpire != EShipEmpire::All && static_cast<int64>(Hull->ShipEmpire) != PilotEmpire))
+                (Hull->ShipEmpire != EShipEmpire::All && Hull->ShipEmpire != EShipEmpire::Neutral && static_cast<int64>(Hull->ShipEmpire) != PilotEmpire))
                 continue;
 
             auto Row = MakeShared<FStoreEntry>();
@@ -186,7 +188,8 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
                     Definition ? FText::FromString(Definition->DisplayName) : FText::FromName(RequiredSkill),
                     Skills && Skills->HasSkill(RequiredSkill) ? INVTEXT("COMPLETE") : INVTEXT("REQUIRED"));
             }
-            Row->Credits = Hull->BaseCost;
+            const auto* Sales=Game->GetSubsystem<UShipInsuranceSubsystem>();
+            Row->Credits = Sales?Sales->HullPurchasePrice(Row->Design):Hull->BaseCost;
             Hulls->Add(Row);
         }
 
@@ -224,7 +227,7 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
         ? FText::Format(INVTEXT("Current ship: {0}"), FText::FromString(ANSI_TO_TCHAR(ActiveShip->GetObserverName())))
         : INVTEXT("No active ship");
 
-    const auto Selected=MakeShared<FName>();const auto Feedback=MakeShared<FText>();
+    const auto Selected=MakeShared<FName>();const auto Feedback=MakeShared<FText>(ReserveReason);
     auto Tabs = SNew(SWidgetSwitcher)
         + SWidgetSwitcher::Slot()[MakeCatalog(Hulls, false,Selected)]
         + SWidgetSwitcher::Slot()[MakeCatalog(Components, true,Selected)];
@@ -240,7 +243,7 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
         + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
         [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(14)).Text(CurrentHull)]
         + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
-        [SNew(STextBlock).Text(INVTEXT("Purchase completed hulls while docked at a shipyard. Construction and refits require shipyard services."))]
+        [SNew(STextBlock).Text(INVTEXT("Carrier aircraft availability follows the OOB squadrons. Training Stormhawk price: 400,000 CR. Completed ships and refits are available at shipyards."))]
         + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
         [
             SNew(SHorizontalBox)

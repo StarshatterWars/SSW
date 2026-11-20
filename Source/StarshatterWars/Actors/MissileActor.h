@@ -5,6 +5,7 @@
 #include "MissileActor.generated.h"
 
 class UNiagaraComponent;
+class UNiagaraSystem;
 
 /** Missile visual shared by carried stores and independent simulation shots. */
 UCLASS(Blueprintable, BlueprintType)
@@ -18,6 +19,7 @@ public:
     UFUNCTION(BlueprintCallable, Category="Missile")
     void BeginSimulationFlight(bool bIgnited = true);
     void IgniteSimulationTrail();
+    void SetSimulationExhaust(bool bBurning,bool bPaused,float TimeDilation);
 
     UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Transient, Category="Missile")
     bool bInFlight = false;
@@ -35,6 +37,10 @@ public:
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Missile|Trail")
     bool bEnableTrail = true;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Missile|Trail")
+    bool bUseNativeExhaust = true;
+    UPROPERTY() TObjectPtr<UNiagaraSystem> NativeTrailSystem;
 
     /** Imported stock missile meshes point along +Y; actor/simulation forward is +X.
      * Disable for a custom Blueprint that deliberately manages its own visual frame. */

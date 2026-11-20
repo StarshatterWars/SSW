@@ -14,6 +14,8 @@
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "ShaderCompiler.h"
+#include "MiniHUDLayout.h"
+#include "Widgets/Layout/SBox.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FThirdPersonMiniHUDTest,"Starshatter.HUD.ThirdPersonMiniHUD",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FThirdPersonMiniHUDTest::RunTest(const FString&)
@@ -23,13 +25,15 @@ bool FThirdPersonMiniHUDTest::RunTest(const FString&)
     auto Details=SNew(SFighterHUDDetails).ShowHUD(true).ThirdPerson_Lambda([&]{return ThirdPerson;});
     Details->NextSample=DBL_MAX;Details->bHasPlayer=true;Details->PlayerName=TEXT("Delta 1");Details->PlayerClass=TEXT("Falcon");
     Details->Primary=TEXT("GUNS: DELTA");Details->Secondary=TEXT("SRM 4");Details->FlightSpeed=500;Details->HeadingDegrees=90;
+    Details->MissionReadouts={TEXT("00:12:34  1X"),TEXT("JANEK"),TEXT("ACTIVE")};
     Details->NavReadouts={TEXT("AUTO NAV 1"),TEXT("VECTOR SPD 500")};Details->CompactNavLabel=TEXT("NAV 01  JANEK");Details->StatusRows={{TEXT("THRUST"),50},{TEXT("FUEL"),100},{TEXT("HULL"),100},{TEXT("GUNS"),99}};
     auto* PreviewTable=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign"));
     const auto* PreviewDesign=PreviewTable?PreviewTable->FindRow<FShipDesign>(TEXT("Falcon"),TEXT("Damage preview fixture")):nullptr;
     if(PreviewDesign){Details->PlayerHull=83;Details->PlayerMFDPreview=MakeUnique<FShipMFDPreview>(true);Details->PlayerMFDPreview->SetDesign(PreviewDesign);}
-    auto Root=SNew(SOverlay)
+    auto Deck=SNew(SOverlay)
         +SOverlay::Slot()[SNew(SFighterHUDPanels).ShowPanels_Lambda([&]{return !ThirdPerson;})]
         +SOverlay::Slot()[Details];
+    TSharedPtr<SBox> FixedFrame;auto Root=SNew(SOverlay)+SOverlay::Slot().HAlign(HAlign_Left).VAlign(VAlign_Top)[SAssignNew(FixedFrame,SBox).WidthOverride(1280).HeightOverride(720)[Deck]];
     FlushAsyncLoading();FAssetCompilingManager::Get().FinishAllCompilation();
     if(GShaderCompilingManager)GShaderCompilingManager->FinishAllCompilation();
     IStreamingManager::Get().StreamAllResources(0);FlushRenderingCommands();
@@ -88,12 +92,37 @@ bool FThirdPersonMiniHUDTest::RunTest(const FString&)
         IFileManager::Get().MakeDirectory(*(FPaths::ProjectSavedDir()/TEXT("Review")),true);
         TestTrue(TEXT("Damage inspection screenshot saved"),FFileHelper::SaveArrayToFile(PNG,*(FPaths::ProjectSavedDir()/TEXT("Review/MiniHUDDamage.png"))));
     }
+    const FVector2D Instrument=SSWMiniHUDLayout::GizmoCenter(FVector2D(1280,720),1);
+    const FVector2D Origin=SSWMiniHUDLayout::Origin(FVector2D(1280,720),1);
+    TestEqual(TEXT("Directional instrument is centered between its fixed column borders"),Instrument.X-Origin.X,46.0);
+    Details->DamagePreviewZoom=2.5f;Details->bDamagePreviewHovered=false;Details->OnMouseMove(Geometry,Hover);
+    TestEqual(TEXT("Each new hover starts with the complete hull fitted"),Details->DamagePreviewZoom,1.f);
+    FixedFrame->SetRenderTransform(FSlateRenderTransform(1.25f,FVector2f(80,40)));
+    auto Scaled=TStrongObjectPtr<UTextureRenderTarget2D>(FWidgetRenderer::CreateTargetFor(FVector2D(1800,1100),TF_Bilinear,true));
+    Renderer->DrawWidget(Scaled.Get(),Root,FVector2D(1800,1100),0);FlushRenderingCommands();TArray<FColor> ScaledImage;
+    Scaled->GameThread_GetRenderTargetResource()->ReadPixels(ScaledImage);
+    // Both halves of the real hull must survive clipping at a nonzero viewport origin and DPI scale.
+    int32 LeftHull=0,RightHull=0;
+    for(int32 Y=260;Y<485;++Y)for(int32 X=1015;X<1505;++X){const auto& Pixel=ScaledImage[Y*1800+X];if(Pixel.G>60 && Pixel.G>Pixel.R*1.3 && Pixel.G>Pixel.B*1.3){if(X<1260)++LeftHull;else++RightHull;}}
+    TestTrue(TEXT("Scaled inspection retains the nose half"),LeftHull>100);
+    TestTrue(TEXT("Scaled inspection retains the tail half"),RightHull>100);
+    TArray64<uint8> ScaledPNG;FImageUtils::PNGCompressImageArray(1800,1100,ScaledImage,ScaledPNG);
+    FFileHelper::SaveArrayToFile(ScaledPNG,*(FPaths::ProjectSavedDir()/TEXT("Review/MiniHUDDamageScaled.png")));
+    FixedFrame->SetRenderTransform(TOptional<FSlateRenderTransform>());
     const float Zoom=Details->DamagePreviewZoom;FPointerEvent Wheel(0,OverModel,OverModel,TSet<FKey>(),FKey(),1,FModifierKeysState());
     TestTrue(TEXT("Model wheel is handled"),Details->OnMouseWheel(Geometry,Wheel).IsEventHandled());
     TestTrue(TEXT("Model wheel magnifies inspection"),Details->DamagePreviewZoom>Zoom);TestFalse(TEXT("Inspection wheel cannot zoom the flight camera"),CameraScrolled);
     const FVector2D Outside(100,400);FPointerEvent OutsideWheel(0,Outside,Outside,TSet<FKey>(),FKey(),1,FModifierKeysState());
     Details->OnMouseMove(Geometry,OutsideWheel);TestFalse(TEXT("Leaving inspection dismisses it"),Details->bDamagePreviewHovered);
     Details->OnMouseWheel(Geometry,OutsideWheel);TestTrue(TEXT("Wheel outside inspection still reaches flight camera"),CameraScrolled);
+
+    Details->bHasTarget=true;Details->TargetName=TEXT("NAV 04 - JANEK TRANSFER STATION");Details->TargetClass=TEXT("Waypoint (next)");Details->TargetHull=Details->TargetShield=-1;Details->TargetRange=26.11;Details->TargetSpeed=-1;
+    Details->TargetMFDPreview=MakeUnique<FShipMFDPreview>(true);Details->TargetMFDPreview->SetWaypoint();
+    auto TargetFrame=TStrongObjectPtr<UTextureRenderTarget2D>(FWidgetRenderer::CreateTargetFor(FVector2D(1280,720),TF_Bilinear,true));
+    Renderer->DrawWidget(TargetFrame.Get(),Root,FVector2D(1280,720),0);FlushRenderingCommands();TArray<FColor> TargetImage;
+    TargetFrame->GameThread_GetRenderTargetResource()->ReadPixels(TargetImage);TArray64<uint8> TargetPNG;
+    FImageUtils::PNGCompressImageArray(1280,720,TargetImage,TargetPNG);
+    TestTrue(TEXT("Target title highlight and separate second line captured"),FFileHelper::SaveArrayToFile(TargetPNG,*(FPaths::ProjectSavedDir()/TEXT("Review/TargetMFDHeader.png"))));
     BeginCleanup(Renderer);return true;
 }
 #endif

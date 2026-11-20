@@ -115,6 +115,7 @@ void UNavLightComponent::ForceVisible(bool bInVisible)
 
 void UNavLightComponent::ApplyVisualSettings()
 {
+    SetCastShadows(LightDef.bHullOccluded);
     SetLightColor(LightDef.Color);
     SetIntensity(LightDef.Intensity * IntensityMultiplier);
     SetAttenuationRadius(LightDef.Radius * RadiusMultiplier);

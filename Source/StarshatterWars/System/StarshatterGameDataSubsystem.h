@@ -336,6 +336,7 @@ private:
     friend class USSWDesignIngestionCommandlet;
     friend class FStagedIngestionTest;
     friend class FCampaignJsonParityTest;
+    friend class FCampaignHeaderInformationTest;
     friend class FAwardsJsonParityTest;
     // =====================================================================
     // Internal helpers

@@ -1,5 +1,7 @@
 #include "ShipInsuranceSubsystem.h"
 #include "ShipyardAI.h"
+#include "CarrierFighterSalesAI.h"
+#include "Hangar.h"
 #include "StationServices.h"
 #include "StarSystem.h"
 #include "EconomyRuntime.h"
@@ -550,29 +552,62 @@ void UShipInsuranceSubsystem::Tick(float DeltaTime)
 
 namespace
 {
-FName DockedHullStock()
+FName DockedHullStock(FName Design,bool Carrier)
 {
     auto* S=Sim::GetSim();const auto* Craft=S?S->GetPlayerShip():nullptr;const auto* Base=Craft?Craft->GetCarrier():nullptr;
-    return Base && Craft->GetRegion() && Craft->GetRegion()->GetSystem()?FEconomyRuntime::Warehouse(UTF8_TO_TCHAR(Craft->GetRegion()->GetSystem()->GetName()),UTF8_TO_TCHAR(Base->GetName()),TEXT("Output")):NAME_None;
+    if(!Base || !Craft->GetRegion() || !Craft->GetRegion()->GetSystem())return NAME_None;
+    const FName System(UTF8_TO_TCHAR(Craft->GetRegion()->GetSystem()->GetName()));
+    return Carrier?CarrierFighterSalesAI::Inventory(System,UTF8_TO_TCHAR(Base->GetName()),Design):FEconomyRuntime::Warehouse(System.ToString(),UTF8_TO_TCHAR(Base->GetName()),TEXT("Output"));
+}
+TOptional<FCarrierFighterOffer> DockedCarrierOffer(const FS_PlayerGameInfo& P,FName Design)
+{
+    auto* S=Sim::GetSim();const auto* Craft=S?S->GetPlayerShip():nullptr;const auto* Base=Craft?Craft->GetCarrier():nullptr;
+    return Base && FStationServices::Offers(ESSWStationService::HullSales)?CarrierFighterSalesAI::Offer(P,*Base,Design):TOptional<FCarrierFighterOffer>();
 }
 }
 double UShipInsuranceSubsystem::HullStock(FName Design)const
 {
-    const auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();return P?ShipyardAI::Stock(P->GetPlayerInfo().Economy,DockedHullStock(),Design):0;
+    const auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();if(!P)return 0;
+    const auto Offer=DockedCarrierOffer(P->GetPlayerInfo(),Design);
+    if(Offer.IsSet())
+    {
+        auto* S=Sim::GetSim();auto* Craft=S?S->GetPlayerShip():nullptr;auto* Base=Craft?Craft->GetCarrier():nullptr;
+        return Base && Base->GetHangar()?CarrierFighterSalesAI::Available(P->GetPlayerInfo().Economy,DockedHullStock(Design,true),*Base->GetHangar(),Offer.GetValue()):0;
+    }
+    return ShipyardAI::Stock(P->GetPlayerInfo().Economy,DockedHullStock(Design,false),Design);
 }
 bool UShipInsuranceSubsystem::CanPurchaseHull(FName Design,FText& Reason)const
 {
     const auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* Hull=ShipDesignRegistry::Find(Design);
-    if(!P || !Hull || !FStationServices::Offers(ESSWStationService::Refit)){Reason=INVTEXT("Dock at a friendly shipyard to purchase a completed hull.");return false;}
+    const auto Offer=P?DockedCarrierOffer(P->GetPlayerInfo(),Design):TOptional<FCarrierFighterOffer>();
+    if(!P || !Hull || (!FStationServices::Offers(ESSWStationService::Refit) && !Offer.IsSet()))
+    {Reason=INVTEXT("Dock at a friendly carrier with this design in its OOB, or a shipyard with completed hulls.");return false;}
     if(!ShipyardAI::Eligible(P->GetPlayerInfo(),*Hull,Reason))return false;
-    if(HullStock(Design)<1){Reason=INVTEXT("This shipyard has no completed hull of that design.");return false;}
-    if(GetBalance()<Hull->BaseCost){Reason=INVTEXT("Insufficient credits.");return false;}
-    Reason=FText::Format(INVTEXT("Purchase completed hull for {0} CR."),FText::AsNumber(Hull->BaseCost));return true;
+    if(HullStock(Design)<1){Reason=INVTEXT("No unassigned squadron stock or completed hull of this design is available.");return false;}
+    const int64 Price=HullPurchasePrice(Design);
+    if(GetBalance()<Price){Reason=FText::Format(INVTEXT("Required: {0} CR. Balance: {1} CR."),FText::AsNumber(Price),FText::AsNumber(GetBalance()));return false;}
+    Reason=FText::Format(INVTEXT("Purchase for {0} CR. Available: {1}."),FText::AsNumber(Price),FText::AsNumber(HullStock(Design)));return true;
 }
 bool UShipInsuranceSubsystem::PurchaseHull(FName Design,FText& Reason)
 {
-    if(!CanPurchaseHull(Design,Reason))return false;auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* Hull=ShipDesignRegistry::Find(Design);const auto Before=P->GetPlayerInfo();
-    auto& Pilot=P->GetMutablePlayerInfo();const auto* Craft=Sim::GetSim()->GetPlayerShip();
-    if(!ShipyardAI::Purchase(Pilot,*Hull,DockedHullStock(),UTF8_TO_TCHAR(Craft->GetRegion()->GetName()),FGuid::NewGuid(),Reason))return false;
+    if(!CanPurchaseHull(Design,Reason))return false;
+    auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* Hull=ShipDesignRegistry::Find(Design);const auto Before=P->GetPlayerInfo();
+    auto& Pilot=P->GetMutablePlayerInfo();auto* Craft=Sim::GetSim()->GetPlayerShip();auto* Base=Craft->GetCarrier();
+    const auto Offer=DockedCarrierOffer(Pilot,Design);
+    if(Offer.IsSet())return Base->GetHangar() && CarrierFighterSalesAI::Purchase(Pilot,*Hull,*Base->GetHangar(),Offer.GetValue(),DockedHullStock(Design,true),UTF8_TO_TCHAR(Craft->GetRegion()->GetName()),FGuid::NewGuid(),[P](){return P->SaveActivePlayerProgress();},Reason);
+    if(!ShipyardAI::Purchase(Pilot,*Hull,DockedHullStock(Design,false),UTF8_TO_TCHAR(Craft->GetRegion()->GetName()),FGuid::NewGuid(),Reason))return false;
     if(!P->SaveActivePlayerProgress()){Pilot=Before;Reason=INVTEXT("Could not save the purchase. Hull stock and credits restored.");return false;}return true;
+}
+bool UShipInsuranceSubsystem::PrepareCarrierFighterSales(FText& Why)
+{
+    if(!FStationServices::Offers(ESSWStationService::HullSales))return false;
+    auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();auto* S=Sim::GetSim();auto* Craft=S?S->GetPlayerShip():nullptr;auto* Base=Craft?Craft->GetCarrier():nullptr;
+    if(!P || !Base || !Craft->GetRegion() || !Craft->GetRegion()->GetSystem())return false;
+    return CarrierFighterSalesAI::Prepare(P->GetMutablePlayerInfo(),*Base,FName(UTF8_TO_TCHAR(Craft->GetRegion()->GetSystem()->GetName())),[P](){return P->SaveActivePlayerProgress();},Why);
+}
+int64 UShipInsuranceSubsystem::HullPurchasePrice(FName Design) const
+{
+    const auto* Hull=ShipDesignRegistry::Find(Design);const auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if(P){const auto Offer=DockedCarrierOffer(P->GetPlayerInfo(),Design);if(Offer.IsSet())return Offer.GetValue().Price;}
+    return Hull?Hull->BaseCost:0;
 }

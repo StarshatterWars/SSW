@@ -89,7 +89,9 @@ class Sim : public SimUniverse
 {
     friend class FLocalWorldStateCodec;
     friend class FLiveWorldResumeTest;
+    friend class FAutolandTargetSelectionTest;
     friend class FIndependentSurveyFlowTest;
+    friend class FIndependentObjectiveFlowTest;
 public:
     // NOTE: Keep only if Sim uses these directly.
     // Otherwise, prefer SimRegion::REAL_SPACE / SimRegion::AIR_SPACE.
@@ -232,7 +234,8 @@ public:
         const FVector& loc,
         int type = 0,
         Ship* fc_src = nullptr,
-        Ship* fc_dst = nullptr
+        Ship* fc_dst = nullptr,
+        bool bStopOnArrival = false
     );
 
     SimRegion* GetActiveRegion() { return active_region; }
@@ -285,6 +288,11 @@ public:
     void PrepareCutscenePlayback(const Mission* PreparedMission);
     void BeginPreparedCutscenePlayback(const Mission* PreparedMission);
     bool NeedsTrainingLaunchClearance() const;
+    // Ground lessons remain accepted while the pilot physically travels to Janek.
+    bool BeginSurfaceTrainingTransit(int32 MissionId,FText& Reason);
+    bool AtSurfaceTrainingDestination() const;
+    bool HasSurfaceTrainingClearance() const;
+    void EnsureTrainingSurfaceBase();
     uint32 StartTime() const { return start_time; }
 
 protected:

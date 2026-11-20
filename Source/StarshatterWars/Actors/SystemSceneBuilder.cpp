@@ -15,6 +15,7 @@
 */
 
 #include "SystemSceneBuilder.h"
+#include "HAL/IConsoleManager.h"
 #include "WorldScapeRoot.h"
 #include "HeightMapVolume.h"
 #include "FoliageMaskVolume.h"
@@ -1122,6 +1123,15 @@ void ScaleJanekOceanWaves(AWorldScapeRoot& Globe)
 void UpdateJanekOrbitRendering(AWorldScapeRoot& Globe, bool bOrbit)
 {
     const auto* Defaults = Globe.GetClass()->GetDefaultObject<AWorldScapeRoot>();
+    static TAutoConsoleVariable<int32> FullWorldScape(TEXT("ssw.Janek.FullWorldScape"),1,
+        TEXT("Use Janek's full WorldScape demo terrain material in orbit as well as on the ground."));
+    if(FullWorldScape.GetValueOnGameThread()!=0)
+    {
+        // Keep one material and coastline through the continuous descent. No baked orbital texture.
+        if(Globe.TerrainMaterial!=Defaults->TerrainMaterial)Globe.TerrainMaterial=Defaults->TerrainMaterial;
+        Globe.bOcean=Defaults->bOcean;
+        return;
+    }
     if (bOrbit)
     {
         // The baked WorldScape colors include both land and sea. Use them on

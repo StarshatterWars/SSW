@@ -101,6 +101,8 @@ private:
 	UTexture2D* LoadTextureFromAssetPath(const FString& AssetPath) const;
 	FSlateBrush CreateBrushFromTexture(UTexture2D* Texture, FVector2D ImageSize);
 	void AutoSelectFirstItemIfNeeded();
+    int32 FactionBriefingCount() const;
+    void AppendFactionBriefings();
 
 private:
 	UPROPERTY(meta = (BindWidgetOptional)) UButton* btn_save = nullptr;

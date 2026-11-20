@@ -1,3 +1,4 @@
+#include "FactionTrainingCatalog.h"
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
@@ -11,6 +12,7 @@
 #include "PlayerCharacter.h"
 #include "Misc/SecureHash.h"
 #include "Misc/CommandLine.h"
+#include "PilotSaveRecovery.h"
 #include "Misc/Parse.h"
 #include "MissionUIStyle.h"
 #include "PlatformSignInDlg.h"
@@ -78,6 +80,7 @@ USSWGameInstance::USSWGameInstance(const FObjectInitializer& ObjectInitializer)
 
 void USSWGameInstance::OnStart()
 {
+    if(PilotSaveRecovery::IsRequested())return;
     if (IsRunningDedicatedServer()) return;
     if (UWorld* World = GetWorld())
     {
@@ -220,6 +223,8 @@ bool USSWGameInstance::RestoreSavedActiveCampaign()
     }
 
     const FS_Campaign* SavedCampaign = DataSS->GetCampaignByIndex1Based(SavedIndex);
+    if(SavedCampaign && SavedIndex==Campaign::TRAINING_CAMPAIGN)
+    {FString Error;SavedCampaign=FactionTrainingCatalog::Resolve(*SavedCampaign,EEMPIRE_NAME(SavedPlayer.Empire),Error);}
     if (!SavedCampaign || !SavedCampaign->bAvailable)
     {
         UE_LOG(LogTemp, Warning, TEXT("[CampaignRestore] Invalid/unavailable saved campaign index=%d"), SavedIndex);
@@ -236,7 +241,7 @@ bool USSWGameInstance::RestoreSavedActiveCampaign()
     }
 
     Campaign* Live = Campaign::GetCampaign();
-    if (!Live || Live->GetCampaignId() != SavedIndex)
+    if (!Live || Live->GetCampaignId() != SavedIndex || FString(UTF8_TO_TCHAR(Live->GetName()))!=SavedCampaign->Name)
     {
         if (!Campaign::SelectFromData(*SavedCampaign))
         {
@@ -702,6 +707,7 @@ void USSWGameInstance::LoadTransitionScreen()
 
 void USSWGameInstance::Init()
 {
+    if(PilotSaveRecovery::IsRequested()){PilotSaveRecovery::RunRequested();return;}
 	Super::Init();
 	USound::SetWorldContext(this);
 
@@ -724,15 +730,21 @@ UUserWidget* USSWGameInstance::GetActiveWidget() {
 
 Campaign* USSWGameInstance::GetAgentTrainingCampaign()
 {
+    const auto* Pilot=PlayerCharacter::GetCurrentPlayer();const auto Empire=Pilot?Pilot->GetEmpire():EEMPIRE_NAME::Terellian;
+    if(AgentTrainingCampaign && FString(UTF8_TO_TCHAR(AgentTrainingCampaign->GetName()))!=FactionTrainingCatalog::Title(Empire))AgentTrainingCampaign.Reset();
     if (!AgentTrainingCampaign)
         if (auto* Data = GetSubsystem<UStarshatterGameDataSubsystem>())
-            if (const auto* Row = Data->GetCampaignByIndex1Based(Campaign::TRAINING_CAMPAIGN))
-                AgentTrainingCampaign = MakeShareable(Campaign::CreateFromData(*Row));
+            if (const auto* Base = Data->GetCampaignByIndex1Based(Campaign::TRAINING_CAMPAIGN))
+            {
+                FString Error;if(const auto* Row=FactionTrainingCatalog::Resolve(*Base,Empire,Error))AgentTrainingCampaign=MakeShareable(Campaign::CreateFromData(*Row));
+                else UE_LOG(LogTemp,Error,TEXT("[Training] %s"),*Error);
+            }
     return AgentTrainingCampaign.Get();
 }
 
 void USSWGameInstance::Shutdown()
 {
+    if(PilotSaveRecovery::IsRequested())return;
     if(auto* State=GetSubsystem<ULocalGameStateSubsystem>())State->SaveAtExit();
     if(!IsRunningCommandlet() && !IsTrainingTestSession()){SaveCampaign();SaveUniverse();}
     ClearPlatformSignInRequest();

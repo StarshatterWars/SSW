@@ -1,4 +1,6 @@
+#include "OOBJsonCatalog.h"
 #include "StarshatterGameDataSubsystem.h"
+#include "StandaloneMissionCatalog.h"
 #include "CampaignStoryRules.h"
 #include "CampaignJsonCatalog.h"
 #include "MissionListJson.h"
@@ -403,7 +405,7 @@ void UStarshatterGameDataSubsystem::Initialize(FSubsystemCollectionBase& Collect
 	CampaignDataTable = Assets->GetDataTable(TEXT("Data.CampaignTable"), true);
 	CampaignActionDataTable = Assets->GetDataTable(TEXT("Data.CampaignActionTable"), true);
 	CampaignOOBDataTable = Assets->GetDataTable(TEXT("Data.CampaignOOBTable"), true);
-	CombatGroupDataTable = Assets->GetDataTable(TEXT("Data.CombatGroupTable"), true);
+	// Faction OOBs load directly into the native registry from JSON.
 	OrderOfBattleDataTable = Assets->GetDataTable(TEXT("Data.OrderOfBattleTable"), true);
 	LoadAwardsJson();
 	
@@ -1614,6 +1616,15 @@ bool UStarshatterGameDataSubsystem::ImportStoryMissions(UDataTable& Output)
 
 void UStarshatterGameDataSubsystem::LoadSingleMissions()
 {
+    const FString NativeDirectory=FPaths::ProjectContentDir()/TEXT("GameData/Missions");
+    if(FPaths::FileExists(NativeDirectory/TEXT("missions.json")))
+    {
+        FString Error;
+        if(!StandaloneMissionCatalog::Load(NativeDirectory,SingleMissionCatalog,SingleMissionScenarios,Error))
+        { UE_LOG(LogTemp,Error,TEXT("[SingleMissions] Native JSON rejected; prior catalog retained: %s"),*Error); }
+        else { UE_LOG(LogTemp,Display,TEXT("[SingleMissions] Native JSON: %d scenarios, no runtime table required."),SingleMissionScenarios.Num()); }
+        return;
+    }
     UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][02] LoadSingleMissions ENTER content=%s existingTable=%s"),
         *FPaths::ProjectContentDir(), *GetPathNameSafe(SingleMissionsDataTable));
     SingleMissionCatalog.Reset();
@@ -2586,72 +2597,14 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full, 
 
 void UStarshatterGameDataSubsystem::ReadCombatRosterData()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[GameData] ReadCombatRosterData: BEGIN"));
-
-	// Clear existing data
-	CombatRosterData.Empty();
-	CombatGroupRegistry::Clear();
-
-	if (!CombatGroupDataTable)
-	{
-		UE_LOG(LogTemp, Error, TEXT("[GameData] ReadCombatRosterData: CombatGroupDataTable is NULL"));
-		return;
-	}
-
-	static const FString ContextString(TEXT("ReadCombatRosterData"));
-
-	const TArray<FName> RowNames = CombatGroupDataTable->GetRowNames();
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[GameData] ReadCombatRosterData: Found %d rows"),
-		RowNames.Num());
-
-	for (const FName& RowName : RowNames)
-	{
-		const FS_CombatGroup* Row =
-			CombatGroupDataTable->FindRow<FS_CombatGroup>(RowName, ContextString);
-
-		if (!Row)
-		{
-			UE_LOG(LogTemp, Warning,
-				TEXT("[GameData] ReadCombatRosterData: Failed to read row '%s'"),
-				*RowName.ToString());
-			continue;
-		}
-
-		// Copy row into runtime struct
-		FS_CombatGroup Group = *Row;
-
-		// Normalize display name
-		if (Group.DisplayName.IsEmpty())
-		{
-			Group.DisplayName = RowName.ToString();
-		}
-
-		// Store in local array (existing behavior)
-		CombatRosterData.Add(Group);
-
-		// Register in global registry (NEW)
-		CombatGroupRegistry::RegisterGroup(RowName, Group);
-
-		UE_LOG(LogTemp, Log,
-			TEXT("[GameData] CombatGroup Loaded: Row=%s Type=%d Id=%d ParentType=%d ParentId=%d Empire=%d Iff=%d Name=%s Region=%s"),
-			*RowName.ToString(),
-			(int32)Group.Type,
-			Group.Id,
-			(int32)Group.ParentType,
-			Group.ParentId,
-			(int32)Group.EmpireId,
-			Group.Iff,
-			*Group.DisplayName,
-			*Group.Region);
-	}
-
-	UE_LOG(LogTemp, Warning,
-		TEXT("[GameData] ReadCombatRosterData: COMPLETE (%d groups, registry=%d)"),
-		CombatRosterData.Num(),
-		CombatGroupRegistry::Num());
+    TMap<FName,FS_CombatGroup> Rows;FString Error;
+    if(!OOBJsonCatalog::LoadDirectory(Rows,FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/OOB"),Error))
+    {UE_LOG(LogTemp,Error,TEXT("[OOBJson] %s; previous roster retained"),*Error);return;}
+    CombatRosterData.Reset();CombatGroupRegistry::Clear();
+    for(const auto& Pair:Rows){auto Group=Pair.Value;for(auto& Unit:Group.Unit)if(Unit.UnitDesign.Equals(TEXT("Blockade Mine"),ESearchCase::IgnoreCase))Unit.UnitDesign=TEXT("BlockadeMine");CombatRosterData.Add(Group);CombatGroupRegistry::RegisterGroup(Pair.Key,Group);}
+    UE_LOG(LogTemp,Display,TEXT("[GameData] Native JSON OOB ready: %d groups"),Rows.Num());
 }
+
 
 void UStarshatterGameDataSubsystem::ReadCampaignData()
 {
@@ -7718,7 +7671,7 @@ TMap<FName, CombatGroup*> UStarshatterGameDataSubsystem::BuildGroupMapFromDataTa
 	for (const FName& RowName : RowNames)
 	{
 		const FS_CombatGroup* Row =
-			CombatGroupDataTable->FindRow<FS_CombatGroup>(RowName, TEXT("BuildGroupMapFromDataTable"));
+			CombatGroupRegistry::Find(RowName);
 		if (!Row)
 		{
 			continue;
@@ -7761,8 +7714,7 @@ void UStarshatterGameDataSubsystem::LinkGroupHierarchy(
 	// Build lookup (non-unique)
 	for (const FName& RowName : RowNames)
 	{
-		FS_CombatGroup* Row =
-			CombatGroupDataTable->FindRow<FS_CombatGroup>(RowName, TEXT(""));
+		const FS_CombatGroup* Row = CombatGroupRegistry::Find(RowName);
 		if (!Row) continue;
 
 		Lookup.Add(
@@ -7775,8 +7727,7 @@ void UStarshatterGameDataSubsystem::LinkGroupHierarchy(
 		{
 			for (const auto& Pair : GroupByRowName)
 			{
-				FS_CombatGroup* Row =
-					CombatGroupDataTable->FindRow<FS_CombatGroup>(Pair.Key, TEXT(""));
+				const FS_CombatGroup* Row = CombatGroupRegistry::Find(Pair.Key);
 				if (!Row) continue;
 
 				if (Row->EmpireId == Empire &&
@@ -7792,8 +7743,7 @@ void UStarshatterGameDataSubsystem::LinkGroupHierarchy(
 	// Link hierarchy
 	for (const FName& RowName : RowNames)
 	{
-		FS_CombatGroup* Row =
-			CombatGroupDataTable->FindRow<FS_CombatGroup>(RowName, TEXT(""));
+		const FS_CombatGroup* Row = CombatGroupRegistry::Find(RowName);
 		if (!Row) continue;
 
 		if (Row->ParentType == ECOMBATGROUP_TYPE::NONE || Row->ParentId <= 0)
@@ -7860,13 +7810,12 @@ void UStarshatterGameDataSubsystem::BuildCombatRosterFromDataTables()
 	UE_LOG(LogTemp, Warning, TEXT("[GameData] BuildCombatRosterFromDataTables: BEGIN"));
 
     // Retained by reflected references; validate before allocating runtime groups.
-    if (!IsValid(CampaignDataTable) || !IsValid(CombatGroupDataTable))
+    if (!IsValid(CampaignDataTable))
     {
         UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Required campaign or combat-group table is unavailable."));
         return;
     }
-    if (CampaignDataTable->GetRowStruct() != FS_Campaign::StaticStruct() ||
-        CombatGroupDataTable->GetRowStruct() != FS_CombatGroup::StaticStruct())
+    if (CampaignDataTable->GetRowStruct() != FS_Campaign::StaticStruct())
     {
         UE_LOG(LogTemp, Error, TEXT("[CombatRoster] Asset registry table bindings have incorrect row types."));
         return;
@@ -7928,8 +7877,7 @@ void UStarshatterGameDataSubsystem::BuildUnitsForGroups(
 {
 	for (const FName& RowName : RowNames)
 	{
-		FS_CombatGroup* Row =
-			CombatGroupDataTable->FindRow<FS_CombatGroup>(RowName, TEXT(""));
+		const FS_CombatGroup* Row = CombatGroupRegistry::Find(RowName);
 		if (!Row) continue;
 
 		CombatGroup* Group = GroupByRowName.FindRef(RowName);
@@ -8029,8 +7977,7 @@ void UStarshatterGameDataSubsystem::BuildCombatantsFromDataTables(
 
 		for (const auto& Pair : GroupByRowName)
 		{
-			FS_CombatGroup* GroupRow =
-				CombatGroupDataTable->FindRow<FS_CombatGroup>(Pair.Key, TEXT(""));
+			const FS_CombatGroup* GroupRow = CombatGroupRegistry::Find(Pair.Key);
 
 			if (!GroupRow) continue;
 
@@ -8146,12 +8093,12 @@ TArray<FName> UStarshatterGameDataSubsystem::GetCampaignEntryRowNames() const
 {
 	TArray<FName> EntryRows;
 
-	if (!CombatGroupDataTable)
+	if (CombatGroupRegistry::Num()==0)
 	{
 		return EntryRows;
 	}
 
-	const TArray<FName> AllRowNames = CombatGroupDataTable->GetRowNames();
+	TArray<FName> AllRowNames;CombatGroupRegistry::GetAll().GetKeys(AllRowNames);AllRowNames.Sort(FNameLexicalLess());
 
 	for (const FS_Combatant& CombatantRow : CombatantData)
 	{
@@ -8162,7 +8109,7 @@ TArray<FName> UStarshatterGameDataSubsystem::GetCampaignEntryRowNames() const
 			for (const FName& RowName : AllRowNames)
 			{
 				const FS_CombatGroup* GroupRow =
-					CombatGroupDataTable->FindRow<FS_CombatGroup>(RowName, TEXT(""));
+					CombatGroupRegistry::Find(RowName);
 
 				if (!GroupRow)
 				{
@@ -8208,7 +8155,7 @@ void UStarshatterGameDataSubsystem::CollectChildRowsRecursive(
 	const FName& ParentRowName,
 	TSet<FName>& OutRows) const
 {
-	if (!CombatGroupDataTable)
+	if (CombatGroupRegistry::Num()==0)
 	{
 		return;
 	}
@@ -8219,7 +8166,7 @@ void UStarshatterGameDataSubsystem::CollectChildRowsRecursive(
 	}
 
 	const FS_CombatGroup* ParentRow =
-		CombatGroupDataTable->FindRow<FS_CombatGroup>(ParentRowName, TEXT(""));
+		CombatGroupRegistry::Find(ParentRowName);
 
 	if (!ParentRow)
 	{
@@ -8228,12 +8175,12 @@ void UStarshatterGameDataSubsystem::CollectChildRowsRecursive(
 
 	OutRows.Add(ParentRowName);
 
-	const TArray<FName> AllRowNames = CombatGroupDataTable->GetRowNames();
+	TArray<FName> AllRowNames;CombatGroupRegistry::GetAll().GetKeys(AllRowNames);AllRowNames.Sort(FNameLexicalLess());
 
 	for (const FName& ChildRowName : AllRowNames)
 	{
 		const FS_CombatGroup* ChildRow =
-			CombatGroupDataTable->FindRow<FS_CombatGroup>(ChildRowName, TEXT(""));
+			CombatGroupRegistry::Find(ChildRowName);
 
 		if (!ChildRow)
 		{

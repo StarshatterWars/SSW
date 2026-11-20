@@ -1,10 +1,15 @@
 #pragma once
-#include "CoreMinimal.h"
+#include "GameStructs.h"
 
 // Journal IDs must not collide with authored training or regional missions.
 // Campaign missions keep their original identity in the simulation and saves.
 namespace AgentMissionRules
 {
+    inline bool FactionAllows(EEMPIRE_NAME Pilot, const FS_CampaignMission& Mission)
+    {
+        return Pilot != EEMPIRE_NAME::NONE && Pilot != EEMPIRE_NAME::Unknown &&
+            (Mission.RequiredEmpire == EEMPIRE_NAME::Neutral || Mission.RequiredEmpire == Pilot);
+    }
     constexpr int32 CampaignBase = 2000000;
     constexpr int32 CampaignStride = 1000000;
     inline int32 Encode(int32 Campaign, int32 Mission)

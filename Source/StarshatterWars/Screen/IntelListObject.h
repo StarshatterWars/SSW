@@ -28,6 +28,7 @@ public:
 	UPROPERTY() FString NewsImage;
 	UPROPERTY() FString NewsAudio;
 
+	UPROPERTY() FName FactionBriefingId;
 	UPROPERTY() bool NewsVisited = false;
 
 	// Link back to source event

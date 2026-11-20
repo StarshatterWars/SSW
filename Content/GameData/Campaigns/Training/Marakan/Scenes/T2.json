@@ -1,0 +1,2939 @@
+{
+  "storyCampaignId": 0,
+  "storyUnlockScene": "",
+  "storyPoints": 0,
+  "rowName": "Marakan_Training_102",
+  "id": 102,
+  "missionName": "Target Practice",
+  "maxPlayers": 0,
+  "missionRegion": "Garden",
+  "missionSystem": "Isham",
+  "scene": "T2",
+  "subtitles": "",
+  "desc": "Marakan T2: Target Practice",
+  "targetName": "",
+  "wardName": "",
+  "objective": "Training - Practice spaceborne fighter operations.",
+  "sitrep": "Cmdr. Varen Keth of Hegemony Flight Induction issues this assignment. Your carrier is Manticore, a Dragon-class ship. Conduct training in the Garden sector of Isham. Training - Practice spaceborne fighter operations.",
+  "startTime": "01/11:15:00",
+  "startAfter": "",
+  "group": "NONE",
+  "missionType": "TRAINING",
+  "source": "Scripted",
+  "displayType": "PlayerMission",
+  "team": 2,
+  "stardate": 0,
+  "degrees": false,
+  "once": false,
+  "element": [
+    {
+      "name": "Manticore",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "Dragon",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "",
+      "instr": "",
+      "intel": "KNOWN",
+      "location": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 2,
+      "count": 1,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 0,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": 0,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [],
+      "instruction": [],
+      "navpoint": [],
+      "ship": []
+    },
+    {
+      "name": "Stallions",
+      "carrier": "Manticore",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "Raptor",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "",
+      "instr": "",
+      "intel": "KNOWN",
+      "location": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 2,
+      "count": 20,
+      "maintCount": 5,
+      "deadCount": 5,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": 0,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [
+        {
+          "ship": -1,
+          "loadoutName": "ACM Medium Range",
+          "stations": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "instruction": [],
+      "navpoint": [],
+      "ship": []
+    },
+    {
+      "name": "Echo",
+      "carrier": "",
+      "commander": "",
+      "squadron": "Stallions",
+      "text": "",
+      "path": "",
+      "design": "Raptor",
+      "skinName": "",
+      "roleName": "SWEEP",
+      "regionName": "",
+      "instr": "",
+      "intel": "KNOWN",
+      "location": {
+        "x": 1000,
+        "y": 2000,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 2,
+      "count": 2,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 2,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": 0,
+      "alert": true,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [
+        {
+          "ship": -1,
+          "loadoutName": "ACM Medium Range",
+          "stations": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "instruction": [
+        {
+          "formation": 0,
+          "speed": 0,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "intercept",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "Alpha",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Intercept",
+          "objectiveLocation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 0,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "intercept",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "Bravo",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Intercept",
+          "objectiveLocation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 0,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "intercept",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "Delta",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Intercept",
+          "objectiveLocation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        }
+      ],
+      "navpoint": [
+        {
+          "formation": 0,
+          "speed": 500,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": 5000,
+            "y": -10000,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 500,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": 12000,
+            "y": -25000,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 500,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "sweep",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Sweep",
+          "objectiveLocation": {
+            "x": 40000,
+            "y": 0,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 500,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "sweep",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Sweep",
+          "objectiveLocation": {
+            "x": 30000,
+            "y": 30000,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 250,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "rtb",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "Manticore",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "RTB",
+          "objectiveLocation": {
+            "x": 0,
+            "y": 30000,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        }
+      ],
+      "ship": []
+    },
+    {
+      "name": "Alpha",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "TargetDrone",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "",
+      "instr": "",
+      "intel": "KNOWN",
+      "location": {
+        "x": -12000,
+        "y": -50000,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 4,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": 0,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [],
+      "instruction": [],
+      "navpoint": [
+        {
+          "formation": 0,
+          "speed": 400,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": -8000,
+            "y": -50000,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 400,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": 30000,
+            "y": -30000,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 400,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": 30000,
+            "y": 0,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 400,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": 50000,
+            "y": 50000,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        }
+      ],
+      "ship": []
+    },
+    {
+      "name": "Bravo",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "TargetDrone",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "",
+      "instr": "",
+      "intel": "KNOWN",
+      "location": {
+        "x": 5000,
+        "y": 50000,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 4,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": 0,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [],
+      "instruction": [],
+      "navpoint": [
+        {
+          "formation": 0,
+          "speed": 400,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": 10000,
+            "y": 40000,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 400,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": 20000,
+            "y": 25000,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 400,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": 50000,
+            "y": 0,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 400,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": 50000,
+            "y": -50000,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        }
+      ],
+      "ship": []
+    },
+    {
+      "name": "Delta",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "Falcon",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "",
+      "instr": "",
+      "intel": "KNOWN",
+      "location": {
+        "x": 40000,
+        "y": 60000,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 2,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": 0,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [
+        {
+          "ship": -1,
+          "loadoutName": "ACM Medium Range",
+          "stations": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "instruction": [],
+      "navpoint": [
+        {
+          "formation": 0,
+          "speed": 750,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "sweep",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Sweep",
+          "objectiveLocation": {
+            "x": 15000,
+            "y": -40000,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        }
+      ],
+      "ship": []
+    }
+  ],
+  "event": [
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Alpha 1",
+      "triggerTarget": "",
+      "eventId": 101,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Alpha 2",
+      "triggerTarget": "",
+      "eventId": 102,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Alpha 3",
+      "triggerTarget": "",
+      "eventId": 103,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Alpha 4",
+      "triggerTarget": "",
+      "eventId": 104,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Bravo 1",
+      "triggerTarget": "",
+      "eventId": 106,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Bravo 2",
+      "triggerTarget": "",
+      "eventId": 107,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Bravo 3",
+      "triggerTarget": "",
+      "eventId": 108,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Bravo 4",
+      "triggerTarget": "",
+      "eventId": 109,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Delta 1",
+      "triggerTarget": "",
+      "eventId": 120,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Delta 2",
+      "triggerTarget": "",
+      "eventId": 121,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_TIME",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Please wait",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-01",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 151,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 2,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_TIME",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Raise your landing gear",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-02a",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 152,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 25,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_TIME",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Maintain formation",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-02b",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 153,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 42,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_TIME",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Sensor combat markers",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-03",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 154,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 55,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_TIME",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Missile Combat",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-04",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 155,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_NAVPT",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Alpha sweep point reached. Press T to cycle Alpha drones. Track and destroy all four.",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Echo",
+      "triggerTarget": "",
+      "eventId": 193,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_NAVPT",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Echo",
+      "triggerTarget": "",
+      "eventId": 194,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "SPAWN",
+      "eventTrigger": "TRIGGER_EVENT",
+      "eventShip": "Alpha",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 195,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        193,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "SPAWN",
+      "eventTrigger": "TRIGGER_EVENT_ALL",
+      "eventShip": "Bravo",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 196,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        194,
+        101,
+        102,
+        103,
+        104,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 5
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_EVENT",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Bravo drones in range. Press T to cycle Bravo drones. Track and destroy all four.",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 197,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        196,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_NAVPT",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Echo",
+      "triggerTarget": "",
+      "eventId": 198,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        4,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_EVENT_ANY",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 199,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        101,
+        102,
+        103,
+        104,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 4
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_EVENT_ALL",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Good!",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-05",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 200,
+      "eventChance": 0,
+      "eventDelay": 1,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        155,
+        199,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 2
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_EVENT",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Gun Combat",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-06",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 201,
+      "eventChance": 0,
+      "eventDelay": 5,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        200,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_EVENT_ALL",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Alpha drones destroyed. Re-engage Autonav and proceed to waypoint 3 for Bravo.",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-07",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 205,
+      "eventChance": 0,
+      "eventDelay": 1,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        101,
+        102,
+        103,
+        104,
+        201,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 5
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_EVENT_ALL",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "All drones destroyed. Proceed to waypoint 4 for the Vampires.",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-08",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 210,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        196,
+        106,
+        107,
+        108,
+        109,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 5
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_EVENT_ALL",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Engage Vampires",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-09",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 211,
+      "eventChance": 0,
+      "eventDelay": 3,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        198,
+        210,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 2
+    },
+    {
+      "eventType": "SPAWN",
+      "eventTrigger": "TRIGGER_EVENT",
+      "eventShip": "Delta",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 212,
+      "eventChance": 0,
+      "eventDelay": 3,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        211,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_EVENT",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Inbound threat evasion techniques",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-10",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 213,
+      "eventChance": 0,
+      "eventDelay": 25,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        211,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_EVENT_ALL",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Vampires destroyed. Re-engage Autonav and return to Manticore.",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-11",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 215,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        120,
+        121,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 2
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_NAVPT",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Return to base",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-12",
+      "triggerShip": "Echo",
+      "triggerTarget": "",
+      "eventId": 300,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        5,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_EVENT",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Docking procedure",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-02-13",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 301,
+      "eventChance": 0,
+      "eventDelay": 18,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 90,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        300,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    }
+  ],
+  "requiredEmpire": "Marakan",
+  "narrativeCampaignId": 1
+}

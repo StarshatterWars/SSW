@@ -3,6 +3,9 @@
 #include "Engine/GameInstance.h"
 #include "Misc/ScopeExit.h"
 #include "ShipActor.h"
+#include "ShipVisualCatalog.h"
+#include "Engine/DataTable.h"
+#include "Misc/Paths.h"
 #include "Skin.h"
 #include "ShipDesignRegistry.h"
 #include "StarshatterShipDesignSubsystem.h"
@@ -73,7 +76,33 @@ bool FNativeHullSkinTest::RunTest(const FString& Parameters)
     A->ApplyHullSkin(nullptr);TestTrue(TEXT("Removing skin restores original material"),A->HullMesh->GetMaterial(0)==Original);
     A->HullSkinMaterialOverrides.Reset();A->ApplyHullSkin(Blue);
     TestTrue(TEXT("Default bridge creates a per-ship dynamic material"),Cast<UMaterialInstanceDynamic>(A->HullMesh->GetMaterial(0))!=nullptr);
+    A->RestoreHullSkin();
+    Skin Direct("Direct");FShipSkin Native;Native.Name=TEXT("Direct");FSkinMtlCell Material;
+    Material.MaterialName=TEXT("Hull");Material.UnrealMaterial=Replacement;Native.Cells.Add(Material);Direct.SetNativeDefinition(Native);
+    A->ApplyHullSkin(&Direct);
+    TestTrue(TEXT("Native C++ skin selects UE material without legacy textures"),A->HullMesh->GetMaterial(0)==Replacement);
     A->RestoreHullSkin();World->DestroyWorld(false);
+ auto* Table=NewObject<UDataTable>();if(!UStarshatterShipDesignSubsystem::ImportJsonCatalog(*Table,FPaths::ProjectContentDir()/TEXT("GameData/Ships/ships.json")))return false;
+ const auto CatalogOptions=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
+ auto* CatalogWorld=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&CatalogOptions);ON_SCOPE_EXIT{CatalogWorld->DestroyWorld(false);};int32 Count=0;
+ for(const auto& Pair:Table->GetRowMap())
+ {
+  const auto& CatalogRow=*reinterpret_cast<const FShipDesign*>(Pair.Value);if(CatalogRow.Skin.IsEmpty())continue;
+  auto* Class=ShipVisualCatalog::Resolve(CatalogRow.ShipName,CatalogRow.Model);if(!TestNotNull(TEXT("Skinned design has a native Blueprint"),Class))continue;
+  auto* Actor=CatalogWorld->SpawnActor<AShipActor>(Class);
+  for(const auto& CatalogDefinition:CatalogRow.Skin)
+  {
+   Skin Selected(TCHAR_TO_UTF8(*CatalogDefinition.Name));Selected.SetNativeDefinition(CatalogDefinition);Actor->ApplyHullSkin(&Selected);
+   for(const auto& CatalogCell:CatalogDefinition.Cells)
+   {
+    auto* CatalogMaterial=CatalogCell.UnrealMaterial.LoadSynchronous();if(!TestNotNull(*FString::Printf(TEXT("%s %s has a cooked UE material"),*CatalogRow.ShipName,*CatalogDefinition.Name),CatalogMaterial))continue;
+    bool Applied=false;for(int32 I=0;I<Actor->HullMesh->GetNumMaterials();++I)Applied|=Actor->HullMesh->GetMaterial(I)==CatalogMaterial;
+    TestTrue(*FString::Printf(TEXT("%s %s selects the UE material on the real hull"),*CatalogRow.ShipName,*CatalogDefinition.Name),Applied);++Count;
+   }
+   Actor->ApplyHullSkin(nullptr);
+  }
+ }
+ TestEqual(TEXT("All 23 native skin variants covered"),Count,23);
     return true;
 }
 #endif

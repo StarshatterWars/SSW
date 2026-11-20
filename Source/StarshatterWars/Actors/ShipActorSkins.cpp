@@ -5,11 +5,9 @@
 #include "GameStructs_System.h"
 #include "Polygon.h"
 #include "Bitmap.h"
-#include "DataLoader.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/Texture2D.h"
-#include "HAL/FileManager.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Misc/Paths.h"
@@ -44,26 +42,7 @@ UTexture2D* AShipActor::ResolveHullSkinTexture(const FString& TextureName,const 
         { if(Found) return nullptr;Found=Cast<UTexture2D>(Asset.GetAsset()); }
         if(Found) return Found;
     }
-    // F10 supports raw staged legacy bitmap files as a rendering fallback.
-    if(DataLoader* Loader=DataLoader::GetLoader())
-    {
-        const FString OldPath=ANSI_TO_TCHAR(Loader->GetDataPath());
-        Loader->SetDataPath("");Bitmap* Image=nullptr;
-        TArray<FString> Candidates;
-        Candidates.Add(FPaths::ProjectContentDir()/TEXT("GameData/Ships")/TextureName);
-        Candidates.Add(FPaths::ProjectContentDir()/TEXT("GameData")/FPaths::GetPath(SourceFile)/TextureName);
-        for(const FString& Candidate:Candidates)
-        {
-            for(const TCHAR* Extension:{TEXT(""),TEXT(".pcx"),TEXT(".bmp"),TEXT(".png"),TEXT(".jpg")})
-            {
-                const FString File=Candidate+Extension;
-                if(IFileManager::Get().FileExists(*File)) {Loader->LoadTexture(TCHAR_TO_ANSI(*File),Image);break;}
-            }
-            if(Image) break;
-        }
-        Loader->SetDataPath(TCHAR_TO_ANSI(*OldPath));
-        if(Image) return Image->GetTexture();
-    }
+    // Runtime skins use cooked UE assets; raw PCX/bitmap decoding is no longer a rendering fallback.
     return nullptr;
 }
 void AShipActor::ApplyHullSkin(const Skin* Selected)
@@ -83,7 +62,9 @@ void AShipActor::ApplyHullSkin(const Skin* Selected)
         if(Definition) for(const auto& Cell:Definition->Cells)
             if((Cell.CellIndex!=INDEX_NONE&&Cell.CellIndex==Index) ||
                (!Cell.MaterialName.IsEmpty() && (FName(*Cell.MaterialName)==LegacyName ||
-                (Slots.IsValidIndex(Index)&&FName(*Cell.MaterialName)==Slots[Index].ImportedMaterialSlotName))))
+                (Slots.IsValidIndex(Index)&&FName(*Cell.MaterialName)==Slots[Index].ImportedMaterialSlotName)) ||
+               (Cell.MaterialName.Equals(TEXT("Hull"),ESearchCase::IgnoreCase) && LegacyName.ToString().EndsWith(TEXT("Hull"),ESearchCase::IgnoreCase)) ||
+               (Cell.MaterialName.Equals(TEXT("Main"),ESearchCase::IgnoreCase) && LegacyName.ToString().StartsWith(TEXT("Main_"),ESearchCase::IgnoreCase))))
                 {NativeCell=&Cell;LegacyName=FName(*Cell.MaterialName);break;}
         if(!Definition) for(int32 I=0;I<Selected->NumCells();++I)
             if(const SkinCell* Cell=Selected->GetCell(I))
@@ -93,6 +74,13 @@ void AShipActor::ApplyHullSkin(const Skin* Selected)
         const FName OverrideKey(*(FString(ANSI_TO_TCHAR(Selected->Name()))+TEXT(".")+LegacyName.ToString()));
         if(const auto* Override=HullSkinMaterialOverrides.Find(OverrideKey))
             if(Override->Get()) {HullMesh->SetMaterial(Index,Override->Get());continue;}
+        if(NativeCell && !NativeCell->UnrealMaterial.IsNull())
+        {
+            if(auto* Material=NativeCell->UnrealMaterial.LoadSynchronous())
+            {HullMesh->SetMaterial(Index,Material);continue;}
+            UE_LOG(LogTemp,Warning,TEXT("[HullSkin] Missing material %s; preserving the hull material"),*NativeCell->UnrealMaterial.ToString());
+            continue;
+        }
         auto* MID=UMaterialInstanceDynamic::Create(Original,this);if(!MID) continue;
         HullMesh->SetMaterial(Index,MID);
         auto Texture=[&](FName Param,const FString& Name,Bitmap* LegacyBitmap)

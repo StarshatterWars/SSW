@@ -3,12 +3,13 @@
 struct FMissionRewardQuote
 {
     int64 Base=0,Recovery=0,Objectives=0,Time=0;
+    int32 CompletionPoints=25;
     int64 Total() const { return Base+Recovery+Objectives+Time; }
 };
 struct FMissionRewardPolicy
 {
     int64 Base=25000,RecoveryBonus=0,ObjectiveBonus=0,TimeBonus=0;
-    int32 TimeLimitSeconds=0;
+    int32 TimeLimitSeconds=0,CompletionPoints=25;
 };
 class FMissionRewardCatalog
 {

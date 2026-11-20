@@ -12,7 +12,7 @@ bool FShortMissionArcTest::RunTest(const FString&)
     FString Json; FMissionArcCatalog Catalog; FText Error;
     if(!TestTrue(TEXT("Authored arc JSON is staged"),FFileHelper::LoadFileToString(Json,*(FPaths::ProjectContentDir()/TEXT("GameData/Agents/mission_arcs.json"))))) return false;
     if(!TestTrue(TEXT("Authored arcs validate"),Catalog.LoadJson(Json,Error)))return false;
-    TestEqual(TEXT("Six regional short arcs"),Catalog.GetArcs().Num(),6);
+    TestEqual(TEXT("Six original arcs plus six faction story arcs"),Catalog.GetArcs().Num(),12);
     constexpr int32 First=910017, Second=910015, Third=910016;
     const FName Pilot(TEXT("Arc Test Pilot")); AgentAI Agent;
     TestTrue(TEXT("T1 retains its own progression"),Agent.ArcRequirement(Pilot,101).IsEmpty());

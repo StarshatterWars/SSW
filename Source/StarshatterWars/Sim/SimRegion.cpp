@@ -1323,6 +1323,7 @@ SimRegion::DockShips()
         const bool bDocked =
             (ship->GetFlightPhase() == EOPSMode::DOCKED);
 
+        if (!bDocked && ship==recovered_player) recovered_player=nullptr;
         if (bDocked) {
             if (ship == recovered_player) continue; // recovery events are recorded once
             if (sim) sim->ProcessEventTrigger(

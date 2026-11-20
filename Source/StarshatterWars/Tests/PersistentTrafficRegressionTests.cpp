@@ -64,4 +64,23 @@ bool FCheckpointInterruptionTest::RunTest(const FString&)
  UGameplayStatics::DeleteGameInSlot(Service->PendingManifest->Slots[1],0);Pilot={};TestTrue(TEXT("Missing newest area falls back to previous complete generation"),ULocalGameStateSubsystem::ReadCheckpoint(Pilot,Profile,0,World));TestEqual(TEXT("Fallback is coherent"),Pilot.Economy.Wallets.FindRef(FEconomyLedger::Pilot()),50000LL);
  return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLostFreightRecoveryTest,"Starshatter.Traffic.LostFreightRefundAndRedispatch",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FLostFreightRecoveryTest::RunTest(const FString&)
+{
+ FEconomyState State;FGalaxyTrafficState Traffic;const FName Owner=FEconomyRuntime::IndustryOwner(),Item(TEXT("Ore")),Source(TEXT("Janus/Mine/Output")),Drop(TEXT("Solus/Works/Input"));
+ auto* Store=FEconomyLedger::CreateInventory(State,Source,Owner,TEXT("Janus"),100);Store->TradingOwner=TEXT("Seller");Store->AskPrices.Add(Item,10);FEconomyLedger::Deposit(State,Source,Item,20,1);
+ Store=FEconomyLedger::CreateInventory(State,Drop,Owner,TEXT("Solus"),100);Store->TradingOwner=TEXT("Buyer");Store->BidPrices.Add(Item,20);State.Wallets.Add(TEXT("Buyer"),1000);
+ FGalaxyTrafficEndpoint A;A.Id=TEXT("Mine");A.System=TEXT("Janus");A.Sector=TEXT("Janus/Belt");auto B=A;B.Id=TEXT("Works");B.System=TEXT("Solus");B.Sector=TEXT("Solus/Orbit");
+ if(!TestTrue(TEXT("Freight dispatched"),TrafficAI::Schedule(Traffic,State,A,B,{A.Sector,B.Sector},Source,Drop,Item,8,1).IsValid()))return false;
+ auto& Lost=Traffic.Journeys[0];TrafficAI::Advance(Lost,State,10,false,false,10,1);TrafficAI::Advance(Lost,State,10,false,false,10,1);
+ TestEqual(TEXT("Cargo physically aboard before loss"),FEconomyLedger::Quantity(State,Lost.Hold,Item),8.0);TrafficAI::Lose(Lost,State);TrafficAI::Lose(Lost,State);
+ TestEqual(TEXT("Loss refunds escrow once"),State.Wallets.FindRef(TEXT("Buyer")),1000LL);TestEqual(TEXT("Undelivered supplier remains unpaid"),State.Wallets.FindRef(TEXT("Seller")),0LL);
+ TestEqual(TEXT("Lost cargo is destroyed, not returned or delivered"),FEconomyLedger::Quantity(State,Source,Item),12.0);TestEqual(TEXT("Destination receives nothing on loss"),FEconomyLedger::Quantity(State,Drop,Item),0.0);TestEqual(TEXT("Lost cargo hold emptied"),FEconomyLedger::Quantity(State,Lost.Hold,Item),0.0);
+ TestTrue(TEXT("New delivery uses remaining real stock"),TrafficAI::Schedule(Traffic,State,A,B,{A.Sector,B.Sector},Source,Drop,Item,8,1).IsValid());
+ for(int32 I=0;I<7;++I)TrafficAI::Advance(Traffic.Journeys.Last(),State,100,false,false,10,1);
+ TestEqual(TEXT("Replacement delivery arrives once"),FEconomyLedger::Quantity(State,Drop,Item),8.0);TestEqual(TEXT("Supplier paid only for successful delivery"),State.Wallets.FindRef(TEXT("Seller")),80LL);TestEqual(TEXT("Destroyed cargo never respawned"),FEconomyLedger::Quantity(State,Source,Item),4.0);
+ return true;
+}
+
 #endif

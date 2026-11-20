@@ -2,9 +2,33 @@
   "entries": [
     {
       "category": "Latest install build",
-      "title": "Build 20261119-180552Z ready to install",
-      "date": "2026-11-19",
-      "body": "Capital-ship order fix, miniHUD damage icons with hover zoom, outlined pulsing waypoints, native economy and traffic, safer saves, independent agent work and rank/medal credit bonuses. Includes the existing local StarServer package."
+      "title": "Build 20261119-204328Z ready to install",
+      "date": "2026-11-20",
+      "body": "Launcher 1.0.13 adds Repair > Recover Pilot Save with dated checkpoints, verified backups and save validation. This game build enables offline recovery of pilot progress and matching world, economy and skills. Fixes stale launch-deck slots when resuming, parked fighter placement and departure collision protection. Includes the existing local StarServer."
+    },
+    {
+      "category": "Next build — not yet packaged",
+      "title": "Next build: Alpha 4 closeout",
+      "date": "2026-11-20",
+      "body": "NEXT BUILD — 20 NOVEMBER 2026 (awaiting verification and user packaging)\nCarrier aircraft sales follow every eligible squadron in the carrier OOB. Mission-assigned aircraft are excluded from sale; stock and purchases persist. The Stormhawk training price remains 400,000 CR. T1 is now Carrier Qualifications. The training agent assigns the pilot to the 18th Trellis Wing aboard CV6-Orion.\n\nGround lessons remain queued while Orion jumps to the Janek Airbase flight corridor. The pilot then launches, flies through the atmosphere and lands at Janek before starting the surface lesson. Continuous surface boundaries preserve velocity without the old control blackout. Recovered free-flight craft can be staged for departure again without replacing their fuel, cargo or damage.\n\nOrion exterior red/green beacons retain their hull fixtures, use a local light radius and cast hull shadows to prevent illumination through the launch bays. Janek now uses the full WorldScape material instead of the baked orbital surface. The runway grade and lake data are unchanged.\n\nTwenty-three freighter and Zodiac-derived skins now have cooked UE material assets selected by native C++. Runtime raw bitmap decoding is removed; legacy skin parsing remains an editor authoring tool.\n\nCampaign information now includes complete Marakan and Dantari headers and seven training flights for each faction. Training retains separate rank and skill gates, local carrier/base assets, and distinct travel sectors. Existing Terellian training remains in place.\n\nMarakan Campaigns 3 and 4 have expanded mission briefs, hostile flights and recovery objectives. Campaign 5 now faces the Zolon threat, with Marakan pilots remaining playable and Zolons remaining opponents. Chapter-specific repeatable agent jobs use faction, system and progression gates.\n\nFaction OOBs now load directly from JSON; the old table is retained for authoring/parity only. Running independent jobs remain visible after offer expiry and repeated Start/refresh commands cannot reset or duplicate them. Current rank and chapter-system authorization are rechecked.\n\nThis is Phase 4. The local dedicated FractalVerse server is Phase 5 and arena multiplayer Phase 6. Mod Editor and new MP4 production remain deferred.\n\nLauncher 1.0.15 adds separate News and Store tabs. No products or checkout are active. An optional HTTPS store link opens in the browser. Epic persistent authorization and Epic's own sign-in page remain the supported login path; no Epic passwords are collected.\n\nGun muzzle flashes are 25% smaller without changing weapon data. Combat beam classes now have native C++ Niagara defaults; legacy range, charge, damage and duration remain controlled by the simulation. Missiles use nozzle-fitted native Niagara exhaust, hidden while racked or dropping free and driven by simulated thrust during flight, including pause/time controls.\n\nAll 221 recipes now have an eligible production facility. Previously 206 recipes had no facility route for installing their blueprint jobs. New links follow the existing regional production lists and exclusive sources; primary automated NPC recipes are unchanged.\n\nFlight Ops is read-only unless you are piloting the displayed carrier. Fighter pilots can inspect rosters but cannot issue launch, recall, readiness or mission-planning commands.\n\nBoth the launcher and main menu now identify this release as Alpha 4 and display the same game build number. A shared alpha warning explains that bugs, crashes, incomplete features and save incompatibilities may occur. The launcher application version is shown separately."
+    },
+    {
+      "category": "Release notes",
+      "title": "Faction stories, introductions and mission rewards",
+      "date": "2026-11-20",
+      "body": "Adds 35 Marakan stories, including the Hegemony side of Campaigns 2-5, and 10 Dantari Campaign 2 stories. New agent handoffs and faction-only dynamic policies keep empire boundaries intact. Training and campaign introductions are readable in Agents and Intel; faction MP4s remain for later. Every successful playable mission grants completion points and credits under the reward policy. Original mission scripts and campaign table remain unchanged."
+    },
+    {
+      "category": "Release notes",
+      "title": "Safer independent jobs and clearer target health",
+      "date": "2026-11-20",
+      "body": "Cargo pickups require docking, freight uses actual unit mass and the selected inventory, and faction jobs validate empire access at start. Neutral commercial hulls remain rank/skill gated but can serve each empire; transports can qualify for courier work. Shipyard construction-to-hangar delivery and lost-freight refunds are regression tested. Target MFD now displays compact fitted-shield and hull health indicators."
+    },
+    {
+      "category": "Release notes",
+      "title": "Cleaner flight readouts and Intel controls",
+      "date": "2026-11-20",
+      "body": "Larger miniHUD system icons, compact gauges and restored mission information; centered direction indicator and full hover ship framing. Manual target selection remains available during autoland. Target MFD titles use a highlighted single-line header with waypoint details below. Intel Back and replay controls use gray buttons and cyan icons."
     },
     {
       "category": "Release notes",
@@ -136,7 +160,7 @@
       "category": "Release notes",
       "title": "Build status",
       "date": "2026-11-19",
-      "body": "The packaged Windows client and existing local StarServer are ready to install. Compilation, 301 offline regression checks and four follow-up MFD/waypoint checks passed. Multiplayer server testing remains deferred."
+      "body": "The new Windows build includes native pilot recovery and the launch-deck resume fix. Four persistence regression tests, six launcher checks and the headless recovery check passed. Install launcher 1.0.13 for Repair > Recover Pilot Save, then update the game. Existing StarServer is included; server testing remains deferred."
     },
     {
       "category": "Patch notes",

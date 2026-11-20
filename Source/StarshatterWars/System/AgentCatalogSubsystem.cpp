@@ -1,3 +1,4 @@
+#include "FactionTrainingCatalog.h"
 #include "AgentCatalogSubsystem.h"
 #include "DynamicMissionAI.h"
 #include "AgentJournalTransaction.h"
@@ -56,7 +57,7 @@ bool UAgentCatalogSubsystem::PrepareIndependentOffer(FName Id,FText& Reason)
 {
  auto* Game=Cast<USSWGameInstance>(GetGameInstance());auto* Players=Game?Game->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;const auto* Agent=FindAgent(Id);
  if(!Game || Game->IsTrainingTestSession() || !Players || !Agent || !CanContact(Id) || Agent->Class==EAgentClass::Training)return false;
- FDynamicAgentContext Context;Context.Id=Id;Context.Name=Agent->DisplayName;Context.System=Agent->System;Context.Region=Agent->Region;Context.Station=Agent->Station;Context.Pools=Agent->DynamicPools;Context.Level=Agent->Level;
+ FDynamicAgentContext Context;Context.Id=Id;Context.Name=Agent->DisplayName;Context.System=Agent->System;Context.Region=Agent->Region;Context.Station=Agent->Station;Context.Pools=Agent->DynamicPools;Context.Level=Agent->Level;Context.Empire=Agent->Empire;
  return DynamicMissionAI::Generate(Players->GetMutablePlayerInfo(),Context,FDateTime::UtcNow().ToUnixTimestamp(),Reason);
 }
 bool UAgentCatalogSubsystem::StartIndependentAssignment(int32 Id,FText& Reason)
@@ -176,6 +177,7 @@ TArray<int32> UAgentCatalogSubsystem::GetEligibleMissions(FName AgentId) const
         {
             if (Scenario.Id <= 0 || Scenario.Id >= 1000000 - Mission::RegionalAgentMissionOffset || Scenario.StoryCampaignId > 0 ||
                 !(Agent->MissionIds.Contains(Scenario.Id) || (Agent->MissionTypes.Contains(Scenario.MissionType) && LocalPool(Scenario.Id))) ||
+                !AgentMissionRules::FactionAllows(Pilot->GetEmpire(),Scenario) ||
                 !AgentMissionRules::LocalSystem(Agent->System, Scenario.MissionSystem) ||
                 !MissionRankRules::Unlocked(MissionRankRules::Required(Scenario))) continue;
 
@@ -218,8 +220,9 @@ bool UAgentCatalogSubsystem::CanAccept(int32 MissionId, FName AgentId) const
         for(const auto& Item:Game->GetTrainingAgent().GetQueue(AgentAI::PilotKey(*Pilot)))if(Item.MissionId==MissionId && Item.Issuer==AgentId && (Item.State==AgentAI::EState::Accepted || Item.State==AgentAI::EState::InProgress))Accepted=true;
         return DynamicMissionAI::Offers(Players->GetPlayerInfo(),AgentId,Accepted?0:FDateTime::UtcNow().ToUnixTimestamp()).Contains(MissionId) && DynamicMissionAI::CanUse(Players->GetPlayerInfo(),MissionId,Reason);
     }
-    if (FindScenario(MissionId))
+    if (const auto* Scenario=FindScenario(MissionId))
     {
+        if(!AgentMissionRules::FactionAllows(Pilot->GetEmpire(),*Scenario))return false;
         const auto* Players = Game->GetSubsystem<UStarshatterPlayerSubsystem>();
         if (!Game->GetTrainingAgent().ArcRequirement(AgentAI::PilotKey(*Pilot), MissionId,
             [Players](int32 Id) { return Players && Players->GetPlayerInfo().HasCompletedMission(Campaign::SINGLE_MISSIONS, Id); }).IsEmpty()) return false;
@@ -347,7 +350,7 @@ FText UAgentCatalogSubsystem::GetAssignmentStatus(FName AgentId) const
         }
         return FText::FromString(FString::Join(Status,TEXT("\n\n")));
     }
-    return INVTEXT("OPERATION LIVE FIRE | Complete each lesson in sequence. Advanced command lessons require the appropriate rank and hull-command skill.");
+    return FText::Format(INVTEXT("{0} | Complete each lesson in sequence. Advanced command lessons require the appropriate rank and hull-command skill."),FText::FromString(FactionTrainingCatalog::Title(Agent->Empire)));
 }
 
 FText UAgentCatalogSubsystem::GetTrainingRequirement(int32 Id) const
@@ -510,7 +513,8 @@ bool UAgentCatalogSubsystem::AssignTrainingOperation(FName AgentId, bool bRequir
     // A refresher lesson must not replace an existing story campaign.
     if(Players->GetPlayerInfo().Campaign>Campaign::TRAINING_CAMPAIGN)return bRequireAcceptedMission;
     const auto* Row=Data->GetCampaignByIndex1Based(Campaign::TRAINING_CAMPAIGN);
-    if(!Row)return false;
+    FString TrainingError;if(Row)Row=FactionTrainingCatalog::Resolve(*Row,Pilot->GetEmpire(),TrainingError);
+    if(!Row || Agent->Empire!=Pilot->GetEmpire())return false;
     const FS_PlayerGameInfo Before=Players->GetPlayerInfo();
     auto& Info=Players->GetMutablePlayerInfo(); Info.Campaign=Campaign::TRAINING_CAMPAIGN; Info.CampaignRowName=Row->RowName;
     // Save the durable assignment before changing runtime campaign ownership.
@@ -519,7 +523,7 @@ bool UAgentCatalogSubsystem::AssignTrainingOperation(FName AgentId, bool bRequir
         Players->GetMutablePlayerInfo()=Before;
         return false;
     }
-    if(!Campaign::GetCampaign() || Campaign::GetCampaign()->GetCampaignId()!=Campaign::TRAINING_CAMPAIGN)
+    if(!Campaign::GetCampaign() || Campaign::GetCampaign()->GetCampaignId()!=Campaign::TRAINING_CAMPAIGN || FString(UTF8_TO_TCHAR(Campaign::GetCampaign()->GetName()))!=Row->Name)
     {
         if(!Campaign::SelectFromData(*Row))
         {

@@ -35,6 +35,7 @@ FStationDockContext StationServicesAI::Context(FName Viewed)
 TConstArrayView<FStationServiceDescriptor> StationServicesAI::Descriptors()
 {
     static const FStationServiceDescriptor Items[]={
+        {ESSWStationService::HullSales,TEXT("SQUADRON AIRCRAFT SALES"),TEXT("UI.ShipStorePopupClass"),TEXT("Purchase eligible aircraft from the carrier OOB squadrons while docked. Assigned aircraft remain unavailable.")},
         {ESSWStationService::Cargo,TEXT("CARGO STORAGE"),TEXT("UI.CargoManifestPopupClass"),TEXT("View cargo and transfer unreserved items while docked.")},
         {ESSWStationService::Market,TEXT("MARKETPLACE"),TEXT("UI.MarketplacePopupClass"),TEXT("Browse and trade goods available at this location.")},
         {ESSWStationService::Insurance,TEXT("INSURANCE"),TEXT("UI.InsurancePopupClass"),TEXT("Review owned-hull coverage through Hangar.")},

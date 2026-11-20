@@ -1413,6 +1413,7 @@ struct FS_PlayerGameInfo : public FTableRowBase
     UPROPERTY(SaveGame) FEconomyState Economy;
     UPROPERTY(SaveGame) FString AgentJournalJson;
     UPROPERTY(SaveGame) FString DynamicAssignmentsJson;
+    UPROPERTY(SaveGame) TArray<FName> ViewedFactionBriefings;
     UPROPERTY(SaveGame) int64 LocalStateRevision=0;
     UPROPERTY(SaveGame) TMap<FName, FSkillProgress> Skills;
     UPROPERTY(SaveGame) TArray<FSkillTrainingEntry> SkillQueue;
@@ -3025,6 +3026,12 @@ struct FS_CampaignMission : public FTableRowBase {
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 StoryCampaignId = 0;
+	// Neutral preserves shared scenarios; authored faction stories remain exclusive.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EEMPIRE_NAME RequiredEmpire = EEMPIRE_NAME::Neutral;
+	// Narrative association only; agents own acceptance and arc progression.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 NarrativeCampaignId = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite) int32 CounterpartMissionId = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString StoryUnlockScene;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

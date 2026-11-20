@@ -11,7 +11,7 @@
     "Empire": "Terellian",
     "MinimumRank": 0,
     "Level": 1,
-    "Description": "Welcome to Operation Live Fire. I am Lt. Mara Venn, your Third Fleet instructor aboard Archon. Begin with space flight, target practice, atmospheric flight and ground strike. As your rank and command skills develop, return for frigate training, advanced destroyer combat and carrier operations. Each lesson shows its prerequisites below.",
+    "Description": "Welcome to Operation Live Fire. You are assigned to the 18th Trellis Wing aboard the CV6-Orion. I am Lt. Mara Venn, your Third Fleet instructor. Begin with space flight, target practice, atmospheric flight and ground strike. As your rank and command skills develop, return for frigate training, advanced destroyer combat and carrier operations. Each lesson shows its prerequisites below.",
     "MissionIds": [
       101,
       102,
@@ -23,7 +23,8 @@
     ],
     "CampaignIds": [],
     "MissionTypes": [],
-    "DynamicPools": []
+    "DynamicPools": [],
+    "IntroductionId": "None"
   },
   {
     "Name": "SolusPatrol",
@@ -57,7 +58,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "TelmeraLiaison",
@@ -89,7 +91,8 @@
     "DynamicPools": [
       "Civil",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "ParagonWatch",
@@ -122,7 +125,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "LorisWatch",
@@ -152,9 +156,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "JanekTraffic",
@@ -186,7 +191,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "JanekMaterials",
@@ -217,7 +223,8 @@
     "DynamicPools": [
       "Industry",
       "Civil"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "JanekFleet",
@@ -249,7 +256,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "JarnellWatch",
@@ -281,7 +289,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "JarnellEnvoy",
@@ -312,7 +321,8 @@
     "DynamicPools": [
       "Civil",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "BorovaPatrol",
@@ -345,7 +355,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "BorovaCommand",
@@ -377,7 +388,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "AthenarWatch",
@@ -409,7 +421,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "AthenarEnvoy",
@@ -440,7 +453,8 @@
     "DynamicPools": [
       "Civil",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "ParagonCommand",
@@ -473,7 +487,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "ThraleWatch",
@@ -505,7 +520,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "ThraleLiaison",
@@ -536,7 +552,8 @@
     "DynamicPools": [
       "Civil",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "SolusEnvoy",
@@ -567,7 +584,8 @@
     "DynamicPools": [
       "Civil",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "TrellisWatch",
@@ -599,7 +617,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "KalonLiaison",
@@ -630,7 +649,8 @@
     "DynamicPools": [
       "Industry",
       "Civil"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "HaicheWatch",
@@ -662,7 +682,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "HaicheEnvoy",
@@ -693,7 +714,8 @@
     "DynamicPools": [
       "Civil",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "SilessiaWatch",
@@ -725,7 +747,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "SilessiaEnvoy",
@@ -756,7 +779,8 @@
     "DynamicPools": [
       "Civil",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "MarakWatch",
@@ -786,9 +810,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "MarakCommand",
@@ -818,9 +843,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "GarrisonWatch",
@@ -850,9 +876,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "LorisCommand",
@@ -882,9 +909,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "RenserWatch",
@@ -914,9 +942,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "AramWatch",
@@ -946,9 +975,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "KolchevWatch",
@@ -978,9 +1008,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "AdantarWatch",
@@ -1008,9 +1039,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "TarsusWatch",
@@ -1038,9 +1070,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "NergalWatch",
@@ -1068,9 +1101,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "RadixCommand",
@@ -1098,9 +1132,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "RamekEnvoy",
@@ -1127,9 +1162,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Civil",
-      "Exploration"
-    ]
+      "MarakanCivil",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "VolanteWatch",
@@ -1157,9 +1193,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "MarakanSecurity",
+      "MarakanExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "FortTalasWatch",
@@ -1187,9 +1224,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "DantariSecurity",
+      "DantariExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "JalahCell",
@@ -1216,9 +1254,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Civil",
-      "Exploration"
-    ]
+      "DantariCivil",
+      "DantariExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "FoothillCommand",
@@ -1246,9 +1285,10 @@
       "SCOUT"
     ],
     "DynamicPools": [
-      "Security",
-      "Exploration"
-    ]
+      "DantariSecurity",
+      "DantariExploration"
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "OstaraExpedition",
@@ -1280,7 +1320,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "LorisExpedition",
@@ -1312,7 +1353,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "HaicheExpedition",
@@ -1344,7 +1386,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "RenserExpedition",
@@ -1376,7 +1419,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "RadixExpedition",
@@ -1408,7 +1452,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "KoriusExpedition",
@@ -1440,7 +1485,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "MeridianFleetCommand",
@@ -1472,7 +1518,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "BorovaFleetCommand",
@@ -1504,7 +1551,8 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
   },
   {
     "Name": "AdonisFleetCommand",
@@ -1537,6 +1585,1080 @@
     "DynamicPools": [
       "Security",
       "Exploration"
-    ]
+    ],
+    "IntroductionId": "None"
+  },
+  {
+    "Name": "MarakanStory41",
+    "DisplayName": "Cmdr. Darrek Sorn",
+    "Division": "Border Operations",
+    "System": "Ostara",
+    "Planet": "Aram",
+    "Region": "Aram",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "A missing Alliance reconnaissance ship has brought the carrier Archon into Aram. Hegemony Command considers this an armed incursion. Screen Orten while identifying and driving off the incoming Alliance patrol. Do not pursue the carrier beyond the border picket.",
+    "MissionIds": [
+      41
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanTraining"
+  },
+  {
+    "Name": "MarakanStory42",
+    "DisplayName": "Cmdr. Varesh Sorn",
+    "Division": "Border Operations",
+    "System": "Loris",
+    "Planet": "Loris",
+    "Region": "Loris",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Alliance strike package Condor is closing on the supply freighter Ascentia. Those holds sustain the Loris garrison. Break the bomber attack and keep the freighter intact; the Alliance escort is a secondary threat.",
+    "MissionIds": [
+      42
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanTraining"
+  },
+  {
+    "Name": "MarakanStory43",
+    "DisplayName": "Cmdr. Korran Sorn",
+    "Division": "Border Operations",
+    "System": "Haiche",
+    "Planet": "Tantalus",
+    "Region": "Tantalus",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "An Alliance strike is crossing the line above the Tantalus mining works. From the Hegemony side this is a raid on a working supply installation. Protect the station and intercept Alpha before its ordnance reaches the refinery.",
+    "MissionIds": [
+      43
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanTraining"
+  },
+  {
+    "Name": "MarakanStory44",
+    "DisplayName": "Cmdr. Jarek Sorn",
+    "Division": "Border Operations",
+    "System": "Renser",
+    "Planet": "Renser",
+    "Region": "Renser",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "The carrier Archon has launched Mustang against our destroyer Sidus. Keep the strike fighters off the ship while Sidus withdraws under Orinoco's screen. Hegemony command needs this force intact for the Renser defense.",
+    "MissionIds": [
+      44
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanTraining"
+  },
+  {
+    "Name": "MarakanStory45",
+    "DisplayName": "Cmdr. Sareth Sorn",
+    "Division": "Border Operations",
+    "System": "Radix",
+    "Planet": "Shadow Canyon",
+    "Region": "Shadow Canyon",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Alliance flight Echo is attempting to suppress the defenses of Shadow Canyon. Hold the starbase perimeter, intercept the attackers and preserve the landing corridor for our returning crews.",
+    "MissionIds": [
+      45
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanTraining"
+  },
+  {
+    "Name": "MarakanStory46",
+    "DisplayName": "Cmdr. Valek Sorn",
+    "Division": "Border Operations",
+    "System": "Paragon",
+    "Planet": "Paragon",
+    "Region": "Paragon",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 3,
+    "Level": 3,
+    "Description": "Alliance cruisers Wraith and Nemesis are hunting our Paragon screen. Take command of the counterattack, protect Parthan and force the leading cruiser out of the approach lane. Neutral shipping is to be left alone.",
+    "MissionIds": [
+      46
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanTraining"
+  },
+  {
+    "Name": "MarakanStory47",
+    "DisplayName": "Cmdr. Toren Sorn",
+    "Division": "Border Operations",
+    "System": "Korius",
+    "Planet": "Korius",
+    "Region": "Korius",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Antares has committed a carrier group over Korius. Hegemony liaison command orders a fighter screen around Goliath while the allied Dantari force reorganizes. Contain the Alliance escort; the opposing carrier is not your primary target.",
+    "MissionIds": [
+      47
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanTraining"
+  },
+  {
+    "Name": "DantariStory51",
+    "DisplayName": "Cmdr. Selen Arat",
+    "Division": "Campaign II Liaison",
+    "System": "Solus",
+    "Planet": "Solus",
+    "Region": "Solus",
+    "Station": "Secession Tender",
+    "Class": "Security",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Alliance forces have answered the Directorate appeal and Archon is entering the courier corridor. To the Separatist fleet this is foreign intervention. Support our blockade patrol and intercept the carrier's advancing fighter screen.",
+    "MissionIds": [
+      51
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "DantariCampaign2"
+  },
+  {
+    "Name": "DantariStory52",
+    "DisplayName": "Cmdr. Nera Sol",
+    "Division": "Campaign II Liaison",
+    "System": "Solus",
+    "Planet": "Solus",
+    "Region": "Solus",
+    "Station": "Secession Tender",
+    "Class": "Security",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "A Directorate courier carries orders intended to consolidate the failed coup's aftermath. Stop the military dispatch before it reaches the Alliance liaison. Expect Vanguard to protect the courier.",
+    "MissionIds": [
+      52
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "DantariCampaign2"
+  },
+  {
+    "Name": "DantariStory53",
+    "DisplayName": "Cmdr. Thalen Voss",
+    "Division": "Campaign II Liaison",
+    "System": "Solus",
+    "Planet": "Kalon",
+    "Region": "Kalon",
+    "Station": "Secession Tender",
+    "Class": "Security",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "The Directorate is using Harmony Station to stage Alliance support. Escort Kalon Strike into the approach corridor and break the Avengers screen. Civilian berths are outside your engagement orders.",
+    "MissionIds": [
+      53
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "DantariCampaign2"
+  },
+  {
+    "Name": "DantariStory54",
+    "DisplayName": "Cmdr. Kira Sen",
+    "Division": "Campaign II Liaison",
+    "System": "Solus",
+    "Planet": "Trellis",
+    "Region": "Trellis",
+    "Station": "Secession Tender",
+    "Class": "Security",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Alliance fighters have opened a relief corridor at Trellis. Our command claims the same route is moving Directorate war supplies. Interdict the armed escort while our strike group inspects the shipping lane.",
+    "MissionIds": [
+      54
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "DantariCampaign2"
+  },
+  {
+    "Name": "DantariStory55",
+    "DisplayName": "Cmdr. Oren Tal",
+    "Division": "Campaign II Liaison",
+    "System": "Renser",
+    "Planet": "Renser",
+    "Region": "Renser",
+    "Station": "Secession Tender",
+    "Class": "Security",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Our Hegemony liaison reports an Alliance picket watching the Renser buildup. Cover the scouts as they recover their sensor records and disengage. This patrol is intelligence work, not an invasion of the picket line.",
+    "MissionIds": [
+      55
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "DantariCampaign2"
+  },
+  {
+    "Name": "DantariStory56",
+    "DisplayName": "Cmdr. Mira Kel",
+    "Division": "Campaign II Liaison",
+    "System": "Solus",
+    "Planet": "Solus",
+    "Region": "Solus",
+    "Station": "Secession Tender",
+    "Class": "Security",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "The Directorate observatory at Tal Vesta is feeding tracking data to Alliance ships. Kendra and Pelorat are exposed to an approaching relief flight. Break its fighter screen and protect the Separatist ships; avoid the civilian research structures.",
+    "MissionIds": [
+      56
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "DantariCampaign2"
+  },
+  {
+    "Name": "DantariStory57",
+    "DisplayName": "Cmdr. Reth Anor",
+    "Division": "Campaign II Liaison",
+    "System": "Solus",
+    "Planet": "Solus",
+    "Region": "Solus",
+    "Station": "Secession Tender",
+    "Class": "Security",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Accusations over Renser have hardened both fleets. Hold a defensive cordon around the liaison interceptors while the Alliance moves Stalwart into the area. Defeat the advance fighters and preserve our evidence relay.",
+    "MissionIds": [
+      57
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "DantariCampaign2"
+  },
+  {
+    "Name": "DantariStory58",
+    "DisplayName": "Cmdr. Dara Vey",
+    "Division": "Campaign II Liaison",
+    "System": "Solus",
+    "Planet": "Trellis",
+    "Region": "Trellis",
+    "Station": "Secession Tender",
+    "Class": "Security",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "The Senate resolution gives the Alliance a mandate we do not recognize. Escort our inspection group through the Trellis approach and challenge the armed escort. The relief transport itself is not a combat objective.",
+    "MissionIds": [
+      58
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "DantariCampaign2"
+  },
+  {
+    "Name": "DantariStory59",
+    "DisplayName": "Cmdr. Tovan Ser",
+    "Division": "Campaign II Liaison",
+    "System": "Solus",
+    "Planet": "Jalah",
+    "Region": "Jalah",
+    "Station": "Secession Tender",
+    "Class": "Security",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "The fleet is falling back to Jalah. Rear Guard must hold long enough for the scattered crews to return. Protect it from the Alliance fighter screen and keep the withdrawal route open.",
+    "MissionIds": [
+      59
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "DantariCampaign2"
+  },
+  {
+    "Name": "DantariStory60",
+    "DisplayName": "Cmdr. Lysa Dant",
+    "Division": "Campaign II Liaison",
+    "System": "Renser",
+    "Planet": "Lornas",
+    "Region": "Lornas",
+    "Station": "Secession Tender",
+    "Class": "Security",
+    "Empire": "Dantari",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Archon and Stalwart are pressing into Khaital. The Dantari liaison flight must protect Ironhelm and Mattock while the defensive force reforms. Defeat the carrier's fighter screen without abandoning the withdrawal line.",
+    "MissionIds": [
+      60
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "DantariCampaign2"
+  },
+  {
+    "Name": "MarakanCampaign2Officer201",
+    "DisplayName": "Cmdr. Darrek Dhal",
+    "Division": "Campaign 2 Operations",
+    "System": "Solus",
+    "Planet": "Solus",
+    "Region": "Solus",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 2,
+    "Description": "A Directorate courier is trying to carry emergency orders through our allied patrol. Escort Separatist Pursuit into position and break Vanguard's escort screen. Preserve the liaison ships; do not chase the courier into civilian traffic.",
+    "MissionIds": [
+      201
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanCampaign2"
+  },
+  {
+    "Name": "MarakanCampaign2Officer202",
+    "DisplayName": "Cmdr. Varesh Dhal",
+    "Division": "Campaign 2 Operations",
+    "System": "Renser",
+    "Planet": "Renser",
+    "Region": "Renser",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 2,
+    "Description": "Our scouts have detected an Alliance picket watching the Renser approaches. Protect Hegemony Scouts while their records are relayed to command. Intercept Vanguard before it can fix our withdrawal vector.",
+    "MissionIds": [
+      202
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanCampaign2"
+  },
+  {
+    "Name": "MarakanCampaign2Officer203",
+    "DisplayName": "Cmdr. Korran Dhal",
+    "Division": "Campaign 2 Operations",
+    "System": "Solus",
+    "Planet": "Solus",
+    "Region": "Solus",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 2,
+    "Description": "The accusations over Renser are bringing Stalwart forward. Our liaison interceptors must remain on station long enough to confirm the fleet movement. Screen them against Vanguard and keep a route clear for recovery.",
+    "MissionIds": [
+      203
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanCampaign2"
+  },
+  {
+    "Name": "MarakanCampaign2Officer204",
+    "DisplayName": "Cmdr. Jarek Dhal",
+    "Division": "Campaign 2 Operations",
+    "System": "Solus",
+    "Planet": "Trellis",
+    "Region": "Trellis",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 2,
+    "Description": "Alliance fighters are escorting a transport through the Trellis cordon. Protect our inspection flight and challenge the armed escort. Relief passengers and civilian crews are outside your engagement orders.",
+    "MissionIds": [
+      204
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanCampaign2"
+  },
+  {
+    "Name": "MarakanCampaign2Officer205",
+    "DisplayName": "Cmdr. Sareth Dhal",
+    "Division": "Campaign 2 Operations",
+    "System": "Solus",
+    "Planet": "Jalah",
+    "Region": "Jalah",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 2,
+    "Description": "The Dantari force is falling back toward Jalah. Hegemony liaison command has committed your flight to cover Separatist Rear Guard. Stop Vanguard from disrupting the withdrawal and bring our crews home.",
+    "MissionIds": [
+      205
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanCampaign2"
+  },
+  {
+    "Name": "MarakanCampaign2Officer206",
+    "DisplayName": "Cmdr. Valek Dhal",
+    "Division": "Campaign 2 Operations",
+    "System": "Solus",
+    "Planet": "Kalon",
+    "Region": "Kalon",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 2,
+    "Description": "Harmony Station has become an anchor for Alliance support. Escort Kalon Strike into the approach lane, defeat Avengers and preserve the strike group. Civilian berths remain protected.",
+    "MissionIds": [
+      206
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanCampaign2"
+  },
+  {
+    "Name": "MarakanCampaign2Officer207",
+    "DisplayName": "Cmdr. Toren Dhal",
+    "Division": "Campaign 2 Operations",
+    "System": "Solus",
+    "Planet": "Solus",
+    "Region": "Solus",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 2,
+    "Description": "Archon is advancing into Solus behind an Alliance fighter screen. Protect Blockade Patrol and intercept Avengers before the cordon is scattered. The carrier itself is not your flight's objective.",
+    "MissionIds": [
+      207
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanCampaign2"
+  },
+  {
+    "Name": "MarakanCampaign2Officer208",
+    "DisplayName": "Cmdr. Darrek Keth",
+    "Division": "Campaign 2 Operations",
+    "System": "Renser",
+    "Planet": "Khaital",
+    "Region": "Khaital",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 2,
+    "Description": "Archon and Stalwart are pressing our Khaital line. Ironhelm needs time to regroup under Mattock's cover. Break Vanguard's advance and keep the defensive group intact.",
+    "MissionIds": [
+      208
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanCampaign2"
+  },
+  {
+    "Name": "MarakanCampaign2Officer209",
+    "DisplayName": "Cmdr. Varesh Keth",
+    "Division": "Campaign 2 Operations",
+    "System": "Solus",
+    "Planet": "Meridian",
+    "Region": "Meridian",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 2,
+    "Description": "Kendra is exposed near the Tal Vesta observatory as Alliance relief fighters arrive. Cover the ship and defeat Vanguard. Your orders concern the armed escort, not the civilian research complex.",
+    "MissionIds": [
+      209
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanCampaign2"
+  },
+  {
+    "Name": "MarakanCampaign2Officer210",
+    "DisplayName": "Cmdr. Korran Keth",
+    "Division": "Campaign 2 Operations",
+    "System": "Solus",
+    "Planet": "Trellis",
+    "Region": "Trellis",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 2,
+    "Description": "The Alliance has opened a passage through the Trellis approaches. Support our patrol while it reforms the cordon, and defeat Avengers before they can widen the breach. Neutral vessels are to be left clear.",
+    "MissionIds": [
+      210
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanCampaign2"
+  },
+  {
+    "Name": "MarakanCampaign3Officer211",
+    "DisplayName": "Cmdr. Jarek Keth",
+    "Division": "Campaign 3 Operations",
+    "System": "Janus",
+    "Planet": "Janek",
+    "Region": "Janek",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "The Janek forward screen is exposed while our spearhead reforms. Defend the picket, destroy the Alliance interception flight and recover before our carriers shift station. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Vanguard and recover to your carrier.",
+    "MissionIds": [
+      211
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign3"
+    ],
+    "IntroductionId": "MarakanCampaign3"
+  },
+  {
+    "Name": "MarakanCampaign3Officer212",
+    "DisplayName": "Cmdr. Sareth Keth",
+    "Division": "Campaign 3 Operations",
+    "System": "Borova",
+    "Planet": "Borova",
+    "Region": "Borova",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Borova is the hinge of the advance. Hold the approach against an Alliance counterattack while the forward wing refuels; preserve the assigned defense flight. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Pursuit and recover to your carrier.",
+    "MissionIds": [
+      212
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign3"
+    ],
+    "IntroductionId": "MarakanCampaign3"
+  },
+  {
+    "Name": "MarakanCampaign3Officer213",
+    "DisplayName": "Cmdr. Valek Keth",
+    "Division": "Campaign 3 Operations",
+    "System": "Borova",
+    "Planet": "Borova",
+    "Region": "Borova",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Alliance scouts have located our Borova staging lane. Break the counterstroke and protect the ships forming the next sortie. Do not chase beyond the recovery corridor. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Pursuit and recover to your carrier.",
+    "MissionIds": [
+      213
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign3"
+    ],
+    "IntroductionId": "MarakanCampaign3"
+  },
+  {
+    "Name": "MarakanCampaign3Officer214",
+    "DisplayName": "Cmdr. Toren Keth",
+    "Division": "Campaign 3 Operations",
+    "System": "Borova",
+    "Planet": "Borova",
+    "Region": "Borova",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Diplomatic traffic is crossing the contested Borova perimeter. Keep armed Alliance interceptors away from the protected liaison unit. Civilian traffic is not a target. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Interceptors and recover to your carrier.",
+    "MissionIds": [
+      214
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign3"
+    ],
+    "IntroductionId": "MarakanCampaign3"
+  },
+  {
+    "Name": "MarakanCampaign3Officer215",
+    "DisplayName": "Cmdr. Darrek Vorn",
+    "Division": "Campaign 3 Operations",
+    "System": "Athenar",
+    "Planet": "Pallas",
+    "Region": "Pallas",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "The Pallas spearhead is isolated from its escorts. Clear the Alliance fighter screen, keep the marked Hegemony unit alive and recover to the carrier. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Fighters and recover to your carrier.",
+    "MissionIds": [
+      215
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign3"
+    ],
+    "IntroductionId": "MarakanCampaign3"
+  },
+  {
+    "Name": "MarakanCampaign3Officer216",
+    "DisplayName": "Cmdr. Varesh Vorn",
+    "Division": "Campaign 3 Operations",
+    "System": "Borova",
+    "Planet": "Borova",
+    "Region": "Borova",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "A rear guard is buying time for the Borova withdrawal. Intercept the pursuing Alliance flights and prevent them from overrunning the protected element. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Rear Guard and recover to your carrier.",
+    "MissionIds": [
+      216
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign3"
+    ],
+    "IntroductionId": "MarakanCampaign3"
+  },
+  {
+    "Name": "MarakanCampaign3Officer217",
+    "DisplayName": "Cmdr. Korran Vorn",
+    "Division": "Campaign 3 Operations",
+    "System": "Silessia",
+    "Planet": "Silessia",
+    "Region": "Silessia",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Our Silessia passage is threatened by Alliance reconnaissance flights. Clear the corridor while the marked unit crosses, then return rather than pursuing into another sector. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Interceptors and recover to your carrier.",
+    "MissionIds": [
+      217
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign3"
+    ],
+    "IntroductionId": "MarakanCampaign3"
+  },
+  {
+    "Name": "MarakanCampaign3Officer218",
+    "DisplayName": "Cmdr. Jarek Vorn",
+    "Division": "Campaign 3 Operations",
+    "System": "Silessia",
+    "Planet": "Vesta",
+    "Region": "Vesta",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 1,
+    "Level": 3,
+    "Description": "Brotherhood raiders are exploiting the Vesta withdrawal. Defeat the pirate screen and protect the assigned Hegemony unit. This is a recovery action, not an attack on civilian shipping. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Supply Tender and recover to your carrier.",
+    "MissionIds": [
+      218
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign3"
+    ],
+    "IntroductionId": "MarakanCampaign3"
+  },
+  {
+    "Name": "MarakanCampaign4Officer219",
+    "DisplayName": "Cmdr. Sareth Vorn",
+    "Division": "Campaign 4 Operations",
+    "System": "Ostara",
+    "Planet": "Aram",
+    "Region": "Aram",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 2,
+    "Level": 4,
+    "Description": "Aram outpost requests immediate relief. Protect its local defense force and stop the Alliance interception flight before it can pin down the relief ships. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Outpost Patrol and recover to your carrier.",
+    "MissionIds": [
+      219
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign4"
+    ],
+    "IntroductionId": "MarakanCampaign4"
+  },
+  {
+    "Name": "MarakanCampaign4Officer220",
+    "DisplayName": "Cmdr. Valek Vorn",
+    "Division": "Campaign 4 Operations",
+    "System": "Tarsus",
+    "Planet": "Tarsus",
+    "Region": "Tarsus",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 2,
+    "Level": 4,
+    "Description": "The ambassador route through Tarsus is compromised. Defend the liaison element against armed interceptors and keep the recovery lane clear. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Rogue Interceptors and recover to your carrier.",
+    "MissionIds": [
+      220
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign4"
+    ],
+    "IntroductionId": "MarakanCampaign4"
+  },
+  {
+    "Name": "MarakanCampaign4Officer221",
+    "DisplayName": "Cmdr. Toren Vorn",
+    "Division": "Campaign 4 Operations",
+    "System": "Tarsus",
+    "Planet": "Tarsus",
+    "Region": "Tarsus",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 2,
+    "Level": 4,
+    "Description": "Unknown Zolon craft have entered the Tarsus engagement. Prioritize the alien attackers threatening the protected unit. Do not treat this as another routine Alliance patrol. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Supply Tender and recover to your carrier.",
+    "MissionIds": [
+      221
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign4"
+    ],
+    "IntroductionId": "MarakanCampaign4"
+  },
+  {
+    "Name": "MarakanCampaign4Officer222",
+    "DisplayName": "Cmdr. Darrek Tarek",
+    "Division": "Campaign 4 Operations",
+    "System": "Loris",
+    "Planet": "Loris",
+    "Region": "Loris",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 2,
+    "Level": 4,
+    "Description": "Loris supply tenders are exposed during the retreat. Escort the protected tender through the marked lane and destroy Brotherhood raiders before they reach it. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Supply Tender and recover to your carrier.",
+    "MissionIds": [
+      222
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign4"
+    ],
+    "IntroductionId": "MarakanCampaign4"
+  },
+  {
+    "Name": "MarakanCampaign4Officer223",
+    "DisplayName": "Cmdr. Varesh Tarek",
+    "Division": "Campaign 4 Operations",
+    "System": "Kolchev",
+    "Planet": "Kolchev",
+    "Region": "Kolchev",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 2,
+    "Level": 4,
+    "Description": "The Kolchev picket must survive to warn the next defensive line. Defend the marked interceptors, defeat the Alliance screen and recover without sacrificing the picket. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Interceptors and recover to your carrier.",
+    "MissionIds": [
+      223
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign4"
+    ],
+    "IntroductionId": "MarakanCampaign4"
+  },
+  {
+    "Name": "MarakanCampaign5Officer224",
+    "DisplayName": "Cmdr. Korran Tarek",
+    "Division": "Campaign 5 Operations",
+    "System": "Garrison",
+    "Planet": "Garrison",
+    "Region": "Garrison",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 2,
+    "Level": 5,
+    "Description": "Zolon probes have appeared near Garrison. Defend the Hegemony picket and destroy the alien scouts before they fix the recovery route. The Zolons are the enemy; you remain a Hegemony pilot. Your assigned craft is Avenger. Destroy the marked hostile flights, preserve Hegemony Picket and recover to your carrier.",
+    "MissionIds": [
+      224
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign5"
+    ],
+    "IntroductionId": "MarakanCampaign5"
+  },
+  {
+    "Name": "MarakanCampaign5Officer225",
+    "DisplayName": "Cmdr. Jarek Tarek",
+    "Division": "Campaign 5 Operations",
+    "System": "Radix",
+    "Planet": "Radix",
+    "Region": "Radix",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 2,
+    "Level": 5,
+    "Description": "Zolon strike craft are crossing Radix. Protect the interceptor screen holding the junction and stop the alien attack before it cuts our withdrawal route. Your assigned craft is Avenger. Destroy the marked hostile flights, preserve Hegemony Interceptors and recover to your carrier.",
+    "MissionIds": [
+      225
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign5"
+    ],
+    "IntroductionId": "MarakanCampaign5"
+  },
+  {
+    "Name": "MarakanCampaign5Officer226",
+    "DisplayName": "Cmdr. Sareth Tarek",
+    "Division": "Campaign 5 Operations",
+    "System": "Isham",
+    "Planet": "Ramek",
+    "Region": "Ramek",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 2,
+    "Level": 5,
+    "Description": "Alien attackers are closing on Ramek. Keep the defense wing alive and the bay approach clear so damaged crews can recover. Break the Zolon attack and return to the carrier. Your assigned craft is Avenger. Destroy the marked hostile flights, preserve Ramek Defense Wing and recover to your carrier.",
+    "MissionIds": [
+      226
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign5"
+    ],
+    "IntroductionId": "MarakanCampaign5"
+  },
+  {
+    "Name": "MarakanCampaign5Officer227",
+    "DisplayName": "Cmdr. Valek Tarek",
+    "Division": "Campaign 5 Operations",
+    "System": "Garrison",
+    "Planet": "Garrison",
+    "Region": "Garrison",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 2,
+    "Level": 5,
+    "Description": "Zolon forces threaten Garrison Military Laboratory during the evacuation of its technical staff. Defend the facility and defeat the alien strike screen; no attack on neutral rescuers is authorized. Your assigned craft is Avenger. Destroy the marked hostile flights, preserve Garrison Military Laboratory and recover to your carrier.",
+    "MissionIds": [
+      227
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign5"
+    ],
+    "IntroductionId": "MarakanCampaign5"
+  },
+  {
+    "Name": "MarakanCampaign5Officer228",
+    "DisplayName": "Cmdr. Toren Tarek",
+    "Division": "Campaign 5 Operations",
+    "System": "Trocanther",
+    "Planet": "Volante",
+    "Region": "Volante",
+    "Station": "Iron Bastion",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 2,
+    "Level": 5,
+    "Description": "The Zolon pursuit has reached Volante. Protect the Hegemony rear guard, destroy the pursuing alien flights and preserve the final recovery corridor for surviving crews. Your assigned craft is Avenger. Destroy the marked hostile flights, preserve Hegemony Rear Guard and recover to your carrier.",
+    "MissionIds": [
+      228
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [
+      "MarakanCampaign5"
+    ],
+    "IntroductionId": "MarakanCampaign5"
+  },
+  {
+    "Name": "MarakanInduction",
+    "DisplayName": "Flight Instructor Karesh Tol",
+    "Division": "Flight Induction",
+    "System": "Marak",
+    "Planet": "Marak",
+    "Region": "Marak",
+    "Station": "Marak Transfer Station",
+    "Class": "Security",
+    "Empire": "Marakan",
+    "MinimumRank": 0,
+    "Level": 1,
+    "Description": "Read your faction induction and report for qualified agent assignments. Original Alliance training is kept separate.",
+    "MissionIds": [],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanTraining"
+  },
+  {
+    "Name": "DantariInduction",
+    "DisplayName": "Flight Instructor Nera Sol",
+    "Division": "Flight Induction",
+    "System": "Solus",
+    "Planet": "Jalah",
+    "Region": "Jalah",
+    "Station": "Goliath",
+    "Class": "Security",
+    "Empire": "Dantari",
+    "MinimumRank": 0,
+    "Level": 1,
+    "Description": "Read your faction induction and report for qualified agent assignments. Original Alliance training is kept separate.",
+    "MissionIds": [],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "DantariTraining"
+  },
+  {
+    "Name": "HegemonyFlightTraining",
+    "DisplayName": "Cmdr. Varen Keth",
+    "Division": "Flight Training",
+    "System": "Isham",
+    "Planet": "Garden",
+    "Region": "Garden",
+    "Station": "Manticore",
+    "Class": "Training",
+    "Empire": "Marakan",
+    "MinimumRank": 0,
+    "Level": 1,
+    "Description": "Welcome to Hegemony Flight Induction. You are assigned to the training wing aboard Manticore. Complete carrier qualifications, gunnery, atmospheric flight and ground strike before advancing to capital-ship command. Surface lessons operate from Tiger Base. Rank and command-skill gates apply.",
+    "MissionIds": [
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "MarakanTraining"
+  },
+  {
+    "Name": "DantariFlightTraining",
+    "DisplayName": "Lt. Sera Vann",
+    "Division": "Flight Training",
+    "System": "Solus",
+    "Planet": "Solus",
+    "Region": "Solus",
+    "Station": "Goliath",
+    "Class": "Training",
+    "Empire": "Dantari",
+    "MinimumRank": 0,
+    "Level": 1,
+    "Description": "Welcome to Separatist Flight Induction. You are assigned to the training wing aboard Goliath. Complete carrier qualifications, gunnery, atmospheric flight and ground strike before advancing to capital-ship command. Surface lessons operate from Telmera Starport. Rank and command-skill gates apply.",
+    "MissionIds": [
+      101,
+      102,
+      103,
+      104,
+      105,
+      106,
+      107
+    ],
+    "CampaignIds": [],
+    "MissionTypes": [],
+    "DynamicPools": [],
+    "IntroductionId": "DantariTraining"
   }
 ]

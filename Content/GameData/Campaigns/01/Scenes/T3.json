@@ -1,1866 +1,1770 @@
 {
-	"storyCampaignId": 0,
-	"storyUnlockScene": "",
-	"storyPoints": 0,
-	"rowName": "None",
-	"id": 103,
-	"missionName": "Flight School",
-	"maxPlayers": 0,
-	"missionRegion": "Janek Station",
-	"missionSystem": "Janus",
-	"scene": "T3",
-	"subtitles": "",
-	"desc": "",
-	"targetName": "",
-	"wardName": "",
-	"objective": "Training - Practice airborne fighter operations.",
-	"sitrep": "The Third Fleet is participating in wargame exercises in the Janus system. Your squadron, the Avengers, are on temporary detached duty to Janek Station.As part of the exercise, you have been tasked with practicing take offs and landings, flying patrol patterns and destroying target drones in your sector.",
-	"startTime": "01/16:23:00",
-	"startAfter": "",
-	"group": "NONE",
-	"missionType": "TRAINING",
-	"source": "Scripted",
-	"displayType": "CutsceneOnly",
-	"team": 0,
-	"stardate": 1084144000,
-	"degrees": true,
-	"once": false,
-	"element": [
-		{
-			"name": "Janek Station",
-			"carrier": "",
-			"commander": "",
-			"squadron": "",
-			"text": "",
-			"path": "",
-			"design": "Airbase1",
-			"skinName": "",
-			"roleName": "PATROL",
-			"regionName": "",
-			"instr": "",
-			"intel": "KNOWN",
-			"location":
-			{
-				"x": 25000,
-				"y": 0,
-				"z": 0
-			},
-			"deck": 1,
-			"iFFCode": 1,
-			"count": 1,
-			"maintCount": 0,
-			"deadCount": 0,
-			"player": 0,
-			"commandAI": 0,
-			"respawns": 0,
-			"holdTime": 0,
-			"zoneLock": 0,
-			"heading": -90,
-			"alert": false,
-			"playable": false,
-			"rogue": false,
-			"invulnerable": false,
-			"rLoc": [],
-			"loadout": [],
-			"instruction": [],
-			"navpoint": [],
-			"ship": []
-		},
-		{
-			"name": "Avengers",
-			"carrier": "Janek Station",
-			"commander": "",
-			"squadron": "",
-			"text": "",
-			"path": "",
-			"design": "Falcon",
-			"skinName": "",
-			"roleName": "PATROL",
-			"regionName": "",
-			"instr": "",
-			"intel": "KNOWN",
-			"location":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"deck": 1,
-			"iFFCode": 1,
-			"count": 20,
-			"maintCount": 5,
-			"deadCount": 5,
-			"player": 0,
-			"commandAI": 1,
-			"respawns": 0,
-			"holdTime": 0,
-			"zoneLock": 0,
-			"heading": 0,
-			"alert": false,
-			"playable": false,
-			"rogue": false,
-			"invulnerable": false,
-			"rLoc": [],
-			"loadout": [
-				{
-					"ship": -1,
-					"loadoutName": "ACM Medium Range",
-					"stations": [
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0
-					]
-				}
-			],
-			"instruction": [],
-			"navpoint": [],
-			"ship": []
-		},
-		{
-			"name": "Alpha",
-			"carrier": "",
-			"commander": "",
-			"squadron": "Avengers",
-			"text": "",
-			"path": "",
-			"design": "Falcon",
-			"skinName": "",
-			"roleName": "SWEEP",
-			"regionName": "",
-			"instr": "",
-			"intel": "KNOWN",
-			"location":
-			{
-				"x": 15000,
-				"y": -5000,
-				"z": 5000
-			},
-			"deck": 1,
-			"iFFCode": 1,
-			"count": 2,
-			"maintCount": 0,
-			"deadCount": 0,
-			"player": 1,
-			"commandAI": 1,
-			"respawns": 0,
-			"holdTime": 0,
-			"zoneLock": 0,
-			"heading": -90,
-			"alert": true,
-			"playable": false,
-			"rogue": false,
-			"invulnerable": false,
-			"rLoc": [],
-			"loadout": [
-				{
-					"ship": -1,
-					"loadoutName": "ACM Medium Range",
-					"stations": [
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0,
-						0
-					]
-				}
-			],
-			"instruction": [
-				{
-					"formation": 0,
-					"speed": 0,
-					"priority": 1,
-					"eMCON": 0,
-					"orderName": "intercept",
-					"statusName": "",
-					"orderRegionName": "",
-					"objectiveName": "Sierra",
-					"objectiveDesc": "",
-					"objectiveInfo": "",
-					"objectiveType": "",
-					"action": "Intercept",
-					"objectiveLocation":
-					{
-						"x": 0,
-						"y": 0,
-						"z": 0
-					},
-					"arrivalRadius": 5000,
-					"rLoc": []
-				}
-			],
-			"navpoint": [
-				{
-					"formation": 0,
-					"speed": 350,
-					"priority": 1,
-					"eMCON": 0,
-					"orderName": "vector",
-					"statusName": "",
-					"orderRegionName": "",
-					"objectiveName": "",
-					"objectiveDesc": "",
-					"objectiveInfo": "",
-					"objectiveType": "",
-					"action": "Vector",
-					"objectiveLocation":
-					{
-						"x": -15000,
-						"y": -5000,
-						"z": 7000
-					},
-					"arrivalRadius": 5000,
-					"rLoc": []
-				},
-				{
-					"formation": 0,
-					"speed": 500,
-					"priority": 1,
-					"eMCON": 0,
-					"orderName": "vector",
-					"statusName": "",
-					"orderRegionName": "",
-					"objectiveName": "",
-					"objectiveDesc": "",
-					"objectiveInfo": "",
-					"objectiveType": "",
-					"action": "Vector",
-					"objectiveLocation":
-					{
-						"x": -15000,
-						"y": -20000,
-						"z": 8000
-					},
-					"arrivalRadius": 5000,
-					"rLoc": []
-				},
-				{
-					"formation": 0,
-					"speed": 500,
-					"priority": 1,
-					"eMCON": 0,
-					"orderName": "sweep",
-					"statusName": "",
-					"orderRegionName": "",
-					"objectiveName": "",
-					"objectiveDesc": "",
-					"objectiveInfo": "",
-					"objectiveType": "",
-					"action": "Sweep",
-					"objectiveLocation":
-					{
-						"x": 0,
-						"y": -10000,
-						"z": 10000
-					},
-					"arrivalRadius": 5000,
-					"rLoc": []
-				},
-				{
-					"formation": 0,
-					"speed": 500,
-					"priority": 1,
-					"eMCON": 0,
-					"orderName": "sweep",
-					"statusName": "",
-					"orderRegionName": "",
-					"objectiveName": "",
-					"objectiveDesc": "",
-					"objectiveInfo": "",
-					"objectiveType": "",
-					"action": "Sweep",
-					"objectiveLocation":
-					{
-						"x": 10000,
-						"y": -10000,
-						"z": 10000
-					},
-					"arrivalRadius": 5000,
-					"rLoc": []
-				},
-				{
-					"formation": 0,
-					"speed": 400,
-					"priority": 1,
-					"eMCON": 0,
-					"orderName": "rtb",
-					"statusName": "",
-					"orderRegionName": "",
-					"objectiveName": "Janek Station",
-					"objectiveDesc": "",
-					"objectiveInfo": "",
-					"objectiveType": "",
-					"action": "RTB",
-					"objectiveLocation":
-					{
-						"x": 60000,
-						"y": 0,
-						"z": 10000
-					},
-					"arrivalRadius": 5000,
-					"rLoc": []
-				}
-			],
-			"ship": []
-		},
-		{
-			"name": "Sierra",
-			"carrier": "",
-			"commander": "",
-			"squadron": "",
-			"text": "",
-			"path": "",
-			"design": "TargetDrone",
-			"skinName": "",
-			"roleName": "PATROL",
-			"regionName": "",
-			"instr": "",
-			"intel": "KNOWN",
-			"location":
-			{
-				"x": 50000,
-				"y": 20000,
-				"z": 10000
-			},
-			"deck": 1,
-			"iFFCode": 2,
-			"count": 4,
-			"maintCount": 0,
-			"deadCount": 0,
-			"player": 0,
-			"commandAI": 1,
-			"respawns": 0,
-			"holdTime": 0,
-			"zoneLock": 0,
-			"heading": 0,
-			"alert": false,
-			"playable": false,
-			"rogue": false,
-			"invulnerable": false,
-			"rLoc": [],
-			"loadout": [],
-			"instruction": [],
-			"navpoint": [
-				{
-					"formation": 0,
-					"speed": 300,
-					"priority": 1,
-					"eMCON": 0,
-					"orderName": "vector",
-					"statusName": "",
-					"orderRegionName": "",
-					"objectiveName": "",
-					"objectiveDesc": "",
-					"objectiveInfo": "",
-					"objectiveType": "",
-					"action": "Vector",
-					"objectiveLocation":
-					{
-						"x": 20000,
-						"y": 20000,
-						"z": 10000
-					},
-					"arrivalRadius": 5000,
-					"rLoc": []
-				},
-				{
-					"formation": 0,
-					"speed": 300,
-					"priority": 1,
-					"eMCON": 0,
-					"orderName": "vector",
-					"statusName": "",
-					"orderRegionName": "",
-					"objectiveName": "",
-					"objectiveDesc": "",
-					"objectiveInfo": "",
-					"objectiveType": "",
-					"action": "Vector",
-					"objectiveLocation":
-					{
-						"x": 20000,
-						"y": 0,
-						"z": 10000
-					},
-					"arrivalRadius": 5000,
-					"rLoc": []
-				},
-				{
-					"formation": 0,
-					"speed": 300,
-					"priority": 1,
-					"eMCON": 0,
-					"orderName": "vector",
-					"statusName": "",
-					"orderRegionName": "",
-					"objectiveName": "",
-					"objectiveDesc": "",
-					"objectiveInfo": "",
-					"objectiveType": "",
-					"action": "Vector",
-					"objectiveLocation":
-					{
-						"x": 0,
-						"y": -20000,
-						"z": 10000
-					},
-					"arrivalRadius": 5000,
-					"rLoc": []
-				},
-				{
-					"formation": 0,
-					"speed": 300,
-					"priority": 1,
-					"eMCON": 0,
-					"orderName": "vector",
-					"statusName": "",
-					"orderRegionName": "",
-					"objectiveName": "",
-					"objectiveDesc": "",
-					"objectiveInfo": "",
-					"objectiveType": "",
-					"action": "Vector",
-					"objectiveLocation":
-					{
-						"x": -20000,
-						"y": -15000,
-						"z": 10000
-					},
-					"arrivalRadius": 5000,
-					"rLoc": []
-				}
-			],
-			"ship": []
-		},
-		{
-			"name": "Building",
-			"carrier": "",
-			"commander": "",
-			"squadron": "",
-			"text": "",
-			"path": "",
-			"design": "Bldg00",
-			"skinName": "",
-			"roleName": "PATROL",
-			"regionName": "Janek Station",
-			"instr": "",
-			"intel": "LOCATED",
-			"location":
-			{
-				"x": -19000,
-				"y": 28000,
-				"z": 0
-			},
-			"deck": 1,
-			"iFFCode": 1,
-			"count": 1,
-			"maintCount": 0,
-			"deadCount": 0,
-			"player": 0,
-			"commandAI": 1,
-			"respawns": 0,
-			"holdTime": 0,
-			"zoneLock": 0,
-			"heading": -13,
-			"alert": false,
-			"playable": false,
-			"rogue": false,
-			"invulnerable": false,
-			"rLoc": [],
-			"loadout": [],
-			"instruction": [],
-			"navpoint": [],
-			"ship": []
-		},
-		{
-			"name": "Building",
-			"carrier": "",
-			"commander": "",
-			"squadron": "",
-			"text": "",
-			"path": "",
-			"design": "Bldg00",
-			"skinName": "",
-			"roleName": "PATROL",
-			"regionName": "Janek Station",
-			"instr": "",
-			"intel": "LOCATED",
-			"location":
-			{
-				"x": -21000,
-				"y": 29000,
-				"z": 0
-			},
-			"deck": 1,
-			"iFFCode": 1,
-			"count": 1,
-			"maintCount": 0,
-			"deadCount": 0,
-			"player": 0,
-			"commandAI": 1,
-			"respawns": 0,
-			"holdTime": 0,
-			"zoneLock": 0,
-			"heading": -13,
-			"alert": false,
-			"playable": false,
-			"rogue": false,
-			"invulnerable": false,
-			"rLoc": [],
-			"loadout": [],
-			"instruction": [],
-			"navpoint": [],
-			"ship": []
-		},
-		{
-			"name": "Office Block",
-			"carrier": "",
-			"commander": "",
-			"squadron": "",
-			"text": "",
-			"path": "",
-			"design": "Bldg01",
-			"skinName": "",
-			"roleName": "PATROL",
-			"regionName": "Janek Station",
-			"instr": "",
-			"intel": "LOCATED",
-			"location":
-			{
-				"x": -16000,
-				"y": 32000,
-				"z": 0
-			},
-			"deck": 1,
-			"iFFCode": 1,
-			"count": 1,
-			"maintCount": 0,
-			"deadCount": 0,
-			"player": 0,
-			"commandAI": 1,
-			"respawns": 0,
-			"holdTime": 0,
-			"zoneLock": 0,
-			"heading": -13,
-			"alert": false,
-			"playable": false,
-			"rogue": false,
-			"invulnerable": false,
-			"rLoc": [],
-			"loadout": [],
-			"instruction": [],
-			"navpoint": [],
-			"ship": []
-		},
-		{
-			"name": "Dome",
-			"carrier": "",
-			"commander": "",
-			"squadron": "",
-			"text": "",
-			"path": "",
-			"design": "Tank00",
-			"skinName": "",
-			"roleName": "PATROL",
-			"regionName": "Janek Station",
-			"instr": "",
-			"intel": "LOCATED",
-			"location":
-			{
-				"x": -19000,
-				"y": 31000,
-				"z": 0
-			},
-			"deck": 1,
-			"iFFCode": 1,
-			"count": 1,
-			"maintCount": 0,
-			"deadCount": 0,
-			"player": 0,
-			"commandAI": 1,
-			"respawns": 0,
-			"holdTime": 0,
-			"zoneLock": 0,
-			"heading": -13,
-			"alert": false,
-			"playable": false,
-			"rogue": false,
-			"invulnerable": false,
-			"rLoc": [],
-			"loadout": [],
-			"instruction": [],
-			"navpoint": [],
-			"ship": []
-		},
-		{
-			"name": "Office Block",
-			"carrier": "",
-			"commander": "",
-			"squadron": "",
-			"text": "",
-			"path": "",
-			"design": "Bldg01",
-			"skinName": "",
-			"roleName": "PATROL",
-			"regionName": "Janek Station",
-			"instr": "",
-			"intel": "LOCATED",
-			"location":
-			{
-				"x": -18000,
-				"y": 30000,
-				"z": 0
-			},
-			"deck": 1,
-			"iFFCode": 1,
-			"count": 1,
-			"maintCount": 0,
-			"deadCount": 0,
-			"player": 0,
-			"commandAI": 1,
-			"respawns": 0,
-			"holdTime": 0,
-			"zoneLock": 0,
-			"heading": -13,
-			"alert": false,
-			"playable": false,
-			"rogue": false,
-			"invulnerable": false,
-			"rLoc": [],
-			"loadout": [],
-			"instruction": [],
-			"navpoint": [],
-			"ship": []
-		},
-		{
-			"name": "Building",
-			"carrier": "",
-			"commander": "",
-			"squadron": "",
-			"text": "",
-			"path": "",
-			"design": "Fact03",
-			"skinName": "",
-			"roleName": "PATROL",
-			"regionName": "Janek Station",
-			"instr": "",
-			"intel": "LOCATED",
-			"location":
-			{
-				"x": -17000,
-				"y": 29000,
-				"z": 0
-			},
-			"deck": 1,
-			"iFFCode": 1,
-			"count": 1,
-			"maintCount": 0,
-			"deadCount": 0,
-			"player": 0,
-			"commandAI": 1,
-			"respawns": 0,
-			"holdTime": 0,
-			"zoneLock": 0,
-			"heading": -13,
-			"alert": false,
-			"playable": false,
-			"rogue": false,
-			"invulnerable": false,
-			"rLoc": [],
-			"loadout": [],
-			"instruction": [],
-			"navpoint": [],
-			"ship": []
-		},
-		{
-			"name": "Cooling Tower",
-			"carrier": "",
-			"commander": "",
-			"squadron": "",
-			"text": "",
-			"path": "",
-			"design": "Cool00",
-			"skinName": "",
-			"roleName": "PATROL",
-			"regionName": "Janek Station",
-			"instr": "",
-			"intel": "LOCATED",
-			"location":
-			{
-				"x": 70000,
-				"y": -10000,
-				"z": 0
-			},
-			"deck": 1,
-			"iFFCode": 1,
-			"count": 4,
-			"maintCount": 0,
-			"deadCount": 0,
-			"player": 0,
-			"commandAI": 1,
-			"respawns": 0,
-			"holdTime": 0,
-			"zoneLock": 0,
-			"heading": 0,
-			"alert": false,
-			"playable": false,
-			"rogue": false,
-			"invulnerable": false,
-			"rLoc": [],
-			"loadout": [],
-			"instruction": [],
-			"navpoint": [],
-			"ship": []
-		}
-	],
-	"event": [
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_DESTROYED",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "",
-			"triggerShip": "Sierra 1",
-			"triggerTarget": "",
-			"eventId": 101,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 0,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 0
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_DESTROYED",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "",
-			"triggerShip": "Sierra 2",
-			"triggerTarget": "",
-			"eventId": 102,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 0,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 0
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_DESTROYED",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "",
-			"triggerShip": "Sierra 3",
-			"triggerTarget": "",
-			"eventId": 103,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 0,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 0
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_DESTROYED",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "",
-			"triggerShip": "Sierra 4",
-			"triggerTarget": "",
-			"eventId": 104,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 0,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 0
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_TIME",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "Please wait",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "Train-03-01",
-			"triggerShip": "",
-			"triggerTarget": "",
-			"eventId": 200,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 2,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 0
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_TIME",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "Taking off",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "Train-03-02",
-			"triggerShip": "",
-			"triggerTarget": "",
-			"eventId": 210,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 20,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 0
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_TIME",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "Raise your langing gear",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "Train-03-03",
-			"triggerShip": "",
-			"triggerTarget": "",
-			"eventId": 220,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 40,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 0
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_TIME",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "Engage autonav",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "Train-03-04",
-			"triggerShip": "",
-			"triggerTarget": "",
-			"eventId": 230,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 65,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 0
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_NAVPT",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "Disengage autonav",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "Train-03-05",
-			"triggerShip": "Alpha",
-			"triggerTarget": "",
-			"eventId": 240,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 65,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				2,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 1
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_EVENT",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "Airborne combat skills",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "Train-03-06",
-			"triggerShip": "",
-			"triggerTarget": "",
-			"eventId": 250,
-			"eventChance": 0,
-			"eventDelay": 14,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 65,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				240,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 1
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_EVENT_ALL",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "Well done!",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "Train-03-07",
-			"triggerShip": "",
-			"triggerTarget": "",
-			"eventId": 260,
-			"eventChance": 0,
-			"eventDelay": 1,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 65,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				101,
-				102,
-				103,
-				104,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 4
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_NAVPT",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "Order your wingman to head for home",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "Train-03-08",
-			"triggerShip": "Alpha",
-			"triggerTarget": "",
-			"eventId": 270,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 65,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				4,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 1
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_NAVPT",
-			"eventShip": "",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "Return to base",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "Train-03-09",
-			"triggerShip": "Alpha",
-			"triggerTarget": "",
-			"eventId": 300,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 65,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				5,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 1
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_RANGE",
-			"eventShip": "Alpha 1",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "Landing procedure",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "Train-03-10",
-			"triggerShip": "Janek Station",
-			"triggerTarget": "",
-			"eventId": 310,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 120,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				15000,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 1
-		},
-		{
-			"eventType": "MESSAGE",
-			"eventTrigger": "TRIGGER_RANGE",
-			"eventShip": "Alpha 1",
-			"eventSource": "",
-			"eventTarget": "",
-			"eventImage": "",
-			"eventMessage": "Final approach",
-			"eventCaption": "",
-			"eventFade":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventSound": "Train-03-11",
-			"triggerShip": "Janek Station",
-			"triggerTarget": "",
-			"eventId": 311,
-			"eventChance": 0,
-			"eventDelay": 0,
-			"eventScale": 1,
-			"eventRotator":
-			{
-				"pitch": 0,
-				"yaw": 0,
-				"roll": 0
-			},
-			"eventOffset":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventTime": 120,
-			"eventPoint":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0
-			},
-			"eventRect":
-			{
-				"x": 0,
-				"y": 0,
-				"z": 0,
-				"w": 0
-			},
-			"eventParam": [
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"triggerParam": [
-				10000,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0,
-				0
-			],
-			"eventNParams": 0,
-			"triggerNParams": 1
-		}
-	]
+  "storyCampaignId": 0,
+  "storyUnlockScene": "",
+  "storyPoints": 0,
+  "rowName": "None",
+  "id": 103,
+  "missionName": "Flight School",
+  "maxPlayers": 0,
+  "missionRegion": "Janek Station",
+  "missionSystem": "Janus",
+  "scene": "T3",
+  "subtitles": "",
+  "desc": "",
+  "targetName": "",
+  "wardName": "",
+  "objective": "Training - Practice airborne fighter operations.",
+  "sitrep": "The Orion will jump to the Janek Airbase flight corridor. You will launch from the carrier, descend through the atmosphere and land at Janek Station. Begin the surface lesson after arrival. Your assignment is the 18th Trellis Wing aboard the CV6-Orion. The Third Fleet is participating in wargame exercises in the Janus system. Your squadron, the Avengers, are on temporary detached duty to Janek Station.As part of the exercise, you have been tasked with practicing take offs and landings, flying patrol patterns and destroying target drones in your sector.",
+  "startTime": "01/16:23:00",
+  "startAfter": "",
+  "group": "NONE",
+  "missionType": "TRAINING",
+  "source": "Scripted",
+  "displayType": "CutsceneOnly",
+  "team": 0,
+  "stardate": 1084144000,
+  "degrees": true,
+  "once": false,
+  "element": [
+    {
+      "name": "Janek Station",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "Airbase1",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "",
+      "instr": "",
+      "intel": "KNOWN",
+      "location": {
+        "x": 25000,
+        "y": 0,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 1,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 0,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": -90,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [],
+      "instruction": [],
+      "navpoint": [],
+      "ship": []
+    },
+    {
+      "name": "Avengers",
+      "carrier": "Janek Station",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "Falcon",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "",
+      "instr": "",
+      "intel": "KNOWN",
+      "location": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 20,
+      "maintCount": 5,
+      "deadCount": 5,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": 0,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [
+        {
+          "ship": -1,
+          "loadoutName": "ACM Medium Range",
+          "stations": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "instruction": [],
+      "navpoint": [],
+      "ship": []
+    },
+    {
+      "name": "Alpha",
+      "carrier": "",
+      "commander": "",
+      "squadron": "Avengers",
+      "text": "",
+      "path": "",
+      "design": "Falcon",
+      "skinName": "",
+      "roleName": "SWEEP",
+      "regionName": "",
+      "instr": "",
+      "intel": "KNOWN",
+      "location": {
+        "x": 15000,
+        "y": -5000,
+        "z": 5000
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 2,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 1,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": -90,
+      "alert": true,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [
+        {
+          "ship": -1,
+          "loadoutName": "ACM Medium Range",
+          "stations": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "instruction": [
+        {
+          "formation": 0,
+          "speed": 0,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "intercept",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "Sierra",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Intercept",
+          "objectiveLocation": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        }
+      ],
+      "navpoint": [
+        {
+          "formation": 0,
+          "speed": 350,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": -15000,
+            "y": -5000,
+            "z": 7000
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 500,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": -15000,
+            "y": -20000,
+            "z": 8000
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 500,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "sweep",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Sweep",
+          "objectiveLocation": {
+            "x": 0,
+            "y": -10000,
+            "z": 10000
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 500,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "sweep",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Sweep",
+          "objectiveLocation": {
+            "x": 10000,
+            "y": -10000,
+            "z": 10000
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 400,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "rtb",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "Janek Station",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "RTB",
+          "objectiveLocation": {
+            "x": 60000,
+            "y": 0,
+            "z": 10000
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        }
+      ],
+      "ship": []
+    },
+    {
+      "name": "Sierra",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "TargetDrone",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "",
+      "instr": "",
+      "intel": "KNOWN",
+      "location": {
+        "x": 50000,
+        "y": 20000,
+        "z": 10000
+      },
+      "deck": 1,
+      "iFFCode": 2,
+      "count": 4,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": 0,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [],
+      "instruction": [],
+      "navpoint": [
+        {
+          "formation": 0,
+          "speed": 300,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": 20000,
+            "y": 20000,
+            "z": 10000
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 300,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": 20000,
+            "y": 0,
+            "z": 10000
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 300,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": 0,
+            "y": -20000,
+            "z": 10000
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        },
+        {
+          "formation": 0,
+          "speed": 300,
+          "priority": 1,
+          "eMCON": 0,
+          "orderName": "vector",
+          "statusName": "",
+          "orderRegionName": "",
+          "objectiveName": "",
+          "objectiveDesc": "",
+          "objectiveInfo": "",
+          "objectiveType": "",
+          "action": "Vector",
+          "objectiveLocation": {
+            "x": -20000,
+            "y": -15000,
+            "z": 10000
+          },
+          "arrivalRadius": 5000,
+          "rLoc": []
+        }
+      ],
+      "ship": []
+    },
+    {
+      "name": "Building",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "Bldg00",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "Janek Station",
+      "instr": "",
+      "intel": "LOCATED",
+      "location": {
+        "x": -19000,
+        "y": 28000,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 1,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": -13,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [],
+      "instruction": [],
+      "navpoint": [],
+      "ship": []
+    },
+    {
+      "name": "Building",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "Bldg00",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "Janek Station",
+      "instr": "",
+      "intel": "LOCATED",
+      "location": {
+        "x": -21000,
+        "y": 29000,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 1,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": -13,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [],
+      "instruction": [],
+      "navpoint": [],
+      "ship": []
+    },
+    {
+      "name": "Office Block",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "Bldg01",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "Janek Station",
+      "instr": "",
+      "intel": "LOCATED",
+      "location": {
+        "x": -16000,
+        "y": 32000,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 1,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": -13,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [],
+      "instruction": [],
+      "navpoint": [],
+      "ship": []
+    },
+    {
+      "name": "Dome",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "Tank00",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "Janek Station",
+      "instr": "",
+      "intel": "LOCATED",
+      "location": {
+        "x": -19000,
+        "y": 31000,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 1,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": -13,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [],
+      "instruction": [],
+      "navpoint": [],
+      "ship": []
+    },
+    {
+      "name": "Office Block",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "Bldg01",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "Janek Station",
+      "instr": "",
+      "intel": "LOCATED",
+      "location": {
+        "x": -18000,
+        "y": 30000,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 1,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": -13,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [],
+      "instruction": [],
+      "navpoint": [],
+      "ship": []
+    },
+    {
+      "name": "Building",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "Fact03",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "Janek Station",
+      "instr": "",
+      "intel": "LOCATED",
+      "location": {
+        "x": -17000,
+        "y": 29000,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 1,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": -13,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [],
+      "instruction": [],
+      "navpoint": [],
+      "ship": []
+    },
+    {
+      "name": "Cooling Tower",
+      "carrier": "",
+      "commander": "",
+      "squadron": "",
+      "text": "",
+      "path": "",
+      "design": "Cool00",
+      "skinName": "",
+      "roleName": "PATROL",
+      "regionName": "Janek Station",
+      "instr": "",
+      "intel": "LOCATED",
+      "location": {
+        "x": 70000,
+        "y": -10000,
+        "z": 0
+      },
+      "deck": 1,
+      "iFFCode": 1,
+      "count": 4,
+      "maintCount": 0,
+      "deadCount": 0,
+      "player": 0,
+      "commandAI": 1,
+      "respawns": 0,
+      "holdTime": 0,
+      "zoneLock": 0,
+      "heading": 0,
+      "alert": false,
+      "playable": false,
+      "rogue": false,
+      "invulnerable": false,
+      "rLoc": [],
+      "loadout": [],
+      "instruction": [],
+      "navpoint": [],
+      "ship": []
+    }
+  ],
+  "event": [
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Sierra 1",
+      "triggerTarget": "",
+      "eventId": 101,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Sierra 2",
+      "triggerTarget": "",
+      "eventId": 102,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Sierra 3",
+      "triggerTarget": "",
+      "eventId": 103,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_DESTROYED",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "",
+      "triggerShip": "Sierra 4",
+      "triggerTarget": "",
+      "eventId": 104,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 0,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_TIME",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Please wait",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-03-01",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 200,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 2,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_TIME",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Taking off",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-03-02",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 210,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 20,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_TIME",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Raise your langing gear",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-03-03",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 220,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 40,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_TIME",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Engage autonav",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-03-04",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 230,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 65,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 0
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_NAVPT",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Disengage autonav",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-03-05",
+      "triggerShip": "Alpha",
+      "triggerTarget": "",
+      "eventId": 240,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 65,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_EVENT",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Airborne combat skills",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-03-06",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 250,
+      "eventChance": 0,
+      "eventDelay": 14,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 65,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        240,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_EVENT_ALL",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Well done!",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-03-07",
+      "triggerShip": "",
+      "triggerTarget": "",
+      "eventId": 260,
+      "eventChance": 0,
+      "eventDelay": 1,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 65,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        101,
+        102,
+        103,
+        104,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 4
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_NAVPT",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Order your wingman to head for home",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-03-08",
+      "triggerShip": "Alpha",
+      "triggerTarget": "",
+      "eventId": 270,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 65,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        4,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_NAVPT",
+      "eventShip": "",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Return to base",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-03-09",
+      "triggerShip": "Alpha",
+      "triggerTarget": "",
+      "eventId": 300,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 65,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        5,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_RANGE",
+      "eventShip": "Alpha 1",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Landing procedure",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-03-10",
+      "triggerShip": "Janek Station",
+      "triggerTarget": "",
+      "eventId": 310,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 120,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        15000,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    },
+    {
+      "eventType": "MESSAGE",
+      "eventTrigger": "TRIGGER_RANGE",
+      "eventShip": "Alpha 1",
+      "eventSource": "",
+      "eventTarget": "",
+      "eventImage": "",
+      "eventMessage": "Final approach",
+      "eventCaption": "",
+      "eventFade": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventSound": "Train-03-11",
+      "triggerShip": "Janek Station",
+      "triggerTarget": "",
+      "eventId": 311,
+      "eventChance": 0,
+      "eventDelay": 0,
+      "eventScale": 1,
+      "eventRotator": {
+        "pitch": 0,
+        "yaw": 0,
+        "roll": 0
+      },
+      "eventOffset": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventTime": 120,
+      "eventPoint": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "eventRect": {
+        "x": 0,
+        "y": 0,
+        "z": 0,
+        "w": 0
+      },
+      "eventParam": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "triggerParam": [
+        10000,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "eventNParams": 0,
+      "triggerNParams": 1
+    }
+  ]
 }

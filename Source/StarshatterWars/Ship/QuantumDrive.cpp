@@ -103,6 +103,7 @@ QuantumDrive::SetDestination(SimRegion* rgn, const FVector& loc)
 {
 	dst_rgn = rgn;
 	dst_loc = loc;
+    bPointDestination=false;
 }
 
 // +--------------------------------------------------------------------+
@@ -275,7 +276,7 @@ QuantumDrive::Jump()
 		else
 			sim->CreateExplosion(ship->GetLocation(), FVector::ZeroVector, EExplosionType::QUANTUM_FLASH, 1, 0, ship->GetRegion());
 
-		sim->RequestHyperJump(ship, dst_rgn, esc_vec);
+		sim->RequestHyperJump(ship, dst_rgn, bPointDestination ? dst_loc : esc_vec,0,nullptr,nullptr,bPointDestination);
 
 		ShipStats* stats = ShipStats::Find(ship->GetName());
 		if (stats)
@@ -284,6 +285,7 @@ QuantumDrive::Jump()
 
 	dst_rgn = 0;
 	dst_loc = FVector::ZeroVector;
+    bPointDestination=false;
 
 	active_state = ACTIVE_POSTWARP;
 }

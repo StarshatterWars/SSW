@@ -8,5 +8,6 @@
     "documentRoot": "LauncherFeed",
     "port": 18787,
     "readyTimeoutSeconds": 12
-  }
+  },
+  "storeUrl": null
 }

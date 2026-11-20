@@ -57,7 +57,13 @@ while ($queue.Count) {
     if (!(Test-Path -LiteralPath $file -PathType Leaf)) { throw "Missing required Apache dependency $relative" }
     $target=Join-Path $destination $relative
     New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
-    Copy-Item -LiteralPath $file -Destination $target -Force
+    # Rebuilding an installer may reuse the verified runtime serving localhost.
+    # Identical files need no write, so a running feed remains available.
+    if (!(Test-Path -LiteralPath $target -PathType Leaf) -or
+        (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ne
+        (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash) {
+        Copy-Item -LiteralPath $file -Destination $target -Force
+    }
     foreach ($dependency in Get-PeImports $file) {
         if (Test-Path -LiteralPath (Join-Path $source "bin/$dependency") -PathType Leaf) { $queue.Enqueue("bin/$dependency") }
         else { [void]$external.Add($dependency) }

@@ -1,3 +1,44 @@
+NEXT BUILD — 20 NOVEMBER 2026 (awaiting verification and user packaging)
+Carrier aircraft sales follow every eligible squadron in the carrier OOB. Mission-assigned aircraft are excluded from sale; stock and purchases persist. The Stormhawk training price remains 400,000 CR. T1 is now Carrier Qualifications. The training agent assigns the pilot to the 18th Trellis Wing aboard CV6-Orion.
+
+Ground lessons remain queued while Orion jumps to the Janek Airbase flight corridor. The pilot then launches, flies through the atmosphere and lands at Janek before starting the surface lesson. Continuous surface boundaries preserve velocity without the old control blackout. Recovered free-flight craft can be staged for departure again without replacing their fuel, cargo or damage.
+
+Orion exterior red/green beacons retain their hull fixtures, use a local light radius and cast hull shadows to prevent illumination through the launch bays. Janek now uses the full WorldScape material instead of the baked orbital surface. The runway grade and lake data are unchanged.
+
+Twenty-three freighter and Zodiac-derived skins now have cooked UE material assets selected by native C++. Runtime raw bitmap decoding is removed; legacy skin parsing remains an editor authoring tool.
+
+Campaign information now includes complete Marakan and Dantari headers and seven training flights for each faction. Training retains separate rank and skill gates, local carrier/base assets, and distinct travel sectors. Existing Terellian training remains in place.
+
+Marakan Campaigns 3 and 4 have expanded mission briefs, hostile flights and recovery objectives. Campaign 5 now faces the Zolon threat, with Marakan pilots remaining playable and Zolons remaining opponents. Chapter-specific repeatable agent jobs use faction, system and progression gates.
+
+Faction OOBs now load directly from JSON; the old table is retained for authoring/parity only. Running independent jobs remain visible after offer expiry and repeated Start/refresh commands cannot reset or duplicate them. Current rank and chapter-system authorization are rechecked.
+
+This is Phase 4. The local dedicated FractalVerse server is Phase 5 and arena multiplayer Phase 6. Mod Editor and new MP4 production remain deferred.
+
+Launcher 1.0.15 adds separate News and Store tabs. No products or checkout are active. An optional HTTPS store link opens in the browser. Epic persistent authorization and Epic's own sign-in page remain the supported login path; no Epic passwords are collected.
+
+Gun muzzle flashes are 25% smaller without changing weapon data. Combat beam classes now have native C++ Niagara defaults; legacy range, charge, damage and duration remain controlled by the simulation. Missiles use nozzle-fitted native Niagara exhaust, hidden while racked or dropping free and driven by simulated thrust during flight, including pause/time controls.
+
+All 221 recipes now have an eligible production facility. Previously 206 recipes had no facility route for installing their blueprint jobs. New links follow the existing regional production lists and exclusive sources; primary automated NPC recipes are unchanged.
+
+Flight Ops is read-only unless you are piloting the displayed carrier. Fighter pilots can inspect rosters but cannot issue launch, recall, readiness or mission-planning commands.
+
+Both the launcher and main menu now identify this release as Alpha 4 and display the same game build number. A shared alpha warning explains that bugs, crashes, incomplete features and save incompatibilities may occur. The launcher application version is shown separately.
+
+OLDER CHECKPOINT NOTES FOLLOW
+
+TRAINING CARRIER PURCHASES - 20 NOVEMBER 2026
+Orion now offers two unassigned Stormhawks from a dedicated Training Reserve while the pilot is in Operation Live Fire training. Training price: 400,000 CR. The regular price elsewhere stays 574,000 CR. Purchases go to the pilot hangar and persist with finite stock; failed saves restore both credits and the reserve fighter. Mission-assigned craft are untouched, and sale reserves cannot be launched through Flight Ops. Training launch clearance requirements remain in place.
+
+Compiled and all six targeted station-service and reward tests passed. Awaiting user cook and package. Live carrier-to-surface training transit and fighter fast travel are not part of this purchase fix yet.
+
+PILOT RECOVERY AND DECK RESUME - 20 NOVEMBER 2026
+Launcher 1.0.13 adds Repair > Recover Pilot Save. Pick a dated checkpoint for a pilot; the launcher verifies the checkpoint, backs up all current saves and checks the restored save before reporting success. Older checkpoints restore the matching saved world and economy. The next cooked game build is required. An older installed game gets a clear explanation and is not launched for recovery.
+
+World resume now removes stale launch-deck slot ownership from departed fighters, parks deck-controlled fighters at their carrier's current authored spots with gear clearance, and restores launch collision protection for departures in progress. Native persistence tests and launcher checks passed; a new packaged T1 deck test remains for the user.
+
+Earlier release notes below refer to earlier build checkpoints.
+
 NEXT BUILD - awaiting user cook and package
 
 Intel replay stability

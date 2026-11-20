@@ -2250,6 +2250,14 @@ void AShipActor::BuildNavLightsFromRuntime()
             Def.Radius =
                 RuntimeNavLight->GetBeaconRadius(BeaconIndex);
 
+            const ShipDesign* LightDesign = RuntimeShip ? RuntimeShip->Design() : SnapshotVisualDesign;
+            if(LightDesign && FCStringAnsi::Stricmp(LightDesign->name,"Orion")==0 &&
+               (Def.Color.R>Def.Color.G*2.0f || Def.Color.G>Def.Color.R*2.0f))
+            {
+                Def.bHullOccluded=true;
+                // These are exterior position beacons, not hangar floodlights.
+                Def.Radius=FMath::Min(Def.Radius,60.0f);
+            }
             Def.Mode =
                 RuntimeNavLight->GetBeaconMode(BeaconIndex);
 

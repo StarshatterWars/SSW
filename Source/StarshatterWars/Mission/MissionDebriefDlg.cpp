@@ -781,17 +781,18 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
                 auto& Info=Players->GetMutablePlayerInfo();
                 const int32 CampaignId = bRegionalAssignment ? Campaign::SINGLE_MISSIONS : bTrainingAssignment ? Campaign::TRAINING_CAMPAIGN : bRecordCampaignMission ? CampaignPtr->GetCampaignId() : Campaign::SINGLE_MISSIONS;
                 const bool bFirstCompletion = Info.MarkMissionCompleted(CampaignId, MissionPtr->GetIdentity());
-                if (bStoryMission && bFirstCompletion)
+                if (bFirstCompletion && !SimPtr->IsNetworked())
                 {
-                    const int32 Bonus = MissionPtr->GetStoryPoints();
+                    const int32 Bonus = FMath::Max(MissionPtr->GetStoryPoints(),FMissionRewardCatalog::Get().Quote(CampaignId,MissionPtr->GetIdentity(),false,0,0).CompletionPoints);
                     if (auto* Pilot = PlayerCharacter::GetCurrentPlayer())
                     {
                         Pilot->AddPoints(Bonus);
                         Info.PlayerPoints = Pilot->GetPoints();
+                        Info.Rank = Pilot->GetRank();
                     }
                     Points += Bonus;
                     if (UTextBlock* MissionScore = GetLabel(211))
-                        MissionScore->SetText(FText::FromString(FString::Printf(TEXT("%d points (%d story completion)"), Points, Bonus)));
+                        MissionScore->SetText(FText::FromString(FString::Printf(TEXT("%d points (%d mission completion)"), Points, Bonus)));
                 }
                 if(CampaignId==Campaign::TRAINING_CAMPAIGN && MissionPtr->GetIdentity()==103
                     && MissionPtr->GetMissionType()==int(EMissionType::TRAINING))

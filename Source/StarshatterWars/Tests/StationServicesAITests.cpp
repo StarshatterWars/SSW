@@ -34,6 +34,6 @@ bool FStationServicesAccessTest::RunTest(const FString&)
     TSet<ESSWStationService> Seen;
     for(const auto& Entry:StationServicesAI::Descriptors())
     {TestFalse(TEXT("Each service descriptor unique"),Seen.Contains(Entry.Service));Seen.Add(Entry.Service);TestTrue(TEXT("Each destination is registered popup key"),FString(Entry.RegistryKey).StartsWith(TEXT("UI.")));}
-    TestEqual(TEXT("All authored capability types represented"),Seen.Num(),10);return true;
+    TestEqual(TEXT("All authored capability types represented"),Seen.Num(),int32(ESSWStationService::HullSales)+1);return true;
 }
 #endif

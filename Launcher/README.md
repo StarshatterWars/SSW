@@ -65,3 +65,31 @@ require elevation, or stop/reconfigure XAMPP or another Apache instance. A busy
 port or missing release files gets a clear error while bundled news remains
 readable. Playing still requires the signed current release: no cached-version
 or offline patch-check bypass has been introduced.
+
+
+### Pilot save recovery (launcher 1.0.13)
+
+Repair → Recover Pilot Save lists only complete, native-validated autosave
+checkpoints, with pilot name, local date/time and points. Select a checkpoint
+and choose Back Up and Restore. The installed game must be closed, and recovery
+shares the install/update lock. The game build must include the native recovery
+handler; older builds are rejected before starting a process.
+
+Recovery runs headless and offline before game subsystems or sign-in initialize.
+It validates all four checkpoint areas and the selected profile/date, round-trips
+the reconstructed pilot and index, then copies and verifies every current `.sav`
+under `StarshatterWars/Saved/PilotRecoveryBackups/<UTC-date>-<unique-id>`.
+Only after backup verification does it replace the account save, named pilot,
+profile index and active checkpoint manifest. Selecting an older checkpoint also
+selects its matching universe/economy generation. Failed writes attempt rollback
+from the verified backup. Original checkpoints remain available. Recovery reports
+are retained in `StarshatterWars/Saved/PilotRecoveryRequests`.
+
+The launcher cannot close during recovery. Reparse-point save folders/files are
+rejected. Recovery is local maintenance, never an online game or EAC session.
+
+### Store panel (launcher 1.0.14)
+
+News and Store have separate tabs. The Store is a presentation placeholder; no checkout, real products, prices or entitlements are active. An optional `storeUrl` in `launcher.json` enables the official-store browser button. It accepts HTTPS URLs without embedded credentials. Keep it null until a provider is configured.
+
+Epic sign-in tries EOS Persistent Auth before Account Portal. The SDK reserves email/password login for Epic internal use; the launcher never collects or forwards Epic passwords. Steam remains deferred.

@@ -1358,11 +1358,13 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
 
 void ShipDesignRegistry::CompleteLegacySkinMetadata(const FName& RowName, TArray<FShipSkin>& Skins)
 {
+#if WITH_EDITOR
+    // Legacy DEF recovery is an authoring migration only. Cooked skins use JSON and UE materials.
     const auto NeedsMetadata=[](const FShipSkin& Skin)
     {
         if(Skin.Cells.IsEmpty()) return true;
         for(const auto& Cell:Skin.Cells)
-            if(!Cell.TextureName.IsEmpty() || !Cell.AuxTextureName.IsEmpty() || !Cell.SpecularTextureName.IsEmpty() ||
+            if(!Cell.UnrealMaterial.IsNull() || !Cell.TextureName.IsEmpty() || !Cell.AuxTextureName.IsEmpty() || !Cell.SpecularTextureName.IsEmpty() ||
                !Cell.BumpTextureName.IsEmpty() || !Cell.EmissiveTextureName.IsEmpty() || Cell.bHasAmbientColor ||
                Cell.bHasDiffuseColor || Cell.bHasSpecularColor || Cell.bHasEmissiveColor || Cell.bHasSpecularPower || Cell.bHasBumpScale) return false;
         return true;
@@ -1380,4 +1382,5 @@ void ShipDesignRegistry::CompleteLegacySkinMetadata(const FName& RowName, TArray
                 for(const auto& Original:Authored) if(Original.Name==Skin.Name) {Skin=Original;break;}
         }
     }
+#endif
 }

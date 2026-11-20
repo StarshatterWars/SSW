@@ -3,10 +3,10 @@
 #include "Misc/Paths.h"
 namespace
 {
-TMap<FName,FSSWProductionFacility> Sites;
-TMap<FName,FSSWProductionRecipe> Batches;
-bool Loaded=false;
-void Ensure(){if(!Loaded){FString Error;if(!SSWProductionCatalog::Reload(Error))UE_LOG(LogTemp,Error,TEXT("[ProductionCatalog] %s"),*Error);}}
+TMap<FName,FSSWProductionFacility> ProductionSites;
+TMap<FName,FSSWProductionRecipe> ProductionRecipes;
+bool bProductionCatalogLoaded=false;
+void EnsureProductionCatalog(){if(!bProductionCatalogLoaded){FString Error;if(!SSWProductionCatalog::Reload(Error))UE_LOG(LogTemp,Error,TEXT("[ProductionCatalog] %s"),*Error);}}
 }
 bool SSWProductionCatalog::Reload(FString& Error)
 {
@@ -23,8 +23,8 @@ bool SSWProductionCatalog::Reload(FString& Error)
     }
     for(const auto& P:NewSites)if(P.Value.Facility.IsEmpty() || P.Value.System.IsEmpty() || P.Value.Region.IsEmpty() || !FMath::IsFinite(P.Value.CapacityTonnes) || P.Value.CapacityTonnes<=0 || !NewBatches.Contains(P.Value.Recipe))
     {Error=TEXT("Invalid facility or missing recipe: ")+P.Key.ToString();return false;}
-    Sites=MoveTemp(NewSites);Batches=MoveTemp(NewBatches);Loaded=true;
-    UE_LOG(LogTemp,Display,TEXT("[ProductionCatalog] JSON-only facilities=%d recipes=%d"),Sites.Num(),Batches.Num());return true;
+    ProductionSites=MoveTemp(NewSites);ProductionRecipes=MoveTemp(NewBatches);bProductionCatalogLoaded=true;
+    UE_LOG(LogTemp,Display,TEXT("[ProductionCatalog] JSON-only facilities=%d recipes=%d"),ProductionSites.Num(),ProductionRecipes.Num());return true;
 }
-const TMap<FName,FSSWProductionFacility>& SSWProductionCatalog::Facilities(){Ensure();return Sites;}
-const TMap<FName,FSSWProductionRecipe>& SSWProductionCatalog::Recipes(){Ensure();return Batches;}
+const TMap<FName,FSSWProductionFacility>& SSWProductionCatalog::Facilities(){EnsureProductionCatalog();return ProductionSites;}
+const TMap<FName,FSSWProductionRecipe>& SSWProductionCatalog::Recipes(){EnsureProductionCatalog();return ProductionRecipes;}

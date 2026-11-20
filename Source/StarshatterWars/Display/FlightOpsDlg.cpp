@@ -16,7 +16,10 @@
 */
 
 #include "FlightOpsDlg.h"
+#include "ShipInsuranceSubsystem.h"
+#include "Engine/GameInstance.h"
 #include "FlightOpsPopup.h"
+#include "FlightOpsAccessRules.h"
 #include "SimElement.h"
 #include "Engine/World.h"
 
@@ -178,7 +181,9 @@ void UFlightOpsDlg::UpdateSelection()
     // This method intentionally remains logic-only; ListView population
     // is delegated to RefreshHangarListForFilterIndex().
 
-    // Button enable/disable logic will be added here as UMG bindings mature.
+    const bool Allowed=CanIssueOrders();
+    for(UButton* Button:{PackageButton,AlertButton,LaunchButton,StandbyButton,RecallButton,MissionButtonPatrol,MissionButtonIntercept,MissionButtonAssault,MissionButtonStrike,MissionButtonEscort,MissionButtonScout})
+        if(Button)Button->SetIsEnabled(Allowed);
 }
 
 // +--------------------------------------------------------------------+
@@ -219,6 +224,7 @@ void UFlightOpsDlg::RefreshHangarListForFilterIndex(int32 FilterIndex)
 
 void UFlightOpsDlg::SetMissionType(int32 InMissionType)
 {
+    if(!CanIssueOrders())return;
     if (RuntimePanel.IsValid()) { RuntimePanel->ChooseMission(InMissionType); return; }
     MissionType = InMissionType;
 
@@ -251,6 +257,7 @@ void UFlightOpsDlg::OnFilterChanged(FString SelectedItem, ESelectInfo::Type)
 
 void UFlightOpsDlg::OnPackageClicked()
 {
+    if(!CanIssueOrders())return;
     if (RuntimePanel.IsValid()) RuntimePanel->PreparePackage();
 }
 
@@ -258,6 +265,7 @@ void UFlightOpsDlg::OnPackageClicked()
 
 void UFlightOpsDlg::OnAlertClicked()
 {
+    if(!CanIssueOrders())return;
     if (RuntimePanel.IsValid()) RuntimePanel->PrepareAlert();
 }
 
@@ -265,6 +273,7 @@ void UFlightOpsDlg::OnAlertClicked()
 
 void UFlightOpsDlg::OnLaunchClicked()
 {
+    if(!CanIssueOrders())return;
     if (RuntimePanel.IsValid()) RuntimePanel->LaunchSelected();
 }
 
@@ -272,6 +281,7 @@ void UFlightOpsDlg::OnLaunchClicked()
 
 void UFlightOpsDlg::OnStandDownClicked()
 {
+    if(!CanIssueOrders())return;
     if (RuntimePanel.IsValid()) RuntimePanel->StandDownSelected();
 }
 
@@ -279,6 +289,7 @@ void UFlightOpsDlg::OnStandDownClicked()
 
 void UFlightOpsDlg::OnRecallClicked()
 {
+    if(!CanIssueOrders())return;
     if (RuntimePanel.IsValid()) RuntimePanel->RecallSelected();
 }
 
@@ -300,6 +311,12 @@ void UFlightOpsDlg::OnMissionStrikeClicked() { SetMissionType(3); }
 void UFlightOpsDlg::OnMissionEscortClicked() { SetMissionType(4); }
 void UFlightOpsDlg::OnMissionScoutClicked() { SetMissionType(5); }
 
+bool UFlightOpsDlg::CanIssueOrders() const
+{
+    auto* Simulation=Sim::GetSim();
+    return GetWorld() && !GetWorld()->IsPaused() && Simulation && Simulation->HasSimulationAuthority() &&
+        FlightOpsAccessRules::CanCommand(ResolvePanelShip(),ResolveCarrier());
+}
 Ship* UFlightOpsDlg::ResolveCarrier() const
 {
     Ship* Player=ResolvePanelShip();
@@ -311,10 +328,12 @@ Ship* UFlightOpsDlg::ResolveCarrier() const
 }
 TSharedRef<SWidget> UFlightOpsDlg::CreatePanelContent()
 {
+    if (auto* GI=GetGameInstance()) if(auto* Sales=GI->GetSubsystem<UShipInsuranceSubsystem>())
+    { FText Reason; Sales->PrepareCarrierFighterSales(Reason); }
     if (PanelTitle) PanelTitle->SetVisibility(ESlateVisibility::Collapsed);
     const TWeakObjectPtr<UFlightOpsDlg> Owner(this);
     return SAssignNew(RuntimePanel,SFlightOpsPopup)
         .ResolveCarrier([Owner](){return Owner.IsValid()?Owner->ResolveCarrier():nullptr;})
-        .CanOperate([Owner](){return Owner.IsValid() && Owner->GetWorld() && !Owner->GetWorld()->IsPaused();});
+        .CanOperate([Owner](){return Owner.IsValid() && Owner->CanIssueOrders();});
 }
 FText UFlightOpsDlg::GetPanelCaption() const{return FText::FromString(TEXT("FLIGHT OPERATIONS"));}

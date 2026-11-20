@@ -34,6 +34,8 @@ public:
     UFUNCTION(BlueprintCallable) bool FitComponent(FGuid Hull, int32 Slot, int32 Level, FText& Result);
     int64 GetBalance() const;
     double HullStock(FName Design) const;
+    bool PrepareCarrierFighterSales(FText& Reason);
+    int64 HullPurchasePrice(FName Design) const;
     bool CanPurchaseHull(FName Design,FText& Reason) const;
     bool PurchaseHull(FName Design,FText& Reason);
     bool CanInsure() const;

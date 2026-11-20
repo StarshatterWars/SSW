@@ -35,7 +35,10 @@ void USSWRuntimeSubsystem::UpdateExplosionVisuals(double Seconds)
    UClass* Class=State.bMuzzleFlash?AMuzzleFlashExplosionActor::MuzzleClass().Get():AExplosionActor::VisualClass(State.Type).Get();if(!Class)continue;
    FActorSpawnParameters Params;Params.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
    Actor=GetWorld()->SpawnActor<AExplosionActor>(Class,GetVisualLocationForRegion(Region,State.Location),FRotator::ZeroRotator,Params);
-   if(!Actor)continue;if(auto* M=Cast<AMuzzleFlashExplosionActor>(Actor))M->SetFlashAppearance(State.FlashId,State.ExplosionScale);ExplosionVisuals.Add(P.Key,Actor);Actor->PlayExplosion(State.ExplosionScale,State.ParticleScale,State.Lifetime);
+   if(!Actor)continue;
+   const float DisplayScale=State.ExplosionScale*(State.bMuzzleFlash?AMuzzleFlashExplosionActor::PresentationSize:1.f);
+   if(auto* M=Cast<AMuzzleFlashExplosionActor>(Actor))M->SetFlashAppearance(State.FlashId,DisplayScale);
+   ExplosionVisuals.Add(P.Key,Actor);Actor->PlayExplosion(DisplayScale,State.ParticleScale,State.Lifetime);
   }
   if(Live.Contains(P.Key))Actor->SyncSimulationLifetime(State.Lifetime);
   Actor->SetPresentationClock(bPaused,TimeCompression);

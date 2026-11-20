@@ -23,6 +23,7 @@
 =============================================================================*/
 
 #include "MenuDlg.h"
+#include "ReleasePresentation.h"
 #include "RuntimeFeaturePolicy.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
@@ -138,7 +139,7 @@ void UMenuDlg::BuildModernMenu()
     Label(TEXT("FRACTAL DEV GAMES"),12,Muted,104,64,600,28);
     Label(TEXT("STARSHATTER"),44,White,254,142,760,68,true);
     Label(TEXT("WARS"),44,White,254,207,760,68,true);
-    Label(TEXT("COMMAND YOUR SHIP. LEAD YOUR FLEET."),15,Muted,104,832,880,36);
+    Label(TEXT("COMMAND YOUR SHIP. LEAD YOUR FLEET."),15,Muted,104,814,880,28);
     // A real, silent attract movie inside a 16:9 frame; artwork remains behind
     // it until media opens, and survives missing/unsupported video codecs.
     Panel(102,308,884,499,FLinearColor(.2f,.45f,.56f,.8f));
@@ -194,8 +195,12 @@ void UMenuDlg::BuildModernMenu()
     Label(TEXT("PILOT"),12,Cyan,1330,930,434,25)->SetJustification(ETextJustify::Right);
     PlayerIdentityText=Label(TEXT("PLAYER NOT LOADED"),19,White,1330,960,434,32);PlayerIdentityText->SetJustification(ETextJustify::Right);
     UnitText=Label(TEXT("UNASSIGNED"),12,Muted,1330,1000,434,25);UnitText->SetJustification(ETextJustify::Right);
-    DescriptionText=Label(TEXT(""),13,Muted,104,852,1650,35);
-    VersionText=Label(TEXT(""),11,Muted,104,1040,700,25);
+    DescriptionText=Label(TEXT(""),13,Muted,1100,846,664,42);
+    const auto Release=SSWReleasePresentation::Read();
+    const FString AlphaNotice=Release.Stage.ToUpper()+TEXT(" — ")+Release.Warning;
+    auto* Warning=Label(*AlphaNotice,12,FLinearColor(.95f,.73f,.37f),104,854,880,42);
+    Warning->SetAutoWrapText(true);
+    VersionText=Label(TEXT(""),11,Muted,104,1040,1650,25);
 }
 
 void UMenuDlg::ApplyModernActionStyles()
@@ -426,8 +431,7 @@ void UMenuDlg::NativeConstruct()
                 Build = MoveTemp(InstalledBuild);
         }
 #endif
-        VersionText->SetText(FText::FromString(FString::Printf(
-            TEXT("%s  |  Build %s"), *Game::VersionInfo, *Build)));
+        VersionText->SetText(FText::FromString(SSWReleasePresentation::Read().Version(Build)));
     }
     else
     {

@@ -9,6 +9,7 @@ class STARSHATTERWARS_API AMuzzleFlashExplosionActor : public AExplosionActor
  GENERATED_BODY()
 public:
  AMuzzleFlashExplosionActor();
+ static constexpr float PresentationSize=0.75f;
  static TSubclassOf<AExplosionActor> MuzzleClass();
  void SetFlashAppearance(const FString& FlashId,float Scale);
  UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Muzzle") TObjectPtr<UMaterialBillboardComponent> FlashGlow;

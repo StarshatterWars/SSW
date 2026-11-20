@@ -2,6 +2,7 @@
 #include "Misc/AutomationTest.h"
 #include "EconomyAI.h"
 #include "ShipyardAI.h"
+#include "TransactionAI.h"
 #include "ProductionCatalog.h"
 #include "CargoCatalogSubsystem.h"
 #include "EconomyRuntime.h"
@@ -74,6 +75,22 @@ bool FUnloadedIndustryTest::RunTest(const FString&)
     EconomyAI::AdvanceFacilities(HullState,Sites,Recipes,10);
     TestEqual(TEXT("Shipyard produces one assembled hull"),FEconomyLedger::Quantity(HullState,Output,DataTableUtils::MakeValidName(HullRecipe.CargoItem)),1.0);
     TestTrue(TEXT("Completed hulls are not fractional freighter loads"),HullState.Inventories.FindChecked(Output).bHullStorage);
+    FS_PlayerGameInfo Buyer;Buyer.Empire=int32(EEMPIRE_NAME::Terellian);Buyer.Rank=0;Buyer.Economy=HullState;Buyer.Economy.Wallets.Add(FEconomyLedger::Pilot(),50000);
+    FShipDesign CompletedHull;CompletedHull.ShipName=TEXT("Falcon");CompletedHull.DisplayName=TEXT("Falcon");CompletedHull.ShipType=2;CompletedHull.Category=EShipCategory::Fighter;CompletedHull.ShipEmpire=EShipEmpire::Terellian;CompletedHull.BaseCost=1000;
+    FText PurchaseReason;const FGuid PurchaseReceipt=FGuid::NewGuid();
+    TestTrue(TEXT("Actual manufactured hull can be bought into a hangar"),ShipyardAI::Purchase(Buyer,CompletedHull,Output,TEXT("Solus/Works"),PurchaseReceipt,PurchaseReason));
+    TestEqual(TEXT("Manufactured stock consumed exactly once"),ShipyardAI::Stock(Buyer.Economy,Output,TEXT("Falcon")),0.0);
+    TestEqual(TEXT("Purchased hull delivered once"),Buyer.HangarShips.Num(),1);
+    auto* HangarSave=NewObject<UPlayerSaveGame>();HangarSave->PlayerInfo=Buyer;TArray<uint8> HangarBytes;
+    TestTrue(TEXT("Purchased manufacturing output saves"),UGameplayStatics::SaveGameToMemory(HangarSave,HangarBytes));
+    if(auto* RestoredBuyer=Cast<UPlayerSaveGame>(UGameplayStatics::LoadGameFromMemory(HangarBytes)))
+    {
+        TestTrue(TEXT("Retry after restart returns original delivered hull"),ShipyardAI::Purchase(RestoredBuyer->PlayerInfo,CompletedHull,Output,TEXT("Solus/Works"),PurchaseReceipt,PurchaseReason));
+        TestEqual(TEXT("Restart retry cannot duplicate hull"),RestoredBuyer->PlayerInfo.HangarShips.Num(),1);
+        TestEqual(TEXT("Restart retry cannot charge twice"),TransactionAI::Balance(RestoredBuyer->PlayerInfo.Economy),49000LL);
+    }
+    else AddError(TEXT("Manufactured hull purchase did not reload"));
+
     TestEqual(TEXT("NPC work never debits the pilot"),E.Wallets.FindRef(FEconomyLedger::Pilot()),0LL);
     return true;
 }

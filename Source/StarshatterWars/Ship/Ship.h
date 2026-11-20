@@ -386,7 +386,9 @@ public:
     void SetSimulatedCargo(SSWFreightManifest::FLoad Load);
     FName GetCargoInventoryKey() const;
     void SyncCargoInventory();
+    void SyncCargoInventory(FEconomyState&);
     void ApplyCargoInventoryToManifest();
+    void ApplyCargoInventoryToManifest(const FEconomyState&);
     void BindCargoInventory(FGuid Hull);
     bool RestoreSavedCargoInventory(FGuid Id);
     bool RepairAtStation();

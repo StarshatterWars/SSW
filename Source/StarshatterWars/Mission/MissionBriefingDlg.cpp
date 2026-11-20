@@ -5140,7 +5140,8 @@ void UMissionBriefingDlg::SyncMissionNavigationTarget()
     const Ship* RecoveryCarrier=RecoveryDeck?RecoveryDeck->GetCarrier():nullptr;
     if(Arrival && Arrival->Cleared() && RecoveryCarrier)
     {
-        if(!bRecoveryTargetSelected || Pilot->IsAutoLandEngaged())
+        // Recovery owns ILS guidance, not the pilot's manually selected contact.
+        if(!bRecoveryTargetSelected)
             for(TActorIterator<AShipActor> It(GetWorld());It;++It)
                 if(It->GetRuntimeShip()==RecoveryCarrier)
                 {

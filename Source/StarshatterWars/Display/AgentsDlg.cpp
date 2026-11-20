@@ -1,3 +1,4 @@
+#include "FactionTrainingCatalog.h"
 #include "AgentsDlg.h"
 #include "RecordDetails.h"
 #include "StarshatterEnvironmentSubsystem.h"
@@ -11,6 +12,7 @@
 #include "AgentAI.h"
 #include "DynamicMissionAI.h"
 #include "MissionArcRules.h"
+#include "FactionBriefingCatalog.h"
 #include "MissionRewardRules.h"
 #include "AgentJournalTransaction.h"
 #include "AgentMissionRules.h"
@@ -24,6 +26,7 @@
 #include "MissionsDlg.h"
 #include "MissionObjectivesDlg.h"
 #include "MissionUIStyle.h"
+#include "FlightPanelStyle.h"
 #include "PlayerCharacter.h"
 #include "SSWGameInstance.h"
 #include "ShipSystemIcon.h"
@@ -79,21 +82,31 @@ void UAgentsDlg::RefreshBoard()
         + SHorizontalBox::Slot().AutoWidth()[SNew(STextBlock).Text(INVTEXT("OFFER EXPIRY (GMT)")).Font(MissionUIStyle::GetRowFont(10))]];
     if (const auto* Officer = Catalog->FindAgent(SelectedAgent))
     {
+        if(Officer->Class==EAgentClass::Training && !Officer->Description.IsEmpty())
+            Board->AddSlot().AutoHeight().Padding(0,4,0,10)
+                [SNew(STextBlock).Text(FText::FromString(Officer->Description)).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true)];
         Board->AddSlot().AutoHeight().Padding(0,4,0,12)
             [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13)).AutoWrapText(true)
                 .Text(Catalog->GetAssignmentStatus(SelectedAgent))];
+        if(!Officer->IntroductionId.IsNone())
+            Board->AddSlot().AutoHeight().Padding(0,0,0,10)
+            [SNew(SButton).ContentPadding(FMargin(12,8))
+                .ToolTipText(INVTEXT("Read your faction's training or campaign introduction"))
+                .OnClicked_Lambda([this,Id=Officer->IntroductionId](){OpenIntroduction(Id);return FReply::Handled();})
+                [SNew(SHorizontalBox)+SHorizontalBox::Slot().AutoWidth()[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Intel)]
+                    +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(STextBlock).Text(INVTEXT("CAMPAIGN BRIEFING")).Font(MissionUIStyle::GetRowFont(12))]]];
         const auto* PlayerState=Game->GetSubsystem<UStarshatterPlayerSubsystem>();
         const bool bOperationAccepted=PlayerState && PlayerState->GetPlayerInfo().Campaign==Campaign::TRAINING_CAMPAIGN;
         if (Officer->Class == EAgentClass::Training)
         {
             Board->AddSlot().AutoHeight().Padding(0,0,0,12)
                 [SNew(SButton).ContentPadding(FMargin(12,8))
-                    .Text(bOperationAccepted?INVTEXT("OPERATION LIVE FIRE - ACCEPTED"):INVTEXT("ACCEPT OPERATION LIVE FIRE"))
+                    .Text(FText::Format(bOperationAccepted?INVTEXT("{0} - ACCEPTED"):INVTEXT("ACCEPT {0}"),FText::FromString(FactionTrainingCatalog::Title(Officer->Empire)).ToUpper()))
                     .IsEnabled(!bOperationAccepted && PlayerState && PlayerState->GetPlayerInfo().Campaign==0 && CanLaunch.IsBound() && CanLaunch.Execute())
                     .ToolTipText(INVTEXT("Accept the training campaign. This assignment is saved to your pilot; individual lessons remain gated by progression."))
                     .OnClicked(FOnClicked::CreateWeakLambda(this,[this,Catalog]()
                     {
-                        Feedback=Catalog->AssignTrainingOperation(SelectedAgent,false)?INVTEXT("Operation Live Fire accepted. Select T1 to review and accept your first lesson."):INVTEXT("The campaign assignment could not be saved.");
+                        Feedback=Catalog->AssignTrainingOperation(SelectedAgent,false)?INVTEXT("Training operation accepted. Select T1 to review and accept your first lesson."):INVTEXT("The campaign assignment could not be saved.");
                         RefreshBoard();return FReply::Handled();
                     }))];
         }
@@ -107,7 +120,7 @@ void UAgentsDlg::RefreshBoard()
                 const bool bCompleted=Agent.IsCompleted(PilotId(),Id) || (!Game->IsTrainingTestSession() && Players && Players->GetPlayerInfo().HasCompletedMission(Campaign::TRAINING_CAMPAIGN,Id));
                 const FLinearColor RowColor=bCompleted?FLinearColor(.35f,.9f,.45f):FLinearColor::White;
                 const bool bSelectable = bOperationAccepted && (bReplay || (bOffered && Catalog->CanAccept(Id,SelectedAgent)));
-                const FText Reason = !bOperationAccepted ? INVTEXT("Accept Operation Live Fire first") : bReplay ? INVTEXT("COMPLETE - REPLAY (NO POINTS)") : bCompleted ? INVTEXT("COMPLETE") : Catalog->GetTrainingRequirement(Id);
+                const FText Reason = !bOperationAccepted ? INVTEXT("Accept your training operation first") : bReplay ? INVTEXT("COMPLETE - REPLAY (NO POINTS)") : bCompleted ? INVTEXT("COMPLETE") : Catalog->GetTrainingRequirement(Id);
                 Board->AddSlot().AutoHeight().Padding(0,3)
                     [SNew(SHorizontalBox)
                         + SHorizontalBox::Slot().FillWidth(.44f).Padding(0,0,12,0)
@@ -238,6 +251,8 @@ void UAgentsDlg::RefreshBoard()
 
 bool UAgentsDlg::CanStartMission(int32 MissionId) const
 {
+    if((MissionId==103 || MissionId==104) && PlayerCharacter::GetCurrentPlayer() && PlayerCharacter::GetCurrentPlayer()->GetEmpire()==EEMPIRE_NAME::Terellian)
+        if(auto* S=Sim::GetSim()) if(S->GetMission() && S->GetMission()->IsFreeFlight()) return true;
     if (!DynamicMissionAI::IsDynamic(MissionId)) return CanLaunch.IsBound() && CanLaunch.Execute();
     auto* Simulation = Sim::GetSim();
     auto* Game = Cast<USSWGameInstance>(GetGameInstance());
@@ -332,8 +347,8 @@ void UAgentsDlg::OpenDetails(int32 MissionId, bool bOffer)
     int32 RewardCampaign=AgentAI::IsTrainingMission(MissionId)?1:1000,RewardMission=MissionId;
     AgentMissionRules::Decode(MissionId,RewardCampaign,RewardMission);
     auto Reward=FMissionRewardCatalog::Get().Quote(RewardCampaign,RewardMission,false,0,0);
-    if(DynamicMissionAI::IsDynamic(MissionId))if(auto* Players=Game->GetSubsystem<UStarshatterPlayerSubsystem>()){Reward.Base=DynamicMissionAI::Reward(Players->GetPlayerInfo(),MissionId);Reward.Recovery=Reward.Objectives=Reward.Time=0;}
-    Status=FText::Format(INVTEXT("{0}  /  REWARD {1} CR + ELIGIBLE BONUSES"),Status,FText::AsNumber(Reward.Base));
+    if(DynamicMissionAI::IsDynamic(MissionId))if(auto* Players=Game->GetSubsystem<UStarshatterPlayerSubsystem>()){Reward.Base=DynamicMissionAI::Reward(Players->GetPlayerInfo(),MissionId);Reward.CompletionPoints=DynamicMissionAI::Points(Players->GetPlayerInfo(),MissionId);Reward.Recovery=Reward.Objectives=Reward.Time=0;}
+    Status=FText::Format(INVTEXT("{0}  /  {1} POINTS  /  {2} CR + ELIGIBLE BONUSES"),Status,FText::AsNumber(Reward.CompletionPoints),FText::AsNumber(Reward.Base));
     for(const auto& Assignment:Queue)if(Assignment.MissionId==MissionId && Assignment.AcceptedUtc>0)
         Status=FText::Format(INVTEXT("{0}\nACCEPTED {1} GMT"),Status,FText::FromString(FDateTime::FromUnixTimestamp(Assignment.AcceptedUtc).ToString(TEXT("%d %b %H:%M"))));
     Details->SetAssignmentMetadata(Officer?FText::FromString(Officer->DisplayName):INVTEXT("Mission Control"),Status,Expiry);
@@ -341,6 +356,20 @@ void UAgentsDlg::OpenDetails(int32 MissionId, bool bOffer)
         Details->SetStartMission(FSimpleDelegate::CreateWeakLambda(this,[this,MissionId](){StartMission(MissionId);}),TDelegate<bool()>::CreateWeakLambda(this,[this,MissionId](){return CanStartMission(MissionId);}));
     DetailLayer->SetContent(Details->TakeWidget());
     DetailLayer->SetVisibility(EVisibility::Visible);
+}
+
+void UAgentsDlg::OpenIntroduction(FName Id)
+{
+    const auto* Brief=FactionBriefingCatalog::Find(Id);auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if(!Brief || !Players || !FactionBriefingCatalog::Available(*Brief,Players->GetPlayerInfo()) || !DetailLayer)return;
+    DetailLayer->SetContent(SNew(SBorder).Padding(18).BorderImage(&FlightPanelStyle::Window())
+        [SNew(SVerticalBox)
+            +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,14)
+            [SNew(SHorizontalBox)+SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).Text(FText::FromString(Brief->Title.ToUpper())).Font(MissionUIStyle::GetHeaderFont(16))]
+                +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ToolTipText(INVTEXT("Close briefing")).OnClicked_Lambda([this](){CloseDetails();return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Back)]]]
+            +SVerticalBox::Slot().FillHeight(1)[SNew(SScrollBox)+SScrollBox::Slot()[SNew(STextBlock).AutoWrapText(true).Font(MissionUIStyle::GetRowFont(14)).Text(FText::FromString(Brief->Body))]]]);
+    DetailLayer->SetVisibility(EVisibility::Visible);
+    auto& Info=Players->GetMutablePlayerInfo();if(!Info.ViewedFactionBriefings.Contains(Id)){Info.ViewedFactionBriefings.Add(Id);Players->MarkDirty();}
 }
 
 void UAgentsDlg::CloseDetails()

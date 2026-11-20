@@ -21,7 +21,9 @@ bool FMissionRewardCatalog::LoadJson(const FString& Json,FText& Error)
         const auto Number=[&](const TCHAR* Name,int64& Value){double N=0;if(!O->TryGetNumberField(Name,N) || !FMath::IsFinite(N) || N<0 || N>1000000000 || N!=FMath::FloorToDouble(N))return false;Value=static_cast<int64>(N);return true;};
         int64 Limit=0;
         if(!Number(TEXT("BaseCredits"),P.Base) || P.Base<=0 || !Number(TEXT("RecoveryBonus"),P.RecoveryBonus) || !Number(TEXT("SecondaryObjectiveBonus"),P.ObjectiveBonus) || !Number(TEXT("TimeBonus"),P.TimeBonus) || !Number(TEXT("TimeLimitSeconds"),Limit))return false;
-        if(P.TimeBonus>0 && Limit<=0)return false;P.TimeLimitSeconds=static_cast<int32>(Limit);return true;
+        if(P.TimeBonus>0 && Limit<=0)return false;P.TimeLimitSeconds=static_cast<int32>(Limit);
+        double Points=25;if(O->HasField(TEXT("CompletionPoints")) && (!O->TryGetNumberField(TEXT("CompletionPoints"),Points) || !FMath::IsFinite(Points) || Points<1 || Points>100000 || Points!=FMath::FloorToDouble(Points)))return false;
+        P.CompletionPoints=int32(Points);return true;
     };
     const TSharedPtr<FJsonObject>* Def=nullptr;FMissionRewardPolicy NewDefault;
     const TArray<TSharedPtr<FJsonValue>>* Rows=nullptr;TMap<FName,FMissionRewardPolicy> NewPolicies;
@@ -37,7 +39,7 @@ bool FMissionRewardCatalog::LoadJson(const FString& Json,FText& Error)
 FMissionRewardQuote FMissionRewardCatalog::Quote(int32 Campaign,int32 Mission,bool Docked,int32 Secondary,double Elapsed) const
 {
     const auto* Override=Policies.Find(Key(Campaign,Mission));const auto& P=Override?*Override:Default;
-    FMissionRewardQuote Q;Q.Base=P.Base;Q.Recovery=Docked?P.RecoveryBonus:0;
+    FMissionRewardQuote Q;Q.CompletionPoints=P.CompletionPoints;Q.Base=P.Base;Q.Recovery=Docked?P.RecoveryBonus:0;
     Q.Objectives=P.ObjectiveBonus*FMath::Clamp(Secondary,0,100);
     Q.Time=FMath::IsFinite(Elapsed) && Elapsed>0 && P.TimeLimitSeconds>0 && Elapsed<=P.TimeLimitSeconds?P.TimeBonus:0;return Q;
 }

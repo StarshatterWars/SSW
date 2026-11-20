@@ -9,7 +9,7 @@ bool ShipyardAI::Eligible(const FS_PlayerGameInfo& Pilot,const FShipDesign& Hull
     {Reason=INVTEXT("This design is not for sale.");return false;}
     if(Pilot.Rank<PlayerCharacter::HullRankRequired(Hull.ShipType,Hull.ShipName)){Reason=INVTEXT("Your rank does not permit this hull.");return false;}
     const FString Empire=StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(int64(Pilot.Empire));
-    if(Hull.ShipEmpire!=EShipEmpire::All && StaticEnum<EShipEmpire>()->GetNameStringByValue(int64(Hull.ShipEmpire))!=Empire)
+    if(Hull.ShipEmpire!=EShipEmpire::All && Hull.ShipEmpire!=EShipEmpire::Neutral && StaticEnum<EShipEmpire>()->GetNameStringByValue(int64(Hull.ShipEmpire))!=Empire)
     {Reason=INVTEXT("This hull belongs to another empire.");return false;}
     const FName Skill=USkillsSubsystem::RequiredHullSkill(Hull.ShipType);
     if(!Skill.IsNone() && FSkillTrainingRules::Level(Pilot.Skills.Find(Skill))<1){Reason=INVTEXT("Train the required hull-operation skill first.");return false;}

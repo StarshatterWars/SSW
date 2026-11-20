@@ -47,26 +47,43 @@ const FPlayerHangarShip* Hull(const FS_PlayerGameInfo& P,const Object& Rule,FTex
   if(H.bLost || H.bAssigned)continue;const auto* D=ShipDesignRegistry::Find(H.Design);FText Why;if(!D || !ShipyardAI::Eligible(P,*D,Why))continue;
   const bool Fighter=(D->ShipType&6)!=0,Shuttle=(D->ShipType&8)!=0;
   const bool Miner=H.Design.ToString().Contains(TEXT("Prospector")) || H.Design.ToString().Contains(TEXT("Rockhopper"));
-  if(D->CargoCapacity.Tonnes+UE_SMALL_NUMBER<Cargo || (Role==TEXT("fighter") && !Fighter) || (Role==TEXT("shuttle") && !Shuttle) || (Role==TEXT("mining") && !Miner) || (Role==TEXT("freighter") && D->CargoCapacity.Tonnes<5))continue;
+  if(D->CargoCapacity.Tonnes+UE_SMALL_NUMBER<Cargo || (Role==TEXT("fighter") && !Fighter) || (Role==TEXT("shuttle") && !Shuttle && D->Category!=EShipCategory::Transport) || (Role==TEXT("mining") && !Miner) || (Role==TEXT("freighter") && D->CargoCapacity.Tonnes<5))continue;
   if(H.HullId==P.SelectedHangarHull)return &H;if(!First)First=&H;
  }
  if(First)return First;
  Reason=FText::FromString(FString::Printf(TEXT("Hangar requirement: usable %s craft, at least %.2f t cargo capacity, with the required rank, empire and hull skills."),*Role,Cargo));return nullptr;
 }
+bool FactionAllowed(const FS_PlayerGameInfo& P,const Object& R)
+{
+ FString Empire;if(!R || !R->TryGetStringField(TEXT("Empire"),Empire))return R.IsValid();
+ if(Empire!=StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(int64(P.Empire)))return false;
+ const TArray<TSharedPtr<FJsonValue>>* Previous=nullptr;
+ if(R->TryGetArrayField(TEXT("RequiredAnyCompletedMissionIds"),Previous) && !Previous->IsEmpty())
+ {
+  bool Unlocked=false;for(const auto& Id:*Previous)Unlocked|=P.HasCompletedMission(Campaign::SINGLE_MISSIONS,int32(Id->AsNumber()));
+  if(!Unlocked)return false;
+ }
+ return true;
+}
+bool AgentAllowed(const FS_PlayerGameInfo& P,const FDynamicAgentContext& A)
+{return A.Empire==EEMPIRE_NAME::Neutral || int32(A.Empire)==P.Empire;}
 FGuid Receipt(int32 Id){FGuid G;FGuid::ParseExact(FMD5::HashAnsiString(*FString::Printf(TEXT("SSW Dynamic Job %d"),Id)),EGuidFormats::Digits,G);return G;}
 FName Package(int32 Id){return FName(*FString::Printf(TEXT("Dynamic courier %d"),Id));}
 FString DockName(Ship* P){return P && P->GetFlightPhase()<=EOPSMode::ALERT && P->GetCarrier()?FString(UTF8_TO_TCHAR(P->GetCarrier()->GetName())):FString();}
 }
 bool DynamicMissionAI::Generate(FS_PlayerGameInfo& P,const FDynamicAgentContext& A,int64 Now,FText& Reason)
 {
+ if(!AgentAllowed(P,A)){Reason=INVTEXT("This officer does not issue orders to your empire.");return false;}
  if(P.Rank<1 || A.Pools.IsEmpty()){Reason=INVTEXT("Complete training and earn your commission before taking independent work.");return false;}
  auto Root=Read(P);if(!Root){Reason=INVTEXT("Saved independent jobs could not be read. No jobs changed.");return false;}
  auto Jobs=Root->GetArrayField(TEXT("jobs"));
- for(const auto& V:Jobs){auto J=V->AsObject();if(J && J->GetStringField(TEXT("agent"))==A.Id.ToString() && J->GetIntegerField(TEXT("state"))<2 && J->GetNumberField(TEXT("expires"))>Now)return true;}
+ for(const auto& V:Jobs){auto J=V->AsObject();if(J && J->GetStringField(TEXT("agent"))==A.Id.ToString() && J->GetIntegerField(TEXT("state"))<2 && (J->GetIntegerField(TEXT("state"))==1 || J->GetNumberField(TEXT("expires"))>Now))return true;}
  TArray<Object> Pool;FText Missing;double Weight=0;
  for(const auto& R:Rules())
  {
-  if(!A.Pools.Contains(FName(*R->GetStringField(TEXT("Pool")))) || P.Rank<R->GetIntegerField(TEXT("MinimumRank")) || A.Level<R->GetIntegerField(TEXT("MinimumAgentLevel")) || !Hull(P,R,Missing))continue;
+  const TArray<TSharedPtr<FJsonValue>>* Systems=nullptr;bool Local=true;
+  if(R->TryGetArrayField(TEXT("Systems"),Systems)){Local=false;for(const auto& Name:*Systems)Local|=Name->AsString().Equals(A.System,ESearchCase::IgnoreCase);}
+  if(!Local || !FactionAllowed(P,R) || !A.Pools.Contains(FName(*R->GetStringField(TEXT("Pool")))) || P.Rank<R->GetIntegerField(TEXT("MinimumRank")) || A.Level<R->GetIntegerField(TEXT("MinimumAgentLevel")) || !Hull(P,R,Missing))continue;
   bool Cooldown=false;int32 Completed=0;
   for(const auto& V:Jobs){auto J=V->AsObject();if(J && J->GetStringField(TEXT("agent"))==A.Id.ToString() && J->GetStringField(TEXT("rule"))==R->GetStringField(TEXT("Id"))){if(J->GetNumberField(TEXT("created"))+R->GetNumberField(TEXT("CooldownSeconds"))>Now)Cooldown=true;if(J->GetIntegerField(TEXT("state"))==2)++Completed;}}
   if(Cooldown || (Completed>0 && !R->GetBoolField(TEXT("Repeatable"))))continue;
@@ -79,29 +96,52 @@ bool DynamicMissionAI::Generate(FS_PlayerGameInfo& P,const FDynamicAgentContext&
  // Failed repeat rolls are stable within the same five-minute refresh window.
  if(Prior && Random.FRand()>Chosen->GetNumberField(TEXT("RepeatChance"))){Reason=INVTEXT("This agent has no new repeat assignment on this refresh.");return false;}
  auto J=MakeShared<FJsonObject>();J->SetNumberField(TEXT("id"),950000+Sequence);J->SetStringField(TEXT("agent"),A.Id.ToString());J->SetStringField(TEXT("rule"),Chosen->GetStringField(TEXT("Id")));J->SetStringField(TEXT("kind"),Chosen->GetStringField(TEXT("Kind")));J->SetStringField(TEXT("title"),A.System+TEXT(": ")+Chosen->GetStringField(TEXT("Title")));
- J->SetStringField(TEXT("system"),A.System);J->SetStringField(TEXT("region"),A.Region);J->SetStringField(TEXT("station"),A.Station);J->SetNumberField(TEXT("created"),double(Now));J->SetNumberField(TEXT("expires"),double(Now)+Chosen->GetNumberField(TEXT("OfferExpirySeconds")));J->SetNumberField(TEXT("state"),0);J->SetNumberField(TEXT("elapsed"),0);J->SetNumberField(TEXT("stage"),0);
+ J->SetStringField(TEXT("system"),A.System);J->SetStringField(TEXT("region"),A.Region);J->SetStringField(TEXT("station"),A.Station);J->SetNumberField(TEXT("created"),double(Now));J->SetNumberField(TEXT("expires"),double(Now)+Chosen->GetNumberField(TEXT("OfferExpirySeconds")));J->SetNumberField(TEXT("state"),0);J->SetNumberField(TEXT("empire"),P.Empire);J->SetNumberField(TEXT("elapsed"),0);J->SetNumberField(TEXT("stage"),0);
  const int64 Credits=FMath::RoundToInt64(Chosen->GetNumberField(TEXT("BaseCredits"))*(1+Chosen->GetNumberField(TEXT("LevelCreditMultiplier"))*FMath::Max(0,A.Level-1)));
  J->SetNumberField(TEXT("credits"),double(Credits));J->SetNumberField(TEXT("score"),Chosen->GetNumberField(TEXT("CompletionScore")));J->SetNumberField(TEXT("seed"),Random.RandRange(1,MAX_int32));Jobs.Add(MakeShared<FJsonValueObject>(J));Root->SetArrayField(TEXT("jobs"),Jobs);Root->SetNumberField(TEXT("sequence"),Sequence);Write(P,Root);Reason=FText::GetEmpty();return true;
 }
 TArray<int32> DynamicMissionAI::Offers(const FS_PlayerGameInfo& P,FName Agent,int64 Now)
-{TArray<int32> Out;auto Root=Read(P);if(Root)for(const auto& V:Root->GetArrayField(TEXT("jobs"))){auto J=V->AsObject();if(J && J->GetStringField(TEXT("agent"))==Agent.ToString() && J->GetIntegerField(TEXT("state"))<2 && J->GetNumberField(TEXT("expires"))>Now)Out.Add(J->GetIntegerField(TEXT("id")));}return Out;}
+{TArray<int32> Out;auto Root=Read(P);if(Root)for(const auto& V:Root->GetArrayField(TEXT("jobs"))){auto J=V->AsObject();if(J && J->GetStringField(TEXT("agent"))==Agent.ToString() && J->GetIntegerField(TEXT("state"))<2 && (J->GetIntegerField(TEXT("state"))==1 || J->GetNumberField(TEXT("expires"))>Now) && FactionAllowed(P,Rule(J->GetStringField(TEXT("rule")))) && (!J->HasField(TEXT("empire")) || J->GetIntegerField(TEXT("empire"))==P.Empire))Out.Add(J->GetIntegerField(TEXT("id")));}return Out;}
 bool DynamicMissionAI::CanUse(const FS_PlayerGameInfo& P,int32 Id,FText& Reason)
-{auto J=Find(Read(P),Id);if(!J || J->GetIntegerField(TEXT("state"))>=2){Reason=INVTEXT("This independent job is no longer available.");return false;}return Hull(P,Rule(J->GetStringField(TEXT("rule"))),Reason)!=nullptr;}
+{auto J=Find(Read(P),Id);if(!J || J->GetIntegerField(TEXT("state"))>=2){Reason=INVTEXT("This independent job is no longer available.");return false;}auto R=Rule(J->GetStringField(TEXT("rule")));double Empire=P.Empire;J->TryGetNumberField(TEXT("empire"),Empire);
+ if(Empire!=P.Empire || !FactionAllowed(P,R)){Reason=INVTEXT("This assignment is not authorized for your empire or campaign progress.");return false;}
+ if(P.Rank<R->GetIntegerField(TEXT("MinimumRank"))){Reason=INVTEXT("Your current rank does not authorize this assignment.");return false;}
+ const TArray<TSharedPtr<FJsonValue>>* Systems=nullptr;
+ if(R->TryGetArrayField(TEXT("Systems"),Systems))
+ {
+  bool Local=false;for(const auto& Name:*Systems)Local|=Name->AsString().Equals(J->GetStringField(TEXT("system")),ESearchCase::IgnoreCase);
+  if(!Local){Reason=INVTEXT("This assignment is outside its authorized campaign systems.");return false;}
+ }
+ return Hull(P,R,Reason)!=nullptr;}
 FText DynamicMissionAI::Title(const FS_PlayerGameInfo& P,int32 Id){auto J=Find(Read(P),Id);return J?FText::FromString(J->GetStringField(TEXT("title"))):FText::GetEmpty();}
+int32 DynamicMissionAI::Points(const FS_PlayerGameInfo& P,int32 Id){auto J=Find(Read(P),Id);return J?J->GetIntegerField(TEXT("score")):0;}
 int64 DynamicMissionAI::Reward(const FS_PlayerGameInfo& P,int32 Id){auto J=Find(Read(P),Id);return J?int64(J->GetNumberField(TEXT("credits"))):0;}
 bool DynamicMissionAI::Preview(const FS_PlayerGameInfo& P,int32 Id,FS_CampaignMission& Out)
 {
  auto J=Find(Read(P),Id);if(!J)return false;FString Text;
  if(!FFileHelper::LoadFileToString(Text,*(FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/01/Scenes/FreeFlight.json"))) || !FJsonObjectConverter::JsonObjectStringToUStruct(Text,&Out))return false;
- Out.Id=Id;Out.MissionName=J->GetStringField(TEXT("title"));Out.StoryCampaignId=0;Out.DisplayType=EMissionDisplayType::PlayerMission;Out.Objective=FString::Printf(TEXT("Independent %s assignment in %s. Return to %s. Base payment: %lld cr. Use a qualifying owned craft; campaign progress is not required."),*J->GetStringField(TEXT("kind")),*J->GetStringField(TEXT("region")),*J->GetStringField(TEXT("station")),Reward(P,Id));FString Status;J->TryGetStringField(TEXT("status"),Status);if(!Status.IsEmpty())Out.Objective+=TEXT("\n\n")+Status;Out.Sitrep=Out.Objective;
+ Out.Id=Id;Out.RequiredEmpire=EEMPIRE_NAME(P.Empire);Out.NarrativeCampaignId=P.Empire==int32(EEMPIRE_NAME::Dantari)?2:0;Out.MissionName=J->GetStringField(TEXT("title"));Out.StoryCampaignId=0;Out.DisplayType=EMissionDisplayType::PlayerMission;Out.Objective=FString::Printf(TEXT("Independent %s assignment in %s. Return to %s. Base payment: %lld cr. Use a qualifying owned craft; campaign progress is not required."),*J->GetStringField(TEXT("kind")),*J->GetStringField(TEXT("region")),*J->GetStringField(TEXT("station")),Reward(P,Id));FString Status;J->TryGetStringField(TEXT("status"),Status);if(!Status.IsEmpty())Out.Objective+=TEXT("\n\n")+Status;Out.Sitrep=Out.Objective;
+ auto Policy=Rule(J->GetStringField(TEXT("rule")));int32 Context=0;FString Brief;
+ if(Policy && Policy->TryGetNumberField(TEXT("NarrativeCampaignId"),Context) && Context>0)
+ {
+  Out.NarrativeCampaignId=Context;Out.Objective=Out.Objective.Replace(TEXT("campaign progress is not required."),TEXT("authorization follows the required campaign chapter."));
+  if(Policy->TryGetStringField(TEXT("Briefing"),Brief))Out.Sitrep=Brief+TEXT("\n\n")+Out.Objective;
+ }
  const FString Kind=J->GetStringField(TEXT("kind"));Out.MissionType=Kind==TEXT("Recon")?EMissionType::RECON:Kind==TEXT("Survey")?EMissionType::SCOUT:Kind==TEXT("Intercept")?EMissionType::INTERCEPT:Kind==TEXT("Escort")?EMissionType::ESCORT_FREIGHT:Kind==TEXT("Defend")?EMissionType::DEFEND:Kind==TEXT("Strike")?EMissionType::ASSAULT:Kind==TEXT("Sweep")?EMissionType::SWEEP:(Kind==TEXT("Freight") || Kind==TEXT("OreDelivery"))?EMissionType::CARGO:(Kind==TEXT("Courier") || Kind==TEXT("Rescue"))?EMissionType::TRANSPORT:EMissionType::PATROL;
  return true;
 }
 bool DynamicMissionAI::Start(Sim& S,FS_PlayerGameInfo& P,AgentAI& Journal,FName Pilot,int32 Id,FText& Reason)
 {
  auto Root=Read(P);auto J=Find(Root,Id);auto* Craft=S.GetPlayerShip();if(!Craft || !J || !CanUse(P,Id,Reason))return false;
+ // Repeated UI commands must not reset objectives, timing or the bound hull.
+ if(J->GetIntegerField(TEXT("state"))!=0){Reason=INVTEXT("This assignment has already started.");return false;}
+ const auto* Accepted=Journal.Find(Pilot);
+ if(!Accepted || Accepted->MissionId!=Id || Accepted->State!=AgentAI::EState::Accepted){Reason=INVTEXT("Accept this assignment from its issuing agent first.");return false;}
  const auto* Required=Hull(P,Rule(J->GetStringField(TEXT("rule"))),Reason);if(!Required || P.SelectedHangarHull!=Required->HullId || FName(UTF8_TO_TCHAR(Craft->DesignName()))!=Required->Design){Reason=INVTEXT("Dock and select the qualifying owned craft from your hangar first.");return false;}
  if(!Craft->GetRegion() || !Craft->GetRegion()->GetSystem() || J->GetStringField(TEXT("system"))!=UTF8_TO_TCHAR(Craft->GetRegion()->GetSystem()->GetName())){Reason=INVTEXT("Travel to the issuing agent's system first.");return false;}
+ const FString Kind=J->GetStringField(TEXT("kind"));
+ if((Kind==TEXT("Courier") || Kind==TEXT("Freight")) && DockName(Craft).IsEmpty())
+ {Reason=INVTEXT("Dock at the issuing station before starting a cargo pickup.");return false;}
  if(!Journal.Start(Pilot,Id))return false;
  J->SetNumberField(TEXT("state"),1);J->SetStringField(TEXT("hull"),Required->HullId.ToString(EGuidFormats::Digits));J->SetStringField(TEXT("startDock"),DockName(Craft));J->SetNumberField(TEXT("started"),double(FDateTime::UtcNow().ToUnixTimestamp()));Write(P,Root);Reason=FText::GetEmpty();return true;
 }
@@ -122,13 +162,14 @@ bool DynamicMissionAI::Advance(Sim& S,FS_PlayerGameInfo& P,AgentAI& Journal,FNam
   {
       FString HullText;FGuid SavedHull;if(J->TryGetStringField(TEXT("hull"),HullText) && FGuid::ParseExact(HullText,EGuidFormats::Digits,SavedHull) && SavedHull==P.SelectedHangarHull){Journal.Start(Pilot,Id);Assignment=Journal.Find(Pilot);}
   }
+  const bool FactionOK=FactionAllowed(P,R) && (!J->HasField(TEXT("empire")) || J->GetIntegerField(TEXT("empire"))==P.Empire);
   const auto Release=[&]()
   {
    FString Text;FGuid Reservation;if(J->TryGetStringField(TEXT("reservation"),Text) && FGuid::Parse(Text,Reservation))FEconomyLedger::Release(P.Economy,FEconomyRuntime::IndustryOwner(),Reservation);
-   Craft->RemoveCourierPackage(Package(Id));
+   Craft->RemoveCourierPackage(Package(Id));Craft->SyncCargoInventory(P.Economy);
    for(ListIter<SimRegion> Regions=S.GetRegions();++Regions;){TArray<Ship*> Cleanup;for(ListIter<Ship> Ships=Regions->GetShips();++Ships;)if(FString(UTF8_TO_TCHAR(Ships->GetName())).StartsWith(Prefix) && !Ships->HasNetworkPilot() && Ships.value()!=Craft)Cleanup.Add(Ships.value());for(auto* Ship:Cleanup)S.DestroyShip(Ship);}
   };
-  if(!Assignment || Assignment->MissionId!=Id || Assignment->State!=AgentAI::EState::InProgress || Craft->IsDead() || Craft->IsDying())
+  if(!Assignment || Assignment->MissionId!=Id || Assignment->State!=AgentAI::EState::InProgress || Craft->IsDead() || Craft->IsDying() || !FactionOK)
   {Release();if(Assignment && Assignment->MissionId==Id)Journal.Resolve(Pilot,Id,false);J->SetNumberField(TEXT("state"),3);Changed=true;Critical=true;continue;}
   const int32 OldStage=J->GetIntegerField(TEXT("stage")),OldState=J->GetIntegerField(TEXT("state"));
   const double Elapsed=J->GetNumberField(TEXT("elapsed"))+Seconds;J->SetNumberField(TEXT("elapsed"),Elapsed);Changed=true;
@@ -147,15 +188,19 @@ bool DynamicMissionAI::Advance(Sim& S,FS_PlayerGameInfo& P,AgentAI& Journal,FNam
   {
    if(Stage==0 && Craft->GetFlightPhase()>EOPSMode::ALERT)
    {
-    auto* Enemy=ShipDesignRegistry::FindLegacy(FName(TEXT("Cutlass")));if(!Enemy)continue;
+    FString EnemyDesign;R->TryGetStringField(TEXT("OpponentDesign"),EnemyDesign);
+    if(EnemyDesign.IsEmpty())EnemyDesign=Craft->GetIFF()==2?TEXT("Falcon"):TEXT("Cutlass");
+    int32 EnemyIFF=Craft->GetIFF()==2?1:3;R->TryGetNumberField(TEXT("OpponentIFF"),EnemyIFF);
+    if(EnemyIFF==Craft->GetIFF() || EnemyIFF<1 || EnemyIFF>3)continue;
+    auto* Enemy=ShipDesignRegistry::FindLegacy(FName(*EnemyDesign));if(!Enemy)continue;
     FRandomStream Random(J->GetIntegerField(TEXT("seed")));const int32 Count=2+Random.RandRange(0,2);int32 Spawned=0;
-    for(int32 I=0;I<Count;++I){const FString Name=Prefix+FString::FromInt(I);auto* NPC=S.CreateShip(TCHAR_TO_UTF8(*Name),"",Enemy,Region->GetName(),OtherHand(Origin+FVector(18000+I*1500,2000+I*750,10000)),Craft->GetIFF()==3?1:3);if(!NPC)continue;auto* Attack=new Instruction(EInstruction::Intercept,Craft->GetName());Attack->SetWeaponsFree(1);NPC->AddNavPoint(Attack);++Spawned;}
+    for(int32 I=0;I<Count;++I){const FString Name=Prefix+FString::FromInt(I);auto* NPC=S.CreateShip(TCHAR_TO_UTF8(*Name),"",Enemy,Region->GetName(),OtherHand(Origin+FVector(18000+I*1500,2000+I*750,10000)),EnemyIFF);if(!NPC)continue;auto* Attack=new Instruction(EInstruction::Intercept,Craft->GetName());Attack->SetWeaponsFree(1);NPC->AddNavPoint(Attack);++Spawned;}
     if(!Spawned)continue;J->SetNumberField(TEXT("enemyCount"),Spawned);
     if(Kind==TEXT("Escort") || Kind==TEXT("Defend"))
     {
-     auto* Design=ShipDesignRegistry::FindLegacy(FName(TEXT("Courier")));const FString Name=Prefix+TEXT("Ward");
+     auto* Design=ShipDesignRegistry::FindLegacy(FName(TEXT("Courier")));if(!Design){Release();continue;}const FString Name=Prefix+TEXT("Ward");
      auto* Ward=Design?S.CreateShip(TCHAR_TO_UTF8(*Name),"",Design,Region->GetName(),OtherHand(Origin+FVector(8000,0,2000)),Craft->GetIFF()):nullptr;
-     if(!Ward)continue;auto* Route=new Instruction(Region,OtherHand(Origin+FVector(25000,1000,7000)));Route->SetSpeed(150);Route->SetWeaponsFree(0);Ward->AddNavPoint(Route);Ward->SetAutoNav(true);
+     if(!Ward){Release();continue;}auto* Route=new Instruction(Region,OtherHand(Origin+FVector(25000,1000,7000)));Route->SetSpeed(150);Route->SetWeaponsFree(0);Ward->AddNavPoint(Route);Ward->SetAutoNav(true);
     }
     J->SetNumberField(TEXT("stage"),1);J->SetStringField(TEXT("status"),TEXT("Defeat the raiders and protect any assigned transport."));
    }
@@ -199,20 +244,20 @@ bool DynamicMissionAI::Advance(Sim& S,FS_PlayerGameInfo& P,AgentAI& Journal,FNam
   }
   else if(Freight)
   {
-   const double Tonnes=R->GetNumberField(TEXT("CargoTonnes"));const FName Item=DataTableUtils::MakeValidName(Kind==TEXT("OreDelivery")?TEXT("magnetite"):J->GetStringField(TEXT("rule"))==TEXT("ShipyardSupply")?TEXT("structural alloy"):J->GetStringField(TEXT("rule"))==TEXT("MachineParts")?TEXT("machine parts"):TEXT("industrial concentrate"));
-   const FName Hold=Craft->GetCargoInventoryKey();Craft->SyncCargoInventory();const FString Dock=DockName(Craft);FName Destination;
+   const double Tonnes=R->GetNumberField(TEXT("CargoTonnes"));FString CargoItem;R->TryGetStringField(TEXT("CargoItem"),CargoItem);const FName Item=DataTableUtils::MakeValidName(!CargoItem.IsEmpty()?CargoItem:Kind==TEXT("OreDelivery")?TEXT("magnetite"):J->GetStringField(TEXT("rule"))==TEXT("ShipyardSupply")?TEXT("structural alloy"):J->GetStringField(TEXT("rule"))==TEXT("MachineParts")?TEXT("machine parts"):TEXT("industrial concentrate"));
+   const FName Hold=Craft->GetCargoInventoryKey();Craft->SyncCargoInventory(P.Economy);const FString Dock=DockName(Craft);FName Destination;
    for(const auto& Pair:P.Economy.Inventories)if(Pair.Value.Owner==FEconomyRuntime::IndustryOwner() && Pair.Value.bOperational && Pair.Key.ToString().StartsWith(J->GetStringField(TEXT("system"))+TEXT("/")) && Pair.Key.ToString().Contains(TEXT("/")+Dock+TEXT("/")) && Pair.Value.DesiredStock.Contains(Item)){Destination=Pair.Key;break;}
    double UnitMass=1;J->TryGetNumberField(TEXT("unitMass"),UnitMass);if(!FMath::IsFinite(UnitMass) || UnitMass<=0)continue;
    double Quantity=Tonnes/UnitMass;
    if(Kind==TEXT("Freight") && Stage==0 && !Dock.IsEmpty())
    {
     TArray<FName> Keys;P.Economy.Inventories.GetKeys(Keys);Keys.Sort([](FName A,FName B){return A.LexicalLess(B);});
-    for(FName Key:Keys)if(Key.ToString().Contains(TEXT("/")+Dock+TEXT("/")) && P.Economy.Inventories[Key].Owner==FEconomyRuntime::IndustryOwner() && FEconomyLedger::Available(P.Economy,Key,Item)>=Quantity)
+    for(FName Key:Keys)if(Key.ToString().Contains(TEXT("/")+Dock+TEXT("/")) && P.Economy.Inventories[Key].Owner==FEconomyRuntime::IndustryOwner() )
     {
-     auto Candidate=P.Economy;const auto* Stock=Candidate.Inventories[Key].Items.FindByPredicate([&](const auto& Stack){return Stack.Type==Item;});if(!Stock || Stock->UnitTonnes<=0)continue;UnitMass=Stock->UnitTonnes;Quantity=Tonnes/UnitMass;
+     auto Candidate=P.Economy;const auto* Stock=Candidate.Inventories[Key].Items.FindByPredicate([&](const auto& Stack){return Stack.Type==Item;});if(!Stock || Stock->UnitTonnes<=0)continue;UnitMass=Stock->UnitTonnes;Quantity=Tonnes/UnitMass;if(FEconomyLedger::Available(Candidate,Key,Item)+UE_SMALL_NUMBER<Quantity)continue;
      const int64 Collateral=FMath::CeilToInt64(Quantity*FMath::Max(1LL,Candidate.Inventories[Key].AskPrices.FindRef(Item)));
      if(!FEconomyLedger::Pay(Candidate,FEconomyLedger::Pilot(),Bond,Collateral,FGuid::NewGuid(),TEXT("Independent freight cargo bond")) || !FEconomyLedger::Withdraw(Candidate,FEconomyRuntime::IndustryOwner(),Key,Item,Quantity) || !FEconomyLedger::Deposit(Candidate,Hold,Item,Quantity,UnitMass))continue;
-     P.Economy=MoveTemp(Candidate);J->SetNumberField(TEXT("unitMass"),UnitMass);J->SetNumberField(TEXT("bond"),double(Collateral));J->SetStringField(TEXT("pickupInventory"),Key.ToString());J->SetNumberField(TEXT("stage"),1);Craft->ApplyCargoInventoryToManifest();break;
+     P.Economy=MoveTemp(Candidate);J->SetNumberField(TEXT("unitMass"),UnitMass);J->SetNumberField(TEXT("bond"),double(Collateral));J->SetStringField(TEXT("pickupInventory"),Key.ToString());J->SetNumberField(TEXT("stage"),1);Craft->ApplyCargoInventoryToManifest(P.Economy);break;
     }
    }
    const double Aboard=FEconomyLedger::Available(P.Economy,Hold,Item);
@@ -230,7 +275,7 @@ bool DynamicMissionAI::Advance(Sim& S,FS_PlayerGameInfo& P,AgentAI& Journal,FNam
    if(BondValue>0 && !FEconomyLedger::Pay(Candidate,Bond,FEconomyLedger::Pilot(),int64(BondValue),FGuid::NewGuid(),TEXT("Independent freight cargo bond refund")))continue;
    const int64 Balance=TransactionAI::Balance(Candidate);if(Balance>MAX_int64-Base-Bonus-Return)continue;
    if(!TransactionAI::ReconcileExternalBalance(Candidate,FEconomyLedger::Pilot(),Balance+Base+Bonus+Return,FName(*J->GetStringField(TEXT("title"))),TEXT("Independent agent assignment"),EWalletTransactionCategory::MissionReward,Receipt(Id),Receipt(Id)))continue;
-   if(!Journal.Resolve(Pilot,Id,true))continue;P.Economy=MoveTemp(Candidate);Craft->ApplyCargoInventoryToManifest();J->SetNumberField(TEXT("state"),2);P.MarkMissionCompleted(Campaign::SINGLE_MISSIONS,Id);
+   if(!Journal.Resolve(Pilot,Id,true))continue;P.Economy=MoveTemp(Candidate);Craft->ApplyCargoInventoryToManifest(P.Economy);J->SetNumberField(TEXT("state"),2);P.MarkMissionCompleted(Campaign::SINGLE_MISSIONS,Id);
    if(auto* Character=PlayerCharacter::GetCurrentPlayer();Character && AgentAI::PilotKey(*Character)==Pilot){Character->AddPoints(J->GetIntegerField(TEXT("score")));P.PlayerPoints=Character->GetPoints();P.Rank=Character->GetRank();}else P.PlayerPoints=int32(FMath::Clamp(int64(P.PlayerPoints)+J->GetIntegerField(TEXT("score")),0LL,int64(MAX_int32)));
    Release();J->SetStringField(TEXT("status"),TEXT("Completed. Credits and score recorded."));Critical=true;
   }

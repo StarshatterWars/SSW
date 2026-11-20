@@ -6,6 +6,8 @@ namespace StarshatterWarsLauncher;
 
 internal static class PlatformSignIn
 {
+    // EOS password login is reserved for Epic internal clients. Reuse authorization, then use Epic's portal.
+    private const int PersistentAuth = 2, AccountPortal = 6;
     private const string EosLibrary = "EOSSDK-Win64-Shipping.dll";
     private const string SteamLibrary = "steam_api64.dll";
     private static nint eosLibrary, steamLibrary;
@@ -60,8 +62,8 @@ internal static class PlatformSignIn
         {
             nint auth = EOS_Platform_GetAuthInterface(platform);
             if (auth == 0) throw new InvalidOperationException("Epic authentication is unavailable.");
-            int result = await Login(auth, platform, 2, cancellation);
-            if (result != 0) result = await Login(auth, platform, 6, cancellation);
+            int result = await Login(auth, platform, PersistentAuth, cancellation);
+            if (result != 0) result = await Login(auth, platform, AccountPortal, cancellation);
             if (result != 0) throw new InvalidOperationException($"Epic sign-in did not complete ({result}).");
             return artifact;
         }

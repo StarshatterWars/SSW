@@ -56,7 +56,8 @@ public:
 		LAUNCH,
 		ACTIVE,
 		APPROACH,
-		RECOVERY
+		RECOVERY,
+        TRANSFERRED
 	};
 
 	enum CONSTANTS { MAX_SQUADRONS = 10 };
@@ -97,6 +98,8 @@ public:
 	int               NumShipsMaint(int squadron)            const;
 	int               NumShipsDead(int squadron)             const;
 	int               NumSlotsEmpty()                        const;
+    bool RestagePlayer(Ship* Craft);
+    bool TransferStoredReserve(int squadron,int index,bool restore=false);
 
 	int               GetActiveElements(List<SimElement>& active_list);
 

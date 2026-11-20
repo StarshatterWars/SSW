@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "AgentAI.h"
+#include "StandaloneMissionCatalog.h"
 #include "TrainingTestRules.h"
 #include "AgentCatalogSubsystem.h"
 #include "PlayerCharacter.h"
@@ -187,23 +188,22 @@ bool FAgentCatalogTest::RunTest(const FString&)
     { TestTrue(FString::Printf(TEXT("Mission %d has a local officer"),Row.Id),RoutedMissions.Contains(Row.Id)); });
     const auto* Instructor=Catalog->FindAgent(TEXT("JanekFlightTraining"));
     TestTrue(TEXT("Same instructor introduces all seven lessons"),Instructor && Instructor->MissionIds.Num()==7 && Instructor->MissionIds.Contains(107));
+    TArray<FS_CampaignMissionList> NativeList;TArray<FS_CampaignMission> NativeScenarios;FString NativeError;
+    if(!TestTrue(TEXT("Native scenario catalog"),StandaloneMissionCatalog::Load(FPaths::ProjectContentDir()/TEXT("GameData/Missions"),NativeList,NativeScenarios,NativeError)))return false;
     ForEachAgent(TEXT("Verify regional agent postings"),
-        [this, Scenarios](FName Key, const FS_AgentCatalogRow& Agent)
+        [this, &NativeScenarios](FName Key, const FS_AgentCatalogRow& Agent)
         {
             if (Agent.Class == EAgentClass::Training)
             {
-                TestEqual(TEXT("Training officer is aboard Archon"), Agent.Station, FString(TEXT("Archon")));
+                const FString Carrier=Agent.Empire==EEMPIRE_NAME::Marakan?TEXT("Manticore"):Agent.Empire==EEMPIRE_NAME::Dantari?TEXT("Goliath"):TEXT("Archon");
+                TestEqual(TEXT("Training officer is aboard its own faction carrier"), Agent.Station, Carrier);
                 return;
             }
             for (const int32 Id : Agent.MissionIds)
             {
                 bool bHasMission = false;
-                Scenarios->ForeachRow<FS_CampaignMission>(TEXT("Find approved mission in the region"),
-                    [&Agent, &bHasMission, Id](FName, const FS_CampaignMission& Scenario)
-                    {
-                        bHasMission |= Scenario.Id == Id && Scenario.StoryCampaignId <= 0 &&
-                            Scenario.MissionSystem.Equals(Agent.System, ESearchCase::IgnoreCase);
-                    });
+                for(const auto& Scenario:NativeScenarios)
+                    bHasMission |= Scenario.Id == Id && Scenario.StoryCampaignId <= 0 && Scenario.MissionSystem.Equals(Agent.System,ESearchCase::IgnoreCase);
                 TestTrue(FString::Printf(TEXT("%s has approved mission %d in its posting"), *Key.ToString(), Id), bHasMission);
             }
         });

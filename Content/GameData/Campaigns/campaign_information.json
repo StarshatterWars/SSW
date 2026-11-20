@@ -1,0 +1,402 @@
+{
+  "schemaVersion": 1,
+  "campaigns": [
+    {
+      "CampaignId": 1,
+      "Empire": "Terellian",
+      "Name": "Operation Live Fire",
+      "Description": "The Third Fleet of the Terellian Alliance is participating in live fire training exercises in the Janus star system.",
+      "Situation": "The Third Fleet of the Terellian Alliance Space Force is participating in live fire training exercises in the Janus star system.  Operation Live Fire will give the fleet some much needed practice under conditions that are as close to combat reality as possible.\\n\\nThe schedule of training scenarios in this campaign has been designed to bring you up to speed on Force:Space combat operations.  The first several missions will give you some practice in fighter operations, both in space and in atmosphere.  You will also get a chance to practice some ground strike operations against static pre-planned targets.  The last few missions are designed to introduce you to the greater complexity of modern starship combat.\\n\\nTo begin the first mission, click the [MISSIONS] button on the left side of this screen.\\n\\n",
+      "Start": "01/00:00:00",
+      "System": "Janus",
+      "Region": "Janek",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": false,
+      "Available": true,
+      "Orders": [
+        "* Execute all of the training missions in this campaign."
+      ]
+    },
+    {
+      "CampaignId": 2,
+      "Empire": "Terellian",
+      "Name": "Operation Highland",
+      "Description": "The Independent System of Solus is in danger of being destroyed by civil war.  Dantari Separatists seeking to join the Hegemony Prefecture of Renser have gained control of much of the Solus Star Fleet.  The Loyalist faction has requested military aid from the Terellian Alliance.  A Force:Space task force has been dispatched to break the blockade, evacuate Alliance citizens from Solus, and stabilize the military situation.",
+      "Situation": "The Independent System of Solus has requested military assistance from Terellian Alliance Force:Command.  Dantari Separatists seeking to join the Hegemony Prefecture of Renser have gained control of much of the Solus Star Fleet and have established a blockade around the Trellis Gate.  The Loyalist forces and many Alliance civilians have been trapped on the inner planets of the system.Force:Intel believes that the Separatists are being backed with military support from the Prefecture of Renser, a Hegemony border system.  All Force:Space units are instructed to be on the lookout for any Hegemony involvement in this conflict.",
+      "Start": "01/00:00:00",
+      "System": "Solus",
+      "Region": "Meridian",
+      "MainImage": "main",
+      "Scripted": false,
+      "Sequential": false,
+      "Available": true,
+      "Orders": [
+        "* Protect civilian and allied assets in the Independent System of Solus.",
+        "* Break the Separatist blockade of the inner planets.",
+        "* Apprehend or destroy military units of the Dantari Separatists.",
+        "* Determine the extent of Hegemony involvement in this conflict."
+      ]
+    },
+    {
+      "CampaignId": 3,
+      "Empire": "Terellian",
+      "Name": "Operation Shining Fortress",
+      "Description": "The war begins. Hegemony forces have begun to invade the core Alliance systems.  Starfleets from Loris and Kolchev, moving through the independent systems Silessia and Haiche, have attacked key targets in the Janus and Borovan systems.  The Alliance Fourth and Fifth Fleets are fighting a defensive battle trying to halt the Hegemony advance, evacuate civilians, and form an effective counterattack.",
+      "Situation": "The Terellian Alliance is facing the first true interstellar war in nearly five hundred years.  Hegemony forces have begun to invade the core Alliance systems.  Starfleets from Loris and Kolchev, moving through the independent systems Silessia and Haiche, have attacked key targets in the Janus and Borovan systems.\\n\\nForce:Space Fourth Fleet (Titan) is stationed in the Borovan system, and is deploying in a defensive posture to meet the invasion threat. Fifth Fleet (Hyperion) is divided.  Task force TF5.15 is assigned to the Janus proving grounds for training exercises.  The remainder of Fifth Fleet is spread throughout the Athenar system.",
+      "Start": "01/00:00:00",
+      "System": "Borova",
+      "Region": "Borova",
+      "MainImage": "main",
+      "Scripted": false,
+      "Sequential": false,
+      "Available": true,
+      "Orders": [
+        "* Protect Alliance civilians and assets in Janus and Borova.",
+        "* Evacuate civilians and government personnel as necessary.",
+        "* Stop the Hegemony advance until a counterattack can be mounted."
+      ]
+    },
+    {
+      "CampaignId": 4,
+      "Empire": "Terellian",
+      "Name": "Operation Firestorm",
+      "Description": "The war comes to an unexpected turning point as new discoveries come to light.  Alliance war fleets continue to push into Hegemony territory as new forces are brought into the battle.",
+      "Situation": "A small Hegemony outpost has been detected in the Ostara system.  Force:Space Sixth Fleet (Atlas) has been tasked with eliminating this threat, as a prelude to the planned invasion of the Tarsus system. Force 9th Carrier Group (Atlas) will reduce the Hegemony fighter component, while the 14th Battle Group (Stormwind) addresses the naval component.",
+      "Start": "01/00:00:00",
+      "System": "Jarnell",
+      "Region": "Adonis",
+      "MainImage": "main",
+      "Scripted": false,
+      "Sequential": false,
+      "Available": true,
+      "Orders": [
+        "* Reduce or eliminate the Hegemony presence in Ostara.",
+        "* Prepare the region for a general invasion of Tarsus.",
+        "* Protect Alliance assets in the area.\\n"
+      ]
+    },
+    {
+      "CampaignId": 5,
+      "Empire": "Terellian",
+      "Name": "Operation Nightfall",
+      "Description": "Two Force:Space fleets press on through major population centers on the road to the Marakan homeworld. Civilians back home begin to question the Alliance's involvement in the war, even as shadows fall upon the climactic battle.",
+      "Situation": "Operation Firestorm was not the strategic success we once believed it to be. Force:Intel field agents have been unable to recover either the Borovan Archaelith or any of the illegal technite from the Korian and Kolchev systems.  We have now determined that the technite has already been shipped out of Kolchev to the Garrison system, and we believe that the Archaelith cannot be far behind.  Garrison is a major military stronghold for the Hegemony, close to the Marak system itself. We cannot estimate how long we have before the Hegemony will be able to produce a Quantum Disruptor weapon system.We are therefore commencing Operation Nightfall to recover the artifacts from the Garrison system. Our first task is to gain military control of the Radix and Isham star systems. Force First Fleet will take the northern route and secure the Isham system, while Second Fleet holds their southern flank by controlling the Radix system. Our combined forces will then converge on the Garrison system as soon as they can manage it.",
+      "Start": "01/00:00:00",
+      "System": "Jarnell",
+      "Region": "Adonis",
+      "MainImage": "main",
+      "Scripted": false,
+      "Sequential": false,
+      "Available": true,
+      "Orders": [
+        "* First Fleet: Engage military targets in the Isham system.",
+        "* Second Fleet: Secure the Radix system.",
+        "* Both fleets to converge on the Garrison system as soon as possible."
+      ]
+    },
+    {
+      "CampaignId": 1,
+      "Empire": "Marakan",
+      "Name": "Hegemony Flight Induction",
+      "Description": "Hegemony Flight Induction: seven qualification flights from carrier operations to capital-ship command.",
+      "Situation": "Cmdr. Varen Keth assigns the pilot to Manticore. Surface exercises operate from Tiger Base. Complete lessons in order; advanced commands require rank and the appropriate ship-command skill.",
+      "Start": "01/00:00:00",
+      "System": "Isham",
+      "Region": "Garden",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Complete carrier qualifications, target practice and atmospheric flight school.",
+        "Conduct the ground strike exercise at Tiger Base.",
+        "Return for advanced frigate, destroyer and carrier command training as rank and skills allow."
+      ]
+    },
+    {
+      "CampaignId": 1,
+      "Empire": "Dantari",
+      "Name": "Separatist Flight Induction",
+      "Description": "Separatist Flight Induction: seven qualification flights from carrier operations to capital-ship command.",
+      "Situation": "Lt. Sera Vann assigns the pilot to Goliath. Surface exercises operate from Telmera Starport. Complete lessons in order; advanced commands require rank and the appropriate ship-command skill.",
+      "Start": "01/00:00:00",
+      "System": "Solus",
+      "Region": "Solus",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Complete carrier qualifications, target practice and atmospheric flight school.",
+        "Conduct the ground strike exercise at Telmera Starport.",
+        "Return for advanced frigate, destroyer and carrier command training as rank and skills allow."
+      ]
+    },
+    {
+      "CampaignId": 2,
+      "Empire": "Marakan",
+      "Name": "Highland: The Hegemony Account",
+      "Description": "The Solus crisis threatens Hegemony interests along the border.",
+      "Situation": "The Solus crisis threatens Hegemony interests along the border. The Directorate has invited Alliance forces into a dispute it calls internal security. Our liaison ships must preserve intelligence, protect our crews and keep the Solus routes open. Follow the local officers through the successive encounters; their account of the campaign is separate from the Alliance narrative.\n\nAssignments are issued by local faction agents. Review the assigned ship, destination, objectives and recovery instructions before accepting each mission. Completed operations determine the next chapter and agent handoff.",
+      "Start": "01/00:00:00",
+      "System": "Solus",
+      "Region": "Solus",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Maintain the Solus cordon and protect Hegemony liaison crews.",
+        "Screen military transports and contest armed Alliance incursions.",
+        "Follow successive local-agent orders while distinguishing civilian traffic from combatants."
+      ]
+    },
+    {
+      "CampaignId": 3,
+      "Empire": "Marakan",
+      "Name": "Shining Fortress: The Advance",
+      "Description": "Hegemony fleets are advancing through the independent systems toward the Alliance core.",
+      "Situation": "Hegemony fleets are advancing through the independent systems toward the Alliance core. Command calls for a decisive campaign, but every gained corridor needs supply and a defensible withdrawal route. Screen the forward groups and protect military shipping. Neutral diplomats, evacuees and colony vessels are not lawful objectives under your orders.\n\nAssignments are issued by local faction agents. Review the assigned ship, destination, objectives and recovery instructions before accepting each mission. Completed operations determine the next chapter and agent handoff.",
+      "Start": "01/00:00:00",
+      "System": "Janus",
+      "Region": "Janek",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Cover the forward battle groups advancing through the independent systems.",
+        "Protect military supply shipping and maintain reinforcement routes.",
+        "Screen enemy counterattacks and preserve a withdrawal corridor for damaged ships.",
+        "Do not engage neutral diplomats, evacuees or colony vessels."
+      ]
+    },
+    {
+      "CampaignId": 4,
+      "Empire": "Marakan",
+      "Name": "Firestorm: Holding the Frontier",
+      "Description": "The Alliance is carrying the war into Hegemony territory.",
+      "Situation": "The Alliance is carrying the war into Hegemony territory. Outposts at Ostara and Tarsus face increasing pressure, while new forces complicate the front. Protect our surviving ships, challenge armed incursions and preserve routes for reinforcement. Third-party raiders remain a separate threat; do not mistake them for allies.\n\nAssignments are issued by local faction agents. Review the assigned ship, destination, objectives and recovery instructions before accepting each mission. Completed operations determine the next chapter and agent handoff.",
+      "Start": "01/00:00:00",
+      "System": "Ostara",
+      "Region": "Aram",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Relieve the Aram outpost and defend the Ostara and Tarsus approaches.",
+        "Escort reinforcements and protect surviving Hegemony formations.",
+        "Disrupt armed Alliance incursions without treating third-party raiders as allies.",
+        "Accept further assignments from the local operations officers."
+      ]
+    },
+    {
+      "CampaignId": 5,
+      "Empire": "Marakan",
+      "Name": "Nightfall: The Zolon Threat",
+      "Description": "The Hegemony faces an alien assault as the Zolon threat reaches its homeward routes.",
+      "Situation": "Zolon scouts and strike craft threaten Garrison, Radix, Ramek and Volante. Defend the pickets, protect technical staff and keep recovery lanes open. You serve the Marakan Hegemony against the Zolons; Zolons are not a playable faction.",
+      "Start": "01/00:00:00",
+      "System": "Garrison",
+      "Region": "Garrison",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Defend Hegemony units against Zolon scouts and strike craft.",
+        "Protect laboratory evacuations and recovery corridors.",
+        "Follow local Hegemony officers between operations and recover surviving crews."
+      ]
+    },
+    {
+      "CampaignId": 2,
+      "Empire": "Dantari",
+      "Name": "Highland: The Separatist Account",
+      "Description": "The Directorate calls our secession a rebellion and has invited the Terellian Alliance to enforce its authority.",
+      "Situation": "The Directorate calls our secession a rebellion and has invited the Terellian Alliance to enforce its authority. We see foreign warships entering Solus under a humanitarian mandate. Hold our blockade and liaison screens, protect the withdrawing crews and distinguish armed escorts from civilian traffic. Commander Arat will pass you between local officers as the crisis unfolds.\n\nAssignments are issued by local faction agents. Review the assigned ship, destination, objectives and recovery instructions before accepting each mission. Completed operations determine the next chapter and agent handoff.",
+      "Start": "01/00:00:00",
+      "System": "Solus",
+      "Region": "Solus",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Hold the Solus blockade and protect Separatist liaison screens.",
+        "Escort withdrawing crews and military shipping through contested corridors.",
+        "Challenge armed Directorate and Alliance escorts without attacking civilian traffic.",
+        "Report to Commander Selen Arat and the officers assigned to each subsequent operation."
+      ]
+    }
+  ],
+  "factionBriefings": [
+    {
+      "Name": "MarakanTraining",
+      "Empire": "Marakan",
+      "CampaignId": 1,
+      "Title": "Hegemony Flight Induction",
+      "Body": "Cmdr. Varen Keth assigns the pilot to Manticore. Surface exercises operate from Tiger Base. Complete lessons in order; advanced commands require rank and the appropriate ship-command skill.",
+      "FirstMissionId": 101,
+      "PrerequisiteMissionIds": [],
+      "Description": "Hegemony Flight Induction: seven qualification flights from carrier operations to capital-ship command.",
+      "Situation": "Cmdr. Varen Keth assigns the pilot to Manticore. Surface exercises operate from Tiger Base. Complete lessons in order; advanced commands require rank and the appropriate ship-command skill.",
+      "Start": "01/00:00:00",
+      "System": "Isham",
+      "Region": "Garden",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Complete carrier qualifications, target practice and atmospheric flight school.",
+        "Conduct the ground strike exercise at Tiger Base.",
+        "Return for advanced frigate, destroyer and carrier command training as rank and skills allow."
+      ]
+    },
+    {
+      "Name": "DantariTraining",
+      "Empire": "Dantari",
+      "CampaignId": 1,
+      "Title": "Separatist Flight Induction",
+      "Body": "Lt. Sera Vann assigns the pilot to Goliath. Surface exercises operate from Telmera Starport. Complete lessons in order; advanced commands require rank and the appropriate ship-command skill.",
+      "FirstMissionId": 101,
+      "PrerequisiteMissionIds": [],
+      "Description": "Separatist Flight Induction: seven qualification flights from carrier operations to capital-ship command.",
+      "Situation": "Lt. Sera Vann assigns the pilot to Goliath. Surface exercises operate from Telmera Starport. Complete lessons in order; advanced commands require rank and the appropriate ship-command skill.",
+      "Start": "01/00:00:00",
+      "System": "Solus",
+      "Region": "Solus",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Complete carrier qualifications, target practice and atmospheric flight school.",
+        "Conduct the ground strike exercise at Telmera Starport.",
+        "Return for advanced frigate, destroyer and carrier command training as rank and skills allow."
+      ]
+    },
+    {
+      "Name": "MarakanCampaign2",
+      "Empire": "Marakan",
+      "CampaignId": 2,
+      "Title": "Highland: The Hegemony Account",
+      "Body": "The Solus crisis threatens Hegemony interests along the border. The Directorate has invited Alliance forces into a dispute it calls internal security. Our liaison ships must preserve intelligence, protect our crews and keep the Solus routes open. Follow the local officers through the successive encounters; their account of the campaign is separate from the Alliance narrative.",
+      "FirstMissionId": 910207,
+      "PrerequisiteMissionIds": [],
+      "Description": "The Solus crisis threatens Hegemony interests along the border.",
+      "Situation": "The Solus crisis threatens Hegemony interests along the border. The Directorate has invited Alliance forces into a dispute it calls internal security. Our liaison ships must preserve intelligence, protect our crews and keep the Solus routes open. Follow the local officers through the successive encounters; their account of the campaign is separate from the Alliance narrative.\n\nAssignments are issued by local faction agents. Review the assigned ship, destination, objectives and recovery instructions before accepting each mission. Completed operations determine the next chapter and agent handoff.",
+      "Start": "01/00:00:00",
+      "System": "Solus",
+      "Region": "Solus",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Maintain the Solus cordon and protect Hegemony liaison crews.",
+        "Screen military transports and contest armed Alliance incursions.",
+        "Follow successive local-agent orders while distinguishing civilian traffic from combatants."
+      ]
+    },
+    {
+      "Name": "MarakanCampaign3",
+      "Empire": "Marakan",
+      "CampaignId": 3,
+      "Title": "Shining Fortress: The Advance",
+      "Body": "Hegemony fleets are advancing through the independent systems toward the Alliance core. Command calls for a decisive campaign, but every gained corridor needs supply and a defensible withdrawal route. Screen the forward groups and protect military shipping. Neutral diplomats, evacuees and colony vessels are not lawful objectives under your orders.",
+      "FirstMissionId": 910211,
+      "PrerequisiteMissionIds": [],
+      "Description": "Hegemony fleets are advancing through the independent systems toward the Alliance core.",
+      "Situation": "Hegemony fleets are advancing through the independent systems toward the Alliance core. Command calls for a decisive campaign, but every gained corridor needs supply and a defensible withdrawal route. Screen the forward groups and protect military shipping. Neutral diplomats, evacuees and colony vessels are not lawful objectives under your orders.\n\nAssignments are issued by local faction agents. Review the assigned ship, destination, objectives and recovery instructions before accepting each mission. Completed operations determine the next chapter and agent handoff.",
+      "Start": "01/00:00:00",
+      "System": "Janus",
+      "Region": "Janek",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Cover the forward battle groups advancing through the independent systems.",
+        "Protect military supply shipping and maintain reinforcement routes.",
+        "Screen enemy counterattacks and preserve a withdrawal corridor for damaged ships.",
+        "Do not engage neutral diplomats, evacuees or colony vessels."
+      ]
+    },
+    {
+      "Name": "MarakanCampaign4",
+      "Empire": "Marakan",
+      "CampaignId": 4,
+      "Title": "Firestorm: Holding the Frontier",
+      "Body": "The Alliance is carrying the war into Hegemony territory. Outposts at Ostara and Tarsus face increasing pressure, while new forces complicate the front. Protect our surviving ships, challenge armed incursions and preserve routes for reinforcement. Third-party raiders remain a separate threat; do not mistake them for allies.",
+      "FirstMissionId": 910219,
+      "PrerequisiteMissionIds": [],
+      "Description": "The Alliance is carrying the war into Hegemony territory.",
+      "Situation": "The Alliance is carrying the war into Hegemony territory. Outposts at Ostara and Tarsus face increasing pressure, while new forces complicate the front. Protect our surviving ships, challenge armed incursions and preserve routes for reinforcement. Third-party raiders remain a separate threat; do not mistake them for allies.\n\nAssignments are issued by local faction agents. Review the assigned ship, destination, objectives and recovery instructions before accepting each mission. Completed operations determine the next chapter and agent handoff.",
+      "Start": "01/00:00:00",
+      "System": "Ostara",
+      "Region": "Aram",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Relieve the Aram outpost and defend the Ostara and Tarsus approaches.",
+        "Escort reinforcements and protect surviving Hegemony formations.",
+        "Disrupt armed Alliance incursions without treating third-party raiders as allies.",
+        "Accept further assignments from the local operations officers."
+      ]
+    },
+    {
+      "Name": "MarakanCampaign5",
+      "Empire": "Marakan",
+      "CampaignId": 5,
+      "Title": "Nightfall: The Zolon Threat",
+      "Body": "The Zolon threat has reached the Hegemony homeward routes. Defend the Garrison pickets, protect the Radix crossing and keep the Ramek and Volante recovery lanes open. Marakan officers will guide your assignments against alien scouts and strike craft. You remain a Hegemony pilot; Zolons are not a playable faction.",
+      "FirstMissionId": 910224,
+      "PrerequisiteMissionIds": [],
+      "Description": "Alliance fleets are approaching the centers of Hegemony power.",
+      "Situation": "Alliance fleets are approaching the centers of Hegemony power. Garrison, Radix, Ramek and the Volante approaches form the remaining defensive chain. Screen the retreating formations, preserve our crews and hold the recovery corridors. Your local officers issue each assignment.\n\nAssignments are issued by local faction agents. Review the assigned ship, destination, objectives and recovery instructions before accepting each mission. Completed operations determine the next chapter and agent handoff.",
+      "Start": "01/00:00:00",
+      "System": "Garrison",
+      "Region": "Garrison",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Screen formations withdrawing toward Garrison, Radix and Ramek.",
+        "Defend the Volante approaches and preserve homeward supply routes.",
+        "Protect recovery corridors and evacuating Hegemony crews.",
+        "Complete the local-agent defense assignments in chapter order."
+      ]
+    },
+    {
+      "Name": "DantariCampaign2",
+      "Empire": "Dantari",
+      "CampaignId": 2,
+      "Title": "Highland: The Separatist Account",
+      "Body": "The Directorate calls our secession a rebellion and has invited the Terellian Alliance to enforce its authority. We see foreign warships entering Solus under a humanitarian mandate. Hold our blockade and liaison screens, protect the withdrawing crews and distinguish armed escorts from civilian traffic. Commander Arat will pass you between local officers as the crisis unfolds.",
+      "FirstMissionId": 910051,
+      "PrerequisiteMissionIds": [],
+      "Description": "The Directorate calls our secession a rebellion and has invited the Terellian Alliance to enforce its authority.",
+      "Situation": "The Directorate calls our secession a rebellion and has invited the Terellian Alliance to enforce its authority. We see foreign warships entering Solus under a humanitarian mandate. Hold our blockade and liaison screens, protect the withdrawing crews and distinguish armed escorts from civilian traffic. Commander Arat will pass you between local officers as the crisis unfolds.\n\nAssignments are issued by local faction agents. Review the assigned ship, destination, objectives and recovery instructions before accepting each mission. Completed operations determine the next chapter and agent handoff.",
+      "Start": "01/00:00:00",
+      "System": "Solus",
+      "Region": "Solus",
+      "MainImage": "main",
+      "Scripted": true,
+      "Sequential": true,
+      "Available": true,
+      "Orders": [
+        "Hold the Solus blockade and protect Separatist liaison screens.",
+        "Escort withdrawing crews and military shipping through contested corridors.",
+        "Challenge armed Directorate and Alliance escorts without attacking civilian traffic.",
+        "Report to Commander Selen Arat and the officers assigned to each subsequent operation."
+      ]
+    }
+  ]
+}

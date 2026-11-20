@@ -48,6 +48,7 @@ public:
 	};
 
 	void              SetDestination(SimRegion* rgn, const FVector& loc);
+    void SetPointDestination(SimRegion* Region,const FVector& MapLocation) { SetDestination(Region,MapLocation); bPointDestination=true; }
 	bool              Engage(bool immediate = false);
 	int               ActiveState() const { return active_state; }
     void CancelJump() { if (active_state == ACTIVE_COUNTDOWN || active_state == ACTIVE_PREWARP) AbortJump(); }
@@ -76,4 +77,5 @@ protected:
 
 	SimRegion*			dst_rgn;
 	FVector             dst_loc;
+    bool bPointDestination=false;
 };

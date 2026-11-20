@@ -22,6 +22,8 @@
 #include "FreightManifestTypes.h"
 #include "GameStructs_System.generated.h"
 
+class UMaterialInterface;
+
 #ifndef SSW_MAX_STORES
 #define SSW_MAX_STORES 16
 #endif
@@ -1616,6 +1618,9 @@ struct FSkinMtlCell
 	// Optional: material name or slot name:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString MaterialName;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TSoftObjectPtr<UMaterialInterface> UnrealMaterial;
 
 	// Optional: texture/bitmap key (legacy loads bitmaps; we store keys only):
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

@@ -4,6 +4,7 @@
 #include "MissileFlightPresentation.h"
 #include "Components/StaticMeshComponent.h"
 #include "NiagaraComponent.h"
+#include "NiagaraSystem.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "Misc/ScopeExit.h"
@@ -35,7 +36,16 @@ bool FMissileForwardAlignmentTest::RunTest(const FString&)
         TestTrue(TEXT("Actual body mesh checked"),Bodies>0);
         TestTrue(TEXT("Visual correction preserves actor pose and scale"),Missile->GetActorTransform().Equals(Pose,.001));
         TestTrue(TEXT("Exhaust remains behind missile centre"),Missile->TrailComponent->GetRelativeLocation().X<0);
-        Missile->BeginSimulationFlight();
+        TestFalse(TEXT("Carried missile has no visible exhaust"),Missile->TrailComponent->IsVisible());
+        Missile->BeginSimulationFlight(false);
+        TestFalse(TEXT("Rack release has no exhaust"),Missile->TrailComponent->IsVisible());
+        Missile->SetSimulationExhaust(true,false,1);
+        TestTrue(TEXT("Burning missile has visible native exhaust"),Missile->TrailComponent->IsVisible() && Missile->TrailComponent->IsActive());
+        TestTrue(TEXT("All stock missile classes use native nozzle Niagara"),Missile->TrailComponent->GetAsset() && Missile->TrailComponent->GetAsset()->GetPathName().Contains(TEXT("NS_SSW_Nozzle_OrangeYellow")));
+        TestTrue(TEXT("Native plume is fitted in world scale once"),Missile->TrailComponent->IsUsingAbsoluteScale() && Missile->TrailComponent->GetRelativeScale3D().X>0);
+        Missile->SetSimulationExhaust(true,true,2);TestTrue(TEXT("Exhaust follows simulation pause"),Missile->TrailComponent->IsPaused());
+        Missile->SetSimulationExhaust(false,false,1);TestFalse(TEXT("Coasting missile has no exhaust"),Missile->TrailComponent->IsVisible() || Missile->TrailComponent->IsActive());
+        Missile->SetSimulationExhaust(true,false,1);
         TestTrue(TEXT("Release preserves launch pose"),Missile->GetActorTransform().Equals(Pose,.001));
         TestNull(TEXT("Fired missile is detached"),Missile->GetAttachParentActor());
         Missile->Destroy();

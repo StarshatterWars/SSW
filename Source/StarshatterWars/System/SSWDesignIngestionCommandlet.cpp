@@ -1,5 +1,6 @@
 #include "SSWDesignIngestionCommandlet.h"
 #include "OOBJsonCatalog.h"
+#include "NativeSkinDefinition.h"
 
 #if WITH_EDITOR
 #include "Algo/Find.h"
@@ -382,6 +383,43 @@ USSWDesignIngestionCommandlet::USSWDesignIngestionCommandlet()
 int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
 {
 #if WITH_EDITOR
+    if(FParse::Param(*Params,TEXT("WriteShipJsonTable")))
+    {
+        auto* Table=NewObject<UDataTable>();
+        if(!UStarshatterShipDesignSubsystem::ImportJsonCatalog(*Table,FPaths::ProjectContentDir()/TEXT("GameData/Ships/ships.json")))return 1;
+        return SaveOutputTable(*Table,TEXT("DT_ShipDesign"),false)?0:1;
+    }
+    if(FParse::Param(*Params,TEXT("SyncNativeSkinsJson")))
+    {
+        auto* Table=NewObject<UDataTable>();
+        const FString Path=FPaths::ProjectContentDir()/TEXT("GameData/Ships/ships.json");
+        if(!UStarshatterShipDesignSubsystem::ImportJsonCatalog(*Table,Path))return 1;
+        int32 Skins=0;
+        for(const auto& Pair:Table->GetRowMap())
+        {
+            auto& Row=*reinterpret_cast<FShipDesign*>(Pair.Value);
+            TArray<FShipSkin> Authored;
+            const FString Definition=ShipVisualCatalog::DefinitionName(Row.ShipName,Row.Model);
+            if(NativeSkinDefinition::LoadAuthoredSkins(Definition+TEXT(".def"),Authored))
+            {
+                for(const auto& Skin:Authored)
+                {
+                    auto* Existing=Row.Skin.FindByPredicate([&](const auto& S){return S.Name==Skin.Name;});
+                    if(!Existing){Row.Skin.Add(Skin);++Skins;continue;}
+                    // Keep explicit UE material choices when refreshing legacy metadata.
+                    auto Materials=Existing->Cells;
+                    *Existing=Skin;
+                    for(auto& Cell:Existing->Cells)for(const auto& Previous:Materials)
+                        if(Previous.MaterialName==Cell.MaterialName)Cell.UnrealMaterial=Previous.UnrealMaterial;
+                    ++Skins;
+                }
+            }
+        }
+        FString Json;
+        if(!DesignTableJson::Export(*Table,Json) || !FFileHelper::SaveStringToFile(Json,*Path,FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))return 1;
+        UE_LOG(LogTemp,Display,TEXT("[NativeSkins] %d complete skin definitions stored in ships.json; no runtime DEF required"),Skins);
+        return 0;
+    }
     if (FParse::Param(*Params,TEXT("ConvertMissionListsJson")))
     {
         auto* Context=NewObject<USSWGameInstance>();auto* Data=NewObject<UStarshatterGameDataSubsystem>(Context);
@@ -642,7 +680,9 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
         if (!Data->SingleMissionsDataTable) return 1;
         Data->SingleMissionsDataTable = DuplicateObject<UDataTable>(Data->SingleMissionsDataTable, GetTransientPackage());
         Data->LoadSingleMissions();
-        if (Data->GetSingleMissionScenarios().Num() != 40) return 1;
+        if (Data->GetSingleMissionScenarios().IsEmpty()) return 1;
+        Data->SingleMissionsDataTable->EmptyTable();
+        for(const auto& Row:Data->GetSingleMissionScenarios())Data->SingleMissionsDataTable->AddRow(Row.RowName,Row);
         return SaveOutputTable(*Data->SingleMissionsDataTable, TEXT("DT_SingleMissions"), false) ? 0 : 1;
     }
 
@@ -839,6 +879,7 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
         return 1;
     Campaign->InitializeCampaignData();
     Campaign->LoadSingleMissions();
+    for(const auto& Row:Campaign->GetSingleMissionScenarios())Campaign->SingleMissionsDataTable->AddRow(Row.RowName,Row);
     Campaign->LoadMultiplayerMissions();
 
     Campaign->LoadAwardsJson();

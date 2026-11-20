@@ -31,6 +31,7 @@ private:
     void RequestMission(bool bCampaign = false);
     void StartMission(int32 MissionId);
     bool CanStartMission(int32 MissionId) const;
+    void OpenIntroduction(FName Id);
     void OpenDetails(int32 MissionId, bool bOffer);
     void CloseDetails();
     void RefreshDirectory();

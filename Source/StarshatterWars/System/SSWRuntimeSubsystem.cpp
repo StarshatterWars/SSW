@@ -1937,9 +1937,8 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
         if (ExistingVisual)
         {
             ExistingVisual->SetActorLocationAndRotation(Position, MissileRotation);
-            if (!Shot->IsReleasingFromRack())
-                if (auto* Missile = Cast<AMissileActor>(ExistingVisual))
-                    Missile->IgniteSimulationTrail();
+            if (auto* Missile = Cast<AMissileActor>(ExistingVisual))
+                Missile->SetSimulationExhaust(!Shot->IsReleasingFromRack() && Shot->GetThrust()>UE_SMALL_NUMBER,bPaused,TimeCompression);
             continue;
         }
         AStaticMeshActor* Visual=nullptr;

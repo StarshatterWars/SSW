@@ -222,10 +222,11 @@ const char* FormatGameTime();
 class SimHyper
 {
 public:
-	SimHyper(Ship* o, SimRegion* r, const FVector& l, int t, bool h, Ship* fc1, Ship* fc2)
-		: ship(o), rgn(r), loc(l), type(t), hyperdrive(h), fc_src(fc1), fc_dst(fc2) {
+	SimHyper(Ship* o, SimRegion* r, const FVector& l, int t, bool h, Ship* fc1, Ship* fc2, bool Stop)
+		: bStopOnArrival(Stop), ship(o), rgn(r), loc(l), type(t), hyperdrive(h), fc_src(fc1), fc_dst(fc2) {
 	}
 
+    bool bStopOnArrival;
 	Ship* ship;
 	SimRegion* rgn;
 	FVector     loc;
@@ -2525,14 +2526,15 @@ Sim::ActivateRegion(SimRegion* rgn)
 
 void
 Sim::RequestHyperJump(Ship* obj, SimRegion* rgn, const FVector& loc,
-	int type, Ship* fc1, Ship* fc2)
+	int type, Ship* fc1, Ship* fc2, bool bStopOnArrival)
 {
+    if(!obj || !rgn || loc.ContainsNaN()) return;
 	bool hyperdrive = false;
 
 	if (obj->GetQuantumDrive() && obj->GetQuantumDrive()->GetSubtype() == QuantumDrive::HYPER)
 		hyperdrive = true;
 
-	jumplist.append(new SimHyper(obj, rgn, loc, type, hyperdrive, fc1, fc2));
+	jumplist.append(new SimHyper(obj, rgn, loc, type, hyperdrive, fc1, fc2,bStopOnArrival));
 }
 
 // +--------------------------------------------------------------------+
@@ -3352,6 +3354,17 @@ Sim::ExecFrame(double DeltaSeconds)
 	if (active_region)
 		active_region->ExecFrame(DeltaSeconds);
 
+    EnsureTrainingSurfaceBase();
+    if(mission && mission->IsFreeFlight() && bPlayerDocked)
+    {
+        auto* Player=GetPlayerShip();auto* Base=Player?Player->GetCarrier():nullptr;
+        if(Base && Base->GetHangar() && Base->GetHangar()->RestagePlayer(Player))
+        {
+            bPlayerDocked=false;bPlayerLaunchRequested=false;PendingLaunchPlayer=Player;
+            DeferredLaunchPlayer=nullptr;
+            HUDView::Message("DOCKED. Services available; select Launch when cleared.");
+        }
+    }
     TickIndustry(DeltaSeconds);
 
 
@@ -3690,11 +3703,12 @@ Sim::ResolveHyperList()
 							QueueArrivalFlash(jumpship, dest, EExplosionType::QUANTUM_FLASH);
 						}
 
-						jumpship->LookAt(FVector::ZeroVector);
+						if(!jump->bStopOnArrival) jumpship->LookAt(FVector::ZeroVector);
 
 						// LEGACY:
 						// Heading is already sim-space.
-						jumpship->SetVelocity(jumpship->GetHeading() * 500.0);
+						if(jump->bStopOnArrival) jumpship->ArcadeStop();
+                        jumpship->SetVelocity(jump->bStopOnArrival ? FVector::ZeroVector : jumpship->GetHeading() * 500.0);
 
 						jumpship->SetHelmHeading(jumpship->GetCompassHeading());
 						jumpship->SetHelmPitch(0);
@@ -4410,6 +4424,7 @@ bool Sim::NeedsTrainingLaunchClearance() const
 {
     if (!mission || !mission->IsFreeFlight()) return false;
     const auto* Pilot=PlayerCharacter::GetCurrentPlayer();
+    if(HasSurfaceTrainingClearance()) return false;
     return !Pilot || !PlayerFlightAccess::CanLaunch(false,Pilot->GetRank());
 }
 void Sim::PrepareCutscenePlayback(const Mission* PreparedMission)
@@ -4422,4 +4437,91 @@ void Sim::BeginPreparedCutscenePlayback(const Mission* PreparedMission)
     PreparedSceneGate.Begin(PreparedMission);
     if (mission && mission == PreparedMission)
         start_time = Game::GetGameTime();
+}
+
+namespace
+{
+const TerrainRegion* JanekSurface(Sim& Simulation)
+{
+    auto* Region=Simulation.FindRegion("Janek Station");
+    const auto* Orbital=Region?Region->GetOrbitalRegion():nullptr;
+    return Orbital && Orbital->GetType()==Orbital::TERRAIN && static_cast<const TerrainRegion*>(Orbital)->HasSurfaceSite()
+        ? static_cast<const TerrainRegion*>(Orbital) : nullptr;
+}
+FVector JanekCorridor(const TerrainRegion& Surface,const SimRegion& Space)
+{
+    // Above the continuous atmosphere boundary, directly over the graded site.
+    return Surface.Location()+Surface.SurfaceVectorToOrbital(FVector(0,TERRAIN_ALTITUDE_LIMIT+10000,0))-Space.GetLocation();
+}
+}
+bool Sim::AtSurfaceTrainingDestination() const
+{
+    auto* Pilot=const_cast<Sim*>(this)->GetPlayerShip();
+    const auto* Base=Pilot?Pilot->GetCarrier():nullptr;
+    return Pilot && Base && !Base->IsDead() && (Pilot->GetFlightPhase()==EOPSMode::DOCKED || Pilot->GetFlightPhase()==EOPSMode::ALERT) &&
+        FCStringAnsi::Stricmp(Base->GetName(),"Janek Station")==0 && Base->IsAirborne();
+}
+void Sim::EnsureTrainingSurfaceBase()
+{
+    if(!mission || !mission->IsFreeFlight() || IsNetworked() || !star_system ||
+       FCStringAnsi::Stricmp(star_system->GetName(),"Janus")!=0 || FindShip("Janek Station")) return;
+    const auto* Surface=JanekSurface(*this);auto* Design=ShipDesignRegistry::FindLegacy(FName(TEXT("Airbase1")));
+    if(!Surface || !Design) return;
+    auto* Base=CreateShip("Janek Station","",Design,"Janek Station",OtherHand(TerrainRegion::JanekStationLocalPosition()),1);
+    if(!Base) return;
+    Base->InitializeRuntimeHangarFromDesign();
+    if(auto* H=Base->GetHangar()) if(!H->NumSquadrons())
+        for(const auto* Name:{"Falcon","Stormhawk"}) if(auto* Craft=ShipDesignRegistry::FindLegacy(Name))
+            H->CreateSquadron(Text(Name),nullptr,Craft,4,1,nullptr,0,4);
+    UE_LOG(LogTemp,Display,TEXT("[TrainingTransit] Janek Station available on the live lakeside globe"));
+}
+bool Sim::HasSurfaceTrainingClearance() const
+{
+    if(!mission || !mission->IsFreeFlight() || IsNetworked()) return false;
+    auto* Runtime=GetSSWRuntimeSubsystem();auto* GI=Runtime?Cast<USSWGameInstance>(Runtime->GetGameInstance()):nullptr;
+    const auto* Character=PlayerCharacter::GetCurrentPlayer();
+    const auto* Order=GI && Character?GI->GetTrainingAgent().Find(AgentAI::PilotKey(*Character)):nullptr;
+    if(!Character || Character->GetEmpire()!=EEMPIRE_NAME::Terellian) return false;
+    if(!Order || Order->State!=AgentAI::EState::Accepted || (Order->MissionId!=103 && Order->MissionId!=104)) return false;
+    auto& Simulation=*const_cast<Sim*>(this);auto* Pilot=Simulation.GetPlayerShip();
+    const auto* Surface=JanekSurface(Simulation);
+    if(!Pilot || !Surface) return false;
+    if(Pilot->IsAirborne()) return Pilot->GetRegion() && Pilot->GetRegion()->GetOrbitalRegion()==Surface;
+    const auto* Carrier=Pilot->GetCarrier();
+    return Carrier && Carrier->GetRegion() && Carrier->GetQuantumDrive() &&
+        Carrier->GetQuantumDrive()->ActiveState()==QuantumDrive::ACTIVE_READY &&
+        FVector::DistSquared(OtherHand(Carrier->GetLocation()),JanekCorridor(*Surface,*Carrier->GetRegion()))<FMath::Square(10000.0);
+}
+bool Sim::BeginSurfaceTrainingTransit(int32 MissionId,FText& Reason)
+{
+    if(!mission || !mission->IsFreeFlight() || IsNetworked() || (MissionId!=103 && MissionId!=104))
+    {Reason=INVTEXT("This flight does not support training transit.");return false;}
+    auto* Runtime=GetSSWRuntimeSubsystem();auto* GI=Runtime?Cast<USSWGameInstance>(Runtime->GetGameInstance()):nullptr;
+    const auto* Character=PlayerCharacter::GetCurrentPlayer();
+    const auto* Order=GI && Character?GI->GetTrainingAgent().Find(AgentAI::PilotKey(*Character)):nullptr;
+    if(!Order || Order->State!=AgentAI::EState::Accepted || Order->MissionId!=MissionId)
+    {Reason=INVTEXT("Accept the surface lesson from your training agent first.");return false;}
+    EnsureTrainingSurfaceBase();
+    const auto* Surface=JanekSurface(*this);auto* Pilot=GetPlayerShip();
+    if(Pilot && Pilot->GetFlightPhase()==EOPSMode::ACTIVE)
+    {Reason=INVTEXT("Fly to Janek Station and land before starting the surface lesson. Climb above 35 km to return to orbit.");return true;}
+    auto* Carrier=Pilot?Pilot->GetCarrier():nullptr;
+    if(!Surface || !Pilot || !Carrier || Carrier->IsDead() || !FindShip("Janek Station"))
+    {Reason=INVTEXT("Janek Airbase flight corridor is unavailable.");return false;}
+    if(HasSurfaceTrainingClearance())
+    {Reason=INVTEXT("TRANSIT CLEARANCE GRANTED. Launch, descend to Janek Station and land. Start the surface lesson after arrival.");return true;}
+    if(Pilot->GetFlightPhase()!=EOPSMode::ALERT && Pilot->GetFlightPhase()!=EOPSMode::DOCKED)
+    {Reason=INVTEXT("Land aboard Orion before requesting the Janek Airbase transfer.");return false;}
+    auto* Drive=Carrier->GetQuantumDrive();auto* Space=Carrier->GetRegion();
+    if(!Drive || !Space || Carrier->IsAirborne() || !Space->GetOrbitalRegion() || Space->GetOrbitalRegion()->Primary()!=Surface->Primary())
+    {Reason=INVTEXT("Orion must be in Janek orbit to transfer to the airbase corridor.");return false;}
+    if(Drive->ActiveState()!=QuantumDrive::ACTIVE_READY)
+    {Reason=INVTEXT("ORION TRANSIT IN PROGRESS. Remain aboard until arrival.");return true;}
+    Drive->SetPointDestination(Space,JanekCorridor(*Surface,*Space));
+    if(!Drive->Engage())
+    {Reason=INVTEXT("Orion quantum drive is charging or unavailable. Remain aboard and retry when ready.");return false;}
+    Carrier->SetThrottle(0);Carrier->SetVelocity(FVector::ZeroVector);Carrier->ArcadeStop();
+    Reason=INVTEXT("The Orion will jump to the Janek Airbase flight corridor. Remain aboard until transit completes, then launch and fly down to Janek Station.");
+    UE_LOG(LogTemp,Display,TEXT("[TrainingTransit] Accepted lesson %d: carrier jump requested; surface mission not started"),MissionId);
+    return true;
 }

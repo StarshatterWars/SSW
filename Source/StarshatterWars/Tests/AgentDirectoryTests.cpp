@@ -52,7 +52,9 @@ bool FAgentDirectoryTest::RunTest(const FString&)
         }
     TestTrue(TEXT("Clearing system selection clears agents"), Catalog->GetSystemAgents(NAME_None).IsEmpty());
     Pilot.SetEmpire(EEMPIRE_NAME::Marakan);
-    TestTrue(TEXT("A different empire cannot retain Janus agents"), Catalog->GetSystemAgents(TEXT("Janus")).IsEmpty());
+    TestFalse(TEXT("Marakan pilot cannot retain Alliance instructor"),Catalog->GetSystemAgents(TEXT("Janus")).Contains(TEXT("JanekFlightTraining")));
+    for(FName Id:Catalog->GetSystemAgents(TEXT("Janus")))
+        TestTrue(TEXT("New frontline officers retain hard faction boundaries"),Catalog->FindAgent(Id)->ServesEmpire(EEMPIRE_NAME::Marakan));
     return true;
 }
 #endif

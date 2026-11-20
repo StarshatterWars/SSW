@@ -24,7 +24,7 @@ IMPLEMENT_COMPLEX_AUTOMATION_TEST(FCampaignOneMissionAudit, "Starshatter.Campaig
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
 void FCampaignOneMissionAudit::GetTests(TArray<FString>& Names,TArray<FString>& Commands) const
 {
-    const TCHAR* Labels[]={TEXT("101 Basic Space Flight"),TEXT("102 Target Practice"),TEXT("103 Flight School"),TEXT("104 Ground Strike"),TEXT("105 Training Cruise"),TEXT("106 Advanced Starship Combat"),TEXT("107 Carrier Operations")};
+    const TCHAR* Labels[]={TEXT("101 Carrier Qualifications"),TEXT("102 Target Practice"),TEXT("103 Flight School"),TEXT("104 Ground Strike"),TEXT("105 Training Cruise"),TEXT("106 Advanced Starship Combat"),TEXT("107 Carrier Operations")};
     for(int32 Index=0;Index<7;++Index){Names.Add(Labels[Index]);Commands.Add(FString::FromInt(101+Index));}
 }
 bool FCampaignOneMissionAudit::RunTest(const FString& Parameters)

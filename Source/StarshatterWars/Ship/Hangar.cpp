@@ -126,6 +126,7 @@ Hangar::ExecFrame(double seconds)
 
 
 				switch (slot->state) {
+                case TRANSFERRED:
 				case UNAVAIL:
 				case STORAGE:
 				case APPROACH:
@@ -389,6 +390,7 @@ Hangar::CreateSquadron(Text squadron, CombatGroup* group,
 bool
 Hangar::GotoActiveFlight(int squadron, int slot_index, SimElement* elem, int* loadout)
 {
+
 	if (elem && squadron < nsquadrons && slot_index < nslots[squadron]) {
 		HangarSlot* slot = &(squadrons[squadron][slot_index]);
 
@@ -450,6 +452,7 @@ Hangar::GotoActiveFlight(int squadron, int slot_index, SimElement* elem, int* lo
 bool
 Hangar::GotoAlert(int squadron, int slot, FlightDeck* d, SimElement* elem, int* loadout, bool pkg, bool expedite)
 {
+
     if (squadron >= 0 && squadron < nsquadrons &&
         slot >= 0 && slot < nslots[squadron] && squadrons[squadron] &&
         d && ship && d->GetCarrier() == ship && d->IsLaunchDeck())
@@ -849,6 +852,7 @@ Hangar::StatusName(const HangarSlot* s) const
 {
 	switch (s->state) {
 	default:
+    case TRANSFERRED: return "Transferred";
 	case UNAVAIL:     return "Unavailable";
 	case MAINT:       return "Maintenance";
 	case STORAGE:     return "Storage";
@@ -1009,4 +1013,30 @@ Hangar::SetAllIFF(int iff)
 			}
 		}
 	}
+}
+
+// Transfer only unused reserve hulls. Assigned, launching and damaged craft stay with the squadron.
+bool Hangar::TransferStoredReserve(int squadron,int index,bool restore)
+{
+    if(squadron<0 || squadron>=nsquadrons || index<0 || index>=nslots[squadron])return false;
+    auto& Slot=squadrons[squadron][index];
+    if(Slot.ship || Slot.package || Slot.deck || Slot.state!=(restore?TRANSFERRED:STORAGE))return false;
+    Slot.state=restore?STORAGE:TRANSFERRED;return true;
+}
+
+bool Hangar::RestagePlayer(Ship* Craft)
+{
+    if(!Craft || !ship || Craft->GetCarrier()!=ship || Craft->GetFlightPhase()!=EOPSMode::DOCKED) return false;
+    int SquadronIndex=-1,Index=-1;
+    if(!FindSquadronAndSlot(Craft,SquadronIndex,Index)) return false;
+    auto& Slot=squadrons[SquadronIndex][Index];
+    for(int I=0;I<ship->NumFlightDecks();++I)
+    {
+        auto* Deck=ship->GetFlightDeck(I);int Spot=-1;
+        if(!Deck || !Deck->IsLaunchDeck() || !Deck->Spot(Craft,Spot)) continue;
+        Slot.deck=Deck;Slot.slot=Spot;Slot.ship=Craft;Slot.design=Craft->Design();
+        Slot.state=ALERT;Slot.time=3;Slot.alert_hold=true;
+        Craft->SetFlightPhase(EOPSMode::ALERT);return true;
+    }
+    return false;
 }

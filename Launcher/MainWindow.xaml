@@ -27,15 +27,27 @@
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Text="STARSHATTER WARS" FontSize="38" FontWeight="Bold"/>
                     <TextBlock Text="by Fractal Dev Games" FontSize="18" Foreground="#A9DCEE" Margin="1,5,0,0"/>
+                    <TextBlock x:Name="ReleaseStage" FontSize="15" FontWeight="SemiBold" Foreground="#F2BB60" Margin="1,8,0,0"/>
+                    <TextBlock x:Name="AlphaWarning" FontSize="12" Foreground="#E1C99E" TextWrapping="Wrap" Margin="1,4,0,0"/>
                 </StackPanel>
             </Border>
         </Border>
         <DockPanel Grid.Row="1" Margin="0,18,0,10">
+            <Button x:Name="RepairButton" DockPanel.Dock="Right" Content="Repair ▾" Click="Repair_Click" Padding="10,9" ToolTip="Repair and recovery tools">
+                <Button.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Header="Recover Pilot Save…" Click="RecoverPilot_Click"/>
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button>
             <Button x:Name="InstallButton" DockPanel.Dock="Right" Content="Install Game…" Click="Install_Click"/>
             <Button DockPanel.Dock="Right" Content="Locate Game…" Click="LocateGame_Click"/>
             <Button x:Name="UpdateButton" DockPanel.Dock="Right" Content="Check for Updates" Click="Update_Click"/>
             <Button x:Name="MusicButton" DockPanel.Dock="Right" Content="Music On" Click="Music_Click"/>
-            <TextBlock Text="News and patch notes" FontSize="23" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="NewsTabButton" Content="NEWS" Click="NewsTab_Click" Background="#24465A" Foreground="#EAF4FF" Padding="12,8" Margin="0,0,6,0"/>
+                <Button x:Name="StoreTabButton" Content="STORE" Click="StoreTab_Click" Background="#172B3B" Foreground="#A9DCEE" Padding="12,8" Margin="0"/>
+            </StackPanel>
         </DockPanel>
         <Border x:Name="AboutPatch" Grid.Row="2" Background="#122131" Padding="12,8" Margin="0,0,0,10" Visibility="Collapsed">
             <StackPanel>
@@ -43,10 +55,31 @@
                 <TextBlock x:Name="PatchNotes" TextWrapping="Wrap" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
-        <Grid Grid.Row="3" Background="#122131">
+        <Grid x:Name="NewsPanel" Grid.Row="3" Background="#122131">
             <TextBlock x:Name="FeedStatus" Margin="20" TextWrapping="Wrap" Text="Loading news and patch notes…"/>
             <wv:WebView2 x:Name="NewsView" Visibility="Hidden" DefaultBackgroundColor="#122131"/>
         </Grid>
+        <Border x:Name="StorePanel" Grid.Row="3" Background="#122131" Padding="22" Visibility="Collapsed">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <TextBlock Text="STARSHATTER WARS STORE" FontSize="25" FontWeight="SemiBold"/>
+                    <TextBlock Text="Fractal Dev Games" Foreground="#80D9F6" Margin="0,4,0,18"/>
+                    <TextBlock Text="Your next chapter in the Starshatter universe." FontSize="17" TextWrapping="Wrap"/>
+                    <UniformGrid Columns="3" Margin="0,20,0,18">
+                        <Border Background="#1A3041" Padding="14" Margin="0,0,8,0"><StackPanel><TextBlock Text="GAME PACKAGES" FontWeight="SemiBold" Foreground="#80D9F6"/><TextBlock Text="Game access and future editions." TextWrapping="Wrap" Margin="0,8,0,0"/></StackPanel></Border>
+                        <Border Background="#1A3041" Padding="14" Margin="0,0,8,0"><StackPanel><TextBlock Text="SHIPS &amp; UPGRADES" FontWeight="SemiBold" Foreground="#80D9F6"/><TextBlock Text="Future spacecraft offers and account upgrades." TextWrapping="Wrap" Margin="0,8,0,0"/></StackPanel></Border>
+                        <Border Background="#1A3041" Padding="14"><StackPanel><TextBlock Text="EXTRAS" FontWeight="SemiBold" Foreground="#80D9F6"/><TextBlock Text="Future cosmetic and supporter items." TextWrapping="Wrap" Margin="0,8,0,0"/></StackPanel></Border>
+                    </UniformGrid>
+                    <TextBlock x:Name="StoreStatus" Text="The store is being prepared. No products are on sale and no payment details are collected by this launcher." Foreground="#ACC4D5" TextWrapping="Wrap"/>
+                    <Button x:Name="StoreVisitButton" Content="OPEN OFFICIAL STORE" IsEnabled="False" Click="StoreVisit_Click" HorizontalAlignment="Left" Background="#24465A" Foreground="#EAF4FF" Margin="0,16,0,0" ToolTip="Store purchasing will be enabled when a provider is configured.">
+                        <Button.Template><ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="16,10"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+                            <ControlTemplate.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Background" Value="#1A3041"/><Setter Property="Foreground" Value="#8198A8"/></Trigger></ControlTemplate.Triggers>
+                        </ControlTemplate></Button.Template>
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
         <DockPanel Grid.Row="4" Margin="0,18,0,0">
             <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button x:Name="OfflineButton" Content="Play Offline" Click="PlayOffline_Click"/>
@@ -56,7 +89,7 @@
                         <TextBlock Text="Play with Steam" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
-                <Button x:Name="PlayButton" Click="Play_Click" FontWeight="Bold" Background="#80D9F6" IsDefault="True" AutomationProperties.Name="Play with Epic">
+                <Button x:Name="PlayButton" Click="Play_Click" FontWeight="Bold" Background="#80D9F6" IsDefault="True" AutomationProperties.Name="Play with Epic" ToolTip="Sign in through Epic. Your saved Epic authorization is reused when available.">
                     <StackPanel Orientation="Horizontal">
                         <Image Source="Assets/EpicGames.png" Width="20" Height="20" Margin="0,0,8,0"/>
                         <TextBlock Text="Play with Epic" VerticalAlignment="Center"/>

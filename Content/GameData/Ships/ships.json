@@ -14016,7 +14016,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM3500_Blue_Hull.MI_IM3500_Blue_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/CargoA.def"
@@ -14063,7 +14064,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM3500_Green_Hull.MI_IM3500_Green_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/CargoA.def"
@@ -14110,7 +14112,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM3500_Red_Hull.MI_IM3500_Red_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/CargoA.def"
@@ -15135,7 +15138,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM4300_Blue_Hull.MI_IM4300_Blue_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/CargoB.def"
@@ -15182,7 +15186,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM4300_Green_Hull.MI_IM4300_Green_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/CargoB.def"
@@ -15229,7 +15234,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM4300_Red_Hull.MI_IM4300_Red_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/CargoB.def"
@@ -16258,7 +16264,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM2800_Blue_Hull.MI_IM2800_Blue_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/CargoC.def"
@@ -16305,7 +16312,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM2800_Green_Hull.MI_IM2800_Green_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/CargoC.def"
@@ -16352,7 +16360,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM2800_Red_Hull.MI_IM2800_Red_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/CargoC.def"
@@ -70721,7 +70730,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM1906_Blue_Hull.MI_IM1906_Blue_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/TankerA.def"
@@ -70768,7 +70778,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM1906_Green_Hull.MI_IM1906_Green_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/TankerA.def"
@@ -70815,7 +70826,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM1906_Red_Hull.MI_IM1906_Red_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/TankerA.def"
@@ -71820,7 +71832,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM1912_Blue_Hull.MI_IM1912_Blue_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/TankerB.def"
@@ -71867,7 +71880,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM1912_Green_Hull.MI_IM1912_Green_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/TankerB.def"
@@ -71914,7 +71928,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_IM1912_Red_Hull.MI_IM1912_Red_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/TankerB.def"
@@ -77172,7 +77187,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_Transport_Blue_Hull.MI_Transport_Blue_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Transport.def"
@@ -77219,7 +77235,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_Transport_Green_Hull.MI_Transport_Green_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Transport.def"
@@ -77266,7 +77283,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_Transport_Red_Hull.MI_Transport_Red_Hull"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Transport.def"
@@ -85316,7 +85334,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_Zodiac_Green_Main.MI_Zodiac_Green_Main"
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
@@ -94653,7 +94672,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_Prospector_Green_Main.MI_Prospector_Green_Main"
           }
         ],
         "SourceFile": "D:/SSW/Content/GameData/Ships/Prospector.def"
@@ -95690,7 +95710,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_Rockhopper_Blue_Hull.MI_Rockhopper_Blue_Hull"
           }
         ],
         "SourceFile": "D:/SSW/Content/GameData/Ships/Rockhopper.def"
@@ -95737,7 +95758,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_Rockhopper_Green_Hull.MI_Rockhopper_Green_Hull"
           }
         ],
         "SourceFile": "D:/SSW/Content/GameData/Ships/Rockhopper.def"
@@ -95784,7 +95806,8 @@
             "bHasSpecularColor": true,
             "bHasEmissiveColor": true,
             "bHasSpecularPower": true,
-            "bHasBumpScale": true
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_Rockhopper_Red_Hull.MI_Rockhopper_Red_Hull"
           }
         ],
         "SourceFile": "D:/SSW/Content/GameData/Ships/Rockhopper.def"
@@ -98112,6 +98135,3182 @@
       {
         "SpriteName": "s1map",
         "SourceFile": "D:/SSW/Content/GameData/Ships/ProcessingFacility.def"
+      }
+    ],
+    "Skin": []
+  },
+  {
+    "Row": "Dantari Raptor",
+    "ShipName": "Dantari Raptor",
+    "DisplayName": "Dantari Raptor",
+    "Abrv": "F5A",
+    "Description": "Dantari Separatist service variant of the Raptor fighter. Retains the original hull and flight systems, with Dantari identification and supply support.",
+    "Model": "Raptor",
+    "ShipClass": "fighter",
+    "ShipEmpire": "Dantari",
+    "Category": "Fighter",
+    "CockpitName": "",
+    "BeautyName": "",
+    "HudIconName": "RaptorHud",
+    "CargoManifest": [],
+    "CargoCapacity": {
+      "Tonnes": 0.5,
+      "LoadTonnesPerSecond": 0,
+      "UnloadTonnesPerSecond": 0,
+      "PassengerBerths": 0
+    },
+    "BaseCost": 587000,
+    "ProductionRecipe": "None",
+    "Mesh": "None",
+    "PCS": 3,
+    "ACS": 1,
+    "Detet": 250000,
+    "RepairTeams": 2,
+    "ShipType": 2,
+    "Hidden": false,
+    "Scale": 0.25,
+    "ExplosionScale": 0,
+    "Mass": 25,
+    "Vlimit": 250,
+    "Agility": 75,
+    "AirFactor": 0.25,
+    "RollRate": 600,
+    "PitchRate": 0,
+    "YawRate": 0,
+    "TurnBank": 0.39269909262657166,
+    "CockpitScale": 1,
+    "AutoRoll": 0,
+    "CL": 0.00800000037997961,
+    "CD": 0.10999999940395355,
+    "Stall": 0.4000000059604645,
+    "Drag": 2.499999936844688e-05,
+    "ArcadeDrag": 1,
+    "RollDrag": 5,
+    "PitchDrag": 5,
+    "YawDrag": 5,
+    "PrepTime": 15,
+    "AvoidTime": 0,
+    "AvoidFighter": 7,
+    "AvoidStrike": 0,
+    "AvoidTarget": 0,
+    "CommitRange": 0,
+    "SplashRadius": -1,
+    "Scuttle": 5000,
+    "RepairSpeed": 1,
+    "Integrity": 2500,
+    "Secret": false,
+    "RepairAuto": false,
+    "RepairScreen": false,
+    "WepScreen": false,
+    "Degrees": false,
+    "EFactor": [
+      0.10000000149011612,
+      0.30000001192092896,
+      1
+    ],
+    "Trans": {
+      "X": 2200,
+      "Y": 2200,
+      "Z": 2200
+    },
+    "Offset": [
+      {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      },
+      {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      },
+      {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      },
+      {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      }
+    ],
+    "Spin": {
+      "X": 0,
+      "Y": 0,
+      "Z": 0
+    },
+    "BeautyCam": {
+      "X": 0,
+      "Y": 0,
+      "Z": 0
+    },
+    "ChaseVec": {
+      "X": 0,
+      "Y": -300,
+      "Z": 62.5
+    },
+    "BridgeVec": {
+      "X": 0,
+      "Y": 60,
+      "Z": 0
+    },
+    "Power": [
+      {
+        "DesignName": "Fusion Reactor",
+        "PName": "Fusion Reactor",
+        "PAbrv": "FUSION",
+        "Type": "FUSION",
+        "SType": 0,
+        "EType": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "ExplosionType": 0,
+        "Output": 75,
+        "Fuel": 0,
+        "Size": 10,
+        "Hull": 0.5,
+        "Loc": {
+          "X": 0,
+          "Y": 0,
+          "Z": 0
+        }
+      }
+    ],
+    "Drive": [
+      {
+        "Name": "Solar Drive",
+        "Abbrev": "DRIVE",
+        "DesignName": "Solar Drive",
+        "Type": "PLASMA",
+        "Thrust": 17,
+        "Augmenter": 50,
+        "DriveScale": 0.30000001192092896,
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": 0
+        },
+        "Size": 24,
+        "HullFactor": 0.5,
+        "ExplosionType": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "bShowTrail": true,
+        "Ports": [
+          {
+            "PointName": "Drive_0",
+            "SocketName": "",
+            "Location": {
+              "X": 9.5,
+              "Y": 0.5,
+              "Z": -34
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "FlareScale": 0.30000001192092896,
+            "TrailScale": 0.30000001192092896,
+            "bShowFlare": true,
+            "bShowTrail": true,
+            "EngineColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "CurrentIntensity": 0
+          },
+          {
+            "PointName": "Drive_1",
+            "SocketName": "",
+            "Location": {
+              "X": -9.5,
+              "Y": 0.5,
+              "Z": -34
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "FlareScale": 0.30000001192092896,
+            "TrailScale": 0.30000001192092896,
+            "bShowFlare": true,
+            "bShowTrail": true,
+            "EngineColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "CurrentIntensity": 0
+          }
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      }
+    ],
+    "Quantum": [],
+    "Farcaster": [],
+    "Thruster": [
+      {
+        "Type": "PLASMA",
+        "Thrust": 100,
+        "ThrusterScale": 0.11999999731779099,
+        "DesignName": "Thruster",
+        "Location": {
+          "X": 0,
+          "Y": -52,
+          "Z": 0
+        },
+        "Size": 32,
+        "HullFactor": 0.800000011920929,
+        "Ports": [
+          {
+            "Direction": "FORE",
+            "PointName": "port_fore",
+            "SocketName": "None",
+            "Location": {
+              "X": -38.5,
+              "Y": -11.5,
+              "Z": -22.5
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 68,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "FORE",
+            "PointName": "port_fore",
+            "SocketName": "None",
+            "Location": {
+              "X": 38.5,
+              "Y": -11.5,
+              "Z": -22.5
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 132,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "AFT",
+            "PointName": "port_aft",
+            "SocketName": "None",
+            "Location": {
+              "X": -38.5,
+              "Y": -11.5,
+              "Z": -37.5
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 136,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "AFT",
+            "PointName": "port_aft",
+            "SocketName": "None",
+            "Location": {
+              "X": 38.5,
+              "Y": -11.5,
+              "Z": -37.5
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 72,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "TOP",
+            "PointName": "port_top",
+            "SocketName": "None",
+            "Location": {
+              "X": 0,
+              "Y": 1.5,
+              "Z": -23
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 272,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "TOP",
+            "PointName": "port_top",
+            "SocketName": "None",
+            "Location": {
+              "X": -1.5,
+              "Y": 1.5,
+              "Z": 13.5
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 528,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "TOP",
+            "PointName": "port_top",
+            "SocketName": "None",
+            "Location": {
+              "X": 1.25,
+              "Y": 1.5,
+              "Z": 13.5
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 528,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port_bottom",
+            "SocketName": "None",
+            "Location": {
+              "X": -3.5,
+              "Y": -4.5,
+              "Z": 14.75
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 288,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port_bottom",
+            "SocketName": "None",
+            "Location": {
+              "X": 3.5,
+              "Y": -4.5,
+              "Z": 14.75
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 288,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "TOP",
+            "PointName": "port_top",
+            "SocketName": "None",
+            "Location": {
+              "X": -38.5,
+              "Y": -10.25,
+              "Z": -26
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 1040,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "TOP",
+            "PointName": "port_top",
+            "SocketName": "None",
+            "Location": {
+              "X": -38.5,
+              "Y": -10.25,
+              "Z": -34.5
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 1040,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "TOP",
+            "PointName": "port_top",
+            "SocketName": "None",
+            "Location": {
+              "X": 38.5,
+              "Y": -10.25,
+              "Z": -26
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 2064,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "TOP",
+            "PointName": "port_top",
+            "SocketName": "None",
+            "Location": {
+              "X": 38.5,
+              "Y": -10.25,
+              "Z": -34.5
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 2064,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port_bottom",
+            "SocketName": "None",
+            "Location": {
+              "X": -38.5,
+              "Y": -12.75,
+              "Z": -26
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 2080,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port_bottom",
+            "SocketName": "None",
+            "Location": {
+              "X": -38.5,
+              "Y": -12.75,
+              "Z": -34.5
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 2592,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port_bottom",
+            "SocketName": "None",
+            "Location": {
+              "X": 38.5,
+              "Y": -12.75,
+              "Z": -26
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 1056,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port_bottom",
+            "SocketName": "None",
+            "Location": {
+              "X": 38.5,
+              "Y": -12.75,
+              "Z": -34.5
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 1568,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "LEFT",
+            "PointName": "port_left",
+            "SocketName": "None",
+            "Location": {
+              "X": -6.25,
+              "Y": -2.25,
+              "Z": 34.75
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 129,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "RIGHT",
+            "PointName": "port_right",
+            "SocketName": "None",
+            "Location": {
+              "X": 6.25,
+              "Y": -2.25,
+              "Z": 34.75
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 66,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          }
+        ],
+        "SourceIndex": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      }
+    ],
+    "Navlight": [
+      {
+        "Name": "Navigation Lights",
+        "Abbrev": "NAV",
+        "DesignName": "Navigation Lights",
+        "Scale": 1,
+        "Period": 1,
+        "Beacons": [
+          {
+            "Name": "Port",
+            "Location": {
+              "X": -21.25,
+              "Y": -33.75,
+              "Z": 1.75
+            },
+            "LocalRotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Type": "RED",
+            "Color": {
+              "R": 1,
+              "G": 0,
+              "B": 0,
+              "A": 1
+            },
+            "Intensity": 100,
+            "Radius": 30,
+            "Mode": "Steady",
+            "BlinkInterval": 1,
+            "PhaseOffset": 0
+          },
+          {
+            "Name": "Starboard",
+            "Location": {
+              "X": -21.25,
+              "Y": 33.75,
+              "Z": 1.75
+            },
+            "LocalRotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Type": "GREEN",
+            "Color": {
+              "R": 0,
+              "G": 1,
+              "B": 0,
+              "A": 1
+            },
+            "Intensity": 100,
+            "Radius": 30,
+            "Mode": "Steady",
+            "BlinkInterval": 1,
+            "PhaseOffset": 0
+          },
+          {
+            "Name": "Dorsal",
+            "Location": {
+              "X": -16.25,
+              "Y": 0,
+              "Z": 5.5
+            },
+            "LocalRotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Type": "WHITE",
+            "Color": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "Intensity": 100,
+            "Radius": 30,
+            "Mode": "Blink",
+            "BlinkInterval": 1,
+            "PhaseOffset": 0
+          },
+          {
+            "Name": "Ventral",
+            "Location": {
+              "X": -16.25,
+              "Y": 0,
+              "Z": -3.5
+            },
+            "LocalRotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Type": "WHITE",
+            "Color": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "Intensity": 100,
+            "Radius": 30,
+            "Mode": "Blink",
+            "BlinkInterval": 1,
+            "PhaseOffset": 0
+          }
+        ],
+        "SourceFile": ""
+      }
+    ],
+    "FlightDeck": [],
+    "LandingGear": [
+      {
+        "Name": "Undercarriage",
+        "Abbrev": "Gear",
+        "DesignName": "",
+        "GearItems": [
+          {
+            "ModelName": "GearNose0",
+            "Start": {
+              "X": 0,
+              "Y": -25,
+              "Z": 134
+            },
+            "End": {
+              "X": 0,
+              "Y": -50,
+              "Z": 148
+            }
+          },
+          {
+            "ModelName": "GearLeft0",
+            "Start": {
+              "X": -20,
+              "Y": -30,
+              "Z": -64
+            },
+            "End": {
+              "X": -45,
+              "Y": -60,
+              "Z": -64
+            }
+          },
+          {
+            "ModelName": "GearRight0",
+            "Start": {
+              "X": 20,
+              "Y": -30,
+              "Z": -64
+            },
+            "End": {
+              "X": 45,
+              "Y": -60,
+              "Z": -64
+            }
+          }
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      }
+    ],
+    "Weapon": [
+      {
+        "WeaponType": "Alpha Cannon",
+        "Name": "",
+        "Abbrev": "Cannon",
+        "DesignName": "",
+        "GroupName": "",
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": 120
+        },
+        "Size": 32,
+        "HullFactor": 0.5,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Aim": {
+          "bHasAzMax": false,
+          "AzMax": 0,
+          "bHasAzMin": false,
+          "AzMin": 0,
+          "bHasElMax": false,
+          "ElMax": 0,
+          "bHasElMin": false,
+          "ElMin": 0,
+          "bHasAzRest": false,
+          "AzRest": 0,
+          "bHasElRest": false,
+          "ElRest": 0
+        },
+        "ExplosionType": 0,
+        "Muzzles": [
+          {
+            "X": -17,
+            "Y": -19,
+            "Z": 170
+          },
+          {
+            "X": 17,
+            "Y": -19,
+            "Z": 170
+          }
+        ],
+        "SourceIndex": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "bMuzzlesWereAuthoredInShipSpace": true,
+        "bMuzzlesResolved": false,
+        "bMuzzlesAreInShipSpace": false,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      }
+    ],
+    "Hardpoint": [
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Vector"
+        ],
+        "Name": "",
+        "Abbrev": "STA-1",
+        "DesignName": "",
+        "Location": {
+          "X": -120,
+          "Y": -49,
+          "Z": -100
+        },
+        "Muzzle": {
+          "X": -120,
+          "Y": -49,
+          "Z": -140
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Vector",
+          "Harpoon"
+        ],
+        "Name": "",
+        "Abbrev": "STA-2",
+        "DesignName": "",
+        "Location": {
+          "X": -99,
+          "Y": -47,
+          "Z": -100
+        },
+        "Muzzle": {
+          "X": -99,
+          "Y": -47,
+          "Z": -130
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Vector",
+          "Harpoon",
+          "Hammer"
+        ],
+        "Name": "",
+        "Abbrev": "STA-3",
+        "DesignName": "",
+        "Location": {
+          "X": -79,
+          "Y": -44,
+          "Z": -100
+        },
+        "Muzzle": {
+          "X": -79,
+          "Y": -44,
+          "Z": -120
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Vector",
+          "Harpoon",
+          "Hammer",
+          "Rockets"
+        ],
+        "Name": "",
+        "Abbrev": "STA-4",
+        "DesignName": "",
+        "Location": {
+          "X": -60,
+          "Y": -41,
+          "Z": -100
+        },
+        "Muzzle": {
+          "X": -60,
+          "Y": -41,
+          "Z": -110
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Vector",
+          "Harpoon",
+          "Hammer",
+          "Rockets"
+        ],
+        "Name": "",
+        "Abbrev": "STA-5",
+        "DesignName": "",
+        "Location": {
+          "X": 60,
+          "Y": -41,
+          "Z": -100
+        },
+        "Muzzle": {
+          "X": 60,
+          "Y": -41,
+          "Z": -110
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Vector",
+          "Harpoon",
+          "Hammer"
+        ],
+        "Name": "",
+        "Abbrev": "STA-6",
+        "DesignName": "",
+        "Location": {
+          "X": 79,
+          "Y": -44,
+          "Z": -100
+        },
+        "Muzzle": {
+          "X": 79,
+          "Y": -44,
+          "Z": -120
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Vector",
+          "Harpoon"
+        ],
+        "Name": "",
+        "Abbrev": "STA-7",
+        "DesignName": "",
+        "Location": {
+          "X": 99,
+          "Y": -45,
+          "Z": -100
+        },
+        "Muzzle": {
+          "X": 99,
+          "Y": -45,
+          "Z": -130
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Vector"
+        ],
+        "Name": "",
+        "Abbrev": "STA-8",
+        "DesignName": "",
+        "Location": {
+          "X": 120,
+          "Y": -49,
+          "Z": -100
+        },
+        "Muzzle": {
+          "X": 120,
+          "Y": -49,
+          "Z": -140
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      }
+    ],
+    "Loadout": [
+      {
+        "Name": "Clean",
+        "Stations": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "Name": "ACM Light",
+        "Stations": [
+          -1,
+          0,
+          0,
+          -1,
+          -1,
+          0,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "Name": "ACM Short Range",
+        "Stations": [
+          -1,
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "Name": "ACM Medium Range",
+        "Stations": [
+          0,
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "Name": "Ground Strike",
+        "Stations": [
+          0,
+          1,
+          3,
+          3,
+          3,
+          3,
+          1,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "Name": "Ship Strike",
+        "Stations": [
+          0,
+          1,
+          2,
+          2,
+          2,
+          2,
+          1,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "Name": "Hvy Ship Strike",
+        "Stations": [
+          0,
+          2,
+          2,
+          2,
+          2,
+          2,
+          2,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "Name": "Rockets",
+        "Stations": [
+          0,
+          0,
+          1,
+          4,
+          4,
+          1,
+          0,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "Name": "Scout/Recon",
+        "Stations": [
+          -1,
+          0,
+          1,
+          -1,
+          -1,
+          1,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      }
+    ],
+    "Sensor": [
+      {
+        "DesignName": "Sensor",
+        "Ranges": [
+          25000,
+          50000,
+          75000
+        ],
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": 30
+        },
+        "Size": 16,
+        "HullFactor": 0.10000000149011612,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceIndex": 0,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      }
+    ],
+    "NavSys": [
+      {
+        "DesignName": "Computer",
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": -10
+        },
+        "Size": 16,
+        "HullFactor": 0.10000000149011612,
+        "SourceIndex": 0,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      }
+    ],
+    "Computer": [
+      {
+        "Name": "Avionics Package",
+        "Abbrev": "HUD",
+        "DesignName": "Avionics",
+        "Type": "AVIONICS",
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": 40
+        },
+        "Size": 16,
+        "HullFactor": 0.5,
+        "SourceIndex": 0,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "Name": "Flight Computer",
+        "Abbrev": "Flight",
+        "DesignName": "Flight",
+        "Type": "FLIGHT",
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": 90
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "SourceIndex": 0,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      }
+    ],
+    "Shield": [],
+    "Squadron": [],
+    "DeathSpiral": [
+      {
+        "Time": 3.5,
+        "Explosions": [
+          {
+            "Time": 0.8999999761581421,
+            "Type": "NONE",
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": -64
+            },
+            "bFinal": false,
+            "SourceFile": ""
+          },
+          {
+            "Time": 1.7000000476837158,
+            "Type": "NONE",
+            "Location": {
+              "X": 20,
+              "Y": 10,
+              "Z": -20
+            },
+            "bFinal": false,
+            "SourceFile": ""
+          },
+          {
+            "Time": 0,
+            "Type": "NONE",
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": -32
+            },
+            "bFinal": true,
+            "SourceFile": ""
+          },
+          {
+            "Time": 0,
+            "Type": "LARGE_BURST",
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": -32
+            },
+            "bFinal": true,
+            "SourceFile": ""
+          }
+        ],
+        "Debris": [
+          {
+            "ModelName": "DebrisX",
+            "Mass": 0,
+            "Speed": 0,
+            "Drag": 0,
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "Count": 1,
+            "Life": 0,
+            "FireType": "NONE",
+            "FireLocations": []
+          },
+          {
+            "ModelName": "",
+            "Mass": 20,
+            "Speed": 190,
+            "Drag": 0.30000001192092896,
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": -2
+            },
+            "Count": 4,
+            "Life": 1.7999999523162842,
+            "FireType": "NONE",
+            "FireLocations": [
+              {
+                "X": 1,
+                "Y": 1,
+                "Z": 1
+              }
+            ]
+          },
+          {
+            "ModelName": "DebrisX",
+            "Mass": 0,
+            "Speed": 0,
+            "Drag": 0,
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "Count": 1,
+            "Life": 0,
+            "FireType": "NONE",
+            "FireLocations": []
+          },
+          {
+            "ModelName": "",
+            "Mass": 20,
+            "Speed": 220,
+            "Drag": 0.3499999940395355,
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": 3
+            },
+            "Count": 3,
+            "Life": 2.200000047683716,
+            "FireType": "NONE",
+            "FireLocations": [
+              {
+                "X": 1,
+                "Y": 1,
+                "Z": 1
+              }
+            ]
+          }
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      }
+    ],
+    "Map": [
+      {
+        "SpriteName": "RaptorMap0",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "SpriteName": "RaptorMap1",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "SpriteName": "RaptorMap2",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "SpriteName": "RaptorMap3",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "SpriteName": "RaptorMap4",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "SpriteName": "RaptorMap5",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "SpriteName": "RaptorMap6",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      },
+      {
+        "SpriteName": "RaptorMap7",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
+      }
+    ],
+    "Skin": []
+  },
+  {
+    "Row": "Dantari Viper",
+    "ShipName": "Dantari Viper",
+    "DisplayName": "Dantari Viper",
+    "Abrv": "F-MK1",
+    "Description": "Dantari Separatist service variant of the Viper fighter. Retains the original hull and flight systems, with Dantari identification and supply support.",
+    "Model": "Viper",
+    "ShipClass": "Fighter",
+    "ShipEmpire": "Dantari",
+    "Category": "Fighter",
+    "CockpitName": "",
+    "BeautyName": "",
+    "HudIconName": "ViperHud",
+    "CargoManifest": [],
+    "CargoCapacity": {
+      "Tonnes": 0.28,
+      "LoadTonnesPerSecond": 0,
+      "UnloadTonnesPerSecond": 0,
+      "PassengerBerths": 0
+    },
+    "BaseCost": 572000,
+    "ProductionRecipe": "None",
+    "Mesh": "None",
+    "PCS": 3,
+    "ACS": 1,
+    "Detet": 250000,
+    "RepairTeams": 2,
+    "ShipType": 2,
+    "Hidden": false,
+    "Scale": 0.23000000417232513,
+    "ExplosionScale": 0,
+    "Mass": 14,
+    "Vlimit": 280,
+    "Agility": 60,
+    "AirFactor": 0.10000000149011612,
+    "RollRate": 550,
+    "PitchRate": 0,
+    "YawRate": 0,
+    "TurnBank": 0.39269909262657166,
+    "CockpitScale": 1,
+    "AutoRoll": 0,
+    "CL": 0.008999999612569809,
+    "CD": 0.10000000149011612,
+    "Stall": 0.4000000059604645,
+    "Drag": 2.499999936844688e-05,
+    "ArcadeDrag": 1,
+    "RollDrag": 5,
+    "PitchDrag": 5,
+    "YawDrag": 5,
+    "PrepTime": 30,
+    "AvoidTime": 0,
+    "AvoidFighter": 7,
+    "AvoidStrike": 0,
+    "AvoidTarget": 0,
+    "CommitRange": 0,
+    "SplashRadius": -1,
+    "Scuttle": 5000,
+    "RepairSpeed": 1,
+    "Integrity": 2050,
+    "Secret": false,
+    "RepairAuto": false,
+    "RepairScreen": false,
+    "WepScreen": false,
+    "Degrees": false,
+    "EFactor": [
+      0.10000000149011612,
+      0.30000001192092896,
+      1
+    ],
+    "Trans": {
+      "X": 2000,
+      "Y": 2000,
+      "Z": 2000
+    },
+    "Offset": [
+      {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      },
+      {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      },
+      {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      },
+      {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      }
+    ],
+    "Spin": {
+      "X": 0,
+      "Y": 0,
+      "Z": 0
+    },
+    "BeautyCam": {
+      "X": 0,
+      "Y": 0,
+      "Z": 0
+    },
+    "ChaseVec": {
+      "X": 0,
+      "Y": -276.00000500679016,
+      "Z": 57.500001043081284
+    },
+    "BridgeVec": {
+      "X": 0,
+      "Y": 33.350000604987144,
+      "Z": 1.840000033378601
+    },
+    "Power": [
+      {
+        "DesignName": "",
+        "PName": "Fusion Reactor",
+        "PAbrv": "FUSION",
+        "Type": "FUSION",
+        "SType": 0,
+        "EType": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "ExplosionType": 0,
+        "Output": 50,
+        "Fuel": 0,
+        "Size": 32,
+        "Hull": 0.5,
+        "Loc": {
+          "X": 0,
+          "Y": 0,
+          "Z": 0
+        }
+      }
+    ],
+    "Drive": [
+      {
+        "Name": "Solar Drive",
+        "Abbrev": "DRIVE",
+        "DesignName": "Solar Drive",
+        "Type": "PLASMA",
+        "Thrust": 16,
+        "Augmenter": 30,
+        "DriveScale": 0.3199999928474426,
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": -80
+        },
+        "Size": 16,
+        "HullFactor": 0.5,
+        "ExplosionType": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "bShowTrail": true,
+        "Ports": [
+          {
+            "PointName": "Drive_0",
+            "SocketName": "",
+            "Location": {
+              "X": -38.18000069260597,
+              "Y": 0,
+              "Z": 0
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "FlareScale": 0.3199999928474426,
+            "TrailScale": 0.3199999928474426,
+            "bShowFlare": true,
+            "bShowTrail": true,
+            "EngineColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "CurrentIntensity": 0
+          }
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      }
+    ],
+    "Quantum": [],
+    "Farcaster": [],
+    "Thruster": [
+      {
+        "Type": "PLASMA",
+        "Thrust": 100,
+        "ThrusterScale": 0.11999999731779099,
+        "DesignName": "Thruster",
+        "Location": {
+          "X": 0,
+          "Y": -40,
+          "Z": 0
+        },
+        "Size": 32,
+        "HullFactor": 0.800000011920929,
+        "Ports": [
+          {
+            "Direction": "FORE",
+            "PointName": "port_fore",
+            "SocketName": "None",
+            "Location": {
+              "X": 1.1500000208616257,
+              "Y": -25.300000458955765,
+              "Z": -4.600000083446503
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 68,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "FORE",
+            "PointName": "port_fore",
+            "SocketName": "None",
+            "Location": {
+              "X": 1.1500000208616257,
+              "Y": 25.300000458955765,
+              "Z": -4.600000083446503
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 132,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "AFT",
+            "PointName": "port_aft",
+            "SocketName": "None",
+            "Location": {
+              "X": -10.350000187754631,
+              "Y": -25.300000458955765,
+              "Z": -4.600000083446503
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 180,
+              "Roll": 0
+            },
+            "Fire": 136,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "AFT",
+            "PointName": "port_aft",
+            "SocketName": "None",
+            "Location": {
+              "X": -10.350000187754631,
+              "Y": 25.300000458955765,
+              "Z": -4.600000083446503
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 180,
+              "Roll": 0
+            },
+            "Fire": 72,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "TOP",
+            "PointName": "port_top",
+            "SocketName": "None",
+            "Location": {
+              "X": 9.200000166893005,
+              "Y": -4.600000083446503,
+              "Z": 1.1500000208616257
+            },
+            "Rotation": {
+              "Pitch": 90,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 528,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "TOP",
+            "PointName": "port_top",
+            "SocketName": "None",
+            "Location": {
+              "X": 9.200000166893005,
+              "Y": 4.600000083446503,
+              "Z": 1.1500000208616257
+            },
+            "Rotation": {
+              "Pitch": 90,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 528,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port_bottom",
+            "SocketName": "None",
+            "Location": {
+              "X": 9.200000166893005,
+              "Y": -4.600000083446503,
+              "Z": -2.3000000417232513
+            },
+            "Rotation": {
+              "Pitch": -90,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 288,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port_bottom",
+            "SocketName": "None",
+            "Location": {
+              "X": 9.200000166893005,
+              "Y": 4.600000083446503,
+              "Z": -2.3000000417232513
+            },
+            "Rotation": {
+              "Pitch": -90,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 288,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "LEFT",
+            "PointName": "port_left",
+            "SocketName": "None",
+            "Location": {
+              "X": 23.000000417232513,
+              "Y": -3.450000062584877,
+              "Z": 0
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": -90,
+              "Roll": 0
+            },
+            "Fire": 129,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "RIGHT",
+            "PointName": "port_right",
+            "SocketName": "None",
+            "Location": {
+              "X": 23.000000417232513,
+              "Y": 3.450000062584877,
+              "Z": 0
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 90,
+              "Roll": 0
+            },
+            "Fire": 66,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "TOP",
+            "PointName": "port_top",
+            "SocketName": "None",
+            "Location": {
+              "X": -5.750000104308128,
+              "Y": -25.300000458955765,
+              "Z": -3.450000062584877
+            },
+            "Rotation": {
+              "Pitch": 90,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 1040,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "TOP",
+            "PointName": "port_top",
+            "SocketName": "None",
+            "Location": {
+              "X": -5.750000104308128,
+              "Y": 25.300000458955765,
+              "Z": -3.450000062584877
+            },
+            "Rotation": {
+              "Pitch": 90,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 2064,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port_bottom",
+            "SocketName": "None",
+            "Location": {
+              "X": -5.750000104308128,
+              "Y": -25.300000458955765,
+              "Z": -5.750000104308128
+            },
+            "Rotation": {
+              "Pitch": -90,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 2080,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port_bottom",
+            "SocketName": "None",
+            "Location": {
+              "X": -5.750000104308128,
+              "Y": 25.300000458955765,
+              "Z": -5.750000104308128
+            },
+            "Rotation": {
+              "Pitch": -90,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 1056,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "LEFT",
+            "PointName": "port_left",
+            "SocketName": "None",
+            "Location": {
+              "X": -10.350000187754631,
+              "Y": -25.760000467300415,
+              "Z": -4.600000083446503
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": -90,
+              "Roll": 0
+            },
+            "Fire": 2,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "LEFT",
+            "PointName": "port_left",
+            "SocketName": "None",
+            "Location": {
+              "X": 1.1500000208616257,
+              "Y": -25.760000467300415,
+              "Z": -4.600000083446503
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": -90,
+              "Roll": 0
+            },
+            "Fire": 2,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "RIGHT",
+            "PointName": "port_right",
+            "SocketName": "None",
+            "Location": {
+              "X": -10.350000187754631,
+              "Y": 25.760000467300415,
+              "Z": -4.600000083446503
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 90,
+              "Roll": 0
+            },
+            "Fire": 1,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "RIGHT",
+            "PointName": "port_right",
+            "SocketName": "None",
+            "Location": {
+              "X": 1.1500000208616257,
+              "Y": 25.760000467300415,
+              "Z": -4.600000083446503
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 90,
+              "Roll": 0
+            },
+            "Fire": 1,
+            "PortScale": 0.11999999731779099,
+            "FlareScale": 0.11999999731779099,
+            "TrailScale": 0.11999999731779099,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          }
+        ],
+        "SourceIndex": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "D:/SSW/Content/GameData/Ships/Viper.def"
+      }
+    ],
+    "Navlight": [
+      {
+        "Name": "Navigation Lights",
+        "Abbrev": "NAV",
+        "DesignName": "Navigation Lights",
+        "Scale": 1,
+        "Period": 1,
+        "Beacons": [
+          {
+            "Name": "Port",
+            "Location": {
+              "X": -16.10000029206276,
+              "Y": -26.45000047981739,
+              "Z": 1.1500000208616257
+            },
+            "LocalRotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Type": "RED",
+            "Color": {
+              "R": 1,
+              "G": 0,
+              "B": 0,
+              "A": 1
+            },
+            "Intensity": 100,
+            "Radius": 30,
+            "Mode": "Steady",
+            "BlinkInterval": 1,
+            "PhaseOffset": 0
+          },
+          {
+            "Name": "Starboard",
+            "Location": {
+              "X": -16.10000029206276,
+              "Y": 26.45000047981739,
+              "Z": 1.1500000208616257
+            },
+            "LocalRotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Type": "GREEN",
+            "Color": {
+              "R": 0,
+              "G": 1,
+              "B": 0,
+              "A": 1
+            },
+            "Intensity": 100,
+            "Radius": 30,
+            "Mode": "Steady",
+            "BlinkInterval": 1,
+            "PhaseOffset": 0
+          },
+          {
+            "Name": "Dorsal",
+            "Location": {
+              "X": -11.500000208616257,
+              "Y": 0,
+              "Z": 4.140000075101852
+            },
+            "LocalRotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Type": "WHITE",
+            "Color": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "Intensity": 100,
+            "Radius": 30,
+            "Mode": "Blink",
+            "BlinkInterval": 1,
+            "PhaseOffset": 0
+          },
+          {
+            "Name": "Ventral",
+            "Location": {
+              "X": -11.500000208616257,
+              "Y": 0,
+              "Z": -2.3000000417232513
+            },
+            "LocalRotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Type": "WHITE",
+            "Color": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "Intensity": 100,
+            "Radius": 30,
+            "Mode": "Blink",
+            "BlinkInterval": 1,
+            "PhaseOffset": 0
+          }
+        ],
+        "SourceFile": ""
+      }
+    ],
+    "FlightDeck": [],
+    "LandingGear": [
+      {
+        "Name": "Undercarriage",
+        "Abbrev": "Gear",
+        "DesignName": "",
+        "GearItems": [
+          {
+            "ModelName": "GearNose0",
+            "Start": {
+              "X": 0,
+              "Y": -14,
+              "Z": 73
+            },
+            "End": {
+              "X": 0,
+              "Y": -40,
+              "Z": 87
+            }
+          },
+          {
+            "ModelName": "GearLeft0",
+            "Start": {
+              "X": -30,
+              "Y": -12,
+              "Z": -40
+            },
+            "End": {
+              "X": -50,
+              "Y": -40,
+              "Z": -40
+            }
+          },
+          {
+            "ModelName": "GearRight0",
+            "Start": {
+              "X": 30,
+              "Y": -12,
+              "Z": -40
+            },
+            "End": {
+              "X": 50,
+              "Y": -40,
+              "Z": -40
+            }
+          }
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      }
+    ],
+    "Weapon": [
+      {
+        "WeaponType": "Alpha Cannon",
+        "Name": "",
+        "Abbrev": "Cannon",
+        "DesignName": "",
+        "GroupName": "",
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": 120
+        },
+        "Size": 32,
+        "HullFactor": 0.5,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Aim": {
+          "bHasAzMax": false,
+          "AzMax": 0,
+          "bHasAzMin": false,
+          "AzMin": 0,
+          "bHasElMax": false,
+          "ElMax": 0,
+          "bHasElMin": false,
+          "ElMin": 0,
+          "bHasAzRest": false,
+          "AzRest": 0,
+          "bHasElRest": false,
+          "ElRest": 0
+        },
+        "ExplosionType": 0,
+        "Muzzles": [
+          {
+            "X": -7,
+            "Y": 7,
+            "Z": 190
+          },
+          {
+            "X": 7,
+            "Y": 7,
+            "Z": 190
+          }
+        ],
+        "SourceIndex": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "bMuzzlesWereAuthoredInShipSpace": true,
+        "bMuzzlesResolved": false,
+        "bMuzzlesAreInShipSpace": false,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      }
+    ],
+    "Hardpoint": [
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Harpoon"
+        ],
+        "Name": "",
+        "Abbrev": "STA-1",
+        "DesignName": "",
+        "Location": {
+          "X": 103,
+          "Y": -39,
+          "Z": -100
+        },
+        "Muzzle": {
+          "X": 103,
+          "Y": -39,
+          "Z": -118
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Harpoon"
+        ],
+        "Name": "",
+        "Abbrev": "STA-2",
+        "DesignName": "",
+        "Location": {
+          "X": 83,
+          "Y": -35,
+          "Z": -100
+        },
+        "Muzzle": {
+          "X": 83,
+          "Y": -35,
+          "Z": -118
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Harpoon"
+        ],
+        "Name": "",
+        "Abbrev": "STA-3",
+        "DesignName": "",
+        "Location": {
+          "X": 51,
+          "Y": -25,
+          "Z": -60
+        },
+        "Muzzle": {
+          "X": 51,
+          "Y": -25,
+          "Z": -80
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Harpoon"
+        ],
+        "Name": "",
+        "Abbrev": "STA-4",
+        "DesignName": "",
+        "Location": {
+          "X": -51,
+          "Y": -25,
+          "Z": -60
+        },
+        "Muzzle": {
+          "X": -51,
+          "Y": -25,
+          "Z": -80
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Harpoon"
+        ],
+        "Name": "",
+        "Abbrev": "STA-5",
+        "DesignName": "",
+        "Location": {
+          "X": -84,
+          "Y": -33,
+          "Z": -100
+        },
+        "Muzzle": {
+          "X": -84,
+          "Y": -33,
+          "Z": -118
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "AllowedWeaponTypes": [
+          "Archer",
+          "Harpoon"
+        ],
+        "Name": "",
+        "Abbrev": "STA-6",
+        "DesignName": "",
+        "Location": {
+          "X": -103,
+          "Y": -39,
+          "Z": -100
+        },
+        "Muzzle": {
+          "X": -103,
+          "Y": -39,
+          "Z": -118
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "AzimuthRadians": 0,
+        "ElevationRadians": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      }
+    ],
+    "Loadout": [
+      {
+        "Name": "Clean",
+        "Stations": [
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "Name": "ACM Light",
+        "Stations": [
+          0,
+          0,
+          -1,
+          -1,
+          0,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "Name": "ACM Short Range",
+        "Stations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "Name": "ACM Medium Range",
+        "Stations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "Name": "Ground Strike",
+        "Stations": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "Name": "Ship Strike",
+        "Stations": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "Name": "Hvy Ship Strike",
+        "Stations": [
+          0,
+          1,
+          1,
+          1,
+          1,
+          0,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1,
+          -1
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      }
+    ],
+    "Sensor": [
+      {
+        "DesignName": "",
+        "Ranges": [
+          25000,
+          50000,
+          75000
+        ],
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": 100
+        },
+        "Size": 32,
+        "HullFactor": 0.10000000149011612,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceIndex": 0,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      }
+    ],
+    "NavSys": [
+      {
+        "DesignName": "",
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": 60
+        },
+        "Size": 16,
+        "HullFactor": 0.10000000149011612,
+        "SourceIndex": 0,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      }
+    ],
+    "Computer": [
+      {
+        "Name": "Avionics Package",
+        "Abbrev": "HUD",
+        "DesignName": "Avionics",
+        "Type": "AVIONICS",
+        "Location": {
+          "X": 20,
+          "Y": 0,
+          "Z": 80
+        },
+        "Size": 16,
+        "HullFactor": 0.5,
+        "SourceIndex": 0,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "Name": "Flight Computer",
+        "Abbrev": "Flight",
+        "DesignName": "Flight",
+        "Type": "FLIGHT",
+        "Location": {
+          "X": -20,
+          "Y": 0,
+          "Z": 80
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "SourceIndex": 0,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      }
+    ],
+    "Shield": [],
+    "Squadron": [],
+    "DeathSpiral": [
+      {
+        "Time": 2.5,
+        "Explosions": [
+          {
+            "Time": 0.6000000238418579,
+            "Type": "NONE",
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": -28
+            },
+            "bFinal": false,
+            "SourceFile": ""
+          },
+          {
+            "Time": 1.399999976158142,
+            "Type": "NONE",
+            "Location": {
+              "X": -10,
+              "Y": 10,
+              "Z": 30
+            },
+            "bFinal": false,
+            "SourceFile": ""
+          },
+          {
+            "Time": 0,
+            "Type": "NONE",
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": -12
+            },
+            "bFinal": true,
+            "SourceFile": ""
+          },
+          {
+            "Time": 0,
+            "Type": "LARGE_BURST",
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": -12
+            },
+            "bFinal": true,
+            "SourceFile": ""
+          }
+        ],
+        "Debris": [
+          {
+            "ModelName": "DebrisX",
+            "Mass": 0,
+            "Speed": 0,
+            "Drag": 0,
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "Count": 1,
+            "Life": 0,
+            "FireType": "NONE",
+            "FireLocations": []
+          },
+          {
+            "ModelName": "",
+            "Mass": 20,
+            "Speed": 196,
+            "Drag": 0.30000001192092896,
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": -2
+            },
+            "Count": 4,
+            "Life": 1.7999999523162842,
+            "FireType": "NONE",
+            "FireLocations": [
+              {
+                "X": 1,
+                "Y": 1,
+                "Z": 1
+              }
+            ]
+          },
+          {
+            "ModelName": "DebrisX",
+            "Mass": 0,
+            "Speed": 0,
+            "Drag": 0,
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "Count": 1,
+            "Life": 0,
+            "FireType": "NONE",
+            "FireLocations": []
+          },
+          {
+            "ModelName": "",
+            "Mass": 20,
+            "Speed": 225,
+            "Drag": 0.3499999940395355,
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": 3
+            },
+            "Count": 3,
+            "Life": 2.200000047683716,
+            "FireType": "NONE",
+            "FireLocations": [
+              {
+                "X": 1,
+                "Y": 1,
+                "Z": 1
+              }
+            ]
+          }
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      }
+    ],
+    "Map": [
+      {
+        "SpriteName": "ViperMap0",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "SpriteName": "ViperMap1",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "SpriteName": "ViperMap2",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "SpriteName": "ViperMap3",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "SpriteName": "ViperMap4",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "SpriteName": "ViperMap5",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "SpriteName": "ViperMap6",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
+      },
+      {
+        "SpriteName": "ViperMap7",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
       }
     ],
     "Skin": []

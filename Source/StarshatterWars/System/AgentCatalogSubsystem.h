@@ -38,6 +38,7 @@ struct FS_AgentCatalogRow : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<EMissionType> MissionTypes;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<int32> CampaignIds;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<FName> DynamicPools;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FName IntroductionId;
 
     bool ServesEmpire(EEMPIRE_NAME PilotEmpire) const
     {

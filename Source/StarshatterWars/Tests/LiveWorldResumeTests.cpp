@@ -13,6 +13,7 @@
 #include "OrbitalRegion.h"
 #include "DataLoader.h"
 #include "Game.h"
+#include "DeckResumeState.h"
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FLiveWorldResumeTest,"Starshatter.Persistence.LiveMissionWorldDiskResume",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FLiveWorldResumeTest::RunTest(const FString&)
 {
@@ -36,6 +37,17 @@ bool FLiveWorldResumeTest::RunTest(const FString&)
  TestTrue(TEXT("Position resumes"),Pilot->GetLocation().Equals(Original));TestTrue(TEXT("Velocity resumes"),Pilot->GetVelocity().Equals(FVector(20,30,40)));TestEqual(TEXT("Damage resumes"),Pilot->GetIntegrity(),640.0);
  TestEqual(TEXT("Rebuilt navigation survives restart"),Pilot->GetFlightPlan().size(),1);if(Pilot->GetFlightPlan().size())TestTrue(TEXT("Edited waypoint retains exact coordinates"),Pilot->GetFlightPlan()[0]->GetLocation().Equals(Destination));
  auto* Verify=NewObject<ULocalUniverseState>();FLocalWorldStateCodec::Capture(S,*Verify);TestEqual(TEXT("Cargo identity is not regenerated on restore"),Verify->Ships[0].CargoId,Cargo);
+ auto* Carrier=S.CreateShip("Resume carrier","",ShipDesignRegistry::FindLegacy(FName(TEXT("Resume fixture hull"))),"Resume sector",FVector::ZeroVector,1);
+ if(!TestNotNull(TEXT("Carrier fixture"),Carrier))return false;
+ FlightDeck Deck;Deck.SetCarrier(Carrier);Deck.AddSlot(FVector(0,50,100),static_cast<uint32>(Pilot->GetClassification()));
+ TestTrue(TEXT("Resumed parked fighter occupies authored deck slot"),DeckResumeState::Park(Deck,*Pilot));
+ const FVector Parked=Pilot->GetLocation();Carrier->MoveTo(FVector(1000,0,0));
+ TestTrue(TEXT("Reparking remains valid after carrier restoration"),DeckResumeState::Park(Deck,*Pilot));
+ TestTrue(TEXT("Parking uses current carrier transform"),(Pilot->GetLocation()-Parked).Equals(FVector(1000,0,0)));
+ DeckResumeState::Release(Deck,*Pilot);Pilot->SetFlightPhase(EOPSMode::ACTIVE);Pilot->MoveTo(FVector(8000,9000,10000));
+ Deck.ExecFrame(0);
+ TestTrue(TEXT("Departed fighter cannot be pulled back to fresh mission deck slot"),Pilot->GetLocation().Equals(FVector(8000,9000,10000)));
+ Pilot->SetCarrier(nullptr,nullptr);
  Assignment.SetIdentity(102);TestFalse(TEXT("Different assignment cannot consume stale world save"),FLocalWorldStateCodec::Restore(S,*Reload));return true;
 }
 #endif

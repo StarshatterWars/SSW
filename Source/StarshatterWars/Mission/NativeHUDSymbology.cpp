@@ -1,4 +1,5 @@
 #include "NativeHUDSymbology.h"
+#include "MiniHUDLayout.h"
 #include "Ship.h"
 #include "ShipActor.h"
 #include "Weapon.h"
@@ -68,10 +69,10 @@ void FNativeHUDSymbology::Paint(const FGeometry& G,FSlateWindowElementList& E,in
  for(const auto& M:Markers){if(M.Actor.IsValid()&&M.Actor.Get()==Selected)continue;const FVector4 Clip=Projection.ComputeViewProjectionMatrix().TransformFVector4(FVector4(M.Position,1));if(Clip.W<=0)continue;const double X=Clip.X/Clip.W,Y=Clip.Y/Clip.W;if(FMath::Abs(X)>1||FMath::Abs(Y)>1)continue;const FVector2D Point((R.Min.X+(X*.5+.5)*R.Width())*Size.X/W,(R.Min.Y+(.5-Y*.5)*R.Height())*Size.Y/H);Art(G,E,L+1,M.Cross,Point,(M.Cross==0||M.Cross==5?LeadSize:TargetSize)*Size.X/W,M.Color);}
 }
 void FNativeHUDSymbology::PaintCompass(const FGeometry& G,FSlateWindowElementList& E,int32 L,double Heading,double Ordered,double Pitch,double OrderedPitch,bool Helm,bool Mini,double Roll)const{
- const FVector2D Size=G.GetLocalSize();const double Scale=FMath::Min(Size.X/1280,Size.Y/720);const FVector2D Center=Mini?FVector2D(Size.X*.5-274*Scale,70*Scale):FVector2D(Size.X-82*Scale,94*Scale);const double D=(Mini?80:104)*Scale;const FLinearColor Tint(.45,.85,1,.85);
+ const FVector2D Size=G.GetLocalSize();const double Scale=FMath::Min(Size.X/1280,Size.Y/720);const FVector2D Center=Mini?SSWMiniHUDLayout::GizmoCenter(Size,Scale):FVector2D(Size.X-82*Scale,94*Scale);const double D=(Mini?80:104)*Scale;const FLinearColor Tint(.45,.85,1,.85);
  if(Mini){
   // Three gimbals share a fixed ship reference. Only presentation uses these angles.
-  const FVector2D C(Size.X*.5-274*Scale,64*Scale);
+  const FVector2D C=SSWMiniHUDLayout::GizmoCenter(Size,Scale);
   const FLinearColor Cyan(.25,.85,1,.95),Amber(1,.68,.2,.95),Violet(.76,.48,1,.95);
   auto Line=[&](const FVector2D& A,const FVector2D& B,FLinearColor Color,float Width=1.f){TArray<FVector2D> P;P.Add(A);P.Add(B);FSlateDrawElement::MakeLines(E,L+2,G.ToPaintGeometry(),P,ESlateDrawEffect::None,Color,true,Width*Scale);};
   // Keep the original numbered heading artwork and its fixed reference pointer.

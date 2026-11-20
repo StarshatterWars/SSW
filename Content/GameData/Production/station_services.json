@@ -80,24 +80,35 @@
     {
       "name": "NoServices",
       "services": []
+    },
+    {
+      "name": "CarrierSupport",
+      "services": [
+        "Cargo",
+        "Insurance",
+        "Repair",
+        "Loadout",
+        "HullSelection",
+        "HullSales"
+      ]
     }
   ],
   "stations": [
     {
       "design": "Adventure",
-      "profile": "FleetSupport"
+      "profile": "CarrierSupport"
     },
     {
       "design": "Dragon",
-      "profile": "FleetSupport"
+      "profile": "CarrierSupport"
     },
     {
       "design": "Goliath",
-      "profile": "FleetSupport"
+      "profile": "CarrierSupport"
     },
     {
       "design": "Orion",
-      "profile": "FleetSupport"
+      "profile": "CarrierSupport"
     },
     {
       "design": "Station3",

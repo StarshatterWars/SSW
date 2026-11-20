@@ -124,7 +124,6 @@ void USSWCombatGroupSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
     GetSSWInstance();
     SetProjectPath();
-    ResolveCombatGroupDataTable();
 }
 
 void USSWCombatGroupSubsystem::Deinitialize()
@@ -183,64 +182,24 @@ bool USSWCombatGroupSubsystem::ResolveCombatGroupDataTable()
     return true;
 }
 
-void USSWCombatGroupSubsystem::LoadAll(bool bFull /*= false*/)
+void USSWCombatGroupSubsystem::LoadAll(bool bFull)
 {
-    UE_LOG(LogTemp, Log, TEXT("[CombatGroupSubsystem] LoadAll (Full=%s)"),
-        bFull ? TEXT("true") : TEXT("false"));
-
-    if (!ResolveCombatGroupDataTable())
+    TMap<FName,FS_CombatGroup> Rows;FString Error;
+    if(!OOBJsonCatalog::LoadDirectory(Rows,FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/OOB"),Error))
+    {UE_LOG(LogTemp,Error,TEXT("[OOBJson] %s; previous native roster retained"),*Error);return;}
+    CombatRosterData.Reset();CombatGroupMapByRow.Reset();CombatGroupRowByName.Reset();CombatGroupRowByKey.Reset();
+    CombatGroupRegistry::Clear();
+    TArray<FName> Keys;Rows.GetKeys(Keys);Keys.Sort(FNameLexicalLess());
+    for(FName Key:Keys)
     {
-        UE_LOG(LogTemp, Error, TEXT("[CombatGroupSubsystem] LoadAll: Failed to resolve CombatGroupDataTable"));
-        return;
+        auto Group=Rows[Key];if(Group.DisplayName.IsEmpty())Group.DisplayName=Key.ToString();
+        for(auto& Unit:Group.Unit)if(Unit.UnitDesign.Equals(TEXT("Blockade Mine"),ESearchCase::IgnoreCase))Unit.UnitDesign=TEXT("BlockadeMine");
+        CombatRosterData.Add(Group);CombatGroupMapByRow.Add(Key,Group);
+        CombatGroupRowByName.Add(Group.Name.ToLower(),Key);
+        CombatGroupRowByKey.Add(FSSWCombatGroupKey(Group.EmpireId,Group.Type,Group.Id),Key);
+        CombatGroupRegistry::RegisterGroup(Key,Group);
     }
-
-    const FString JsonDirectory=FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/OOB");
-    if(FPaths::DirectoryExists(JsonDirectory))
-    {
-        FString Error;if(!OOBJsonCatalog::ImportDirectory(*CombatGroupDataTable,JsonDirectory,Error))
-        {UE_LOG(LogTemp,Error,TEXT("[OOBJson] %s; previous table retained"),*Error);return;}
-    }
-    // Older campaign tables still contain the spaced design identifier.
-    for (const FName RowName : CombatGroupDataTable->GetRowNames())
-    {
-        if (FS_CombatGroup* Row = CombatGroupDataTable->FindRow<FS_CombatGroup>(
-            RowName, TEXT("Normalize blockade mine design"), false))
-        {
-            for (FS_CombatGroupUnit& Unit : Row->Unit)
-                if (Unit.UnitDesign.Equals(TEXT("Blockade Mine"), ESearchCase::IgnoreCase))
-                    Unit.UnitDesign = TEXT("BlockadeMine");
-        }
-    }
-
-    //InitializeCombatRoster();
-    ReadCombatRosterData();
-
-    const int32 TableRows = CombatGroupDataTable ? CombatGroupDataTable->GetRowNames().Num() : -1;
-    const int32 CacheRows = CombatRosterData.Num();
-
-    FString FirstRowName = TEXT("None");
-    if (CombatGroupDataTable)
-    {
-        const TArray<FName> RowNames = CombatGroupDataTable->GetRowNames();
-        if (RowNames.Num() > 0)
-        {
-            FirstRowName = RowNames[0].ToString();
-        }
-    }
-
-    FString FirstCacheName = TEXT("None");
-    if (CombatRosterData.Num() > 0)
-    {
-        FirstCacheName = CombatRosterData[0].Name;
-    }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[DBG CGS] After LoadAll: Table=%s TableRows=%d CacheRows=%d FirstTableRow=%s FirstCacheGroup=%s"),
-        *GetNameSafe(CombatGroupDataTable),
-        TableRows,
-        CacheRows,
-        *FirstRowName,
-        *FirstCacheName);
+    BuildIndexes();UE_LOG(LogTemp,Display,TEXT("[OOBJson] Loaded %d groups directly from JSON; no DataTable"),Rows.Num());
 }
 
 // -----------------------------------------------------------------------------
@@ -685,83 +644,7 @@ void USSWCombatGroupSubsystem::LoadCombatRoster(const char* InFilename, int32 Te
 // Readback
 // -----------------------------------------------------------------------------
 
-void USSWCombatGroupSubsystem::ReadCombatRosterData()
-{
-    UE_LOG(LogTemp, Warning, TEXT("[LoadCombatRoster] ReadCombatRosterTable: BEGIN"));
-
-    if (!ResolveCombatGroupDataTable())
-    {
-        UE_LOG(LogTemp, Error, TEXT("[LoadCombatRoster] ReadCombatRosterTable: CombatGroupDataTable is NULL"));
-        return;
-    }
-
-    CombatRosterData.Reset();
-    CombatGroupMapByRow.Reset();
-    CombatGroupRowByName.Reset();
-    CombatGroupRowByKey.Reset();
-    CombatGroupRegistry::Clear();
-
-    static const FString ContextString(TEXT("ReadCombatRosterData"));
-    const TArray<FName> RowNames = CombatGroupDataTable->GetRowNames();
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[LoadCombatRoster] ReadCombatRosterTable: Found %d rows"),
-        RowNames.Num());
-
-    for (const FName& RowName : RowNames)
-    {
-        const FS_CombatGroup* Row =
-            CombatGroupDataTable->FindRow<FS_CombatGroup>(RowName, ContextString);
-
-        if (!Row)
-        {
-            UE_LOG(LogTemp, Warning,
-                TEXT("[LoadCombatRoster] ReadCombatRosterTable: Failed to read row '%s'"),
-                *RowName.ToString());
-            continue;
-        }
-
-        FS_CombatGroup Group = *Row;
-
-        if (Group.DisplayName.IsEmpty())
-        {
-            Group.DisplayName = RowName.ToString();
-        }
-
-        CombatRosterData.Add(Group);
-        CombatGroupMapByRow.Add(RowName, Group);
-
-        if (!Group.Name.IsEmpty())
-        {
-            CombatGroupRowByName.Add(Group.Name.ToLower(), RowName);
-        }
-
-        CombatGroupRowByKey.Add(
-            FSSWCombatGroupKey(Group.EmpireId, Group.Type, Group.Id),
-            RowName);
-
-        CombatGroupRegistry::RegisterGroup(RowName, Group);
-
-        UE_LOG(LogTemp, Log,
-            TEXT("[LoadCombatRoster] CombatGroup Table Loaded: Row=%s Type=%d Id=%d ParentType=%d ParentId=%d Empire=%d Iff=%d Name=%s Region=%s"),
-            *RowName.ToString(),
-            (int32)Group.Type,
-            Group.Id,
-            (int32)Group.ParentType,
-            Group.ParentId,
-            (int32)Group.EmpireId,
-            Group.Iff,
-            *Group.DisplayName,
-            *Group.Region);
-    }
-
-    BuildIndexes();
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("1: COMPLETE (%d groups, registry=%d)"),
-        CombatRosterData.Num(),
-        CombatGroupRegistry::Num());
-}
+void USSWCombatGroupSubsystem::ReadCombatRosterData() { LoadAll(false); }
 
 // -----------------------------------------------------------------------------
 // Queries

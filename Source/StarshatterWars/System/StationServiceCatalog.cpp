@@ -10,7 +10,7 @@ namespace
 bool ServiceFromName(const FString& Name,ESSWStationService& Out)
 {
     static const TCHAR* Names[]={TEXT("Cargo"),TEXT("Market"),TEXT("Insurance"),TEXT("Repair"),TEXT("Loadout"),
-        TEXT("HullSelection"),TEXT("Refit"),TEXT("Manufacturing"),TEXT("Blueprints"),TEXT("SkillBooks")};
+        TEXT("HullSelection"),TEXT("Refit"),TEXT("Manufacturing"),TEXT("Blueprints"),TEXT("SkillBooks"),TEXT("HullSales")};
     for(uint8 I=0;I<UE_ARRAY_COUNT(Names);++I)if(Name==Names[I]){Out=static_cast<ESSWStationService>(I);return true;}
     return false;
 }

@@ -4,7 +4,7 @@
 // Capabilities are authored SSW station roles, independent of price and simulation equations.
 enum class ESSWStationService : uint8
 {
-    Cargo,Market,Insurance,Repair,Loadout,HullSelection,Refit,Manufacturing,Blueprints,SkillBooks
+    Cargo,Market,Insurance,Repair,Loadout,HullSelection,Refit,Manufacturing,Blueprints,SkillBooks,HullSales
 };
 class STARSHATTERWARS_API FStationServiceCatalog
 {

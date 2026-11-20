@@ -35,7 +35,8 @@ public:
         SCompoundWidget::Tick(G,T,D);
         if(T>=NextRefresh){NextRefresh=T+0.5;Refresh();}
     }
-    void ChooseMission(int32 Type){MissionType=FMath::Clamp(Type,0,5);ObjectiveName.Empty();RefreshChoices();}
+    bool CanIssueOrders()const{return Operate && Operate();}
+    void ChooseMission(int32 Type){if(!CanIssueOrders())return;MissionType=FMath::Clamp(Type,0,5);ObjectiveName.Empty();RefreshChoices();}
     void ChooseFilter(int32 Index){Filter=Index;SelectedSquad=SelectedSlot=-1;SelectedSlots.Empty();Signature.Empty();Refresh();}
     void PreparePackage(){Prepare(true);}
     void PrepareAlert(){Prepare(false);}
@@ -68,9 +69,9 @@ private:
     Hangar* Bay()const{auto* C=Carrier();return C?C->GetHangar():nullptr;}
     const HangarSlot* Selected()const{auto* H=Bay();return H && SelectedSquad>=0 && SelectedSquad<H->NumSquadrons() && SelectedSlot>=0 && SelectedSlot<H->SquadronSize(SelectedSquad)?H->GetSlot(SelectedSquad,SelectedSlot):nullptr;}
     TSharedRef<SWidget> Label(const FString& S,bool Button=false) {
-        return SNew(STextBlock).Text(FText::FromString(Button?S.ToUpper():S))
+        return SNew(STextBlock).Text(FText::FromString(S.ToUpper()))
             .ColorAndOpacity(Button?FLinearColor::White:FLinearColor(0.52f,0.79f,0.93f))
-            .Font(FCoreStyle::GetDefaultFontStyle("Regular",16)).AutoWrapText(true);
+            .Font(FCoreStyle::GetDefaultFontStyle("Regular",12)).AutoWrapText(true);
     }
     TSharedRef<SWidget> SlotColumns(const FString& Squadron, const FString& Craft,
         const FString& Status, const FString& Time, bool bHeader = false)
@@ -82,8 +83,8 @@ private:
         {
             Columns->AddSlot().FillWidth(Widths[Column]).Padding(8, 3)
             [
-                SNew(STextBlock).Text(FText::FromString(*Values[Column]))
-                .Font(FCoreStyle::GetDefaultFontStyle(bHeader ? "Bold" : "Regular", bHeader ? 13 : 15))
+                SNew(STextBlock).Text(FText::FromString(Values[Column]->ToUpper()))
+                .Font(FCoreStyle::GetDefaultFontStyle(bHeader ? "Bold" : "Regular", bHeader ? 11 : 12))
                 .ColorAndOpacity(bHeader ? FLinearColor(.52f, .79f, .93f) : FLinearColor::White)
                 .Justification(Column == 3 ? ETextJustify::Right : ETextJustify::Left)
                 .Clipping(EWidgetClipping::ClipToBounds).OverflowPolicy(ETextOverflowPolicy::Ellipsis)
@@ -92,7 +93,7 @@ private:
         return Columns;
     }
     bool Allowed(int32 Command)const {
-        if(Operate && !Operate())return false;
+        if(!CanIssueOrders())return false;
         auto* H=Bay();if(!H || SelectedSquad<0 || SelectedSquad>=H->NumSquadrons())return false;
         for(int Index:SelectedSlots) {
             if(Index<0 || Index>=H->SquadronSize(SelectedSquad))continue;
@@ -105,7 +106,7 @@ private:
         return false;
     }
     bool CanPrepare(bool Package)const {
-        if(Operate && !Operate())return false;
+        if(!CanIssueOrders())return false;
         auto* H=Bay();if(!H || SelectedSquad<0 || SelectedSquad>=H->NumSquadrons() || SelectedSlots.IsEmpty())return false;
         for(int Index:SelectedSlots)if(Index<0 || Index>=H->SquadronSize(SelectedSquad) || H->GetState(H->GetSlot(SelectedSquad,Index))!=Hangar::STORAGE)return false;
         return !Package || MissionType==0 || MissionType==5 || !ObjectiveName.IsEmpty();
@@ -175,28 +176,28 @@ private:
         Root->AddSlot().AutoHeight()[SAssignNew(Missions,SHorizontalBox)];
         const TCHAR* MissionNames[]={TEXT("PATROL"),TEXT("INTERCEPT"),TEXT("ASSAULT"),TEXT("STRIKE"),TEXT("ESCORT"),TEXT("SCOUT")};
         for(int I=0;I<6;++I)Missions->AddSlot().FillWidth(1).Padding(2)
-            [SNew(SButton).ButtonStyle(&ControlStyle()).ButtonColorAndOpacity_Lambda([this,I](){return MissionType==I?FLinearColor(0.3f,0.7f,1):FLinearColor::White;})
-                .OnClicked_Lambda([this,I](){MissionType=I;ObjectiveName.Empty();RefreshChoices();return FReply::Handled();})[Label(MissionNames[I],true)]];
+            [SNew(SButton).ButtonStyle(&ControlStyle()).IsEnabled_Lambda([this](){return CanIssueOrders();}).ButtonColorAndOpacity_Lambda([this,I](){return MissionType==I?FLinearColor(0.3f,0.7f,1):FLinearColor::White;})
+                .OnClicked_Lambda([this,I](){if(!CanIssueOrders())return FReply::Handled();MissionType=I;ObjectiveName.Empty();RefreshChoices();return FReply::Handled();})[Label(MissionNames[I],true)]];
         Root->AddSlot().AutoHeight().Padding(0,8)
             [SNew(SHorizontalBox)
                 +SHorizontalBox::Slot().FillWidth(1).Padding(2)
-                [SAssignNew(ObjectiveCombo,SComboBox<TSharedPtr<FString>>).OptionsSource(&ObjectiveOptions)
+                [SAssignNew(ObjectiveCombo,SComboBox<TSharedPtr<FString>>).IsEnabled_Lambda([this](){return CanIssueOrders();}).OptionsSource(&ObjectiveOptions)
                     .OnGenerateWidget_Lambda([this](TSharedPtr<FString> Item){return Label(Item?*Item:FString());})
-                    .OnSelectionChanged_Lambda([this](TSharedPtr<FString> Item,ESelectInfo::Type){if(Item)ObjectiveName=*Item;})
+                    .OnSelectionChanged_Lambda([this](TSharedPtr<FString> Item,ESelectInfo::Type){if(Item && CanIssueOrders())ObjectiveName=*Item;})
                     [SNew(STextBlock).ColorAndOpacity(FLinearColor::White).Clipping(EWidgetClipping::ClipToBounds)
                         .OverflowPolicy(ETextOverflowPolicy::Ellipsis).Text_Lambda([this](){return FText::FromString(ObjectiveName.IsEmpty()?
                         (MissionType==0 || MissionType==5?TEXT("OBJECTIVE: PATROL ROUTE"):TEXT("NO ELIGIBLE OBJECTIVES")):TEXT("OBJECTIVE: ")+ObjectiveName);})]]
                 +SHorizontalBox::Slot().FillWidth(1).Padding(2)
-                [SAssignNew(LoadCombo,SComboBox<TSharedPtr<FString>>).OptionsSource(&LoadOptions)
+                [SAssignNew(LoadCombo,SComboBox<TSharedPtr<FString>>).IsEnabled_Lambda([this](){return CanIssueOrders();}).OptionsSource(&LoadOptions)
                     .OnGenerateWidget_Lambda([this](TSharedPtr<FString> Item){return Label(Item?*Item:FString());})
-                    .OnSelectionChanged_Lambda([this](TSharedPtr<FString> Item,ESelectInfo::Type){if(Item)LoadName=*Item;})
+                    .OnSelectionChanged_Lambda([this](TSharedPtr<FString> Item,ESelectInfo::Type){if(Item && CanIssueOrders())LoadName=*Item;})
                     [SNew(STextBlock).ColorAndOpacity(FLinearColor::White).Clipping(EWidgetClipping::ClipToBounds)
                         .OverflowPolicy(ETextOverflowPolicy::Ellipsis).Text_Lambda([this](){return FText::FromString(LoadName.IsEmpty()?TEXT("LOADOUT: STORED"):TEXT("LOADOUT: ")+LoadName);})]]];
         Root->AddSlot().AutoHeight()[SNew(SHorizontalBox)
             +SHorizontalBox::Slot().Padding(4)[SNew(SButton).ButtonStyle(&ControlStyle()).ToolTipText(INVTEXT("Apply the selected loadout and launch up to four fighters from one squadron.")).IsEnabled_Lambda([this](){return CanPrepare(true);}).OnClicked_Lambda([this](){return Prepare(true);})[Label(TEXT("PACKAGE"),true)]]
             +SHorizontalBox::Slot().Padding(4)[SNew(SButton).ButtonStyle(&ControlStyle()).ToolTipText(INVTEXT("Ready up to four fighters from one squadron with their stored loadouts.")).IsEnabled_Lambda([this](){return CanPrepare(false);}).OnClicked_Lambda([this](){return Prepare(false);})[Label(TEXT("ALERT"),true)]]];
         Root->AddSlot().AutoHeight()[SNew(STextBlock).AutoWrapText(true).ColorAndOpacity(FLinearColor(0.25f,0.7f,1))
-            .Text_Lambda([this](){return FText::FromString(StatusMessage);})];
+            .Text_Lambda([this](){return CanIssueOrders()?FText::FromString(StatusMessage):INVTEXT("READ ONLY — PILOT THIS CARRIER TO ISSUE FLIGHT ORDERS.");})];
         Refresh();
     }
     void Refresh() {

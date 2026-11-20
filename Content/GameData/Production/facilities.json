@@ -23,7 +23,18 @@
   {
     "Name": "Adonis_Alloy_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_machine_parts",
+      "Make_sealed_documents",
+      "Make_standard_oxygen_regulator",
+      "Make_heavy_duty_coolant_pump",
+      "Make_precision_vacuum_seal_kit",
+      "Make_prototype_landing_gear_damper",
+      "Make_standard_optical_sensor_array",
+      "Make_heavy_duty_fiber_data_harness",
+      "Make_precision_battery_cell_pack",
+      "Make_prototype_machine_tool_spindle",
+      "Make_standard_hull_inspection_scanner"
     ],
     "Facility": "Adonis Alloy Works",
     "System": "Jarnell",
@@ -67,7 +78,19 @@
   {
     "Name": "Maraner_Materials_Refinery",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_avionics",
+      "Make_hull_section",
+      "Make_repair_kit",
+      "Make_prototype_atmosphere_filter",
+      "Make_standard_heat_exchanger_core",
+      "Make_heavy_duty_pressure_relief_valve",
+      "Make_precision_bay_door_motor",
+      "Make_prototype_navigation_beacon_receiver",
+      "Make_standard_signal_processor",
+      "Make_heavy_duty_reactor_control_relay",
+      "Make_precision_servo_controller",
+      "Make_prototype_refinery_crucible"
     ],
     "Facility": "Maraner Materials Refinery",
     "System": "Borova",
@@ -111,7 +134,17 @@
   {
     "Name": "Pallas_Industrial_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_reactor_fuel",
+      "Make_precision_atmosphere_filter",
+      "Make_prototype_thermal_radiator",
+      "Make_standard_pressure_relief_valve",
+      "Make_heavy_duty_bay_door_motor",
+      "Make_precision_navigation_beacon_receiver",
+      "Make_prototype_antenna_gimbal",
+      "Make_standard_reactor_control_relay",
+      "Make_heavy_duty_servo_controller",
+      "Make_precision_refinery_crucible"
     ],
     "Facility": "Pallas Industrial Works",
     "System": "Athenar",
@@ -155,7 +188,18 @@
   {
     "Name": "Dorrath_Metals_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_field_medical_supplies",
+      "Make_navigation_computer",
+      "Make_thruster_propellant",
+      "Make_prototype_water_purifier",
+      "Make_standard_cryogenic_valve",
+      "Make_heavy_duty_cargo_restraint_set",
+      "Make_precision_inertial_reference_unit",
+      "Make_prototype_infrared_detector",
+      "Make_standard_voltage_converter",
+      "Make_heavy_duty_thruster_control_valve",
+      "Make_precision_ore_sorting_sensor"
     ],
     "Facility": "Dorrath Metals Works",
     "System": "Paragon",
@@ -199,7 +243,16 @@
   {
     "Name": "Hera_Mineral_Processing_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_standard_atmosphere_filter",
+      "Make_heavy_duty_thermal_radiator",
+      "Make_precision_propellant_feed_pump",
+      "Make_prototype_cargo_lift_actuator",
+      "Make_standard_navigation_beacon_receiver",
+      "Make_heavy_duty_antenna_gimbal",
+      "Make_precision_power_bus_coupler",
+      "Make_prototype_gyroscope_assembly",
+      "Make_standard_refinery_crucible"
     ],
     "Facility": "Hera Mineral Processing Works",
     "System": "Thralis",
@@ -306,7 +359,17 @@
   {
     "Name": "Kalon_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_food",
+      "Make_prototype_humidity_separator",
+      "Make_standard_propellant_feed_pump",
+      "Make_heavy_duty_cargo_lift_actuator",
+      "Make_precision_star_tracker",
+      "Make_prototype_radio_receiver_module",
+      "Make_standard_power_bus_coupler",
+      "Make_heavy_duty_gyroscope_assembly",
+      "Make_precision_conveyor_drive",
+      "Make_Ghost_Navigation_Charts"
     ],
     "Facility": "Kalon Materials Works",
     "System": "Solus",
@@ -371,7 +434,18 @@
   {
     "Name": "Silessia_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_precision_humidity_separator",
+      "Make_prototype_cryogenic_valve",
+      "Make_standard_cargo_lift_actuator",
+      "Make_heavy_duty_star_tracker",
+      "Make_precision_radio_receiver_module",
+      "Make_prototype_voltage_converter",
+      "Make_standard_gyroscope_assembly",
+      "Make_heavy_duty_conveyor_drive",
+      "Make_Cipher_Relays",
+      "Make_Restricted_Memory_Crystals",
+      "Make_Dust"
     ],
     "Facility": "Silessia Materials Works",
     "System": "Silessia",
@@ -415,7 +489,17 @@
   {
     "Name": "Tal_Amin_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_carbon_composite",
+      "Make_heavy_duty_carbon_dioxide_scrubber",
+      "Make_precision_heat_exchanger_core",
+      "Make_prototype_pressure_relief_valve",
+      "Make_standard_landing_gear_damper",
+      "Make_heavy_duty_transponder_module",
+      "Make_precision_signal_processor",
+      "Make_prototype_reactor_control_relay",
+      "Make_standard_machine_tool_spindle",
+      "Make_heavy_duty_survey_drill_head"
     ],
     "Facility": "Tal Amin Materials Works",
     "System": "Haiche",
@@ -459,7 +543,15 @@
   {
     "Name": "Renser_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_heavy_duty_humidity_separator",
+      "Make_precision_cryogenic_valve",
+      "Make_prototype_cargo_restraint_set",
+      "Make_standard_star_tracker",
+      "Make_heavy_duty_radio_receiver_module",
+      "Make_precision_voltage_converter",
+      "Make_prototype_thruster_control_valve",
+      "Make_standard_conveyor_drive"
     ],
     "Facility": "Renser Materials Works",
     "System": "Renser",
@@ -503,7 +595,17 @@
   {
     "Name": "Loris_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_shield_components",
+      "Make_prototype_oxygen_regulator",
+      "Make_standard_thermal_insulation_panel",
+      "Make_heavy_duty_docking_collar_gasket",
+      "Make_precision_landing_gear_bearing",
+      "Make_prototype_optical_sensor_array",
+      "Make_standard_circuit_breaker_bank",
+      "Make_heavy_duty_flux_sensor",
+      "Make_precision_ore_sampler",
+      "Make_prototype_hull_inspection_scanner"
     ],
     "Facility": "Loris Materials Works",
     "System": "Loris",
@@ -547,7 +649,16 @@
   {
     "Name": "Aram_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_engine_assembly",
+      "Make_precision_water_purifier",
+      "Make_prototype_thermal_insulation_panel",
+      "Make_standard_cargo_restraint_set",
+      "Make_heavy_duty_inertial_reference_unit",
+      "Make_precision_infrared_detector",
+      "Make_prototype_circuit_breaker_bank",
+      "Make_standard_thruster_control_valve",
+      "Make_heavy_duty_ore_sorting_sensor"
     ],
     "Facility": "Aram Materials Works",
     "System": "Ostara",
@@ -591,7 +702,17 @@
   {
     "Name": "Kolchev_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_sensor_assembly",
+      "Make_heavy_duty_oxygen_regulator",
+      "Make_precision_coolant_pump",
+      "Make_prototype_vacuum_seal_kit",
+      "Make_standard_landing_gear_bearing",
+      "Make_heavy_duty_optical_sensor_array",
+      "Make_precision_fiber_data_harness",
+      "Make_prototype_battery_cell_pack",
+      "Make_standard_ore_sampler",
+      "Make_heavy_duty_hull_inspection_scanner"
     ],
     "Facility": "Kolchev Materials Works",
     "System": "Kolchev",
@@ -635,7 +756,17 @@
   {
     "Name": "Adantar_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_medical_supplies",
+      "Make_precision_oxygen_regulator",
+      "Make_prototype_coolant_pump",
+      "Make_standard_docking_collar_gasket",
+      "Make_heavy_duty_landing_gear_bearing",
+      "Make_precision_optical_sensor_array",
+      "Make_prototype_fiber_data_harness",
+      "Make_standard_flux_sensor",
+      "Make_heavy_duty_ore_sampler",
+      "Make_precision_hull_inspection_scanner"
     ],
     "Facility": "Adantar Materials Works",
     "System": "Korius",
@@ -679,7 +810,15 @@
   {
     "Name": "Tarsus_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_standard_thermal_radiator",
+      "Make_heavy_duty_propellant_feed_pump",
+      "Make_precision_cargo_lift_actuator",
+      "Make_prototype_star_tracker",
+      "Make_standard_antenna_gimbal",
+      "Make_heavy_duty_power_bus_coupler",
+      "Make_precision_gyroscope_assembly",
+      "Make_prototype_conveyor_drive"
     ],
     "Facility": "Tarsus Materials Works",
     "System": "Tarsus",
@@ -744,7 +883,18 @@
   {
     "Name": "Nergal_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_military_spare_parts",
+      "Make_heavy_duty_water_purifier",
+      "Make_precision_thermal_insulation_panel",
+      "Make_prototype_docking_collar_gasket",
+      "Make_standard_inertial_reference_unit",
+      "Make_heavy_duty_infrared_detector",
+      "Make_precision_circuit_breaker_bank",
+      "Make_prototype_flux_sensor",
+      "Make_standard_ore_sorting_sensor",
+      "Make_Unregistered_Survey_Cores",
+      "Make_Ketracel_White"
     ],
     "Facility": "Nergal Materials Works",
     "System": "Nephrys",
@@ -788,7 +938,16 @@
   {
     "Name": "Radix_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_finished_electronics",
+      "Make_standard_humidity_separator",
+      "Make_heavy_duty_cryogenic_valve",
+      "Make_precision_cargo_restraint_set",
+      "Make_prototype_inertial_reference_unit",
+      "Make_standard_radio_receiver_module",
+      "Make_heavy_duty_voltage_converter",
+      "Make_precision_thruster_control_valve",
+      "Make_prototype_ore_sorting_sensor"
     ],
     "Facility": "Radix Materials Works",
     "System": "Radix",
@@ -832,7 +991,17 @@
   {
     "Name": "Ramek_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_life_support_supplies",
+      "Make_precision_carbon_dioxide_scrubber",
+      "Make_prototype_heat_exchanger_core",
+      "Make_standard_vacuum_seal_kit",
+      "Make_heavy_duty_landing_gear_damper",
+      "Make_precision_transponder_module",
+      "Make_prototype_signal_processor",
+      "Make_standard_battery_cell_pack",
+      "Make_heavy_duty_machine_tool_spindle",
+      "Make_precision_survey_drill_head"
     ],
     "Facility": "Ramek Materials Works",
     "System": "Isham",
@@ -876,7 +1045,16 @@
   {
     "Name": "Marak_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_military_rations",
+      "Make_standard_water_purifier",
+      "Make_heavy_duty_thermal_insulation_panel",
+      "Make_precision_docking_collar_gasket",
+      "Make_prototype_landing_gear_bearing",
+      "Make_standard_infrared_detector",
+      "Make_heavy_duty_circuit_breaker_bank",
+      "Make_precision_flux_sensor",
+      "Make_prototype_ore_sampler"
     ],
     "Facility": "Marak Materials Works",
     "System": "Marak",
@@ -920,7 +1098,17 @@
   {
     "Name": "Garrison_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_standard_carbon_dioxide_scrubber",
+      "Make_heavy_duty_heat_exchanger_core",
+      "Make_precision_pressure_relief_valve",
+      "Make_prototype_bay_door_motor",
+      "Make_standard_transponder_module",
+      "Make_heavy_duty_signal_processor",
+      "Make_precision_reactor_control_relay",
+      "Make_prototype_servo_controller",
+      "Make_standard_survey_drill_head",
+      "Make_Colorado_Tegridy"
     ],
     "Facility": "Garrison Materials Works",
     "System": "Garrison",
@@ -964,7 +1152,16 @@
   {
     "Name": "Volante_Materials_Works",
     "AdditionalRecipes": [
-      "Make_mining_drone"
+      "Make_mining_drone",
+      "Make_heavy_duty_atmosphere_filter",
+      "Make_precision_thermal_radiator",
+      "Make_prototype_propellant_feed_pump",
+      "Make_standard_bay_door_motor",
+      "Make_heavy_duty_navigation_beacon_receiver",
+      "Make_precision_antenna_gimbal",
+      "Make_prototype_power_bus_coupler",
+      "Make_standard_servo_controller",
+      "Make_heavy_duty_refinery_crucible"
     ],
     "Facility": "Volante Materials Works",
     "System": "Trocanther",
@@ -1044,7 +1241,17 @@
     "InstallationFeeCredits": 25,
     "PerRunFeeCredits": 2,
     "MaximumPlayerRuns": 10000,
-    "AdditionalRecipes": [],
+    "AdditionalRecipes": [
+      "Make_prototype_carbon_dioxide_scrubber",
+      "Make_standard_coolant_pump",
+      "Make_heavy_duty_vacuum_seal_kit",
+      "Make_precision_landing_gear_damper",
+      "Make_prototype_transponder_module",
+      "Make_standard_fiber_data_harness",
+      "Make_heavy_duty_battery_cell_pack",
+      "Make_precision_machine_tool_spindle",
+      "Make_prototype_survey_drill_head"
+    ],
     "FacilityType": "Shipyard"
   },
   {

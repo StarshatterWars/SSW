@@ -203,5 +203,626 @@
         "NextMissionIds": []
       }
     ]
+  },
+  {
+    "Id": "MarakanBorderWar",
+    "Title": "The Other Side of the Line",
+    "Empire": "Marakan",
+    "Description": "Opposed-side story assignments. Campaign numbers are narrative references; agents own acceptance and progression.",
+    "Steps": [
+      {
+        "MissionId": 910041,
+        "Title": "Aram: Watch on the Border",
+        "AgentId": "MarakanStory41",
+        "Issuer": "Cmdr. Darrek Sorn",
+        "System": "Ostara",
+        "Region": "Aram",
+        "Brief": "A missing Alliance reconnaissance ship has brought the carrier Archon into Aram. Hegemony Command considers this an armed incursion. Screen Orten while identifying and driving off the incoming Alliance patrol. Do not pursue the carrier beyond the border picket.",
+        "Chapter": "Chapter 1",
+        "NextMissionIds": [
+          910042
+        ]
+      },
+      {
+        "MissionId": 910042,
+        "Title": "Loris: Wings of Iron",
+        "AgentId": "MarakanStory42",
+        "Issuer": "Cmdr. Varesh Sorn",
+        "System": "Loris",
+        "Region": "Loris",
+        "Brief": "Alliance strike package Condor is closing on the supply freighter Ascentia. Those holds sustain the Loris garrison. Break the bomber attack and keep the freighter intact; the Alliance escort is a secondary threat.",
+        "Chapter": "Chapter 2",
+        "NextMissionIds": [
+          910043
+        ]
+      },
+      {
+        "MissionId": 910043,
+        "Title": "Tantalus: Hold the Line",
+        "AgentId": "MarakanStory43",
+        "Issuer": "Cmdr. Korran Sorn",
+        "System": "Haiche",
+        "Region": "Tantalus",
+        "Brief": "An Alliance strike is crossing the line above the Tantalus mining works. From the Hegemony side this is a raid on a working supply installation. Protect the station and intercept Alpha before its ordnance reaches the refinery.",
+        "Chapter": "Chapter 3",
+        "NextMissionIds": [
+          910044
+        ]
+      },
+      {
+        "MissionId": 910044,
+        "Title": "Lornas: Deny the Hammer",
+        "AgentId": "MarakanStory44",
+        "Issuer": "Cmdr. Jarek Sorn",
+        "System": "Renser",
+        "Region": "Renser",
+        "Brief": "The carrier Archon has launched Mustang against our destroyer Sidus. Keep the strike fighters off the ship while Sidus withdraws under Orinoco's screen. Hegemony command needs this force intact for the Renser defense.",
+        "Chapter": "Chapter 4",
+        "NextMissionIds": [
+          910045
+        ]
+      },
+      {
+        "MissionId": 910045,
+        "Title": "Shadow Canyon: Unbroken Shield",
+        "AgentId": "MarakanStory45",
+        "Issuer": "Cmdr. Sareth Sorn",
+        "System": "Radix",
+        "Region": "Shadow Canyon",
+        "Brief": "Alliance flight Echo is attempting to suppress the defenses of Shadow Canyon. Hold the starbase perimeter, intercept the attackers and preserve the landing corridor for our returning crews.",
+        "Chapter": "Chapter 5",
+        "NextMissionIds": [
+          910046
+        ]
+      },
+      {
+        "MissionId": 910046,
+        "Title": "Paragon: Turn the Hunt",
+        "AgentId": "MarakanStory46",
+        "Issuer": "Cmdr. Valek Sorn",
+        "System": "Paragon",
+        "Region": "Paragon",
+        "Brief": "Alliance cruisers Wraith and Nemesis are hunting our Paragon screen. Take command of the counterattack, protect Parthan and force the leading cruiser out of the approach lane. Neutral shipping is to be left alone.",
+        "Chapter": "Chapter 6",
+        "NextMissionIds": [
+          910047
+        ]
+      },
+      {
+        "MissionId": 910047,
+        "Title": "Korius: The Other Sky",
+        "AgentId": "MarakanStory47",
+        "Issuer": "Cmdr. Toren Sorn",
+        "System": "Korius",
+        "Region": "Korius",
+        "Brief": "Antares has committed a carrier group over Korius. Hegemony liaison command orders a fighter screen around Goliath while the allied Dantari force reorganizes. Contain the Alliance escort; the opposing carrier is not your primary target.",
+        "Chapter": "Chapter 7",
+        "NextMissionIds": []
+      }
+    ]
+  },
+  {
+    "Id": "DantariHighland",
+    "Title": "Highland: A Separatist Account",
+    "Empire": "Dantari",
+    "Description": "Opposed-side story assignments. Campaign numbers are narrative references; agents own acceptance and progression.",
+    "Steps": [
+      {
+        "MissionId": 910051,
+        "Title": "Solus: Hold the Blockade",
+        "AgentId": "DantariStory51",
+        "Issuer": "Cmdr. Selen Arat",
+        "System": "Solus",
+        "Region": "Solus",
+        "Brief": "Alliance forces have answered the Directorate appeal and Archon is entering the courier corridor. To the Separatist fleet this is foreign intervention. Support our blockade patrol and intercept the carrier's advancing fighter screen.",
+        "Chapter": "Chapter 1",
+        "NextMissionIds": [
+          910052
+        ]
+      },
+      {
+        "MissionId": 910052,
+        "Title": "Solus: The Undelivered Order",
+        "AgentId": "DantariStory52",
+        "Issuer": "Cmdr. Nera Sol",
+        "System": "Solus",
+        "Region": "Solus",
+        "Brief": "A Directorate courier carries orders intended to consolidate the failed coup's aftermath. Stop the military dispatch before it reaches the Alliance liaison. Expect Vanguard to protect the courier.",
+        "Chapter": "Chapter 2",
+        "NextMissionIds": [
+          910053
+        ]
+      },
+      {
+        "MissionId": 910053,
+        "Title": "Kalon: Challenge at Harmony",
+        "AgentId": "DantariStory53",
+        "Issuer": "Cmdr. Thalen Voss",
+        "System": "Solus",
+        "Region": "Kalon",
+        "Brief": "The Directorate is using Harmony Station to stage Alliance support. Escort Kalon Strike into the approach corridor and break the Avengers screen. Civilian berths are outside your engagement orders.",
+        "Chapter": "Chapter 3",
+        "NextMissionIds": [
+          910054
+        ]
+      },
+      {
+        "MissionId": 910054,
+        "Title": "Trellis: Close the Corridor",
+        "AgentId": "DantariStory54",
+        "Issuer": "Cmdr. Kira Sen",
+        "System": "Solus",
+        "Region": "Trellis",
+        "Brief": "Alliance fighters have opened a relief corridor at Trellis. Our command claims the same route is moving Directorate war supplies. Interdict the armed escort while our strike group inspects the shipping lane.",
+        "Chapter": "Chapter 4",
+        "NextMissionIds": [
+          910055
+        ]
+      },
+      {
+        "MissionId": 910055,
+        "Title": "Renser: Eyes Beyond the Border",
+        "AgentId": "DantariStory55",
+        "Issuer": "Cmdr. Oren Tal",
+        "System": "Renser",
+        "Region": "Renser",
+        "Brief": "Our Hegemony liaison reports an Alliance picket watching the Renser buildup. Cover the scouts as they recover their sensor records and disengage. This patrol is intelligence work, not an invasion of the picket line.",
+        "Chapter": "Chapter 5",
+        "NextMissionIds": [
+          910056
+        ]
+      },
+      {
+        "MissionId": 910056,
+        "Title": "Meridian: The Observatory Screen",
+        "AgentId": "DantariStory56",
+        "Issuer": "Cmdr. Mira Kel",
+        "System": "Solus",
+        "Region": "Solus",
+        "Brief": "The Directorate observatory at Tal Vesta is feeding tracking data to Alliance ships. Kendra and Pelorat are exposed to an approaching relief flight. Break its fighter screen and protect the Separatist ships; avoid the civilian research structures.",
+        "Chapter": "Chapter 6",
+        "NextMissionIds": [
+          910057
+        ]
+      },
+      {
+        "MissionId": 910057,
+        "Title": "Solus: Words and Weapons",
+        "AgentId": "DantariStory57",
+        "Issuer": "Cmdr. Reth Anor",
+        "System": "Solus",
+        "Region": "Solus",
+        "Brief": "Accusations over Renser have hardened both fleets. Hold a defensive cordon around the liaison interceptors while the Alliance moves Stalwart into the area. Defeat the advance fighters and preserve our evidence relay.",
+        "Chapter": "Chapter 7",
+        "NextMissionIds": [
+          910058
+        ]
+      },
+      {
+        "MissionId": 910058,
+        "Title": "Trellis: A Dangerous Mandate",
+        "AgentId": "DantariStory58",
+        "Issuer": "Cmdr. Dara Vey",
+        "System": "Solus",
+        "Region": "Trellis",
+        "Brief": "The Senate resolution gives the Alliance a mandate we do not recognize. Escort our inspection group through the Trellis approach and challenge the armed escort. The relief transport itself is not a combat objective.",
+        "Chapter": "Chapter 8",
+        "NextMissionIds": [
+          910059
+        ]
+      },
+      {
+        "MissionId": 910059,
+        "Title": "Jalah: Bring Them Home",
+        "AgentId": "DantariStory59",
+        "Issuer": "Cmdr. Tovan Ser",
+        "System": "Solus",
+        "Region": "Jalah",
+        "Brief": "The fleet is falling back to Jalah. Rear Guard must hold long enough for the scattered crews to return. Protect it from the Alliance fighter screen and keep the withdrawal route open.",
+        "Chapter": "Chapter 9",
+        "NextMissionIds": [
+          910060
+        ]
+      },
+      {
+        "MissionId": 910060,
+        "Title": "Khaital: The Price of Intervention",
+        "AgentId": "DantariStory60",
+        "Issuer": "Cmdr. Lysa Dant",
+        "System": "Renser",
+        "Region": "Lornas",
+        "Brief": "Archon and Stalwart are pressing into Khaital. The Dantari liaison flight must protect Ironhelm and Mattock while the defensive force reforms. Defeat the carrier's fighter screen without abandoning the withdrawal line.",
+        "Chapter": "Chapter 10",
+        "NextMissionIds": []
+      }
+    ]
+  },
+  {
+    "Id": "MarakanCampaign2",
+    "Title": "Hegemony Campaign 2",
+    "Empire": "Marakan",
+    "Description": "Marakan account of the campaign, issued through local officers. The campaign number is a narrative reference; this does not replace the Terellian campaign.",
+    "Steps": [
+      {
+        "MissionId": 910207,
+        "Title": "Solus: Hold the Cordon",
+        "AgentId": "MarakanCampaign2Officer207",
+        "Issuer": "Cmdr. Toren Dhal",
+        "System": "Solus",
+        "Region": "Solus",
+        "Brief": "Archon is advancing into Solus behind an Alliance fighter screen. Protect Blockade Patrol and intercept Avengers before the cordon is scattered. The carrier itself is not your flight's objective.",
+        "Chapter": "Chapter 1",
+        "NextMissionIds": [
+          910201
+        ]
+      },
+      {
+        "MissionId": 910201,
+        "Title": "Solus: Seal the Dispatch",
+        "AgentId": "MarakanCampaign2Officer201",
+        "Issuer": "Cmdr. Darrek Dhal",
+        "System": "Solus",
+        "Region": "Solus",
+        "Brief": "A Directorate courier is trying to carry emergency orders through our allied patrol. Escort Separatist Pursuit into position and break Vanguard's escort screen. Preserve the liaison ships; do not chase the courier into civilian traffic.",
+        "Chapter": "Chapter 2",
+        "NextMissionIds": [
+          910206
+        ]
+      },
+      {
+        "MissionId": 910206,
+        "Title": "Kalon: Challenge the Screen",
+        "AgentId": "MarakanCampaign2Officer206",
+        "Issuer": "Cmdr. Valek Dhal",
+        "System": "Solus",
+        "Region": "Kalon",
+        "Brief": "Harmony Station has become an anchor for Alliance support. Escort Kalon Strike into the approach lane, defeat Avengers and preserve the strike group. Civilian berths remain protected.",
+        "Chapter": "Chapter 3",
+        "NextMissionIds": [
+          910210
+        ]
+      },
+      {
+        "MissionId": 910210,
+        "Title": "Trellis: Close the Breach",
+        "AgentId": "MarakanCampaign2Officer210",
+        "Issuer": "Cmdr. Korran Keth",
+        "System": "Solus",
+        "Region": "Trellis",
+        "Brief": "The Alliance has opened a passage through the Trellis approaches. Support our patrol while it reforms the cordon, and defeat Avengers before they can widen the breach. Neutral vessels are to be left clear.",
+        "Chapter": "Chapter 4",
+        "NextMissionIds": [
+          910202
+        ]
+      },
+      {
+        "MissionId": 910202,
+        "Title": "Renser: Forward Eyes",
+        "AgentId": "MarakanCampaign2Officer202",
+        "Issuer": "Cmdr. Varesh Dhal",
+        "System": "Renser",
+        "Region": "Renser",
+        "Brief": "Our scouts have detected an Alliance picket watching the Renser approaches. Protect Hegemony Scouts while their records are relayed to command. Intercept Vanguard before it can fix our withdrawal vector.",
+        "Chapter": "Chapter 5",
+        "NextMissionIds": [
+          910209
+        ]
+      },
+      {
+        "MissionId": 910209,
+        "Title": "Meridian: Rescue the Screen",
+        "AgentId": "MarakanCampaign2Officer209",
+        "Issuer": "Cmdr. Varesh Keth",
+        "System": "Solus",
+        "Region": "Meridian",
+        "Brief": "Kendra is exposed near the Tal Vesta observatory as Alliance relief fighters arrive. Cover the ship and defeat Vanguard. Your orders concern the armed escort, not the civilian research complex.",
+        "Chapter": "Chapter 6",
+        "NextMissionIds": [
+          910203
+        ]
+      },
+      {
+        "MissionId": 910203,
+        "Title": "Solus: Shield the Liaison",
+        "AgentId": "MarakanCampaign2Officer203",
+        "Issuer": "Cmdr. Korran Dhal",
+        "System": "Solus",
+        "Region": "Solus",
+        "Brief": "The accusations over Renser are bringing Stalwart forward. Our liaison interceptors must remain on station long enough to confirm the fleet movement. Screen them against Vanguard and keep a route clear for recovery.",
+        "Chapter": "Chapter 7",
+        "NextMissionIds": [
+          910204
+        ]
+      },
+      {
+        "MissionId": 910204,
+        "Title": "Trellis: Armed Passage",
+        "AgentId": "MarakanCampaign2Officer204",
+        "Issuer": "Cmdr. Jarek Dhal",
+        "System": "Solus",
+        "Region": "Trellis",
+        "Brief": "Alliance fighters are escorting a transport through the Trellis cordon. Protect our inspection flight and challenge the armed escort. Relief passengers and civilian crews are outside your engagement orders.",
+        "Chapter": "Chapter 8",
+        "NextMissionIds": [
+          910205
+        ]
+      },
+      {
+        "MissionId": 910205,
+        "Title": "Jalah: Cover the Withdrawal",
+        "AgentId": "MarakanCampaign2Officer205",
+        "Issuer": "Cmdr. Sareth Dhal",
+        "System": "Solus",
+        "Region": "Jalah",
+        "Brief": "The Dantari force is falling back toward Jalah. Hegemony liaison command has committed your flight to cover Separatist Rear Guard. Stop Vanguard from disrupting the withdrawal and bring our crews home.",
+        "Chapter": "Chapter 9",
+        "NextMissionIds": [
+          910208
+        ]
+      },
+      {
+        "MissionId": 910208,
+        "Title": "Khaital: Ironhelm Relief",
+        "AgentId": "MarakanCampaign2Officer208",
+        "Issuer": "Cmdr. Darrek Keth",
+        "System": "Renser",
+        "Region": "Khaital",
+        "Brief": "Archon and Stalwart are pressing our Khaital line. Ironhelm needs time to regroup under Mattock's cover. Break Vanguard's advance and keep the defensive group intact.",
+        "Chapter": "Chapter 10",
+        "NextMissionIds": []
+      }
+    ]
+  },
+  {
+    "Id": "MarakanCampaign3",
+    "Title": "Hegemony Campaign 3",
+    "Empire": "Marakan",
+    "Description": "Marakan account of the campaign, issued through local officers. The campaign number is a narrative reference; this does not replace the Terellian campaign.",
+    "Steps": [
+      {
+        "MissionId": 910211,
+        "Title": "Janek: Forward Spear",
+        "AgentId": "MarakanCampaign3Officer211",
+        "Issuer": "Cmdr. Jarek Keth",
+        "System": "Janus",
+        "Region": "Janek",
+        "Brief": "The Janek forward screen is exposed while our spearhead reforms. Defend the picket, destroy the Alliance interception flight and recover before our carriers shift station. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Vanguard and recover to your carrier.",
+        "Chapter": "Chapter 1",
+        "NextMissionIds": [
+          910212
+        ]
+      },
+      {
+        "MissionId": 910212,
+        "Title": "Borova: Hold the Approach",
+        "AgentId": "MarakanCampaign3Officer212",
+        "Issuer": "Cmdr. Sareth Keth",
+        "System": "Borova",
+        "Region": "Borova",
+        "Brief": "Borova is the hinge of the advance. Hold the approach against an Alliance counterattack while the forward wing refuels; preserve the assigned defense flight. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Pursuit and recover to your carrier.",
+        "Chapter": "Chapter 2",
+        "NextMissionIds": [
+          910213
+        ]
+      },
+      {
+        "MissionId": 910213,
+        "Title": "Borova: Turn the Counterstroke",
+        "AgentId": "MarakanCampaign3Officer213",
+        "Issuer": "Cmdr. Valek Keth",
+        "System": "Borova",
+        "Region": "Borova",
+        "Brief": "Alliance scouts have located our Borova staging lane. Break the counterstroke and protect the ships forming the next sortie. Do not chase beyond the recovery corridor. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Pursuit and recover to your carrier.",
+        "Chapter": "Chapter 3",
+        "NextMissionIds": [
+          910214
+        ]
+      },
+      {
+        "MissionId": 910214,
+        "Title": "Borova: Diplomatic Cordon",
+        "AgentId": "MarakanCampaign3Officer214",
+        "Issuer": "Cmdr. Toren Keth",
+        "System": "Borova",
+        "Region": "Borova",
+        "Brief": "Diplomatic traffic is crossing the contested Borova perimeter. Keep armed Alliance interceptors away from the protected liaison unit. Civilian traffic is not a target. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Interceptors and recover to your carrier.",
+        "Chapter": "Chapter 4",
+        "NextMissionIds": [
+          910215
+        ]
+      },
+      {
+        "MissionId": 910215,
+        "Title": "Pallas: Hold the Spearhead",
+        "AgentId": "MarakanCampaign3Officer215",
+        "Issuer": "Cmdr. Darrek Vorn",
+        "System": "Athenar",
+        "Region": "Pallas",
+        "Brief": "The Pallas spearhead is isolated from its escorts. Clear the Alliance fighter screen, keep the marked Hegemony unit alive and recover to the carrier. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Fighters and recover to your carrier.",
+        "Chapter": "Chapter 5",
+        "NextMissionIds": [
+          910216
+        ]
+      },
+      {
+        "MissionId": 910216,
+        "Title": "Borova: Rearguard Vigil",
+        "AgentId": "MarakanCampaign3Officer216",
+        "Issuer": "Cmdr. Varesh Vorn",
+        "System": "Borova",
+        "Region": "Borova",
+        "Brief": "A rear guard is buying time for the Borova withdrawal. Intercept the pursuing Alliance flights and prevent them from overrunning the protected element. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Rear Guard and recover to your carrier.",
+        "Chapter": "Chapter 6",
+        "NextMissionIds": [
+          910217
+        ]
+      },
+      {
+        "MissionId": 910217,
+        "Title": "Silessia: A Clear Corridor",
+        "AgentId": "MarakanCampaign3Officer217",
+        "Issuer": "Cmdr. Korran Vorn",
+        "System": "Silessia",
+        "Region": "Silessia",
+        "Brief": "Our Silessia passage is threatened by Alliance reconnaissance flights. Clear the corridor while the marked unit crosses, then return rather than pursuing into another sector. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Interceptors and recover to your carrier.",
+        "Chapter": "Chapter 7",
+        "NextMissionIds": [
+          910218
+        ]
+      },
+      {
+        "MissionId": 910218,
+        "Title": "Vesta: No Safe Harbor",
+        "AgentId": "MarakanCampaign3Officer218",
+        "Issuer": "Cmdr. Jarek Vorn",
+        "System": "Silessia",
+        "Region": "Vesta",
+        "Brief": "Brotherhood raiders are exploiting the Vesta withdrawal. Defeat the pirate screen and protect the assigned Hegemony unit. This is a recovery action, not an attack on civilian shipping. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Supply Tender and recover to your carrier.",
+        "Chapter": "Chapter 8",
+        "NextMissionIds": []
+      }
+    ]
+  },
+  {
+    "Id": "MarakanCampaign4",
+    "Title": "Hegemony Campaign 4",
+    "Empire": "Marakan",
+    "Description": "Marakan account of the campaign, issued through local officers. The campaign number is a narrative reference; this does not replace the Terellian campaign.",
+    "Steps": [
+      {
+        "MissionId": 910219,
+        "Title": "Aram: Outpost Relief",
+        "AgentId": "MarakanCampaign4Officer219",
+        "Issuer": "Cmdr. Sareth Vorn",
+        "System": "Ostara",
+        "Region": "Aram",
+        "Brief": "Aram outpost requests immediate relief. Protect its local defense force and stop the Alliance interception flight before it can pin down the relief ships. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Outpost Patrol and recover to your carrier.",
+        "Chapter": "Chapter 1",
+        "NextMissionIds": [
+          910220
+        ]
+      },
+      {
+        "MissionId": 910220,
+        "Title": "Tarsus: The Ambassador's Wake",
+        "AgentId": "MarakanCampaign4Officer220",
+        "Issuer": "Cmdr. Valek Vorn",
+        "System": "Tarsus",
+        "Region": "Tarsus",
+        "Brief": "The ambassador route through Tarsus is compromised. Defend the liaison element against armed interceptors and keep the recovery lane clear. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Rogue Interceptors and recover to your carrier.",
+        "Chapter": "Chapter 2",
+        "NextMissionIds": [
+          910221
+        ]
+      },
+      {
+        "MissionId": 910221,
+        "Title": "Tarsus: An Unwelcome Ally",
+        "AgentId": "MarakanCampaign4Officer221",
+        "Issuer": "Cmdr. Toren Vorn",
+        "System": "Tarsus",
+        "Region": "Tarsus",
+        "Brief": "Unknown Zolon craft have entered the Tarsus engagement. Prioritize the alien attackers threatening the protected unit. Do not treat this as another routine Alliance patrol. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Supply Tender and recover to your carrier.",
+        "Chapter": "Chapter 3",
+        "NextMissionIds": [
+          910222
+        ]
+      },
+      {
+        "MissionId": 910222,
+        "Title": "Loris: Lifeline Under Fire",
+        "AgentId": "MarakanCampaign4Officer222",
+        "Issuer": "Cmdr. Darrek Tarek",
+        "System": "Loris",
+        "Region": "Loris",
+        "Brief": "Loris supply tenders are exposed during the retreat. Escort the protected tender through the marked lane and destroy Brotherhood raiders before they reach it. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Supply Tender and recover to your carrier.",
+        "Chapter": "Chapter 4",
+        "NextMissionIds": [
+          910223
+        ]
+      },
+      {
+        "MissionId": 910223,
+        "Title": "Kolchev: Preserve the Picket",
+        "AgentId": "MarakanCampaign4Officer223",
+        "Issuer": "Cmdr. Varesh Tarek",
+        "System": "Kolchev",
+        "Region": "Kolchev",
+        "Brief": "The Kolchev picket must survive to warn the next defensive line. Defend the marked interceptors, defeat the Alliance screen and recover without sacrificing the picket. Your assigned craft is Raptor. Destroy the marked hostile flights, preserve Hegemony Interceptors and recover to your carrier.",
+        "Chapter": "Chapter 5",
+        "NextMissionIds": []
+      }
+    ]
+  },
+  {
+    "Id": "MarakanCampaign5",
+    "Title": "Hegemony Campaign 5",
+    "Empire": "Marakan",
+    "Description": "A Hegemony campaign against the Zolon threat: defend recovery lanes, protect evacuations and preserve the homeward corridor. Zolons are not a playable empire.",
+    "Steps": [
+      {
+        "MissionId": 910224,
+        "Title": "Garrison: Night Watch",
+        "AgentId": "MarakanCampaign5Officer224",
+        "Issuer": "Cmdr. Korran Tarek",
+        "System": "Garrison",
+        "Region": "Garrison",
+        "Brief": "Zolon probes have appeared near Garrison. Defend the Hegemony picket and destroy the alien scouts before they fix the recovery route. The Zolons are the enemy; you remain a Hegemony pilot. Your assigned craft is Avenger. Destroy the marked hostile flights, preserve Hegemony Picket and recover to your carrier.",
+        "Chapter": "Chapter 1",
+        "NextMissionIds": [
+          910225
+        ]
+      },
+      {
+        "MissionId": 910225,
+        "Title": "Radix: Crossroads Guard",
+        "AgentId": "MarakanCampaign5Officer225",
+        "Issuer": "Cmdr. Jarek Tarek",
+        "System": "Radix",
+        "Region": "Radix",
+        "Brief": "Zolon strike craft are crossing Radix. Protect the interceptor screen holding the junction and stop the alien attack before it cuts our withdrawal route. Your assigned craft is Avenger. Destroy the marked hostile flights, preserve Hegemony Interceptors and recover to your carrier.",
+        "Chapter": "Chapter 2",
+        "NextMissionIds": [
+          910226
+        ]
+      },
+      {
+        "MissionId": 910226,
+        "Title": "Ramek: Keep the Bay Open",
+        "AgentId": "MarakanCampaign5Officer226",
+        "Issuer": "Cmdr. Sareth Tarek",
+        "System": "Isham",
+        "Region": "Ramek",
+        "Brief": "Alien attackers are closing on Ramek. Keep the defense wing alive and the bay approach clear so damaged crews can recover. Break the Zolon attack and return to the carrier. Your assigned craft is Avenger. Destroy the marked hostile flights, preserve Ramek Defense Wing and recover to your carrier.",
+        "Chapter": "Chapter 3",
+        "NextMissionIds": [
+          910227
+        ]
+      },
+      {
+        "MissionId": 910227,
+        "Title": "Garrison: Last Laboratory Guard",
+        "AgentId": "MarakanCampaign5Officer227",
+        "Issuer": "Cmdr. Valek Tarek",
+        "System": "Garrison",
+        "Region": "Garrison",
+        "Brief": "Zolon forces threaten Garrison Military Laboratory during the evacuation of its technical staff. Defend the facility and defeat the alien strike screen; no attack on neutral rescuers is authorized. Your assigned craft is Avenger. Destroy the marked hostile flights, preserve Garrison Military Laboratory and recover to your carrier.",
+        "Chapter": "Chapter 4",
+        "NextMissionIds": [
+          910228
+        ]
+      },
+      {
+        "MissionId": 910228,
+        "Title": "Volante: The Rear Guard",
+        "AgentId": "MarakanCampaign5Officer228",
+        "Issuer": "Cmdr. Toren Tarek",
+        "System": "Trocanther",
+        "Region": "Volante",
+        "Brief": "The Zolon pursuit has reached Volante. Protect the Hegemony rear guard, destroy the pursuing alien flights and preserve the final recovery corridor for surviving crews. Your assigned craft is Avenger. Destroy the marked hostile flights, preserve Hegemony Rear Guard and recover to your carrier.",
+        "Chapter": "Chapter 5",
+        "NextMissionIds": []
+      }
+    ]
   }
 ]

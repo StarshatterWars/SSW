@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "zrktWZiSOuo=",
+  "success": true,
+  "projectFilePath": "D:\\SSW\\Launcher.Tests\\LauncherRecoveryTests.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Carlo\\.nuget\\packages\\microsoft.web.webview2\\1.0.4314.35\\microsoft.web.webview2.1.0.4314.35.nupkg.sha512"
+  ],
+  "logs": []
+}

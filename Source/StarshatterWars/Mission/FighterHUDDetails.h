@@ -147,7 +147,7 @@ private:
     bool bAugmenterActive = false;
     FLinearColor TargetDisplayColor = FLinearColor::Yellow;
     FString HomeCarrierReadout;
-    TArray<FString> NavReadouts, MissileReadouts;
+    TArray<FString> NavReadouts, MissileReadouts, MissionReadouts;
     FString DefenseReadout;
     bool bDamagePreviewHovered=false;
     float DamagePreviewZoom=1.f;
