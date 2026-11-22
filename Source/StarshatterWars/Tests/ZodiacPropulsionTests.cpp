@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "Misc/Paths.h"
 #include "Engine/DataTable.h"
@@ -47,6 +48,7 @@ bool FZodiacPropulsionTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("All twelve RCS ports reach the runtime system"),Runtime.GetThruster()->GetNumThrusters(),12);
     const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     ON_SCOPE_EXIT {World->DestroyWorld(false);};
     UClass* Class=LoadClass<AZodiacShipActor>(nullptr,TEXT("/Game/Models/Zodiac/BP_Zodiac.BP_Zodiac_C"));
     if(!TestNotNull(TEXT("Saved Zodiac Blueprint"),Class))return false;

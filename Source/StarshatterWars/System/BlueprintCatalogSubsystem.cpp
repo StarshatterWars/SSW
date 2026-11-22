@@ -53,7 +53,7 @@ FGuid UBlueprintCatalogSubsystem::PurchaseLicense(FEconomyState& State, const FB
     const int64 Cost = Original ? Offer.OriginalPrice : Offer.CopyPrice;
     if (Offer.Recipe.IsNone() || Cost <= 0 || (!Original && Offer.CopyRuns <= 0)) return {};
     const FGuid Receipt = FGuid::NewGuid();
-    if (!FEconomyLedger::Pay(State, FEconomyLedger::Pilot(), TEXT("NPC blueprint publisher"), Cost, Receipt, TEXT("Blueprint purchase"))) return {};
+    if (!FEconomyLedger::Pay(State, FEconomyLedger::Pilot(), TEXT("NPC blueprint publisher"), Cost, Receipt, TEXT("Blueprint purchase"),ECommercePurpose::Purchase)) return {};
     const FGuid Blueprint = FEconomyLedger::GrantBlueprint(State, FEconomyLedger::Pilot(), Offer.Recipe, Original, Offer.CopyRuns);
     auto& PurchaseReceipt = State.Journal.Last(); PurchaseReceipt.Item = Offer.Recipe; PurchaseReceipt.Quantity = 1;
     PurchaseReceipt.UnitPrice = double(Cost); PurchaseReceipt.Reference = Blueprint;
@@ -220,7 +220,7 @@ FGuid UBlueprintCatalogSubsystem::BeginPlayerJob(const FSSWProductionFacility& S
     // Preserve nominal inputs: reversing a rounded discrete preview would apply efficiency twice.
     const FGuid Id = FEconomyLedger::QueueBlueprintJob(State, FEconomyLedger::Pilot(), FName(*Site.Facility), Quote.Input, Quote.Output,
         Blueprint, Runs, Quote.NominalMaterials, Quote.NominalProducts, Quote.NominalDuration);
-    if (!Id.IsValid() || (Quote.InstallationFee>0 && !FEconomyLedger::Pay(State,FEconomyLedger::Pilot(),TEXT("NPC facility services"),Quote.InstallationFee,Id,TEXT("Manufacturing installation"))) || !Players->SaveActivePlayerProgress())
+    if (!Id.IsValid() || (Quote.InstallationFee>0 && !FEconomyLedger::Pay(State,FEconomyLedger::Pilot(),TEXT("NPC facility services"),Quote.InstallationFee,Id,TEXT("Manufacturing installation"),ECommercePurpose::Service)) || !Players->SaveActivePlayerProgress())
     { Players->GetMutablePlayerInfo() = Before; Reason = INVTEXT("Could not save the job. No materials or licensed runs were consumed."); return {}; }
     Reason = INVTEXT("Manufacturing job installed. Output is delivered automatically."); return Id;
 }

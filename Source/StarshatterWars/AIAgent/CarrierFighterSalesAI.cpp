@@ -51,7 +51,7 @@ int64 Price(const FS_PlayerGameInfo& P,FName Design,int64 Normal)
         {double N=0;if(Pair.Value->TryGetNumber(N) && FMath::IsFinite(N) && N>0 && N<=1.e12 && N==FMath::FloorToDouble(N))Out.Add(FName(*Pair.Key),int64(N));}
         return Out;
     }();
-    if(CarrierFighterSalesAI::IsTrainingPilot(P))if(const auto* Value=Prices.Find(Design))return *Value;
+    if(CarrierFighterSalesAI::IsTrainingPilot(P))if(const auto* Value=Prices.Find(Design))return FMath::Min(*Value,Normal);
     return Normal;
 }
 bool RosterSquadron(const FCarrierFighterOffer& O,const FString& Name)

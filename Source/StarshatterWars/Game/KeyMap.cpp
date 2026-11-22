@@ -463,11 +463,7 @@ KeyMap::BuildDefaultKeyMap()
 	defmap[i++] = KeyMapEntry(KEY_EMCON_PLUS, VK_F10);
 
 	defmap[i++] = KeyMapEntry(KEY_EXIT, VK_ESCAPE);
-	defmap[i++] = KeyMapEntry(KEY_PAUSE, VK_PAUSE);
 	// defmap[i++] = KeyMapEntry(KEY_NEXT_VIEW,           VK_TAB);
-	defmap[i++] = KeyMapEntry(KEY_TIME_EXPAND, VK_DELETE);
-	defmap[i++] = KeyMapEntry(KEY_TIME_COMPRESS, VK_INSERT);
-	defmap[i++] = KeyMapEntry(KEY_TIME_SKIP, VK_INSERT, VK_SHIFT);
 
 	defmap[i++] = KeyMapEntry(KEY_CAM_BRIDGE, VK_F1);
 	defmap[i++] = KeyMapEntry(KEY_CAM_VIRT, VK_F1, VK_SHIFT);
@@ -600,7 +596,7 @@ KeyMap::LoadKeyMap(const char* filename, int max_keys)
 		ZeroMemory(alt_str, sizeof(alt_str));
 		ZeroMemory(joy_str, sizeof(joy_str));
 
-		sscanf(line, "%s %s %s %s", act_str, key_str, alt_str, joy_str);
+		sscanf_s(line, "%s %s %s %s", act_str, unsigned(sizeof(act_str)), key_str, unsigned(sizeof(key_str)), alt_str, unsigned(sizeof(alt_str)), joy_str, unsigned(sizeof(joy_str)));
 
 		act = GetKeyAction(act_str);
 		key = GetKeyKey(key_str);

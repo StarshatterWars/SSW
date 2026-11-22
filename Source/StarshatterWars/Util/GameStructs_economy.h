@@ -3,6 +3,7 @@
 #include "GameStructs_contractstate.h"
 #include "MiningCrystalTypes.h"
 #include "MiningDroneTypes.h"
+#include "CommerceCharges.h"
 #include "GameStructs_economy.generated.h"
 
 UENUM()
@@ -44,6 +45,7 @@ struct FEconomyInventory
     UPROPERTY(SaveGame) bool bSupplyOnly = false;
     UPROPERTY(SaveGame) bool bHullStorage = false;
     UPROPERTY(SaveGame) TMap<FName,double> DesiredStock;
+    UPROPERTY(SaveGame) TSet<FName> AcceptedItems;
     UPROPERTY(SaveGame) double CapacityTonnes = 0;
     UPROPERTY(SaveGame) double ReservedOutputTonnes = 0;
     UPROPERTY(SaveGame) TArray<FEconomyItem> Items;
@@ -95,6 +97,8 @@ struct FIndustryJob
     UPROPERTY(SaveGame) TArray<FCommodityAmount> Products;
     UPROPERTY(SaveGame) double Duration = 0;
     UPROPERTY(SaveGame) double Remaining = 0;
+    UPROPERTY(SaveGame) double CompletionAt = 0;
+    UPROPERTY(SaveGame) double LastProgressAt = 0;
     UPROPERTY(SaveGame) EIndustryJobState State = EIndustryJobState::Queued;
 };
 UENUM()
@@ -114,9 +118,12 @@ struct FMarketOrder
     UPROPERTY(SaveGame) EMarketOrderState State = EMarketOrderState::Open;
     UPROPERTY(SaveGame) double Quantity = 0;
     UPROPERTY(SaveGame) double Remaining = 0;
+    UPROPERTY(SaveGame) double CompletionAt = 0;
+    UPROPERTY(SaveGame) double LastProgressAt = 0;
     UPROPERTY(SaveGame) double UnitTonnes = 1;
     UPROPERTY(SaveGame) int64 UnitPrice = 0;
     UPROPERTY(SaveGame) int64 EscrowCredits = 0;
+    UPROPERTY(SaveGame) bool bApplyCommerceCharges = false;
     UPROPERTY(SaveGame) double ReservedTonnes = 0;
     UPROPERTY(SaveGame) FGuid CargoReservation;
     UPROPERTY(SaveGame) int64 CreatedUtc = 0;
@@ -135,6 +142,9 @@ struct FEconomyTransaction
     UPROPERTY(SaveGame) FName From;
     UPROPERTY(SaveGame) FName To;
     UPROPERTY(SaveGame) int64 Credits = 0;
+    UPROPERTY(SaveGame) int64 BaseCredits = 0;
+    UPROPERTY(SaveGame) int64 TaxCredits = 0;
+    UPROPERTY(SaveGame) int64 FeeCredits = 0;
     UPROPERTY(SaveGame) int64 TimestampUtc = 0;
     UPROPERTY(SaveGame) FName Item;
     UPROPERTY(SaveGame) double Quantity = 0;
@@ -176,12 +186,25 @@ struct FRegionalMarketHistory
     UPROPERTY(SaveGame) int32 PendingTradeCount=0;
     UPROPERTY(SaveGame) TArray<FRegionalPriceSample> Samples;
 };
+// Native identity only: production profiles and exterior meshes remain data-driven.
+USTRUCT()
+struct FGroundFactorySite
+{
+    GENERATED_BODY()
+    UPROPERTY(SaveGame) FName BuildingDesign;
+    UPROPERTY(SaveGame) FString Facility;
+    UPROPERTY(SaveGame) FString System;
+    UPROPERTY(SaveGame) FString Planet;
+    UPROPERTY(SaveGame) FString Region;
+    UPROPERTY(SaveGame) FString Empire;
+};
 USTRUCT()
 struct FEconomyState
 {
     GENERATED_BODY()
     UPROPERTY(SaveGame) TMap<FName, FEconomyInventory> Inventories;
     UPROPERTY(SaveGame) TMap<FName, int64> Wallets;
+    UPROPERTY(SaveGame) TSet<FName> PlayerAccounts;
     UPROPERTY(SaveGame) TMap<FGuid, FEconomyReservation> Reservations;
     UPROPERTY(SaveGame) TMap<FName, FContractTransaction> Contracts;
     UPROPERTY(SaveGame) TArray<FIndustryJob> Jobs;
@@ -200,8 +223,15 @@ struct FEconomyState
     UPROPERTY(SaveGame) double EconomyStepSeconds=0;
     UPROPERTY(SaveGame) double EconomyClockSeconds=0;
     UPROPERTY(SaveGame) double NPCIncomeSeconds=0;
+    UPROPERTY(SaveGame) TMap<FName,double> BackgroundMineDeadlines;
+    UPROPERTY(SaveGame) TMap<FName,double> BackgroundMineLastCycle;
+    UPROPERTY(SaveGame) double NextBackgroundMineAt=0;
+    UPROPERTY(SaveGame) double LastBackgroundMineAt=0;
+    UPROPERTY(SaveGame) double NextRegionalPriceAt=0;
+    UPROPERTY(SaveGame) double LastRegionalPriceAt=0;
     UPROPERTY(SaveGame) TMap<FName,double> BackgroundOreRemaining;
     UPROPERTY(SaveGame) TSet<FName> OfflineFacilities;
+    UPROPERTY(SaveGame) TMap<FName,FGroundFactorySite> GroundFactories;
     UPROPERTY(SaveGame) bool bLegacyWalletMigrated = false;
 };
 
@@ -210,6 +240,7 @@ class STARSHATTERWARS_API FEconomyLedger
 {
 public:
     static FName Pilot() { return FName(TEXT("Pilot")); }
+    static bool IsPlayerOwner(const FEconomyState& State,FName Owner) { return Owner==Pilot() || State.PlayerAccounts.Contains(Owner); }
     static FEconomyInventory* CreateInventory(FEconomyState&, FName Key, FName Owner, FName System, double Capacity);
     static bool ReconcileManifest(FEconomyState&, FName Inventory, const TArray<FCommodityAmount>&);
     static double Used(const FEconomyInventory&);
@@ -220,13 +251,13 @@ public:
     static FGuid Reserve(FEconomyState&, FName Owner, FName Inventory, FName Item, double Quantity);
     static bool Release(FEconomyState&, FName Owner, FGuid Reservation);
     static bool Transfer(FEconomyState&, FName Owner, FName Source, FName Destination, FName Item, double Quantity, FGuid Reservation = FGuid());
-    static bool Pay(FEconomyState&, FName From, FName To, int64 Credits, FGuid Transaction, FName Reason);
-    static bool Trade(FEconomyState&, FName Buyer, FName Seller, FName Source, FName Destination, FName Item, double Quantity, int64 TotalPrice, FGuid Transaction);
+    static bool Pay(FEconomyState&, FName From, FName To, int64 Credits, FGuid Transaction, FName Reason,ECommercePurpose Purpose=ECommercePurpose::None);
+    static bool Trade(FEconomyState&, FName Buyer, FName Seller, FName Source, FName Destination, FName Item, double Quantity, int64 TotalPrice, FGuid Transaction,ECommercePurpose Purpose=ECommercePurpose::None);
     // Queued orders use whole catalog units/tonnes and whole-credit unit prices.
     // Buy orders escrow real credits and reserve destination space; sell orders reserve actual stock.
     static FGuid PlaceMarketOrder(FEconomyState&, FName Owner, FName Market, FName Inventory, FName Item,
-        EMarketOrderSide Side, double Quantity, double UnitTonnes, int64 UnitPrice, int64 NowUtc, int64 ExpiresUtc, FGuid Receipt, FText& Reason);
-    static bool ModifyMarketOrder(FEconomyState&, FName Owner, FGuid Order, int64 UnitPrice, FGuid Receipt, FText& Reason);
+        EMarketOrderSide Side, double Quantity, double UnitTonnes, int64 UnitPrice, int64 NowUtc, int64 ExpiresUtc, FGuid Receipt, FText& Reason,ECommercePurpose Purpose=ECommercePurpose::None);
+    static bool ModifyMarketOrder(FEconomyState&, FName Owner, FGuid Order, int64 UnitPrice, FGuid Receipt, FText& Reason,ECommercePurpose Purpose=ECommercePurpose::None);
     static bool CancelMarketOrder(FEconomyState&, FName Owner, FGuid Order, FGuid Receipt, FText& Reason);
     static int32 AdvanceMarketOrders(FEconomyState&, int64 NowUtc);
     static FGuid QueueJob(FEconomyState&, FName Owner, FName Facility, FName Input, FName Output, FName Recipe, const TArray<FCommodityAmount>& Materials, const TArray<FCommodityAmount>& Products, double Duration);

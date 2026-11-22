@@ -109,6 +109,7 @@ const ShipVisualCatalog::FEntry Definitions[] = {
     { TEXT("Wolf"), TEXT("Wolf"), TEXT("Wolf"), TEXT("WolfShipActor"), TEXT("destroyer") },
     { TEXT("Jackal"), TEXT("Jackal"), TEXT("Jackal"), TEXT("JackalShipActor"), TEXT("attack") },
     { TEXT("Zodiac"), TEXT("Zodiac"), TEXT("Zodiac"), TEXT("ZodiacShipActor"), TEXT("fighter") },
+    { TEXT("CrewShuttle"), TEXT("CrewShuttle"), TEXT("Zodiac"), TEXT("ZodiacShipActor"), TEXT("fighter") },
     { TEXT("Prospector"), TEXT("Prospector"), TEXT("Zodiac"), TEXT("ZodiacShipActor"), TEXT("fighter") },
     { TEXT("Rockhopper"), TEXT("Rockhopper"), TEXT("IM3500"), TEXT("CargoAShipActor"), TEXT("freighter") },
     { TEXT("ZZA"), TEXT("ZZA"), TEXT("ZAttack"), TEXT("ZZAShipActor"), TEXT("attack") },
@@ -146,7 +147,7 @@ FString ShipVisualCatalog::DefinitionName(const FString& DesignName, const FStri
 FString ShipVisualCatalog::CanonicalClassPath(const FString& DesignName, const FString& ModelName)
 {
     const FString Definition = DefinitionName(DesignName, ModelName);
-    if (Definition == TEXT("Prospector")) return ClassPath(TEXT("Zodiac"));
+    if (Definition == TEXT("Prospector") || Definition == TEXT("CrewShuttle")) return ClassPath(TEXT("Zodiac"));
     if (Definition == TEXT("Rockhopper")) return ClassPath(TEXT("CargoA"));
     return ClassPath(Definition);
 }
@@ -156,7 +157,7 @@ UClass* ShipVisualCatalog::Resolve(const FString& DesignName, const FString& Mod
     Names.AddUnique(DefinitionName(DesignName, ModelName));
     Names.AddUnique(DesignName);
     if (DesignName.Equals(TEXT("Rockhopper"))) Names.AddUnique(TEXT("CargoA"));
-    if (DesignName.Equals(TEXT("Prospector"))) Names.AddUnique(TEXT("Zodiac"));
+    if (DesignName.Equals(TEXT("Prospector")) || DesignName.Equals(TEXT("CrewShuttle"))) Names.AddUnique(TEXT("Zodiac"));
     if (Names[0] == TEXT("AsteroidBase") || Names[0] == TEXT("MiningStation")) Names.AddUnique(TEXT("FreightXfer"));
     if (!ModelName.IsEmpty()) Names.AddUnique(ModelName);
     for (const FString& Name : Names)
@@ -175,7 +176,7 @@ UClass* ShipVisualCatalog::Resolve(const FString& DesignName, const FString& Mod
 FString ShipVisualCatalog::IconFolder(const FString& DesignName)
 {
     if (DesignName.Equals(TEXT("Shipyard"))) return TEXT("Station1");
-    if (DesignName.Equals(TEXT("Prospector"))) return TEXT("Zodiac");
+    if (DesignName.Equals(TEXT("Prospector")) || DesignName.Equals(TEXT("CrewShuttle"))) return TEXT("Zodiac");
     if (DesignName.Equals(TEXT("Rockhopper"))) return TEXT("CargoA");
     if (DesignName.Equals(TEXT("Asteroid Base"), ESearchCase::IgnoreCase) ||
         DesignName.Equals(TEXT("Mining Station"), ESearchCase::IgnoreCase)) return TEXT("Station1");

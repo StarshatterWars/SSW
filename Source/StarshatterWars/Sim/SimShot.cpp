@@ -66,18 +66,18 @@ static double SSRandRange(const double Min, const double Max)
 // +--------------------------------------------------------------------+
 
 SimShot::SimShot(const FVector& pos, const Camera& shot_cam, WeaponDesign* dsn, const Ship* ship)
-	: first_frame(true),
-	owner(ship),
+	: owner(ship),
+	charge(1.0f),
+	offset(1.0e5f),
+	altitude_agl(-1.0e6f),
+	eta(0),
+	first_frame(true),
+	hit_target(false),
 	flash(0),
 	flare(0),
 	trail(0),
 	sound(0),
-	eta(0),
-	charge(1.0f),
-	design(dsn),
-	offset(1.0e5f),
-	altitude_agl(-1.0e6f),
-	hit_target(false)
+	design(dsn)
 {
 	obj_type = ESimObject::SHOT;
 	type = design->type;
@@ -99,45 +99,20 @@ SimShot::SimShot(const FVector& pos, const Camera& shot_cam, WeaponDesign* dsn, 
 	velocity = cam.vpn() * (double)design->speed;
 
 	MoveTo(pos);
+	// FVector's default constructor does not initialize coordinates. Collision
+	// queries can run before the first movement step, so start with a valid segment.
+	origin = pos;
 
 	if (beam)
 		origin = pos + (shot_cam.vpn() * -design->length);
 
-	switch (design->graphic_type) {
-	case Graphic::BOLT: {
-		Bolt* s = new Bolt(design->length, design->width, design->shot_img, 1);
-		s->SetDirection(cam.vpn());
-		rep = s;
-	}
-					  break;
-
-	case Graphic::SPRITE: {
-		Sprite* s = 0;
-
-		if (design->animation)
-			s = new DriveSprite(design->animation, design->anim_length);
-		else
-			s = new DriveSprite(design->shot_img);
-
-		s->Scale((double)design->scale);
-		rep = s;
-	}
-						break;
-
-	case Graphic::SOLID: {
-        // UE sphere presentation handles missiles without a legacy model.
-        if (!design->shot_model) break;
-		Solid* s = new Solid;
-		s->UseModel(design->shot_model);
-		rep = s;
-
-		radius = rep->Radius();
-	}
-					   break;
-	}
-
-	if (rep)
-		rep->MoveTo(pos);
+    // Niagara actors own bolts, beams and sprite-style projectiles. Retain only
+    // authored solid geometry whose radius participates in legacy collision.
+    if(design->graphic_type==Graphic::SOLID && design->shot_model)
+    {
+        Solid* Model=new Solid;Model->UseModel(design->shot_model);
+        rep=Model;radius=rep->Radius();rep->MoveTo(pos);
+    }
 
     // Unreal bolt presentation is owned by the runtime subsystem, using this
     // shot's converted position, impact and lifetime. Do not spawn an independent
@@ -159,19 +134,6 @@ SimShot::SimShot(const FVector& pos, const Camera& shot_cam, WeaponDesign* dsn, 
 	dy_drg = design->yaw_drag;
 
 	SetAngularRates((float)design->roll_rate, (float)design->pitch_rate, (float)design->yaw_rate);
-
-	if (design->flash_img != 0) {
-		flash = new Sprite(design->flash_img);
-		flash->Scale((double)design->flash_scale);
-		flash->MoveTo(pos - cam.vpn() * design->length);
-		flash->SetLuminous(true);
-	}
-
-	if (design->flare_img != 0) {
-		flare = new DriveSprite(design->flare_img);
-		flare->Scale((double)design->flare_scale);
-		flare->MoveTo(pos);
-	}
 
 	if (owner) {
 		iff_code = (BYTE)owner->GetIFF();
@@ -353,19 +315,7 @@ SimShot::ExecFrame(double seconds)
     BeamDamageSeconds=Game::Paused()?0.0:FMath::Max(0.0,seconds);
 	altitude_agl = -1.0e6f;
 
-	// add random flickering effect:
-	double flicker = 0.75 + (double)FMath::Rand() / 8e4;
-	if (flicker > 1) flicker = 1;
-
-	if (flare) {
-		flare->SetShade(flicker);
-	}
-	else if (beam) {
-		Bolt* blob = (Bolt*)rep;
-		blob->SetShade(flicker);
-		offset -= (float)(seconds * 10);
-	}
-
+    // Flicker is presentation-owned; it must not allocate sprites or consume the simulation RNG.
 	if (Game::Paused())
 		return;
 

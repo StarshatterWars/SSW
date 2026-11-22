@@ -108,7 +108,7 @@ public:
                         }
                     }
                 }
-                SSWDamagePanel::Paint(H->DamageRows, E, L + 1, G, {(512 - FlightPanelStyle::CenterPanelWidth) / 2, 220}, 1.0f, Blue, Cursor);
+                SSWDamagePanel::PaintSchematic(H->DamagePoints,H->PlayerMFDPreview && H->PlayerMFDPreview->IsReady()?&H->PlayerMFDPreview->GetBrush():nullptr,H->PlayerHull,E,L+1,G, {(512 - FlightPanelStyle::CenterPanelWidth) / 2, 220}, 1.0f, Blue, Cursor);
             }
             else if(H->PlayerMFDPreview && H->PlayerMFDPreview->IsReady())Image({120,270},{270,135},H->PlayerMFDPreview->GetBrush());
             Text(20,440,H->HomeCarrierReadout,Blue,20);
@@ -336,11 +336,13 @@ void FCockpitDisplays::Update(AFighterActor* Fighter,TSharedRef<SFighterHUDDetai
 #include "AssetCompilingManager.h"
 #include "ShaderCompiler.h"
 #include "ShowFlags.h"
+#include "../Tests/ScopedTestWorldContext.h"
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCockpitDisplaysTest,"Starshatter.HUD.CockpitDisplays",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FCockpitDisplaysTest::RunTest(const FString&)
 {
     const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     UWorld* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext WorldContext(World);
     if(!TestNotNull(TEXT("Preview world"),World))return false;
     UClass* Class=LoadClass<AFighterActor>(nullptr,TEXT("/Game/Models/Falcon/BP_Falcon.BP_Falcon_C"));
     auto* Fighter=Class?World->SpawnActor<AFighterActor>(Class):nullptr;

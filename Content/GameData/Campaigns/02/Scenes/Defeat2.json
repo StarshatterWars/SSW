@@ -1,0 +1,1002 @@
+{
+	"storyCampaignId": 0,
+	"requiredEmpire": "Neutral",
+	"narrativeCampaignId": 0,
+	"counterpartMissionId": 0,
+	"storyUnlockScene": "",
+	"storyPoints": 0,
+	"rowName": "None",
+	"id": 292,
+	"missionName": "Campaign 02 Defeat",
+	"maxPlayers": 0,
+	"missionRegion": "Khaital",
+	"missionSystem": "Renser",
+	"scene": "Defeat2",
+	"subtitles": "",
+	"desc": "",
+	"targetName": "",
+	"wardName": "",
+	"objective": "",
+	"sitrep": "",
+	"startTime": "",
+	"startAfter": "",
+	"group": "NONE",
+	"missionType": "PATROL",
+	"source": "Scripted",
+	"displayType": "CutsceneOnly",
+	"team": 0,
+	"stardate": 0,
+	"degrees": false,
+	"once": false,
+	"element": [
+		{
+			"name": "Falcon",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "CameraPod",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 1,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Ironhelm",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Broadsword",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Khaital",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 750,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Khaital",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": -50000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Mattock",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Broadsword",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Khaital",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 10000,
+				"y": 2000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 750,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Khaital",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": -10000,
+						"y": -50000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Oak Hall",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Tiger",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Khaital",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 5000,
+				"y": 6000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 750,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Khaital",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": -2000,
+						"y": -50000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "North Point",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Tiger",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Khaital",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": -5000,
+				"y": -4000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 750,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Khaital",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 11000,
+						"y": -50000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		}
+	],
+	"event": [
+		{
+			"eventType": "BEGIN_SCENE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Scene 1",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "body:Khaital",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 1,
+				"y": 0,
+				"z": 4000000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0.059999998658895493,
+				"y": 0.0020000000949949026,
+				"z": 0.0099999997764825821
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick18",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Operation Highland",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 73,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 20,
+				"z": 300,
+				"w": 100
+			},
+			"eventParam": [
+				-128,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick18",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Defeat",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 73,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 42,
+				"z": 300,
+				"w": 100
+			},
+			"eventParam": [
+				-128,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "End_03_Defeat",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 2,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Ironhelm",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 15,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				6,
+				30,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 2,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "Black",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 10,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 33,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				-1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "END_SCENE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Scene 1",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 35,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		}
+	]
+}

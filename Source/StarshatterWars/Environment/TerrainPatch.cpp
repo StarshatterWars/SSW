@@ -66,8 +66,8 @@ FORCEINLINE uint32 TPPackColor(const FColor& C)
 
 TerrainPatch::TerrainPatch(Terrain* terr, const Bitmap* patch, const Rect& r,
 	const FVector& p1, const FVector& p2)
-	: ndetail(0)
-	, terrain(terr)
+	: terrain(terr)
+	, ndetail(0)
 	, rect(r)
 	, water(nullptr)
 	, min_height(1e9f)
@@ -161,8 +161,8 @@ TerrainPatch::TerrainPatch(Terrain* terr,
 	const FVector& p1,
 	const FVector& p2,
 	double sea_level)
-	: ndetail(0)
-	, terrain(terr)
+	: terrain(terr)
+	, ndetail(0)
 	, rect(r)
 	, water(nullptr)
 	, min_height(0.0f)

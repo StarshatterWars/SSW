@@ -17,6 +17,8 @@
 */
 
 #include "SimRegion.h"
+#include "OrdnanceMagazine.h"
+#include "BoltCollisionCandidates.h"
 #include "Mission.h"
 #include "AsteroidFieldLayout.h"
 #include "Sim.h"
@@ -175,9 +177,10 @@ SimRegion::SimRegion(Sim* s, const char* n, int t)
 }
 
 SimRegion::SimRegion(Sim* SimPtr, OrbitalRegion* OrbitalRegionPtr)
-    : sim(SimPtr),
-    orbital_region(OrbitalRegionPtr),
-    type(REAL_SPACE)
+    : 
+    sim(SimPtr),
+    type(REAL_SPACE),
+    orbital_region(OrbitalRegionPtr)
 {
     star_system = nullptr;
     location = FVector::ZeroVector;
@@ -797,6 +800,8 @@ void SimRegion::DamageShips()
     // Restore legacy shot/ship damage dispatch after projectile movement.
     // HitBy owns shields, subsystem damage, arming and friendly-fire rules.
     TMap<Ship*, double> OreLoadedThisFrame;
+    TArray<SSWBoltCollision::FHull> HullSnapshot;
+    TArray<uint8> BoltCandidates;
     for (SimShot* Shot : GetProjectiles()) {
         if (!Shot || IsDeadShot(Shot) || !Shot->GetDesign()) continue;
         if (Shot->GetDesign()->IsMiningLaser())
@@ -860,7 +865,19 @@ void SimRegion::DamageShips()
             }
             continue;
         }
+        // Snapshot after the previous shot commits: damage/death ordering is unchanged.
+        const bool FilterBolts=!Shot->IsMissile() && !Shot->IsBeam() && ships.size()>=256;
+        if(FilterBolts)
+        {
+            HullSnapshot.SetNum(ships.size());
+            for(int Index=0;Index<ships.size();++Index)
+                if(const Ship* Hull=ships[Index])
+                    HullSnapshot[Index]={Hull->GetLocation(),Hull->GetRadius()};
+                else HullSnapshot[Index]={FVector::ZeroVector,0};
+            SSWBoltCollision::FindCandidates(HullSnapshot,Shot->GetOrigin(),Shot->GetLocation(),BoltCandidates);
+        }
         for (int ShipIndex=0;ShipIndex<ships.size();++ShipIndex) {
+            if(FilterBolts && !BoltCandidates[ShipIndex]) continue;
             Ship* Victim=ships[ShipIndex];
             if (!Victim || Victim==Shot->Owner() || Victim->IsDead() || Victim->IsDying()) continue;
             FVector Impact=FVector::ZeroVector;
@@ -1393,6 +1410,7 @@ SimRegion::DockShips()
                 TEXT("[SimRegion::DockShips] Destroying Docked Ship='%s'"),
                 ANSI_TO_TCHAR(ship->GetName()));
 
+            if(carrier)OrdnanceMagazine::ReturnAI(*carrier,*ship);
             ship->Destroy();
 
             if (carrier) {

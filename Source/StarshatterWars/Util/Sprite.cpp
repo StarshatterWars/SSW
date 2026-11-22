@@ -68,12 +68,24 @@ static FVector RowAsVector(const FMatrix& M, int Row)
 // +--------------------------------------------------------------------+
 
 Sprite::Sprite()
-	: w(0), h(0), nframes(0), own_frames(0),
-	frames(0), frame_index(0), frame_time(67), loop(0), shade(1.0),
-	angle(0.0), blend_mode(4), filter(1), vset(4), poly(0)
+	: 
+    w(0),
+    h(0),
+    loop(0),
+    nframes(0),
+    own_frames(0),
+    frames(0),
+    frame_index(0),
+    frame_time(67),
+    shade(1.0),
+    angle(0.0),
+    blend_mode(4),
+    filter(1),
+    poly(0),
+    vset(4)
 {
 	trans = true;
-	SetAnimation(nullptr, 0, 0, 0);
+	// Empty sprites have no animation until a real bitmap is assigned.
 
 	vset.space = VertexSet::WORLD_SPACE;
 	for (int i = 0; i < 4; i++) {
@@ -99,9 +111,21 @@ Sprite::Sprite()
 }
 
 Sprite::Sprite(Bitmap* animation, int length, int repeat, int share)
-	: w(0), h(0), nframes(0), own_frames(0),
-	frames(0), frame_index(0), frame_time(67), loop(0), shade(1.0),
-	angle(0.0), blend_mode(4), filter(1), vset(4), poly(0)
+	: 
+    w(0),
+    h(0),
+    loop(0),
+    nframes(0),
+    own_frames(0),
+    frames(0),
+    frame_index(0),
+    frame_time(67),
+    shade(1.0),
+    angle(0.0),
+    blend_mode(4),
+    filter(1),
+    poly(0),
+    vset(4)
 {
 	trans = true;
 	SetAnimation(animation, length, repeat, share);

@@ -106,7 +106,7 @@ public:
     void CycleHUDWarn();
 
     void FrameRate(double F);
-    void ExecFrame(float DeltaTime);
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
 
     // External/Internal camera panel toggles (if you still use these in HUD):
     UFUNCTION() void ShowExternal();

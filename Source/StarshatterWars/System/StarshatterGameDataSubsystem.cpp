@@ -1,5 +1,6 @@
 
 #include "StarshatterGameDataSubsystem.h"
+#include "SSWRuntimeSubsystem.h"
 #include "OOBJsonCatalog.h"
 #include "StandaloneMissionCatalog.h"
 #include "CampaignStoryRules.h"
@@ -314,6 +315,11 @@ static EInstruction ParseInstructionType(const FString& InValue)
 }
 void UStarshatterGameDataSubsystem::Tick(float DeltaTime)
 {
+    // Runtime.UpdateWorld owns both frame passes while the game loop runs.
+    // Keep this compatibility fallback for previews without an active runtime.
+    if(const auto* Instance=GetGameInstance())
+        if(const auto* Runtime=Instance->GetSubsystem<USSWRuntimeSubsystem>();Runtime && Runtime->IsRuntimeRunning()) return;
+
 	Galaxy* GalaxyPtr = Galaxy::GetInstance();
 	if (GalaxyPtr)
 	{
@@ -1562,14 +1568,14 @@ void UStarshatterGameDataSubsystem::InitializeCampaignData() {
 		FileName.Append(FString::FormatAsNumber(i));
 		FileName.Append("/");
 		CampaignPath = FileName;
-		FileName.Append("campaign.def");
+		FileName.Append("campaign.json");
 		LoadCampaignData(TCHAR_TO_ANSI(*FileName), true);
 	}
 }
 
 // Load standalone missions independently from campaign scenario/cutscene arrays.
-// The catalog (Missions.def) supplies IDs and scripts; the numbered .def files
-// supply the complete authored mission models for previews and later execution.
+// The JSON mission catalog supplies IDs and scripts; JSON scenarios supply
+// complete authored mission models for previews and later execution.
 bool UStarshatterGameDataSubsystem::ImportStoryMissions(UDataTable& Output)
 {
 #if WITH_EDITOR
@@ -1588,7 +1594,7 @@ bool UStarshatterGameDataSubsystem::ImportStoryMissions(UDataTable& Output)
     {
         const FString Folder = CampaignsFolder / FString::Printf(TEXT("%02d/Story"), CampaignId);
         TArray<FString> Files;
-        IFileManager::Get().FindFiles(Files, *(Folder / TEXT("*.def")), true, false);
+        IFileManager::Get().FindFiles(Files, *(Folder / TEXT("*.json")), true, false);
         Files.Sort();
         for (const FString& File : Files)
     {
@@ -1617,245 +1623,18 @@ bool UStarshatterGameDataSubsystem::ImportStoryMissions(UDataTable& Output)
 
 void UStarshatterGameDataSubsystem::LoadSingleMissions()
 {
-    const FString NativeDirectory=FPaths::ProjectContentDir()/TEXT("GameData/Missions");
-    if(FPaths::FileExists(NativeDirectory/TEXT("missions.json")))
+    const FString Directory = FPaths::ProjectContentDir() / TEXT("GameData/Missions");
+    FString Error;
+    if (!StandaloneMissionCatalog::Load(Directory, SingleMissionCatalog, SingleMissionScenarios, Error))
     {
-        FString Error;
-        if(!StandaloneMissionCatalog::Load(NativeDirectory,SingleMissionCatalog,SingleMissionScenarios,Error))
-        { UE_LOG(LogTemp,Error,TEXT("[SingleMissions] Native JSON rejected; prior catalog retained: %s"),*Error); }
-        else { UE_LOG(LogTemp,Display,TEXT("[SingleMissions] Native JSON: %d scenarios, no runtime table required."),SingleMissionScenarios.Num()); }
-        return;
-    }
-    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][02] LoadSingleMissions ENTER content=%s existingTable=%s"),
-        *FPaths::ProjectContentDir(), *GetPathNameSafe(SingleMissionsDataTable));
-    SingleMissionCatalog.Reset();
-    SingleMissionScenarios.Reset();
-
-    // Resolve the actual configured registry key on every load. This also
-    // handles cases where asset loading order left the pointer null during
-    // GameInstanceSubsystem::Initialize().
-    if (UGameInstance* GI = GetGameInstance())
-    {
-        if (UStarshatterAssetRegistrySubsystem* Assets = GI->GetSubsystem<UStarshatterAssetRegistrySubsystem>())
-        {
-            UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][03] Registry subsystem=%s querying Data.SingleMissionTable"), *GetPathNameSafe(Assets));
-            UDataTable* RegistryTable = Assets->GetDataTable(TEXT("Data.SingleMissionTable"), false);
-            UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][04] Registry returned=%s"), *GetPathNameSafe(RegistryTable));
-            if (RegistryTable)
-            {
-                SingleMissionsDataTable = RegistryTable;
-            }
-            else
-            {
-                UE_LOG(LogTemp, Error,
-                    TEXT("[SingleMissions] Registry key Data.SingleMissionTable did not resolve a DataTable."));
-            }
-        }
-        else if (!SingleMissionsDataTable)
-        {
-            UE_LOG(LogTemp, Error, TEXT("[SMTRACE][03] AssetRegistry subsystem MISSING"));
-        }
+        UE_LOG(LogTemp, Error, TEXT("[SingleMissions] JSON rejected; prior catalog retained: %s"), *Error);
     }
     else
     {
-        UE_LOG(LogTemp, Error, TEXT("[SMTRACE][03] GameInstance MISSING"));
+        UE_LOG(LogTemp, Display, TEXT("[SingleMissions] Native JSON: %d scenarios."), SingleMissionScenarios.Num());
     }
-    if (!SingleMissionsDataTable)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][05] Registry miss; attempting fixed /Game/GameData/DataTables/DT_SingleMissions path"));
-        SingleMissionsDataTable = LoadObject<UDataTable>(nullptr,
-            TEXT("/Game/GameData/DataTables/DT_SingleMissions.DT_SingleMissions"));
-    }
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SingleMissions] Table=%s Struct=%s Expected=%s"),
-        *GetPathNameSafe(SingleMissionsDataTable),
-        SingleMissionsDataTable ? *GetPathNameSafe(SingleMissionsDataTable->GetRowStruct()) : TEXT("<null>"),
-        *GetPathNameSafe(FS_CampaignMission::StaticStruct()));
-
-    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][06] Table path=%s rowStruct=%s expected=%s initialRows=%d"),
-        *GetPathNameSafe(SingleMissionsDataTable),
-        SingleMissionsDataTable ? *GetPathNameSafe(SingleMissionsDataTable->GetRowStruct()) : TEXT("NULL"),
-        *GetPathNameSafe(FS_CampaignMission::StaticStruct()),
-        SingleMissionsDataTable ? SingleMissionsDataTable->GetRowNames().Num() : -1);
-
-    // The built-in mission data uses exactly the same table row as authored
-    // campaign/training mission scenarios: FS_CampaignMission.
-    if (!SingleMissionsDataTable ||
-        SingleMissionsDataTable->GetRowStruct() != FS_CampaignMission::StaticStruct())
-    {
-        UE_LOG(LogTemp, Error, TEXT("[SMTRACE][FATAL] Cannot ingest: missing table or wrong row struct."));
-        UE_LOG(LogTemp, Error,
-            TEXT("[SingleMissions] DT_SingleMissions missing or wrong Row Structure. Select FS_CampaignMission (not FS_SingleMissionRow) in the DataTable asset."));
-        return;
-    }
-
-    const auto ReadRows = [this]()
-    {
-        SingleMissionCatalog.Reset();
-        SingleMissionScenarios.Reset();
-        TArray<FName> Names = SingleMissionsDataTable->GetRowNames();
-        Names.Sort([](const FName& A, const FName& B) { return A.LexicalLess(B); });
-        for (const FName& RowName : Names)
-        {
-            const FS_CampaignMission* Row = SingleMissionsDataTable->FindRow<FS_CampaignMission>(
-                RowName, TEXT("ReadSingleMissions"), false);
-            if (!Row || Row->Id <= 0) continue;
-            SingleMissionScenarios.Add(*Row);
-            FS_CampaignMissionList Entry;
-            Entry.Id = Row->Id;
-            Entry.Name = Row->MissionName;
-            Entry.Description = Row->Desc;
-            Entry.Sitrep = Row->Sitrep;
-            Entry.Objective = Row->Objective;
-            Entry.System = Row->MissionSystem;
-            Entry.Region = Row->MissionRegion;
-            Entry.Start = Row->StartTime;
-            Entry.Source = EMissionSource::Scripted;
-            Entry.Available = true;
-            Entry.Complete = false;
-            Entry.Status = EMISSIONSTATUS::Available;
-            SingleMissionCatalog.Add(Entry);
-        }
-        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][READ] ReadRows rawRows=%d accepted=%d"),
-            Names.Num(), SingleMissionScenarios.Num());
-        UE_LOG(LogTemp, Display,
-            TEXT("[SingleMissions] DataTable contains %d standard FS_CampaignMission rows (%s)"),
-            SingleMissionScenarios.Num(), *GetPathNameSafe(SingleMissionsDataTable));
-    };
-
-#if !WITH_EDITOR
-    // Cooked content is authoritative; never mutate a packaged DataTable.
-    ReadRows();
-    return;
-#else
-    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][07] WITH_EDITOR=1; attempting import from .def files. PIE=%d"), GIsPlayInEditorWorld ? 1 : 0);
-    // Only the dedicated single-player directory is accepted.
-    const FString MissionsDir = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("GameData/Missions"));
-    const FString CatalogFile = FPaths::Combine(MissionsDir, TEXT("Missions.def"));
-    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][08] catalog=%s exists=%d directory=%s exists=%d"),
-        *CatalogFile, FPaths::FileExists(CatalogFile) ? 1 : 0,
-        *MissionsDir, IFileManager::Get().DirectoryExists(*MissionsDir) ? 1 : 0);
-    if (!FPaths::FileExists(CatalogFile) && !FPaths::FileExists(FPaths::ChangeExtension(CatalogFile,TEXT("json"))))
-    {
-        UE_LOG(LogTemp, Error, TEXT("[SingleMissions] Catalog missing: %s"), *CatalogFile);
-        ReadRows();
-        return;
-    }
-
-    // Reuse the original grammar and all nested parsing functions.
-    // Isolate scratch state from the campaign and cutscene import pipelines.
-    const TArray<FS_CampaignMissionList> PreviousList = MissionListArray;
-    const TArray<FS_CampaignMission> PreviousScenarios = MissionArray;
-    const FS_CampaignMission PreviousCutscene = CutsceneData;
-    const bool bPreviousStandalone = bParsingStandaloneMission;
-
-    LoadMissionList(MissionsDir + TEXT("/"));
-    const TArray<FS_CampaignMissionList> ParsedList = MissionListArray;
-    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][09] Missions.def parsed catalog entries=%d"), ParsedList.Num());
-    for (const FS_CampaignMissionList& DebugEntry : ParsedList)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][10] Catalog ID=%d name='%s' script='%s'"),
-            DebugEntry.Id, *DebugEntry.Name, *DebugEntry.Script);
-    }
-    bParsingStandaloneMission = true;
-
-    TMap<FName, FS_CampaignMission> PendingRows;
-    TSet<int32> SeenIds;
-    for (const FS_CampaignMissionList& CatalogEntry : ParsedList)
-    {
-        if (CatalogEntry.Id <= 0 || SeenIds.Contains(CatalogEntry.Id) ||
-            CatalogEntry.Script.IsEmpty() ||
-            CatalogEntry.Script != FPaths::GetCleanFilename(CatalogEntry.Script) ||
-            !CatalogEntry.Script.EndsWith(TEXT(".def"), ESearchCase::IgnoreCase))
-        {
-            UE_LOG(LogTemp, Error, TEXT("[SingleMissions] Bad catalog ID/script: %d / %s"),
-                CatalogEntry.Id, *CatalogEntry.Script);
-            continue;
-        }
-        SeenIds.Add(CatalogEntry.Id);
-        const FString ScenarioFile = FPaths::Combine(MissionsDir, CatalogEntry.Script);
-        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][11] Scenario ID=%d file=%s exists=%d"),
-            CatalogEntry.Id, *ScenarioFile, FPaths::FileExists(ScenarioFile) ? 1 : 0);
-        if (!FPaths::FileExists(ScenarioFile))
-        {
-            UE_LOG(LogTemp, Error, TEXT("[SingleMissions] Missing scenario: %s"), *ScenarioFile);
-            continue;
-        }
-        const int32 BeforeCount = MissionArray.Num();
-        ParseMission(TCHAR_TO_ANSI(*ScenarioFile));
-        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][12] ParseMission result ID=%d missionArrayBefore=%d after=%d"),
-            CatalogEntry.Id, BeforeCount, MissionArray.Num());
-        if (MissionArray.Num() != BeforeCount + 1)
-        {
-            UE_LOG(LogTemp, Error, TEXT("[SingleMissions] Parser did not create a mission for %s"), *ScenarioFile);
-            continue;
-        }
-
-        FS_CampaignMission Scenario = MissionArray.Last();
-        // Most original standalone .def scenarios have no 'id' field.
-        // Missions.def is authoritative for mission identity.
-        Scenario.Id = CatalogEntry.Id;
-        Scenario.RowName = FName(*FString::Printf(TEXT("Mission_%03d"), CatalogEntry.Id));
-        if (Scenario.MissionName.IsEmpty()) Scenario.MissionName = CatalogEntry.Name;
-        if (Scenario.Desc.IsEmpty()) Scenario.Desc = CatalogEntry.Description;
-        if (Scenario.Sitrep.IsEmpty()) Scenario.Sitrep = CatalogEntry.Sitrep;
-        if (Scenario.Objective.IsEmpty()) Scenario.Objective = CatalogEntry.Objective;
-        if (Scenario.MissionSystem.IsEmpty()) Scenario.MissionSystem = CatalogEntry.System;
-        if (Scenario.MissionRegion.IsEmpty()) Scenario.MissionRegion = CatalogEntry.Region;
-        if (Scenario.StartTime.IsEmpty()) Scenario.StartTime = CatalogEntry.Start;
-        Scenario.Source = EMissionSource::Scripted;
-        Scenario.DisplayType = EMissionDisplayType::PlayerMission;
-
-        UE_LOG(LogTemp, Display,
-            TEXT("[SingleMissions] Parsed %03d '%s': elements=%d events=%d"),
-            Scenario.Id, *Scenario.MissionName, Scenario.Element.Num(), Scenario.Event.Num());
-        PendingRows.Add(Scenario.RowName, MoveTemp(Scenario));
-    }
-
-    MissionListArray = PreviousList;
-    MissionArray = PreviousScenarios;
-    CutsceneData = PreviousCutscene;
-    bParsingStandaloneMission = bPreviousStandalone;
-
-    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][13] Import summary catalog=%d pending=%d existingTableRows=%d"),
-        ParsedList.Num(), PendingRows.Num(), SingleMissionsDataTable->GetRowNames().Num());
-    if (ParsedList.IsEmpty() || PendingRows.Num() != ParsedList.Num())
-    {
-        UE_LOG(LogTemp, Error,
-            TEXT("[SingleMissions] Import incomplete: %d/%d scenarios; existing DT kept."),
-            PendingRows.Num(), ParsedList.Num());
-        ReadRows();
-        return;
-    }
-
-    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][14] COMMIT begin table=%s oldRows=%d"),
-        *GetPathNameSafe(SingleMissionsDataTable), SingleMissionsDataTable->GetRowNames().Num());
-    SingleMissionsDataTable->Modify();
-    SingleMissionsDataTable->EmptyTable();
-    for (const TPair<FName, FS_CampaignMission>& RowPair : PendingRows)
-    {
-        SingleMissionsDataTable->AddRow(RowPair.Key, RowPair.Value);
-        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][15] AddRow '%s' ID=%d tableRowsNow=%d"),
-            *RowPair.Key.ToString(), RowPair.Value.Id, SingleMissionsDataTable->GetRowNames().Num());
-    }
-    SingleMissionsDataTable->MarkPackageDirty();
-    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][16] COMMIT done tableRows=%d packageDirty=%d"),
-        SingleMissionsDataTable->GetRowNames().Num(),
-        SingleMissionsDataTable->GetOutermost()->IsDirty() ? 1 : 0);
-    UE_LOG(LogTemp, Warning,
-        TEXT("[SingleMissions] Runtime table now has %d rows. Editor Play does not save this to the .uasset; save/reimport in a non-PIE editor workflow for persistence."),
-        SingleMissionsDataTable->GetRowNames().Num());
-    UE_LOG(LogTemp, Display,
-        TEXT("[SingleMissions] Imported %d rows into DT_SingleMissions (FS_CampaignMission). Save the DataTable asset to retain them."),
-        PendingRows.Num());
-    ReadRows();
-#endif
 }
 
-
-// Separate multiplayer ingestion, following the Single Missions FS_CampaignMission
-// DataTable path. The Multiplayer folder contains standalone *.def scenarios;
-// unlike single-player, no Missions.def catalog is required.
 void UStarshatterGameDataSubsystem::LoadMultiplayerMissions()
 {
     UE_LOG(LogTemp, Warning, TEXT("[MPTRACE][01] LoadMultiplayerMissions ENTER"));
@@ -1908,13 +1687,13 @@ void UStarshatterGameDataSubsystem::LoadMultiplayerMissions()
 #else
     const FString MissionDir = FPaths::Combine(FPaths::ProjectContentDir(), TEXT("GameData/Multiplayer"));
     TArray<FString> MissionFiles;
-    IFileManager::Get().FindFiles(MissionFiles, *FPaths::Combine(MissionDir, TEXT("*.def")), true, false);
+    IFileManager::Get().FindFiles(MissionFiles, *FPaths::Combine(MissionDir, TEXT("*.json")), true, false);
     MissionFiles.Sort();
     UE_LOG(LogTemp, Warning, TEXT("[MPTRACE][04] directory=%s exists=%d files=%d"),
         *MissionDir, IFileManager::Get().DirectoryExists(*MissionDir) ? 1 : 0, MissionFiles.Num());
     if (MissionFiles.IsEmpty())
     {
-        UE_LOG(LogTemp, Error, TEXT("[MPTRACE][ERROR] No .def mission files found under %s"), *MissionDir);
+        UE_LOG(LogTemp, Error, TEXT("[MPTRACE][ERROR] No JSON mission files found under %s"), *MissionDir);
         ReadTableRows();
         return;
     }
@@ -1992,6 +1771,18 @@ const FS_CampaignMission* UStarshatterGameDataSubsystem::FindSingleMissionScenar
     });
 }
 
+bool UStarshatterGameDataSubsystem::ReadCampaignJsonDirectory(const FString& Directory, FS_Campaign& Out)
+{
+    auto* Reader = NewObject<UStarshatterGameDataSubsystem>(NewObject<UGameInstance>());
+    Reader->CampaignDataTable = NewObject<UDataTable>(Reader);
+    Reader->CampaignDataTable->RowStruct = FS_Campaign::StaticStruct();
+    const FTCHARToUTF8 Path(*(Directory / TEXT("campaign.json")));
+    Reader->LoadCampaignData(Path.Get(), true, true);
+    if (Reader->CampaignDataTable->GetRowMap().Num() != 1) return false;
+    Out = *reinterpret_cast<const FS_Campaign*>(Reader->CampaignDataTable->GetRowMap().CreateConstIterator().Value());
+    return true;
+}
+
 void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full, bool bPreferJson)
 {
 	if (!CampaignDataTable)
@@ -2006,6 +1797,29 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full, 
     CampaignPath=JsonDirectory+TEXT("/");
     const bool bJsonActions=bPreferJson && FPaths::FileExists(JsonDirectory/TEXT("actions.json"));
     const bool bJsonZones=bPreferJson && FPaths::FileExists(JsonDirectory/TEXT("zones.json"));
+    if(bPreferJson)
+    {
+        const FString HeaderPath=JsonDirectory/TEXT("campaign.json");
+        TArray<uint8> HeaderBytes;FString HeaderText;FS_Campaign Native;
+        if((!SSWModFiles::Read(HeaderPath,HeaderBytes) && !FFileHelper::LoadFileToArray(HeaderBytes,*HeaderPath)) || HeaderBytes.Num()>8*1024*1024)
+        {UE_LOG(LogTemp,Error,TEXT("Unreadable campaign JSON: %s"),*HeaderPath);return;}
+        FFileHelper::BufferToString(HeaderText,HeaderBytes.GetData(),HeaderBytes.Num());
+        if(!FJsonObjectConverter::JsonObjectStringToUStruct(HeaderText,&Native,0,0) || Native.Name.IsEmpty() || Native.Index<0)
+        {UE_LOG(LogTemp,Error,TEXT("Invalid campaign JSON: %s"),*HeaderPath);return;}
+        name=TCHAR_TO_UTF8(*Native.Name);
+        CombatantArray=Native.Combatant;CampaignActionArray.Reset();MissionArray.Reset();TemplateMissionArray.Reset();ScriptedMissionArray.Reset();ZoneArray.Reset();
+        LoadMissionList(CampaignPath,true);LoadTemplateList(CampaignPath,true);
+        LoadCutscene(CampaignPath);LoadTemplateMission(CampaignPath);LoadScriptedMission(CampaignPath);
+        Native.MissionList=MissionListArray;Native.TemplateList=TemplateListArray;Native.Missions=MissionArray;
+        Native.TemplateMissions=TemplateMissionArray;Native.ScriptedMissions=ScriptedMissionArray;
+        FString Error;
+        if(!CampaignJsonCatalog::Apply(JsonDirectory,Native,CampaignActionDataTable,ZonesDataTable,Error))
+        {UE_LOG(LogTemp,Error,TEXT("[CampaignJson] %s"),*Error);return;}
+        Native.bAvailable=true;Native.bCompleted=false;
+        CampaignDataTable->AddRow(FName(*Native.Name),Native);CampaignData=MoveTemp(Native);
+        return;
+    }
+
 
 	TArray<uint8> Bytes;
 	if (!SSWModFiles::Read(CampaignDPath, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *CampaignDPath))
@@ -2501,7 +2315,8 @@ void UStarshatterGameDataSubsystem::LoadCampaignData(const char* fs, bool full, 
 							if (def->name()->value() == "name") {
 								GetDefText(CombatantName, def, filename);
 
-								if (FStringToEnum<EEMPIRE_NAME>(FString(CombatantName).ToUpper(), EName, false))
+								if (FString(CombatantName).Equals(TEXT("Marakan Hegemony"),ESearchCase::IgnoreCase)) EName=EEMPIRE_NAME::Marakan;
+                                if (EName==EEMPIRE_NAME::Marakan || FStringToEnum<EEMPIRE_NAME>(FString(CombatantName).ToUpper(), EName, false))
 								{
 									UE_LOG(LogTemp, Log, TEXT("Converted to enum: %d"), static_cast<int32>(EName));
 								}
@@ -2925,10 +2740,10 @@ UStarshatterGameDataSubsystem::LoadMissionList(FString Path,bool bPreferJson)
         FString Error;
         const auto Result=MissionListJson::ReadMissions(Path,MissionListArray,Error);
         if(Result==MissionListJson::EReadResult::Loaded)return;
-        if(Result==MissionListJson::EReadResult::Invalid)
-        {UE_LOG(LogTemp,Error,TEXT("[LoadMissionList] %s; DEF fallback rejected."),*Error);return;}
+        UE_LOG(LogTemp,Error,TEXT("[LoadMissionList] JSON missing or invalid in %s: %s; DEF fallback rejected."),*Path,*Error);
+        return;
     }
-    UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][CATALOG] LoadMissionList called path=%s"), *Path);
+    UE_LOG(LogTemp, Log, TEXT("[SMTRACE][CATALOG] LoadMissionList called path=%s"), *Path);
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::LoadMissionList()"));
 	MissionListArray.Empty();
 
@@ -3124,8 +2939,8 @@ UStarshatterGameDataSubsystem::LoadTemplateList(FString Path,bool bPreferJson)
         FString Error;
         const auto Result=MissionListJson::ReadTemplates(Path,TemplateListArray,Error);
         if(Result==MissionListJson::EReadResult::Loaded)return;
-        if(Result==MissionListJson::EReadResult::Invalid)
-        {UE_LOG(LogTemp,Error,TEXT("[LoadTemplateList] %s; DEF fallback rejected."),*Error);return;}
+        UE_LOG(LogTemp,Error,TEXT("[LoadTemplateList] JSON missing or invalid in %s: %s; DEF fallback rejected."),*Path,*Error);
+        return;
     }
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::LoadTemplateList()"));
 
@@ -3299,7 +3114,8 @@ UStarshatterGameDataSubsystem::LoadTemplateList(FString Path,bool bPreferJson)
 						}
 						else if (pdef->name()->value() == "exec_once")
 						{
-							GetDefNumber(exec_once, pdef, fn);
+							if(pdef->term() && pdef->term()->isBool()) exec_once=pdef->term()->isBool()->value()?1:0;
+                            else GetDefNumber(exec_once,pdef,fn);
 							NewTemplateList.ExecOnce = exec_once;
 						}
 						else if (pdef->name()->value().contains("before"))
@@ -3354,13 +3170,9 @@ void UStarshatterGameDataSubsystem::LoadCutscene(FString Path)
 	TArray<FString> Files;
 	Files.Empty();
 
-	const FString Pattern = ScenesDir / TEXT("*.def");
-	FFileManagerGeneric::Get().FindFiles(Files, *Pattern, true, false);
-    TArray<FString> JsonFiles;
-    IFileManager::Get().FindFiles(JsonFiles, *(ScenesDir / TEXT("*.json")), true, false);
-    for (const FString& JsonFile : JsonFiles) Files.AddUnique(FPaths::ChangeExtension(JsonFile,TEXT("def")));
+	const FString Pattern = ScenesDir / TEXT("*.json");
+    IFileManager::Get().FindFiles(Files, *Pattern, true, false);
     Files.Sort();
-
 
 	FS_CampaignMission NewCutsceneData;
 
@@ -3407,8 +3219,9 @@ void UStarshatterGameDataSubsystem::LoadTemplateMission(FString Name)
 	TArray<FString> Files;
 	Files.Empty();
 
-	const FString Pattern = TemplatesDir / TEXT("*.def");
-	FFileManagerGeneric::Get().FindFiles(Files, *Pattern, true, false);
+	const FString Pattern = TemplatesDir / TEXT("*.json");
+    IFileManager::Get().FindFiles(Files, *Pattern, true, false);
+    Files.Sort();
 
 	for (const FString& LeafName : Files)
 	{
@@ -3433,8 +3246,9 @@ void UStarshatterGameDataSubsystem::LoadScriptedMission(FString Name)
 	TArray<FString> Files;
 	Files.Empty();
 
-	const FString Pattern = ScriptsDir / TEXT("*.def");
-	FFileManagerGeneric::Get().FindFiles(Files, *Pattern, true, false);
+	const FString Pattern = ScriptsDir / TEXT("*.json");
+    IFileManager::Get().FindFiles(Files, *Pattern, true, false);
+    Files.Sort();
 
 	for (const FString& LeafName : Files)
 	{
@@ -3468,7 +3282,7 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn, bool bPreferJso
 {
     if (bParsingStandaloneMission)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[SMTRACE][PARSER] ParseMission standalone fn=%s"), fn ? ANSI_TO_TCHAR(fn) : TEXT("NULL"));
+        UE_LOG(LogTemp, Log, TEXT("[SMTRACE][PARSER] ParseMission standalone fn=%s"), fn ? ANSI_TO_TCHAR(fn) : TEXT("NULL"));
     }
 	UE_LOG(LogTemp, Log, TEXT("UStarshatterGameDataSubsystem::ParseMission()"));
 
@@ -3514,6 +3328,12 @@ void UStarshatterGameDataSubsystem::ParseMission(const char* fn, bool bPreferJso
         return;
     }
 
+
+    if (bPreferJson && !bModMission)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MissionJson] Required JSON missing: %s; legacy import must be explicit."), *JsonPath);
+        return;
+    }
 
 	if (!bModMission && !FPaths::FileExists(MissionPath))
 	{
@@ -3990,7 +3810,7 @@ bool UStarshatterGameDataSubsystem::ParseMissionInstructionCommon(
 	OutInstr.RLoc =
 		MissionRLocArray;
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[ParseMissionInstructionCommon] cmd='%s' action=%d tgt='%s' rgn='%s' speed=%d loc=%s"),
 		*OutInstr.OrderName,
 		(int32)OutInstr.Action,
@@ -4849,6 +4669,12 @@ void UStarshatterGameDataSubsystem::ParseScriptedTemplate(const char* fn, bool b
     }
 
 
+    if (bPreferJson && !bModMission)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MissionJson] Required JSON missing: %s; legacy import must be explicit."), *JsonPath);
+        return;
+    }
+
 	if (!bModMission && !FPaths::FileExists(ScriptPath))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Scripted template file not found: %s"), *ScriptPath);
@@ -5106,6 +4932,12 @@ void UStarshatterGameDataSubsystem::ParseMissionTemplate(const char* fn, bool bP
         return;
     }
 
+
+    if (bPreferJson && !bModMission)
+    {
+        UE_LOG(LogTemp, Error, TEXT("[MissionJson] Required JSON missing: %s; legacy import must be explicit."), *JsonPath);
+        return;
+    }
 
 	if (!bModMission && !FPaths::FileExists(TemplatePath))
 	{
@@ -8346,7 +8178,7 @@ bool UStarshatterGameDataSubsystem::RebuildCampaignCutscenePresentation()
         FS_Campaign& Row = *reinterpret_cast<FS_Campaign*>(Entry.Value);
         const FString Folder = FPaths::ProjectContentDir() / FString::Printf(TEXT("GameData/Campaigns/%02d/Scenes"), Row.Index + 1);
         TArray<FString> Files;
-        IFileManager::Get().FindFiles(Files, *(Folder / TEXT("*.def")), true, false);
+        IFileManager::Get().FindFiles(Files, *(Folder / TEXT("*.json")), true, false);
         Files.Sort();
         for (const FString& File : Files)
         {
@@ -8519,9 +8351,7 @@ bool UStarshatterGameDataSubsystem::ConvertPlayableMissionsToJson()
         ParseMission(Ansi.Get(), false);
         if (MissionArray.Num()!=1) { bSuccess=false; break; }
         const FS_CampaignMission Original = MissionArray[0];
-        const bool bCinematic=Original.Event.ContainsByPredicate([](const FS_MissionEvent& Event)
-            {return Event.EventType==MISSIONEVENT_TYPE::BEGIN_SCENE || Event.EventType==MISSIONEVENT_TYPE::END_SCENE;});
-        if (bCinematic || Original.Element.IsEmpty()) continue;
+        if (Original.Element.IsEmpty()) continue;
         FString Json;
         FS_CampaignMission RoundTrip;
         if (!FJsonObjectConverter::UStructToJsonObjectString(Original, Json) ||
@@ -8537,7 +8367,7 @@ bool UStarshatterGameDataSubsystem::ConvertPlayableMissionsToJson()
         ++Converted;
     }
     MissionElementArray=SavedElements; MissionEventArray=SavedEvents; LastParsedMissionEventTime=SavedTime;
-    UE_LOG(LogTemp,Display,TEXT("[MissionJson] %d playable missions converted; DEF/JSON parity %s; campaign and cutscene definitions retained"),Converted,bSuccess?TEXT("PASS"):TEXT("FAIL"));
+    UE_LOG(LogTemp,Display,TEXT("[MissionJson] %d missions/templates converted; DEF/JSON parity %s; JSON is the runtime content source"),Converted,bSuccess?TEXT("PASS"):TEXT("FAIL"));
     return bSuccess && Converted>0;
 }
 

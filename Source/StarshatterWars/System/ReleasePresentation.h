@@ -8,7 +8,7 @@ namespace SSWReleasePresentation
 {
  struct FInfo
  {
-  FString Stage=TEXT("Alpha 4");
+  FString Stage=TEXT("Alpha 5");
   FString Warning=TEXT("Work in progress. This alpha build may contain bugs, crashes, incomplete features and save incompatibilities. Gameplay and balance may change.");
   FString Version(const FString& Build)const{return Stage+TEXT(" | Build ")+Build;}
  };

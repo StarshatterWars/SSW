@@ -915,7 +915,7 @@ void USingleMissionDlg::OnBackPressed()
 }
 void USingleMissionDlg::OnCampaignTabPressed()
 {
-    if (manager) manager->ShowMissionSelectDlg();
+    if (manager) manager->ReturnFromMissionBriefing();
 }
 void USingleMissionDlg::OnSingleTabPressed()
 {

@@ -1,0 +1,5629 @@
+{
+	"storyCampaignId": 0,
+	"requiredEmpire": "Neutral",
+	"narrativeCampaignId": 0,
+	"counterpartMissionId": 0,
+	"storyUnlockScene": "",
+	"storyPoints": 0,
+	"rowName": "None",
+	"id": 201,
+	"missionName": "Operation Highland Start",
+	"maxPlayers": 0,
+	"missionRegion": "Solus",
+	"missionSystem": "Solus",
+	"scene": "01-News-Start",
+	"subtitles": "",
+	"desc": "",
+	"targetName": "",
+	"wardName": "",
+	"objective": "Operation Highland Briefing",
+	"sitrep": "SOLUS - The Provisional Security Directorate of the Independent System of Solus formally requested military assistance from Terellian Alliance Force:Command this morning.  Special couriers ran the Trellis blockade to deliver the message to the Force outpost in the nearby Janek system.\\n\\nThe official government of this system has been cut off by the illegal blockade of the Trellis Farcaster, said Adminstrator Lars of the Directorate.  We have suffered a great deal of damage in the fighting, and we need help to reestablish basic services here.\\n\\nSolus has been ripped nearly in two by the bloody civil war that erupted between the Loyalist and Separatist factions of the system government.  Dantari Separatists under the leadership of Senator Masil Gannet, after months of pressing for an official alliance with the Hegemony Prefecture of Renser, have seized much of the Solus star fleet and taken control of the outer worlds of Trellis and Jalah.  The Loyalist faction, although still technically in control of the official goverment, has been trapped on the inner planets Solus and Meridian.\\n\\nThe Separatist blockade of the Trellis Farcaster has also taken a toll on the many Alliance citizens in the Solus system.  Several Terellian companies maintain major offices on the capitol world itself, and Tal Vesta University runs a stellar observatory near the planet Meridian.  An estimated 375,000 Terellians are trapped by the blockade.  So far they have been unable to convince the Dantari Separatists to grant them safe passage back to the main Alliance systems.",
+	"startTime": "01/00:00:00",
+	"startAfter": "",
+	"group": "NONE",
+	"missionType": "PATROL",
+	"source": "Scripted",
+	"displayType": "CutsceneOnly",
+	"team": 0,
+	"stardate": 1147287263,
+	"degrees": true,
+	"once": false,
+	"element": [
+		{
+			"name": "Falcon",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "CameraPod",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 1,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Tal Vesta Stellar Observatory",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Observatory",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Meridian",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 75000,
+				"y": 75000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Solus-Trellis",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Farcaster",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Solus",
+			"instr": "",
+			"intel": "LOCATED",
+			"location":
+			{
+				"x": -200000,
+				"y": -100000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Trellis-Solus",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Solus-Jalah",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Farcaster",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Solus",
+			"instr": "",
+			"intel": "LOCATED",
+			"location":
+			{
+				"x": 150000,
+				"y": -180000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Jalah-Solus",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Jalah-Solus",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Farcaster",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Jalah",
+			"instr": "",
+			"intel": "LOCATED",
+			"location":
+			{
+				"x": 100000,
+				"y": -150000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Solus-Jalah",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Jalah-Trellis",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Farcaster",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Jalah",
+			"instr": "",
+			"intel": "LOCATED",
+			"location":
+			{
+				"x": 120000,
+				"y": -200000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Trellis-Jalah",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Trellis-Solus",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Farcaster",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Trellis",
+			"instr": "",
+			"intel": "LOCATED",
+			"location":
+			{
+				"x": -100000,
+				"y": -150000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Solus-Trellis",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Trellis-Jalah",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Farcaster",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Trellis",
+			"instr": "",
+			"intel": "LOCATED",
+			"location":
+			{
+				"x": 50000,
+				"y": -100000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "",
+					"objectiveName": "Jalah-Trellis",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Trellis Docks",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Station1",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Trellis",
+			"instr": "",
+			"intel": "LOCATED",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Blockade Runner",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Courier",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Trellis",
+			"instr": "",
+			"intel": "LOCATED",
+			"location":
+			{
+				"x": -120000,
+				"y": -90000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 1000,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": -120000,
+						"y": -170000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Kitts",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Wolf",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Trellis",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 185000,
+				"y": -280000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 180,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 180,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 185000,
+						"y": -360000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				},
+				{
+					"formation": 0,
+					"speed": 180,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 165000,
+						"y": -400000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Lovo",
+			"carrier": "",
+			"commander": "Kitts",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Baikal",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Trellis",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 187000,
+				"y": -281000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 180,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 180,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 187000,
+						"y": -361000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				},
+				{
+					"formation": 0,
+					"speed": 180,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 167000,
+						"y": -401000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Edmonton",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "IM4300",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Trellis",
+			"instr": "",
+			"intel": "LOCATED",
+			"location":
+			{
+				"x": 212000,
+				"y": -290000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 500,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Trellis",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": -120000,
+						"y": -170000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		}
+	],
+	"event": [
+		{
+			"eventType": "BEGIN_SCENE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Operation Highland Briefing",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "body:Solus",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0.01,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 10000000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0.01,
+			"eventPoint":
+			{
+				"x": 0.11999999731779099,
+				"y": 0.0099999997764825821,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "HOLD",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "Kitts",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0.01,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				4,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "HOLD",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "Lovo",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0.01,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				4,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "News",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 4,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Solus System",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Capitol",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "SOLUS - The Provisional Security Directorate\\nof the Independent System of Solus",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "News_01_Campaign_Start",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0.27000000000000002,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "formally requested military assistance\\nfrom Terellian Alliance Force Command this morning.",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 4.2999999999999998,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Blockade Runner",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 7,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				6,
+				15,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 2,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Trellis Sector",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 7,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Blockade Runner",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 7,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "Special couriers ran the Trellis blockade\\nto deliver the message",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 9,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "to the Force outpost\\nin the nearby Janek system.",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 12.56,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Kitts",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 20,
+			"eventPoint":
+			{
+				"x": 2.5,
+				"y": 0.2800000011920929,
+				"z": 9000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 20,
+			"eventPoint":
+			{
+				"x": 0.035000000149011612,
+				"y": 0.0030000000260770321,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Dantari Separatists",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 20,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Destroyer Squadron 'Kitts'",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 20,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "The official government of this system\\nhas been cut off by the illegal blockade",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 16.18,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "of the Trellis Farcaster,\\\" said\\nAdministrator Lars of the Directorate.",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 19.640000000000001,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "\\\"We have suffered a great deal of damage\\nin the fighting,",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 23.75,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "and we need help to reestablish\\nbasic services here.\\\"",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 26.629999999999999,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "body:Trellis",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 30,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 100000000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 30,
+			"eventPoint":
+			{
+				"x": -0.15000000596046448,
+				"y": 0.0099999997764825821,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Trellis",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 30,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "Solus has been ripped nearly in two\\nby the bloody civil war",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 30,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "that erupted between the Loyalist\\nand Separatist factions of the system government.",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 33.829999999999998,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "body:Jalah",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 37.850000000000001,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 80000000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 37.850000000000001,
+			"eventPoint":
+			{
+				"x": 0.11999999731779099,
+				"y": 0.0099999997764825821,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Jalah",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 37.850000000000001,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "Dantari Separatists, under the leadership\\nof Senator Masil Gannet,",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 37.850000000000001,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "after months of pressing for an official alliance\\nwith the Hegemony Prefecture of Renser,",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 41.600000000000001,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "have seized much of the Solus star fleet\\nand taken control",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 46.549999999999997,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "of the outer worlds\\nof Trellis and Jalah.",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 49.490000000000002,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Tal Vesta Stellar Observatory",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 52.549999999999997,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 2000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 52.549999999999997,
+			"eventPoint":
+			{
+				"x": -0.12999999523162842,
+				"y": 0.0099999997764825821,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Meridian Sector",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 52.549999999999997,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Tal Vesta Stellar Observatory",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 52.549999999999997,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "The Loyalist faction, although still\\ntechnically in control of the official government,",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 52.549999999999997,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "has been trapped on the inner planets\\nSolus and Meridian.",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 56.5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Trellis-Solus",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 60.5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 2000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 60.5,
+			"eventPoint":
+			{
+				"x": -0.12999999523162842,
+				"y": 0.0099999997764825821,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Trellis Sector",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 60.5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Trellis-Solus Farcaster",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 60.5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "The Separatist blockade of the Trellis Farcaster\\nhas also taken a toll",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 60.5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "on the many Alliance citizens\\nin the Solus system.",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 63.850000000000001,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "body:Meridian",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 68.5,
+			"eventPoint":
+			{
+				"x": 60,
+				"y": 0,
+				"z": 100000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 68.5,
+			"eventPoint":
+			{
+				"x": 0.14000000059604645,
+				"y": 0.0099999997764825821,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Meridian",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 68.5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "Several Terellian companies maintain\\nmajor offices on the capital world itself,",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 68.5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Tal Vesta Stellar Observatory",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 72.549999999999997,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 2000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 72.549999999999997,
+			"eventPoint":
+			{
+				"x": -0.12999999523162842,
+				"y": 0.0099999997764825821,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Meridian Sector",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 72.549999999999997,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Tal Vesta Stellar Observatory",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 72.549999999999997,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "and Tal Vesta University runs a stellar observatory\\nnear the planet Meridian.",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 72.549999999999997,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "An estimated 375,000 Terellians\\nare trapped by the blockade.",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 77.5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "So far they have been unable to convince\\nthe Dantari Separatists",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 81.530000000000001,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Solus System",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 85.5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Capitol",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 85.5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "to grant them safe passage\\nback to the main Alliance systems.",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 85.5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "body:Solus",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 85.5,
+			"eventPoint":
+			{
+				"x": 60,
+				"y": 0,
+				"z": 10000000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 85.5,
+			"eventPoint":
+			{
+				"x": 0.14000000059604645,
+				"y": 0.0099999997764825821,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "END_SCENE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Briefing End",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 89.5,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		}
+	]
+}

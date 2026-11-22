@@ -1,0 +1,190 @@
+{
+  "entries": [
+    {
+      "category": "Latest install build",
+      "title": "Alpha 5 - Build 20261120-073846Z ready to install",
+      "date": "2026-11-20",
+      "body": "Alpha 5 preparation: direct JSON weapons and components, cleaner logbook and reference filters, automatic mission messages, unread panel alerts, damage schematic and event-driven data panels. Capital weapons now share the full Weapons panel. Player avatars support Steam; Epic uses a fallback icon. Includes existing StarServer; server conversion and multiplayer tests remain deferred."
+    },
+    {
+      "category": "Release notes",
+      "title": "Alpha 5: panels, JSON catalogs and presentation",
+      "date": "2026-11-20",
+      "body": "This game build separates Chat Macros in Player Logbook, adds station/platform and transport/shuttle filters without redundant prefixes, and loads weapons and components directly from JSON. Mission messages reopen automatically and cannot be hidden by the pilot. Closed data panels show unread-update markers. CAUTION uses a top-down hull schematic with damage icons at authored or probable system locations; miniHUD hover and wheel magnification are removed. Cargo, marketplace, industry and wallet views refresh from changes instead of periodic table polling. Routine diagnostic messages use information logging; actual warnings remain under review. Capital-ship weapon status is integrated into the full Weapons panel. Player Logbook adds an account avatar: Steamworks supplies Steam images; Epic and offline accounts use a player icon because EOS exposes no avatar image. Live Steam verification remains pending. Launcher 1.0.17 includes the offline Roadmap tab. The cooked package is now available through the launcher. The local server conversion remains gated; further legacy-derived simulation changes wait for the owner commit."
+    },
+    {
+      "category": "Development update",
+      "title": "Alpha 5 — local universe server development",
+      "date": "2026-11-20",
+      "body": "Alpha 4 is verified and closed. Alpha 5 begins with direct JSON weapon and component loading, dedicated chat macros and cleaner reference filters, followed by the local FractalVerse client/server conversion. The server will own universe state, the economy and saved progress. Arena multiplayer and StarServer testing remain deferred. The latest downloadable game is still the verified Alpha 4 build until the new build is cooked, packaged and published. This is an alpha: bugs, crashes and save incompatibilities may occur. Launcher 1.0.17 adds an offline Roadmap tab: player-owned stations and corporations are planned for Alpha 8, and walkable hangars for Alpha 9 after the full-scale resize."
+    },
+    {
+      "category": "Release notes",
+      "title": "Alpha 4: gameplay, economy and presentation updates",
+      "date": "2026-11-20",
+      "body": "ALPHA 4 — 20 NOVEMBER 2026\nCarrier aircraft sales follow every eligible squadron in the carrier OOB. Mission-assigned aircraft are excluded from sale; stock and purchases persist. The Stormhawk training price remains 400,000 CR. T1 is now Carrier Qualifications. The training agent assigns the pilot to the 18th Trellis Wing aboard CV6-Orion.\n\nGround lessons remain queued while Orion jumps to the Janek Airbase flight corridor. The pilot then launches, flies through the atmosphere and lands at Janek before starting the surface lesson. Continuous surface boundaries preserve velocity without the old control blackout. Recovered free-flight craft can be staged for departure again without replacing their fuel, cargo or damage.\n\nOrion exterior red/green beacons retain their hull fixtures, use a local light radius and cast hull shadows to prevent illumination through the launch bays. Janek now uses the full WorldScape material instead of the baked orbital surface. The runway grade and lake data are unchanged.\n\nTwenty-three freighter and Zodiac-derived skins now have cooked UE material assets selected by native C++. Runtime raw bitmap decoding is removed; legacy skin parsing remains an editor authoring tool.\n\nCampaign information now includes complete Marakan and Dantari headers and seven training flights for each faction. Training retains separate rank and skill gates, local carrier/base assets, and distinct travel sectors. Existing Terellian training remains in place.\n\nMarakan Campaigns 3 and 4 have expanded mission briefs, hostile flights and recovery objectives. Campaign 5 now faces the Zolon threat, with Marakan pilots remaining playable and Zolons remaining opponents. Chapter-specific repeatable agent jobs use faction, system and progression gates.\n\nFaction combat-group rosters now load directly from JSON. The separate OOB force-summary table remains. Running independent jobs remain visible after offer expiry and repeated Start/refresh commands cannot reset or duplicate them. Current rank and chapter-system authorization are rechecked.\n\nThis is Phase 4. The local dedicated FractalVerse server is Phase 5 and arena multiplayer Phase 6. Mod Editor and new MP4 production remain deferred.\n\nLauncher 1.0.15 adds separate News and Store tabs. No products or checkout are active. An optional HTTPS store link opens in the browser. Epic persistent authorization and Epic's own sign-in page remain the supported login path; no Epic passwords are collected.\n\nGun muzzle flashes are 25% smaller without changing weapon data. Combat beam classes now have native C++ Niagara defaults; legacy range, charge, damage and duration remain controlled by the simulation. Missiles use nozzle-fitted native Niagara exhaust, hidden while racked or dropping free and driven by simulated thrust during flight, including pause/time controls.\n\nAll 221 recipes now have an eligible production facility. Previously 206 recipes had no facility route for installing their blueprint jobs. New links follow the existing regional production lists and exclusive sources; primary automated NPC recipes are unchanged.\n\nFlight Ops is read-only unless you are piloting the displayed carrier. Fighter pilots can inspect rosters but cannot issue launch, recall, readiness or mission-planning commands.\n\nBoth the launcher and main menu now identify this release as Alpha 4 and display the same game build number. A shared alpha warning explains that bugs, crashes, incomplete features and save incompatibilities may occur. The launcher application version is shown separately."
+    },
+    {
+      "category": "Release notes",
+      "title": "Faction stories, introductions and mission rewards",
+      "date": "2026-11-20",
+      "body": "Adds 35 Marakan stories, including the Hegemony side of Campaigns 2-5, and 10 Dantari Campaign 2 stories. New agent handoffs and faction-only dynamic policies keep empire boundaries intact. Training and campaign introductions are readable in Agents and Intel; faction MP4s remain for later. Every successful playable mission grants completion points and credits under the reward policy. Original mission scripts and campaign table remain unchanged."
+    },
+    {
+      "category": "Release notes",
+      "title": "Safer independent jobs and clearer target health",
+      "date": "2026-11-20",
+      "body": "Cargo pickups require docking, freight uses actual unit mass and the selected inventory, and faction jobs validate empire access at start. Neutral commercial hulls remain rank/skill gated but can serve each empire; transports can qualify for courier work. Shipyard construction-to-hangar delivery and lost-freight refunds are regression tested. Target MFD now displays compact fitted-shield and hull health indicators."
+    },
+    {
+      "category": "Release notes",
+      "title": "Cleaner flight readouts and Intel controls",
+      "date": "2026-11-20",
+      "body": "Larger miniHUD system icons, compact gauges and restored mission information; centered direction indicator and full hover ship framing. Manual target selection remains available during autoland. Target MFD titles use a highlighted single-line header with waypoint details below. Intel Back and replay controls use gray buttons and cyan icons."
+    },
+    {
+      "category": "Release notes",
+      "title": "Outlined, pulsing waypoints",
+      "date": "2026-11-19",
+      "body": "Waypoints now have fine illuminated facet edges and a gentle brightness pulse. Both the in-space marker and target-MFD preview rotate upright. Pulse speed stays steady during accelerated travel."
+    },
+    {
+      "category": "Release notes",
+      "title": "Promotion and medal payments",
+      "date": "2026-11-19",
+      "body": "Newly earned ranks and medals grant configurable credit bonuses, recorded once in the pilot wallet. Reloading or replaying cannot pay the same award twice."
+    },
+    {
+      "category": "Release notes",
+      "title": "Independent agent work",
+      "date": "2026-11-19",
+      "body": "Agents can offer paid independent work based on their role, your rank and usable craft in your hangar. Generated offers persist with the pilot. The survey acceptance, save, restart and completion flow has automated coverage."
+    },
+    {
+      "category": "Release notes",
+      "title": "NPC patrols, freight recovery and saves",
+      "date": "2026-11-19",
+      "body": "Free flight gains regional friendly, neutral and hostile fighter patrols. Blocked freight can seek another buyer while protecting reserved cargo and payments. Save tests cover interrupted checkpoints, exit during autosave and native mission-state restoration."
+    },
+    {
+      "category": "Release notes",
+      "title": "Legacy form cleanup",
+      "date": "2026-11-19",
+      "body": "Removed the obsolete FRM form files and their parser calls from panel initialization. Current panels continue to use their Unreal widgets."
+    },
+    {
+      "category": "Release notes",
+      "title": "Offline regression checks",
+      "date": "2026-11-19",
+      "body": "The editor build compiled successfully. The full offline suite passed 301 checks with no failures, followed by four passing checks for the final MFD and waypoint adjustments. This package is ready for hands-on flight testing."
+    },
+    {
+      "category": "Release notes",
+      "title": "Reliable capital-ship orders",
+      "date": "2026-11-19",
+      "body": "Fixed uninitialized radio orders that could make capital ships hold position or follow an unintended travel command. New instructions start without an order, while copied instructions retain deliberate orders. All 13 AI checks passed."
+    },
+    {
+      "category": "Release notes",
+      "title": "Compact flight instruments and damage inspection",
+      "date": "2026-11-19",
+      "body": "The left information view stays fixed, with native system icons, wider gauges and aligned values. The miniHUD ship model carries live component damage icons and opens an enlarged inspection view on hover. Scrolling there magnifies the inspection rather than zooming the flight camera. The existing caution panel remains available."
+    },
+    {
+      "category": "Release notes",
+      "title": "Faction OOB JSON ingestion",
+      "date": "2026-11-19",
+      "body": "All eight faction orders of battle now have editable JSON catalogs. Conversion preserved 644 groups and 967 nested unit rows, exact row names, enums, counts and coordinates. The current runtime still uses DT_CombatGroup as a verified transition step."
+    },
+    {
+      "category": "Release notes",
+      "title": "Native economy and NPC trade",
+      "date": "2026-11-19",
+      "body": "Mining, hauling and production continue in unloaded systems while SSW is open. Finite deposits, real pickup reservations, cargo holds and unload completion prevent early or duplicate delivery credit. Separate NPC businesses have budgets, buy/sell quotes, payment escrow, executed trade history and recovery when destinations close."
+    },
+    {
+      "category": "Release notes",
+      "title": "Industry and shipyards",
+      "date": "2026-11-19",
+      "body": "Production facilities and recipes now load directly into native catalogs. Seven selected worlds host shipyards using the transfer-station hull as a placeholder. Six hull recipes connect material stock to completed ships, rank/empire/skill eligibility, wallet payment and hangar delivery. Shipyard hull stock cannot become fractional freighter cargo."
+    },
+    {
+      "category": "Release notes",
+      "title": "Local saves and timed skills",
+      "date": "2026-11-19",
+      "body": "Five-minute sequential checkpoints preserve pilot, economy, skills and universe data as matching generations, with normal-exit saves and fallback to the previous complete checkpoint. Skills use UTC end times, individual level queue entries, standard levels I–V and advanced books for VI–X."
+    },
+    {
+      "category": "Release notes",
+      "title": "Orbits and flight effects",
+      "date": "2026-11-19",
+      "body": "Native planet and moon paths use eccentricity, inclination and Kepler motion, with conservative body and moon-envelope clearance. Perspective maps sample these paths. Cannon bolts use brighter native Niagara effects. Waypoint markers turn upright about the vertical axis."
+    },
+    {
+      "category": "Release notes",
+      "title": "Regression fixes and current limits",
+      "date": "2026-11-19",
+      "body": "Added the shipyard Blueprint and refreshed ship designs. Fixed a freight inventory pointer lifetime and uninitialized radio orders. Offline regressions now include native patrols, alternative freight buyers, save recovery, paid awards and waypoint rendering. Multiplayer and Mod Editor remain disabled; FractalVerse authority and the remaining catalog migrations are future work."
+    },
+    {
+      "category": "Release notes",
+      "title": "Intel replay stability and clearer record details",
+      "date": "2026-11-19",
+      "body": "Fixed a garbage-collection lifetime issue in Intel replay controls and cleaned up nested mission previews. List details now use compact headers, status badges, labelled facts and separate information sections across production, market, contract, skill, blueprint, agent, wallet, cargo and contact panels. Live replay and narrow/wide rendering checks passed."
+    },
+    {
+      "category": "Release notes",
+      "title": "System-first agent directory",
+      "date": "2026-11-19",
+      "body": "Choose a system before choosing an agent. Same System, One Jump and Empire-wide filters include only neutral agents and agents from your own empire. One Jump follows direct farcaster links. Mission rank and skill requirements still apply. Four focused checks passed."
+    },
+    {
+      "category": "Release notes",
+      "title": "Flight effects and refreshed videos",
+      "date": "2026-11-19",
+      "body": "Brighter nozzle-fitted native engine plumes and maneuvering jets use Terellian blue, Dantari orange-yellow and Marakan green, with smooth burn response. The main-menu battle and campaign 2–4 openings have been rebuilt. The training intro has also been re-recorded with current effects and confirmed shuttle docking onto Archon. Campaign 5 and further cinematic action remain deferred. Shield-hit flashes now have soft edges. Region-owned beams are expired and deleted once, with missing-design and retired-owner guards."
+    },
+    {
+      "category": "Release notes",
+      "title": "Mining drones and manufacturing",
+      "date": "2026-11-19",
+      "body": "A new mining-drone model and beam, Repeat Mining, and cargo-backed spare replacements join the mining controls. Prospector bays carry three drones; Rockhopper bays carry ten. Drones return and unload before ore is credited. New cargo, blueprint and recipe entries support drone manufacturing in twenty factory systems. Facilities can offer additional recipes, and player jobs check the required skills."
+    },
+    {
+      "category": "Release notes",
+      "title": "SSW economy and equipment balance",
+      "date": "2026-11-19",
+      "body": "Recalibrated five commodity prices, 46 hull prices, five batch-processing times, mining-drone yields and component quality grades using relative EVE data with SSW credit values and native power calculations. Grade III keeps its physical baseline. Higher grades improve performance while changing power demand and price. Existing hull geometry, mass, thrust and reactor output are retained."
+    },
+    {
+      "category": "Release notes",
+      "title": "Station services and contracts",
+      "date": "2026-11-19",
+      "body": "Inspect station and carrier services while flying; use them only when docked at the station being viewed. Carriers offer basic support, while full refits require a shipyard. Courier contracts gain confirmed abandonment and clearer collateral handling. Wallet receipts identify individual contract operations, with duplicate-identity, stock-ownership and inventory checks. Guild listings follow the pilot’s empire."
+    },
+    {
+      "category": "Release notes",
+      "title": "Editable data and launcher installation",
+      "date": "2026-11-19",
+      "body": "Ranks, awards, cargo and agent catalogs now load directly from JSON without runtime Data Tables. Existing inventory item identifiers are preserved for saved cargo and market stock. Mission/template catalogs, campaign actions and campaign zones use JSON ingestion with their existing table consumers. Campaign headers and galaxy/terrain definitions remain unchanged. The launcher bundles a silent local Apache server for installation testing without XAMPP; signed version and patch checks remain required for online and offline Play. Downloads remain separate from the launcher installer."
+    },
+    {
+      "category": "Release notes",
+      "title": "Build status",
+      "date": "2026-11-19",
+      "body": "Alpha 4 client and editor builds passed. The 314-test regression suite, final menu layout checks and 18 launcher checks passed. The packaged Windows game includes the existing StarServer. Server authority, arena multiplayer and cinematic polish remain deferred."
+    },
+    {
+      "category": "Patch notes",
+      "title": "Nozzle-fitted engine plumes",
+      "date": "2026-11-19",
+      "body": "Nozzle-fitted engine plumes: Terellian blue, Dantari orange-yellow and Marakan green, with smooth throttle response. Includes NPC traffic, mining drone controls and the local StarServer package."
+    },
+    {
+      "category": "News",
+      "title": "Starshatter Wars by Fractal Dev Games",
+      "date": "2026-11-19",
+      "body": "Install or update this build, then run T1 to check the new engine colors, nozzle fit and smooth throttle response."
+    }
+  ]
+}

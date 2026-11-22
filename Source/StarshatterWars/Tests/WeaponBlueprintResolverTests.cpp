@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "WeaponBlueprintResolver.h"
 #include "MissileFlightPresentation.h"
 #include "MissileActor.h"
@@ -19,6 +20,7 @@ bool FWeaponBlueprintResolverTest::RunTest(const FString& Parameters)
         TestEqual(TEXT("Recon pod directly inherits MissileActor"),ReconClass->GetSuperClass(),AMissileActor::StaticClass());
     const auto Options = UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World = UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     auto* Rocket = World->SpawnActor<ARocketMissileActor>();
     auto* Recon = World->SpawnActor<AReconPodActor>();
     for (auto* Mesh : {Rocket->MeshComponent.Get(),Recon->MeshComponent.Get()})

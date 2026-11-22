@@ -6,7 +6,6 @@
 #include "RecordDetails.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "PlayerCharacter.h"
-#include "Widgets/Views/SExpanderArrow.h"
 #include "Widgets/Layout/SWidgetSwitcher.h"
 #include "SkillsSubsystem.h"
 #include "StarshatterPlayerSubsystem.h"
@@ -192,22 +191,22 @@ TSharedRef<SWidget> USkillsDlg::RebuildWidget()
     }
     for (const auto& Skill : Table->All)
     {
-        auto Parent=Categories.FindChecked(Skill->Group);
-        for (FName Required : Skill->Prerequisites)
-            if (const auto* Candidate=Nodes.Find(Required); Candidate && (*Candidate)->Skill->Group==Skill->Group) { Parent=*Candidate; break; }
-        Parent->Children.Add(Nodes.FindChecked(Skill->Name));
+        // Categories expand once. Prerequisites remain in the details and native
+        // training rules instead of creating a deeply nested arrow for every skill.
+        Categories.FindChecked(Skill->Group)->Children.Add(Nodes.FindChecked(Skill->Name));
     }
     Table->Roots.Sort([](const auto& A,const auto& B) { return A->Category.LexicalLess(B->Category); });
+    for(const auto& Root:Table->Roots)
+        Root->Children.Sort([](const auto& A,const auto& B){return A->Skill->DisplayName.Compare(B->Skill->DisplayName,ESearchCase::IgnoreCase)<0;});
     auto Tree=SNew(STreeView<TSharedPtr<FSkillTreeNode>>).TreeItemsSource(&Table->Roots).SelectionMode(ESelectionMode::Single)
         .OnGetChildren_Lambda([](TSharedPtr<FSkillTreeNode> Node,TArray<TSharedPtr<FSkillTreeNode>>& Children) { Children=Node->Children; })
         .OnGenerateRow_Lambda([Weak](TSharedPtr<FSkillTreeNode> Node,const TSharedRef<STableViewBase>& Owner)
         {
             auto Row=SNew(STableRow<TSharedPtr<FSkillTreeNode>>,Owner).Style(&MissionUIStyle::FlightTableRowStyle());
-            Row->SetContent(SNew(SHorizontalBox)
-                + SHorizontalBox::Slot().AutoWidth()[SNew(SExpanderArrow,Row)]
+            Row->SetRowContent(SNew(SHorizontalBox)
                 + SHorizontalBox::Slot().AutoWidth().Padding(3)[SNew(SShipSystemIcon).Icon(Node->Skill ? EShipSystemIcon::Skills : CategoryIcon(Node->Category))]
                 + SHorizontalBox::Slot().FillWidth(1)
-                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Margin(FMargin(4,6))
+                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(Node->Skill?11:12)).Margin(FMargin(4,6))
                     .Text(FText::FromString(Node->Skill ? Node->Skill->DisplayName : Node->Category.ToString()).ToUpper())]);
             return Row;
         })
@@ -215,7 +214,20 @@ TSharedRef<SWidget> USkillsDlg::RebuildWidget()
         { if (Node) { Table->SelectedGroup=Node->Skill ? Node->Skill->Group : Node->Category; Table->Selected=Node->Skill; Table->Refresh(); } });
     for (const auto& Root : Table->Roots) Tree->SetItemExpansion(Root,true);
     auto List=SNew(SListView<FSkillItem>).ListItemsSource(&Table->Visible).HeaderRow(Header).SelectionMode(ESelectionMode::Single)
-        .OnGenerateRow_Lambda([Weak](FSkillItem Item,const TSharedRef<STableViewBase>& Owner) { return SNew(SSkillRow,Owner).Item(Item).Service(Weak); })
+        .OnGenerateRow_Lambda([Weak,Table](FSkillItem Item,const TSharedRef<STableViewBase>& Owner)
+        {
+            return SNew(SSkillRow,Owner).Item(Item).Service(Weak)
+                .OnRequestTraining(FRequestSkillTraining::CreateLambda([Weak,Table](FName Skill,int32 Level)
+                {
+                    const auto* Found=Table->All.FindByPredicate([Skill](const FSkillItem& Entry){return Entry->Name==Skill;});
+                    if(!Found || !Weak.IsValid())return;
+                    Table->Selected=*Found;
+                    if(Weak->GetLevel(Skill)>=Level)
+                    {Table->PendingLevel=0;Table->Feedback=INVTEXT("This skill level is already trained.");}
+                    else {Table->PendingLevel=Level;Table->Feedback=FText::GetEmpty();}
+                    Table->Refresh();
+                }));
+        })
         .OnSelectionChanged_Lambda([Table](FSkillItem Item,ESelectInfo::Type) { Table->Selected=Item; Table->Feedback=FText::GetEmpty(); });
     Table->List=List;
     return SNew(SVerticalBox)
@@ -235,7 +247,7 @@ TSharedRef<SWidget> USkillsDlg::RebuildWidget()
             + SHorizontalBox::Slot().FillWidth(1).Padding(0,0,8,0)[MissionUIStyle::MakeDataPane(Tree)]
             + SHorizontalBox::Slot().FillWidth(2)[MissionUIStyle::MakeDataPane(List)]]
         + SVerticalBox::Slot().FillHeight(0.35f).Padding(8)
-        [MissionUIStyle::MakeDataPane(SNew(SScrollBox)+SScrollBox::Slot()[SNew(SRecordDetails).Record_Lambda([Table,Weak]()
+        [MissionUIStyle::MakeDataPane(SNew(SScrollBox)+SScrollBox::Slot()[SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([Table](){return PointerHash(Table->Selected.Get());}).Record_Lambda([Table,Weak]()
             {
                 FRecordDetails D;D.Icon=EShipSystemIcon::Skills;
                 if(!Table->Selected){D.Title=INVTEXT("SELECT A SKILL BOOK");D.Description=INVTEXT("Standard books unlock Levels I-V. Advanced books unlock VI-X. Click a level dot to queue training; each level has its own saved GMT finish time.");return D;}

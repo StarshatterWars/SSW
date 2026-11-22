@@ -1,0 +1,2528 @@
+{
+	"storyCampaignId": 0,
+	"requiredEmpire": "Neutral",
+	"narrativeCampaignId": 0,
+	"counterpartMissionId": 0,
+	"storyUnlockScene": "",
+	"storyPoints": 0,
+	"rowName": "None",
+	"id": 405,
+	"missionName": "Operation Firestorm",
+	"maxPlayers": 0,
+	"missionRegion": "Jarnell",
+	"missionSystem": "Jarnell",
+	"scene": "05-Operation-Firestorm",
+	"subtitles": "",
+	"desc": "",
+	"targetName": "",
+	"wardName": "",
+	"objective": "",
+	"sitrep": "",
+	"startTime": "",
+	"startAfter": "",
+	"group": "NONE",
+	"missionType": "PATROL",
+	"source": "Scripted",
+	"displayType": "CutsceneOnly",
+	"team": 0,
+	"stardate": 1155670000,
+	"degrees": true,
+	"once": false,
+	"element": [
+		{
+			"name": "Camera",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "CameraPod",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Jarnell",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 1,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": true,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Atlas",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Orion",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Tarsus",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 10000,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": true,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 300,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Tarsus",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 10000,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Loyalty",
+			"carrier": "",
+			"commander": "Atlas",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Courageous",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Tarsus",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 1000
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": true,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Tarsus",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Vernor",
+			"carrier": "",
+			"commander": "Atlas",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Asher",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Tarsus",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": -5000,
+				"y": 0,
+				"z": -2000
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": true,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Tarsus",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": -5000,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Nichols",
+			"carrier": "",
+			"commander": "Atlas",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Asher",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Tarsus",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 14000,
+				"y": 0,
+				"z": 3000
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": true,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Tarsus",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 14000,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Sentry",
+			"carrier": "",
+			"commander": "Atlas",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Falcon",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Tarsus",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 18000,
+				"y": -18000,
+				"z": -2000
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 4,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [
+				{
+					"ship": -1,
+					"loadoutName": "ACM Medium Range",
+					"stations": [
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Tarsus",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 20000,
+						"y": -50000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Victor",
+			"carrier": "",
+			"commander": "Atlas",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Stormhawk",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Tarsus",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": -6000,
+				"y": -23000,
+				"z": 3000
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 4,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [
+				{
+					"ship": -1,
+					"loadoutName": "ACM Medium Range",
+					"stations": [
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0,
+						0
+					]
+				}
+			],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Tarsus",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": -10000,
+						"y": -50000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Morningstar",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Broadsword",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Tarsus",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 52000,
+				"y": -44000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 180,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": true,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Assault",
+					"statusName": "",
+					"orderRegionName": "Tarsus",
+					"objectiveName": "Loyalty",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Assault",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Crossbow",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Broadsword",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Tarsus",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 70000,
+				"y": -58000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 180,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": true,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Assault",
+					"statusName": "",
+					"orderRegionName": "Tarsus",
+					"objectiveName": "Loyalty",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Assault",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Gunston",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Tiger",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Tarsus",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 68000,
+				"y": -44000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 180,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": true,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 0,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Assault",
+					"statusName": "",
+					"orderRegionName": "Tarsus",
+					"objectiveName": "Loyalty",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Assault",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": 0,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Archaelith",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Archaelith",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Museum",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		}
+	],
+	"event": [
+		{
+			"eventType": "BEGIN_SCENE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Scene 1",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "body:Jarnell",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 2,
+				"y": 0,
+				"z": 15000000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": -0.11999999731779099,
+				"y": 0.0099999997764825821,
+				"z": 0.0099999997764825821
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick18",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "The PRESIDENT of the TERELLIAN ALLIANCE",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 10,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 20,
+				"z": 300,
+				"w": 300
+			},
+			"eventParam": [
+				-128,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "News_05_Operation_Firestorm",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 3,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Morningstar",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 10,
+			"eventPoint":
+			{
+				"x": 300,
+				"y": 0,
+				"z": 1200
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				6,
+				40,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 2,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick18",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Hegemony Forces",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 7,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 10,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 20,
+				"z": 300,
+				"w": 100
+			},
+			"eventParam": [
+				-128,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick12",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Tarsus System",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 7,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 10,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 40,
+				"z": 300,
+				"w": 100
+			},
+			"eventParam": [
+				-128,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Victor 1",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 25,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				6,
+				15,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 2,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Sentry 1",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 35,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				6,
+				15,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 2,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Atlas",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 45,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 1800
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				6,
+				40,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 2,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick18",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Force:Space Sixth Fleet",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 7,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 45,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 20,
+				"z": 300,
+				"w": 100
+			},
+			"eventParam": [
+				-128,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick12",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "9th Carrier Group 'Atlas'",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 7,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 45,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 40,
+				"z": 300,
+				"w": 100
+			},
+			"eventParam": [
+				-128,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Archaelith",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 70,
+			"eventPoint":
+			{
+				"x": 3,
+				"y": 0.05000000074505806,
+				"z": 170
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 70,
+			"eventPoint":
+			{
+				"x": 0.11999999731779099,
+				"y": 0.0099999997764825821,
+				"z": -0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick18",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Borovan Archaelith",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 7,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 70,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 20,
+				"z": 300,
+				"w": 100
+			},
+			"eventParam": [
+				-14671840,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick12",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "File Footage",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 7,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 70,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 40,
+				"z": 300,
+				"w": 100
+			},
+			"eventParam": [
+				-14671840,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Atlas",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 90,
+			"eventPoint":
+			{
+				"x": -3,
+				"y": 0,
+				"z": 18000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 90,
+			"eventPoint":
+			{
+				"x": -0.070000000298023224,
+				"y": 0.0070000002160668373,
+				"z": -0.0099999997764825821
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Vernor",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 110,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				6,
+				25,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 2,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Nichols",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 125,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				6,
+				25,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 2,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Atlas",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 140,
+			"eventPoint":
+			{
+				"x": 3,
+				"y": -0.20000000298023224,
+				"z": 10000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 140,
+			"eventPoint":
+			{
+				"x": 0.070000000298023224,
+				"y": 0.019999999552965164,
+				"z": -0.0099999997764825821
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "END_SCENE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Scene 1",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 155,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		}
+	]
+}

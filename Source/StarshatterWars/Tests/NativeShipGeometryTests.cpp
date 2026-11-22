@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "NativeShipGeometry.h"
 #include "ShipActor.h"
 #include "Components/StaticMeshComponent.h"
@@ -11,6 +12,7 @@ bool FNativeHullGeometryTest::RunTest(const FString& Parameters)
 {
     const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     UWorld* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     auto* Actor=World->SpawnActor<AShipActor>();
     Actor->HullMesh->SetStaticMesh(LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Cube.Cube")));
     Actor->HullMesh->SetWorldTransform(Actor->GetActorTransform());

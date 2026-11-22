@@ -22,6 +22,8 @@
 =============================================================================*/
 
 #include "PlayerDlg.h"
+#include "PlatformAvatarWidget.h"
+#include "FractalVerseStatusWidget.h"
 #include "GuildCatalogSubsystem.h"
 #include "TransactionAI.h"
 #include "AgentAI.h"
@@ -30,6 +32,9 @@
 #include "Widgets/Layout/SBorder.h"
 #include "Styling/CoreStyle.h"
 #include "Widgets/SBoxPanel.h"
+#include "Widgets/Layout/SWidgetSwitcher.h"
+#include "Widgets/Input/SButton.h"
+#include "ShipSystemIcon.h"
 #include "Widgets/Text/STextBlock.h"
 
 #include "ModernMenuLayout.h"
@@ -625,7 +630,7 @@ void UPlayerDlg::RefreshUIFromSubsystem()
     UStarshatterPlayerSubsystem* SS = GetPlayerSS();
     if (!SS)
     {
-        UE_LOG(LogPlayerDlg, Warning, TEXT("[PlayerDlg] RefreshUIFromSubsystem: PlayerSubsystem is NULL"));
+        if(GetWorld() && GetWorld()->IsGameWorld()) UE_LOG(LogPlayerDlg,Warning,TEXT("[PlayerDlg] RefreshUIFromSubsystem: PlayerSubsystem is NULL"));
         return;
     }
 
@@ -1196,32 +1201,40 @@ TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
                 AddStat(FText::AsNumber(Index + 1), Display(Pilot.ChatMacros[Index]));
     }
 
-    return MissionUIStyle::MakeDataPane(
-        SNew(SVerticalBox)
-        + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 12)
-        [
-            SNew(STextBlock).Text(Display(Pilot.GetRankedDisplayName()))
-            .Font(MissionUIStyle::GetHeaderFont(18)).AutoWrapText(true)
-        ]
-        + SVerticalBox::Slot().FillHeight(1)
-        [
-            SNew(SScrollBox)
-            + SScrollBox::Slot()
-            [
-                SNew(SHorizontalBox)
-                + SHorizontalBox::Slot().FillWidth(1).Padding(0, 0, 8, 0)
-                [
-                    SNew(SVerticalBox)
-                    + SVerticalBox::Slot().AutoHeight()[Overview]
-                    + SVerticalBox::Slot().AutoHeight()[Awards]
-                ]
-                + SHorizontalBox::Slot().FillWidth(1).Padding(8, 0, 0, 0)
-                [
-                    SNew(SVerticalBox)
-                    + SVerticalBox::Slot().AutoHeight()[ServiceRecord]
-                    + SVerticalBox::Slot().AutoHeight()[History]
-                    + SVerticalBox::Slot().AutoHeight()[Radio]
-                ]
-            ]
-        ]);
+    else
+    {
+        Radio->AddSlot().AutoHeight()[SNew(STextBlock).Text(INVTEXT("No chat macros configured.")).AutoWrapText(true)];
+    }
+    auto Pages=SNew(SWidgetSwitcher);
+    Pages->AddSlot()[SNew(SScrollBox)+SScrollBox::Slot()
+        [SNew(SHorizontalBox)
+            +SHorizontalBox::Slot().FillWidth(1).Padding(0,0,8,0)
+                [SNew(SVerticalBox)+SVerticalBox::Slot().AutoHeight()[Overview]+SVerticalBox::Slot().AutoHeight()[Awards]]
+            +SHorizontalBox::Slot().FillWidth(1).Padding(8,0,0,0)
+                [SNew(SVerticalBox)+SVerticalBox::Slot().AutoHeight()[ServiceRecord]+SVerticalBox::Slot().AutoHeight()[History]]]];
+    Pages->AddSlot()[SNew(SScrollBox)+SScrollBox::Slot()[Radio]];
+    Pages->AddSlot()[SNew(SFractalVerseStatusPanel).GameInstance(Instance)];
+    auto Tabs=SNew(SHorizontalBox);
+    const auto AddTab=[&](int32 Index,EShipSystemIcon Icon,FText Caption)
+    {
+        Tabs->AddSlot().AutoWidth().Padding(0,0,8,0)
+        [SNew(SButton).ToolTipText(Caption).ContentPadding(FMargin(12,6))
+            .ButtonColorAndOpacity_Lambda([Pages,Index](){return Pages->GetActiveWidgetIndex()==Index?MissionUIStyle::RowSelectedBG:MissionUIStyle::RowBG;})
+            .OnClicked_Lambda([Pages,Index](){Pages->SetActiveWidgetIndex(Index);return FReply::Handled();})
+            [SNew(SHorizontalBox)
+                +SHorizontalBox::Slot().AutoWidth().Padding(0,0,8,0)[SNew(SShipSystemIcon).Icon(Icon)]
+                +SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)[SNew(STextBlock).Text(Caption).Font(MissionUIStyle::GetRowFont(13)).ColorAndOpacity(FLinearColor::White)]]];
+    };
+    AddTab(0,EShipSystemIcon::Agent,INVTEXT("LOGBOOK"));
+    AddTab(1,EShipSystemIcon::Radio,INVTEXT("CHAT MACROS"));
+    AddTab(2,EShipSystemIcon::Sensor,INVTEXT("SERVER"));
+    return MissionUIStyle::MakeDataPane(SNew(SVerticalBox)
+        +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,12)
+            [SNew(SHorizontalBox)
+                + SHorizontalBox::Slot().AutoWidth().Padding(0,0,14,0)
+                    [SNew(SPlatformAvatarWidget).GameInstance(Instance)]
+                + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)
+                    [SNew(STextBlock).Text(Display(Pilot.GetRankedDisplayName())).Font(MissionUIStyle::GetHeaderFont(18)).AutoWrapText(true)]]
+        +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,10)[Tabs]
+        +SVerticalBox::Slot().FillHeight(1)[Pages]);
 }

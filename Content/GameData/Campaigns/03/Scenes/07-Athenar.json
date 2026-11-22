@@ -1,0 +1,1893 @@
+{
+	"storyCampaignId": 0,
+	"requiredEmpire": "Neutral",
+	"narrativeCampaignId": 0,
+	"counterpartMissionId": 0,
+	"storyUnlockScene": "",
+	"storyPoints": 0,
+	"rowName": "None",
+	"id": 307,
+	"missionName": "Athenar",
+	"maxPlayers": 0,
+	"missionRegion": "Pallas",
+	"missionSystem": "Athenar",
+	"scene": "07-Athenar",
+	"subtitles": "",
+	"desc": "",
+	"targetName": "",
+	"wardName": "",
+	"objective": "",
+	"sitrep": "",
+	"startTime": "",
+	"startAfter": "",
+	"group": "NONE",
+	"missionType": "PATROL",
+	"source": "Scripted",
+	"displayType": "CutsceneOnly",
+	"team": 0,
+	"stardate": 1177880000,
+	"degrees": true,
+	"once": false,
+	"element": [
+		{
+			"name": "Camera",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "CameraPod",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 1000,
+				"y": 30000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 1,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Furious",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Devastator",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Janek",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Janek",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Valiant",
+			"carrier": "",
+			"commander": "Furious",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Courageous",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Janek",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": -2000,
+				"y": 15000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Janek",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": -8000,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Honorable",
+			"carrier": "",
+			"commander": "Furious",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Courageous",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Janek",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 25000,
+				"y": -15000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Janek",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 25000,
+						"y": -90000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Salas",
+			"carrier": "",
+			"commander": "Furious",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Asher",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Janek",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": -11000,
+				"y": -12000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Janek",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": -24000,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Enigma",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Spectre",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Navara",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Navara",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Gorgon",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Spectre",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Navara",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 3000,
+				"y": 1000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Navara",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 4000,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Normandy",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Berents",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Navara",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": -4000,
+				"y": -1000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Navara",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": -6000,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Intruder",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Vendetta",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Pallas",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Pallas",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 0,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Royale",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Imperial",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Pallas",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": -2000,
+				"y": 15000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Pallas",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": -8000,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Merin Asgar",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Volnaris",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Pallas",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": 25000,
+				"y": -15000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Pallas",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 25000,
+						"y": -90000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Fourth Sector",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Tiger",
+			"skinName": "",
+			"roleName": "FLEET",
+			"regionName": "Pallas",
+			"instr": "",
+			"intel": "SECRET",
+			"location":
+			{
+				"x": -11000,
+				"y": -12000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 2,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 600,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Pallas",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": -24000,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		}
+	],
+	"event": [
+		{
+			"eventType": "BEGIN_SCENE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Scene 1",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "Black",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 1,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				-1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Intruder",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 1.2999999523162842,
+				"y": -0.15000000596046448,
+				"z": 3000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": -0.10999999940395355,
+				"y": 0.014999999664723873,
+				"z": 0.02500000037252903
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick18",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "STRATPLAN BRIEFING",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 5,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 1,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 20,
+				"z": 600,
+				"w": 150
+			},
+			"eventParam": [
+				-1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "OCRB",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Timestamp: $TIME\\nSubject: Hegemony Forces Invade Athenar\\nClassified: CONFIDENTIAL DND/CRYPTO",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 5,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 1,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 40,
+				"z": 600,
+				"w": 150
+			},
+			"eventParam": [
+				-128,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "C3-B07-OK",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 3,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Royale",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 20,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				6,
+				23,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 2,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Furious",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 40,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				6,
+				12,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 2,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick18",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Force:Space 17th Battle Group 'Furious'",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 7,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 40,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 20,
+				"z": 600,
+				"w": 150
+			},
+			"eventParam": [
+				-128,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Valiant",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 50,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				6,
+				12,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 2,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Enigma",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 60,
+			"eventPoint":
+			{
+				"x": 0.69999998807907104,
+				"y": 0.20000000298023224,
+				"z": 4000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 60,
+			"eventPoint":
+			{
+				"x": 0.11999999731779099,
+				"y": -0.0099999997764825821,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick18",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Force:Space 48TH DESTROYER SQUADRON 'ENIGMA'",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 7,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 60,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 20,
+				"z": 600,
+				"w": 150
+			},
+			"eventParam": [
+				-128,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "END_SCENE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Scene 1",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 75,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		}
+	]
+}

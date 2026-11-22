@@ -1,4 +1,6 @@
 #include "TransactionDlg.h"
+#include "ChangeDrivenPanel.h"
+
 #include "RecordDetails.h"
 #include "TransactionAI.h"
 #include "StarshatterPlayerSubsystem.h"
@@ -142,16 +144,18 @@ public:
                     [SNew(STextBlock).Text(INVTEXT("›")).Font(MissionUIStyle::GetRowFont(15))]]]
             + SVerticalBox::Slot().AutoHeight().Padding(10,4)[Services]
             + SVerticalBox::Slot().AutoHeight().Padding(10,8)
-            [SNew(SBox).MaxDesiredHeight(210)[SNew(SScrollBox)+SScrollBox::Slot()[SNew(SRecordDetails)
+            [SNew(SBox).MaxDesiredHeight(210)[SNew(SScrollBox)+SScrollBox::Slot()[SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([this](){return GetTypeHash(Selected);})
                 .Record_Lambda([this]() { auto D=Details;D.Icon=EShipSystemIcon::Wallet;if(D.Title.IsEmpty()){D.Title=INVTEXT("SELECT A TRANSACTION");D.Description=INVTEXT("Inspect its receipt, counterparties and wallet movement. Amounts are credits; dates are GMT.");}return D; })]]])];
         Refresh();
+        DataHandle=FSimDataEvents::Changed().AddSP(this,&STransactionWallet::OnDataChanged);
     }
+    ~STransactionWallet(){FSimDataEvents::Changed().Remove(DataHandle);}
     void Tick(const FGeometry& Geometry, double Time, float Delta) override
     {
         SCompoundWidget::Tick(Geometry,Time,Delta);
-        if (Time>=NextRefresh && Players.IsValid())
+        if (bDataDirty && Players.IsValid())
         {
-            NextRefresh=Time+1;
+            bDataDirty=false;
             const auto& History=Players->GetPlayerInfo().Economy.Journal;
             const FGuid Last=History.IsEmpty() ? FGuid() : History.Last().Id;
             if (Last!=LastReceipt || History.Num()!=LastCount)
@@ -165,7 +169,9 @@ private:
     FGuid Selected;
     int32 SortColumn=0;
     bool bDescending=true;
-    double NextRefresh=0;
+    FDelegateHandle DataHandle;bool bDataDirty=false;
+    void OnDataChanged(const FEconomyState& State)
+    {if(Players.IsValid() && &Players->GetPlayerInfo().Economy==&State)bDataDirty=true;}
     FGuid LastReceipt;
     int32 LastCount=-1;
     bool bRecentOnly=false;
@@ -269,6 +275,13 @@ private:
                     Details.Fact(INVTEXT("FROM"),FText::FromString(WalletName(Tx.From))).Fact(INVTEXT("TO"),FText::FromString(WalletName(Tx.To)));
                     Details.Fact(INVTEXT("SOURCE"),FText::FromString(WalletName(Tx.Source))).Fact(INVTEXT("DESTINATION"),FText::FromString(WalletName(Tx.Destination)));
                     Details.Fact(INVTEXT("TRADE VALUE"),FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Tx.Credits)));
+                    if(Tx.TaxCredits || Tx.FeeCredits)
+                    {
+                        Details.Fact(INVTEXT("BASE COST"),FText::AsNumber(Tx.BaseCredits));
+                        Details.Fact(INVTEXT("INCLUDED GST"),FText::AsNumber(Tx.TaxCredits));
+                        Details.Fact(INVTEXT("INCLUDED FEES"),FText::AsNumber(Tx.FeeCredits));
+                        Details.Fact(INVTEXT("FINAL TOTAL"),FText::AsNumber(Tx.Credits));
+                    }
                     Details.Fact(INVTEXT("WALLET CHANGE"),Known?FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Delta)):INVTEXT("UNKNOWN"));
                     Details.Fact(INVTEXT("RECEIPT"),FText::FromString(Tx.Id.ToString()));
                     if(Tx.Reference.IsValid())Details.Fact(INVTEXT("REFERENCE"),FText::FromString(Tx.Reference.ToString()));

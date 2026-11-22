@@ -1,0 +1,1762 @@
+{
+	"storyCampaignId": 0,
+	"requiredEmpire": "Neutral",
+	"narrativeCampaignId": 0,
+	"counterpartMissionId": 0,
+	"storyUnlockScene": "",
+	"storyPoints": 0,
+	"rowName": "None",
+	"id": 515,
+	"missionName": "Disappearance",
+	"maxPlayers": 0,
+	"missionRegion": "Marak",
+	"missionSystem": "Marak",
+	"scene": "15-Disappearance",
+	"subtitles": "",
+	"desc": "",
+	"targetName": "",
+	"wardName": "",
+	"objective": "",
+	"sitrep": "",
+	"startTime": "",
+	"startAfter": "",
+	"group": "NONE",
+	"missionType": "PATROL",
+	"source": "Scripted",
+	"displayType": "CutsceneOnly",
+	"team": 0,
+	"stardate": 1188999999,
+	"degrees": true,
+	"once": false,
+	"element": [
+		{
+			"name": "Camera",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "CameraPod",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 100000,
+				"y": 30000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 1,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Orion",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Orion",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Marak",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 100000,
+				"y": 300000,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 100,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Marak",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 100000,
+						"y": -70000,
+						"z": 0
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Courageous",
+			"carrier": "",
+			"commander": "Orion",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Courageous",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Marak",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 93000,
+				"y": 311000,
+				"z": 500
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 100,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Marak",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 93000,
+						"y": -70000,
+						"z": 500
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Asher",
+			"carrier": "",
+			"commander": "Orion",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Asher",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Marak",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 118000,
+				"y": 314000,
+				"z": -1000
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 100,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Marak",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 118000,
+						"y": -70000,
+						"z": -1000
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Shaw",
+			"carrier": "",
+			"commander": "Orion",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Asher",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Marak",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 90000,
+				"y": 292000,
+				"z": 800
+			},
+			"deck": 1,
+			"iFFCode": 1,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [
+				{
+					"formation": 0,
+					"speed": 100,
+					"priority": 1,
+					"eMCON": 0,
+					"orderName": "Vector",
+					"statusName": "",
+					"orderRegionName": "Marak",
+					"objectiveName": "",
+					"objectiveDesc": "",
+					"objectiveInfo": "",
+					"objectiveType": "",
+					"action": "Vector",
+					"objectiveLocation":
+					{
+						"x": 90000,
+						"y": -70000,
+						"z": 800
+					},
+					"arrivalRadius": 5000,
+					"rLoc": []
+				}
+			],
+			"ship": []
+		},
+		{
+			"name": "Dragon",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Hulk-Dragon",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Xanthe",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 20000,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Broadsword",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Hulk-Broadsword",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Xanthe",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 53000,
+				"y": 0,
+				"z": 10000
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Volnaris",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Hulk-Volnaris",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Marak",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 16000,
+				"y": 0,
+				"z": -2000
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		},
+		{
+			"name": "Imperial",
+			"carrier": "",
+			"commander": "",
+			"squadron": "",
+			"text": "",
+			"path": "",
+			"design": "Hulk-Imperial",
+			"skinName": "",
+			"roleName": "PATROL",
+			"regionName": "Marak",
+			"instr": "",
+			"intel": "KNOWN",
+			"location":
+			{
+				"x": 20000,
+				"y": 0,
+				"z": 0
+			},
+			"deck": 1,
+			"iFFCode": 0,
+			"count": 1,
+			"maintCount": 0,
+			"deadCount": 0,
+			"player": 0,
+			"commandAI": 1,
+			"respawns": 0,
+			"holdTime": 0,
+			"zoneLock": 0,
+			"heading": 0,
+			"alert": false,
+			"playable": false,
+			"rogue": false,
+			"invulnerable": false,
+			"rLoc": [],
+			"loadout": [],
+			"instruction": [],
+			"navpoint": [],
+			"ship": []
+		}
+	],
+	"event": [
+		{
+			"eventType": "BEGIN_SCENE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Scene 1",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "body:Marak",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": 2,
+				"y": 0.10000000149011612,
+				"z": 50000000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 0,
+			"eventPoint":
+			{
+				"x": -0.05000000074505806,
+				"y": 0.0070000002160668373,
+				"z": -0.039999999105930328
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "Limerick18",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "STRATPLAN BRIEFING",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 5,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 1,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 20,
+				"z": 600,
+				"w": 150
+			},
+			"eventParam": [
+				-1,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "DISPLAY",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "OCRB",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Timestamp: $TIME\\nSubject: Status of Marak Prime\\nClassified: TOP SECRET R7 NTK/EO",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 1,
+				"y": 5,
+				"z": 1
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 1,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 20,
+				"y": 40,
+				"z": 600,
+				"w": 150
+			},
+			"eventParam": [
+				-128,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "MESSAGE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "Briefing_15",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 3,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Dragon",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 10,
+			"eventPoint":
+			{
+				"x": 2,
+				"y": -0.10000000149011612,
+				"z": 8000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 10,
+			"eventPoint":
+			{
+				"x": -0.05000000074505806,
+				"y": 0.0070000002160668373,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Broadsword",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 22,
+			"eventPoint":
+			{
+				"x": 3,
+				"y": 0.20000000298023224,
+				"z": 6000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 22,
+			"eventPoint":
+			{
+				"x": 0.059999998658895493,
+				"y": -0.0099999997764825821,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Imperial",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 34,
+			"eventPoint":
+			{
+				"x": 4,
+				"y": -0.10000000149011612,
+				"z": 9000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 34,
+			"eventPoint":
+			{
+				"x": -0.070000000298023224,
+				"y": 0.0070000002160668373,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "Orion",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 50,
+			"eventPoint":
+			{
+				"x": 2,
+				"y": -0.10000000149011612,
+				"z": 8000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 50,
+			"eventPoint":
+			{
+				"x": -0.05000000074505806,
+				"y": 0.0070000002160668373,
+				"z": 0.019999999552965164
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "body:Marak",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 80,
+			"eventPoint":
+			{
+				"x": 5,
+				"y": -0.10000000149011612,
+				"z": 30000000
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				3,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "CAMERA",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 80,
+			"eventPoint":
+			{
+				"x": -0.085000000894069672,
+				"y": 0.0020000000949949026,
+				"z": 0.029999999329447746
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				5,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 1,
+			"triggerNParams": 0
+		},
+		{
+			"eventType": "END_SCENE",
+			"eventTrigger": "TRIGGER_TIME",
+			"eventShip": "",
+			"eventSource": "",
+			"eventTarget": "",
+			"eventImage": "",
+			"eventMessage": "Scene 1",
+			"eventCaption": "",
+			"eventFade":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventSound": "",
+			"triggerShip": "",
+			"triggerTarget": "",
+			"eventId": 0,
+			"eventChance": 0,
+			"eventDelay": 0,
+			"eventScale": 1,
+			"eventRotator":
+			{
+				"pitch": 0,
+				"yaw": 0,
+				"roll": 0
+			},
+			"eventOffset":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventTime": 105,
+			"eventPoint":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0
+			},
+			"eventRect":
+			{
+				"x": 0,
+				"y": 0,
+				"z": 0,
+				"w": 0
+			},
+			"eventParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"triggerParam": [
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0,
+				0
+			],
+			"eventNParams": 0,
+			"triggerNParams": 0
+		}
+	]
+}

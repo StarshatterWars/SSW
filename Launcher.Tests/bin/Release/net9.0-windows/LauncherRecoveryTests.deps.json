@@ -8,7 +8,7 @@
     ".NETCoreApp,Version=v9.0": {
       "LauncherRecoveryTests/1.0.0": {
         "dependencies": {
-          "StarshatterWarsLauncher": "1.0.15",
+          "StarshatterWarsLauncher": "1.0.18",
           "Microsoft.Web.WebView2.Core": "1.0.4314.35",
           "Microsoft.Web.WebView2.WinForms": "1.0.4314.35",
           "Microsoft.Web.WebView2.Wpf": "1.0.4314.35"
@@ -36,14 +36,14 @@
           }
         }
       },
-      "StarshatterWarsLauncher/1.0.15": {
+      "StarshatterWarsLauncher/1.0.18": {
         "dependencies": {
           "Microsoft.Web.WebView2": "1.0.4314.35"
         },
         "runtime": {
           "StarshatterWarsLauncher.dll": {
-            "assemblyVersion": "1.0.15.0",
-            "fileVersion": "1.0.15.0"
+            "assemblyVersion": "1.0.18.0",
+            "fileVersion": "1.0.18.0"
           }
         }
       },
@@ -86,7 +86,7 @@
       "path": "microsoft.web.webview2/1.0.4314.35",
       "hashPath": "microsoft.web.webview2.1.0.4314.35.nupkg.sha512"
     },
-    "StarshatterWarsLauncher/1.0.15": {
+    "StarshatterWarsLauncher/1.0.18": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

@@ -170,7 +170,7 @@ void UEngineeringDlg::Hide()
 // Runtime
 // --------------------------------------------------------------------
 
-void UEngineeringDlg::ExecFrame(float DeltaTime)
+void UEngineeringDlg::ExecFrame(double DeltaTime)
 {
     // Classic behavior: only update selection if shown.
     // If you have a screen-stack boolean, check it. Otherwise just update if ship exists.

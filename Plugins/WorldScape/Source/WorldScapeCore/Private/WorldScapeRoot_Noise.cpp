@@ -454,10 +454,8 @@ FNoiseData AWorldScapeRoot::GetNoise(const DVector& Position,
 
 			
 			//if ((PositionWorldTransformedPosition - VolumeTransformList[j].GetLocation()).Lenght() > VolumeSize * 5)
-			if ((PositionWorldTransformedPosition - VolumeTransformList[j].GetLocation()).SizeSquared() > FMath::Square(VolumeSize * 5)) // Set Square
-			{
-				continue;
-			}
+			// Height-map volumes affect vertical columns, not spheres. Test their
+			// local footprint below; a high mountain must not bypass flattening.
 
 			//TODO : Make Double precision transformation
 			PositionTransformedPosition = VolumeTransformList[j].InverseTransformPositionNoScale(PositionWorldTransformedPosition.ToFVector());
@@ -842,10 +840,8 @@ FNoiseData AWorldScapeRoot::GetNoise_HOnly(const DVector& Position,
 
 			
 
-			if ((PositionWorldTransformedPosition - VolumeTransformList[j].GetLocation()).SizeSquared() > FMath::Square(VolumeSize * 5)) // Set Square
-			{
-				continue;
-			}
+			// Height-map volumes affect vertical columns, not spheres. Test their
+			// local footprint below; a high mountain must not bypass flattening.
 
 			//TODO : Make Double precision transformation
 			PositionTransformedPosition = VolumeTransformList[j].InverseTransformPositionNoScale(PositionWorldTransformedPosition.ToFVector());

@@ -1,0 +1,15 @@
+{
+  "Scene": "01-Campaign-Start",
+  "FrameRate": 30,
+  "Duration": 92.00549359992146,
+  "ScreenMessagesSuppressed": true,
+  "cinematic_finish": "contrast, subtle vignette and fades; ISN on documentary clips",
+  "video_encoder": "h264_nvenc",
+  "render_inputs_sha256": "7d8db4b02ba21fb672aa5afc765441a1e62db4983cdb32dd154ca248cc47791b",
+  "campaign": 4,
+  "source_def": "D:\\SSW\\Content\\GameData\\Campaigns\\04\\Scenes\\01-Campaign-Start.def",
+  "source_sha256": "fdd201286fd1f0d80c23d1eb146eb3a378c3430b380f3091d78cc5bea6edfd81",
+  "mp4_sha256": "550323d4ebf00721e7b9372f9a1fbc06573982381da62701648b27b1c5027aa4",
+  "captured_frames": 2529,
+  "render_directory": "D:\\SSW\\Saved\\CutsceneRenders\\Campaign04\\01-Campaign-Start\\20261119_103235"
+}

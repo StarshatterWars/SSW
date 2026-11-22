@@ -213,7 +213,7 @@ public:
 	virtual void   SetThrottleEnabled(int t) { throttle = t; }
 
 	virtual void   SwapYawRoll(int swap) { swapped = swap; }
-	virtual int    GetSwapYawRoll() { return swapped; }
+	virtual int    GetSwapYawRoll() const { return swapped; }
 	virtual void   InvertPitch(int inv) { inverted = inv; }
 	virtual int    GetInverted() { return inverted; }
 

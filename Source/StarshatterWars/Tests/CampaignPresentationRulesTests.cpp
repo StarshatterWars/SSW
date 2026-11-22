@@ -4,6 +4,7 @@
 #include "FighterActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "LandingGear.h"
+#include "MissionSceneIsolation.h"
 
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCampaignPresentationRulesTest, "Starshatter.Campaign.PresentationRules",
     EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -11,6 +12,26 @@ bool FCampaignPresentationRulesTest::RunTest(const FString& Parameters)
 {
     using namespace CampaignPresentationRules;
     FS_PlayerGameInfo PilotFixture;
+    FS_PlayerGameInfo Graduate;Graduate.Campaign=1;
+    for(int32 Id=101;Id<=103;++Id)Graduate.MarkMissionCompleted(1,Id);
+    TestFalse(TEXT("T3 alone does not show the T4 graduation handoff"),NeedsTrainingHandoff(Graduate,[](int32){return false;}));
+    Graduate.MarkMissionCompleted(1,104);
+    TestTrue(TEXT("All four initial lessons offer the Campaign 2 handoff"),NeedsTrainingHandoff(Graduate,[](int32){return false;}));
+    Graduate.Campaign=2;
+    TestTrue(TEXT("Graduate restored to Janek can recover even after the pending flag was cleared"),NeedsFleetReturnRecovery(Graduate,true,true));
+    TestFalse(TEXT("Recovery does not interrupt an active mission"),NeedsFleetReturnRecovery(Graduate,false,true));
+    TestFalse(TEXT("Recovery does not gate normal campaign travel away from Janek"),NeedsFleetReturnRecovery(Graduate,true,false));
+    Graduate.PendingFleetDeploymentCampaign=2;
+    TestTrue(TEXT("Accepted deployment remains pending until arrival"),HasPendingFleetDeployment(Graduate,2));
+    Graduate.PendingFleetDeploymentCampaign=0;
+    TestFalse(TEXT("Leaving Meridian after deployment does not block later missions"),HasPendingFleetDeployment(Graduate,2));
+    Graduate.PendingFleetDeploymentCampaign=2;Graduate.Campaign=3;
+    TestFalse(TEXT("Old deployment orders cannot gate a different campaign"),HasPendingFleetDeployment(Graduate,3));
+    Graduate.Campaign=2;
+    TestFalse(TEXT("Accepted Campaign 2 dismisses the training referral"),NeedsTrainingHandoff(Graduate,[](int32){return true;}));
+    TestTrue(TEXT("Background WorldScape planets are isolated from the live mission"),MissionSceneIsolation::IsWorldSurface(GetDefault<AWorldScapeRoot>()));
+    TestTrue(TEXT("Background native terrain is isolated from the live mission"),MissionSceneIsolation::IsWorldSurface(GetDefault<ANativeTerrainActor>()));
+    TestFalse(TEXT("Ordinary actors are not hidden by the planet isolation policy"),MissionSceneIsolation::IsWorldSurface(GetDefault<AActor>()));
     TestFalse(TEXT("New Cadet cannot select a campaign or standalone missions"), CanSelectCampaign(PilotFixture));
     PilotFixture.bStartedAsEnsign = true;
     TestTrue(TEXT("First-run Ensign can select a campaign and standalone missions"), CanSelectCampaign(PilotFixture));

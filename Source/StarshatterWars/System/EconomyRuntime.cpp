@@ -14,12 +14,31 @@ void FEconomyRuntime::EnsureWarehouse(FEconomyState& State, FName Key, FName Sys
 }
 void FEconomyRuntime::InitializeMarkets(FEconomyState& State, const UCargoCatalogSubsystem& Catalog)
 {
+    // Never record an empty startup pass before native cargo ingestion completes.
+    if (!Catalog.HasDefinitions()) return;
     const FName Marker(TEXT("Authored initial market stock v1"));
     const FName DroneMarker(TEXT("Authored initial mining drone stock v1"));
     const FName DroneItem = DataTableUtils::MakeValidName(TEXT("mining drone"));
-    const bool ExistingMarkets = State.InitializedMarkets.Contains(Marker);
-    const bool ExistingDrones = State.InitializedMarkets.Contains(DroneMarker);
-    if (ExistingMarkets && ExistingDrones) return;
+    bool ExistingMarkets = State.InitializedMarkets.Contains(Marker);
+    bool ExistingDrones = State.InitializedMarkets.Contains(DroneMarker);
+    const FName ReadyMarker(TEXT("Catalog-ready NPC warehouse stock v2"));
+    if (ExistingMarkets && ExistingDrones && State.InitializedMarkets.Contains(ReadyMarker)) return;
+    const FName RepairMarker(TEXT("Catalog-ready NPC warehouse startup repair v1"));
+    bool HasWarehouse=false,EmptyReadyWarehouses=true;
+    for (const auto& Pair : State.Inventories)
+        if (Pair.Key == Warehouse(Pair.Value.System.ToString(), TEXT("NPC Market"), TEXT("Stock")))
+        {
+            HasWarehouse=true;
+            if (FEconomyLedger::Used(Pair.Value)>UE_SMALL_NUMBER || Pair.Value.ReservedOutputTonnes>0 ||
+                !Pair.Value.bOperational || Pair.Value.CapacityTonnes<=0)EmptyReadyWarehouses=false;
+        }
+    const bool RepairEmptyStartup = ExistingMarkets && (!ExistingDrones || !HasWarehouse) && EmptyReadyWarehouses &&
+        !State.InitializedMarkets.Contains(RepairMarker) && State.MarketOrders.IsEmpty() &&
+        !State.Journal.ContainsByPredicate([](const auto& Entry){return Entry.Category==EWalletTransactionCategory::Market;});
+    // Repair only the never-traded, empty-catalog startup (or orphaned markers).
+    // Completed initialization and spent stock never trigger a replenishment.
+    if (RepairEmptyStartup) { ExistingMarkets=false;ExistingDrones=false; }
+    if (ExistingMarkets && ExistingDrones) { State.InitializedMarkets.Add(ReadyMarker); return; }
     FString Json; TArray<TSharedPtr<FJsonValue>> Entries;
     if (!FFileHelper::LoadFileToString(Json, *(FPaths::ProjectContentDir() / TEXT("GameData/Cargo/economy.json"))) ||
         !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Entries)) return;
@@ -75,5 +94,8 @@ void FEconomyRuntime::InitializeMarkets(FEconomyState& State, const UCargoCatalo
         });
     }
     State.InitializedMarkets.Add(Marker);
+    if (RepairEmptyStartup) State.InitializedMarkets.Add(RepairMarker);
     if (DroneMigrationComplete && DroneMarkets > 0) State.InitializedMarkets.Add(DroneMarker);
+    if (State.InitializedMarkets.Contains(Marker) && State.InitializedMarkets.Contains(DroneMarker))
+        State.InitializedMarkets.Add(ReadyMarker);
 }

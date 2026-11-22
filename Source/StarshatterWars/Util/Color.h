@@ -23,18 +23,17 @@ struct ColorFormat
 {
     ColorFormat(int palsize)
         : pal(palsize), bpp(8),
-        rdown(0), rshift(0), rmask(0),
-        gdown(0), gshift(0), gmask(0),
-        bdown(0), bshift(0), bmask(0),
-        adown(0), ashift(0), amask(0) {
+        rdown(0), rshift(0), gdown(0), gshift(0),
+        bdown(0), bshift(0), adown(0), ashift(0),
+        rmask(0), gmask(0), bmask(0), amask(0) {
     }
 
     ColorFormat(int size, BYTE r, BYTE rs, BYTE g, BYTE gs, BYTE b, BYTE bs, BYTE a = 0, BYTE as = 0)
         : pal(0), bpp(size),
-        rdown(8 - r), rshift(rs), rmask(((1 << r) - 1) << rs),
-        gdown(8 - g), gshift(gs), gmask(((1 << g) - 1) << gs),
-        bdown(8 - b), bshift(bs), bmask(((1 << b) - 1) << bs),
-        adown(8 - a), ashift(as), amask(((1 << a) - 1) << as) {
+        rdown(8 - r), rshift(rs), gdown(8 - g), gshift(gs),
+        bdown(8 - b), bshift(bs), adown(8 - a), ashift(as),
+        rmask(((1 << r) - 1) << rs), gmask(((1 << g) - 1) << gs),
+        bmask(((1 << b) - 1) << bs), amask(((1 << a) - 1) << as) {
     }
 
     int   pal;

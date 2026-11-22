@@ -1,4 +1,6 @@
 #include "TransactionAI.h"
+#include "SimDataEvents.h"
+
 #include "Misc/DateTime.h"
 
 int64 TransactionAI::Balance(const FEconomyState& State, FName Owner)
@@ -70,7 +72,7 @@ bool TransactionAI::ReconcileExternalBalance(FEconomyState& State, FName Owner, 
     Entry.Credits = NewBalance > Previous ? NewBalance - Previous : Previous - NewBalance;
     Entry.From = NewBalance > Previous ? Counterparty : Owner;
     Entry.To = NewBalance > Previous ? Owner : Counterparty;
-    State.Wallets.Add(Owner, NewBalance); State.CommittedTransactions.Add(Entry.Id); State.Journal.Add(MoveTemp(Entry));
+    State.Wallets.Add(Owner, NewBalance); State.CommittedTransactions.Add(Entry.Id); State.Journal.Add(MoveTemp(Entry)); FSimDataEvents::Publish(State);
     if (State.Journal.Num() > 512) State.Journal.RemoveAt(0, State.Journal.Num() - 512);
     return true;
 }

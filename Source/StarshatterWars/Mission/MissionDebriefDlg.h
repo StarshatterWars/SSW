@@ -95,7 +95,7 @@ public:
     UFUNCTION() void OnCloseClicked();
     UFUNCTION() void OnUnitSelectionChanged(UObject* SelectedItem);
 
-    void ExecFrame(float DeltaSeconds);
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
     void DrawUnits();
     void DrawSelectedUnit(int32 StatsIndex);
     void EnsureUi();
@@ -133,6 +133,7 @@ public:
     UPROPERTY() TObjectPtr<UTextBlock> EvidenceWidget;
     FMissionDebriefResult DebriefResult;
     Mission* RecordedMission = nullptr;
+    bool bTrainingReplayDebrief = false;
     uint32 RecordedStartTime = MAX_uint32;
     bool bModernUiBuilt = false;
     UPROPERTY() TMap<int32,TObjectPtr<UDebriefListItem>> UnitSnapshots;

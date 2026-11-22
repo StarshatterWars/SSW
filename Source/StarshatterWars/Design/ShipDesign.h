@@ -56,8 +56,7 @@ class ShipSquadron;
 
 // +====================================================================+
 // Used to share common information about ships of a single type.
-// ShipDesign objects are loaded from a text file and stored in a
-// static list (catalog) member for use by the Ship.
+// Runtime objects are built from JSON catalog records by ShipDesignRegistry.
 
 class ShipDesign
 {
@@ -70,7 +69,6 @@ public:
 	};
 
 	ShipDesign();
-	ShipDesign(const char* name, const char* path, const char* filename, bool secret = false);
 	~ShipDesign();
 
 	// public interface:
@@ -79,8 +77,6 @@ public:
 	static bool          CheckName(const char* name);
 	static ShipDesign*	 Get(const char* design_name, const char* design_path = 0);
 	static ShipDesign*	 GetDesignName(const char* design_name, const char* design_path = 0);
-	static ShipDesign*	 FindModDesign(const char* design_name, const char* design_path = 0);
-	static void          ClearModCatalog();
 	static int           GetDesignList(int type, List<Text>& designs); // never destroy the design list!
 
 	static int           ClassForName(const char* name);
@@ -88,38 +84,8 @@ public:
 	static const char*	 GetDesignClass(int type);
 
 	int 				 GetType() { return type; }
-	static int           LoadCatalog(const char* path, const char* file, bool mod = false);
-	static void          LoadSkins(const char* path, const char* archive = 0);
-	static void          PreloadCatalog(int index = -1);
-	static int           StandardCatalogSize();
 
 	int operator == (const ShipDesign& s) const { return !strncmp(name, s.name, 31); }
-
-	// Parser:
-	void  ParseShip(TermDef* def);
-
-	void  ParsePower(TermStruct* val);
-	void  ParseDrive(TermStruct* val);
-	void  ParseQuantumDrive(TermStruct* val);
-	void  ParseFarcaster(TermStruct* val);
-	void  ParseThruster(TermStruct* val);
-	void  ParseNavlight(TermStruct* val);
-	void  ParseFlightDeck(TermStruct* val);
-	void  ParseLandingGear(TermStruct* val);
-	void  ParseWeapon(TermStruct* val);
-	void  ParseHardPoint(TermStruct* val);
-	void  ParseSensor(TermStruct* val);
-	void  ParseNavsys(TermStruct* val);
-	void  ParseComputer(TermStruct* val);
-	void  ParseShield(TermStruct* val);
-	void  ParseDeathSpiral(TermStruct* val);
-	void  ParseExplosion(TermStruct* val, int index);
-	void  ParseDebris(TermStruct* val, int index);
-	void  ParseLoadout(TermStruct* val);
-	void  ParseMap(TermStruct* val);
-	void  ParseSquadron(TermStruct* val);
-	Skin* ParseSkin(TermStruct* val);
-	void  ParseSkinMtl(TermStruct* val, Skin* skin);
 
 	// general information:
 	const char* DisplayName() const;

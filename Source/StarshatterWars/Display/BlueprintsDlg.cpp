@@ -165,7 +165,7 @@ TSharedRef<SWidget> UBlueprintsDlg::RebuildWidget()
         + SVerticalBox::Slot().AutoHeight().Padding(8)
         [MissionUIStyle::MakeDataPane(SNew(SBox).MaxDesiredHeight(170)
             [SNew(SScrollBox)+SScrollBox::Slot()
-                [SNew(SRecordDetails).Record_Lambda([Weak,Model]()
+                [SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([Model](){return PointerHash(Model->Selected.Get());}).Record_Lambda([Weak,Model]()
                     { RefreshPreflight(Weak,Model); return DescribeQuote(Model); })]])]
         + SVerticalBox::Slot().AutoHeight().Padding(8)[SNew(SHorizontalBox)
             + SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).AutoWrapText(true).Text_Lambda([Model]() { return Model->Feedback; })]

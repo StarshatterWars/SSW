@@ -84,7 +84,7 @@ DEFINE_LOG_CATEGORY_STATIC(LogOptionsScreen, Log, All);
 UOptionsScreen::UOptionsScreen(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
-    bIsFocusable = true;
+    SetIsFocusable(true);
     SetDialogInputEnabled(true);
 }
 
@@ -106,7 +106,7 @@ void UOptionsScreen::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    bIsFocusable = true;
+    SetIsFocusable(true);
 
     BindDelegates();
     // Wire the manager into EVERY page sitting in the switcher:
@@ -200,7 +200,7 @@ FReply UOptionsScreen::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEv
     const FKey Key = InKeyEvent.GetKey();
 
     // ESC -> return to menu
-    if (Key == EKeys::Escape || Key == EKeys::Virtual_Back)
+    if (Key == EKeys::Escape || Key == EKeys::Virtual_Gamepad_Back.GetVirtualKey())
     {
         CancelOptions();
         return FReply::Handled();

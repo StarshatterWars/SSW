@@ -29,11 +29,11 @@ bool ShipyardAI::Purchase(FS_PlayerGameInfo& Pilot,const FShipDesign& Hull,FName
     if(Pilot.Economy.Wallets.FindRef(FEconomyLedger::Pilot())<Hull.BaseCost){Reason=INVTEXT("Insufficient credits.");return false;}
     const auto Before=Pilot;const FName Seller=Store->TradingOwner.IsNone()?EconomyAI::NPCAccount(Inventory):Store->TradingOwner;
     const FName Item=DataTableUtils::MakeValidName(Hull.ShipName.ToLower()+TEXT(" assembled hull"));
-    if(!FEconomyLedger::Withdraw(Pilot.Economy,Store->Owner,Inventory,Item,1) || !FEconomyLedger::Pay(Pilot.Economy,FEconomyLedger::Pilot(),Seller,Hull.BaseCost,Receipt,TEXT("Shipyard hull purchase")))
+    if(!FEconomyLedger::Withdraw(Pilot.Economy,Store->Owner,Inventory,Item,1) || !FEconomyLedger::Pay(Pilot.Economy,FEconomyLedger::Pilot(),Seller,Hull.BaseCost,Receipt,TEXT("Shipyard hull purchase"),ECommercePurpose::Purchase))
     {Pilot=Before;Reason=INVTEXT("The purchase could not be committed. Stock and credits retained.");return false;}
     auto& Entry=Pilot.HangarShips.AddDefaulted_GetRef();Entry.HullId=Receipt;Entry.Design=FName(*Hull.ShipName);Entry.Name=Hull.DisplayName.IsEmpty()?Hull.ShipName:Hull.DisplayName;Entry.HullValue=Hull.BaseCost;Entry.Location=Location;
     if(!Hull.Loadout.IsEmpty()){Entry.LoadoutName=Hull.Loadout[0].Name;Entry.LoadoutStations=Hull.Loadout[0].Stations;}
-    auto& Payment=Pilot.Economy.Journal.Last();Payment.Item=Entry.Design;Payment.Quantity=1;Payment.UnitPrice=Hull.BaseCost;Payment.Reference=Receipt;Payment.Category=EWalletTransactionCategory::Shipyard;
+    auto& Payment=Pilot.Economy.Journal.Last();Payment.Item=Entry.Design;Payment.Quantity=1;Payment.UnitPrice=Hull.BaseCost;Payment.Reference=Receipt;Payment.Source=Inventory;Payment.Destination=FName(*Location);Payment.Category=EWalletTransactionCategory::Shipyard;
     EconomyAI::RecordTrade(Pilot.Economy,Pilot.Economy.Inventories.FindChecked(Inventory).System,Item,1,Hull.BaseCost);
     Reason=INVTEXT("Hull purchased and delivered to your hangar at this station.");return true;
 }

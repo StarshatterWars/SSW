@@ -1405,6 +1405,8 @@ struct FS_PlayerGameInfo : public FTableRowBase
     UPROPERTY(BlueprintReadWrite, SaveGame) TArray<FPlayerHangarShip> HangarShips;
     UPROPERTY(BlueprintReadWrite, SaveGame) FGuid AssignedHangarHull;
     UPROPERTY(BlueprintReadWrite, SaveGame) FGuid SelectedHangarHull;
+    UPROPERTY(BlueprintReadWrite, SaveGame) TSet<FName> OwnedShipSkins;
+    UPROPERTY(BlueprintReadWrite, SaveGame) TArray<FStoredShipEquipment> StoredShipEquipment;
     UPROPERTY(BlueprintReadWrite, SaveGame) FName HomeSystem = TEXT("Janus");
     UPROPERTY(BlueprintReadWrite, SaveGame) FName HomeRegion = TEXT("Janek");
     UPROPERTY(SaveGame) FGuildState Guilds;
@@ -1462,6 +1464,10 @@ struct FS_PlayerGameInfo : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName CampaignRowName = NAME_None;
+
+	// Accepted fleet-transfer orders survive a restart, but are cleared on arrival.
+	UPROPERTY(BlueprintReadWrite)
+	int32 PendingFleetDeploymentCampaign = 0;
 
 	UPROPERTY(BlueprintReadWrite)
 	int32 Mission = -1;

@@ -1,6 +1,6 @@
 /*  Project Starshatter 4.5
     Destroyer Studios LLC
-    Copyright © 1997-2004. All Rights Reserved.
+    Copyright Â© 1997-2004. All Rights Reserved.
 
     SUBSYSTEM:    Stars.exe
     FILE:         HUDView.h
@@ -147,7 +147,6 @@ public:
     static HUDView*   GetInstance() { return hud_view; }
     static void       Message(const char* fmt, ...);
     static void       ClearMessages();
-    static void       PrepareBitmap(const char* name, Bitmap& img, BYTE*& shades);
     static void       TransferBitmap(const Bitmap& src, Bitmap& img, BYTE*& shades);
     static void       ColorizeBitmap(Bitmap& img, BYTE* shades, FColor color, bool force_alpha = false);
 

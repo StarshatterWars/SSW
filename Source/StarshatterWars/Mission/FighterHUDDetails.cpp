@@ -171,7 +171,6 @@ namespace
 // GEAR DOWN is at HUD center +126; LAUNCH is below it at +158.
 static FVector2D MiniHUDOrigin(const FVector2D& Size,float Scale){return SSWMiniHUDLayout::Origin(Size,Scale);}
 static FSlateRect DamageImageRect(const FVector2D& Size,float Scale){return SSWMiniHUDLayout::DamageImage(Size,Scale);}
-static FSlateRect DamagePopupRect(const FVector2D& Size,float Scale){return SSWMiniHUDLayout::DamagePopup(Size,Scale);}
 
 static FVector2D RadioPanelOrigin(const FVector2D& Size, float Scale)
 {
@@ -185,11 +184,7 @@ static FVector2D GearButtonOrigin(FVector2D Size,float Scale,bool Mini)
 }
 static FSlateRect CarrierLaunchButtonRect(const FVector2D& Size, float Scale)
 {
-    const FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle("Bold",
-        FMath::Max(8, int32(11 * Scale)));
-    const FVector2D Label = FSlateApplication::Get().GetRenderer()->
-        GetFontMeasureService()->Measure(TEXT("LAUNCH"), Font);
-    const FVector2D Extent(Label.X + 10 * Scale, (Label.Y + 4 * Scale) * 2.0);
+    const FVector2D Extent(48 * Scale, 48 * Scale);
     const FVector2D TopLeft(Size.X * 0.5 - Extent.X * 0.5,
         Size.Y * 0.5 - Extent.Y * 0.5);
     return FSlateRect(TopLeft.X, TopLeft.Y,
@@ -271,7 +266,7 @@ void SFighterHUDDetails::Tick(const FGeometry& G, double Now, float Delta)
     {
         if (PanelPlayerId != Player->GetIdentity())
         {
-            PanelPlayerId=Player->GetIdentity();bShowCaution=false;bShowInformation=true;
+            PanelPlayerId=Player->GetIdentity();bShowCaution=false;bShowInformation=!InformationCaptions.IsEmpty();bRestoreCautionAfterMessages=false;
         }
         UpdateILSMode(Player->GetIdentity(), Player->GetInbound() != nullptr);
         PitchDegrees = FMath::RadiansToDegrees(Player->GetCompassPitch());
@@ -388,7 +383,8 @@ void SFighterHUDDetails::Refresh()
         NetworkEmcon = Snapshot->Emcon;
         CompactNavLabel = Snapshot->bDestroyed ? TEXT("DESTROYED") :
             Snapshot->bRetired ? TEXT("RETIRED") : TEXT("MULTIPLAYER");
-        DamagePoints.Reset(); // Network snapshots expose aggregate hull health, not component mounts.
+        DamagePoints.Reset();
+        // Network snapshots expose aggregate hull health, not component mounts.
         StatusRows.Add({TEXT("THRUST"), Snapshot->Throttle});
         StatusRows.Add({TEXT("FUEL"), double(Snapshot->FuelPercent)});
         StatusRows.Add({TEXT("HULL"), Snapshot->HullPercent});
@@ -489,15 +485,18 @@ void SFighterHUDDetails::Refresh()
         // Legacy warning cells remain in fixed positions as damage changes.
         SSWDamagePanel::Build(P, DamageRows);
         DamagePoints.Reset();
+        int32 DamageIconCounts[128]={};
         if(PlayerMFDPreview && PlayerMFDPreview->IsReady())
             for(ListIter<SimSystem> System=P->GetSystems();++System;)
             {
                 const FVector Mount=System->GetMountRelativeLocation();
+                const auto Icon=SShipSystemIcon::ForSystem(*System.value());
+                const int32 Index=DamageIconCounts[FMath::Clamp(int32(Icon),0,127)]++;
                 FVector2D UV;
-                if(Mount.IsNearlyZero() || !PlayerMFDPreview->ProjectSystemLocation(Mount,UV))continue;
+                if(Mount.IsNearlyZero() || !PlayerMFDPreview->ProjectSystemLocation(Mount,UV))UV=SSWDamagePanel::DefaultLocation(Icon,Index,P->IsStarship());
                 auto& Point=DamagePoints.AddDefaulted_GetRef();Point.UV=UV;
-                Point.Health=FMath::Clamp(System->GetAvailability(),0.0,100.0);
-                Point.Name=UTF8_TO_TCHAR(System->GetName());Point.Icon=SShipSystemIcon::ForSystem(*System.value());
+                Point.Health=FMath::Clamp(System->GetAvailability(),0.0,100.0);Point.Status=System->GetStatus();
+                Point.Name=UTF8_TO_TCHAR(System->GetName());Point.Icon=Icon;
             }
         Sensor* SensorData = P->GetSensor();
         SensorRange = SensorData ? FMath::Max(1.0, SensorData->GetBeamRange()) : 1.0;
@@ -713,7 +712,7 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
         Local.X >= LaunchRect.Left && Local.X <= LaunchRect.Right &&
         Local.Y >= LaunchRect.Top && Local.Y <= LaunchRect.Bottom)
     {
-        if (Sim* LiveSim=Sim::GetSim(); LiveSim && (GetReadyCarrierLaunchSim() || (bPreTakeoff && LiveSim->NeedsTrainingLaunchClearance())))
+        if (Sim* LiveSim=Sim::GetSim(); LiveSim && GetReadyCarrierLaunchSim())
         {
             LiveSim->RequestPlayerCarrierLaunch();
             return FReply::Handled();
@@ -728,24 +727,25 @@ FReply SFighterHUDDetails::OnMouseButtonDown(const FGeometry& MyGeometry, const 
 }
 FReply SFighterHUDDetails::OnMouseMove(const FGeometry& Geometry,const FPointerEvent& Event)
 {
-    const FVector2D Size=Geometry.GetLocalSize();const float Scale=FMath::Min(Size.X/1280.f,Size.Y/720.f);
-    const FVector2D Cursor=Geometry.AbsoluteToLocal(Event.GetScreenSpacePosition());
-    const bool Hover=ShowHUD.Get() && ThirdPerson.Get() && !IsCockpitDisplayActive() && bHasPlayer &&
-        (DamageImageRect(Size,Scale).ContainsPoint(Cursor) || (bDamagePreviewHovered && FSlateRect(FMath::Min(DamageImageRect(Size,Scale).Left,DamagePopupRect(Size,Scale).Left),DamageImageRect(Size,Scale).Top,FMath::Max(DamageImageRect(Size,Scale).Right,DamagePopupRect(Size,Scale).Right),DamagePopupRect(Size,Scale).Bottom).ContainsPoint(Cursor)));
-    if(Hover!=bDamagePreviewHovered){if(Hover)DamagePreviewZoom=1.f;bDamagePreviewHovered=Hover;Invalidate(EInvalidateWidgetReason::Paint);}
-    return Hover?FReply::Handled():SCompoundWidget::OnMouseMove(Geometry,Event);
+    const FVector2D Size = Geometry.GetLocalSize();
+    const float Scale = FMath::Min(Size.X / 1280.f, Size.Y / 720.f);
+    const FVector2D Cursor = Geometry.AbsoluteToLocal(Event.GetScreenSpacePosition());
+    Ship* Player = PlayerShip();
+    const bool Denied = Player && Player->GetDock() && Player->GetDock()->IsLaunchDeck() &&
+        Player->GetFlightPhase() < EOPSMode::ACTIVE && Sim::GetSim() && Sim::GetSim()->NeedsTrainingLaunchClearance();
+    const bool Hovered = !NetworkController.IsValid() && GetReadyCarrierLaunchSim() &&
+        CarrierLaunchButtonRect(Size, Scale).ContainsPoint(Cursor);
+    SetToolTipText(Hovered ? FText::FromString(Denied ? TEXT("Launch — mission clearance required") : TEXT("Launch")) : FText::GetEmpty());
+    return SCompoundWidget::OnMouseMove(Geometry,Event);
 }
 void SFighterHUDDetails::OnMouseLeave(const FPointerEvent& Event)
-{
-    bDamagePreviewHovered=false;DamagePreviewZoom=1.f;Invalidate(EInvalidateWidgetReason::Paint);SCompoundWidget::OnMouseLeave(Event);
-}
+{SetToolTipText(FText::GetEmpty()); SCompoundWidget::OnMouseLeave(Event);}
 FReply SFighterHUDDetails::OnMouseWheel(const FGeometry& Geometry, const FPointerEvent& Event)
 {
     const FVector2D Size=Geometry.GetLocalSize();const float Scale=FMath::Min(Size.X/1280.f,Size.Y/720.f);
     const FVector2D Cursor=Geometry.AbsoluteToLocal(Event.GetScreenSpacePosition());
-    if(ShowHUD.Get() && ThirdPerson.Get() && bHasPlayer && !IsCockpitDisplayActive() &&
-       (DamageImageRect(Size,Scale).ContainsPoint(Cursor) || (bDamagePreviewHovered && DamagePopupRect(Size,Scale).ContainsPoint(Cursor))))
-    {DamagePreviewZoom=FMath::Clamp(DamagePreviewZoom+Event.GetWheelDelta()*.15f,1.f,2.5f);bDamagePreviewHovered=true;Invalidate(EInvalidateWidgetReason::Paint);return FReply::Handled();}
+    if(ShowHUD.Get() && ThirdPerson.Get() && bHasPlayer && !IsCockpitDisplayActive() && DamageImageRect(Size,Scale).ContainsPoint(Cursor))
+        return FReply::Handled(); // Fixed instrument: do not zoom the model or the flight camera here.
     if (OnOverviewWheel.IsBound() && OnOverviewWheel.Execute(Event.GetWheelDelta()))
         return FReply::Handled();
 
@@ -1158,24 +1158,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
             FSlateDrawElement::MakeBox(E,L+2,
                 G.ToPaintGeometry(FVector2f(108*Scale,54*Scale),FSlateLayoutTransform(FVector2f(P+FVector2D(531,23)*Scale))),
                 &PlayerMFDPreview->GetBrush(),ESlateDrawEffect::None,ShipHealthColor(PlayerHull));
-        for(const auto& Point:DamagePoints)
+        for(const auto& Point:DamagePoints)if(Point.HasDamage())
             SShipSystemIcon::PaintIcon(E,L+3,G,P+(FVector2D(531,23)+Point.UV*FVector2D(108,54)-FVector2D(3.5,3.5))*Scale,
                 Point.Icon,ShipHealthColor(Point.Health),Scale*.32f);
-        if(bDamagePreviewHovered && PlayerMFDPreview && PlayerMFDPreview->IsReady())
-        {
-            const FSlateRect R=DamagePopupRect(Size,Scale);const FVector2D At(R.Left,R.Top),Extent(R.Right-R.Left,R.Bottom-R.Top);
-            Box(At,Extent,FLinearColor(.008,.019,.032,.98));Box(At,FVector2D(Extent.X,Scale),InstrumentColor);
-            Text(At+FVector2D(12,8)*Scale,PlayerName.ToUpper()+TEXT(" / DAMAGE"),InstrumentColor,10);
-            Text(At+FVector2D(12,238)*Scale,FString::Printf(TEXT("HULL %.0f%%   /   WHEEL ZOOM %.2fx"),PlayerHull,DamagePreviewZoom),ShipHealthColor(PlayerHull),10);
-            const FVector2D Area=At+FVector2D(12,32)*Scale,AreaSize=FVector2D(396,198)*Scale;
-            const FVector2D ImageSize=AreaSize*DamagePreviewZoom,ImageAt=Area+(AreaSize-ImageSize)*.5;
-            E.PushClip(FSlateClippingZone(G.ToPaintGeometry(FVector2f(AreaSize),FSlateLayoutTransform(FVector2f(Area)))));
-            FSlateDrawElement::MakeBox(E,L+10,G.ToPaintGeometry(FVector2f(ImageSize),FSlateLayoutTransform(FVector2f(ImageAt))),
-                &PlayerMFDPreview->GetBrush(),ESlateDrawEffect::None,ShipHealthColor(PlayerHull));
-            for(const auto& Point:DamagePoints)
-                SShipSystemIcon::PaintIcon(E,L+11,G,ImageAt+Point.UV*ImageSize-FVector2D(9,9)*Scale,Point.Icon,ShipHealthColor(Point.Health),Scale*.82f);
-            E.PopClip();
-        }
         MiniText(524,77,PlayerClass,10,White,124);
         MiniText(524,91,HomeCarrierReadout,10,Muted,124);
         if(JumpSeconds>0||ThreatLevel>0){
@@ -1187,26 +1172,30 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
 
     }
-    const bool bTrainingClearanceDenied=bPreTakeoff && Sim::GetSim() && Sim::GetSim()->NeedsTrainingLaunchClearance();
-    if (!NetworkController.IsValid() && (GetReadyCarrierLaunchSim() || bTrainingClearanceDenied))
+    if (!NetworkController.IsValid() && GetReadyCarrierLaunchSim())
     {
         const FSlateRect R = CarrierLaunchButtonRect(Size, Scale);
         const FVector2D TopLeft(R.Left, R.Top);
         const FVector2D Dimensions(R.Right - R.Left, R.Bottom - R.Top);
         // Render exactly like the existing GEAR DOWN popup, rather than
         // stretching TAC_button artwork to a non-native aspect ratio.
-        const FLinearColor Border = bTrainingClearanceDenied?FLinearColor(.4f,.5f,.55f):InstrumentColor;
+        const FLinearColor Border = InstrumentColor;
         Box(TopLeft, Dimensions, FLinearColor(0, 0.015f, 0.03f, 0.75f));
         Box(TopLeft, FVector2D(Dimensions.X, Scale), Border);
         Box(TopLeft + FVector2D(0, Dimensions.Y - Scale), FVector2D(Dimensions.X, Scale), Border);
         Box(TopLeft, FVector2D(Scale, Dimensions.Y), Border);
         Box(TopLeft + FVector2D(Dimensions.X - Scale, 0), FVector2D(Scale, Dimensions.Y), Border);
-        const FSlateFontInfo LaunchFont = FCoreStyle::GetDefaultFontStyle("Bold", FMath::Max(8, int32(11 * Scale)));
-        const FVector2D LabelSize = FSlateApplication::Get().GetRenderer()->GetFontMeasureService()->Measure(TEXT("LAUNCH"), LaunchFont);
-        FSlateDrawElement::MakeText(E, L + 3,
-            G.ToPaintGeometry(FVector2f(LabelSize),
-                FSlateLayoutTransform(FVector2f(TopLeft + (Dimensions - LabelSize) * 0.5f))),
-            TEXT("LAUNCH"), LaunchFont, ESlateDrawEffect::None, InstrumentColor);
+        // Launch glyph: an upward arrow lifting clear of the flight deck.
+        auto Stroke = [&](std::initializer_list<FVector2D> Points)
+        {
+            TArray<FVector2D> Line;
+            for (const FVector2D& Point : Points) Line.Add(TopLeft + Point * Scale);
+            FSlateDrawElement::MakeLines(E, L + 3, G.ToPaintGeometry(), Line,
+                ESlateDrawEffect::None, Border, true, 2.5f * Scale);
+        };
+        Stroke({FVector2D(24, 31), FVector2D(24, 11)});
+        Stroke({FVector2D(15, 20), FVector2D(24, 11), FVector2D(33, 20)});
+        Stroke({FVector2D(12, 32), FVector2D(12, 37), FVector2D(36, 37), FVector2D(36, 32)});
     }
     // The fighter uses weapon readouts beside the central HUD, not the capital-ship TAC frame.
     if (bShowWeapons && !bHasPlayer) Text(FVector2D(Size.X*0.5-250*Scale,Size.Y*0.5+24*Scale),TEXT("WEAPONS: NO PLAYER SHIP"));
@@ -1332,10 +1321,10 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         ReticleText(-248,LowerReadoutBaseline+LowerReadoutRowHeight,108,Secondary.ToUpper());
         }
     }
-    if (bHasPlayer && bShowCaution && !DamageRows.IsEmpty())
+    if (bHasPlayer && bShowCaution)
     {
-        const double Height = 42 + 34 * ((DamageRows.Num() + 3) / 4);
-        SSWDamagePanel::Paint(DamageRows, E, L + 2, G,
+        const double Height = SSWDamagePanel::SchematicHeight;
+        SSWDamagePanel::PaintSchematic(DamagePoints,PlayerMFDPreview && PlayerMFDPreview->IsReady()?&PlayerMFDPreview->GetBrush():nullptr,PlayerHull,E,L+2,G,
             FVector2D((Size.X - FlightPanelStyle::CenterPanelWidth * Scale) * 0.5, Size.Y - Height * Scale), Scale, InstrumentColor,
             FVector2D(G.AbsoluteToLocal(FSlateApplication::Get().GetCursorPos())));
     }
@@ -1426,27 +1415,6 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         }
         return L + 6;
     }
-    if (bCapitalWeapons && bShowWeapons && !bShowCaution &&
-        (!bShowInformation || InformationCaptions.IsEmpty()))
-    {
-        const int32 MissileCount = FMath::Min(MissileReadouts.Num(), 6);
-        const FVector2D D = FVector2D(326, 69 + 18 * ((MissileCount + 1) / 2)) * Scale;
-        const FVector2D P((Size.X - D.X) * 0.5, Size.Y - D.Y - 8 * Scale);
-        const FSlateBrush& Glass = FlightPanelStyle::Glass();
-        FSlateDrawElement::MakeBox(E,L+1,G.ToPaintGeometry(FVector2f(D),FSlateLayoutTransform(FVector2f(P))),
-            &Glass,ESlateDrawEffect::None,Glass.TintColor.GetSpecifiedColor());
-        SShipSystemIcon::PaintIcon(E, L + 2, G, P + FVector2D(12, 4) * Scale,
-            EShipSystemIcon::Weapon, InstrumentColor, Scale);
-        Text(P+FVector2D(12,29)*Scale,Primary);
-        Text(P+FVector2D(168,29)*Scale,Secondary);
-        Text(P+FVector2D(12,47)*Scale,DefenseReadout);
-        for (int32 I=0; I<MissileCount; ++I)
-        {
-            const FVector2D Row = P + FVector2D(12+156*(I%2),65+18*(I/2))*Scale;
-            SShipSystemIcon::PaintIcon(E, L + 2, G, Row, EShipSystemIcon::Projectile, InstrumentColor, Scale * 0.65f);
-            Text(Row + FVector2D(18,0)*Scale,MissileReadouts[I]);
-        }
-    }
     if (bShowInformation && !InformationCaptions.IsEmpty())
     {
         const FVector2D D = FVector2D(FlightPanelStyle::CenterPanelWidth,124) * Scale;
@@ -1463,9 +1431,9 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
     {
         TArray<FString> Labels;
         TArray<int32> Commands;
-        TArray<bool> Enabled;
+        TArray<bool> RowEnabled;
         FString Title;
-        BuildRadioRows(Labels, Commands, Enabled, Title);
+        BuildRadioRows(Labels, Commands, RowEnabled, Title);
         const FVector2D Origin = RadioPanelOrigin(Size, Scale);
         const FVector2D Extent = FVector2D(244, 64 + Labels.Num() * 24) * Scale;
         FlightPanelStyle::PaintGlass(E, L + 1, G, Origin, Extent);
@@ -1473,7 +1441,7 @@ int32 SFighterHUDDetails::OnPaint(const FPaintArgs& Args, const FGeometry& G, co
         for (int32 Index = 0; Index < Labels.Num(); ++Index)
             Text(Origin + FVector2D(12, 36 + 24 * Index) * Scale,
                 FString::Printf(TEXT("%d. %s"), Index + 1, *Labels[Index]),
-                Enabled[Index] ? InstrumentColor : FLinearColor(.35f, .45f, .5f));
+                RowEnabled[Index] ? InstrumentColor : FLinearColor(.35f, .45f, .5f));
         Text(Origin + FVector2D(12, 40 + 24 * Labels.Num()) * Scale,
             FString::Printf(TEXT("0 CLOSE    %s 1X"),
                 *StarshatterInputBindings::ResolvedKey(TEXT("SSW_TravelSpeedReset"), EKeys::F12).GetDisplayName().ToString()));
@@ -1843,6 +1811,16 @@ void SFighterHUDDetails::UpdateILSMode(int32 PlayerId, bool bInbound)
 void SFighterHUDDetails::UpdateInformationMessages()
 {
     TArray<FRadioHUDLine> Lines;RadioView::GetHUDMessages(Lines);
+    if (!Lines.IsEmpty())
+    {
+        if (bShowCaution) bRestoreCautionAfterMessages=true;
+        bShowInformation=true; bShowCaution=false;
+    }
+    else
+    {
+        bShowInformation=false;
+        if (bRestoreCautionAfterMessages) { bShowCaution=true; bRestoreCautionAfterMessages=false; }
+    }
     bool Changed=Lines.Num()!=InformationCaptions.Num();
     for(int32 I=0;!Changed && I<Lines.Num();++I)
         Changed=Lines[I].Caption!=InformationCaptions[I] || Lines[I].ExpiresAt!=InformationExpiry[I];
@@ -1850,7 +1828,7 @@ void SFighterHUDDetails::UpdateInformationMessages()
     InformationRows->ClearChildren();InformationCaptions.Reset();InformationExpiry.Reset();
     for(const auto& Line:Lines)
     {
-        if (Line.Caption==TEXT("NO MISSION ASSIGNED. CLEARANCE DECLINED.")) { bShowInformation=true; bShowCaution=false; }
+
         InformationCaptions.Add(Line.Caption);InformationExpiry.Add(Line.ExpiresAt);
         InformationRows->AddSlot().AutoHeight().Padding(0,0,0,3)
         [ SNew(STextBlock).Text(FText::FromString(Line.Caption)).AutoWrapText(true)

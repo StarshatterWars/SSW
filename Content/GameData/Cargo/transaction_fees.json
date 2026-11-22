@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "GstBasisPoints": 200,
+  "ServiceFeeBasisPoints": 100,
+  "BrokerFeeBasisPoints": 100
+}

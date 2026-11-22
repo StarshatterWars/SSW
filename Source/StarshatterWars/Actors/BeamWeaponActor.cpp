@@ -97,11 +97,12 @@ void ABeamWeaponActor::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ABeamWeaponActor::SetBeamPoints(FVector Start, FVector End)
 {
+    const bool bPointsChanged = BeamStart != Start || BeamEnd != End;
     BeamStart = Start;
     BeamEnd = End;
-    SetActorLocation(Start);
+    if (GetActorLocation() != Start) SetActorLocation(Start);
     ApplyVisual();
-    OnBeamUpdated(Start, End, FVector::Distance(Start, End));
+    if (bPointsChanged) OnBeamUpdated(Start, End, FVector::Distance(Start, End));
 }
 
 void ABeamWeaponActor::SetBeamActive(bool bActive)
@@ -135,27 +136,52 @@ void ABeamWeaponActor::ApplyVisual()
     if (!BeamFX) return;
 
     const FVector LocalEnd=BeamFX->GetComponentTransform().InverseTransformPosition(BeamEnd);
-    // The pack exposes a local endpoint, float size and Vector3f color.
-    if(BeamSystem){
-        auto SetVec=[this](const TCHAR* Name,const FVector& Value){
-            const FNiagaraVariable Var(FNiagaraTypeDefinition::GetVec3Def(),FName(Name));
-            if(BeamSystem->GetExposedParameters().GetParameterData(Var))BeamFX->SetVariableVec3(FName(Name),Value);
-        };
-        SetVec(TEXT("User.beamEnd"),LocalEnd);
-        SetVec(TEXT("User.color"),FVector(BeamColor.R,BeamColor.G,BeamColor.B));
-        SetVec(TEXT("User.colorDeco"),FVector(8,8,8));
-        SetVec(TEXT("User.colorDeco2"),FVector(8,8,8));
-        SetVec(TEXT("User.coreColor"),FVector(8,8,8));
-        BeamFX->SetVariableFloat(TEXT("User.size"),BeamWidth/FMath::Max(.01f,PackReferenceWidth));
+    const bool bSystemChanged=!bVisualParametersInitialized || PresentedSystem.Get()!=BeamSystem.Get();
+    const bool bEndpointChanged=bSystemChanged || PresentedLocalEnd!=LocalEnd;
+    const bool bColorChanged=bSystemChanged || PresentedColor!=BeamColor;
+    const bool bWidthChanged=bSystemChanged || PresentedWidth!=BeamWidth || PresentedReferenceWidth!=PackReferenceWidth;
+    if(bSystemChanged)
+    {
+        if(BeamFX->GetAsset()!=BeamSystem.Get()) BeamFX->SetAsset(BeamSystem);
+        PackVectorParameters=0;
+        if(BeamSystem)
+        {
+            const TCHAR* Names[]={TEXT("User.beamEnd"),TEXT("User.color"),TEXT("User.colorDeco"),TEXT("User.colorDeco2"),TEXT("User.coreColor")};
+            for(uint8 Index=0;Index<UE_ARRAY_COUNT(Names);++Index)
+                if(BeamSystem->GetExposedParameters().GetParameterData(FNiagaraVariable(FNiagaraTypeDefinition::GetVec3Def(),FName(Names[Index]))))
+                    PackVectorParameters|=uint8(1<<Index);
+            const TCHAR* Decorative[]={TEXT("User.colorDeco"),TEXT("User.colorDeco2"),TEXT("User.coreColor")};
+            for(uint8 Index=0;Index<UE_ARRAY_COUNT(Decorative);++Index)
+                if(PackVectorParameters & (1<<(Index+2))) BeamFX->SetVariableVec3(FName(Decorative[Index]),FVector(8,8,8));
+        }
+        BeamFX->SetVariableVec3(TEXT("User.BeamStart"),FVector::ZeroVector);
     }
-    FBox Bounds(ForceInit);Bounds+=FVector::ZeroVector;Bounds+=LocalEnd;
-    BeamFX->SetSystemFixedBounds(Bounds.ExpandBy(FMath::Max(500.0f,BeamWidth*20.0f)));
-    // Compatibility for existing custom Niagara/Blueprint beam presentations.
-    BeamFX->SetVariableVec3(TEXT("User.BeamStart"),FVector::ZeroVector);
-    BeamFX->SetVariableVec3(TEXT("User.BeamEnd"),LocalEnd);
-    BeamFX->SetVariableLinearColor(TEXT("User.BeamColor"),BeamColor);
-    BeamFX->SetVariableFloat(TEXT("User.BeamWidth"),BeamWidth);
-    BeamFX->SetVariableFloat(TEXT("User.BeamLength"),FVector::Distance(BeamStart,BeamEnd));
+    if(bEndpointChanged)
+    {
+        if(PackVectorParameters & 1) BeamFX->SetVariableVec3(TEXT("User.beamEnd"),LocalEnd);
+        BeamFX->SetVariableVec3(TEXT("User.BeamEnd"),LocalEnd);
+        BeamFX->SetVariableFloat(TEXT("User.BeamLength"),FVector::Distance(BeamStart,BeamEnd));
+    }
+    if(bColorChanged)
+    {
+        if(PackVectorParameters & 2) BeamFX->SetVariableVec3(TEXT("User.color"),FVector(BeamColor.R,BeamColor.G,BeamColor.B));
+        BeamFX->SetVariableLinearColor(TEXT("User.BeamColor"),BeamColor);
+    }
+    if(bWidthChanged)
+    {
+        if(BeamSystem) BeamFX->SetVariableFloat(TEXT("User.size"),BeamWidth/FMath::Max(.01f,PackReferenceWidth));
+        BeamFX->SetVariableFloat(TEXT("User.BeamWidth"),BeamWidth);
+    }
+    if(bEndpointChanged || bWidthChanged)
+    {
+        FBox Bounds(ForceInit);Bounds+=FVector::ZeroVector;Bounds+=LocalEnd;
+        BeamFX->SetSystemFixedBounds(Bounds.ExpandBy(FMath::Max(500.0f,BeamWidth*20.0f)));
+    }
+#if WITH_DEV_AUTOMATION_TESTS
+    if(bEndpointChanged || bWidthChanged || bColorChanged) ++VisualUpdateCount;
+#endif
+    PresentedSystem=BeamSystem;PresentedLocalEnd=LocalEnd;PresentedColor=BeamColor;
+    PresentedWidth=BeamWidth;PresentedReferenceWidth=PackReferenceWidth;bVisualParametersInitialized=true;
     if(bBeamActive && BeamSystem && !BeamFX->IsActive())BeamFX->Activate(true);
 }
 

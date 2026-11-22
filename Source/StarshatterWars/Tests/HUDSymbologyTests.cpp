@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "NativeHUDSymbology.h"
 #include "WaypointActor.h"
 #include "ProceduralMeshComponent.h"
@@ -17,7 +18,8 @@ bool FHUDSymbologyMathTest::RunTest(const FString&){
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FWaypointPlumbobTest,"Starshatter.HUD.PhysicalWaypoint",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FWaypointPlumbobTest::RunTest(const FString&){
  TArray<FVector> V,N;TArray<int32>T;TArray<FVector2D>UV;TArray<FLinearColor>C;AWaypointActor::BuildPlumbob(V,T,N,UV,C,240,100);TestEqual(TEXT("Eight independent triangular faces"),V.Num(),24);TestEqual(TEXT("Eight triangles"),T.Num(),24);TestEqual(TEXT("Facet normals"),N.Num(),24);FBox Bounds(V);TestEqual(TEXT("Marker height"),Bounds.GetSize().Z,240.0);for(const auto& Normal:N)TestTrue(TEXT("Face normal normalized"),Normal.IsNormalized());
- auto* World=UWorld::CreateWorld(EWorldType::Game,false);auto* Actor=World->SpawnActor<AWaypointActor>();if(TestNotNull(TEXT("Physical waypoint spawns"),Actor)){
+ auto* World=UWorld::CreateWorld(EWorldType::Game,false);
+    FScopedSSWTestWorldContext TestWorldContext1(World);auto* Actor=World->SpawnActor<AWaypointActor>();if(TestNotNull(TEXT("Physical waypoint spawns"),Actor)){
  Actor->WaypointIndex=1;Actor->SectorName=TEXT("Janek");Actor->Description=TEXT("Go to the Janek sector");Actor->bNextWaypoint=true;Actor->RefreshAppearance(true);TestEqual(TEXT("Concise label"),Actor->CompactLabel(),FString(TEXT("NAV 01\nJanek")));TestFalse(TEXT("Physical marker visible"),Actor->IsHidden());TestEqual(TEXT("Marker does not collide"),Actor->WaypointMarker->GetCollisionEnabled(),ECollisionEnabled::NoCollision);TestEqual(TEXT("Arrival radius remains simulation-only"),Actor->ArrivalSphere->GetCollisionEnabled(),ECollisionEnabled::NoCollision);Actor->SetArrivalHullRadius(25);TestEqual(TEXT("Legacy arrival rule unchanged"),Actor->ArrivalRadiusMeters,AWaypointActor::LegacyArrivalRadius(25));TestNotNull(TEXT("Green marker material assigned"),Actor->WaypointMarker->GetMaterial(0));Actor->Tick(1.f);TestTrue(TEXT("Marker turns around vertical axis without tilting"),Actor->WaypointMarker->GetUpVector().Equals(FVector::UpVector,.001));TestTrue(TEXT("Marker rotates ten degrees each second"),FMath::IsNearlyEqual(Actor->WaypointMarker->GetRelativeRotation().Yaw,10.f,.001f));if(auto* Material=Cast<UMaterialInstanceDynamic>(Actor->WaypointMarker->GetMaterial(0))){float Brightness=0;TestTrue(TEXT("Pulse drives material brightness"),Material->GetScalarParameterValue(FMaterialParameterInfo(TEXT("Intensity")),Brightness));TestTrue(TEXT("Pulse stays gentle and never blacks out"),Brightness>=1.875f-.001f && Brightness<=2.5f+.001f);}
  Actor->RefreshAppearance(false);TestTrue(TEXT("Out-of-sector markers can be hidden"),Actor->IsHidden());}
  World->DestroyWorld(false);return true;

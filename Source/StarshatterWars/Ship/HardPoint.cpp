@@ -31,9 +31,10 @@
 // +----------------------------------------------------------------------+
 
 HardPoint::HardPoint(FVector muzzle_loc, double az, double el)
-	: aim_azimuth((float)az)
-	, aim_elevation((float)el)
-	, muzzle(muzzle_loc)
+	: 
+    muzzle(muzzle_loc),
+    aim_azimuth((float)az),
+    aim_elevation((float)el)
 {
 	std::memset(designs, 0, sizeof(designs));
 }
@@ -41,12 +42,13 @@ HardPoint::HardPoint(FVector muzzle_loc, double az, double el)
 // +----------------------------------------------------------------------+
 
 HardPoint::HardPoint(const HardPoint& h)
-	: aim_azimuth(h.aim_azimuth)
-	, aim_elevation(h.aim_elevation)
-	, muzzle(h.muzzle)
-	, mount_rel(h.mount_rel)
-	, radius(h.radius)
-	, hull_factor(h.hull_factor)
+	: 
+    muzzle(h.muzzle),
+    aim_azimuth(h.aim_azimuth),
+    aim_elevation(h.aim_elevation),
+    mount_rel(h.mount_rel),
+    radius(h.radius),
+    hull_factor(h.hull_factor)
 {
 	std::memcpy(designs, h.designs, sizeof(designs));
 }

@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "CarrierInteriorBuilderComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
@@ -15,6 +16,7 @@ bool FCarrierInteriorBlockoutTest::RunTest(const FString& Parameters)
         .CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     UWorld* World = UWorld::CreateWorld(EWorldType::EditorPreview, false, NAME_None, nullptr, true,
         ERHIFeatureLevel::Num, &WorldOptions);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     if (!TestNotNull(TEXT("Preview world"), World)) return false;
     AActor* Owner = World->SpawnActor<AActor>();
     UCarrierInteriorBuilderComponent* Builder = NewObject<UCarrierInteriorBuilderComponent>(Owner);

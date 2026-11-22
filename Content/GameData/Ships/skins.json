@@ -1,0 +1,586 @@
+{
+  "schemaVersion": 1,
+  "prices": {
+    "Normal": 5000,
+    "Special": 15000,
+    "Event": 25000
+  },
+  "skins": [
+    {
+      "id": "IM3500.Blue",
+      "name": "Blue",
+      "hull": "IM3500",
+      "skinName": "Blue",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM3500 Freighter. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM3500.Green",
+      "name": "Green",
+      "hull": "IM3500",
+      "skinName": "Green",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM3500 Freighter. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM3500.Red",
+      "name": "Red",
+      "hull": "IM3500",
+      "skinName": "Red",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM3500 Freighter. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM4300.Blue",
+      "name": "Blue",
+      "hull": "IM4300",
+      "skinName": "Blue",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM4300 Hauler. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM4300.Green",
+      "name": "Green",
+      "hull": "IM4300",
+      "skinName": "Green",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM4300 Hauler. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM4300.Red",
+      "name": "Red",
+      "hull": "IM4300",
+      "skinName": "Red",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM4300 Hauler. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM2800.Blue",
+      "name": "Blue",
+      "hull": "IM2800",
+      "skinName": "Blue",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM2800 Cargo. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM2800.Green",
+      "name": "Green",
+      "hull": "IM2800",
+      "skinName": "Green",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM2800 Cargo. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM2800.Red",
+      "name": "Red",
+      "hull": "IM2800",
+      "skinName": "Red",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM2800 Cargo. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Falcon.Naval_Blue",
+      "name": "Naval Blue",
+      "hull": "Falcon",
+      "skinName": "Naval Blue",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Falcon. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Falcon.Arctic_White",
+      "name": "Arctic White",
+      "hull": "Falcon",
+      "skinName": "Arctic White",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Falcon. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Falcon.Gunmetal",
+      "name": "Gunmetal",
+      "hull": "Falcon",
+      "skinName": "Gunmetal",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Falcon. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Falcon.Desert_Sand",
+      "name": "Desert Sand",
+      "hull": "Falcon",
+      "skinName": "Desert Sand",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Falcon. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Falcon.Forest_Green",
+      "name": "Forest Green",
+      "hull": "Falcon",
+      "skinName": "Forest Green",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Falcon. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Falcon.Rescue_Orange",
+      "name": "Rescue Orange",
+      "hull": "Falcon",
+      "skinName": "Rescue Orange",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Falcon. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Falcon.Crimson",
+      "name": "Crimson",
+      "hull": "Falcon",
+      "skinName": "Crimson",
+      "included": false,
+      "category": "Special",
+      "description": "Included cosmetic finish for Falcon. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Falcon.Midnight",
+      "name": "Midnight",
+      "hull": "Falcon",
+      "skinName": "Midnight",
+      "included": false,
+      "category": "Event",
+      "description": "Included cosmetic finish for Falcon. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Stormhawk.Naval_Blue",
+      "name": "Naval Blue",
+      "hull": "Stormhawk",
+      "skinName": "Naval Blue",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Stormhawk. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Stormhawk.Arctic_White",
+      "name": "Arctic White",
+      "hull": "Stormhawk",
+      "skinName": "Arctic White",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Stormhawk. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Stormhawk.Gunmetal",
+      "name": "Gunmetal",
+      "hull": "Stormhawk",
+      "skinName": "Gunmetal",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Stormhawk. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Stormhawk.Desert_Sand",
+      "name": "Desert Sand",
+      "hull": "Stormhawk",
+      "skinName": "Desert Sand",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Stormhawk. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Stormhawk.Forest_Green",
+      "name": "Forest Green",
+      "hull": "Stormhawk",
+      "skinName": "Forest Green",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Stormhawk. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Stormhawk.Rescue_Orange",
+      "name": "Rescue Orange",
+      "hull": "Stormhawk",
+      "skinName": "Rescue Orange",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Stormhawk. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Stormhawk.Crimson",
+      "name": "Crimson",
+      "hull": "Stormhawk",
+      "skinName": "Crimson",
+      "included": false,
+      "category": "Special",
+      "description": "Included cosmetic finish for Stormhawk. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Stormhawk.Midnight",
+      "name": "Midnight",
+      "hull": "Stormhawk",
+      "skinName": "Midnight",
+      "included": false,
+      "category": "Event",
+      "description": "Included cosmetic finish for Stormhawk. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM1906.Blue",
+      "name": "Blue",
+      "hull": "IM1906",
+      "skinName": "Blue",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM1906 Tanker. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM1906.Green",
+      "name": "Green",
+      "hull": "IM1906",
+      "skinName": "Green",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM1906 Tanker. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM1906.Red",
+      "name": "Red",
+      "hull": "IM1906",
+      "skinName": "Red",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM1906 Tanker. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM1912.Blue",
+      "name": "Blue",
+      "hull": "IM1912",
+      "skinName": "Blue",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM1912 Tanker. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM1912.Green",
+      "name": "Green",
+      "hull": "IM1912",
+      "skinName": "Green",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM1912 Tanker. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "IM1912.Red",
+      "name": "Red",
+      "hull": "IM1912",
+      "skinName": "Red",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM1912 Tanker. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Transport.Blue",
+      "name": "Blue",
+      "hull": "Transport",
+      "skinName": "Blue",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Transport. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Transport.Green",
+      "name": "Green",
+      "hull": "Transport",
+      "skinName": "Green",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Transport. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Transport.Red",
+      "name": "Red",
+      "hull": "Transport",
+      "skinName": "Red",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Transport. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Zodiac.Green",
+      "name": "Green",
+      "hull": "Zodiac",
+      "skinName": "Green",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Zodiac.Naval_Blue",
+      "name": "Naval Blue",
+      "hull": "Zodiac",
+      "skinName": "Naval Blue",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Zodiac.Arctic_White",
+      "name": "Arctic White",
+      "hull": "Zodiac",
+      "skinName": "Arctic White",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Zodiac.Gunmetal",
+      "name": "Gunmetal",
+      "hull": "Zodiac",
+      "skinName": "Gunmetal",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Zodiac.Desert_Sand",
+      "name": "Desert Sand",
+      "hull": "Zodiac",
+      "skinName": "Desert Sand",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Zodiac.Forest_Green",
+      "name": "Forest Green",
+      "hull": "Zodiac",
+      "skinName": "Forest Green",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Zodiac.Rescue_Orange",
+      "name": "Rescue Orange",
+      "hull": "Zodiac",
+      "skinName": "Rescue Orange",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Zodiac.Crimson",
+      "name": "Crimson",
+      "hull": "Zodiac",
+      "skinName": "Crimson",
+      "included": false,
+      "category": "Special",
+      "description": "Included cosmetic finish for Zodiac. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Zodiac.Midnight",
+      "name": "Midnight",
+      "hull": "Zodiac",
+      "skinName": "Midnight",
+      "included": false,
+      "category": "Event",
+      "description": "Included cosmetic finish for Zodiac. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Prospector.Green",
+      "name": "Green",
+      "hull": "Prospector",
+      "skinName": "Green",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Prospector. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Prospector.Naval_Blue",
+      "name": "Naval Blue",
+      "hull": "Prospector",
+      "skinName": "Naval Blue",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Prospector. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Prospector.Arctic_White",
+      "name": "Arctic White",
+      "hull": "Prospector",
+      "skinName": "Arctic White",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Prospector. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Prospector.Gunmetal",
+      "name": "Gunmetal",
+      "hull": "Prospector",
+      "skinName": "Gunmetal",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Prospector. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Prospector.Desert_Sand",
+      "name": "Desert Sand",
+      "hull": "Prospector",
+      "skinName": "Desert Sand",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Prospector. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Prospector.Forest_Green",
+      "name": "Forest Green",
+      "hull": "Prospector",
+      "skinName": "Forest Green",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Prospector. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Prospector.Rescue_Orange",
+      "name": "Rescue Orange",
+      "hull": "Prospector",
+      "skinName": "Rescue Orange",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Prospector. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Prospector.Crimson",
+      "name": "Crimson",
+      "hull": "Prospector",
+      "skinName": "Crimson",
+      "included": false,
+      "category": "Special",
+      "description": "Included cosmetic finish for Zodiac Prospector. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Prospector.Midnight",
+      "name": "Midnight",
+      "hull": "Prospector",
+      "skinName": "Midnight",
+      "included": false,
+      "category": "Event",
+      "description": "Included cosmetic finish for Zodiac Prospector. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Rockhopper.Blue",
+      "name": "Blue",
+      "hull": "Rockhopper",
+      "skinName": "Blue",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM3500 Rockhopper. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Rockhopper.Green",
+      "name": "Green",
+      "hull": "Rockhopper",
+      "skinName": "Green",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM3500 Rockhopper. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "Rockhopper.Red",
+      "name": "Red",
+      "hull": "Rockhopper",
+      "skinName": "Red",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for IM3500 Rockhopper. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "CrewShuttle.Green",
+      "name": "Green",
+      "hull": "CrewShuttle",
+      "skinName": "Green",
+      "included": true,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Crew Shuttle. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "CrewShuttle.Naval_Blue",
+      "name": "Naval Blue",
+      "hull": "CrewShuttle",
+      "skinName": "Naval Blue",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Crew Shuttle. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "CrewShuttle.Arctic_White",
+      "name": "Arctic White",
+      "hull": "CrewShuttle",
+      "skinName": "Arctic White",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Crew Shuttle. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "CrewShuttle.Gunmetal",
+      "name": "Gunmetal",
+      "hull": "CrewShuttle",
+      "skinName": "Gunmetal",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Crew Shuttle. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "CrewShuttle.Desert_Sand",
+      "name": "Desert Sand",
+      "hull": "CrewShuttle",
+      "skinName": "Desert Sand",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Crew Shuttle. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "CrewShuttle.Forest_Green",
+      "name": "Forest Green",
+      "hull": "CrewShuttle",
+      "skinName": "Forest Green",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Crew Shuttle. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "CrewShuttle.Rescue_Orange",
+      "name": "Rescue Orange",
+      "hull": "CrewShuttle",
+      "skinName": "Rescue Orange",
+      "included": false,
+      "category": "Normal",
+      "description": "Included cosmetic finish for Zodiac Crew Shuttle. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "CrewShuttle.Crimson",
+      "name": "Crimson",
+      "hull": "CrewShuttle",
+      "skinName": "Crimson",
+      "included": false,
+      "category": "Special",
+      "description": "Included cosmetic finish for Zodiac Crew Shuttle. Original surface details are retained; performance and equipment are unchanged."
+    },
+    {
+      "id": "CrewShuttle.Midnight",
+      "name": "Midnight",
+      "hull": "CrewShuttle",
+      "skinName": "Midnight",
+      "included": false,
+      "category": "Event",
+      "description": "Included cosmetic finish for Zodiac Crew Shuttle. Original surface details are retained; performance and equipment are unchanged."
+    }
+  ]
+}

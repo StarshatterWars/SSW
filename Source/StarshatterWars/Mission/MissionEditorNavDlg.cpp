@@ -48,7 +48,7 @@ UMissionEditorNavDlg::UMissionEditorNavDlg(const FObjectInitializer& ObjectIniti
     : Super(ObjectInitializer)
 {
     SetDialogInputEnabled(true);
-    bIsFocusable = true;
+    SetIsFocusable(true);
 }
 
 void UMissionEditorNavDlg::BindFormWidgets()

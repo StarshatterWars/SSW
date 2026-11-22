@@ -178,13 +178,13 @@ FReply UBaseScreen::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent
 
     const FKey Key = InKeyEvent.GetKey();
 
-    if (Key == EKeys::Enter || Key == EKeys::Virtual_Accept)
+    if (Key == EKeys::Enter || Key == EKeys::Virtual_Gamepad_Accept.GetVirtualKey())
     {
         HandleAccept();
         return FReply::Handled();
     }
 
-    if (Key == EKeys::Escape || Key == EKeys::Virtual_Back)
+    if (Key == EKeys::Escape || Key == EKeys::Virtual_Gamepad_Back.GetVirtualKey())
     {
         HandleCancel();
         return FReply::Handled();
@@ -796,7 +796,7 @@ UCanvasPanel* UBaseScreen::ResolveRootCanvas()
 
         while (Stack.Num() > 0)
         {
-            UWidget* W = Stack.Pop(false);
+            UWidget* W = Stack.Pop(EAllowShrinking::No);
 
             if (UCanvasPanel* C = Cast<UCanvasPanel>(W))
             {
@@ -1069,7 +1069,7 @@ void UBaseScreen::StyleButton_Default(
     const FSlateBrush Disabled = MakeStarshatterBrush(Btn_DisabledTex ? Btn_DisabledTex : Btn_NormalTex,
         Btn_9SliceMargin, Btn_ImageSize);
 
-    FButtonStyle Style = Button->WidgetStyle;
+    FButtonStyle Style = Button->GetStyle();
     Style.SetNormal(Normal);
     Style.SetHovered(Hovered);
     Style.SetPressed(Pressed);
@@ -1099,7 +1099,7 @@ void UBaseScreen::StyleButton_Default(
 #if ENGINE_MAJOR_VERSION >= 5
     Button->SetStyle(Style);
 #else
-    Button->WidgetStyle = Style;
+    Button->GetStyle() = Style;
     Button->SynchronizeProperties();
 #endif
 

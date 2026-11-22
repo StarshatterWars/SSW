@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "MissionBriefingDlg.h"
 #include "Ship.h"
@@ -26,14 +27,15 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAutolandTargetSelectionTest,"Starshatter.Carri
 bool FAutolandTargetSelectionTest::RunTest(const FString&)
 {
  const bool OwnLoader=!DataLoader::GetLoader();if(OwnLoader)DataLoader::Initialize();ON_SCOPE_EXIT{if(OwnLoader)DataLoader::Close();};
- TUniquePtr<Sim> Owned;if(!Sim::GetSim()){AddExpectedError(TEXT("ERROR: could notxparse 'Explosions.def'"),EAutomationExpectedErrorFlags::Contains,1);Owned=MakeUnique<Sim>(nullptr);}
+ TUniquePtr<Sim> Owned;if(!Sim::GetSim()){Owned=MakeUnique<Sim>(nullptr);}
  auto& Simulation=*Sim::GetSim();auto* Previous=Simulation.active_region;
  auto* Region=new SimRegion(&Simulation,"Selection recovery fixture",SimRegion::REAL_SPACE);Simulation.regions.append(Region);Simulation.active_region=Region;
  ShipDesign Design;SimElement Element("Selection fixture",1);
  auto* RecoveryPilot=new FRecoverySelectionShip("Pilot",&Design);auto* Base=new Ship("Recovery base","",&Design,1,0,nullptr,false);
  Region->InsertObject(RecoveryPilot);Region->InsertObject(Base);Region->SetPlayerShip(RecoveryPilot);Element.AddShip(RecoveryPilot);RecoveryPilot->SetElement(&Element);
  auto Deck=MakeUnique<FlightDeck>();Deck->SetCarrier(Base);auto Arrival=MakeUnique<InboundSlot>(RecoveryPilot,Deck.Get(),0,0);Arrival->Clear();RecoveryPilot->SetFlightPhase(EOPSMode::ACTIVE);RecoveryPilot->SetInbound(Arrival.Get());RecoveryPilot->AutoLandForFixture(true);
- auto* World=UWorld::CreateWorld(EWorldType::Game,false);World->SetGameInstance(NewObject<UGameInstance>());
+ auto* World=UWorld::CreateWorld(EWorldType::Game,false);
+    FScopedSSWTestWorldContext TestWorldContext1(World);World->SetGameInstance(NewObject<UGameInstance>());
  TStrongObjectPtr<UMissionBriefingDlg> Panel(NewObject<UMissionBriefingDlg>(World));Panel->bLiveMissionStarted=true;Panel->bRecoveryTargetSelected=true;
  ON_SCOPE_EXIT{Panel->bLiveMissionStarted=false;Panel.Reset();World->DestroyWorld(false);RecoveryPilot->SetInbound(nullptr);RecoveryPilot->SetCarrier(nullptr,nullptr);Arrival.Reset();Deck.Reset();Simulation.regions.remove(Region);Simulation.active_region=Previous;delete Region;};
  auto* BaseVisual=World->SpawnActor<AShipActor>();BaseVisual->BindRuntimeShip(Base);

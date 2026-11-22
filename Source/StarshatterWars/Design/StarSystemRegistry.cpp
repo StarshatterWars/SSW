@@ -271,24 +271,17 @@ StarSystem* StarSystemRegistry::BuildStarSystem(
         }
     }
 
-    if (Row.Name.Equals(TEXT("Janus"), ESearchCase::IgnoreCase) ||
-        Row.Name.Equals(TEXT("Janus System"), ESearchCase::IgnoreCase))
+    System->LoadTerrainRegion(FPaths::ProjectContentDir()/TEXT("GameData/Galaxy/terrain_regions.json"),nullptr,nullptr);
+    for(ListIter<OrbitalRegion> It=System->GetAllRegions();++It;)
     {
-        const FString Definition = FPaths::ProjectContentDir() /
-            TEXT("GameData/Galaxy/Janus System/Janus System.def");
-        if (OrbitalRegion* Janek = System->LoadTerrainRegion(
-            Definition, "Janek Station", System->FindOrbital("Janek")))
-        {
-            if (const FPlanet* Planet = Env->FindPlanetMapByName(TEXT("Janek")))
-                if (const FNamedBodyLocation* Site = Planet->Locations.FindByPredicate([](const FNamedBodyLocation& Location)
-                    { return Location.Name == TEXT("Janek Station") && Location.Type == ELocationType::Airbase; }))
-                    static_cast<TerrainRegion*>(Janek)->SetSurfaceSiteOffset(Site->Position);
-            Env->RegisterRegion(Janek);
-        }
-        else
-        {
-            UE_LOG(LogTemp, Error, TEXT("Could not register Janek Station airspace from %s"), *Definition);
-        }
+        OrbitalRegion* Region=It.value();
+        if(Region->GetType()!=Orbital::TERRAIN)continue;
+        Env->RegisterRegion(Region);
+        auto* Surface=static_cast<TerrainRegion*>(Region);
+        const Orbital* Primary=Surface->Primary();
+        if(const FPlanet* Planet=Primary?Env->FindPlanetMapByName(UTF8_TO_TCHAR(Primary->GetName())):nullptr)
+            if(const auto* Site=Planet->Locations.FindByPredicate([&](const FNamedBodyLocation& Location){return Location.Name==UTF8_TO_TCHAR(Region->GetName()) && Location.Type==ELocationType::Airbase;}))
+                Surface->SetSurfaceSiteOffset(Site->Position);
     }
 
     System->RecalculateRadius();

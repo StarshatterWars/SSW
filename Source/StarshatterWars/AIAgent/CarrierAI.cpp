@@ -45,8 +45,14 @@ DEFINE_LOG_CATEGORY_STATIC(LogTempCarrierAI, Log, All);
 // +----------------------------------------------------------------------+
 
 CarrierAI::CarrierAI(Ship* s, int level)
-	: sim(0), ship(s), hangar(0), exec_time(0), flight_planner(0),
-	hold_time(0), ai_level(level)
+	: 
+    sim(0),
+    ship(s),
+    hangar(0),
+    flight_planner(0),
+    exec_time(0),
+    hold_time(0),
+    ai_level(level)
 {
 	if (ship) {
 		sim = Sim::GetSim();

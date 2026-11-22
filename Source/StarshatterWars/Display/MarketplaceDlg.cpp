@@ -1,4 +1,5 @@
 #include "MarketplaceDlg.h"
+#include "ChangeDrivenPanel.h"
 #include "EconomyAI.h"
 #include "RecordDetails.h"
 #include "ShipSystemIcon.h"
@@ -222,6 +223,7 @@ namespace
         EColumnSortMode::Type SortMode = EColumnSortMode::Ascending;
         TWeakObjectPtr<UGameInstance> Instance;
         FString System;
+        TMap<FName, int32> JumpDistances;
         FOfferPtr Selected;
         double Quantity=1;
         FStationMarketQuote BuyQuote,SellQuote;
@@ -316,10 +318,10 @@ namespace
             if(Action<2)
             {
                 Id=FEconomyLedger::PlaceMarketOrder(State,FEconomyLedger::Pilot(),FEconomyRuntime::Warehouse(System,TEXT("NPC Market"),TEXT("Stock")),Craft->GetCargoInventoryKey(),Item,
-                    Action==0?EMarketOrderSide::Buy:EMarketOrderSide::Sell,Quantity,Selected->Goods.Size,LimitPrice,Now,Now+24*3600,FGuid::NewGuid(),ServiceMessage);
+                    Action==0?EMarketOrderSide::Buy:EMarketOrderSide::Sell,Quantity,Selected->Goods.Size,LimitPrice,Now,Now+24*3600,FGuid::NewGuid(),ServiceMessage,ECommercePurpose::Brokerage);
                 Changed=Id.IsValid();
             }
-            else if(Action==2)Changed=FEconomyLedger::ModifyMarketOrder(State,FEconomyLedger::Pilot(),Id,LimitPrice,FGuid::NewGuid(),ServiceMessage);
+            else if(Action==2)Changed=FEconomyLedger::ModifyMarketOrder(State,FEconomyLedger::Pilot(),Id,LimitPrice,FGuid::NewGuid(),ServiceMessage,ECommercePurpose::Brokerage);
             else Changed=FEconomyLedger::CancelMarketOrder(State,FEconomyLedger::Pilot(),Id,FGuid::NewGuid(),ServiceMessage);
             if(!Changed)return;
             NextTradeAt=FPlatformTime::Seconds()+.35;
@@ -353,8 +355,15 @@ namespace
                     Offer->Available=Offer->bRestricted?0:FEconomyLedger::Available(State,Local,FName(*Offer->Name));
                     const double Pressure=double(Offer->Demand)/FMath::Max(1.0,Offer->Available);
                     Offer->Price=Offer->Goods.Value*FMath::Clamp(.8+Pressure,.85,3.0);
-                    if(!Offer->Producer.IsEmpty() && Offer->Goods.Size>0)
-                        Offer->ProducerStock=FEconomyLedger::SystemQuantity(State,FName(*Offer->Producer),FName(*Offer->Name))/Offer->Goods.Size;
+                    Offer->Producer.Empty();Offer->ProducerStock=0;Offer->ProducerJumps=MAX_int32;
+                    for(const auto& Distance:JumpDistances)
+                    {
+                        const FName Warehouse=FEconomyRuntime::Warehouse(Distance.Key.ToString(),TEXT("NPC Market"),TEXT("Stock"));
+                        const double Stock=FEconomyLedger::Available(State,Warehouse,FName(*Offer->Name));
+                        if(Stock<=0 || Distance.Value>Offer->ProducerJumps ||
+                            (Distance.Value==Offer->ProducerJumps && Stock<=Offer->ProducerStock))continue;
+                        Offer->Producer=Distance.Key.ToString();Offer->ProducerStock=Stock;Offer->ProducerJumps=Distance.Value;
+                    }
                 }
             }
             UpdateQuotes();Sort();RefreshRecords();
@@ -448,7 +457,12 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
     {
         if (const auto* Catalog = Instance->GetSubsystem<UCargoCatalogSubsystem>())
         {
+            // Native warehouse initialization is independent of factories and loaded sectors.
+            // The persistent seed markers make opening this panel idempotent.
+            if (Simulation && Simulation->HasSimulationAuthority() && !Simulation->IsNetworked())
+                FEconomyRuntime::InitializeMarkets(Simulation->GetEconomy(), *Catalog);
             const auto Distances = GetJumpDistances(Instance->GetSubsystem<UStarshatterEnvironmentSubsystem>(), System);
+            Table->JumpDistances=Distances;
             Catalog->ForEachDefinition([Table, &Markets, &Distances, LocalIndex](FName Name, const FS_CargoCatalogRow& Goods)
             {
                 if (LocalIndex == INDEX_NONE) return;
@@ -473,8 +487,9 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                     const bool bProduces = Market.Production.Contains(Name) || Index == ExclusiveIndex;
                     Demand.Add(bTrades ? FMath::Max(1, FMath::RoundToInt(BaseStock * 0.15 * Market.DemandScale)) : 0);
                     Production.Add(bProduces && bTrades ? BaseStock : 0);
-                    const double Tonnes = Economy ? FEconomyLedger::SystemQuantity(*Economy, FName(*Market.Name), Name) : 0;
-                    Stock.Add(Goods.Size > 0 ? static_cast<int32>(FMath::Clamp(FMath::FloorToDouble(Tonnes / Goods.Size), 0.0, double(MAX_int32))) : 0);
+                    const FName Warehouse=FEconomyRuntime::Warehouse(Market.Name,TEXT("NPC Market"),TEXT("Stock"));
+                    const double Available=Economy?FEconomyLedger::Available(*Economy,Warehouse,Name):0;
+                    Stock.Add(static_cast<int32>(FMath::Clamp(FMath::FloorToDouble(Available),0.0,double(MAX_int32))));
                 }
                 Offer->Available = Stock[LocalIndex];
                 Offer->Demand = Demand[LocalIndex];
@@ -516,9 +531,9 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
     AddColumn("Description", INVTEXT("Description"), 4.f);
     AddColumn("Available", INVTEXT("NPC stock"), 1.1f);
     AddColumn("Demand", INVTEXT("Demand / hr"), 1.2f);
-    AddColumn("Producer", INVTEXT("Nearest producer"), 2.f);
+    AddColumn("Producer", INVTEXT("Nearest warehouse"), 2.f);
     AddColumn("Jumps", INVTEXT("Jumps"), 0.8f);
-    AddColumn("ProducerStock", INVTEXT("Producer stock"), 1.4f);
+    AddColumn("ProducerStock", INVTEXT("Warehouse stock"), 1.4f);
     AddColumn("Source", INVTEXT("Local status"), 1.3f);
     AddColumn("Rarity", INVTEXT("RARITY"), 1.1f);
     AddColumn("Illicit", INVTEXT("ILLICIT"), 0.8f);
@@ -557,9 +572,7 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
     };
     auto Orders=Records(false),History=Records(true);Table->OrderList=Orders;Table->HistoryList=History;
     Table->RefreshLive();
-    List->RegisterActiveTimer(.5f,FWidgetActiveTimerDelegate::CreateLambda([Table](double,float)
-    {Table->RefreshLive();return EActiveTimerReturnType::Continue;}));
-    return SNew(SVerticalBox)
+    return SNew(SChangeDrivenPanel).OnChanged_Lambda([Table](){Table->RefreshLive();})[SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(20, 18, 20, 10)
         [
             SNew(STextBlock).Font(MissionUIStyle::GetRowFont(13))
@@ -598,7 +611,7 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                 SNew(SVerticalBox)
                 + SVerticalBox::Slot().FillHeight(1)
                 [SNew(SScrollBox) + SScrollBox::Slot()
-                    [SNew(SRecordDetails).Record_Lambda([Selected]()
+                    [SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([Selected](){return PointerHash(Selected->Get());}).Record_Lambda([Selected]()
                         {
                             FRecordDetails D;D.Icon=EShipSystemIcon::Marketplace;
                             if(!*Selected){D.Title=INVTEXT("SELECT AN ITEM");D.Description=INVTEXT("Inspect local stock and the nearest producer. Trading requires docking.");return D;}
@@ -669,11 +682,15 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                     [SNew(SButton).ToolTipText(INVTEXT("Cancel the selected open order and release unspent escrow or unsold cargo"))
                         .IsEnabled_Lambda([Table](){return Table->CanManageOrder();})
                         .OnClicked_Lambda([Table](){Table->OrderAction(3);return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Abort)]]]
+                + SVerticalBox::Slot().AutoHeight().Padding(0,3)
+                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11))
+                    .Text_Lambda([Table](){const double Value=Table->Quantity*double(Table->LimitPrice);if(!FMath::IsFinite(Value) || Value<0 || Value>9.e15)return INVTEXT("INVALID ORDER VALUE");const int64 Total=FMath::RoundToInt64(Value);return FText::Format(INVTEXT("ORDER VALUE {0} CR  |  BROKER {1} CR (GST INCLUDED)  |  BUY ESCROW + FEE {2} CR"),FText::AsNumber(Total),FText::AsNumber(CommerceCharges::BrokerFee(Total)),FText::AsNumber(Total+CommerceCharges::BrokerFee(Total)));})
+                    .ToolTipText(INVTEXT("The broker fee is charged on placement and repricing, separately from reserved funds. Cancellation returns unused escrow; broker fees are not refunded. Executed sales include GST, with the net proceeds credited to the seller."))]
                 + SVerticalBox::Slot().AutoHeight()
                 [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([Table]()
                 {return Table->Selected?FText::Format(INVTEXT("{0}  |  MAX {1}\n{2}  |  MAX {3}"),Table->BuyQuote.Reason,FText::AsNumber(Table->BuyQuote.Maximum),Table->SellQuote.Reason,FText::AsNumber(Table->SellQuote.Maximum)):FText::GetEmpty();})]
                 + SVerticalBox::Slot().AutoHeight().Padding(0,4)
                 [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([Table](){return Table->ServiceMessage;})]
             )
-        ];
+        ]];
 }

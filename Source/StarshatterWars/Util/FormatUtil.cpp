@@ -17,40 +17,44 @@
 #include <cstdio>
 
 
-void FormatNumber(char* txt, double n)
+void FormatNumber(TArrayView<char> Buffer, double n)
 {
+    if(Buffer.IsEmpty()) return;
+    char* txt=Buffer.GetData();
 	double a = fabs(n);
 
 	if (a < 1e3)
-		sprintf(txt, "%d", (int)(n));
+		std::snprintf(txt, Buffer.Num(), "%d", (int)(n));
 
 	else if (a < 1e6)
-		sprintf(txt, "%.1f K", (n / 1e3));
+		std::snprintf(txt, Buffer.Num(), "%.1f K", (n / 1e3));
 
 	else if (a < 1e9)
-		sprintf(txt, "%.1f M", (n / 1e6));
+		std::snprintf(txt, Buffer.Num(), "%.1f M", (n / 1e6));
 
 	else if (a < 1e12)
-		sprintf(txt, "%.1f G", (n / 1e9));
+		std::snprintf(txt, Buffer.Num(), "%.1f G", (n / 1e9));
 
 	else if (a < 1e15)
-		sprintf(txt, "%.1f T", (n / 1e12));
+		std::snprintf(txt, Buffer.Num(), "%.1f T", (n / 1e12));
 
 	else
-		sprintf(txt, "%.1e", n);
+		std::snprintf(txt, Buffer.Num(), "%.1e", n);
 }
 
 // +--------------------------------------------------------------------+
 
-void FormatNumberExp(char* txt, double n)
+void FormatNumberExp(TArrayView<char> Buffer, double n)
 {
+    if(Buffer.IsEmpty()) return;
+    char* txt=Buffer.GetData();
 	double a = fabs(n);
 
 	if (a < 100e3)
-		sprintf(txt, "%d", (int)(n));
+		std::snprintf(txt, Buffer.Num(), "%d", (int)(n));
 
 	else
-		sprintf(txt, "%.1e", n);
+		std::snprintf(txt, Buffer.Num(), "%.1e", n);
 }
 
 // +--------------------------------------------------------------------+
@@ -59,9 +63,11 @@ const int MINUTE = 60;
 const int HOUR = 60 * MINUTE;
 const int DAY = 24 * HOUR;
 
-void FormatTime(char* buf, double seconds)
+void FormatTime(TArrayView<char> Buffer, double seconds)
 {
-	if (!buf) return;
+    if(Buffer.IsEmpty()) return;
+    char* buf=Buffer.GetData();
+	
 
 	int total = (int)seconds;
 
@@ -70,14 +76,16 @@ void FormatTime(char* buf, double seconds)
 	int secs = total % 60;
 
 	if (hours > 0)
-		sprintf_s(buf, 32, "%d:%02d:%02d", hours, minutes, secs);
+		std::snprintf(buf, Buffer.Num(), "%d:%02d:%02d", hours, minutes, secs);
 	else
-		sprintf_s(buf, 32, "%02d:%02d", minutes, secs);
+		std::snprintf(buf, Buffer.Num(), "%02d:%02d", minutes, secs);
 }
 // +--------------------------------------------------------------------+
 
-void FormatTimeOfDay(char* txt, double time)
+void FormatTimeOfDay(TArrayView<char> Buffer, double time)
 {
+    if(Buffer.IsEmpty()) return;
+    char* txt=Buffer.GetData();
 	int t = (int)time;
 
 	if (t >= DAY) {
@@ -89,13 +97,15 @@ void FormatTimeOfDay(char* txt, double time)
 	int m = ((t - h * HOUR) / MINUTE);
 	int s = ((t - h * HOUR - m * MINUTE));
 
-	sprintf(txt, "%02d:%02d:%02d", h, m, s);
+	std::snprintf(txt, Buffer.Num(), "%02d:%02d:%02d", h, m, s);
 }
 
 // +--------------------------------------------------------------------+
 
-void FormatDayTime(char* txt, double time, bool short_format)
+void FormatDayTime(TArrayView<char> Buffer, double time, bool short_format)
 {
+    if(Buffer.IsEmpty()) return;
+    char* txt=Buffer.GetData();
 	int t = (int)time;
 	int d = 1, h = 0, m = 0, s = 0;
 
@@ -118,15 +128,17 @@ void FormatDayTime(char* txt, double time, bool short_format)
 	s = t;
 
 	if (short_format)
-		sprintf(txt, "%02d/%02d:%02d:%02d", d, h, m, s);
+		std::snprintf(txt, Buffer.Num(), "%02d/%02d:%02d:%02d", d, h, m, s);
 	else
-		sprintf(txt, "Day %02d %02d:%02d:%02d", d, h, m, s);
+		std::snprintf(txt, Buffer.Num(), "Day %02d %02d:%02d:%02d", d, h, m, s);
 }
 
 // +--------------------------------------------------------------------+
 
-void FormatDay(char* txt, double time)
+void FormatDay(TArrayView<char> Buffer, double time)
 {
+    if(Buffer.IsEmpty()) return;
+    char* txt=Buffer.GetData();
 	int t = (int)time;
 	int d = 1, h = 0, m = 0, s = 0;
 
@@ -136,7 +148,7 @@ void FormatDay(char* txt, double time)
 		d++;
 	}
 
-	sprintf(txt, "Day %02d", d);
+	std::snprintf(txt, Buffer.Num(), "Day %02d", d);
 }
 
 FString FormatDayFromString(FString txt)
@@ -145,8 +157,10 @@ FString FormatDayFromString(FString txt)
 }
 // +--------------------------------------------------------------------+
 
-void FormatPoint(char* txt, const Point& p)
+void FormatPoint(TArrayView<char> Buffer, const Point& p)
 {
+    if(Buffer.IsEmpty()) return;
+    char* txt=Buffer.GetData();
 	char x[16];
 	char y[16];
 	char z[16];
@@ -155,7 +169,7 @@ void FormatPoint(char* txt, const Point& p)
 	FormatNumber(y, p.Y);
 	FormatNumber(z, p.Z);
 
-	sprintf(txt, "(%s, %s, %s)", x, y, z);
+	std::snprintf(txt, Buffer.Num(), "(%s, %s, %s)", x, y, z);
 }
 
 // +--------------------------------------------------------------------+
@@ -170,10 +184,16 @@ Text FormatTimeString(int utc)
 		utc = (int)time(0);
 
 	time_t aclock = utc;                // Get time in seconds
-	struct tm* t = localtime(&aclock); // Convert time to struct tm form
+	struct tm LocalTime{};
+#if PLATFORM_WINDOWS
+    if(localtime_s(&LocalTime,&aclock)!=0) return Text();
+#else
+    if(!localtime_r(&aclock,&LocalTime)) return Text();
+#endif
+    const struct tm* t=&LocalTime; // Convert time to struct tm form
 
 	char buffer[256];
-	sprintf(buffer, "%d %s %d, %2d:%02d:%02d %s",
+	std::snprintf(buffer, sizeof(buffer), "%d %s %d, %2d:%02d:%02d %s",
 		t->tm_mday, month[t->tm_mon], 1900 + t->tm_year,
 		t->tm_hour > 12 ? t->tm_hour - 12 : t->tm_hour,
 		t->tm_min, t->tm_sec, meridian[t->tm_hour > 12]);

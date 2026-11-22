@@ -2,6 +2,7 @@
 #include "CoreMinimal.h"
 #include "ShipSystemIcon.h"
 #include "Widgets/SCompoundWidget.h"
+#include "SimDataEvents.h"
 
 struct FRecordDetailField { FText Label; FText Value; };
 struct FRecordDetailSection { FText Heading; FText Body; };
@@ -18,8 +19,9 @@ struct FRecordDetails
 class SRecordDetails : public SCompoundWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SRecordDetails) {} SLATE_ATTRIBUTE(FRecordDetails, Record) SLATE_END_ARGS()
+    SLATE_BEGIN_ARGS(SRecordDetails):_EventDriven(false),_SelectionRevision(0) {} SLATE_ATTRIBUTE(FRecordDetails, Record) SLATE_ARGUMENT(bool,EventDriven) SLATE_ATTRIBUTE(uint32,SelectionRevision) SLATE_END_ARGS()
     void Construct(const FArguments& Args);
+    ~SRecordDetails();
     void Tick(const FGeometry&, double CurrentTime, float DeltaTime) override;
 private:
     void Refresh(int32 Columns);
@@ -28,4 +30,8 @@ private:
     FString Signature;
     int32 LastColumns = 0;
     double NextRefresh = 0;
+    bool bEventDriven=false,bDirty=true;
+    TAttribute<uint32> SelectionRevision;
+    uint32 LastSelection=0;
+    FDelegateHandle ChangeHandle;
 };

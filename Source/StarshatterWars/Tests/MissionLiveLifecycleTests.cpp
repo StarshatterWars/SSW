@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
 #include "MissionBriefingDlg.h"
+#include "Widgets/SNullWidget.h"
 #include "Campaign.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
@@ -39,7 +40,9 @@ bool FMissionHiddenLiveTickTest::RunTest(const FString& Parameters)
     Briefing->PlayerScoreText=NewObject<UTextBlock>(Briefing);
     Briefing->PlayerScoreText->SetText(FText::FromString(TEXT("Awaiting live update")));
     Briefing->bLiveMissionStarted=true;
+    Briefing->SetDialogInputEnabled(false);
     Briefing->SetVisibility(ESlateVisibility::Collapsed);
+    TestTrue(TEXT("Retired briefing uses a private no-op widget without mutating Slate's shared null widget"),Briefing->RebuildWidget()->GetType()==FName(TEXT("SSpacer")));
     Briefing->StartLiveSessionUpdates();
     TestTrue(TEXT("Live timer active with collapsed briefing"),Fixture->World->GetTimerManager().IsTimerActive(Briefing->TravelPresentationTimer));
     ADD_LATENT_AUTOMATION_COMMAND(FCheckLiveUpdates([this,Fixture]()

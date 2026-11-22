@@ -5,6 +5,6 @@
 namespace SSWModFiles
 {
     bool Read(const FString& Path, TArray<uint8>& Bytes);
-    // Choose within the highest-priority pack before choosing JSON over DEF.
+    // Read JSON from the highest-priority enabled pack; DEF requires explicit migration.
     bool ReadMission(const FString& Path, TArray<uint8>& Bytes, bool& bJson);
 }

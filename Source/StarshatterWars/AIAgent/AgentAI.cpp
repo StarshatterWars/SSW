@@ -1,4 +1,5 @@
 #include "AgentAI.h"
+#include "FreeFlightAssignment.h"
 #include "MissionArcRules.h"
 #include "PlayerCharacter.h"
 #include "Serialization/JsonReader.h"
@@ -61,9 +62,9 @@ const AgentAI::FAssignment* AgentAI::Request(FName Pilot, TConstArrayView<int32>
     int32 Next = INDEX_NONE;TArray<int32> RegionalChoices;
     for (const int32 Id : EligibleMissions)
     {
-        if (Id <= 0 || Completed.FindRef(Pilot).Contains(Id) || (HistoricalCompletion && HistoricalCompletion(Id)) || !ArcRequirement(Pilot,Id,HistoricalCompletion).IsEmpty()) continue;
+        if (Id <= 0 || (Id!=FreeFlightAssignment::Id && (Completed.FindRef(Pilot).Contains(Id) || (HistoricalCompletion && HistoricalCompletion(Id)))) || !ArcRequirement(Pilot,Id,HistoricalCompletion).IsEmpty()) continue;
         if (Outcome && Outcome->MissionId == Id &&
-            ((!bRetryDeclined && Outcome->State == EState::Declined) || Outcome->State == EState::Completed)) continue;
+            ((!bRetryDeclined && Outcome->State == EState::Declined) || (Outcome->State == EState::Completed && Id!=FreeFlightAssignment::Id))) continue;
         if (Queue.ContainsByPredicate([Id](const FAssignment& Item) { return Item.MissionId == Id; })) continue;
         bool bAlreadyOffered = false;
         for (const auto& Offer : PilotOffers)
@@ -82,11 +83,20 @@ const AgentAI::FAssignment* AgentAI::Request(FName Pilot, TConstArrayView<int32>
     OnJournalChanged().Broadcast(); return &Offer;
 }
 
-bool AgentAI::QueueTestReplay(FName Pilot,int32 MissionId,FName Issuer)
+bool AgentAI::QueueTestReplay(FName Pilot,int32 MissionId,FName Issuer,TFunction<bool(int32)> HistoricalCompletion,bool bSuspendDockedTraining)
 {
-    if(MissionId<101 || MissionId>107 || Pilot.IsNone() || !IsCompleted(Pilot,MissionId) || !GetQueue(Pilot).IsEmpty())return false;
+    if(MissionId<101 || MissionId>107 || Pilot.IsNone() ||
+       !(IsCompleted(Pilot,MissionId) || (HistoricalCompletion && HistoricalCompletion(MissionId)))) return false;
+    auto& Queue=Queues.FindOrAdd(Pilot);
+    if(!Queue.IsEmpty())
+    {
+        if(!bSuspendDockedTraining || Queue.ContainsByPredicate([](const FAssignment& Item)
+            {return Item.MissionId<101 || Item.MissionId>107 || Item.bTestReplay;})) return false;
+        // Preserve unfinished lessons. Only docked commands may suspend them.
+        for(auto& Item:Queue) if(Item.State==EState::InProgress) Item.State=EState::Accepted;
+    }
     FAssignment Replay{MissionId,EState::Accepted,Issuer};Replay.bTestReplay=true;
-    Replay.AcceptedUtc=FDateTime::UtcNow().ToUnixTimestamp(); Queues.FindOrAdd(Pilot).Add(Replay);OnJournalChanged().Broadcast();return true;
+    Replay.AcceptedUtc=FDateTime::UtcNow().ToUnixTimestamp(); Queue.Insert(Replay,0);OnJournalChanged().Broadcast();return true;
 }
 
 bool AgentAI::Transition(FName Pilot, int32 MissionId, EState From, EState To)
@@ -99,7 +109,7 @@ bool AgentAI::Transition(FName Pilot, int32 MissionId, EState From, EState To)
 
 bool AgentAI::Accept(FName Pilot, int32 MissionId, TFunction<bool(int32)> HistoricalCompletion)
 {
-    if (IsCompleted(Pilot,MissionId) || (HistoricalCompletion && HistoricalCompletion(MissionId)) || !ArcRequirement(Pilot,MissionId,HistoricalCompletion).IsEmpty() ||
+    if ((MissionId!=FreeFlightAssignment::Id && (IsCompleted(Pilot,MissionId) || (HistoricalCompletion && HistoricalCompletion(MissionId)))) || !ArcRequirement(Pilot,MissionId,HistoricalCompletion).IsEmpty() ||
         GetQueue(Pilot).ContainsByPredicate([MissionId](const auto& Item){return Item.MissionId==MissionId;})) return false;
     auto* PilotOffers = Offers.Find(Pilot);
     if (!PilotOffers) return false;
@@ -148,7 +158,7 @@ bool AgentAI::Resolve(FName Pilot, int32 MissionId, bool bSucceeded)
     if (Queue.IsEmpty() || (IsCompleted(Pilot,MissionId) && !Queue[0].bTestReplay)) return false;
     const auto Outcome = bSucceeded ? EState::Completed : EState::Failed;
     if (!Transition(Pilot, MissionId, EState::InProgress, Outcome)) return false;
-    if (bSucceeded && !Queues.FindChecked(Pilot)[0].bTestReplay) Completed.FindOrAdd(Pilot).Add(MissionId);
+    if (bSucceeded && MissionId!=FreeFlightAssignment::Id && !Queues.FindChecked(Pilot)[0].bTestReplay) Completed.FindOrAdd(Pilot).Add(MissionId);
     Queues.FindChecked(Pilot)[0].CompletedUtc=FDateTime::UtcNow().ToUnixTimestamp();
     RecordOutcome(Pilot, Queues.FindChecked(Pilot)[0]);
     Queues.FindChecked(Pilot).RemoveAt(0);

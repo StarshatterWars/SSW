@@ -17,6 +17,7 @@
 */
 
 #include "Hangar.h"
+#include "OrdnanceMagazine.h"
 
 #include "CoreMinimal.h"
 #include "HAL/PlatformMemory.h"
@@ -68,8 +69,17 @@ private:
 // +--------------------------------------------------------------------+
 
 HangarSlot::HangarSlot()
-	: ship(0), group(0), iff(0), design(0), deck(0), slot(0),
-	state(0), time(0), package(0), alert_hold(false)
+	: 
+    group(0),
+    ship(0),
+    iff(0),
+    design(0),
+    deck(0),
+    slot(0),
+    state(0),
+    time(0),
+    package(0),
+    alert_hold(false)
 {
 	for (int i = 0; i < 16; i++)
 		loadout[i] = -1;
@@ -440,6 +450,7 @@ Hangar::GotoActiveFlight(int squadron, int slot_index, SimElement* elem, int* lo
 					slot->ship->GetElementIndex());
 
 				slot->ship->SetName(name);
+                if(elem->GetPlayer()!=slot->ship->GetElementIndex())OrdnanceMagazine::ReplenishAI(*ship,*slot->ship);
 			}
 
 			return true;
@@ -514,7 +525,8 @@ Hangar::StandDown(int squadron, int slot)
 						package->DelShip(s->ship);
 					}
 
-					sim->DestroyShip(s->ship);
+					if(ship)OrdnanceMagazine::ReturnAI(*ship,*s->ship);
+                    sim->DestroyShip(s->ship);
 				}
 
 				clear_slot = true;
@@ -535,10 +547,11 @@ Hangar::StandDown(int squadron, int slot)
 
 			if (package) {
 				int npkg = 0;
-				for (int i = 0; i < nslots[squadron]; i++) {
-					if (squadrons[squadron][i].package == package)
-						npkg++;
-				}
+                // A flight can span aircraft types and therefore multiple squadrons.
+                // Standing one down must not delete the element still used by another.
+                for (int Group = 0; Group < nsquadrons; ++Group)
+                    for (int Index = 0; Index < nslots[Group]; ++Index)
+                        if (squadrons[Group][Index].package == package) ++npkg;
 
 				if (npkg == 0) {
 					Sim::GetSim()->DestroyElement(package);

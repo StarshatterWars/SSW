@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "CmdIntelDlg.h"
 #include "IntelLVElement.h"
 #include "IntelListObject.h"
@@ -20,6 +21,7 @@ bool FIntelNativeReportsTest::RunTest(const FString& Parameters)
     const auto Options = UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false)
         .CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     UWorld* World = UWorld::CreateWorld(EWorldType::EditorPreview, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     if (!TestNotNull(TEXT("Fixture world"), World)) return false;
     World->SetGameInstance(NewObject<UGameInstance>());
     TStrongObjectPtr<UCmdIntelDlg> Dialog(NewObject<UCmdIntelDlg>(World));

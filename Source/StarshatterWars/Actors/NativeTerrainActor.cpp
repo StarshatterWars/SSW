@@ -14,9 +14,9 @@ ANativeTerrainActor::ANativeTerrainActor()
     Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);Mesh->SetCollisionResponseToAllChannels(ECR_Block);
     Mesh->SetMaterial(0,LoadObject<UMaterialInterface>(nullptr,TEXT("/Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial")));
 }
-void ANativeTerrainActor::SetSurfaceSky(bool bEnabled)
+void ANativeTerrainActor::SetSurfaceSky(bool bEnabled, bool bOwnAtmosphere, float SunIntensity)
 {
-    if (bEnabled && !SurfaceAtmosphere)
+    if (bEnabled && bOwnAtmosphere && !SurfaceAtmosphere)
     {
         // Mission geometry uses one Unreal unit per metre. The renderer
         // interprets 100,000 Unreal units as one kilometre.
@@ -43,6 +43,9 @@ void ANativeTerrainActor::SetSurfaceSky(bool bEnabled)
             UE_LOG(LogTemp, Error, TEXT("Janek surface WorldScape volumetric cloud material could not be loaded."));
         }
 
+    }
+    if (bEnabled && !SurfaceSun)
+    {
         SurfaceSun = NewObject<UDirectionalLightComponent>(this);
         SurfaceSun->SetAtmosphereSunLight(true);
         SurfaceSun->SetIntensity(4.0f);
@@ -51,16 +54,29 @@ void ANativeTerrainActor::SetSurfaceSky(bool bEnabled)
         SurfaceSun->RegisterComponent();
     }
     if (SurfaceAtmosphere)
-        SurfaceAtmosphere->SetVisibility(bEnabled);
+        SurfaceAtmosphere->SetVisibility(bEnabled && bOwnAtmosphere);
     if (SurfaceClouds)
-        SurfaceClouds->SetVisibility(bEnabled);
+        SurfaceClouds->SetVisibility(bEnabled && bOwnAtmosphere);
     if (SurfaceSun)
+    {
+        SurfaceSun->SetIntensity(FMath::Clamp(SunIntensity, 0.0f, 150000.0f));
         SurfaceSun->SetVisibility(bEnabled);
+    }
 }
 
 void ANativeTerrainActor::UpdateTerrain(Terrain* Model,const FVector& Observer,const FVector& RegionOrigin)
 {
-    if(!Model || !Model->HasHeightfield()){SetActorHiddenInGame(true);Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);LastModel=nullptr;return;}
+    // WorldScape supplies its own mesh and atmosphere, but still needs surface sunlight.
+    const bool bSurfaceLit = SurfaceSun && SurfaceSun->IsVisible();
+    if(!Model || !Model->HasHeightfield())
+    {
+        Mesh->SetVisibility(false);
+        SetActorHiddenInGame(!bSurfaceLit);
+        Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        LastModel=nullptr;
+        return;
+    }
+    Mesh->SetVisibility(true);
     SetActorHiddenInGame(false);Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     const double Step=FMath::Max(1.,Model->NativeSampleSpacing());
     const FIntPoint Cell(FMath::FloorToInt(Observer.X/(Step*32)),FMath::FloorToInt(Observer.Z/(Step*32)));
@@ -81,7 +97,7 @@ void ANativeTerrainActor::UpdateTerrain(Terrain* Model,const FVector& Observer,c
         const TCHAR* MaterialPath = Region && FCStringAnsi::Stricmp(Region->GetName(), "Janek Station") == 0
             ? TEXT("/Game/Maps/Ground/M_JanekGround.M_JanekGround")
             : TEXT("/Engine/EngineMaterials/WorldGridMaterial.WorldGridMaterial");
-        if (UMaterialInterface* Material = LoadObject<UMaterialInterface>(nullptr, MaterialPath))
+        if (UMaterialInterface* Material = LoadObject<UMaterialInterface>(nullptr, Region && !Region->SurfaceMaterial().IsEmpty() ? *Region->SurfaceMaterial() : MaterialPath))
             Mesh->SetMaterial(0, Material);
     }
     LastModel=Model;LastCell=Cell;

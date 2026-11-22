@@ -101,8 +101,8 @@ void QuitView::ShowMenu()
     bPreviousWorldPaused = UGameplayStatics::IsGamePaused(World);
     bPreviousCursor = PC->bShowMouseCursor;
     if (USSWRuntimeSubsystem* Runtime = World->GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
-    { bPreviousRuntimePaused = Runtime->IsPaused(); Runtime->SetPaused(true); }
-    UGameplayStatics::SetGamePaused(World, true);
+    { bPreviousRuntimePaused = Runtime->IsPaused(); }
+    // Mission menu changes input focus only; the live universe continues.
     if (MenuWidgetClass)
     {
         UQuitMissionMenu* Widget = CreateWidget<UQuitMissionMenu>(PC, MenuWidgetClass);
@@ -124,7 +124,7 @@ void QuitView::ShowMenu()
     const FLinearColor XTextColor(0.79f, 0.93f, 1.0f, 1.0f);
     TSharedRef<SVerticalBox> Items = SNew(SVerticalBox);
     Items->AddSlot().AutoHeight().Padding(12, 10, 12, 22)
-    [SNew(STextBlock).Text(FText::FromString(TEXT("MISSION CONTROL  /  PAUSED")))
+    [SNew(STextBlock).Text(FText::FromString(TEXT("MISSION CONTROL  /  LIVE")))
         .ColorAndOpacity(FLinearColor(0.53f, 0.84f, 0.96f))
         .Font(FCoreStyle::GetDefaultFontStyle("Bold", 24))];
     const TCHAR* Labels[] = {

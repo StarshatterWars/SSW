@@ -1,5 +1,8 @@
 #include "ProductionDlg.h"
+#include "ChangeDrivenPanel.h"
+
 #include "ProductionCatalog.h"
+#include "EconomyRuntime.h"
 #include "RecordDetails.h"
 #include "BlueprintsDlg.h"
 #include "IndustryJobsPanel.h"
@@ -46,8 +49,26 @@ FText GetProductionStatus(const FSSWProductionStock* Stock)
 {
     if (!Stock) return INVTEXT("NO LIVE DATA");
     if (Stock->RemainingSeconds > 0) return INVTEXT("PRODUCING");
+    if (Stock->ReservedOutput > 0) return INVTEXT("OUTPUT BLOCKED");
     if (Stock->GetTonnes(FName(TEXT("Finished Goods Storage"))) > 0) return INVTEXT("OUTPUT READY");
     return INVTEXT("AWAITING MATERIALS");
+}
+
+FText GetFacilityStatus(const FSSWProductionFacility& Site)
+{
+    if(const auto* Simulation=Sim::GetSim())
+    {
+        const auto& Economy=Simulation->ReadEconomy();
+        for(const auto& Pair:SSWProductionCatalog::Facilities())
+            if(Pair.Value.System==Site.System && Pair.Value.Facility==Site.Facility && Economy.OfflineFacilities.Contains(Pair.Key))return INVTEXT("OFFLINE");
+        if(Site.FacilityType==ESSWProductionFacilityType::Storage)
+        {
+            const auto* Inventory=Economy.Inventories.Find(FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("Stock")));
+            if(!Inventory)return INVTEXT("STORAGE INITIALIZING");
+            return Inventory->bOperational?FText::Format(INVTEXT("STORAGE: {0} / {1} T"),FText::AsNumber(FEconomyLedger::Used(*Inventory)),FText::AsNumber(Inventory->CapacityTonnes)):INVTEXT("OFFLINE");
+        }
+    }
+    return GetProductionStatus(GetLiveStock(Site));
 }
 
 class SProductionRow : public SMultiColumnTableRow<FFacilityPtr>
@@ -82,8 +103,8 @@ public:
                 + SHorizontalBox::Slot().AutoWidth().Padding(4,2)[SNew(SShipSystemIcon).Icon(SShipSystemIcon::ForCatalogImage(Image))]
                 + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(Product.ToUpper()).OverflowPolicy(ETextOverflowPolicy::Ellipsis)];
         if (Column == "Status")
-            return SNew(STextBlock).Margin(FMargin(5, 4)).Font(MissionUIStyle::GetRowFont(12))
-                .Text_Lambda([Site = Facility]() { return GetProductionStatus(GetLiveStock(*Site)); });
+            return SNew(SChangeDrivenText).Font(MissionUIStyle::GetRowFont(12))
+                .Text_Lambda([Site = Facility]() { return GetFacilityStatus(*Site); });
 
         FText Label;
         if (Column == "Facility") Label = FText::FromString(Facility->Facility);
@@ -170,7 +191,7 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                 VisibleRows->Sort([Id,Mode](const FFacilityPtr& A,const FFacilityPtr& B)
                 {
                     const auto Key=[Id](const auto& S)->FString
-                    {if(Id=="Type")return StaticEnum<ESSWProductionFacilityType>()->GetNameStringByValue(int64(S.FacilityType));if(Id=="System")return S.System;if(Id=="Planet")return S.Planet;if(Id=="Region")return S.Region;if(Id=="Empire")return S.Empire;if(Id=="Location")return S.bSurface?TEXT("SURFACE"):TEXT("ORBITAL");if(Id=="Product" || Id=="Minerals" || Id=="ProcessingTime")return S.Recipe.ToString();if(Id=="Status")return GetProductionStatus(GetLiveStock(S)).ToString();return S.Facility;};
+                    {if(Id=="Type")return StaticEnum<ESSWProductionFacilityType>()->GetNameStringByValue(int64(S.FacilityType));if(Id=="System")return S.System;if(Id=="Planet")return S.Planet;if(Id=="Region")return S.Region;if(Id=="Empire")return S.Empire;if(Id=="Location")return S.bSurface?TEXT("SURFACE"):TEXT("ORBITAL");if(Id=="Product" || Id=="Minerals" || Id=="ProcessingTime")return S.Recipe.ToString();if(Id=="Status")return GetFacilityStatus(S).ToString();return S.Facility;};
                     int32 Order=Id=="Capacity"?(A->CapacityTonnes<B->CapacityTonnes?-1:(A->CapacityTonnes>B->CapacityTonnes?1:0)):Key(*A).Compare(Key(*B));
                     if(Order==0)Order=A->Facility.Compare(B->Facility);return Mode==EColumnSortMode::Descending?Order>0:Order<0;
                 });
@@ -217,16 +238,17 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
             return SNew(SProductionRow, Owner).Facility(Site)
                 .Image(Recipe ? Recipe->Image : FName(TEXT("Production")))
                 .Minerals(Recipe ? Recipe->Minerals : INVTEXT("UNASSIGNED"))
-                .Product(Recipe ? Recipe->Product : INVTEXT("UNASSIGNED"))
+                .Product(Recipe ? Recipe->Product : (Site->FacilityType==ESSWProductionFacilityType::Storage?INVTEXT("STORAGE"):INVTEXT("UNASSIGNED")))
                 .ProcessingTime(Recipe ? Recipe->ProcessingTime : INVTEXT("—"));
         });
 
     *ListHandle=List;
-    const auto ApplyRange = [Rows, VisibleRows, Selected, WeakList = TWeakPtr<SListView<FFacilityPtr>>(List)](int32 Range)
+    const auto TypeFilter=MakeShared<int32>(-1);const auto RangeFilter=MakeShared<int32>(0);
+    const auto ApplyRange = [Rows, VisibleRows, Selected,TypeFilter,RangeFilter, WeakList = TWeakPtr<SListView<FFacilityPtr>>(List)](int32 Range)
     {
         const auto View = WeakList.Pin();
         if (!View) return FReply::Handled();
-        View->ClearSelection();
+        *RangeFilter=Range;View->ClearSelection();
         Selected->Reset();
 
         Sim* Simulation = Sim::GetSim();
@@ -245,6 +267,7 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
         VisibleRows->Reset();
         for (const auto& Site : *Rows)
         {
+            if(*TypeFilter>=0 && int32(Site->FacilityType)!=*TypeFilter)continue;
             const bool bCurrentRegion = Region && LocalSystem &&
                 Site->System.Equals(ANSI_TO_TCHAR(LocalSystem->GetName()), ESearchCase::IgnoreCase) &&
                 Site->Region.Equals(ANSI_TO_TCHAR(Region->GetName()), ESearchCase::IgnoreCase);
@@ -264,9 +287,15 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
             .OnClicked_Lambda([ApplyRange, Index]() { return ApplyRange(Index); })
         ];
 
+    auto TypeButtons=SNew(SHorizontalBox);
+    const FText Types[]={INVTEXT("ALL"),INVTEXT("FACTORIES"),INVTEXT("REFINERIES"),INVTEXT("SHIPYARDS"),INVTEXT("STORAGE")};
+    const int32 Values[]={-1,1,0,2,3};
+    for(int32 Index=0;Index<UE_ARRAY_COUNT(Types);++Index)
+        TypeButtons->AddSlot().AutoWidth().Padding(0,0,8,0)[SNew(SButton).Text(Types[Index]).OnClicked_Lambda([TypeFilter,RangeFilter,ApplyRange,Value=Values[Index]](){*TypeFilter=Value;return ApplyRange(*RangeFilter);})];
     auto Browser = SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(12, 8)
         [Filters]
+        + SVerticalBox::Slot().AutoHeight().Padding(12,0,12,8)[TypeButtons]
         + SVerticalBox::Slot().FillHeight(0.65f).Padding(12, 0)
         [MissionUIStyle::MakeDataPane(List, FMargin(0))]
         + SVerticalBox::Slot().FillHeight(0.35f).Padding(12, 8, 12, 10)
@@ -276,17 +305,17 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
             + SScrollBox::Slot().Padding(0, 6)
             [
                 SNew(SButton).Text(INVTEXT("OPEN FACTORY"))
-                .Visibility_Lambda([Selected]() { return *Selected ? EVisibility::Visible : EVisibility::Collapsed; })
+                .Visibility_Lambda([Selected]() { return *Selected && (*Selected)->FacilityType!=ESSWProductionFacilityType::Storage ? EVisibility::Visible : EVisibility::Collapsed; })
                 .OnClicked_Lambda([OpenFactory, Selected]() { OpenFactory(*Selected); return FReply::Handled(); })
             ]
             + SScrollBox::Slot().Padding(0, 6)
             [
-                SNew(SRecordDetails).Record_Lambda([Selected, RecipeLabels]()
+                SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([Selected](){return *Selected?GetTypeHash((*Selected)->Facility):0;}).Record_Lambda([Selected, RecipeLabels]()
                 {
                     FRecordDetails D; D.Icon=EShipSystemIcon::Production;
                     if(!*Selected){D.Title=INVTEXT("SELECT A PRODUCTION FACILITY");D.Description=INVTEXT("Choose a facility above to inspect its storage, recipe and live production status.");return D;}
                     const auto& Site=**Selected;const auto* Recipe=RecipeLabels->Find(Site.Recipe);const auto* Stock=GetLiveStock(Site);
-                    D.Title=FText::FromString(Site.Facility);D.Status=GetProductionStatus(Stock);
+                    D.Title=FText::FromString(Site.Facility);D.Status=GetFacilityStatus(Site);
                     D.Subtitle=FText::Format(INVTEXT("{0} / {1} / {2}"),FText::FromString(Site.System),FText::FromString(Site.Planet),FText::FromString(Site.Region));
                     D.Fact(INVTEXT("EMPIRE"),FText::FromString(Site.Empire)).Fact(INVTEXT("FACILITY"),Site.bSurface?INVTEXT("SURFACE"):INVTEXT("ORBITAL"));
                     D.Fact(INVTEXT("TYPE"),FText::FromString(StaticEnum<ESSWProductionFacilityType>()->GetNameStringByValue(int64(Site.FacilityType))));
@@ -296,12 +325,29 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                     D.Fact(INVTEXT("MATERIAL MODIFIER"),FText::Format(INVTEXT("{0}%"),FText::AsNumber(Site.PlayerMaterialMultiplier*100)));
                     D.Fact(INVTEXT("TIME MODIFIER"),FText::Format(INVTEXT("{0}%"),FText::AsNumber(Site.PlayerTimeMultiplier*100)));
                     if(Recipe){D.Fact(INVTEXT("BATCH TIME"),Recipe->ProcessingTime);D.Section(INVTEXT("REQUIRED INPUT / BATCH"),Recipe->Minerals);D.Section(INVTEXT("FINISHED OUTPUT / BATCH"),Recipe->Product);}
+                    else if(Site.FacilityType==ESSWProductionFacilityType::Storage)
+                    {
+                        D.Fact(INVTEXT("STORAGE TYPE"),FText::FromString(Site.StorageRole));
+                        TArray<FString> Allowed;for(FName Item:Site.AllowedItems)Allowed.Add(Item.ToString().ToUpper());
+                        D.Section(INVTEXT("ACCEPTED CARGO"),FText::FromString(Allowed.IsEmpty()?TEXT("GENERAL CARGO"):FString::Join(Allowed,TEXT(", "))));
+                        if(auto* Simulation=Sim::GetSim())
+                        {
+                            const auto& Economy=Simulation->ReadEconomy();const FName Key=FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("Stock"));
+                            if(const auto* Inventory=Economy.Inventories.Find(Key))
+                            {
+                                D.Status=Inventory->bOperational?INVTEXT("STORAGE AVAILABLE"):INVTEXT("OFFLINE");
+                                D.Fact(INVTEXT("USED STORAGE"),FText::Format(INVTEXT("{0} T"),FText::AsNumber(FEconomyLedger::Used(*Inventory))));
+                                TArray<FString> Contents;for(const auto& Item:Inventory->Items)if(Item.Quantity>0)Contents.Add(FString::Printf(TEXT("%s: %.2f"),*Item.Type.ToString(),Item.Quantity));
+                                D.Section(INVTEXT("CONTENTS"),FText::FromString(Contents.IsEmpty()?TEXT("EMPTY"):FString::Join(Contents,TEXT("\n"))));
+                            }
+                        }
+                    }
                     else D.Section(INVTEXT("RECIPE"),INVTEXT("No recipe assigned."));return D;
                 })
             ]
             )
         ];
-    const auto FactoryColumn = [](const FText& Header, TAttribute<FText> Body)
+    const auto FactoryColumn = [Selected](const FText& Header, TAttribute<FText> Body)
     {
         return SNew(SBorder).Padding(14).BorderImage(FCoreStyle::Get().GetBrush("WhiteBrush"))
             .BorderBackgroundColor(MissionUIStyle::PanelBG.CopyWithNewOpacity(1.0f))
@@ -311,7 +357,7 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                 [SNew(STextBlock).Text(Header).Font(MissionUIStyle::GetRowFont(16))]
                 + SVerticalBox::Slot().FillHeight(1)
                 [SNew(SScrollBox) + SScrollBox::Slot()
-                    [SNew(STextBlock).Text(Body).AutoWrapText(true).Font(MissionUIStyle::GetRowFont(14))]]
+                    [SNew(SChangeDrivenText).Text(Body).Font(MissionUIStyle::GetRowFont(14)).SelectionRevision_Lambda([Selected](){return *Selected?GetTypeHash((*Selected)->Facility):0;})]]
             ];
     };
     auto Factory = SNew(SVerticalBox)
@@ -367,7 +413,7 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                     if (!*Selected) return FText::GetEmpty();
                     const auto* Stock = GetLiveStock(**Selected);
                     if (!Stock || Stock->RemainingSeconds <= 0) return GetProductionStatus(Stock);
-                    return FText::Format(INVTEXT("PRODUCING\n\n{0} s remaining"),
+                    return FText::Format(INVTEXT("BATCH RUNNING\n\n{0} S ALLOCATED\nCOMPLETION IS AUTOMATIC"),
                         FText::AsNumber(FMath::CeilToInt(Stock->RemainingSeconds)));
                 }))
             ]

@@ -1,7 +1,7 @@
 /*
 	Project Starshatter Wars
 	Fractal Dev Studios
-	Copyright © 2025-2026. All Rights Reserved.
+	Copyright Â© 2025-2026. All Rights Reserved.
 
 	SUBSYSTEM:    Stars.exe
 	FILE:         TerrainRegion.h
@@ -43,6 +43,10 @@ public:
     virtual void Update() override;
     FVector PredictLocation(double DeltaSeconds) override;
     void SetSurfaceSiteOffset(const FVector& Offset);
+    const FString& SurfaceMaterial() const { return surface_material; }
+    double SurfaceSunIntensity() const { return surface_sun_intensity; }
+    const FString& BiomeProfile() const { return biome_profile; }
+    const FString& WeatherProfile() const { return weather_profile; }
     bool HasSurfaceSite() const { return SurfaceSiteOffset.IsSet(); }
     FVector SurfaceVectorToOrbital(const FVector& Vector) const;
     FVector OrbitalVectorToSurface(const FVector& Vector) const;
@@ -90,6 +94,8 @@ public:
 
 protected:
     TOptional<FVector> SurfaceSiteOffset;
+    FString surface_material, biome_profile, weather_profile;
+    double surface_sun_intensity = 4.0;
 	Text              patch_name;
 	Text              patch_texture;
 	Text              apron_name;

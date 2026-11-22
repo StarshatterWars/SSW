@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "Items": [
+    {
+      "Id": "Missile/Archer",
+      "Name": "Archer",
+      "Category": "Missiles",
+      "Group": "SRM",
+      "Weapon": "Archer",
+      "PriceCredits": 180,
+      "Description": "The ARCHER SRM is the standard Hegemony anti-fighter munition.  Although not very fast, the Archer is very maneuverable, which makes it deadly accurate in short range engagements.  The Archer's main weakness is its low-quality seeker head.  The Archer can be defeated by releasing a decoy and performing a break turn at low power.  Each Archer hardpoint carries two weapons."
+    },
+    {
+      "Id": "Missile/Javelin",
+      "Name": "Javelin",
+      "Category": "Missiles",
+      "Group": "SRM",
+      "Weapon": "Javelin",
+      "PriceCredits": 180,
+      "Description": "The JAVELIN SRM is the standard Alliance short range anti-fighter munition.  The Javelin is quite similar to the Hegemony Archer SRM, although it is carries more fuel and has an increased effective range as a result.  Unfortunately, it is not much faster than the Archer, and enemy fighters can still defeat the shot with a decoy if given sufficient warning.  The Javelin is best employed at short ranges from low aspect to minimize the enemy's chance of escape.  Each Javelin hardpoint carries three weapons."
+    },
+    {
+      "Id": "Missile/Vector",
+      "Name": "Vector",
+      "Category": "Missiles",
+      "Group": "MRM",
+      "Weapon": "Vector",
+      "PriceCredits": 300,
+      "Description": "The VECTOR MRM is a medium-range general purpose guided munition.  The Vector is a high-speed weapon that is suitable for engaging small to medium-size maneuvering targets at ranges from 15 to 35 km.  Hegemony forces field an almost identical munition known as the Longbow."
+    },
+    {
+      "Id": "Missile/Hammer",
+      "Name": "Hammer",
+      "Category": "Missiles",
+      "Group": "AGM",
+      "Weapon": "Hammer",
+      "PriceCredits": 350,
+      "Description": "The HAMMER AGM is a medium-range passive-guided air to ground munition.  The Hammer is a low-speed but very powerful weapon that is suitable for engaging hardened ground targets at ranges up to 50 km.  Recommended procedure is to employ the Hammer from its maximum range to avoid subjecting your fighter to ground fire."
+    },
+    {
+      "Id": "Missile/Harpoon",
+      "Name": "Harpoon",
+      "Category": "Missiles",
+      "Group": "ASM",
+      "Weapon": "Harpoon",
+      "PriceCredits": 450,
+      "Description": "The HARPOON ASM is a long-range passive-guided antiship munition.  The Harpoon is a high-speed weapon that is suitable for engaging small to medium-size starships at ranges up to 50 km.  The Harpoon is not easily spoofed or intercepted and has excellent shield penetration capabilities.  Recommended procedure is to employ this weapon from its maximum range to avoid subjecting your fighter to enemy PDB fire. Hegemony forces field a similar fighter-launched antiship munition known as the HORN."
+    },
+    {
+      "Id": "Missile/Rockets",
+      "Name": "Rockets",
+      "Category": "Missiles",
+      "Group": "RKS",
+      "Weapon": "Rockets",
+      "PriceCredits": 120,
+      "Description": "Each fighter-based ROCKET POD holds twelve guided submunitions that may be employed against a wide variety of spaceborne and ground-based targets.  Rockets are fired from the pod in salvos of four each time press the firing stud.  Rockets are most effective against stationary or slow moving targets, and are often used in mine-sweeping missions."
+    },
+    {
+      "Id": "Drone/Fighter Decoy",
+      "Name": "Fighter Decoy",
+      "Category": "Drones",
+      "Group": "DECOY",
+      "Weapon": "Fighter Decoy",
+      "PriceCredits": 600,
+      "Description": "The FIGHTER DECOY is a general-purpose missile countermeasure that is designed to mimic the radient energy signature of your fighter's engine.  Anti-fighter missiles will generally guide on the closest, strongest return that their sensors can detect.  When your Sensor Warning Receiver notifies you of an inbound threat, you should release a decoy and disengage your drive augmenter (afterburner) to evade the missile.  The Fighter Decoy does no damage to enemy targets."
+    },
+    {
+      "Id": "Drone/Rostov",
+      "Name": "Rostov",
+      "Category": "Drones",
+      "Group": "ROSTOV",
+      "Weapon": "Rostov",
+      "PriceCredits": 600,
+      "Description": "Compatible ship equipment. Purchased into local dock storage; does not auto-equip."
+    },
+    {
+      "Id": "Missile/SAM-1",
+      "Name": "SAM-1",
+      "Category": "Missiles",
+      "Group": "SAM",
+      "Weapon": "SAM-1",
+      "PriceCredits": 250,
+      "Description": "The SURFACE-TO-AIR MISSILE (SAM) BATTERY is an autonomous ground-launched guided missile system designed for area defense against a variety of airborne targets.  Each SAM Battery carries eight missiles on an upright turret with integrated sensor array.  It can engage fighters and attack craft at ranges up to 20 km."
+    },
+    {
+      "Id": "Missile/Mk7 Interceptor",
+      "Name": "Mk7 Interceptor",
+      "Category": "Missiles",
+      "Group": "MK7",
+      "Weapon": "Mk7 Interceptor",
+      "PriceCredits": 200,
+      "Description": "The MARK VII INTERCEPTOR is a ship-launched antifighter weapon that is also effective at engaging enemy combat drones and missiles.  The Mark VII also has some limited effectiveness against starship targets.  The Mark VII is commonly deployed on frigates tasked with fleet defense, as well as heavier cruiser class starships."
+    },
+    {
+      "Id": "Missile/Fusion Torpedo",
+      "Name": "Fusion Torpedo",
+      "Category": "Missiles",
+      "Group": "TORP",
+      "Weapon": "Fusion Torpedo",
+      "PriceCredits": 900,
+      "Description": "The FUSION TORPEDO is the standard issue guided long range antiship munition in use on most Force:Space destroyer and destroyer-escort class vessels.  Fusion Torpedoes pack a large amount of destructive power in a small package, but low speed and acceleration make them easy targets for PDB and Interceptor fire.  Employing them at point blank range can mitigate this effect."
+    },
+    {
+      "Id": "Drone/Nike",
+      "Name": "Nike",
+      "Category": "Drones",
+      "Group": "NIKE",
+      "Weapon": "Nike",
+      "PriceCredits": 600,
+      "Description": "The NIKE high-speed antiship missile is commonly used on light cruiser class starships.  The Nike is considerably faster than the smaller Fusion Torpedo, and also has better shield penetration capabilities."
+    },
+    {
+      "Id": "Drone/Athena1",
+      "Name": "Athena1",
+      "Category": "Drones",
+      "Group": "ATHENA",
+      "Weapon": "Athena1",
+      "PriceCredits": 600,
+      "Description": "The ATHENA is the elder sister of the Nike Antiship Missile.  Compared to the Nike, the Athena has a more advanced drive sytstem and greater acceleration.  Mounted only on heavy cruiser starship types, this Athena variant is designed for starboard missile tubes."
+    },
+    {
+      "Id": "Drone/Athena2",
+      "Name": "Athena2",
+      "Category": "Drones",
+      "Group": "ATHENA",
+      "Weapon": "Athena2",
+      "PriceCredits": 600,
+      "Description": "The ATHENA is the elder sister of the Nike Antiship Missile.  Compared to the Nike, the Athena has a more advanced drive sytstem and greater acceleration.  Mounted only on heavy cruiser starship types, this Athena variant is designed for port side missile tubes."
+    },
+    {
+      "Id": "Drone/Sensor Drone",
+      "Name": "Sensor Drone",
+      "Category": "Drones",
+      "Group": "DRONE",
+      "Weapon": "Sensor Drone",
+      "PriceCredits": 600,
+      "Description": "The starship SENSOR DRONE is a multi-frequency active sensor probe that may be used to detect enemy ships far beyond the range of onboard ship sensors.  As long as it is active, the Sensor Drone will detect any contact that comes within 50 km of its position.  Of course, the Sensor Drone does no damage to enemy targets."
+    },
+    {
+      "Id": "Drone/MiningDrone",
+      "Name": "Mining Drone",
+      "Category": "Drones",
+      "Group": "MINING",
+      "Weapon": "",
+      "PriceCredits": 13280,
+      "Description": "An autonomous industrial drone with an ore cutter, survey optics and return-to-bay controls. Requires a fitted mining-drone bay. Extracted ore enters its owner's cargo hold only after the drone physically returns and unloads. Purchased into local dock storage."
+    },
+    {
+      "Id": "Missile/Recon Pod",
+      "Name": "Recon Pod",
+      "Category": "Missiles",
+      "Group": "CAM",
+      "Weapon": "Recon Pod",
+      "PriceCredits": 200,
+      "Description": "A compatible reconnaissance hardpoint pod. Supplied from the selected local ordnance store."
+    }
+  ]
+}

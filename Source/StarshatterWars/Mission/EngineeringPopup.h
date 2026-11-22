@@ -12,6 +12,7 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Styling/CoreStyle.h"
 #include "InMissionButtonStyle.h"
+#include "MissionUIStyle.h"
 #include "InputCoreTypes.h"
 #include "Ship.h"
 #include "Power.h"

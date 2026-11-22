@@ -28,7 +28,7 @@ struct FOrdnanceCatalog {
  ~FOrdnanceCatalog(){WeaponDesignRegistry::Clear();for(const auto& P:Before)WeaponDesignRegistry::RegisterDesign(P.Key,P.Value);}
 };
 class FArmedPulse : public SimShot {
-public: FArmedPulse(const FVector& P,WeaponDesign* D,const Ship* O):SimShot(P,Camera(),D,O){armed=true;}
+public: FArmedPulse(const FVector& P,WeaponDesign* D,const Ship* O):SimShot(P,Camera(),D,O){armed=true;origin=P-FVector(0,0,100);}
 };
 class FDecoyTarget : public Ship {
 public: using Ship::Ship;
@@ -68,7 +68,7 @@ bool FDroneCollisionParity::RunTest(const FString&){
  const bool OwnLoader=!DataLoader::GetLoader();if(OwnLoader)DataLoader::Initialize();ON_SCOPE_EXIT{if(OwnLoader)DataLoader::Close();};
  TUniquePtr<Sim> OwnedSim;if(!Sim::GetSim()){
  // This repository has no legacy Explosions.def; cosmetic explosions use UE assets.
- AddExpectedError(TEXT("ERROR: could notxparse 'Explosions.def'"),EAutomationExpectedErrorFlags::Contains,1);
+ 
  OwnedSim=MakeUnique<Sim>(nullptr);
  }
  ShipDesign SD;SD.type=static_cast<int>(CLASSIFICATION::FIGHTER);SD.integrity=1000;SD.radius=200;SD.scale=1;
@@ -81,7 +81,10 @@ bool FDroneCollisionParity::RunTest(const FString&){
  TestTrue(TEXT("Scan records legacy mission event"),ShipStats::Find(Owner.GetName())->HasEvent(ESimEvent::SCAN_TARGET));
  Region.UpdateShots(0);
  WeaponDesign D;D.name="Parity combat drone";D.drone=1;D.mass=1;D.damage=20;D.charge=1;D.life=5;D.speed=0;D.integrity=100;
- Region.InsertObject(new Drone(Target->GetLocation(),Camera(),&D,&Owner));
+ Drone* CombatDrone=new Drone(Target->GetLocation()-FVector(0,0,100),Camera(),&D,&Owner);
+ TestTrue(TEXT("Projectile origin initialized at spawn"),CombatDrone->GetOrigin().Equals(CombatDrone->GetLocation()));
+ CombatDrone->MoveTo(Target->GetLocation());
+ Region.InsertObject(CombatDrone);
  TestEqual(TEXT("Drone has one owner list"),Region.GetShots().size(),0);
  TestEqual(TEXT("Drone included in runtime/collision view"),Region.GetProjectiles().Num(),1);
  Region.DamageShips();TestTrue(TEXT("Combat drone damages Unreal hull without legacy rep"),Target->GetIntegrity()<Before);
@@ -122,7 +125,7 @@ bool FShipLauncherParity::RunTest(const FString&){
  const bool OwnLoader=!DataLoader::GetLoader();if(OwnLoader)DataLoader::Initialize();ON_SCOPE_EXIT{if(OwnLoader)DataLoader::Close();};
  TUniquePtr<Sim> OwnedSim;if(!Sim::GetSim()){
  // This repository has no legacy Explosions.def; cosmetic explosions use UE assets.
- AddExpectedError(TEXT("ERROR: could notxparse 'Explosions.def'"),EAutomationExpectedErrorFlags::Contains,1);
+ 
  OwnedSim=MakeUnique<Sim>(nullptr);
  }
  FOrdnanceCatalog Catalog;const auto Before=ShipDesignRegistry::GetAll();ON_SCOPE_EXIT{ShipDesignRegistry::Clear();for(const auto& P:Before)ShipDesignRegistry::RegisterDesign(P.Key,P.Value);};

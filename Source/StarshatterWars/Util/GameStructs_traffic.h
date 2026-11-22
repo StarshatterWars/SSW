@@ -24,6 +24,10 @@ struct FGalaxyTrafficJourney
     UPROPERTY(SaveGame) double UnitTonnes=1;
     UPROPERTY(SaveGame) double Remaining=0;
     UPROPERTY(SaveGame) double Age=0;
+    UPROPERTY(SaveGame) double TransitionAt=0;
+    UPROPERTY(SaveGame) double LastTransitionAt=0;
+    UPROPERTY(SaveGame) EGalaxyTrafficPhase ScheduledPhase=EGalaxyTrafficPhase::Waiting;
+    UPROPERTY(SaveGame) int32 ScheduledRouteIndex=0;
     UPROPERTY(SaveGame) FString BlockedReason;
     UPROPERTY(SaveGame) bool bDestinationReserved=false;
     UPROPERTY(SaveGame) FName Buyer;

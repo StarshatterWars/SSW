@@ -92,6 +92,7 @@ public:
     // Copy/blit:
     void        BitBlt(int x, int y, const Bitmap& srcImage, int sx, int sy, int w, int h, bool blend = false);
     void        CopyBitmap(const Bitmap& rhs);
+    void        SetTexture(UTexture2D* InTexture, int t = BMP_SOLID);
     void        SetCPUImage(int w,int h,const FColor* pixels,int t=BMP_SOLID,bool upload=true);
     void        CopyImage(int w, int h, BYTE* p, int t = BMP_SOLID);
     void        CopyImage(int w, int h, ColorIndex* p, int t = BMP_SOLID); // convenience overload

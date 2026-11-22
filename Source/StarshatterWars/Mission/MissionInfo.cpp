@@ -39,19 +39,20 @@ static const int TIME_NEVER = (int)1e9;
 // --------------------------------------------------------------------
 
 MissionInfo::MissionInfo()
-    : mission(nullptr)
-    , start(0)
-    , type(0)
-    , id(0)
-    , min_rank(0)
-    , max_rank(0)
-    , action_id(0)
-    , action_status(0)
-    , exec_once(0)
-    , start_before(TIME_NEVER)
-    , start_after(0)
-    , DisplayType(EMissionDisplayType::PlayerMission)
-    , Source(EMissionSource::Unknown)
+    : 
+    id(0),
+    start(0),
+    type(0),
+    min_rank(0),
+    max_rank(0),
+    action_id(0),
+    action_status(0),
+    exec_once(0),
+    start_before(TIME_NEVER),
+    start_after(0),
+    DisplayType(EMissionDisplayType::PlayerMission),
+    Source(EMissionSource::Unknown),
+    mission(nullptr)
 {
 }
 

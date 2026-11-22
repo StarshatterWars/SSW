@@ -5,17 +5,18 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>1.0.15</Version>
-    <ApplicationIcon>../Application.ico</ApplicationIcon>
+    <Version>1.0.18</Version>
+    <ApplicationIcon>Assets/SSW_Modern.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup><InternalsVisibleTo Include="LauncherRecoveryTests"/></ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
     <Content Include="../Content/Build/release-info.json" Link="release-info.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
-    <Content Include="launcher.json;feed.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="launcher.json;feed.json;roadmap.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../ArtSource/Audio/Music/Menu/SS_TGS_Menu-Loop.wav" Link="MenuMusic.wav" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Resource Include="../ArtSource/Splash/SSW_OrionLaunch_UE_Splash_800x450.png" Link="Orion.png" />
     <Resource Include="Assets/EpicGames.png;Assets/Steam.png" />
+    <Resource Include="Assets/SSW_Modern.ico" Link="Assets/SSW.ico" />
     <Content Include="LocalFeedServer/**/*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

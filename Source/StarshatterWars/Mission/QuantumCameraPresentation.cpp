@@ -1,4 +1,5 @@
 #include "QuantumCameraPresentation.h"
+#include "Ship.h"
 #include "Camera/CameraTypes.h"
 #include "Camera/PlayerCameraManager.h"
 #include "GameFramework/PlayerController.h"
@@ -63,4 +64,11 @@ void FQuantumCameraPresentation::Update(APlayerController* Controller, float Sec
         Modifier = Cast<UQuantumTravelCameraModifier>(Camera->AddNewCameraModifier(UQuantumTravelCameraModifier::StaticClass()));
     }
     if (auto* Owned = Modifier.Get()) { Owned->ExpectedViewTarget = Target; Owned->Strength = Envelope.Strength; }
+}
+
+Ship* ResolveQuantumPresentationShip(Ship* Pilot)
+{
+    if (Pilot && Pilot->GetFlightPhase() <= EOPSMode::ALERT)
+        if (auto* Carrier = Pilot->GetCarrier(); Carrier && !Carrier->IsDead()) return Carrier;
+    return Pilot;
 }

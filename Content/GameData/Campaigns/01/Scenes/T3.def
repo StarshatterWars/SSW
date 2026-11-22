@@ -8,20 +8,13 @@ region: "Janek Station"
 id: 103
 objective: "Training - "
     "Practice airborne fighter operations."
-sitrep: "The Orion will jump to the Janek Airbase flight corridor. You will launch from the carrier, descend through the atmosphere and land at Janek Station. Begin the surface lesson after arrival. Your assignment is the 18th Trellis Wing aboard the CV6-Orion. The Third Fleet is participating in wargame "
-    "exercises in the Janus system. "
-    "Your squadron, the Avengers, are on temporary "
-    "detached duty to Janek Station."
-    "As part of the exercise, you have "
-    "been tasked with practicing take offs and landings, "
-    "flying patrol patterns "
-    "and destroying target drones in your sector."
+sitrep: "A shuttle will transfer you from Orion to the surface at Janek Station for flight training. The fighter assigned by your mission is prepared at the airbase. Begin the surface lesson there. Your assignment is the 18th Trellis Wing aboard the CV6-Orion. The Third Fleet is participating in wargame exercises in the Janus system. Your squadron, the Avengers, are on temporary detached duty to Janek Station.As part of the exercise, you have been tasked with practicing take offs and landings, flying patrol patterns and destroying target drones in your sector."
 start: "01/16:23:00"
 stardate: 1084144000
 degrees: true
 element: {
     name: "Janek Station",
-    design: Airbase1,
+    design: JanekStation,
     loc: (25e3, 0, 0),
     head: -90,
     iff: 1,

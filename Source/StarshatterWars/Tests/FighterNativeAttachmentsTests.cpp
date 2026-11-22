@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "FighterActor.h"
 #include "FighterLandingGearComponent.h"
 #include "Components/ChildActorComponent.h"
@@ -9,6 +10,7 @@
 #include "Engine/World.h"
 #include "LandingGear.h"
 #include "Ship.h"
+#include "ShipDesign.h"
 #include "AvengerShipActor.h"
 #include "CobraShipActor.h"
 #include "CutlassShipActor.h"
@@ -25,11 +27,12 @@
 #include "ZodiacShipActor.h"
 #include "ZZAShipActor.h"
 #include "ZZFShipActor.h"
+#include "ShipVisualCatalog.h"
 
 class FGearTestShip : public Ship
 {
 public:
-    FGearTestShip() : Ship("GearTest", "", static_cast<ShipDesign*>(nullptr), 1, 0, nullptr, false) {}
+    explicit FGearTestShip(ShipDesign* Design=nullptr) : Ship("GearTest", "", Design, 1, 0, nullptr, false) {}
     void SetTestGear(LandingGear* InGear) { if (gear) systems.remove(gear); gear = InGear; if (gear) systems.append(gear); }
 };
 
@@ -85,9 +88,28 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
         .CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     UWorld* World = UWorld::CreateWorld(EWorldType::EditorPreview, false, NAME_None, nullptr, true,
         ERHIFeatureLevel::Num, &WorldOptions);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     if (!TestNotNull(TEXT("Preview world"), World)) return false;
     ARaptorShipActor* Fighter = World->SpawnActor<ARaptorShipActor>();
     if (!TestNotNull(TEXT("Raptor preview"), Fighter)) { World->DestroyWorld(false); return false; }
+    Fighter->LightRoot->SetAbsolute(true,true,true);
+    Fighter->VFXRoot->SetAbsolute(true,true,true);
+    Fighter->PointRoot->SetAbsolute(true,true,true);
+    Fighter->BindRuntimeShip(nullptr);
+    for(USceneComponent* Root:{Fighter->LightRoot,Fighter->PointRoot,Fighter->VFXRoot.Get()})
+    {
+        TestEqual(TEXT("Mounted equipment shares the moving hull frame"),Root->GetAttachParent(),Fighter->ShipRoot);
+        TestFalse(TEXT("Mounts cannot retain a world-space location"),Root->IsUsingAbsoluteLocation());
+        TestFalse(TEXT("Mounts inherit hull rotation"),Root->IsUsingAbsoluteRotation());
+        TestFalse(TEXT("Mounts inherit hull scale"),Root->IsUsingAbsoluteScale());
+    }
+    auto* Duplicate=NewObject<UChildActorComponent>(Fighter,TEXT("ImportedCockpitDuplicate"));
+    Duplicate->SetupAttachment(Fighter->PointRoot);Fighter->AddInstanceComponent(Duplicate);
+    Duplicate->RegisterComponent();Duplicate->SetChildActorClass(AActor::StaticClass());
+    Fighter->Tick(0);
+    TestFalse(TEXT("Imported duplicate cockpit is hidden in exterior views"),Duplicate->IsVisible());
+    if(TestNotNull(TEXT("Duplicate cockpit fixture exists"),Duplicate->GetChildActor()))
+        TestTrue(TEXT("Non-player cockpit actor is hidden"),Duplicate->GetChildActor()->IsHidden());
     UFighterLandingGearComponent* Nose = Fighter->LandingGearActors[0];
     TestEqual(TEXT("Raptor DEF start axis conversion"), Nose->RetractedPosition, FVector(134,0,-25));
     TestEqual(TEXT("Raptor DEF end axis conversion"), Nose->ExtendedPosition, FVector(148,0,-50));
@@ -267,6 +289,57 @@ bool FFighterNativeAttachmentsTest::RunTest(const FString& Parameters)
     World->DestroyWorld(false);
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStormhawkGearPresentationTest, "Starshatter.Fighter.StormhawkLandingGear",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FStormhawkGearPresentationTest::RunTest(const FString&)
+{
+    const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
+    UWorld* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext Context(World);
+    UClass* Class=ShipVisualCatalog::Resolve(TEXT("Stormhawk"));
+    auto* Fighter=Class?World->SpawnActor<AFighterActor>(Class):nullptr;
+    if (!TestNotNull(TEXT("Actual Stormhawk Blueprint spawns"),Fighter)) {World->DestroyWorld(false);return false;}
+    Fighter->PreviewGearDeployment=1;
+    Fighter->SynchronizeLandingGearMarkers();
+    AddInfo(FString::Printf(TEXT("Stormhawk class %s, native gear %d"),*Class->GetPathName(),Fighter->LandingGearActors.Num()));
+    TestEqual(TEXT("Stormhawk has three native gear stations"),Fighter->LandingGearActors.Num(),3);
+    for (UFighterLandingGearComponent* Gear:Fighter->LandingGearActors)
+    {
+        if (!TestNotNull(TEXT("Landing gear component"),Gear)) continue;
+        AActor* Child=Gear->GetChildActor();
+        if (!TestNotNull(TEXT("Gear child Blueprint instantiates"),Child)) continue;
+        TArray<UStaticMeshComponent*> Meshes;Child->GetComponents(Meshes);
+        int32 VisibleMeshes=0;
+        for(auto* Mesh:Meshes) if(Mesh->GetStaticMesh() && Mesh->IsVisible() && !Mesh->bHiddenInGame) ++VisibleMeshes;
+        TestTrue(TEXT("Extended gear contains visible mesh geometry"),!Child->IsHidden() && VisibleMeshes>0);
+        AddInfo(FString::Printf(TEXT("%s class %s scale %s location %s meshes %d"),*Gear->GetName(),*GetNameSafe(Gear->GetChildActorClass()),*Gear->GetComponentScale().ToString(),*Gear->GetComponentLocation().ToString(),VisibleMeshes));
+    }
+    ShipDesign TestDesign;strcpy_s(TestDesign.name,"Stormhawk");TestDesign.type=static_cast<int>(CLASSIFICATION::FIGHTER);
+    TestDesign.scale=.25;TestDesign.integrity=1000;TestDesign.radius=50;
+    FGearTestShip RuntimeShip(&TestDesign);
+    LandingGear RuntimeGear;
+    RuntimeGear.AddGear(nullptr,FVector(0,-18,100),FVector(0,-38,130));
+    RuntimeGear.AddGear(nullptr,FVector(-20,-20,-74),FVector(-40,-50,-70));
+    RuntimeGear.AddGear(nullptr,FVector(20,-20,-74),FVector(40,-50,-70));
+    RuntimeShip.SetTestGear(&RuntimeGear);
+    Fighter->BindRuntimeShip(&RuntimeShip);
+    RuntimeGear.SetState(LandingGear::GEAR_DOWN);
+    Fighter->Tick(.01f);
+    for(UFighterLandingGearComponent* Gear:Fighter->LandingGearActors)
+        TestTrue(TEXT("Bound Stormhawk shows parked gear"),Gear && Gear->bGearVisible && Gear->GetChildActor() && !Gear->GetChildActor()->IsHidden());
+    RuntimeGear.SetState(LandingGear::GEAR_UP);
+    Fighter->Tick(.01f);
+    for(UFighterLandingGearComponent* Gear:Fighter->LandingGearActors)
+        TestFalse(TEXT("Bound Stormhawk retracts gear"),Gear && Gear->bGearVisible);
+    RuntimeGear.SetState(LandingGear::GEAR_DOWN);
+    Fighter->Tick(.01f);
+    for(UFighterLandingGearComponent* Gear:Fighter->LandingGearActors)
+        TestTrue(TEXT("Bound Stormhawk lowers gear again for landing"),Gear && Gear->bGearVisible && Gear->GetChildActor() && !Gear->GetChildActor()->IsHidden());
+    Fighter->BindRuntimeShip(nullptr);
+    RuntimeShip.SetTestGear(nullptr);
+    World->DestroyWorld(false);
+    return true;
+}
 #endif
 
 
@@ -326,6 +399,7 @@ bool FFighterWeaponRolesTest::RunTest(const FString& Parameters)
     const UWorld::InitializationValues Options = UWorld::InitializationValues().AllowAudioPlayback(false)
         .CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     UWorld* World = UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext2(World);
     ARaptorShipActor* Fighter = World->SpawnActor<ARaptorShipActor>();
     auto* Cannon = CastChecked<UShipWeaponMountComponent>(Fighter->HullWeaponMounts[0].Get());
     TestEqual(TEXT("Raptor twin cannon remains one authored weapon"), Fighter->HullWeaponMounts.Num(),1);

@@ -4,6 +4,21 @@
 
 namespace CampaignPresentationRules
 {
+    inline bool NeedsFleetReturnRecovery(const FS_PlayerGameInfo& Player, bool FreeFlight, bool DockedAtJanek)
+    {
+        return Player.Campaign==2 && Player.HasCompletedMission(1,104) && FreeFlight && DockedAtJanek;
+    }
+    inline bool HasPendingFleetDeployment(const FS_PlayerGameInfo& Player, int32 CampaignId)
+    {
+        return CampaignId==2 && Player.Campaign==CampaignId && Player.PendingFleetDeploymentCampaign==CampaignId;
+    }
+    inline bool NeedsTrainingHandoff(const FS_PlayerGameInfo& Player, TFunctionRef<bool(int32)> Completed)
+    {
+        if(Player.Campaign!=1)return false;
+        for(int32 Id=101;Id<=104;++Id)
+            if(!Player.HasCompletedMission(1,Id) && !Completed(Id))return false;
+        return true;
+    }
     inline bool HasRuntimeSceneTrigger(const FS_MissionEvent& Event)
     {
         return Event.TriggerNParams > 0 || !Event.TriggerShip.IsEmpty() || !Event.TriggerTarget.IsEmpty() ||

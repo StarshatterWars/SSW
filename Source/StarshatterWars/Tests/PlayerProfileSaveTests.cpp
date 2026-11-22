@@ -17,6 +17,7 @@ bool FPlayerProfileSaveTest::RunTest(const FString& Parameters)
     TArray<FString> Files={Base,Players->GetPlayerIndexSlot()};
     ON_SCOPE_EXIT {for(const FString& File:Files) UGameplayStatics::DeleteGameInSlot(File,0);};
     auto& Alpha=Players->GetMutablePlayerInfo();Alpha.Name=TEXT("Alpha");Alpha.Callsign=TEXT("One");Alpha.Rank=3;Alpha.MedalsMask=5;Alpha.ChatMacros={TEXT("Alpha macro")};
+    Alpha.PendingFleetDeploymentCampaign=2;
     TestTrue(TEXT("Existing single-player save written to isolated fixture"),Players->SavePlayer(true));
     const auto AlphaData=Players->GetPlayerInfo();
     auto Saves=Players->GetSavedPlayers();
@@ -27,6 +28,7 @@ bool FPlayerProfileSaveTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Original authoritative save retained"),UGameplayStatics::DoesSaveGameExist(Base,0));
 
     auto& Beta=Players->GetMutablePlayerInfo();Beta.Name=TEXT("Beta");Beta.Callsign=TEXT("Two");Beta.Rank=7;Beta.MedalsMask=10;Beta.ChatMacros={TEXT("Beta macro")};
+    Beta.PendingFleetDeploymentCampaign=0;
     TestTrue(TEXT("Save second named pilot"),Players->SavePlayerAs(TEXT("Beta")));
     const auto BetaData=Players->GetPlayerInfo();Saves=Players->GetSavedPlayers();
     TestEqual(TEXT("Two pilots are listed"),Saves.Num(),2);
@@ -39,6 +41,7 @@ bool FPlayerProfileSaveTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Rejected operations leave current pilot unchanged"),FS_PlayerGameInfo::StaticStruct()->CompareScriptStruct(&BetaData,&Players->GetPlayerInfo(),0));
 
     TestTrue(TEXT("Load Alpha"),Players->LoadSavedPlayer(AlphaSlot));
+    TestEqual(TEXT("Unfinished fleet deployment survives pilot reload"),Players->GetPlayerInfo().PendingFleetDeploymentCampaign,2);
     TestTrue(TEXT("Complete profile, progress, awards and macros restored"),FS_PlayerGameInfo::StaticStruct()->CompareScriptStruct(&AlphaData,&Players->GetPlayerInfo(),0));
     Players->GetMutablePlayerInfo().Callsign=TEXT("Updated Alpha");
     TestTrue(TEXT("Overwrite selected pilot"),Players->SavePlayerAs(TEXT("Alpha"),AlphaSlot));

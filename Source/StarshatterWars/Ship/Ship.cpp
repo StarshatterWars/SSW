@@ -191,19 +191,74 @@ Ship::Ship(
 	int cmd_ai,
 	const int* load,
 	bool bCreateAI)
-	: IFF_code(IFF), killer(0), throttle(0), augmenter(false), throttle_request(0),
-	shield(0), shieldRep(0), main_drive(0), quantum_drive(0), farcaster(0),
-	check_fire(false), probe(0), sensor_drone(0), primary(0), secondary(1),
-	cmd_chain_index(0), target(0), subtarget(0), radio_orders(0), launch_point(0),
-	g_force(0.0f), sensor(0), navsys(0), flcs(0), hangar(0), respawns(0), invulnerable(false),
-	thruster(0), decoy(0), ai_mode(2), command_ai_level(cmd_ai), flcs_mode(EFLCSMode::AUTO), loadout(0),
-	emcon(3), old_emcon(3), master_caution(false), cockpit(0), gear(0), skin(0),
-	auto_repair(true), last_repair_time(0), last_eval_time(0), last_beam_time(0), last_bolt_time(0),
-	warp_fov(1), flight_phase(EOPSMode::LAUNCH), launch_time(0), carrier(0), dock(0), ff_count(0),
-	inbound(0), element(0), director_info("Init"), combat_unit(0), net_control(0),
-	track(0), ntrack(0), track_time(0), helm_heading(0.0f), helm_pitch(0.0f),
-	altitude_agl(-1.0e6f), transition_time(0.0f), transition_type(TRANSITION_NONE),
-	friendly_fire_time(0), ward(0), net_observer_mode(false), orig_elem_index(-1)
+	: 
+    killer(0),
+    throttle(0),
+    throttle_request(0),
+    augmenter(false),
+    IFF_code(IFF),
+    cmd_chain_index(0),
+    ff_count(0),
+    flight_phase(EOPSMode::LAUNCH),
+    target(0),
+    subtarget(0),
+    ward(0),
+    check_fire(false),
+    primary(0),
+    secondary(1),
+    skin(0),
+    cockpit(0),
+    main_drive(0),
+    quantum_drive(0),
+    farcaster(0),
+    shield(0),
+    shieldRep(0),
+    navsys(0),
+    flcs(0),
+    sensor(0),
+    gear(0),
+    thruster(0),
+    decoy(0),
+    probe(0),
+    sensor_drone(0),
+    hangar(0),
+    combat_unit(0),
+    element(0),
+    orig_elem_index(-1),
+    radio_orders(0),
+    launch_point(0),
+    director_info("Init"),
+    ai_mode(2),
+    command_ai_level(cmd_ai),
+    flcs_mode(EFLCSMode::AUTO),
+    net_observer_mode(false),
+    emcon(3),
+    old_emcon(3),
+    invulnerable(false),
+    launch_time(0),
+    friendly_fire_time(0),
+    carrier(0),
+    dock(0),
+    inbound(0),
+    net_control(0),
+    track(0),
+    ntrack(0),
+    track_time(0),
+    helm_heading(0.0f),
+    helm_pitch(0.0f),
+    altitude_agl(-1.0e6f),
+    g_force(0.0f),
+    warp_fov(1),
+    transition_time(0.0f),
+    transition_type(TRANSITION_NONE),
+    respawns(0),
+    master_caution(false),
+    auto_repair(true),
+    last_repair_time(0),
+    last_eval_time(0),
+    last_beam_time(0),
+    last_bolt_time(0),
+    loadout(0)
 {
 	sim = Sim::GetSim();
 
@@ -305,7 +360,7 @@ Ship::Ship(
 			dir = Director;
 			net_control = nullptr;
 
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, Log,
 				TEXT("[Ship] SimDirector created for '%hs' CmdAI=%d RequestedAIType=%d Dir=%p DirType=%d"),
 				ship_name,
 				cmd_ai,
@@ -316,7 +371,7 @@ Ship::Ship(
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship] AI/DIRECTOR DISABLED for '%hs'"),
 			ship_name);
 	}
@@ -328,7 +383,7 @@ Ship::Ship(
 		trigger[i] = false;
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[Ship] Constructed '%hs' Reactors=%d Drives=%d MainDrive=%p Thruster=%p NavSys=%p FLCS=%p Systems=%d"),
 		GetName(),
 		reactors.size(),
@@ -761,7 +816,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 
 		thruster = runtime_thruster;
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship] Runtime thruster initialized Ship='%s' Thruster=%p Ports=%d SourceIndex=%d TransLimits=(%.2f %.2f %.2f)"),
 			ANSI_TO_TCHAR(name),
 			runtime_thruster,
@@ -892,7 +947,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 						thruster->TransYLimit(),
 						thruster->TransZLimit());
 
-					UE_LOG(LogTemp, Warning,
+					UE_LOG(LogTemp, Log,
 						TEXT("[Ship] FLCS using thruster limits Ship='%hs' FLCS=%p Thruster=%p TransLimits=(%.2f %.2f %.2f)"),
 						GetName(),
 						GetFLCS(),
@@ -908,7 +963,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 						design->trans_y,
 						design->trans_z);
 
-					UE_LOG(LogTemp, Warning,
+					UE_LOG(LogTemp, Log,
 						TEXT("[Ship] FLCS using design fallback limits Ship='%hs' FLCS=%p TransLimits=(%.2f %.2f %.2f)"),
 						GetName(),
 						GetFLCS(),
@@ -922,7 +977,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 				flcs_mode = EFLCSMode::AUTO;
 				flcs->SetMode(EFLCSMode::AUTO);
 
-				UE_LOG(LogTemp, Warning,
+				UE_LOG(LogTemp, Log,
 					TEXT("[Ship] FLCS initialized Ship='%hs' FLCS=%p VLimit=%.2f Mode=%d"),
 					GetName(),
 					GetFLCS(),
@@ -957,7 +1012,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 		computers.append(NewComputer);
 		systems.append(NewComputer);
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship] Computer runtime built Ship='%hs' Computer=%p Type=%d Class='%hs' Systems=%d FLCS=%p SourceIndex=%d"),
 			GetName(),
 			NewComputer,
@@ -968,16 +1023,19 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 			src_index);
 	}
 
-	if (!flcs)
+	bool bExpectsFLCS=false;
+    for(int Index=0;design && Index<design->computers.size();++Index)
+        if(const Computer* Definition=design->computers[Index];Definition && Definition->GetComputerType()==EComputerType::FLIGHT) bExpectsFLCS=true;
+    if (!flcs && bExpectsFLCS)
 	{
 		UE_LOG(LogTemp, Warning,
 			TEXT("[Ship] WARNING: No FLCS assigned Ship='%hs' Computers=%d"),
 			GetName(),
 			computers.size());
 	}
-	else
+	else if (flcs)
 	{
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship] OK: FLCS assigned Ship='%hs' FLCS=%p"),
 			GetName(),
 			flcs);
@@ -1061,7 +1119,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 		navlights.append(RuntimeNavLight);
 		systems.append(RuntimeNavLight);
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship] NavLight runtime built Ship='%hs' NavLight=%p Beacons=%d Enabled=%d Systems=%d"),
 			GetName(),
 			RuntimeNavLight,
@@ -1071,7 +1129,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 
 		for (int BeaconIndex = 0; BeaconIndex < RuntimeNavLight->NumBeacons(); BeaconIndex++)
 		{
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, Log,
 				TEXT("[Ship]   NavLight Beacon[%d] Name='%hs' Loc=(%.1f %.1f %.1f) Color=(%.2f %.2f %.2f) Intensity=%.1f Radius=%.1f Mode=%d Blink=%.2f Phase=%.2f Lit=%d"),
 				BeaconIndex,
 				RuntimeNavLight->GetBeaconName(BeaconIndex),
@@ -1090,7 +1148,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 		}
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[Ship] Systems COUNT '%hs' Reactors=%d Drives=%d Thrusters=%d Sensors=%d Shields=%d Computers=%d NavLights=%d Weapons=%d QuantumDrives=%d Farcasters=%d Systems=%d"),
 		GetName(),
 		reactors.size(),
@@ -1105,7 +1163,7 @@ void Ship::InitializeRuntimeSystemsFromDesign()
 		farcasters.size(),
 		systems.size());
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[Ship] Systems PTR '%hs' MainDrive=%p Thruster=%p NavSys=%p Sensor=%p Shield=%p Quantum=%p Farcaster=%p FLCS=%p"),
 		GetName(),
 		main_drive,
@@ -1230,7 +1288,7 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
         RuntimeWeapon->SetFiringOrders(IsDropship() && RuntimeWeapon->GetTurret()
             ? WeaponsOrders::POINT_DEFENSE : WeaponsOrders::MANUAL);
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship] Weapon runtime built Ship='%hs' Weapon=%p Group='%hs' Groups=%d Systems=%d"),
 			GetName(),
 			RuntimeWeapon,
@@ -1283,7 +1341,7 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 		Group->AddWeapon(Missile);
 		Group->SetAbbreviation(Missile->Abbreviation());
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship] Hardpoint weapon Ship='%hs' HP=%d Type=%d Group='%hs' Ammo=%d"),
 			GetName(), i, Mounted, Missile->Group(), Missile->Ammo());
 	}
@@ -1321,7 +1379,7 @@ void Ship::InitializeRuntimeWeaponsFromDesign()
 	if (primary < 0 && weapons.size() > 0) primary = 0;
 	if (secondary < 0 && weapons.size() > 1) secondary = 1;
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[Ship] InitializeRuntimeWeaponsFromDesign COMPLETE Ship='%hs' Weapons=%d Hardpoints=%d Systems=%d Primary=%d Secondary=%d"),
 		GetName(),
 		weapons.size(),
@@ -1369,7 +1427,7 @@ void Ship::InitializeRuntimeLandingGearFromDesign()
 		gear =
 			landing_gear.size() > 0 ? landing_gear[0] : nullptr;
 		
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship] LandingGear runtime built Ship='%s' Gear=%p Items=%d State=%d Systems=%d"),
 			*FString(GetName()),
 			RuntimeGear,
@@ -1408,7 +1466,7 @@ void Ship::InitializeRuntimeFlightDecksFromDesign()
 		flight_decks.append(RuntimeDeck);
 		systems.append(RuntimeDeck);
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship] FlightDeck runtime built Ship='%s' Deck=%p Index=%d Launch=%d Recovery=%d Slots=%d Systems=%d"),
 			*FString(GetName()),
 			RuntimeDeck,
@@ -1489,7 +1547,7 @@ void Ship::InitializeRuntimeHangarFromDesign()
 			0,
 			0);
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship] Hangar squadron build Ship='%s' Squadron='%hs' Design='%hs' Count=%d Created=%d"),
 			*FString(GetName()),
 			Sq->GetName(),
@@ -1532,7 +1590,7 @@ void Ship::InitializeRuntimeDeathSpiralFromDesign()
 			continue;
 		}
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship] Runtime explosion built Ship='%s' Index=%d Type=%d Time=%.2f Loc=%s Final=%d"),
 			*FString(GetName()),
 			i,
@@ -1778,6 +1836,7 @@ void
 Ship::SetRegion(SimRegion* rgn)
 {
 	SimObject::SetRegion(rgn);
+    if (!rgn) return;
 	if (rgn && CargoManifest.IsSet())
 		CargoManifest->CaptureOrigin(*rgn, GetLocation());
 
@@ -1870,7 +1929,7 @@ Ship::Activate(SimScene& Scene)
 	// Legacy Drive system only provides runtime thrust state.	
 	// Thruster system only provides runtime thrust state.
 
-	UE_LOG(LogTemp, Verbose,
+	UE_LOG(LogTemp, Log,
 		TEXT("[Ship] NavLights handled by UE actor visuals"));
 
 	ListIter<WeaponGroup> GroupIter = weapons;
@@ -3261,7 +3320,7 @@ Ship::SetLeader(Ship* Leader)
 
 	element = LeaderElement;
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[Ship] SetLeader Follower='%hs' Leader='%hs' GetLeader='%hs' Ward='%hs' Element='%hs' Index=%d"),
 		GetName(),
 		Leader->GetName(),
@@ -3331,7 +3390,7 @@ Ship::AddNavPoint(Instruction* pt, Instruction* after)
 
 		element->AddShip(this, 1);
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship::AddNavPoint] Created solo element Ship='%hs' Element=%p Index=%d Region='%hs'"),
 			GetName(),
 			element,
@@ -3343,7 +3402,7 @@ Ship::AddNavPoint(Instruction* pt, Instruction* after)
 	{
 		element->AddNavPoint(pt, after);
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship::AddNavPoint] Added navpoint Ship='%hs' TargetName='%hs' NextNav=%p NextTarget='%hs'"),
 			GetName(),
 			pt->GetTargetName() ? pt->GetTargetName() : "NULL",
@@ -3384,7 +3443,7 @@ Ship::DelNavPoint(Instruction* pt)
 	{
 		element->DelNavPoint(pt);
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship::DelNavPoint] Deleted navpoint Ship='%hs' Nav=%p NextNav=%p NextTarget='%hs'"),
 			GetName(),
 			pt,
@@ -3408,7 +3467,7 @@ Ship::ClearFlightPlan()
 {
 	if (!element)
 	{
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Verbose,
 			TEXT("[Ship::ClearFlightPlan] No element Ship='%hs'"),
 			GetName());
 
@@ -3419,7 +3478,7 @@ Ship::ClearFlightPlan()
 	{
 		element->ClearFlightPlan();
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship::ClearFlightPlan] Cleared Ship='%hs' NextNav=%p"),
 			GetName(),
 			GetNextNavPoint());
@@ -3450,7 +3509,7 @@ Ship::SetAutoNav(bool engage)
     if (engage && bAutoTrack) SetAutoTrack(false);
     if (engage && inbound && sim && sim->GetPlayerShip()==this) { SetAutoLand(true);return; }
     if (!navsys) {
-        UE_LOG(LogTemp, Warning, TEXT("[AutoNav] Rejected: ship has no navigation system."));
+        if(engage) UE_LOG(LogTemp, Warning, TEXT("[AutoNav] Rejected: ship has no navigation system."));
         return;
     }
     if (engage) {
@@ -7144,7 +7203,7 @@ void Ship::SetNetworkControl(SimDirector* net)
 	//-------------------------------------------------------------
 	if (net_control)
 	{
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Ship::SetNetworkControl] Net-controlled Ship='%hs' NetControl=%p"),
 			GetName(),
 			net_control);
@@ -7198,7 +7257,7 @@ void Ship::SetNetworkControl(SimDirector* net)
 		dir = SteerAI::Create(this, ESteerAIType::FIGHTER);
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[Ship::InitRuntimeSystems] AI Director Created Ship='%s' IsStarship=%d Dir=%p DirType=%d"),
 		ANSI_TO_TCHAR(GetName()),
 		IsStarship() ? 1 : 0,

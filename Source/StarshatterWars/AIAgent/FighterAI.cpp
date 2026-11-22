@@ -67,19 +67,20 @@ static bool IsWaitingForTrainee(Ship* Leader, Instruction* Waypoint)
 // +----------------------------------------------------------------------+
 
 FighterAI::FighterAI(SimObject* s)
-    : ShipAI(s),
-    brakes(0.0),
-    drop_state(0),
-    jink_time(0),
-    evading(false),
+    : 
+    ShipAI(s),
     decoy_missile(0),
     missile_time(0.0),
     terrain_warning(false),
+    drop_state(0),
+    brakes(0.0),
+    time_to_dock(0.0),
     inbound(0),
     rtb_code(0),
-    form_up(false),
+    evading(false),
+    jink_time(0),
     over_threshold(false),
-    time_to_dock(0.0),
+    form_up(false),
     go_manual(false)
 {
     ai_type = ESteerAIType::FIGHTER;

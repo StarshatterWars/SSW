@@ -63,6 +63,7 @@ public:
     UMissionWeaponDlg(const FObjectInitializer& ObjectInitializer);
 
     virtual void NativeConstruct() override;
+    virtual void NativeDestruct() override;
 
     void SetParentDlg(UMissionBriefingDlg* InParentDlg);
     void SetManager(UMissionPlanner* InManager) { Manager = InManager; }
@@ -200,6 +201,8 @@ protected:
 
     UPROPERTY()
     UTextBlock* WeightValueText = nullptr;
+    UPROPERTY(Transient) UTextBlock* StoresValueText = nullptr;
+    FDelegateHandle StoresChangedHandle;
 
     // ------------------------------------------------------------
     // Entry widget classes

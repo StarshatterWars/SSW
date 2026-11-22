@@ -74,15 +74,15 @@ bool FThirdPersonMiniHUDTest::RunTest(const FString&)
     bool CameraScrolled=false;Details->OnOverviewWheel.BindLambda([&](float){CameraScrolled=true;return true;});
     const FGeometry Geometry=FGeometry::MakeRoot(FVector2D(1280,720),FSlateLayoutTransform());
     const FVector2D OverModel(850,65);FPointerEvent Hover(0,OverModel,OverModel,TSet<FKey>(),FKey(),0,FModifierKeysState());
-    TestTrue(TEXT("Hover opens damage inspection"),Details->OnMouseMove(Geometry,Hover).IsEventHandled());
+    TestFalse(TEXT("Hover does not open an inspection popup"),Details->OnMouseMove(Geometry,Hover).IsEventHandled());
     auto* Designs=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_ShipDesign.DT_ShipDesign"));
     const auto* Falcon=Designs?Designs->FindRow<FShipDesign>(TEXT("Falcon"),TEXT("Damage inspection")):nullptr;
     if(TestNotNull(TEXT("Inspection uses the real Falcon model"),Falcon))
     {
         Details->PlayerHull=83;
         TestTrue(TEXT("Damage model renders"),Details->PlayerMFDPreview->SetDesign(Falcon));
-        Details->DamagePoints.Add({FVector2D(.3,.5),35,TEXT("Engine"),EShipSystemIcon::Engine});
-        Details->DamagePoints.Add({FVector2D(.7,.5),100,TEXT("Sensor"),EShipSystemIcon::Sensor});
+        Details->DamagePoints.Add({SSWDamagePanel::DefaultLocation(EShipSystemIcon::Engine),35,TEXT("Engine"),EShipSystemIcon::Engine});
+        Details->DamagePoints.Add({SSWDamagePanel::DefaultLocation(EShipSystemIcon::Sensor),100,TEXT("Sensor"),EShipSystemIcon::Sensor});
         FAssetCompilingManager::Get().FinishAllCompilation();if(GShaderCompilingManager)GShaderCompilingManager->FinishAllCompilation();
         Details->PlayerMFDPreview->SetDesign(Falcon);FlushRenderingCommands();
         TStrongObjectPtr<UTextureRenderTarget2D> Inspection(FWidgetRenderer::CreateTargetFor(FVector2D(1280,720),TF_Bilinear,true));
@@ -95,26 +95,20 @@ bool FThirdPersonMiniHUDTest::RunTest(const FString&)
     const FVector2D Instrument=SSWMiniHUDLayout::GizmoCenter(FVector2D(1280,720),1);
     const FVector2D Origin=SSWMiniHUDLayout::Origin(FVector2D(1280,720),1);
     TestEqual(TEXT("Directional instrument is centered between its fixed column borders"),Instrument.X-Origin.X,46.0);
-    Details->DamagePreviewZoom=2.5f;Details->bDamagePreviewHovered=false;Details->OnMouseMove(Geometry,Hover);
-    TestEqual(TEXT("Each new hover starts with the complete hull fitted"),Details->DamagePreviewZoom,1.f);
-    FixedFrame->SetRenderTransform(FSlateRenderTransform(1.25f,FVector2f(80,40)));
-    auto Scaled=TStrongObjectPtr<UTextureRenderTarget2D>(FWidgetRenderer::CreateTargetFor(FVector2D(1800,1100),TF_Bilinear,true));
-    Renderer->DrawWidget(Scaled.Get(),Root,FVector2D(1800,1100),0);FlushRenderingCommands();TArray<FColor> ScaledImage;
-    Scaled->GameThread_GetRenderTargetResource()->ReadPixels(ScaledImage);
-    // Both halves of the real hull must survive clipping at a nonzero viewport origin and DPI scale.
-    int32 LeftHull=0,RightHull=0;
-    for(int32 Y=260;Y<485;++Y)for(int32 X=1015;X<1505;++X){const auto& Pixel=ScaledImage[Y*1800+X];if(Pixel.G>60 && Pixel.G>Pixel.R*1.3 && Pixel.G>Pixel.B*1.3){if(X<1260)++LeftHull;else++RightHull;}}
-    TestTrue(TEXT("Scaled inspection retains the nose half"),LeftHull>100);
-    TestTrue(TEXT("Scaled inspection retains the tail half"),RightHull>100);
-    TArray64<uint8> ScaledPNG;FImageUtils::PNGCompressImageArray(1800,1100,ScaledImage,ScaledPNG);
-    FFileHelper::SaveArrayToFile(ScaledPNG,*(FPaths::ProjectSavedDir()/TEXT("Review/MiniHUDDamageScaled.png")));
-    FixedFrame->SetRenderTransform(TOptional<FSlateRenderTransform>());
-    const float Zoom=Details->DamagePreviewZoom;FPointerEvent Wheel(0,OverModel,OverModel,TSet<FKey>(),FKey(),1,FModifierKeysState());
-    TestTrue(TEXT("Model wheel is handled"),Details->OnMouseWheel(Geometry,Wheel).IsEventHandled());
-    TestTrue(TEXT("Model wheel magnifies inspection"),Details->DamagePreviewZoom>Zoom);TestFalse(TEXT("Inspection wheel cannot zoom the flight camera"),CameraScrolled);
+    TestTrue(TEXT("Engines sit aft of sensors in the damage schematic"),SSWDamagePanel::DefaultLocation(EShipSystemIcon::Engine).X>SSWDamagePanel::DefaultLocation(EShipSystemIcon::Sensor).X);
+    TestTrue(TEXT("Weapons occupy opposite sides of the hull"),SSWDamagePanel::DefaultLocation(EShipSystemIcon::Weapon,0).Y<.5 && SSWDamagePanel::DefaultLocation(EShipSystemIcon::Weapon,1).Y>.5);
+    TestEqual(TEXT("Only the damaged engine receives a caution icon"),SSWDamagePanel::DamageCount(Details->DamagePoints),1);
+    Details->bShowCaution=true;
+    auto CautionFrame=TStrongObjectPtr<UTextureRenderTarget2D>(FWidgetRenderer::CreateTargetFor(FVector2D(1280,720),TF_Bilinear,true));
+    Renderer->DrawWidget(CautionFrame.Get(),Root,FVector2D(1280,720),0);FlushRenderingCommands();TArray<FColor> CautionImage;
+    CautionFrame->GameThread_GetRenderTargetResource()->ReadPixels(CautionImage);
+    TArray64<uint8> CautionPNG;FImageUtils::PNGCompressImageArray(1280,720,CautionImage,CautionPNG);
+    TestTrue(TEXT("Caution hull schematic capture saved"),FFileHelper::SaveArrayToFile(CautionPNG,*(FPaths::ProjectSavedDir()/TEXT("Review/CautionSchematic.png"))));
+    FPointerEvent Wheel(0,OverModel,OverModel,TSet<FKey>(),FKey(),1,FModifierKeysState());
+    TestTrue(TEXT("Wheel over the fixed instrument is consumed"),Details->OnMouseWheel(Geometry,Wheel).IsEventHandled());
+    TestFalse(TEXT("Instrument wheel cannot zoom the flight camera"),CameraScrolled);
     const FVector2D Outside(100,400);FPointerEvent OutsideWheel(0,Outside,Outside,TSet<FKey>(),FKey(),1,FModifierKeysState());
-    Details->OnMouseMove(Geometry,OutsideWheel);TestFalse(TEXT("Leaving inspection dismisses it"),Details->bDamagePreviewHovered);
-    Details->OnMouseWheel(Geometry,OutsideWheel);TestTrue(TEXT("Wheel outside inspection still reaches flight camera"),CameraScrolled);
+    Details->OnMouseWheel(Geometry,OutsideWheel);TestTrue(TEXT("Wheel outside the instrument still reaches the flight camera"),CameraScrolled);
 
     Details->bHasTarget=true;Details->TargetName=TEXT("NAV 04 - JANEK TRANSFER STATION");Details->TargetClass=TEXT("Waypoint (next)");Details->TargetHull=Details->TargetShield=-1;Details->TargetRange=26.11;Details->TargetSpeed=-1;
     Details->TargetMFDPreview=MakeUnique<FShipMFDPreview>(true);Details->TargetMFDPreview->SetWaypoint();

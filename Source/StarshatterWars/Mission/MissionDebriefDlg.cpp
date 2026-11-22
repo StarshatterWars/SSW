@@ -12,6 +12,7 @@
 */
 
 #include "MissionDebriefDlg.h"
+#include "TrainingReplay.h"
 #include "MissionRewardRules.h"
 #include "DebriefProgressSnapshot.h"
 #include "AgentMissionRules.h"
@@ -519,7 +520,7 @@ void UMissionDebriefDlg::Hide()
 // Frame
 // --------------------------------------------------------------------
 
-void UMissionDebriefDlg::ExecFrame(float /*DeltaSeconds*/)
+void UMissionDebriefDlg::ExecFrame(double /*DeltaSeconds*/)
 {
     // Legacy: if list has items but none selected, force select first
     if (UListView* UnitList = GetList(320))
@@ -736,9 +737,10 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
         if (DebriefResult.bSuccess) MissionPtr->SetComplete(true);
     }
     if (!SimPtr || !MissionPtr || (RecordedMission==MissionPtr && RecordedStartTime==SimPtr->StartTime())) return;
+    bTrainingReplayDebrief=TrainingReplay::IsActive(Cast<USSWGameInstance>(GetGameInstance()),MissionPtr->GetIdentity());
     const bool bStoryMission = MissionPtr->IsStoryMission();
     // Snapshot before CommitMission clears ShipStats. Save evidence and score separately.
-    if (auto* GI=Cast<USSWGameInstance>(GetGameInstance()); GI && !GI->IsTrainingTestSession())
+    if (auto* GI=Cast<USSWGameInstance>(GetGameInstance()); GI && !GI->IsTrainingTestSession() && !bTrainingReplayDebrief)
     {
         auto* ProgressPlayers=GI->GetSubsystem<UStarshatterPlayerSubsystem>();
         if(!ProgressPlayers)return;
@@ -846,7 +848,7 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
             }
         }
     }
-    else if (auto* TestGame=Cast<USSWGameInstance>(GetGameInstance()); TestGame && TestGame->IsTrainingTestSession() && SimPtr->GetMission()==MissionPtr)
+    else if (auto* TestGame=Cast<USSWGameInstance>(GetGameInstance()); TestGame && (TestGame->IsTrainingTestSession() || bTrainingReplayDebrief) && SimPtr->GetMission()==MissionPtr)
         SimPtr->ResolveAgentAssignment(DebriefResult.bSuccess);
     RecordedMission=MissionPtr; RecordedStartTime=SimPtr->StartTime();
     UE_LOG(LogTemp,Display,TEXT("[MissionDebrief] Mission=%d Outcome=%s Points=%d Evidence=%s"),
@@ -878,7 +880,7 @@ void UMissionDebriefDlg::OnCloseClicked()
     LocalSim->UnloadMission();
 
     PlayerCharacter* PlayerObj = PlayerCharacter::GetCurrentPlayer();
-    if (PlayerObj && !(Cast<USSWGameInstance>(GetGameInstance()) && Cast<USSWGameInstance>(GetGameInstance())->IsTrainingTestSession()) && PlayerObj->ShowAward())
+    if (PlayerObj && !bTrainingReplayDebrief && !(Cast<USSWGameInstance>(GetGameInstance()) && Cast<USSWGameInstance>(GetGameInstance())->IsTrainingTestSession()) && PlayerObj->ShowAward())
     {
         if (Manager && Manager->GetAwardDlg())
         {
@@ -915,18 +917,11 @@ void UMissionDebriefDlg::OnCloseClicked()
 
     Mouse::Show(false);
 
-    Campaign* Camp = Campaign::GetCampaign();
-    if (Camp && Camp->GetCampaignId() < Campaign::SINGLE_MISSIONS)
-    {
-        RuntimeSS->SetGameMode(EGameMode::CMPN);
-    }
-    else
-    {
-        RuntimeSS->SetGameMode(EGameMode::MENU);
-    }
     if (GetMenuManager())
     {
         Hide();
         GetMenuManager()->ReturnFromMissionBriefing();
     }
+    else
+        RuntimeSS->SetGameMode(EGameMode::MENU);
 }

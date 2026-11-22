@@ -40,7 +40,7 @@ public:
     FText ArcRequirement(FName Pilot, int32 MissionId, TFunction<bool(int32)> HistoricalCompletion = {}) const;
     FText ArcStatus(FName Pilot, int32 MissionId, TFunction<bool(int32)> HistoricalCompletion = {}) const;
     bool Accept(FName Pilot, int32 MissionId, TFunction<bool(int32)> HistoricalCompletion = {});
-    bool QueueTestReplay(FName Pilot,int32 MissionId,FName Issuer);
+    bool QueueTestReplay(FName Pilot,int32 MissionId,FName Issuer, TFunction<bool(int32)> HistoricalCompletion = {}, bool bSuspendDockedTraining = false);
     bool Decline(FName Pilot, int32 MissionId);
     bool Start(FName Pilot, int32 MissionId);
     bool Resolve(FName Pilot, int32 MissionId, bool bSucceeded);

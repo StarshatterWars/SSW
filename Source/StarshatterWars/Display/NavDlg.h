@@ -56,7 +56,7 @@ public:
 
     // Original API surface (ported):
     virtual void      RegisterControls();
-    virtual void      ExecFrame();
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
 
     StarSystem* GetSystem() const { return star_system; }
     void              SetSystem(StarSystem* s);

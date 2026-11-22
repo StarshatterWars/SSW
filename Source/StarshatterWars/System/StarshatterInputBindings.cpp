@@ -67,8 +67,7 @@ UInputAction* StarshatterInputBindings::MapTravelSpeed(UInputMappingContext* Con
         ? NSLOCTEXT("SSW.InputActions", "TravelSpeedReset", "Return Travel Speed to 1x")
         : NSLOCTEXT("SSW.InputActions", "TravelSpeedMenu", "Toggle Travel Speed Menu");
     Action->ValueType = EInputActionValueType::Boolean;
-    Context->MapKey(Action, bReset ? EKeys::Delete : EKeys::Insert);
-    Context->MapKey(Action, bReset ? EKeys::F12 : EKeys::F11);
+    // Retained compatibility action; persistent-universe travel has no speed controls.
     return Action;
 }
 

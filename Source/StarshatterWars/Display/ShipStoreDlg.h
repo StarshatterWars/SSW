@@ -10,5 +10,7 @@ class STARSHATTERWARS_API UShipStoreDlg : public UBaseScreen
 
 protected:
     TSharedRef<SWidget> RebuildWidget() override;
+private:
+    UPROPERTY(Transient) TObjectPtr<class UShipBriefingPreview> Preview;
 };
 

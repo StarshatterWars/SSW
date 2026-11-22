@@ -1,10 +1,13 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "MissionCompletionStatus.h"
 #include "CampaignPresentationRules.h"
 #include "PlayerSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "MissionCameraRig.h"
+#include "ShipDesign.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "Misc/ScopeExit.h"
 
@@ -61,6 +64,7 @@ bool FRecoveryCameraHoldTest::RunTest(const FString&)
 {
     const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     if(!TestNotNull(TEXT("Preview world"),World))return false;
     ON_SCOPE_EXIT{World->DestroyWorld(false);};
     auto* Fighter=World->SpawnActor<AFighterActor>();auto* Camera=World->SpawnActor<ACameraActor>();
@@ -76,6 +80,35 @@ bool FRecoveryCameraHoldTest::RunTest(const FString&)
     TestTrue(TEXT("Later recovery callbacks retain the original pose"),Camera->GetActorTransform().Equals(Pose,.001));
     Rig.Reset(nullptr);TestFalse(TEXT("Next mission resets recovery hold"),Rig.bRecoveryViewHeld);
     TestFalse(TEXT("Next mission releases the parked fighter pose"),Fighter->bRecoveryPresentationHeld);
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSurfaceLaunchCameraTest,"Starshatter.Mission.SurfaceLaunchCamera",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FSurfaceLaunchCameraTest::RunTest(const FString&)
+{
+    const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
+    auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext Context(World);
+    ON_SCOPE_EXIT{World->DestroyWorld(false);};
+    ShipDesign BaseDesign;BaseDesign.type=int32(CLASSIFICATION::GROUND_UNITS);
+    ShipDesign HullDesign;HullDesign.type=int32(CLASSIFICATION::FIGHTER);
+    Ship Base("Camera base","",&BaseDesign,1,0,nullptr,false);
+    Ship Pilot("Camera pilot","",&HullDesign,1,0,nullptr,false);
+    SimRegion Region(nullptr,"Camera surface",0);Base.SetRegion(&Region);Pilot.SetRegion(&Region);
+    FlightDeck Deck;Deck.SetLaunchDeck();Deck.SetCarrier(&Base);
+    Pilot.SetCarrier(&Base,&Deck);Pilot.SetFlightPhase(EOPSMode::ALERT);
+    auto* Visual=World->SpawnActor<AShipActor>();
+    Visual->HullMesh->SetStaticMesh(LoadObject<UStaticMesh>(nullptr,TEXT("/Engine/BasicShapes/Cube.Cube")));
+    Visual->SetActorLocationAndRotation(FVector(100,200,300),FRotator(0,45,0));
+    auto* Camera=World->SpawnActor<ACameraActor>();auto* PC=World->SpawnActor<APlayerController>();
+    FMissionCameraRig Rig;double Zoom=1;
+    Rig.Tick(PC,Camera,Visual,&Pilot,&Region,nullptr,.016,Zoom);
+    const FVector Eye=Camera->GetActorLocation();
+    TestTrue(TEXT("Surface launch camera stays above the aircraft"),Eye.Z>Visual->GetActorLocation().Z+30);
+    TestTrue(TEXT("Surface launch camera stays behind the aircraft"),FVector::DotProduct(Eye-Visual->GetActorLocation(),Visual->GetActorForwardVector())<0);
+    TestTrue(TEXT("Runway view remains upright"),Camera->GetActorUpVector().Z>.75);
+    TestTrue(TEXT("Camera faces the aircraft"),FVector::DotProduct(Camera->GetActorForwardVector(),(Visual->GetActorLocation()-Eye).GetSafeNormal())>.95);
+    Pilot.SetCarrier(nullptr,nullptr);Base.SetRegion(nullptr);Pilot.SetRegion(nullptr);
     return true;
 }
 #endif

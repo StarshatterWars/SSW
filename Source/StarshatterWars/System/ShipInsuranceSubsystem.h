@@ -20,6 +20,8 @@ public:
     UWorld* GetTickableGameObjectWorld() const override { return GetWorld(); }
     void BeginMission();
     bool RememberLoadout(const TArray<int32>& Stations, const FString& Name);
+    bool ApplyStoredLoadout(const TArray<int32>& Stations,const FString& Name,FText& Reason);
+    FText LoadoutStoresText() const;
     bool CanModifyHull(FGuid Hull) const;
     bool CanRefitHull(FGuid Hull, FText* Reason = nullptr) const;
     const TArray<FPlayerHangarShip>& GetShips() const;
@@ -31,6 +33,7 @@ public:
     UFUNCTION(BlueprintCallable) bool SelectHull(FGuid Hull, FText& Result);
     bool IsSelected(FGuid Hull) const;
     bool ValidateFitting(FGuid Hull, int32 Slot, int32 Level, FText& Result) const;
+    int32 StoredComponentCount(FGuid Hull,int32 Slot,int32 Level) const;
     UFUNCTION(BlueprintCallable) bool FitComponent(FGuid Hull, int32 Slot, int32 Level, FText& Result);
     int64 GetBalance() const;
     double HullStock(FName Design) const;
@@ -40,6 +43,9 @@ public:
     bool PurchaseHull(FName Design,FText& Reason);
     bool CanInsure() const;
 private:
+    void ProvisionMissionMagazine();
+    bool bNeedsMagazineIssue = true;
+    FText LastLoadoutReason;
     bool bRestoreLoadout = false;
     float ConditionElapsed = 0;
     bool bDockedConditionSaved = false;

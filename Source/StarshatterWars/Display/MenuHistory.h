@@ -46,7 +46,7 @@ public:
     void Pop()
     {
         if (History.Num() > 0)
-            History.Pop(false);
+            History.Pop(EAllowShrinking::No);
     }
 
     void Push(Menu* InMenu)

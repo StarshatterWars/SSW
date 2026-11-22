@@ -68,7 +68,7 @@ public:
     virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
     void SetShip(Ship* InShip);
-    void ExecFrame();
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
     bool CanIssueOrders() const;
 
 protected:

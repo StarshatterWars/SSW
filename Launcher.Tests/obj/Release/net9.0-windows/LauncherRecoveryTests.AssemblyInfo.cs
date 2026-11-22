@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LauncherRecoveryTests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3b38212d356eb87013a5a956314f65e2fdacf55a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d50c49dae8b70a62f34d06b772ed81cafc8c5bc9")]
 [assembly: System.Reflection.AssemblyProductAttribute("LauncherRecoveryTests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LauncherRecoveryTests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

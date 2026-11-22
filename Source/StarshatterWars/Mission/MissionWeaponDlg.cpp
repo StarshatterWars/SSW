@@ -19,6 +19,7 @@
 */
 
 #include "MissionWeaponDlg.h"
+#include "SimDataEvents.h"
 
 #include "MissionBriefingDlg.h"
 #include "MissionPlanner.h"
@@ -167,13 +168,20 @@ void UMissionWeaponDlg::NativeConstruct()
 {
     Super::NativeConstruct();
     BuildRuntimeLayout();
+    FSimDataEvents::Changed().Remove(StoresChangedHandle);
+    StoresChangedHandle=FSimDataEvents::Changed().AddWeakLambda(this,[this](const FEconomyState&)
+    {if(StoresValueText && GetGameInstance())if(const auto* Service=GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>())StoresValueText->SetText(Service->LoadoutStoresText());});
+}
+void UMissionWeaponDlg::NativeDestruct()
+{
+    FSimDataEvents::Changed().Remove(StoresChangedHandle);StoresChangedHandle.Reset();Super::NativeDestruct();
 }
 
 void UMissionWeaponDlg::SetParentDlg(UMissionBriefingDlg* InParentDlg)
 {
     ParentDlg = InParentDlg;
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[MissionWeaponDlg] SetParentDlg: ParentDlg=%p Mission=%p"),
         ParentDlg,
         ParentDlg ? ParentDlg->GetMissionPtr() : nullptr);
@@ -325,7 +333,7 @@ void UMissionWeaponDlg::RefreshFromMission()
 
     Mission* MissionPtr = ResolveMission();
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[MissionWeaponDlg] RefreshFromMission: this=%p ParentDlg=%p Mission=%p"),
         this,
         ParentDlg,
@@ -393,6 +401,7 @@ void UMissionWeaponDlg::RefreshFromMission()
             *GetDesignName(Design), Design->Weapon.Num());
     }
 
+    if(StoresValueText && GetGameInstance())if(const auto* Service=GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>())StoresValueText->SetText(Service->LoadoutStoresText());
     bRefreshingLoadouts = false;
 }
 
@@ -622,6 +631,8 @@ void UMissionWeaponDlg::BuildRuntimeLayout()
     AddInfoRow(TEXT("ELEMENT:"), ElementNameValueText);
     AddInfoRow(TEXT("TYPE:"), DesignNameValueText);
     AddInfoRow(TEXT("WEIGHT:"), WeightValueText);
+    AddInfoRow(TEXT("STORES:"), StoresValueText);
+    if(StoresValueText){StoresValueText->SetFont(MissionUIStyle::GetRowFont(11));StoresValueText->SetAutoWrapText(true);}
 
     USizeBox* PreviewHost = WidgetTree->ConstructWidget<USizeBox>();
     PreviewHost->SetWidthOverride(410.f);
@@ -867,7 +878,7 @@ void UMissionWeaponDlg::HandleLoadoutSelectionChanged(UObject* Item)
         return;
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[MissionWeaponDlg] Selection changed -> Index=%d"),
         SelectedItem->GetLoadoutIndex());
 
@@ -893,17 +904,12 @@ bool UMissionWeaponDlg::ApplyLiveLoadout(MissionLoad* Load)
     TArray<int32> Stations;
     for (int32 Index = 0; Index < Design->Hardpoint.Num(); ++Index)
         Stations.Add(Load->GetStation(Index));
-    TArray<int32> Previous;
-    if (int* Current = Craft->GetLoadout())
-        for (int32 Index = 0; Index < Stations.Num(); ++Index) Previous.Add(Current[Index]);
-    if (!Craft->ApplyDockedLoadout(Stations)) return false;
-    auto* Insurance = GetGameInstance() ? GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>() : nullptr;
-    if (Insurance && !Insurance->RememberLoadout(Stations, UTF8_TO_TCHAR(Load->GetName().data())))
-    {
-        Craft->ApplyDockedLoadout(Previous);
-        return false;
-    }
-    return true;
+    auto* Insurance=GetGameInstance()?GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>():nullptr;
+    if(!Insurance)return false;
+    FText Reason;
+    const bool Applied=Insurance->ApplyStoredLoadout(Stations,UTF8_TO_TCHAR(Load->GetName().data()),Reason);
+    if(StoresValueText)StoresValueText->SetText(Insurance->LoadoutStoresText());
+    return Applied;
 }
 
 void UMissionWeaponDlg::OnLoadoutSelected(UMissionWeaponLoadoutListObject* SelectedItem)
@@ -938,7 +944,7 @@ void UMissionWeaponDlg::OnLoadoutSelected(UMissionWeaponLoadoutListObject* Selec
 
     const FShipLoadout& Src = Design->Loadout[Index];
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("APPLYING LOADOUT '%s'"),
         *Src.Name);
 

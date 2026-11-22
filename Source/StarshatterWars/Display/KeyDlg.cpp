@@ -51,7 +51,7 @@ UKeyDlg::UKeyDlg(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
     SetDialogInputEnabled(true);
-    bIsFocusable = true;
+    SetIsFocusable(true);
 }
 
 void UKeyDlg::NativeOnInitialized()
@@ -262,7 +262,7 @@ void UKeyDlg::AppendFighterHUDBindings()
     };
     AddFixedShortcut(TEXT("COMMUNICATIONS"), NSLOCTEXT("SSW.InputActions", "EOSOverlay", "EOS SOCIAL OVERLAY"),
         FText::FromString(TEXT("Shift+F3")));
-    AddFixedShortcut(TEXT("GENERAL"), NSLOCTEXT("SSW.InputActions", "FixedMissionExit", "OPEN MISSION PAUSE / EXIT MENU FROM FLIGHT OR PANELS"),
+    AddFixedShortcut(TEXT("GENERAL"), NSLOCTEXT("SSW.InputActions", "FixedMissionExit", "OPEN MISSION EXIT MENU FROM FLIGHT OR PANELS"),
         EKeys::Escape.GetDisplayName());
 
     for (auto* Context:Contexts)
@@ -274,7 +274,7 @@ void UKeyDlg::AppendFighterHUDBindings()
             const FName Name=Mapping.Action->GetFName();
             // Superseded camera actions are not bound by the mission camera controller.
             if(Name==TEXT("IA_Quit") || Name==TEXT("IA_ViewCockpit") || Name==TEXT("IA_ViewVirtualCockpit") ||
-                Name==TEXT("IA_ViewChase") || Name==TEXT("IA_ViewOrbit") || Name==TEXT("IA_MouseZoom") || Name==TEXT("IA_GroundMode") || Name==TEXT("IA_HudMode")) continue;
+                Name==TEXT("IA_ViewChase") || Name==TEXT("IA_ViewOrbit") || Name==TEXT("IA_MouseZoom") || Name==TEXT("IA_GroundMode") || Name==TEXT("IA_HudMode") || Name==TEXT("IA_HUDInformation")) continue;
             const FString Id=StarshatterInputBindings::Id(Mapping);
             if (EnhancedRows.Contains(Id)) continue;
             auto* Row=WidgetTree->ConstructWidget<UHorizontalBox>();
@@ -329,7 +329,7 @@ bool UKeyDlg::CaptureKey(FKey Key)
 }
 FReply UKeyDlg::NativeOnKeyDown(const FGeometry& Geometry,const FKeyEvent& Event)
 {
-    if (Event.GetKey()==EKeys::Escape || Event.GetKey()==EKeys::Virtual_Back)
+    if (Event.GetKey()==EKeys::Escape || Event.GetKey()==EKeys::Virtual_Gamepad_Back.GetVirtualKey())
     {
         if (bCapturing) {bCapturing=false;RefreshDisplayFromSettings();}
         else OnCancelClicked();

@@ -35,7 +35,7 @@ int    Keyboard::map[KEY_MAP_SIZE];
 int    Keyboard::alt[KEY_MAP_SIZE];
 
 Keyboard::Keyboard()
-	: x(0), y(0), z(0), p(0), r(0), w(0), c(0), p1(0), r1(0), w1(0), t(0)
+	: x(0), y(0), z(0), p(0), r(0), w(0), t(0), p1(0), r1(0), w1(0), c(0)
 {
 	instance = this;
 	sensitivity = 25;

@@ -552,7 +552,7 @@ int32 UFormattingUtils::ParseDayTimeString(const FString& In)
 
 int32 UFormattingUtils::ParseStarshatterTime(const FString& InTime)
 {
-    UE_LOG(LogTemp, Warning, TEXT("[ParseStarshatterTime] Input = '%s'"), *InTime);
+    UE_LOG(LogTemp, Log, TEXT("[ParseStarshatterTime] Input = '%s'"), *InTime);
 
     FString DayPart;
     FString TimePart;
@@ -573,7 +573,7 @@ int32 UFormattingUtils::ParseStarshatterTime(const FString& InTime)
 
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("[ParseStarshatterTime] DayPart = '%s', TimePart = '%s'"), *DayPart, *TimePart);
+    UE_LOG(LogTemp, Log, TEXT("[ParseStarshatterTime] DayPart = '%s', TimePart = '%s'"), *DayPart, *TimePart);
 
     TArray<FString> Parts;
     TimePart.ParseIntoArray(Parts, TEXT(":"), true);
@@ -584,7 +584,7 @@ int32 UFormattingUtils::ParseStarshatterTime(const FString& InTime)
         return 0;
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("[ParseStarshatterTime] Parsed Parts = %s : %s : %s"),
+    UE_LOG(LogTemp, Log, TEXT("[ParseStarshatterTime] Parsed Parts = %s : %s : %s"),
         *Parts[0], *Parts[1], *Parts[2]);
 
     const int32 Days = FCString::Atoi(*DayPart);
@@ -592,7 +592,7 @@ int32 UFormattingUtils::ParseStarshatterTime(const FString& InTime)
     const int32 Minutes = FCString::Atoi(*Parts[1]);
     const int32 Seconds = FCString::Atoi(*Parts[2]);
 
-    UE_LOG(LogTemp, Warning, TEXT("[ParseStarshatterTime] Numeric = Days=%d Hours=%d Minutes=%d Seconds=%d"),
+    UE_LOG(LogTemp, Log, TEXT("[ParseStarshatterTime] Numeric = Days=%d Hours=%d Minutes=%d Seconds=%d"),
         Days, Hours, Minutes, Seconds);
 
     const int32 ZeroBasedDays = FMath::Max(0, Days - 1);
@@ -600,7 +600,7 @@ int32 UFormattingUtils::ParseStarshatterTime(const FString& InTime)
     const int32 TotalSeconds =
         (((ZeroBasedDays * 24) + Hours) * 60 + Minutes) * 60 + Seconds;
 
-    UE_LOG(LogTemp, Warning, TEXT("[ParseStarshatterTime] ZeroBasedDays=%d TotalSeconds=%d"),
+    UE_LOG(LogTemp, Log, TEXT("[ParseStarshatterTime] ZeroBasedDays=%d TotalSeconds=%d"),
         ZeroBasedDays, TotalSeconds);
 
     return TotalSeconds;

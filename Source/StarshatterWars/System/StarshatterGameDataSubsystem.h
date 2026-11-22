@@ -179,6 +179,7 @@ public:
     // Campaigns (static load + DT hydration)
     // =====================================================================
     void LoadCampaignData(const char* FileName, bool full = false, bool bPreferJson = true);
+    static bool ReadCampaignJsonDirectory(const FString& Directory, FS_Campaign& Out);
 
     void ReadCombatRosterData();
 
@@ -336,6 +337,7 @@ private:
     friend class USSWDesignIngestionCommandlet;
     friend class FStagedIngestionTest;
     friend class FCampaignJsonParityTest;
+    friend class FCampaignHeaderJsonTest;
     friend class FCampaignHeaderInformationTest;
     friend class FAwardsJsonParityTest;
     // =====================================================================

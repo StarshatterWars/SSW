@@ -40,7 +40,7 @@ void UCmpFileDlg::NativeOnInitialized()
 
     // If you want Enter/Escape routed through UBaseScreen consistently:
     SetDialogInputEnabled(true);
-    bIsFocusable = true;
+    SetIsFocusable(true);
 
     // Optional: resolve subsystem campaign:
     // if (UGameInstance* GI = UGameplayStatics::GetGameInstance(this))
@@ -95,7 +95,7 @@ void UCmpFileDlg::Show()
     bExitLatch = false;
 }
 
-void UCmpFileDlg::ExecFrame(float DeltaTime)
+void UCmpFileDlg::ExecFrame(double DeltaTime)
 {
     (void)DeltaTime;
 

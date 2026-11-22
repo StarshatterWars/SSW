@@ -82,19 +82,49 @@ FORCEINLINE FVector ToOtherHand(const FVector& V)
 }
 
 MapView::MapView(View* InParent, ActiveWindow* InActiveWindow)
-	: View(InParent, 0, 0, InParent ? InParent->Width() : 0, InParent ? InParent->Height() : 0)
-	, active_window(InActiveWindow)
-	, system(nullptr), zoom(1.1), offset_x(0), offset_y(0), ship(nullptr), campaign(nullptr)
-	, captured(false), dragging(false), adding_navpt(false)
-	, moving_navpt(false), moving_elem(false)
-	, view_mode(VIEW_SYSTEM), seln_mode(SELECT_REGION), ship_filter(0xffffffff)
-	, current_star(0), current_planet(0), current_region(0)
-	, current_ship(nullptr), current_elem(nullptr), current_navpt(nullptr), mission(nullptr)
-	, scrolling(0), scroll_x(0), scroll_y(0), click_x(0), click_y(0)
-	, active_menu(nullptr), map_menu(nullptr), map_system_menu(nullptr), map_sector_menu(nullptr)
-	, ship_menu(nullptr), editor(false)
-	, nav_menu(nullptr), action_menu(nullptr), objective_menu(nullptr), formation_menu(nullptr), speed_menu(nullptr)
-	, hold_menu(nullptr), farcast_menu(nullptr), menu_view(nullptr)
+	: 
+    View(InParent, 0, 0, InParent ? InParent->Width() : 0, InParent ? InParent->Height() : 0),
+    campaign(nullptr),
+    mission(nullptr),
+    system(nullptr),
+    ship(nullptr),
+    editor(false),
+    current_star(0),
+    current_planet(0),
+    current_region(0),
+    current_ship(nullptr),
+    current_elem(nullptr),
+    current_navpt(nullptr),
+    view_mode(VIEW_SYSTEM),
+    seln_mode(SELECT_REGION),
+    captured(false),
+    dragging(false),
+    adding_navpt(false),
+    moving_navpt(false),
+    moving_elem(false),
+    scrolling(0),
+    ship_filter(0xffffffff),
+    zoom(1.1),
+    offset_x(0),
+    offset_y(0),
+    scroll_x(0),
+    scroll_y(0),
+    click_x(0),
+    click_y(0),
+    active_window(InActiveWindow),
+    active_menu(nullptr),
+    map_menu(nullptr),
+    map_system_menu(nullptr),
+    map_sector_menu(nullptr),
+    ship_menu(nullptr),
+    nav_menu(nullptr),
+    action_menu(nullptr),
+    objective_menu(nullptr),
+    formation_menu(nullptr),
+    speed_menu(nullptr),
+    hold_menu(nullptr),
+    farcast_menu(nullptr),
+    menu_view(nullptr)
 {
 	for (int i = 0; i < 3; i++) {
 		view_zoom[i] = zoom;

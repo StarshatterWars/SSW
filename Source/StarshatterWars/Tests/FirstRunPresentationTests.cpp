@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "FirstTimeDlg.h"
 #include "MenuDlg.h"
@@ -31,7 +32,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFirstRunPresentationTest,"Starshatter.Menu.Fir
     EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FFirstRunPresentationTest::RunTest(const FString& Parameters)
 {
-    auto* World=UWorld::CreateWorld(EWorldType::Game,false);World->SetGameInstance(NewObject<UGameInstance>());
+    auto* World=UWorld::CreateWorld(EWorldType::Game,false);
+    FScopedSSWTestWorldContext TestWorldContext1(World);World->SetGameInstance(NewObject<UGameInstance>());
     ON_SCOPE_EXIT {World->DestroyWorld(false);};
     UClass* SetupClass=LoadClass<UFirstTimeDlg>(nullptr,TEXT("/Game/Screens/Main/WBP_FirstTimeDlg.WBP_FirstTimeDlg_C"));
     if(!TestNotNull(TEXT("Actual first-run Blueprint loads"),SetupClass))return false;
@@ -50,6 +52,9 @@ bool FFirstRunPresentationTest::RunTest(const FString& Parameters)
     TestEqual(TEXT("First-run height is 512"),Frame->GetHeightOverride(),512.f);
     TestNotNull(TEXT("Pilot name input"),Setup->NameEdit.Get());TestNotNull(TEXT("Callsign input"),Setup->CallsignEdit.Get());
     TestEqual(TEXT("Only Alliance and Marakan are first-run choices"),Setup->EmpireCombo->GetOptionCount(),2);
+    auto* GeneratedOption=Setup->GenerateEmpireOption(TEXT("Terellian Alliance"));
+    TestTrue(TEXT("Combo labels are retained by the first-run panel"),Setup->EmpireOptionWidgets.FindRef(TEXT("Terellian Alliance"))==GeneratedOption);
+    TestTrue(TEXT("Repeated selection reuses the retained label"),Setup->GenerateEmpireOption(TEXT("Terellian Alliance"))==GeneratedOption);
     TestEqual(TEXT("Dantari remains campaign-only"),Setup->EmpireCombo->FindOptionIndex(TEXT("Dantari Separatists")),INDEX_NONE);
     TestNull(TEXT("Flight model is no longer a first-run choice"),Setup->PlayStyleCombo.Get());
     FS_PlayerGameInfo Defaults;Defaults.FlightModel=0;Setup->ApplyUiToPlayerInfo(Defaults);

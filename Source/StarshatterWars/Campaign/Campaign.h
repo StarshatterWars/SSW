@@ -234,20 +234,8 @@ public:
     static double        GetStardate();
 
 protected:
-    void                 LoadCampaign(DataLoader* loader, bool full = false);
-    void                 LoadTemplateList(DataLoader* loader);
-    void                 LoadMissionList(DataLoader* loader);
-    void                 LoadCustomMissions(DataLoader* loader);
 
-    void                 ParseGroup(
-        TermStruct* val,
-        CombatGroup* force,
-        CombatGroup* clone,
-        const char* filename);
 
-    void                 ParseAction(
-        TermStruct* val,
-        const char* filename);
 
     CombatGroup* CloneOver(
         CombatGroup* force,
@@ -303,6 +291,7 @@ protected:
 
 protected:
         const FS_Campaign* CampaignData = nullptr;
+        TUniquePtr<FS_Campaign> OwnedJsonDefinition;
 
 protected:
     void LoadCombatantsFromData(const FS_Campaign& Data);

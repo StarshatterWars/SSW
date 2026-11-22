@@ -41,11 +41,12 @@ const double SENSOR_THRESHOLD = 0.25;
 // +----------------------------------------------------------------------+
 
 Sensor::Sensor()
-    : SimSystem(SYSTEM_CATEGORY::SENSOR, 1, "Dual Sensor Pkg", 1, 10, 10, 10),
+    : 
+    SimSystem(SYSTEM_CATEGORY::SENSOR, 1, "Dual Sensor Pkg", 1, 10, 10, 10),
     mode(ESensorMode::STD),
-    target(0),
     nsettings(0),
-    range_index(0)
+    range_index(0),
+    target(0)
 {
     name = "Sensor";
     abrv = "Sensor";
@@ -59,11 +60,12 @@ Sensor::Sensor()
 // +----------------------------------------------------------------------+
 
 Sensor::Sensor(const Sensor& s)
-    : SimSystem(s),
+    : 
+    SimSystem(s),
     mode(ESensorMode::STD),
-    target(0),
     nsettings(s.nsettings),
-    range_index(0)
+    range_index(0),
+    target(0)
 {
     Mount(s);
 

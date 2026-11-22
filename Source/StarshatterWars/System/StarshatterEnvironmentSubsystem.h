@@ -29,13 +29,12 @@
 
     RESPONSIBILITIES
     ================
-    - Load and parse legacy environment definitions
-    - Populate Unreal DataTables
-    - Build in-memory arrays for UI and runtime queries
+    - Load the validated JSON environment catalog
+        - Build in-memory arrays for UI and runtime queries
     - Resolve parent-child relationships:
         System -> Star -> Planet -> Moon
         System -> Region graph
-    - Provide DT-first read-only accessors
+    - Provide C++ catalog and runtime hierarchy queries
 
     NON-GOALS
     =========
@@ -55,29 +54,17 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 
-// Legacy parsing headers
-#include "DataLoader.h"
-#include "ParseUtil.h"
-#include "Random.h"
-#include "FormatUtil.h"
-#include "Text.h"
-#include "Term.h"
-
 // Engine helpers
-#include "Misc/FileHelper.h"
-#include "Misc/Paths.h"
-#include "Engine/DataTable.h"
-#include "HAL/FileManagerGeneric.h"
 
 // Project types
 #include "GameStructs.h"
 #include "GameStructs_System.h"
 #include "Tickable.h"
+#include "Engine/DataTable.h"
 
 #include "StarshatterEnvironmentSubsystem.generated.h"
 
 // Forward declarations
-class DataLoader;
 class StarSystem;
 class Sim;
 
@@ -187,27 +174,11 @@ public:
     void SetProjectPath();
     FString GetProjectPath();
 
-    bool GetRegionTypeFromString(const FString& InString, EOrbitalType& OutValue);
-
-    // -----------------------------------------------------------------
-    // Galaxy and environment parsing
-    // -----------------------------------------------------------------
-    void LoadGalaxyMap();
-
-    void ParseRegion(TermStruct* Val, const char* Fn);
-
-    void ParseStarMap(TermStruct* Val, const char* Fn);
-    void ParsePlanetMap(TermStruct* Val, const char* Fn);
-    void ParseMoonMap(TermStruct* Val, const char* Fn);
-
-    void ParseTerrain(TermStruct* Val, const char* Fn);
-
-    // -----------------------------------------------------------------
-    // DataTable creation and export
-    // -----------------------------------------------------------------
+    // JSON supplies the catalog; tables remain available to existing consumers.
+    bool LoadGalaxyMap();
     void CreateEnvironmentTables();
-
     void ResolveDataTables();
+    const FRegion* FindRegionByName(const FString& Name) const;
 
     // -----------------------------------------------------------------
     // Lifetime control
@@ -225,9 +196,6 @@ public:
 
 
 
-    // -----------------------------------------------------------------
-    // DataTable accessors
-    // -----------------------------------------------------------------
     UDataTable* GetGalaxyTable() const { return GalaxyDataTable; }
     UDataTable* GetStarsTable() const { return StarsDataTable; }
     UDataTable* GetPlanetsTable() const { return PlanetsDataTable; }
@@ -266,15 +234,6 @@ public:
     TArray<FS_CampaignZone> ZoneDataArray;
 
 protected:
-
-    // -----------------------------------------------------------------
-    // Internal state
-    // -----------------------------------------------------------------
-    bool bLoaded = false;
-
-    // -----------------------------------------------------------------
-    // DataTables
-    // -----------------------------------------------------------------
     UPROPERTY(EditDefaultsOnly, Category = "Starshatter|Environment|DataTables")
     TObjectPtr<UDataTable> GalaxyDataTable = nullptr;
 
@@ -288,22 +247,11 @@ protected:
     UDataTable* TerrainRegionsDataTable = nullptr;
     UDataTable* ZonesDataTable = nullptr;
 
-    // -----------------------------------------------------------------
-    // Working row scratch
-    // -----------------------------------------------------------------
-    FS_Galaxy         GalaxyData;
-    FStarSystem       StarSystemData;
-    FStarSystem       StarData;
-    FPlanet           PlanetData;
-    FMoon             MoonData;
-    FRegion           RegionData;
-    FS_TerrainRegion  TerrainRegionData;
 
-    // Map format arrays
-    TArray<FStarSystem>  StarMapArray;
-    TArray<FPlanet>      PlanetMapArray;
-    TArray<FMoon>        MoonMapArray;
-    TArray<FRegion>      RegionMapArray;
+    // -----------------------------------------------------------------
+    // Internal state
+    // -----------------------------------------------------------------
+    bool bLoaded = false;
 
     // Paths
     FString ProjectPath;
@@ -329,17 +277,16 @@ private:
     USSWGameInstance* SSWInstance = nullptr;
 
     // ==================================================================== =
-    // DT -> runtime hydration
+    // JSON catalog -> runtime hierarchy
     // =====================================================================
     bool HydrateAllFromTables();
-
     bool ReadGalaxyDataTable();
-    bool BuildStarSystemArrayFromGalaxy();
     bool ReadStarsTable();
     bool ReadPlanetsTable();
     bool ReadMoonsTable();
     bool ReadRegionsTable();
     bool ReadTerrainRegionsTable();
+    bool BuildStarSystemArrayFromGalaxy();
 
     void BuildEnvironmentCaches();
 

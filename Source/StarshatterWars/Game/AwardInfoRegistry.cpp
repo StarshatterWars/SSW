@@ -1,7 +1,7 @@
 /*=============================================================================
     Project:        Starshatter Wars (nGenEx Unreal Port)
     Studio:         Fractal Dev Games
-    Copyright:      (C) 2024–2026. All Rights Reserved.
+    Copyright:      (C) 2024â€“2026. All Rights Reserved.
 
     SUBSYSTEM:      AwardInfoRegistry
     FILE:           AwardInfoRegistry.cpp
@@ -92,10 +92,6 @@ void UAwardInfoRegistry::BuildCaches()
         UE_LOG(LogTemp, Log, TEXT("[AwardInfoRegistry] Cached %d ranks from '%s'."),
             RankById.Num(), *RT->GetName());
     }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[AwardInfoRegistry] RankTable is null."));
-    }
 
     if (UDataTable* MT = MedalTable.Get())
     {
@@ -109,10 +105,6 @@ void UAwardInfoRegistry::BuildCaches()
 
         UE_LOG(LogTemp, Log, TEXT("[AwardInfoRegistry] Cached %d medals from '%s'."),
             MedalById.Num(), *MT->GetName());
-    }
-    else
-    {
-        UE_LOG(LogTemp, Warning, TEXT("[AwardInfoRegistry] MedalTable is null."));
     }
 }
 
@@ -178,7 +170,7 @@ const TCHAR* UAwardInfoRegistry::MedalName(int32 MedalId)
 
 const TCHAR* UAwardInfoRegistry::MedalAbrv(int32 /*MedalId*/)
 {
-    // If medals truly don’t have abbreviations, delete this API.
+    // If medals truly donâ€™t have abbreviations, delete this API.
     return TEXT("");
 }
 

@@ -1,6 +1,8 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "AgentAI.h"
+#include "TrainingReplay.h"
+#include "FreeFlightAssignment.h"
 #include "StandaloneMissionCatalog.h"
 #include "TrainingTestRules.h"
 #include "AgentCatalogSubsystem.h"
@@ -158,9 +160,14 @@ bool FAgentCatalogTest::RunTest(const FString&)
     {
         Systems.Add(Pair.Value.System);
         Levels.Add(Pair.Value.Level);
+        if(!Pair.Value.CampaignIds.IsEmpty() || Pair.Key.ToString().Contains(TEXT("Campaign")) || Pair.Key.ToString().Contains(TEXT("Story")))
+            TestEqual(TEXT("Campaign and faction-story officers are level 1"),Pair.Value.Level,1);
     }
     TestTrue(TEXT("Agents are distributed across at least twenty systems"), Systems.Num() >= 20);
     TestEqual(TEXT("All five levels are represented"), Levels.Num(), 5);
+    const auto* AdvancedStory=Catalog->FindAgent(TEXT("MarakanCampaign4Officer219"));
+    if(TestNotNull(TEXT("Campaign 4 officer remains available"),AdvancedStory))
+        TestEqual(TEXT("Agent level does not remove the existing mission rank gate"),AdvancedStory->MinimumRank,2);
 
     PlayerCharacter Pilot;
     auto* PreviousPilot = PlayerCharacter::GetCurrentPlayer();
@@ -201,6 +208,13 @@ bool FAgentCatalogTest::RunTest(const FString&)
             }
             for (const int32 Id : Agent.MissionIds)
             {
+                if (Id == FreeFlightAssignment::Id)
+                {
+                    TestTrue(TEXT("Flight clearance belongs to a security dispatcher with the Ensign gate"),
+                        Agent.Class == EAgentClass::Security && Agent.MinimumRank >= 2);
+                    TestFalse(TEXT("Free Flight is not permitted during training"), FreeFlightAssignment::Unlocked(Agent.MinimumRank, true));
+                    continue;
+                }
                 bool bHasMission = false;
                 for(const auto& Scenario:NativeScenarios)
                     bHasMission |= Scenario.Id == Id && Scenario.StoryCampaignId <= 0 && Scenario.MissionSystem.Equals(Agent.System,ESearchCase::IgnoreCase);
@@ -239,4 +253,28 @@ bool FAgentLocalSortieTest::RunTest(const FString&)
     return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FTrainingCareerReplayTest,"Starshatter.Agents.CareerTrainingReplay",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FTrainingCareerReplayTest::RunTest(const FString&)
+{
+    AgentAI Agent;const FName Pilot(TEXT("Replay career")),Issuer(TEXT("JanekFlightTraining"));
+    const int32 Lessons[]={104};
+    TestNotNull(TEXT("Next lesson offered"),Agent.Request(Pilot,Lessons,Issuer,false,[](int32 Id){return Id<=103;}));
+    TestTrue(TEXT("Next lesson accepted"),Agent.Accept(Pilot,104,[](int32 Id){return Id<=103;}));
+    TestTrue(TEXT("Current lesson started"),Agent.Start(Pilot,104));
+    auto History=[](int32 Id){return Id==103;};
+    TestFalse(TEXT("Active lesson cannot be suspended without docking authorization"),Agent.QueueTestReplay(Pilot,103,Issuer,History));
+    TestTrue(TEXT("Completed T3 in pilot history can replay while docked"),Agent.QueueTestReplay(Pilot,103,Issuer,History,true));
+    auto Queue=Agent.GetQueue(Pilot);
+    TestEqual(TEXT("Unfinished T4 is preserved"),Queue.Num(),2);
+    TestTrue(TEXT("Replay is recognised for reward suppression"),TrainingReplay::Matches(Queue,103));
+    TestFalse(TEXT("A different mission cannot inherit replay suppression"),TrainingReplay::Matches(Queue,104));
+    TestTrue(TEXT("T3 replay starts"),Agent.Start(Pilot,103));
+    TestTrue(TEXT("T3 replay resolves"),Agent.Resolve(Pilot,103,true));
+    TestFalse(TEXT("Replay does not add progression to the journal"),Agent.IsCompleted(Pilot,103));
+    Queue=Agent.GetQueue(Pilot);
+    TestEqual(TEXT("T4 returns to the front"),Queue[0].MissionId,104);
+    TestTrue(TEXT("T4 can be started again"),Agent.Start(Pilot,104));
+    TestFalse(TEXT("Uncompleted T2 cannot be replayed"),Agent.QueueTestReplay(Pilot,102,Issuer,History,true));
+    return true;
+}
 #endif

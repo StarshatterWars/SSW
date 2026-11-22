@@ -15,6 +15,7 @@ class UVerticalBox;
 class UBorder;
 class UHorizontalBox;
 struct FShipDesign;
+struct FShipSkin;
 struct FWeaponDesign;
 
 // Asset-only snapshot: no legacy Ship/Mission pointers and no gameplay actors.
@@ -42,7 +43,7 @@ class STARSHATTERWARS_API UShipBriefingPreview : public UUserWidget
 {
     GENERATED_BODY()
 public:
-    bool SetShipDesign(const FShipDesign* Design, const TArray<const FWeaponDesign*>& Stores = {});
+    bool SetShipDesign(const FShipDesign* Design, const TArray<const FWeaponDesign*>& Stores = {}, const FShipSkin* Skin = nullptr);
     bool SetMissionScene(Mission* MissionDef);
     void SetPreviewActive(bool bActive);
     void SetReferencePreview() { bReferencePreview = true; }

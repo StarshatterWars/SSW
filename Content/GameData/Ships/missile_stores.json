@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "CarrierRoundsPerType": 500,
+  "StationRoundsPerType": 200,
+  "DesignOverrides": {
+    "Orion": 1000
+  },
+  "UnitTonnes": 0.01,
+  "CarrierCapacityTonnes": 500,
+  "StationCapacityTonnes": 200
+}

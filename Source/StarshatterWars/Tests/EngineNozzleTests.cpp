@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "EnginePlumeTuning.h"
 #include "NativeShipGeometry.h"
@@ -20,6 +21,7 @@ bool FEngineNozzleGeometryTest::RunTest(const FString&)
     const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false)
         .CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     if(!TestNotNull(TEXT("Nozzle world"),World))return false;
     ON_SCOPE_EXIT {World->DestroyWorld(false);};
     auto* Actor=World->SpawnActor<AShipActor>();
@@ -55,6 +57,7 @@ bool FEngineNozzleFactionTest::RunTest(const FString&)
     const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false)
         .CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext2(World);
     if(!TestNotNull(TEXT("Faction engine world"),World))return false;
     ON_SCOPE_EXIT {World->DestroyWorld(false);};
     for(EShipEmpire Empire:{EShipEmpire::Terellian,EShipEmpire::Dantari,EShipEmpire::Marakan})

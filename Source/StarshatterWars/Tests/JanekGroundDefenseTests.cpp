@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "DataLoader.h"
 #include "Engine/GameInstance.h"
@@ -14,6 +15,7 @@
 #include "SimShot.h"
 #include "StarshatterWeaponDesignSubsystem.h"
 #include "StarSystem.h"
+#include "GalaxyJsonCatalog.h"
 #include "Weapon.h"
 #include "WeaponGroup.h"
 #include "WeaponBlueprintResolver.h"
@@ -56,15 +58,19 @@ bool FJanekGroundDefenseTest::RunTest(const FString&)
         else { Loader->SetDataPath(PreviousPath.data()); Loader->UseFileSystem(bPreviousFileSystem); }
     };
     StarSystem Janus("Janus System", FVector::ZeroVector);
-    const FString Galaxy = FPaths::ConvertRelativePathToFull(Data / TEXT("Galaxy")) + TEXT("/");
-    Janus.SetDataPath(TCHAR_TO_ANSI(*Galaxy));
-    Janus.Load();
+    TArray<FS_Galaxy> Systems; TArray<FRegion> Regions; FString Error;
+    if (!TestTrue(TEXT("Galaxy JSON loads"), GalaxyJsonCatalog::Load(Data / TEXT("Galaxy/galaxy.json"), Systems, Regions, Error))) return false;
+    const auto* System = Systems.FindByPredicate([](const FS_Galaxy& Row) { return Row.Name.StartsWith(TEXT("Janus")); });
+    if (!TestNotNull(TEXT("Janus JSON system"), System)) return false;
+    Janus.HydrateFromEnvironment(*System);
+    Janus.LoadTerrainRegion(Data / TEXT("Galaxy/terrain_regions.json"), "Janek Station", nullptr);
     OrbitalRegion* Janek = Janus.FindRegion("Janek Station");
     if (!TestNotNull(TEXT("Janek Station region from the Janus definition"), Janek)) return false;
 
     const auto Options = UWorld::InitializationValues().AllowAudioPlayback(false)
         .CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World = UWorld::CreateWorld(EWorldType::EditorPreview, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     if (!TestNotNull(TEXT("Ground defense fixture world"), World)) return false;
     ON_SCOPE_EXIT { World->DestroyWorld(false); };
 

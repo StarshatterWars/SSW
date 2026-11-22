@@ -10,6 +10,7 @@
 #include "MissionElement.h"
 #include "Instruction.h"
 #include "ShipDesignRegistry.h"
+#include "ShipVisualCatalog.h"
 #include "WeaponDesignRegistry.h"
 #include "FormattingUtils.h"
 #include "Misc/ScopeExit.h"
@@ -77,8 +78,9 @@ bool FCampaignOneMissionAudit::RunTest(const FString& Parameters)
         }
         if(!Element.Design.IsEmpty())
         {
-            const FString Path=FString::Printf(TEXT("/Game/Models/%s/BP_%s"),*Element.Design,*Element.Design);
-            if(!FPackageName::DoesPackageExist(Path))MissingModels.AddUnique(Element.Design);
+            const auto* Visual=ShipDesignRegistry::Find(FName(*Element.Design));
+            const FString Path=ShipVisualCatalog::CanonicalClassPath(Element.Design,Visual?Visual->Model:FString());
+            if(!FPackageName::DoesPackageExist(FPackageName::ObjectPathToPackageName(Path)))MissingModels.AddUnique(Element.Design);
         }
     }
     if(Id==107)TestEqual(TEXT("Carrier Operations retains legacy elapsed-hours start"),UFormattingUtils::ParseStarshatterTime(Row->StartTime),466200);
@@ -120,7 +122,7 @@ bool FCampaignOneMissionAudit::RunTest(const FString& Parameters)
     }
     TestTrue(TEXT("Training mission has a player-controlled element"),PlayerElements>0);
     TestEqual(TEXT("Authored training events retained"),Converted.GetEvents().size(),Row->Event.Num());
-    if(!MissingModels.IsEmpty())AddWarning(FString::Printf(TEXT("Mission %d unresolved model Blueprint mappings (live visual review required): %s"),Id,*FString::Join(MissingModels,TEXT(", "))));
+    if(!MissingModels.IsEmpty())AddError(FString::Printf(TEXT("Mission %d unresolved model Blueprint mappings (live visual review required): %s"),Id,*FString::Join(MissingModels,TEXT(", "))));
     FString ReportDir;
     if(FParse::Value(FCommandLine::Get(),TEXT("Campaign1ReportDir="),ReportDir))
     {

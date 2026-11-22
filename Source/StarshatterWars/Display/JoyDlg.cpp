@@ -486,7 +486,7 @@ void UJoyDlg::SetAxisLabel(int32 AxisIndex, const TCHAR* InText)
 
         while (Stack.Num() > 0)
         {
-            UWidget* W = Stack.Pop(false);
+            UWidget* W = Stack.Pop(EAllowShrinking::No);
             if (!W) continue;
 
             if (UTextBlock* Found = Cast<UTextBlock>(W))

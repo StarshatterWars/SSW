@@ -77,7 +77,7 @@ public:
     bool CanAcceptSelectedMission() const;
 
 private:
-    void ExecFrame();
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
 
     void BuildModernMissionsLayout();
     void RefreshModernMissionRows();

@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
@@ -31,6 +32,7 @@ bool FShieldPresentationTest::RunTest(const FString&)
     const auto Options = UWorld::InitializationValues().AllowAudioPlayback(false)
         .CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World = UWorld::CreateWorld(EWorldType::EditorPreview, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     if (!TestNotNull(TEXT("Shield fixture world"), World)) return false;
     ON_SCOPE_EXIT { World->DestroyWorld(false); };
     auto* Class = LoadClass<AOrionShipActor>(nullptr, TEXT("/Game/Models/Orion/BP_Orion.BP_Orion_C"));

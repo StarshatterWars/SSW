@@ -42,7 +42,7 @@ public:
 
     // Legacy parity:
     void RegisterControls();
-    void ExecFrame();
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
 
 protected:
     // ----------------------------------------------------------------

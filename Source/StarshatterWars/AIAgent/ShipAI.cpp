@@ -59,29 +59,30 @@ DEFINE_LOG_CATEGORY_STATIC(LogTempAI, Log, All);
 // +--------------------------------------------------------------------+
 
 ShipAI::ShipAI(SimObject* s)
-	: SteerAI(s),
-	support(0),
-	rumor(0),
-	threat(0),
-	threat_missile(0),
-	drop_time(0),
-	too_close(0),
-	navpt(0),
-	patrol(0),
-	engaged_ship_id(0),
-	bracket(false),
-	identify(false),
-	hold(false),
-	takeoff(false),
-	throttle(0),
-	old_throttle(0),
-	element_index(1),
-	splash_count(0),
-	tactical(0),
-	farcaster(0),
-	ai_level(2),
-	last_avoid_time(0),
-	last_call_time(0)
+	: 
+    SteerAI(s),
+    support(0),
+    rumor(0),
+    threat(0),
+    threat_missile(0),
+    navpt(0),
+    tactical(0),
+    farcaster(0),
+    engaged_ship_id(0),
+    splash_count(0),
+    throttle(0),
+    old_throttle(0),
+    drop_time(0),
+    last_avoid_time(0),
+    last_call_time(0),
+    element_index(1),
+    too_close(0),
+    bracket(false),
+    identify(false),
+    hold(false),
+    takeoff(false),
+    patrol(0),
+    ai_level(2)
 {
 	ship = (Ship*)self;
 

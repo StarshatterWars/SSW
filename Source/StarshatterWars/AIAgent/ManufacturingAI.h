@@ -18,6 +18,7 @@ public:
         double MaterialMultiplier = 1.0;
     };
 
+    static TArray<FName> MineralKeys(const FSSWProductionRecipe&);
     static bool BuildBatch(const FEconomyState&, FName Input, const FSSWProductionRecipe&, TArray<FCommodityAmount>& Materials, TArray<FCommodityAmount>& Products);
     static bool AdvanceLive(FEconomyState&, FName Facility, FName Input, FName Output, FName RecipeId,
         const FSSWProductionRecipe&, bool bOperational, double Seconds);

@@ -52,6 +52,20 @@ struct FHangarSystemCondition
     UPROPERTY(SaveGame) int32 Status = 0;
 };
 
+UENUM(BlueprintType)
+enum class EShipStoreCategory : uint8 { Hulls, Skins, Components, Missiles, Drones };
+
+USTRUCT(BlueprintType)
+struct FStoredShipEquipment
+{
+    GENERATED_BODY()
+    UPROPERTY(BlueprintReadOnly, SaveGame) FName CatalogId;
+    UPROPERTY(BlueprintReadOnly, SaveGame) EShipStoreCategory Category = EShipStoreCategory::Components;
+    UPROPERTY(BlueprintReadOnly, SaveGame) FString Location;
+    UPROPERTY(BlueprintReadOnly, SaveGame) int32 Quantity = 0;
+    UPROPERTY(BlueprintReadOnly, SaveGame) FHangarComponent ComponentState;
+};
+
 USTRUCT(BlueprintType)
 struct FPlayerHangarShip
 {
@@ -73,6 +87,10 @@ struct FPlayerHangarShip
     UPROPERTY(BlueprintReadOnly, SaveGame) TArray<FHangarComponent> Components;
     UPROPERTY(BlueprintReadOnly, SaveGame) TArray<int32> LoadoutStations;
     UPROPERTY(BlueprintReadOnly, SaveGame) FString LoadoutName;
+    UPROPERTY(BlueprintReadOnly, SaveGame) FName SelectedSkin;
+    UPROPERTY(SaveGame) TMap<int32,int32> SavedWeaponAmmo;
+    UPROPERTY(SaveGame) TMap<int32,FName> SavedWeaponTypes;
+    UPROPERTY(SaveGame) FName OrdnanceIssueKey;
 };
 
 USTRUCT(BlueprintType)

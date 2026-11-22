@@ -107,6 +107,7 @@ void AFighterActor::OnConstruction(const FTransform& Transform)
     Super::OnConstruction(Transform);
     ConfigureCockpitBlueprint();
     SynchronizeLandingGearMarkers();
+    UpdateCockpitPresentation();
 }
 
 void AFighterActor::ConfigureCockpitBlueprint()
@@ -212,18 +213,43 @@ void AFighterActor::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
     UpdateLandingGearPresentation();
-    Ship* Runtime = GetRuntimeShip();
-    if (Runtime || SnapshotVisualDesign)
+    if (GetRuntimeShip()) ConfigureCockpitBlueprint();
+    UpdateCockpitPresentation();
+}
+
+void AFighterActor::UpdateCockpitPresentation()
+{
+    const Ship* Runtime = GetRuntimeShip();
+    const bool Visible = Runtime && !bNetworkChaseView && !Runtime->HasNetworkPilot() && Sim::GetSim() &&
+        Runtime == Sim::GetSim()->GetPlayerShip() && bCockpitViewActive;
+    for (USceneComponent* Mount : {FighterCockpitRoot.Get(), FighterLandingGearRoot.Get(), FighterLaunchRoot.Get()})
     {
-        if (Runtime) ConfigureCockpitBlueprint();
-        const bool Visible = Runtime && !bNetworkChaseView && !Runtime->HasNetworkPilot() && Sim::GetSim() &&
-            Runtime == Sim::GetSim()->GetPlayerShip() && bCockpitViewActive;
-        CockpitComponent->SetVisibility(Visible,true);
-        Cockpit->SetVisibility(Visible && !CockpitComponent->GetChildActorClass(), true);
-        if(auto* Child=CockpitComponent->GetChildActor())
+        if (Mount->GetAttachParent() != PointRoot)
+            Mount->AttachToComponent(PointRoot, FAttachmentTransformRules::KeepRelativeTransform);
+        Mount->SetAbsolute(false,false,false);
+    }
+    CockpitComponent->SetVisibility(Visible,true);
+    CockpitComponent->SetHiddenInGame(!Visible,true);
+    Cockpit->SetVisibility(Visible && !CockpitComponent->GetChildActorClass(),true);
+    Cockpit->SetHiddenInGame(!Visible,true);
+    // Imported Blueprints can contain additional cockpit child actors. Only the
+    // player's designated interior may render; target/AI interiors stay hidden.
+    TArray<UChildActorComponent*> Assemblies;
+    GetComponents(Assemblies);
+    for (auto* Assembly : Assemblies)
+    {
+        const bool Interior = Assembly == CockpitComponent || Assembly->GetName().Contains(TEXT("Cockpit")) ||
+            (Assembly->GetChildActorClass() && Assembly->GetChildActorClass()->GetPathName().Contains(TEXT("/Cockpit")));
+        if (!Interior) continue;
+        const bool Show = Visible && Assembly == CockpitComponent;
+        Assembly->SetVisibility(Show,true);
+        Assembly->SetHiddenInGame(!Show,true);
+        if (AActor* Child = Assembly->GetChildActor())
         {
-            Child->SetActorHiddenInGame(!Visible);
-            Child->SetActorEnableCollision(false);
+            if (auto* Root = Child->GetRootComponent()) Root->SetAbsolute(false,false,false);
+            TArray<AActor*> Parts;Child->GetAttachedActors(Parts,false,true);Parts.Add(Child);
+            for (AActor* Part : Parts) if (IsValid(Part))
+            { Part->SetActorHiddenInGame(!Show); Part->SetActorEnableCollision(false); }
         }
     }
 }

@@ -78,7 +78,7 @@ void UStarshatterUIStyleSubsystem::ApplyButtonStyleInternal(
     // 2) Apply brushes + default sounds via SlateSound
     //    (NO UButton delegates, no lambdas, no Clear())
     // --------------------------------------------------------------------
-    FButtonStyle Style = Button->WidgetStyle;
+    FButtonStyle Style = Button->GetStyle();
     Style.SetNormal(Normal);
     Style.SetHovered(Hovered);
     Style.SetPressed(Pressed);

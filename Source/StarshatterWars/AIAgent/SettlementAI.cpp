@@ -1,4 +1,5 @@
 #include "SettlementAI.h"
+#include "CommerceCharges.h"
 
 using namespace ContractTransactions;
 
@@ -58,17 +59,20 @@ bool SettlementAI::CloseExpired(FContractTransaction& Contract, FContractAccount
     return true;
 }
 
-bool SettlementAI::ClaimAuction(FContractTransaction& Contract, FContractAccounts& Accounts, FName Actor)
+bool SettlementAI::ClaimAuction(FContractTransaction& Contract, FContractAccounts& Accounts, FName Actor, bool bApplyGst)
 {
     if (Contract.Terms.Type != ESSWContractType::Auction || Contract.State != EContractState::AwaitingClaims)
         return false;
     FContractAccount* Account = Accounts.Find(Actor);
     if (!Account)
         return false;
-    if (Actor == Contract.Issuer && !Contract.bSellerClaimed && CanReceiveCredits(*Account, Contract.HighBid))
+    const auto Sale=CommerceCharges::Quote(Contract.HighBid,bApplyGst?ECommercePurpose::MarketSale:ECommercePurpose::None);
+    if (Actor == Contract.Issuer && !Contract.bSellerClaimed && CanReceiveCredits(*Account, Sale.Base))
     {
-        Account->Credits += Contract.HighBid;
-        RecordWallet(*Account,Contract.HighBid,TEXT("Contract auction proceeds"),Contract.Id);
+        if(Sale.Tax && (Actor==CommerceCharges::TaxAccount() || !CanReceiveCredits(Accounts.FindRef(CommerceCharges::TaxAccount()),Sale.Tax)))return false;
+        Account->Credits += Sale.Base;
+        RecordWallet(*Account,Sale.Base,TEXT("Contract auction proceeds (GST included)"),Contract.Id);
+        if(Sale.Tax){auto& Revenue=Accounts.FindOrAdd(CommerceCharges::TaxAccount());Revenue.Credits+=Sale.Tax;RecordWallet(Revenue,Sale.Tax,TEXT("Auction included GST"),Contract.Id);}
         Contract.bSellerClaimed = true;
     }
     else if (Actor == Contract.HighBidder && !Contract.bBuyerClaimed &&

@@ -53,3 +53,4 @@ D:\SSW\Launcher.Tests\bin\Release\net9.0-windows\Microsoft.Web.WebView2.Wpf.xml
 D:\SSW\Launcher.Tests\obj\Release\net9.0-windows\LauncherRecoveryTests.csproj.AssemblyReference.cache
 D:\SSW\Launcher.Tests\obj\Release\net9.0-windows\Launcher.8D01D1A0.Up2Date
 D:\SSW\Launcher.Tests\bin\Release\net9.0-windows\release-info.json
+D:\SSW\Launcher.Tests\bin\Release\net9.0-windows\roadmap.json

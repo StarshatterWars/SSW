@@ -48,7 +48,7 @@ public:
     void Show();
 
     /** Legacy ExecFrame equivalent */
-    virtual void ExecFrame(float DeltaTime);
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
 
     /** Legacy manager hook (CmpnScreen*) */
     void SetManager(UCmpnScreen* InManager) { Manager = InManager; }

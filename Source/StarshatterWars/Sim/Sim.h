@@ -64,6 +64,7 @@ class CameraManager;
 
 class Ship;
 class ShipDesign;
+struct FS_PlayerGameInfo;
 
 class Drone;
 class Explosion;
@@ -114,6 +115,7 @@ public:
     void LoadMission(Mission* msn, bool preload_textures = false);
     void ExecMission();
     // Player-controlled carrier launch; no launch queue advances until requested.
+    bool BoardOwnedTrainingFighter(FS_PlayerGameInfo& Profile, FGuid Hull, TFunctionRef<bool()> Persist, FText& Reason);
     bool CanRequestPlayerCarrierLaunch();
     bool RequestPlayerCarrierLaunch();
     bool IsTrainingLaunchLeaderPending();
@@ -343,6 +345,9 @@ protected:
     {
         double Time = 0.0;
         double NextPulse = 0.0;
+        double TransferAt=0;
+        bool bWaitingForInventory=false;
+        uint64 InventoryRevision=0;
         bool bDelivering = false;
         double LoadedTonnes = 0;
         ContractAI Contract;
@@ -361,6 +366,10 @@ protected:
     TUniquePtr<class EconomyAI> EconomyController;
     double IndustrySeconds = 0;
     double MarketSeconds = 0;
+    bool bMarketDirty=true;
+    uint64 EconomyRevision=0;
+    int64 NextMarketExpiryUtc=0;
+    FDelegateHandle MarketChangeHandle;
     FEconomyState LocalEconomy;
     FSSWProductionStock JanekRefinery;
     Ship* DeferredLaunchPlayer = nullptr;

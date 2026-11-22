@@ -49,7 +49,7 @@ Keep the current 1/100 presentation scale and legacy simulation coordinates for 
 
 ## Alpha 4 — gameplay, economy, optimization and legacy completeness
 
-**Active. Renumbered by the project owner on 2026-11-20.** This is the current additions and verification phase, including the documented EVE comparison work. Earlier Phase 5 build logs retain their historical names; they are evidence for this current phase, not proof of server completion.
+**Closed after owner verification on 2026-11-20. Renumbered by the project owner on 2026-11-20.** This is the current additions and verification phase, including the documented EVE comparison work. Earlier Phase 5 build logs retain their historical names; they are evidence for this current phase, not proof of server completion.
 
 Scope includes native mining, production, transport, market and shipyard behavior; inventory and wallet consistency; contracts, skills and player progression; agents and campaign handoffs; faction missions and training; JSON migrations; launcher installation and recovery; UI, propulsion, carrier travel and planet regressions. Use recovered client evidence and public data to identify gaps, while retaining SSW rules unless a change has been authorized. Distinguish client behavior from inferred server behavior.
 
@@ -73,7 +73,7 @@ Distribute patches from a signed release manifest over HTTPS. Download only chan
 
 ## Alpha 5 — local dedicated FractalVerse server
 
-**Planned after Phase 4 verification; renumbered 2026-11-20. Not yet completed as a server integration phase.** StarServer remains the multiplayer match server. FractalVerse is a separate persistent universe server, initially local, with a future dedicated host using the same authority rules.
+**Authorized to begin after the current pre-Phase 5 UI and direct JSON ingestion changes pass compilation and automated tests. Renumbered 2026-11-20. Not yet completed as a server integration phase.** StarServer remains the multiplayer match server. FractalVerse is a separate persistent universe server, initially local, with a future dedicated host using the same authority rules.
 
 - Native system records exist independently of UE levels: systems, stars, planets, moons, fixed stations, deposits, NPC craft and routes. Nearby presentation uses those records; unloading presentation must not reset state or destroy cargo.
 - Mining, manufacturing, transport, NPC market budgets, supply/demand, price history and shipyard output continue in unloaded systems. T1 is a temporary test fixture and must not be required by the universe.
@@ -102,6 +102,16 @@ Remaining arena multiplayer verification includes a supported match with matchin
 Start the asset and presentation conversion with Falcon and Orion. Preserve legacy simulation distances and timing. Verify camera framing, launch and recovery, terrain contact, attachment points, and collision alignment before extending full scale to the fleet and mission environments.
 
 
+## Alpha 8 — Free Verse ownership and corporations
+
+**Planned; added at the owner’s request on 2026-11-20.** Player-owned stations and production facilities need acquisition, persistent ownership, upkeep, inventories, docking and service permissions, and logistics endpoints. Player corporations need membership, roles, shared wallets, hangars and station assets, transaction history and access controls. Corporations are separate from career guilds. All mutations must be server-authoritative. Expand docked production and market management here.
+
+Acceptance includes permission rejection, ownership and inventory persistence, shared-account audit trails, production and freight at owned facilities, and restart recovery without duplicated stock or credits.
+
+## Alpha 9 — walkable hangars and station spaces
+
+**Planned after Alpha 7 full-scale resizing.** Begin with one hangar and fighter. Add walking, boarding/disembarking and station service access; verify human/ship scale, collision, cameras, spawn and exit safety before extending to carriers and stations. Walking must not bypass docking, ownership or service permissions.
+
 ## Faction content and cinematic scheduling
 
 Faction training and the documented Marakan and Dantari mission additions are included in the active Phase 4 closeout, subject to progression and regression checks. Zolons remain non-playable. Do not declare faction content complete based only on file presence.
@@ -110,7 +120,7 @@ MP4 production and cinematic polish are a separate deferred workstream, with no 
 
 ## Phase 4 release status — 2026-11-20
 
-The owner completed cooking and packaging. Build 20261120-053210Z is archived as Build/Windows.zip with the existing StarServer, custom icon and anti-cheat bootstrapper. All 145 archived files were verified against the signed manifest, and the verified release was published to the launcher feed. Phase 4 remains open until the owner confirms a successful update through the launcher.
+The owner completed cooking and packaging. Build 20261120-053210Z is archived as Build/Windows.zip with the existing StarServer, custom icon and anti-cheat bootstrapper. All 145 archived files were verified against the signed manifest, and the verified release was published to the launcher feed. The owner confirmed the update and verified Phase 4 on 2026-11-20; Phase 4 is closed.
 
 Pre-Phase 5 work is direct JSON ingestion into native records with parity and regression testing. Retain the agreed campaign portions and galaxy/environment conversion for later. This migration is separate from Phase 5 local dedicated FractalVerse authority.
 
@@ -131,7 +141,7 @@ The cook gate passed: editor and Windows Development game compilation succeeded,
 
 Ships, weapons and systems remain JSON-sourced but use runtime DataTable bridges. Campaign collections, galaxy/environment/regions and separate force-summary OOB tables remain. Direct faction combat-group JSON loading does not remove that separate summary table. See Saved/RuntimeIngestionAudit-20261120.json.
 
-The launcher and game share Alpha 4 release metadata, warning text and game build labels. Phase 4 closure is pending the final owner cook/package and packaged release verification.
+The launcher and game share Alpha 4 release metadata, warning text and game build labels. Phase 4 was subsequently verified and closed by the owner on 2026-11-20. Alpha 5 now uses shared release metadata.
 
 The simulation remains the source of gameplay state. Unreal weapon/engine effects are visualization and do not own hits, damage, inventories, thrust or timing.
 
@@ -148,3 +158,28 @@ The simulation remains the source of gameplay state. Unreal weapon/engine effect
 - Initial static inventory is in ShipCoverage.md/json. File presence is not runtime validity, and the ingested design table may override source definitions.
 - Existing model, turret and cutscene tests must be rerun on the current build. Passing parser/structure checks will not be described as complete cinematic or flight playback.
 - Imported content and user-authored assets must be preserved. Missing source art is recorded as a dependency, not replaced with an unrelated ship.
+
+## Alpha 5 preparation checkpoint — 2026-11-20
+
+Phase 4 is verified and closed. Weapons and system/component designs now load JSON directly into native records in the normal boot path. Editor authoring and parity helpers retain their table interfaces. Ships still use their existing bridge; campaign and galaxy remain unchanged. The native comparison preserves all reflected fields, five component grades, names containing spaces and Recon Pod’s authored damage sentinel. Failed catalog reads preserve prior records.
+
+The in-flight Player Logbook has separate Logbook and Chat Macros tabs. Tactical Reference groups stations/platforms and transports/shuttles with filters and omits their redundant type prefixes. Editor compilation and 315 offline tests passed (192 success, 123 with warnings, zero failed or skipped). Windows client compilation is tracked separately in Saved/Logs/PrePhase5NativeCatalogClientBuild.log; owner cooking and packaging remain required.
+
+Launcher 1.0.17 adds an offline Roadmap tab from Launcher/roadmap.json, with 24 passing launcher checks and a rendered layout review. Alpha 8 covers player-owned stations and corporations; Alpha 9 covers walkable hangars after Alpha 7 resizing. These are planned features, not completed functionality. The current launcher/game stage label is Alpha 5; the available signed installation remains the last verified Alpha 4 package until the next owner package is published.
+
+
+### Future docked presentation
+
+Replace empty carrier and orbital-station bay entry views with a shared ready-room. Preserve the live docked session, agent assignments, station services and owned-craft locations. Ground bases can use the same room with site-specific scenery. Deferred until after the current JSON and effects regression build.
+
+
+### AI-operated crew shuttle boarding
+
+Use the quantum-equipped Zodiac Crew Shuttle as NPC transport between carrier/station docks and planetary bases. The pilot boards through a docked Board action, AI handles departure, quantum travel and surface approach, and the pilot disembarks at the required mission destination. Scheduled transfers are AI-operated. A purchased crew shuttle may also be player-flown for transport missions, subject to ownership, rank and mission gates. Retain the tested T3 surface-transfer fallback until the boarding, route, arrival and persistence flow is implemented and verified. Return transport after T4 follows the same service.
+
+
+### Cosmetic hull appearances
+
+EVE reference: https://support.eveonline.com/hc/en-us/articles/203280701-Ship-SKINs and https://developers.eveonline.com/docs/guides/skinr/ . EVE uses character-owned compatible-hull skin licenses and material/pattern definitions. SSW already supports native per-hull material-slot replacement through authored UE material instances and JSON ship skins.
+
+Next pass: a JSON-only skin catalog (stable ID, readable name, compatible hulls, material-instance slot mappings and preview); pilot-owned unlock IDs; selected skin ID per owned hull; a Hangar Appearance selector with preview/apply/reset; persistence and later server validation of ownership/hull compatibility. NPC and authored mission skins continue using their existing skin names. Cosmetics never alter ship stats, fitted hardware or simulation damage. Preserve original materials for reset and do not modify shared master assets at runtime. Marketplace licensing can follow after the selection and save flow is verified.

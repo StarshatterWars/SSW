@@ -20,7 +20,7 @@
 static int RESOURCE_KEY = 1;
 
 Resource::Resource()
-    : id(reinterpret_cast<HANDLE>(RESOURCE_KEY++))
+    : id(reinterpret_cast<HANDLE>(static_cast<UPTRINT>(RESOURCE_KEY++)))
 {
 }
 

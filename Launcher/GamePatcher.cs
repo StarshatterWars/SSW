@@ -33,8 +33,8 @@ internal sealed class GamePatcher(HttpClient http)
             !string.IsNullOrEmpty(manifestUrl.Query) || !string.IsNullOrEmpty(manifestUrl.Fragment))
             throw new InvalidDataException("Use HTTPS or a loopback HTTP address, without credentials, query, or fragment.");
 
-        byte[] manifestBytes = await http.GetByteArrayAsync(manifestUrl, token);
-        byte[] signature = await http.GetByteArrayAsync(new Uri(manifestUrl.AbsoluteUri + ".sig"), token);
+        byte[] manifestBytes = await ReadReleaseMetadataAsync(manifestUrl, token);
+        byte[] signature = await ReadReleaseMetadataAsync(new Uri(manifestUrl.AbsoluteUri + ".sig"), token);
         using var key = RSA.Create();
         key.ImportFromPem(publicKey);
         if (key.KeySize < 2048 || !key.VerifyData(manifestBytes, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1))
@@ -44,6 +44,19 @@ internal sealed class GamePatcher(HttpClient http)
             throw new InvalidDataException("The manifest is empty.");
         Validate(manifest);
         return manifest;
+    }
+
+    private async Task<byte[]> ReadReleaseMetadataAsync(Uri url, CancellationToken token)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.CacheControl = new System.Net.Http.Headers.CacheControlHeaderValue
+        {
+            NoCache = true,
+            NoStore = true
+        };
+        using var response = await http.SendAsync(request, token);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsByteArrayAsync(token);
     }
 
     private async Task<string> ApplyAsync(string install, Uri manifestUrl, Manifest manifest,

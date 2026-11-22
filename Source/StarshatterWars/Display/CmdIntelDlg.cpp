@@ -135,7 +135,7 @@ void UCmdIntelDlg::NativeConstruct()
 
 	if (IntelList)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[CmdIntelDlg] IntelList OK: %s"), *IntelList->GetName());
+		UE_LOG(LogTemp, Log, TEXT("[CmdIntelDlg] IntelList OK: %s"), *IntelList->GetName());
 
 		IntelList->OnItemSelectionChanged().RemoveAll(this);
 		IntelList->OnItemSelectionChanged().AddUObject(this, &UCmdIntelDlg::OnNewsSelectionChanged);
@@ -442,7 +442,7 @@ void UCmdIntelDlg::ShowIntelDlg()
 // | ExecFrame                                                            |
 // +----------------------------------------------------------------------+
 
-void UCmdIntelDlg::ExecFrame()
+void UCmdIntelDlg::ExecFrame(double /*DeltaTime*/)
 {
 	RebuildNewsListIfCampaignChanged();
 
@@ -670,7 +670,7 @@ CombatEvent* UCmdIntelDlg::GetSelectedEvent(int32& OutSelectedIndex) const
 void UCmdIntelDlg::OnNewsSelectionChanged(UObject* Item)
 {
     if (bReportSubpanels && bRefreshingIntelList) return;
-	UE_LOG(LogTemp, Warning, TEXT("[CmdIntelDlg] SelectionChanged fired"));
+	UE_LOG(LogTemp, Log, TEXT("[CmdIntelDlg] SelectionChanged fired"));
 
 	if (!Item)
 	{

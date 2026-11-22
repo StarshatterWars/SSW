@@ -4,6 +4,7 @@
 #include "Engine/DataTable.h"
 #include "JsonObjectConverter.h"
 #include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
 #include "SSWModFiles.h"
@@ -72,7 +73,7 @@ bool AwardsJsonCatalog::Load(const FString& Path, TArray<FRankInfo>& Ranks, TArr
 {
     Error.Reset();
     TArray<uint8> Bytes;
-    if ((!SSWModFiles::Read(Path, Bytes) && !FFileHelper::LoadFileToArray(Bytes, *Path)) || Bytes.IsEmpty() || Bytes.Num() > 4 * 1024 * 1024)
+    if ((!SSWModFiles::Read(Path, Bytes) && (!FPaths::FileExists(Path) || !FFileHelper::LoadFileToArray(Bytes, *Path))) || Bytes.IsEmpty() || Bytes.Num() > 4 * 1024 * 1024)
     { Error = TEXT("Unreadable/oversized awards JSON: ") + Path; return false; }
     FString Text; FFileHelper::BufferToString(Text, Bytes.GetData(), Bytes.Num());
     TSharedPtr<FJsonObject> Object;

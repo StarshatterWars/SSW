@@ -69,7 +69,7 @@ void UGameOptionsDlg::NativeConstruct()
     BuildListsIfNeeded();
     BuildGameRows();
 
-    UE_LOG(LogGameOptionsDlg, Warning, TEXT("[GameOptionsDlg] AutoVBox children after BuildGameRows: %d"),
+    UE_LOG(LogGameOptionsDlg, Log, TEXT("[GameOptionsDlg] AutoVBox children after BuildGameRows: %d"),
         VBox->GetChildrenCount());
 
     if (bClosed)

@@ -28,7 +28,7 @@ public:
     virtual int       ProcessMenuItem();
     virtual void      ClearMenuSelection(Menu* menu);
 
-    virtual bool      IsShown() { return show_menu != 0; }
+    bool IsShown() const override { return show_menu != 0; }
     virtual int       GetAction() { return action; }
     virtual Menu* GetMenu() { return menu; }
     virtual void      SetMenu(Menu* m) { menu = m; }

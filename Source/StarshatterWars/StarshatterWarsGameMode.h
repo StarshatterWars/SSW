@@ -13,6 +13,7 @@ class AStarshatterWarsGameMode : public AGameModeBase
 
 public:
 	AStarshatterWarsGameMode();
+    bool SetPause(APlayerController*, FCanUnpause = FCanUnpause()) override { return false; }
 };
 
 

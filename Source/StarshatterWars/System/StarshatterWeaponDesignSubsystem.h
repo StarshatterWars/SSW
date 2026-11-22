@@ -63,6 +63,8 @@ public:
     void LoadWeaponDesigns();
 
     static bool ImportJsonCatalog(UDataTable& Table, const FString& Path);
+    static bool ReadJsonCatalog(const FString& Path,TMap<FName,FWeaponDesign>& Out,FString& Error);
+    bool ReloadJsonCatalog(const FString& Path,FString& Error);
 
     // Legacy importer for migration and older definitions.
     void LoadWeaponDesign(const char* Filename);

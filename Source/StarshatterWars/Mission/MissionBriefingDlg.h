@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "BaseScreen.h"
 #include "GameStructs.h"
+#include "PanelAttentionState.h"
 #include "MissionBriefingDlg.generated.h"
 
 enum class ESSWStationService : uint8;
@@ -74,7 +75,7 @@ public:
     virtual void ShowMsnDlg();
     virtual void OnCommit();
     virtual void OnCancel();
-    virtual void ExecFrame();
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
 
     void SetCampaign(Campaign* InCampaign) { CampaignPtr = InCampaign; }
     void SetMission(Mission* InMission) { MissionPtr = InMission; }
@@ -90,6 +91,7 @@ public:
     Mission* GetMissionPtr() const { return MissionPtr; }
 
 protected:
+    virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativePreConstruct() override;
     virtual void NativeConstruct() override;
     virtual void NativeDestruct() override;
@@ -187,6 +189,10 @@ protected:
     UPROPERTY(Transient) TObjectPtr<class UGuildsDlg> GuildsWidget;
     void ToggleGuilds();
     void CloseGuilds();
+    TSharedPtr<SWidget> ShipSkinPopup;
+    UPROPERTY(Transient) TObjectPtr<class UShipSkinDlg> ShipSkinWidget;
+    void ToggleShipSkins();
+    void CloseShipSkins();
     TSharedPtr<SWidget> MiningDronesPopup;
     UPROPERTY(Transient) TObjectPtr<class UMiningDronesDlg> MiningDronesWidget;
     void ToggleMiningDrones();
@@ -277,6 +283,12 @@ protected:
     void UpdateTravelPresentation(float DeltaSeconds);
     void StartLiveSessionUpdates();
     void UpdateLiveMission();
+    void UpdatePanelAttention();
+    FPanelAttentionState PanelAttention;
+    bool bPanelAttentionDirty = true;
+    double NextPanelAttentionDispatch=0;
+    FDelegateHandle PanelDataHandle,PanelAgentHandle;
+    void OnPanelDataChanged(const FEconomyState& State);
     friend class FMissionHiddenLiveTickTest;
     friend class FAutolandTargetSelectionTest;
     void ClearTravelPresentation(bool bStopUpdates = true);

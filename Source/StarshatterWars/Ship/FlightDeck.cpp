@@ -16,6 +16,7 @@
 */
 
 #include "FlightDeck.h"
+#include "OrdnanceMagazine.h"
 
 #include "Math/Vector.h"
 #include "Logging/LogMacros.h"
@@ -69,7 +70,7 @@ namespace
 class FlightDeckSlot
 {
 public:
-	FlightDeckSlot() : ship(0), state(0), sequence(0), time(0), filter(0xf), clearance(0.0) {}
+	FlightDeckSlot() : ship(0), state(0), sequence(0), time(0), clearance(0.0), filter(0xf) {}
 	int operator == (const FlightDeckSlot& that) const { return this == &that; }
 
 	Ship* ship;
@@ -208,9 +209,20 @@ InboundSlot::GetObserverName() const
 // +======================================================================+
 
 FlightDeck::FlightDeck()
-	: SimSystem(SYSTEM_CATEGORY::FLIGHT_DECK, FLIGHT_DECK_LAUNCH, "Flight Deck", 1, 1),
-	carrier(0), index(0), num_slots(0), max_ships(0), slots(0), cycle_time(5), num_hoops(0), hoops(0),
-	azimuth(0), light(0), num_catsounds(0), num_approach_pts(0)
+	: 
+    SimSystem(SYSTEM_CATEGORY::FLIGHT_DECK, FLIGHT_DECK_LAUNCH, "Flight Deck", 1, 1),
+    carrier(0),
+    index(0),
+    num_slots(0),
+    max_ships(0),
+    slots(0),
+    azimuth(0),
+    cycle_time(5),
+    num_approach_pts(0),
+    num_catsounds(0),
+    num_hoops(0),
+    hoops(0),
+    light(0)
 {
 	name = "Flight Deck";
 	abrv = "FD";
@@ -223,13 +235,23 @@ FlightDeck::FlightDeck()
 // +----------------------------------------------------------------------+
 
 FlightDeck::FlightDeck(const FlightDeck& s)
-	: SimSystem(s),
-	carrier(0), index(0), start_rel(s.start_rel),
-	end_rel(s.end_rel), cam_rel(s.cam_rel),
-	cycle_time(s.cycle_time),
-	num_slots(s.num_slots), max_ships(s.max_ships), slots(0),
-	num_hoops(0), hoops(0), azimuth(s.azimuth), light(0),
-	num_catsounds(0), num_approach_pts(s.num_approach_pts)
+	: 
+    SimSystem(s),
+    carrier(0),
+    index(0),
+    num_slots(s.num_slots),
+    max_ships(s.max_ships),
+    slots(0),
+    start_rel(s.start_rel),
+    end_rel(s.end_rel),
+    cam_rel(s.cam_rel),
+    azimuth(s.azimuth),
+    cycle_time(s.cycle_time),
+    num_approach_pts(s.num_approach_pts),
+    num_catsounds(0),
+    num_hoops(0),
+    hoops(0),
+    light(0)
 {
 	Mount(s);
 	box = s.box;
@@ -652,6 +674,9 @@ FlightDeck::LaunchShip(Ship* slot_ship)
             UE_LOG(LogFlightDeck, Warning, TEXT("[CarrierLaunch] Rejected unqueued ship '%hs'"), slot_ship->GetName());
             return false;
         }
+
+        const bool MissionPlayer=slot_ship->GetElement() && slot_ship->GetElement()->GetPlayer()==slot_ship->GetElementIndex();
+        if(slot_ship!=sim->GetPlayerShip() && !MissionPlayer)OrdnanceMagazine::ReplenishAI(*carrier,*slot_ship);
 
         // Independent aircraft may not belong to a mission element.
         // Keep the legacy departure waypoint for aircraft with no flight plan.

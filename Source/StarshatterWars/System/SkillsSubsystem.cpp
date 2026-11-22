@@ -1,4 +1,6 @@
 #include "SkillsSubsystem.h"
+#include "SimDataEvents.h"
+
 #include "StationServices.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "TransactionAI.h"
@@ -33,7 +35,7 @@ bool FSkillRules::Purchase(FEconomyState& State, TMap<FName, FSkillProgress>& Le
 {
     if (!CanPurchase(Skill, Learned, Rank, Empire, Reason)) return false;
     const FGuid Id = FGuid::NewGuid();
-    if (!FEconomyLedger::Pay(State, FEconomyLedger::Pilot(), TEXT("Skill book publisher"), Skill.BookPrice, Id, TEXT("Skill book")))
+    if (!FEconomyLedger::Pay(State, FEconomyLedger::Pilot(), TEXT("Skill book publisher"), Skill.BookPrice, Id, TEXT("Skill book"),ECommercePurpose::Purchase))
     { Reason = INVTEXT("Insufficient credits for this skill book."); return false; }
     auto& Receipt = State.Journal.Last(); Receipt.Item = Skill.Name; Receipt.Quantity = 1;
     Receipt.UnitPrice = double(Skill.BookPrice); Receipt.Reference = Id;
@@ -271,7 +273,7 @@ void USkillsSubsystem::Tick(float)
     if(!Players || !Players->HasLoaded() || (Simulation && Simulation->IsNetworked()))return;
     const auto& View=Players->GetPlayerInfo();if(View.SkillQueue.IsEmpty() || View.SkillQueue[0].FinishesUtc>FDateTime::UtcNow().ToUnixTimestamp())return;
     const auto Before=View;auto& P=Players->GetMutablePlayerInfo();
-    if(FSkillTrainingRules::Advance(Definitions,P.Skills,P.SkillQueue,FDateTime::UtcNow().ToUnixTimestamp()) && !Players->SaveActivePlayerProgress())P=Before;
+    if(FSkillTrainingRules::Advance(Definitions,P.Skills,P.SkillQueue,FDateTime::UtcNow().ToUnixTimestamp())) {if(!Players->SaveActivePlayerProgress())P=Before;else FSimDataEvents::Publish(P.Economy);}
 }
 FText USkillsSubsystem::TrainingStatus(FName Id) const
 {
@@ -293,7 +295,7 @@ bool USkillsSubsystem::PurchaseAdvancedBook(FName Id,FText& Reason)
 {
     if(!CanPurchaseAdvancedBook(Id,Reason))return false;auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto Before=Players->GetPlayerInfo();auto& Economy=Players->GetEconomy();
     const auto& Def=Definitions.FindChecked(Id);const FGuid Receipt=FGuid::NewGuid();
-    if(!FEconomyLedger::Pay(Economy,FEconomyLedger::Pilot(),TEXT("Advanced skill publisher"),Def.AdvancedBookPrice,Receipt,TEXT("Advanced skill book")))return false;
+    if(!FEconomyLedger::Pay(Economy,FEconomyLedger::Pilot(),TEXT("Advanced skill publisher"),Def.AdvancedBookPrice,Receipt,TEXT("Advanced skill book"),ECommercePurpose::Purchase))return false;
     Economy.Journal.Last().Item=Id;Economy.Journal.Last().Reference=Receipt;
     Players->GetMutablePlayerInfo().Skills.FindChecked(Id).bAdvancedBookOwned=true;
     if(!Players->SaveActivePlayerProgress()){Players->GetMutablePlayerInfo()=Before;Reason=INVTEXT("Could not save advanced book purchase. Credits restored.");return false;}
@@ -337,7 +339,7 @@ bool FSkillTrainingRules::InstantTrain(FEconomyState& Economy,const TMap<FName,F
     for(FName Required:Def->Prerequisites)if(Level(Learned.Find(Required))<FMath::Max(1,Def->RequiredSkillLevels.FindRef(Required)))
     {Reason=INVTEXT("Complete the prerequisite skills first.");return false;}
     const int64 Cost=InstantCost(Entry,Now);
-    if(!FEconomyLedger::Pay(Economy,FEconomyLedger::Pilot(),TEXT("Skill training office"),Cost,FGuid::NewGuid(),TEXT("Instant skill training")))
+    if(!FEconomyLedger::Pay(Economy,FEconomyLedger::Pilot(),TEXT("Skill training office"),Cost,FGuid::NewGuid(),TEXT("Instant skill training"),ECommercePurpose::Service))
     {Reason=INVTEXT("Insufficient credits for instant training.");return false;}
     Economy.Journal.Last().Item=Entry.Skill;Economy.Journal.Last().Reference=Entry.Id;
     Progress->TrainedLevel=Entry.TargetLevel;Progress->bComplete=Entry.TargetLevel>=Def->MaximumLevel;Progress->SkillPoints=0;

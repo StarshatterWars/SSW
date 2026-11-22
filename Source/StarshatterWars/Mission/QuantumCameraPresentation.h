@@ -3,6 +3,10 @@
 #include "Camera/CameraModifier.h"
 #include "QuantumCameraPresentation.generated.h"
 
+class Ship;
+// Docked craft share their carrier's travel presentation, without changing their own sim warp.
+Ship* ResolveQuantumPresentationShip(Ship* Pilot);
+
 enum class EQuantumPresentationPhase : uint8 { Idle, Countdown, Departure, Loading, Arrival };
 
 // Cosmetic clock only. Never feeds timing, warp factors or movement back into the sim.

@@ -41,6 +41,12 @@ bool ManufacturingAI::Advance(const Job& WorkOrder, const FSSWProductionRecipe& 
 }
 
 
+TArray<FName> ManufacturingAI::MineralKeys(const FSSWProductionRecipe& Recipe)
+{
+    if(!Recipe.NativeMineralKeys.IsEmpty() || Recipe.Minerals.IsEmpty())return Recipe.NativeMineralKeys;
+    checkf(IsInGameThread(),TEXT("Mineral names must be resolved before economy worker dispatch."));
+    TArray<FName> Names;for(auto Mineral:Recipe.Minerals)Names.Add(DataTableUtils::MakeValidName(StaticEnum<ESSWMineral>()->GetNameStringByValue(int64(Mineral))));return Names;
+}
 bool ManufacturingAI::BuildBatch(const FEconomyState& State, FName Input, const FSSWProductionRecipe& Recipe,
     TArray<FCommodityAmount>& Materials, TArray<FCommodityAmount>& Products)
 {
@@ -66,10 +72,10 @@ bool ManufacturingAI::BuildBatch(const FEconomyState& State, FName Input, const 
     else
     {
         double Needed = Recipe.InputTonnes;
+        const auto AcceptedMinerals=MineralKeys(Recipe);
         for (const auto& Stack : Inventory->Items)
         {
-            const bool Accepted = Recipe.Minerals.ContainsByPredicate([&](ESSWMineral Mineral)
-            { return DataTableUtils::MakeValidName(StaticEnum<ESSWMineral>()->GetNameStringByValue(static_cast<int64>(Mineral))) == Stack.Type; });
+            const bool Accepted = AcceptedMinerals.Contains(Stack.Type);
             if (!Accepted || Stack.UnitTonnes != 1) continue;
             const double Amount = FMath::Min(Needed, FEconomyLedger::Available(State, Input, Stack.Type));
             if (Amount <= 0) continue;

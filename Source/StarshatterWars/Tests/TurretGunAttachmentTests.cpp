@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
@@ -37,6 +38,7 @@ bool FTurretGunAttachmentTest::RunTest(const FString&)
  TestEqual(TEXT("All 26 Wep.def turret entries covered"),Seen.Num(),26);
  const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
  auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
  if(!TestNotNull(TEXT("Preview world"),World))return false;
  ON_SCOPE_EXIT{World->DestroyWorld(false);};
  for(const FName Type:Seen){auto* Gun=World->SpawnActor<ATurretActor>(TurretCatalog::VisualClass(Type));const auto* R=WeaponDesignRegistry::Find(Type);

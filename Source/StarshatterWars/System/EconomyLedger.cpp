@@ -1,4 +1,6 @@
 #include "EconomyAI.h"
+#include "ProductionEvents.h"
+#include "SimDataEvents.h"
 #include "GameStructs_economy.h"
 #include "Misc/DateTime.h"
 
@@ -12,7 +14,7 @@ bool HasAccess(const FEconomyInventory* Inv, FName Owner) { return Inv && !Owner
 // Shared validation for normal deposits and an uncommitted job-output candidate.
 bool DepositInto(FEconomyInventory& Inv, FName Item, double Count, double Mass)
 {
-    if (Item.IsNone() || !Positive(Count) || !Positive(Mass) || !Positive(Count * Mass) ||
+    if (!Inv.bOperational || (!Inv.AcceptedItems.IsEmpty() && !Inv.AcceptedItems.Contains(Item)) || Item.IsNone() || !Positive(Count) || !Positive(Mass) || !Positive(Count * Mass) ||
         FEconomyLedger::Used(Inv) + Count * Mass > Inv.CapacityTonnes + UE_SMALL_NUMBER) return false;
     auto* Stack = Find(Inv, Item);
     if (Stack && (!FMath::IsNearlyEqual(Stack->UnitTonnes, Mass) || Stack->Quantity > EconomyQuantityLimit - Count)) return false;
@@ -37,6 +39,7 @@ void Record(FEconomyState& State, FGuid Id, FName Reason, FName From, FName To, 
         : Kind.Contains(TEXT("Blueprint")) ? EWalletTransactionCategory::Blueprint : EWalletTransactionCategory::General;
     State.Journal.Add(Entry); State.CommittedTransactions.Add(Id);
     if (State.Journal.Num() > 512) State.Journal.RemoveAt(0, State.Journal.Num() - 512);
+    FSimDataEvents::Publish(State);
 }
 bool ValidateAmounts(const TArray<FCommodityAmount>& Amounts)
 {
@@ -53,16 +56,20 @@ bool ValidateAmounts(const TArray<FCommodityAmount>& Amounts)
 
 FEconomyInventory* FEconomyLedger::CreateInventory(FEconomyState& State, FName Key, FName Owner, FName System, double Capacity)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     if (Key.IsNone() || Owner.IsNone() || !FMath::IsFinite(Capacity) || Capacity < 0 || Capacity > EconomyQuantityLimit) return nullptr;
     if (auto* Existing = State.Inventories.Find(Key))
         return Existing->Owner == Owner && Existing->System == System ? Existing : nullptr;
     FEconomyInventory Inv; Inv.Id = FGuid::NewGuid(); Inv.Owner = Owner; Inv.System = System; Inv.CapacityTonnes = Capacity;
-    return &State.Inventories.Add(Key, MoveTemp(Inv));
+    auto* Added=&State.Inventories.Add(Key,MoveTemp(Inv)); FSimDataEvents::Publish(State);return Added;
 }
 bool FEconomyLedger::ReconcileManifest(FEconomyState& State, FName Key, const TArray<FCommodityAmount>& Desired)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     auto* Inventory = State.Inventories.Find(Key);
     if (!Inventory || (!Desired.IsEmpty() && !ValidateAmounts(Desired))) return false;
+    if(Inventory->ManifestItems.Num()==Desired.Num() && !Desired.ContainsByPredicate([Inventory](const auto& Amount)
+        {const auto* Stack=Find(*Inventory,Amount.Item);return !Inventory->ManifestItems.Contains(Amount.Item) || !Stack || Stack->Quantity!=Amount.Quantity || Stack->UnitTonnes!=Amount.UnitTonnes;}))return true;
     auto Candidate = *Inventory;
     TSet<FName> Managed = Candidate.ManifestItems;
     for (const auto& Amount : Desired) Managed.Add(Amount.Item);
@@ -85,7 +92,9 @@ bool FEconomyLedger::ReconcileManifest(FEconomyState& State, FName Key, const TA
     if (Used(Candidate) > Candidate.CapacityTonnes + UE_SMALL_NUMBER) return false;
     Candidate.ManifestItems.Reset();
     for (const auto& Amount : Desired) Candidate.ManifestItems.Add(Amount.Item);
-    *Inventory = MoveTemp(Candidate); return true;
+    const bool Changed=Inventory->Items.Num()!=Candidate.Items.Num() || Inventory->ManifestItems.Num()!=Candidate.ManifestItems.Num() ||
+        Inventory->Items.ContainsByPredicate([&Candidate](const auto& A){const auto* B=Candidate.Items.FindByPredicate([&A](const auto& Entry){return Entry.Id==A.Id;});return !B || B->Type!=A.Type || B->Quantity!=A.Quantity || B->UnitTonnes!=A.UnitTonnes;});
+    *Inventory = MoveTemp(Candidate); if(Changed)FSimDataEvents::Publish(State); return true;
 }
 
 double FEconomyLedger::Used(const FEconomyInventory& Inventory)
@@ -110,28 +119,35 @@ double FEconomyLedger::Available(const FEconomyState& State, FName Inventory, FN
 }
 bool FEconomyLedger::Deposit(FEconomyState& State, FName Inventory, FName Item, double Count, double Mass)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     auto* Inv = State.Inventories.Find(Inventory);
-    return Inv && DepositInto(*Inv, Item, Count, Mass);
+    const bool Changed=Inv && DepositInto(*Inv, Item, Count, Mass);
+    if(Changed)FSimDataEvents::Publish(State);return Changed;
 }
 bool FEconomyLedger::Withdraw(FEconomyState& State, FName Owner, FName Inventory, FName Item, double Count)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     auto* Inv = State.Inventories.Find(Inventory);
     if (!HasAccess(Inv, Owner) || !Positive(Count) || Available(State, Inventory, Item) < Count) return false;
-    Find(*Inv, Item)->Quantity -= Count; return true;
+    Find(*Inv, Item)->Quantity -= Count; FSimDataEvents::Publish(State); return true;
 }
 FGuid FEconomyLedger::Reserve(FEconomyState& State, FName Owner, FName Inventory, FName Item, double Count)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     if (!HasAccess(State.Inventories.Find(Inventory), Owner) || !Positive(Count) || Available(State, Inventory, Item) < Count) return {};
     FEconomyReservation Claim; Claim.Id = FGuid::NewGuid(); Claim.Owner = Owner; Claim.Inventory = Inventory; Claim.Item = Item; Claim.Quantity = Count;
-    State.Reservations.Add(Claim.Id, Claim); return Claim.Id;
+    State.Reservations.Add(Claim.Id, Claim); FSimDataEvents::Publish(State); return Claim.Id;
 }
 bool FEconomyLedger::Release(FEconomyState& State, FName Owner, FGuid Id)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     const auto* Claim = State.Reservations.Find(Id);
-    return Claim && Claim->Owner == Owner && State.Reservations.Remove(Id) == 1;
+    const bool Changed=Claim && Claim->Owner == Owner && State.Reservations.Remove(Id) == 1;
+    if(Changed)FSimDataEvents::Publish(State);return Changed;
 }
 bool FEconomyLedger::Transfer(FEconomyState& State, FName Owner, FName Source, FName Destination, FName Item, double Count, FGuid Id)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     auto* From = State.Inventories.Find(Source); auto* To = State.Inventories.Find(Destination);
     if (Source == Destination || !HasAccess(From, Owner) || !HasAccess(To, Owner) || !Positive(Count)) return false;
     auto* Claim = Id.IsValid() ? State.Reservations.Find(Id) : nullptr;
@@ -150,19 +166,48 @@ bool FEconomyLedger::Transfer(FEconomyState& State, FName Owner, FName Source, F
     if (Claim) { Claim->Quantity -= Count; if (Claim->Quantity <= UE_SMALL_NUMBER) State.Reservations.Remove(Id); }
     return true;
 }
-bool FEconomyLedger::Pay(FEconomyState& State, FName From, FName To, int64 Credits, FGuid Id, FName Reason)
+namespace
 {
-    if (!Id.IsValid() || From.IsNone() || To.IsNone() || From == To || Credits < 0 || State.CommittedTransactions.Contains(Id) ||
-        State.Wallets.FindRef(From) < Credits || State.Wallets.FindRef(To) < 0 || State.Wallets.FindRef(To) > MAX_int64 - Credits) return false;
-    State.Wallets.FindOrAdd(From) -= Credits; State.Wallets.FindOrAdd(To) += Credits;
-    Record(State, Id, Reason, From, To, Credits); return true;
+TMap<FName,int64> ChargeDeltas(FName From,FName To,const FCommercePrice& Quote)
+{
+    TMap<FName,int64> Deltas;Deltas.FindOrAdd(From)-=Quote.Total;Deltas.FindOrAdd(To)+=Quote.Base;
+    if(Quote.Tax)Deltas.FindOrAdd(CommerceCharges::TaxAccount())+=Quote.Tax;
+    if(Quote.Fee)Deltas.FindOrAdd(CommerceCharges::FeeAccount())+=Quote.Fee;
+    return Deltas;
 }
-bool FEconomyLedger::Trade(FEconomyState& State, FName Buyer, FName Seller, FName Source, FName Destination, FName Item, double Count, int64 Price, FGuid Id)
+bool CanApplyDeltas(const FEconomyState& State,const TMap<FName,int64>& Deltas)
 {
+    for(const auto& Pair:Deltas)
+    {
+        const int64 Balance=State.Wallets.FindRef(Pair.Key);
+        if(Balance<0 || (Pair.Value<0 && Balance < -Pair.Value) || (Pair.Value>0 && Balance>MAX_int64-Pair.Value))return false;
+    }
+    return true;
+}
+void ApplyDeltas(FEconomyState& State,const TMap<FName,int64>& Deltas)
+{for(const auto& Pair:Deltas)State.Wallets.FindOrAdd(Pair.Key)+=Pair.Value;}
+void RecordCharges(FEconomyState& State,const FCommercePrice& Quote,const TMap<FName,int64>& Deltas)
+{
+    auto& Entry=State.Journal.Last();Entry.BaseCredits=Quote.Base;Entry.TaxCredits=Quote.Tax;Entry.FeeCredits=Quote.Fee;
+    Entry.WalletDeltas=Deltas;Entry.WalletBalancesAfter.Reset();
+    for(const auto& Pair:Deltas)Entry.WalletBalancesAfter.Add(Pair.Key,State.Wallets.FindRef(Pair.Key));
+}
+}
+bool FEconomyLedger::Pay(FEconomyState& State,FName From,FName To,int64 Credits,FGuid Id,FName Reason,ECommercePurpose Purpose)
+{
+    FScopedSimDataChangeBatch DataChangeBatch(State);
+    const auto Quote=CommerceCharges::Quote(Credits,Purpose);const auto Deltas=ChargeDeltas(From,To,Quote);
+    if(!Id.IsValid() || From.IsNone() || To.IsNone() || From==To || !Quote.bValid || State.CommittedTransactions.Contains(Id) || !CanApplyDeltas(State,Deltas))return false;
+    ApplyDeltas(State,Deltas);Record(State,Id,Reason,From,To,Credits);RecordCharges(State,Quote,Deltas);return true;
+}
+bool FEconomyLedger::Trade(FEconomyState& State, FName Buyer, FName Seller, FName Source, FName Destination, FName Item, double Count, int64 Price, FGuid Id,ECommercePurpose Purpose)
+{
+    FScopedSimDataChangeBatch DataChangeBatch(State);
+    const auto Quote=CommerceCharges::Quote(Price,Purpose);const auto Deltas=ChargeDeltas(Buyer,Seller,Quote);
     const auto* From = State.Inventories.Find(Source); auto* To = State.Inventories.Find(Destination);
     if (Buyer == Seller || Source == Destination || !HasAccess(From, Seller) || !HasAccess(To, Buyer) || !Positive(Count) ||
         Available(State, Source, Item) < Count || !Id.IsValid() || State.CommittedTransactions.Contains(Id) || Price < 0 ||
-        State.Wallets.FindRef(Buyer) < Price || State.Wallets.FindRef(Seller) < 0 || State.Wallets.FindRef(Seller) > MAX_int64 - Price) return false;
+        !Quote.bValid || !CanApplyDeltas(State,Deltas)) return false;
     const auto* Stack = From->Items.FindByPredicate([Item](const auto& Entry) { return Entry.Type == Item; });
     const FGuid SoldId = Stack ? Stack->Id : FGuid();
     const bool FullStack = Stack && Stack->Quantity == Count;
@@ -172,8 +217,8 @@ bool FEconomyLedger::Trade(FEconomyState& State, FName Buyer, FName Seller, FNam
     auto& SourceInventory = State.Inventories.FindChecked(Source);
     auto* Sold = Find(SourceInventory, Item); Sold->Quantity -= Count;
     SourceInventory.Items.RemoveAll([Item](const auto& Entry) { return Entry.Type == Item && Entry.Quantity == 0; });
-    State.Wallets.FindOrAdd(Buyer) -= Price; State.Wallets.FindOrAdd(Seller) += Price;
-    Record(State, Id, TEXT("Market purchase"), Buyer, Seller, Price);
+    ApplyDeltas(State,Deltas);
+    Record(State, Id, TEXT("Market purchase"), Buyer, Seller, Price);RecordCharges(State,Quote,Deltas);
     auto& Entry=State.Journal.Last();Entry.Item=Item;Entry.Quantity=Count;Entry.UnitPrice=Count>0?double(Price)/Count:0;Entry.Source=Source;Entry.Destination=Destination;
     EconomyAI::RecordTrade(State,SourceInventory.System,Item,Count,double(Price));
     return true;
@@ -181,32 +226,36 @@ bool FEconomyLedger::Trade(FEconomyState& State, FName Buyer, FName Seller, FNam
 FGuid FEconomyLedger::QueueJob(FEconomyState& State, FName Owner, FName Facility, FName Input, FName Output, FName Recipe,
     const TArray<FCommodityAmount>& Materials, const TArray<FCommodityAmount>& Products, double Duration)
 {
-    if (Owner == Pilot()) return {};
+    FScopedSimDataChangeBatch DataChangeBatch(State);
+    if (IsPlayerOwner(State,Owner)) return {};
     return QueueAuthorizedJob(State, Owner, Facility, Input, Output, Recipe, Materials, Products, Duration);
 }
 FGuid FEconomyLedger::QueueAuthorizedJob(FEconomyState& State, FName Owner, FName Facility, FName Input, FName Output, FName Recipe,
     const TArray<FCommodityAmount>& Materials, const TArray<FCommodityAmount>& Products, double Duration)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     if (Owner.IsNone() || Facility.IsNone() || Recipe.IsNone() || Input == Output ||
         !HasAccess(State.Inventories.Find(Input), Owner) || !HasAccess(State.Inventories.Find(Output), Owner) ||
         !Positive(Duration) || !ValidateAmounts(Materials) || !ValidateAmounts(Products)) return {};
     FIndustryJob Job; Job.Id = FGuid::NewGuid(); Job.Owner = Owner; Job.Facility = Facility; Job.Input = Input; Job.Output = Output;
     Job.Recipe = Recipe; Job.Materials = Materials; Job.Products = Products; Job.Duration = Duration; Job.Remaining = Duration;
-    State.Jobs.Add(Job); return Job.Id;
+    State.Jobs.Add(Job); FSimDataEvents::Publish(State); return Job.Id;
 }
 FGuid FEconomyLedger::GrantBlueprint(FEconomyState& State, FName Owner, FName Recipe, bool Original, int32 Runs, double ME, double TE)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     if (Owner.IsNone() || Recipe.IsNone() || (!Original && Runs <= 0) || !FMath::IsFinite(ME) || ME < 0 || ME > 0.1 ||
         !FMath::IsFinite(TE) || TE < 0 || TE > 0.2) return {};
     FBlueprintInstance BP; BP.Id = FGuid::NewGuid(); BP.Owner = Owner; BP.Recipe = Recipe;
     BP.bOriginal = Original; BP.RunsRemaining = Original ? 0 : Runs; BP.MaterialEfficiency = ME; BP.TimeEfficiency = TE;
-    State.Blueprints.Add(BP.Id, BP); return BP.Id;
+    State.Blueprints.Add(BP.Id, BP); FSimDataEvents::Publish(State); return BP.Id;
 }
 FGuid FEconomyLedger::QueueBlueprintJob(FEconomyState& State, FName Owner, FName Facility, FName Input, FName Output,
     FGuid Blueprint, int32 Runs, const TArray<FCommodityAmount>& Materials, const TArray<FCommodityAmount>& Products, double Duration)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     const auto* BP = State.Blueprints.Find(Blueprint);
-    if (!BP || BP->Owner != Owner || (Owner == Pilot() && (!State.BlueprintReceipts.Contains(Blueprint) || !State.CommittedTransactions.Contains(State.BlueprintReceipts.FindRef(Blueprint)))) || Runs <= 0 || Runs > 1000000 || (!BP->bOriginal && BP->RunsRemaining < Runs) ||
+    if (!BP || BP->Owner != Owner || (IsPlayerOwner(State,Owner) && (!State.BlueprintReceipts.Contains(Blueprint) || !State.CommittedTransactions.Contains(State.BlueprintReceipts.FindRef(Blueprint)))) || Runs <= 0 || Runs > 1000000 || (!BP->bOriginal && BP->RunsRemaining < Runs) ||
         State.Jobs.ContainsByPredicate([Blueprint](const auto& Job) { return Job.Blueprint == Blueprint &&
             Job.State != EIndustryJobState::Completed && Job.State != EIndustryJobState::Cancelled; })) return {};
     auto Inputs = Materials; auto Outputs = Products;
@@ -235,7 +284,7 @@ bool FEconomyLedger::CanStartJob(const FEconomyState& State, const FIndustryJob&
     {
         const auto* BP = State.Blueprints.Find(Job.Blueprint);
         if (!BP || BP->Owner != Job.Owner || BP->Recipe != Job.Recipe ||
-            (Job.Owner == Pilot() && (!State.BlueprintReceipts.Contains(Job.Blueprint) || !State.CommittedTransactions.Contains(State.BlueprintReceipts.FindRef(Job.Blueprint)))))
+            (IsPlayerOwner(State,Job.Owner) && (!State.BlueprintReceipts.Contains(Job.Blueprint) || !State.CommittedTransactions.Contains(State.BlueprintReceipts.FindRef(Job.Blueprint)))))
         { Reason = INVTEXT("The required blueprint is unavailable."); return false; }
         if (!BP->bOriginal && BP->RunsRemaining < Job.Runs)
         { Reason = INVTEXT("The blueprint copy has insufficient remaining runs."); return false; }
@@ -262,6 +311,7 @@ bool FEconomyLedger::CanStartJob(const FEconomyState& State, const FIndustryJob&
 }
 bool FEconomyLedger::CancelJob(FEconomyState& State, FName Owner, FGuid Id)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     auto* Job = State.Jobs.FindByPredicate([Id](const auto& Entry) { return Entry.Id == Id; });
     if (!Job || Job->Owner != Owner || Job->State == EIndustryJobState::Completed || Job->State == EIndustryJobState::Cancelled) return false;
     if (Job->State == EIndustryJobState::Running)
@@ -271,10 +321,11 @@ bool FEconomyLedger::CancelJob(FEconomyState& State, FName Owner, FGuid Id)
         if (!Out || Out->Owner != Owner) return false;
         for (const auto& Product : Job->Products) Out->ReservedOutputTonnes = FMath::Max(0.0, Out->ReservedOutputTonnes - Product.Quantity * Product.UnitTonnes);
     }
-    Job->State = EIndustryJobState::Cancelled; return true;
+    Job->State = EIndustryJobState::Cancelled; Job->CompletionAt=0;ProductionEvents::Emit(Job->Facility,Job->Id,EProductionEvent::Cancelled,INVTEXT("Job cancelled; reserved output space released.")); FSimDataEvents::Publish(State); return true;
 }
 int32 FEconomyLedger::AdvanceJobs(FEconomyState& State, double Seconds, TFunctionRef<bool(FName)> Operational)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     if (!FMath::IsFinite(Seconds) || Seconds <= 0) return 0;
     int32 Completed = 0;
     TMap<FName, double> TimeLeft;
@@ -284,7 +335,7 @@ int32 FEconomyLedger::AdvanceJobs(FEconomyState& State, double Seconds, TFunctio
         if (Job.State != EIndustryJobState::Running)
         {
             FText Reason;
-            if (!CanStartJob(State, Job, true, Reason)) { Job.State = EIndustryJobState::Blocked; continue; }
+            if (!CanStartJob(State, Job, true, Reason)) { if(Job.State!=EIndustryJobState::Blocked){Job.State=EIndustryJobState::Blocked;FSimDataEvents::Publish(State);} continue; }
             auto* In = State.Inventories.Find(Job.Input); auto* Out = State.Inventories.Find(Job.Output);
             auto* BP = Job.Blueprint.IsValid() ? State.Blueprints.Find(Job.Blueprint) : nullptr;
             double OutputMass = 0;
@@ -297,7 +348,7 @@ int32 FEconomyLedger::AdvanceJobs(FEconomyState& State, double Seconds, TFunctio
                     auto& Stack = Out->Items.AddDefaulted_GetRef(); Stack.Id = FGuid::NewGuid();
                     Stack.Type = Product.Item; Stack.UnitTonnes = Product.UnitTonnes;
                 }
-            Out->ReservedOutputTonnes += OutputMass; Job.State = EIndustryJobState::Running;
+            Out->ReservedOutputTonnes += OutputMass; Job.State = EIndustryJobState::Running; FSimDataEvents::Publish(State);
         }
         double& Budget = TimeLeft.FindOrAdd(Job.Facility, Seconds);
         const double UsedTime = FMath::Min(Job.Remaining, Budget);
@@ -320,7 +371,7 @@ int32 FEconomyLedger::AdvanceJobs(FEconomyState& State, double Seconds, TFunctio
         // Failed attempts stay Running at zero remaining time: retries never
         // re-consume inputs or blueprint runs, and the facility remains occupied.
         *Out = MoveTemp(Candidate);
-        Job.State = EIndustryJobState::Completed; ++Completed;
+        Job.State = EIndustryJobState::Completed; FSimDataEvents::Publish(State); ++Completed;
     }
     return Completed;
 }
@@ -374,7 +425,10 @@ bool FillOrders(FEconomyState& State,FMarketOrder& Buy,FMarketOrder& Sell,int64 
     int64 Required=0;if(Remaining>0 && !OrderTotal(Remaining,Buy.UnitPrice,Required))return false;
     if(Buy.EscrowCredits<Cost || Buy.EscrowCredits-Cost<Required)return false;
     const int64 Refund=Buy.EscrowCredits-Cost-Required;
-    if(State.Wallets.FindRef(Sell.Owner)<0 || State.Wallets.FindRef(Buy.Owner)<0 || State.Wallets.FindRef(Sell.Owner)>MAX_int64-Cost || State.Wallets.FindRef(Buy.Owner)>MAX_int64-Refund)return false;
+    const auto Charge=CommerceCharges::Quote(Cost,(Sell.bApplyCommerceCharges || Buy.bApplyCommerceCharges)?ECommercePurpose::MarketSale:ECommercePurpose::None);
+    TMap<FName,int64> FillDeltas;FillDeltas.FindOrAdd(Sell.Owner)+=Charge.Base;FillDeltas.FindOrAdd(Buy.Owner)+=Refund;
+    if(Charge.Tax)FillDeltas.FindOrAdd(CommerceCharges::TaxAccount())+=Charge.Tax;
+    if(!CanApplyDeltas(State,FillDeltas))return false;
     auto Out=*Destination;Out.ReservedOutputTonnes=FMath::Max(0.0,Out.ReservedOutputTonnes-Mass);
     const bool FullStack=Stock->Quantity==Quantity,EmptyDestination=FEconomyLedger::Quantity(State,Buy.Inventory,Buy.Item)==0;
     if(!DepositInto(Out,Buy.Item,Quantity,Buy.UnitTonnes))return false;
@@ -383,14 +437,14 @@ bool FillOrders(FEconomyState& State,FMarketOrder& Buy,FMarketOrder& Sell,int64 
     In.Items.RemoveAll([&](const auto& Item){return Item.Type==Sell.Item && Item.Quantity==0;});
     *Source=MoveTemp(In);*Destination=MoveTemp(Out);
     Claim->Quantity-=Quantity;if(Claim->Quantity<=UE_SMALL_NUMBER)State.Reservations.Remove(Sell.CargoReservation);
-    State.Wallets.FindOrAdd(Sell.Owner)+=Cost;State.Wallets.FindOrAdd(Buy.Owner)+=Refund;
+    ApplyDeltas(State,FillDeltas);
     Buy.Remaining=Remaining;Buy.EscrowCredits=Required;Buy.ReservedTonnes=FMath::Max(0.0,Buy.ReservedTonnes-Mass);
     Sell.Remaining-=Quantity;
     if(Buy.Remaining==0)Buy.State=EMarketOrderState::Filled;
     if(Sell.Remaining==0)Sell.State=EMarketOrderState::Filled;
     Record(State,FGuid::NewGuid(),TEXT("Limit order fill"),Buy.Owner,Sell.Owner,Cost);
     auto& Entry=State.Journal.Last();Entry.TimestampUtc=NowUtc;Entry.Item=Buy.Item;Entry.Quantity=Quantity;Entry.UnitPrice=double(Price);
-    Entry.WalletDeltas.Reset();Entry.WalletDeltas.Add(Buy.Owner,Refund);Entry.WalletDeltas.Add(Sell.Owner,Cost);
+    RecordCharges(State,Charge,FillDeltas);
     Entry.Category=EWalletTransactionCategory::Market;
     Entry.Source=Sell.Inventory;Entry.Destination=Buy.Inventory;Entry.BuyOrder=Buy.Id;Entry.SellOrder=Sell.Id;
     EconomyAI::RecordTrade(State,Source->System,Buy.Item,Quantity,double(Cost));
@@ -398,8 +452,9 @@ bool FillOrders(FEconomyState& State,FMarketOrder& Buy,FMarketOrder& Sell,int64 
 }
 }
 FGuid FEconomyLedger::PlaceMarketOrder(FEconomyState& State,FName Owner,FName Market,FName Inventory,FName Item,
-    EMarketOrderSide Side,double Count,double Mass,int64 Price,int64 NowUtc,int64 ExpiresUtc,FGuid Receipt,FText& Reason)
+    EMarketOrderSide Side,double Count,double Mass,int64 Price,int64 NowUtc,int64 ExpiresUtc,FGuid Receipt,FText& Reason,ECommercePurpose Purpose)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     int64 Total=0;
     if((Side!=EMarketOrderSide::Buy && Side!=EMarketOrderSide::Sell) || Owner.IsNone() || Market.IsNone() || Item.IsNone() || Item.ToString().StartsWith(TEXT("Courier/")) ||
         !Receipt.IsValid() || State.CommittedTransactions.Contains(Receipt) || State.MarketOrders.Contains(Receipt) ||
@@ -411,6 +466,10 @@ FGuid FEconomyLedger::PlaceMarketOrder(FEconomyState& State,FName Owner,FName Ma
     {Reason=INVTEXT("The order inventory is unavailable in this market.");return {};}
     int32 Open=0,Owned=0;for(const auto& Pair:State.MarketOrders)if(Pair.Value.State==EMarketOrderState::Open){++Open;if(Pair.Value.Owner==Owner)++Owned;}
     if(Open>=1024 || Owned>=64){Reason=INVTEXT("The market or owner has reached its open-order limit.");return {};}
+    const int64 Brokerage=Purpose==ECommercePurpose::Brokerage?CommerceCharges::BrokerFee(Total):0;
+    if(State.Wallets.FindRef(Owner)<Brokerage+(Side==EMarketOrderSide::Buy?Total:0))
+    {Reason=INVTEXT("Insufficient credits for escrow and the disclosed broker fee.");return {};}
+    const auto Before=State;
     FMarketOrder Order;Order.Id=Receipt;Order.Owner=Owner;Order.Market=Market;Order.Inventory=Inventory;Order.Item=Item;Order.Side=Side;
     Order.Quantity=Order.Remaining=FMath::RoundToDouble(Count);Order.UnitTonnes=Mass;Order.UnitPrice=Price;Order.CreatedUtc=NowUtc;Order.ExpiresUtc=ExpiresUtc;
     if(Side==EMarketOrderSide::Buy)
@@ -430,16 +489,23 @@ FGuid FEconomyLedger::PlaceMarketOrder(FEconomyState& State,FName Owner,FName Ma
         Order.CargoReservation=Reserve(State,Owner,Inventory,Item,Order.Remaining);
         if(!Order.CargoReservation.IsValid()){Reason=INVTEXT("The selected cargo could not be reserved.");return {};}
     }
+    if(Brokerage>0 && !Pay(State,Owner,CommerceCharges::FeeAccount(),Brokerage,FGuid::NewGuid(),TEXT("Market order broker fee"),ECommercePurpose::Brokerage))
+    {State=Before;Reason=INVTEXT("The broker fee could not be committed. Escrow and reservations restored.");return {};}
+    if(Brokerage>0){State.Journal.Last().Reference=Receipt;State.Journal.Last().TimestampUtc=NowUtc;}
+    Order.bApplyCommerceCharges=Purpose==ECommercePurpose::Brokerage;
     Order.Sequence=++State.NextMarketSequence;State.MarketOrders.Add(Order.Id,Order);
     OrderHistory(State,Receipt,Side==EMarketOrderSide::Buy?FName(TEXT("Buy order escrow")):FName(TEXT("Sell order reservation")),Order,Order.EscrowCredits,Owner,TEXT("Market escrow"));
     State.Journal.Last().TimestampUtc=NowUtc;Reason=INVTEXT("Limit order placed. Credits or cargo are reserved until settlement, cancellation or expiry.");return Order.Id;
 }
-bool FEconomyLedger::ModifyMarketOrder(FEconomyState& State,FName Owner,FGuid Id,int64 Price,FGuid Receipt,FText& Reason)
+bool FEconomyLedger::ModifyMarketOrder(FEconomyState& State,FName Owner,FGuid Id,int64 Price,FGuid Receipt,FText& Reason,ECommercePurpose Purpose)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     auto* Order=State.MarketOrders.Find(Id);int64 Required=0;
     if(!Order || Order->Owner!=Owner || Order->State!=EMarketOrderState::Open || !Receipt.IsValid() || State.CommittedTransactions.Contains(Receipt) ||
         !OrderTotal(Order->Remaining,Price,Required) || State.Wallets.FindRef(Owner)<0 || Order->EscrowCredits<0 || Order->EscrowCredits>9000000000000000LL || State.NextMarketSequence==MAX_int64)
     {Reason=INVTEXT("Select your own open order and a valid limit price.");return false;}
+    const int64 Brokerage=Purpose==ECommercePurpose::Brokerage && Order->UnitPrice!=Price?CommerceCharges::BrokerFee(Required):0;
+    const auto Before=State;
     int64 Delta=0;
     if(Order->Side==EMarketOrderSide::Buy)
     {
@@ -448,6 +514,10 @@ bool FEconomyLedger::ModifyMarketOrder(FEconomyState& State,FName Owner,FGuid Id
         {Reason=INVTEXT("Insufficient credits or wallet capacity for this price change.");return false;}
         State.Wallets.FindOrAdd(Owner)-=Delta;Order->EscrowCredits=Required;
     }
+    if(Brokerage>0 && !Pay(State,Owner,CommerceCharges::FeeAccount(),Brokerage,FGuid::NewGuid(),TEXT("Market order repricing broker fee"),ECommercePurpose::Brokerage))
+    {State=Before;Reason=INVTEXT("Insufficient credits for the broker fee. Order and escrow restored.");return false;}
+    if(Brokerage>0)State.Journal.Last().Reference=Id;
+    if(Purpose==ECommercePurpose::Brokerage)Order->bApplyCommerceCharges=true;
     if(Order->UnitPrice!=Price)Order->Sequence=++State.NextMarketSequence;
     Order->UnitPrice=Price;
     OrderHistory(State,Receipt,TEXT("Limit order repriced"),*Order,FMath::Abs(Delta),Delta<0?FName(TEXT("Market escrow")):Owner,Delta<0?Owner:FName(TEXT("Market escrow")));
@@ -455,6 +525,7 @@ bool FEconomyLedger::ModifyMarketOrder(FEconomyState& State,FName Owner,FGuid Id
 }
 bool FEconomyLedger::CancelMarketOrder(FEconomyState& State,FName Owner,FGuid Id,FGuid Receipt,FText& Reason)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     auto* Order=State.MarketOrders.Find(Id);
     if(!Order || Order->Owner!=Owner || Order->State!=EMarketOrderState::Open || !Receipt.IsValid() || State.CommittedTransactions.Contains(Receipt) ||
         Order->EscrowCredits<0 || State.Wallets.FindRef(Owner)<0 || State.Wallets.FindRef(Owner)>MAX_int64-Order->EscrowCredits)
@@ -472,6 +543,7 @@ bool FEconomyLedger::CancelMarketOrder(FEconomyState& State,FName Owner,FGuid Id
 }
 int32 FEconomyLedger::AdvanceMarketOrders(FEconomyState& State,int64 NowUtc)
 {
+    FScopedSimDataChangeBatch DataChangeBatch(State);
     if(NowUtc<0)return 0;
     struct FBook {TArray<FGuid> Buys,Sells;};
     TMap<FName,TMap<FName,FBook>> Markets;

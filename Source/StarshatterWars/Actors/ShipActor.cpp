@@ -513,9 +513,30 @@ void AShipActor::SyncBlueprintActorSlots()
     }
 }
 
+void AShipActor::EnsureHullAttachmentHierarchy()
+{
+    // Mount coordinates are authored in the common ship frame. Retain that
+    // frame while repairing Blueprint parenting/absolute-transform overrides.
+    auto Bind = [](USceneComponent* Part, USceneComponent* Parent)
+    {
+        if (!Part || !Parent || Part == Parent) return;
+        if (Part->GetAttachParent() != Parent)
+            Part->AttachToComponent(Parent, FAttachmentTransformRules::KeepRelativeTransform);
+        Part->SetAbsolute(false, false, false);
+    };
+    Bind(VisualRoot, ShipRoot);
+    Bind(HullMesh, VisualRoot);
+    Bind(PointRoot, ShipRoot);
+    Bind(LightRoot, ShipRoot);
+    Bind(VFXRoot, ShipRoot);
+    Bind(WeaponHardpointRoot, PointRoot);
+    Bind(TurretMountRoot, PointRoot);
+}
+
 void AShipActor::OnConstruction(const FTransform& Transform)
 {
     Super::OnConstruction(Transform);
+    EnsureHullAttachmentHierarchy();
 
     // Imported hull nose is -Y; +90 yaw aligns it with the actor's +X flight axis.
     // Assign, never accumulate: existing Blueprint +90 values remain +90.
@@ -558,6 +579,7 @@ void AShipActor::OnConstruction(const FTransform& Transform)
 
 void AShipActor::BeginPlay()
 {
+    EnsureHullAttachmentHierarchy();
     // Apply after Blueprint construction scripts as well as native construction.
     if (VisualRoot) VisualRoot->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
     // Port positions and jet rotations already use actor flight axes.
@@ -718,7 +740,7 @@ void AShipActor::RebuildMainEnginePoints()
 
 void AShipActor::RebuildMainEngineEmitters()
 {
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[ShipActor] RebuildMainEngineEmitters: BEGIN Ship='%s' Points=%d"),
         *GetName(),
         MainEnginePoints.Num());
@@ -736,7 +758,7 @@ void AShipActor::RebuildMainEngineEmitters()
 
     if (!bEnableMainEngineEmitters || !MainEngineEmitterSystem)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipActor] RebuildMainEngineEmitters: SKIPPED (disabled or no system)"));
         return;
     }
@@ -764,6 +786,7 @@ void AShipActor::RebuildMainEngineEmitters()
         }
 
         Emitter->SetupAttachment(Point);
+        Emitter->SetAutoActivate(false);
         Emitter->RegisterComponent();
 
         Emitter->SetAsset(MainEngineEmitterSystem);
@@ -775,7 +798,7 @@ void AShipActor::RebuildMainEngineEmitters()
         // Engine ON/OFF control
         // ----------------------------------------------------
 
-        Emitter->SetAutoActivate(bMainEnginesActive);
+
 
         if (bMainEnginesActive)
         {
@@ -820,7 +843,7 @@ void AShipActor::RebuildMainEngineEmitters()
         }
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[ShipActor] RebuildMainEngineEmitters: END Created=%d"),
         MainEngineEmitters.Num());
 }
@@ -893,7 +916,7 @@ void AShipActor::RefreshNavLights()
 
 void AShipActor::RebuildNavLights()
 {
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[ShipActor] RebuildNavLights: BEGIN Ship='%s' DefCount=%d"),
         *GetName(),
         NavLightDefs.Num());
@@ -911,7 +934,7 @@ void AShipActor::RebuildNavLights()
 
     if (!bEnableNavLights || !LightRoot || NavLightDefs.Num() == 0)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipActor] RebuildNavLights: SKIPPED"));
         return;
     }
@@ -1046,7 +1069,7 @@ void AShipActor::RebuildNavLights()
     NavLightSequenceTimer = 0.0f;
     NavLightSequenceIndex = 0;
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[ShipActor] RebuildNavLights: END Created=%d"),
         NavLights.Num());
 }
@@ -1430,7 +1453,7 @@ USceneComponent* AShipActor::CreateGeneratedPoint(
     // the actor belongs to a world. OnConstruction rebuilds them for live actors.
     if (HasAnyFlags(RF_ClassDefaultObject | RF_ArchetypeObject) || !GetWorld())
     {
-        UE_LOG(LogTemp, Verbose,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipActor] Deferring generated point '%s_%d' until actor construction: %s"),
             *BaseName, Index, *GetName());
         return nullptr;
@@ -1514,7 +1537,7 @@ void AShipActor::ClearNavLightVisuals()
 
 void AShipActor::RebuildThrusterEmitters()
 {
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[ShipActor] RebuildThrusterEmitters: BEGIN Ship='%s' Points=%d"),
         *GetName(),
         ThrusterPoints.Num());
@@ -1531,7 +1554,7 @@ void AShipActor::RebuildThrusterEmitters()
 
     if (!bEnableThrusterEmitters || !ThrusterEmitterSystem)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipActor] RebuildThrusterEmitters: SKIPPED (disabled or no system)"));
         return;
     }
@@ -1559,6 +1582,7 @@ void AShipActor::RebuildThrusterEmitters()
         }
 
         Emitter->SetupAttachment(Point);
+        Emitter->SetAutoActivate(false);
         Emitter->RegisterComponent();
 
         Emitter->SetAsset(ThrusterEmitterSystem);
@@ -1570,7 +1594,7 @@ void AShipActor::RebuildThrusterEmitters()
         // Thruster ON/OFF control
         // ----------------------------------------------------
 
-        Emitter->SetAutoActivate(bThrustersActive);
+
 
         if (bThrustersActive)
         {
@@ -1584,7 +1608,7 @@ void AShipActor::RebuildThrusterEmitters()
         ThrusterEmitters.Add(Emitter);
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[ShipActor] RebuildThrusterEmitters: END Created=%d"),
         ThrusterEmitters.Num());
 }
@@ -1752,7 +1776,7 @@ void AShipActor::SetCutsceneNavMovement(
         SetActorRelativeRotation(MoveRotation);
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[ShipActor] SetCutsceneNavMovement Actor=%s StartLegacy=%s TargetLegacy=%s StartUE=%s TargetUE=%s Speed=%.2f"),
         *GetName(),
         *InStartLegacy.ToString(),
@@ -1784,7 +1808,7 @@ void AShipActor::SetCutsceneLocalMovement(
         GetRootComponent()->SetRelativeRotation(Direction.Rotation());
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[ShipActor] SetCutsceneLocalMovement Actor=%s Start=%s Target=%s Speed=%.2f"),
         *GetName(),
         *CutsceneStartLocal.ToString(),
@@ -1809,7 +1833,7 @@ void AShipActor::UpdateCutsceneNavMovement(float DeltaTime)
         GetRootComponent()->SetRelativeLocation(CutsceneTargetLocal);
         bUseCutsceneNavMovement = false;
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipActor] Cutscene movement complete Actor=%s Final=%s"),
             *GetName(),
             *CutsceneTargetLocal.ToString());
@@ -1838,6 +1862,7 @@ void AShipActor::UpdateCutsceneNavMovement(float DeltaTime)
 
 void AShipActor::BindRuntimeShip(Ship* InShip)
 {
+    EnsureHullAttachmentHierarchy();
     if (RuntimeShip != InShip) { bRuntimeVisualInitialized = false; ReleaseRecoveryPresentation(); }
     for (auto& Entry : RuntimeTurretBaseRestRotations)
         if (IsValid(Entry.Key)) Entry.Key->SetRelativeRotation(Entry.Value);
@@ -1904,7 +1929,7 @@ void AShipActor::BindRuntimeShip(Ship* InShip)
     Drive* MainDrive =
         RuntimeShip ? RuntimeShip->GetMainDrive() : nullptr;
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[ShipActor] BindRuntimeShip Actor=%s RuntimeShip=%p Ship='%s' NavLightSystems=%d MainDrive=%p DrivePorts=%d"),
         *GetName(),
         RuntimeShip,
@@ -2181,7 +2206,7 @@ void AShipActor::BuildNavLightsFromRuntime()
         return;
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[ShipActor] BuildNavLightsFromRuntime ENTER Actor='%s' RuntimeShip=%p"),
         *GetName(),
         RuntimeShip);
@@ -2194,7 +2219,7 @@ void AShipActor::BuildNavLightsFromRuntime()
 
     if (!RuntimeShip && !SnapshotVisualDesign)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipActor] BuildNavLightsFromRuntime: RuntimeShip is null Actor='%s'"),
             *GetName());
         return;
@@ -2203,7 +2228,7 @@ void AShipActor::BuildNavLightsFromRuntime()
     const auto& LightSystems = RuntimeShip ? RuntimeShip->navlights : SnapshotVisualDesign->navlights;
     if (LightSystems.size() <= 0)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipActor] BuildNavLightsFromRuntime: no runtime navlights Actor='%s'"),
             *GetName());
         return;
@@ -2388,7 +2413,7 @@ void AShipActor::BuildMainEngineEffects(const Drive* MainDrive)
 
     if (!MainDrive)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipActor] BuildMainEnginesFromRuntime: no main drive Actor='%s'"),
             *GetName());
         return;
@@ -2442,6 +2467,7 @@ void AShipActor::BuildMainEngineEffects(const Drive* MainDrive)
         if (Emitter)
         {
             Emitter->SetupAttachment(Point);
+            Emitter->SetAutoActivate(false);
             Emitter->RegisterComponent();
 
             Emitter->SetAsset(MainEngineEmitterSystem);
@@ -2468,7 +2494,6 @@ void AShipActor::BuildMainEngineEffects(const Drive* MainDrive)
             Emitter->SetAbsolute(false,false,true);
             Emitter->SetRelativeScale3D(FVector(Radius));
 
-            Emitter->SetAutoActivate(false);
             Emitter->Deactivate();
 
             RuntimeMainEngineEmitters.Add(Emitter);
@@ -2617,8 +2642,9 @@ void AShipActor::PresentMainEngineEffects(float DeltaTime, float RawPower, float
     for (UPointLightComponent* Glow : RuntimeIdleEngineLights)
         if (Glow)
         {
-            Glow->SetVisibility(bAlive);
-            Glow->SetIntensity(.5f+2.f*FMath::Clamp(MainEngineVisualPower,0.f,1.f));
+            if(Glow->IsVisible()!=bAlive) Glow->SetVisibility(bAlive);
+            const float Intensity=.5f+2.f*FMath::Clamp(MainEngineVisualPower,0.f,1.f);
+            if(Glow->Intensity!=Intensity) Glow->SetIntensity(Intensity);
         }
 
     const bool bActive = MainEngineVisualPower > IdleThreshold;

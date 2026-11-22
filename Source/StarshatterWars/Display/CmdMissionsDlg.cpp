@@ -230,7 +230,7 @@ void UCmdMissionsDlg::ShowMissionsDlg()
     }
 }
 
-void UCmdMissionsDlg::ExecFrame()
+void UCmdMissionsDlg::ExecFrame(double /*DeltaTime*/)
 {
     if (!CampaignPtr)
     {

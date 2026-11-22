@@ -3,6 +3,9 @@
 
 
 #include "SSWGameInstance.h"
+#include "CoreGlobals.h"
+#include "PlatformAvatarSubsystem.h"
+#include "FractalVerseSubsystem.h"
 
 #include "FactionTrainingCatalog.h"
 #include "LocalGameStateSubsystem.h"
@@ -83,6 +86,7 @@ USSWGameInstance::USSWGameInstance(const FObjectInitializer& ObjectInitializer)
 void USSWGameInstance::OnStart()
 {
     if(PilotSaveRecovery::IsRequested())return;
+    if (UFractalVerseSubsystem::ProcessRole() != EFractalVerseRole::Disabled) return;
     if (IsRunningDedicatedServer()) return;
     if (UWorld* World = GetWorld())
     {
@@ -336,7 +340,8 @@ TSharedRef<SWidget> USSWGameInstance::BuildPlatformSignInContent()
             [SNew(STextBlock).Text(Label).Font(MissionUIStyle::GetInfoValueFont(18))];
 
         return SNew(SButton).ButtonStyle(&ProviderStyle.Get())
-            .IsEnabled_Lambda([this] { return !PendingPlatformIdentity.IsValid(); })
+            .IsEnabled_Lambda([this, Provider] { return !PendingPlatformIdentity.IsValid() &&
+                (UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Client || Provider==TEXT("EOS")); })
             .ContentPadding(FMargin(16.f, 10.f))
             .OnClicked_Lambda([this, Provider, ProviderStyle, ProviderNormal, ProviderPressed] {
                 BeginPlatformSignIn(Provider);
@@ -469,6 +474,17 @@ void USSWGameInstance::FinishPlatformSignIn(FName Provider, bool bSuccess, const
         return;
     }
 
+    if (UFractalVerseSubsystem::ProcessRole()==EFractalVerseRole::Client)
+    {
+        // Authentication only. Career/profile state arrives from the server, never local saves.
+        PlatformPilotName=DisplayName;
+        if (auto* Avatars=GetSubsystem<UPlatformAvatarSubsystem>()) Avatars->SetAccount(Provider,AccountId);
+        if (PlatformSignInView) PlatformSignInView->RemoveFromParent();
+        PlatformSignInView=nullptr; PlatformSignInStatus.Reset();
+        UE_LOG(LogTemp,Display,TEXT("[FractalVerseClient] Platform sign-in complete; awaiting verified server pilot."));
+        return;
+    }
+
     const FString AccountKey = Provider.ToString() + TEXT(":") + AccountId;
     const FString AccountSlot = TEXT("PlayerSave_") + FMD5::HashAnsiString(*AccountKey);
     if (Players->GetSlotName() != AccountSlot)
@@ -488,6 +504,8 @@ void USSWGameInstance::FinishPlatformSignIn(FName Provider, bool bSuccess, const
             PlatformSignInStatus->SetText(NSLOCTEXT("SSWSignIn", "ProfileFailed", "Could not load this account's pilot save."));
         return;
     }
+    if (auto* Avatars = GetSubsystem<UPlatformAvatarSubsystem>())
+        Avatars->SetAccount(Provider, AccountId);
     PlatformPilotName = DisplayName;
     Players->GetMutablePlayerInfo().Name = DisplayName;
     PlayerCharacter::SetWorldContext(this);
@@ -504,6 +522,22 @@ void USSWGameInstance::FinishPlatformSignIn(FName Provider, bool bSuccess, const
 
 void USSWGameInstance::ShowMainMenuScreen()
 {
+    if (UFractalVerseSubsystem::ProcessRole()==EFractalVerseRole::Client)
+    {
+        // During migration the connection review owns presentation; no local career/menu boot.
+        if (auto* Online=IOnlineSubsystem::Get(TEXT("EOS")))
+            if (auto Identity=Online->GetIdentityInterface(); Identity && Identity->GetLoginStatus(0)!=ELoginStatus::LoggedIn)
+                PlatformPilotName.Empty();
+        if (PlatformPilotName.IsEmpty() && !PendingPlatformIdentity)
+        {
+            FString Provider; FParse::Value(FCommandLine::Get(),TEXT("SSWLauncherProvider="),Provider);
+            if (!bLauncherPlatformSignInStarted && Provider==TEXT("EOS"))
+            { bLauncherPlatformSignInStarted=true; BeginPlatformSignIn(TEXT("EOS")); }
+            else if (auto* PC=UGameplayStatics::GetPlayerController(this,0)) ShowPlatformSignIn(PC);
+        }
+        return;
+    }
+
     if (GetWorld() && GetWorld()->GetFirstPlayerController<ASSWSessionLobbyController>()) return;
     FString LauncherProvider;
     FParse::Value(FCommandLine::Get(), TEXT("SSWLauncherProvider="), LauncherProvider);
@@ -638,7 +672,7 @@ void USSWGameInstance::ShowOperationsAfterLevelLoad()
 	Screen->Setup();
 
 	// Reuse the existing MenuScreen -> Campaign/Operations entry path.
-	Screen->ShowOperationsDlg();
+	Screen->ReturnFromMissionBriefing();
 
 	PC->bShowMouseCursor = true;
 	PC->bEnableClickEvents = true;
@@ -711,6 +745,8 @@ void USSWGameInstance::Init()
 {
     if(PilotSaveRecovery::IsRequested()){PilotSaveRecovery::RunRequested();return;}
 	Super::Init();
+    // Game HUD messages use their own panels; Unreal diagnostics stay in the log.
+    GAreScreenMessagesEnabled = false;
 	USound::SetWorldContext(this);
 
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
@@ -747,6 +783,12 @@ Campaign* USSWGameInstance::GetAgentTrainingCampaign()
 void USSWGameInstance::Shutdown()
 {
     if(PilotSaveRecovery::IsRequested())return;
+    if (UFractalVerseSubsystem::ProcessRole() != EFractalVerseRole::Disabled)
+    {
+        FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
+        Super::Shutdown();
+        return;
+    }
     if(auto* State=GetSubsystem<ULocalGameStateSubsystem>())State->SaveAtExit();
     if(!IsRunningCommandlet() && !IsTrainingTestSession()){SaveCampaign();SaveUniverse();}
     ClearPlatformSignInRequest();

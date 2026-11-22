@@ -156,7 +156,7 @@ void UCmdMsgDlg::HandleKeyboardShortcuts()
 
     // ENTER / ACCEPT
     if (PC->WasInputKeyJustPressed(EKeys::Enter) ||
-        PC->WasInputKeyJustPressed(EKeys::Virtual_Accept))
+        PC->WasInputKeyJustPressed(EKeys::Virtual_Gamepad_Accept.GetVirtualKey()))
     {
         if (CmpnScreen)
         {

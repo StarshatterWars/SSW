@@ -9,12 +9,12 @@ internal static class ReleasePresentation
         try
         {
             using var doc=JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory,"release-info.json")));
-            string stage=doc.RootElement.GetProperty("stage").GetString() ?? "Alpha 4";
+            string stage=doc.RootElement.GetProperty("stage").GetString() ?? "Alpha 5";
             string warning=doc.RootElement.GetProperty("warning").GetString() ?? DefaultWarning;
-            return (string.IsNullOrWhiteSpace(stage)?"Alpha 4":stage,string.IsNullOrWhiteSpace(warning)?DefaultWarning:warning);
+            return (string.IsNullOrWhiteSpace(stage)?"Alpha 5":stage,string.IsNullOrWhiteSpace(warning)?DefaultWarning:warning);
         }
         catch(Exception ex) when(ex is IOException or UnauthorizedAccessException or JsonException or KeyNotFoundException or InvalidOperationException)
-        { return ("Alpha 4",DefaultWarning); }
+        { return ("Alpha 5",DefaultWarning); }
     });
     internal static string Stage => Info.Value.Stage;
     internal static string Warning => Info.Value.Warning;

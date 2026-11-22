@@ -1,5 +1,5 @@
-#include "Sensor.h"
 #pragma once
+#include "Sensor.h"
 #include "FittingMetrics.h"
 
 #include "Widgets/SCompoundWidget.h"
@@ -21,6 +21,7 @@
 #include "Ship.h"
 #include "WeaponGroup.h"
 #include "Weapon.h"
+#include "Shield.h"
 #include "SimContact.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/Notifications/SProgressBar.h"
@@ -87,12 +88,15 @@ public:
         SCompoundWidget::Tick(Geometry,Time,Delta);
         if(Time>=NextContactRefresh){NextContactRefresh=Time+0.5;RefreshContacts();}
         Ship* P=Player();
-        FString NewSignature=FString::Printf(TEXT("%p"),static_cast<void*>(P));
-        if (P) for (int32 I=0; I<P->GetWeapons().size(); ++I)
-            NewSignature+=FString::Printf(TEXT(";%p"),static_cast<void*>(P->GetWeapons()[I]));
-        if (NewSignature!=Signature) {
-            Signature=NewSignature; StopFire(); Page=0; Rebuild();
+        if(Time>=NextStructureCheck || OwnerIdentity!=reinterpret_cast<UPTRINT>(P))
+        {
+            NextStructureCheck=Time+.5;
+            const int32 Count=P?P->GetWeapons().size():0;
+            bool Changed=OwnerIdentity!=reinterpret_cast<UPTRINT>(P) || GroupIdentities.Num()!=Count;
+            for(int32 I=0;!Changed && I<Count;++I)Changed=GroupIdentities[I]!=reinterpret_cast<UPTRINT>(P->GetWeapons()[I]);
+            if(Changed){OwnerIdentity=reinterpret_cast<UPTRINT>(P);GroupIdentities.Reset(Count);for(int32 I=0;I<Count;++I)GroupIdentities.Add(reinterpret_cast<UPTRINT>(P->GetWeapons()[I]));StopFire();Page=0;Rebuild();}
         }
+        if(Time>=NextReadoutRefresh){NextReadoutRefresh=Time+.1;RefreshReadouts();}
         if (!Operable() || !FSlateApplication::Get().IsActive() ||
             !FSlateApplication::Get().GetPressedMouseButtons().Contains(EKeys::LeftMouseButton)) StopFire();
         if (HeldGroup>=0 && Group(HeldGroup) && P) P->FireWeapon(HeldGroup);
@@ -133,7 +137,11 @@ private:
     TSharedPtr<SVerticalBox> Root;
     TStrongObjectPtr<UTexture2D> Textures[6];
     FSlateBrush Brushes[6];
-    FString Signature;
+    UPTRINT OwnerIdentity=0;
+    TArray<UPTRINT> GroupIdentities;
+    TMap<int32,FText> CachedReadouts;
+    FText CapitalReadout;
+    double NextStructureCheck=0,NextReadoutRefresh=0;
     int32 Page=0;
     int32 HeldGroup=INDEX_NONE;
 
@@ -173,6 +181,22 @@ private:
         }
         const FString Amount=Unlimited ? TEXT("UNLIMITED") : FString::FromInt(Ammo);
         return FString::Printf(TEXT("AMMO  %s\nCHARGE  %.0f%%\nPOWER  %d / %d\nBURST %.2f DPS / SUSTAINED %.2f DPS"),*Amount,Count?Charge/Count:0.0,Powered,Count,BurstDPS,SustainedDPS);
+    }
+    static FString GroupCaption(WeaponGroup* Group)
+    {
+        if(!Group)return TEXT("NONE");
+        int64 Ammo=0;bool Unlimited=false;
+        for(int32 I=0;I<Group->NumWeapons();++I)if(const auto* Gun=Group->GetWeapon(I)){if(Gun->Ammo()<0)Unlimited=true;else Ammo+=Gun->Ammo();}
+        return FString::Printf(TEXT("%hs  %s"),Group->Name(),Unlimited?TEXT("UNL"):*FString::Printf(TEXT("%lld"),Ammo));
+    }
+    void RefreshReadouts()
+    {
+        CachedReadouts.Reset();
+        auto* Craft=Player();
+        if(Craft)for(int32 I=Page*4;I<FMath::Min(Page*4+4,Craft->GetWeapons().size());++I)CachedReadouts.Add(I,Text(Readout(I)));
+        CapitalReadout=Craft && Craft->IsStarship()?Text(FString::Printf(TEXT("PRIMARY  %s   |   SECONDARY  %s   |   SHIELD %.0f%%   |   DECOYS %d   |   PROBES %d"),
+            *GroupCaption(Craft->GetPrimaryGroup()),*GroupCaption(Craft->GetSecondaryGroup()),Craft->GetShield()?double(Craft->GetShieldStrength()):0.0,
+            Craft->GetDecoy()?Craft->GetDecoy()->Ammo():0,Craft->GetProbeLauncher()?Craft->GetProbeLauncher()->Ammo():0)):FText::GetEmpty();
     }
     static bool IsListedContact(SimContact* Contact, Ship* Player) {
         Ship* Target = Contact->GetShip();
@@ -274,11 +298,19 @@ private:
         }
     }
     void Rebuild() {
+        RefreshReadouts();
         Root->ClearChildren();
         if(!Embedded) Root->AddSlot().AutoHeight()[Frame(Label(ContactsOnly?TEXT("CONTACTS"):TEXT("TACTICAL WEAPONS"),20))];
         Root->AddSlot().AutoHeight().Padding(8)[SNew(STextBlock).ColorAndOpacity(Blue()).Text_Lambda([this](){
             auto* P=Player();auto* S=P?P->GetSensor():nullptr;
             return Text(S?FString::Printf(TEXT("SENSOR %d   RANGE %.0f KM   EMCON %d"),int(S->GetMode()),S->GetBeamRange()/1000.0,P->GetEMCON()):TEXT("NO SENSOR"));})];
+        if(!ContactsOnly && Player() && Player()->IsStarship())
+            Root->AddSlot().AutoHeight().Padding(8,0,8,8)
+            [SNew(SHorizontalBox)
+                +SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0,0,8,0)
+                    [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Weapon).ToolTipText(Text(TEXT("Capital ship armament, defensive systems and probe stores")))]
+                +SHorizontalBox::Slot().FillWidth(1)
+                    [SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",12)).AutoWrapText(true).ColorAndOpacity(Blue()).Text_Lambda([this](){return CapitalReadout;})]];
         TSharedPtr<SVerticalBox> Rows;
         ContactState.Empty();
         ContactsBox=SNew(SVerticalBox); SystemsBox=SNew(SVerticalBox);
@@ -351,7 +383,7 @@ private:
              +SHorizontalBox::Slot().FillWidth(0.65f)[OrderButton(I,WeaponsOrders::AUTO,TEXT("AUTO"))]
              +SHorizontalBox::Slot().FillWidth(0.65f)[OrderButton(I,WeaponsOrders::POINT_DEFENSE,TEXT("DEF"))]
              +SHorizontalBox::Slot().FillWidth(1).Padding(5,0)
-              [SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(Blue()).Text_Lambda([this,I](){return Text(Readout(I));})]];
+              [SNew(STextBlock).Font(FCoreStyle::GetDefaultFontStyle("Regular",14)).ColorAndOpacity(Blue()).Text_Lambda([this,I](){return CachedReadouts.FindRef(I);})]];
         }
         if (!ContactsOnly) for (int32 Slot=0;Slot<4 && Page*4+Slot<Count;++Slot) {
             const int32 I=Page*4+Slot;

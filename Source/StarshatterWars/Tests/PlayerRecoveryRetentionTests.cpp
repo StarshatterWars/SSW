@@ -24,6 +24,7 @@ bool FPlayerRecoveryRetentionTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Repeated processing preserves parked fighter"),Region.GetShips().contains(Player));
     auto* Wingman = new Ship("Recovered wingman","",&Design,1,0,nullptr,false);
     Region.GetShips().append(Wingman);
+    AddExpectedError(TEXT("Docked with NULL carrier"),EAutomationExpectedErrorFlags::Contains,1);
     Wingman->SetFlightPhase(EOPSMode::DOCKED);
     Region.DockShips();
     TestFalse(TEXT("NPC recovery retains legacy immediate removal"),Region.GetShips().contains(Wingman));

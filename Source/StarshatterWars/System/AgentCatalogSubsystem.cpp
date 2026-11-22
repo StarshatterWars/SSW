@@ -1,5 +1,16 @@
 
 #include "AgentCatalogSubsystem.h"
+#include "Ship.h"
+#include "ShipDesignRegistry.h"
+#include "SimElement.h"
+#include "SimRegion.h"
+#include "LocalGameStateSubsystem.h"
+#include "TrainingShuttleRules.h"
+#include "StationServices.h"
+#include "CampaignFleetTransit.h"
+#include "StarSystem.h"
+#include "FreeFlightAssignment.h"
+#include "JsonObjectConverter.h"
 #include "FactionTrainingCatalog.h"
 #include "DynamicMissionAI.h"
 #include "AgentJournalTransaction.h"
@@ -65,6 +76,15 @@ bool UAgentCatalogSubsystem::StartIndependentAssignment(int32 Id,FText& Reason)
 {
  auto* Game=Cast<USSWGameInstance>(GetGameInstance());auto* Players=Game?Game->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;auto* Simulation=Sim::GetSim();auto* Pilot=PlayerCharacter::GetCurrentPlayer();
  if(!Game || !Players || !Simulation || !Simulation->GetMission() || !Simulation->GetMission()->IsFreeFlight() || !Pilot)return false;
+ if(Id==FreeFlightAssignment::Id)
+ {
+     const auto* Order=Game->GetTrainingAgent().Find(AgentAI::PilotKey(*Pilot));
+     if(!Order || Order->MissionId!=Id || !CanAccept(Id,Order->Issuer) || !FStationServices::IsDocked())return false;
+     const auto Started=AgentJournalTransaction::Commit(Game->GetTrainingAgent(),Players->GetMutablePlayerInfo(),
+         [&](){return Game->GetTrainingAgent().Start(AgentAI::PilotKey(*Pilot),Id);},[&](){return Players->SaveActivePlayerProgress();});
+     Reason=Started==AgentJournalTransaction::EResult::Committed?INVTEXT("Free Flight clearance granted. Use Launch when your craft is ready."):INVTEXT("Unable to save departure clearance. Retry the assignment.");
+     return Started==AgentJournalTransaction::EResult::Committed;
+ }
  const auto Result=AgentJournalTransaction::Commit(Game->GetTrainingAgent(),Players->GetMutablePlayerInfo(),[&](){return DynamicMissionAI::Start(*Simulation,Players->GetMutablePlayerInfo(),Game->GetTrainingAgent(),AgentAI::PilotKey(*Pilot),Id,Reason);},[&](){return Players->SaveActivePlayerProgress();});
  if(Result==AgentJournalTransaction::EResult::SaveFailed)Reason=INVTEXT("Unable to save job start; the accepted assignment was retained.");
  return Result==AgentJournalTransaction::EResult::Committed;
@@ -123,6 +143,8 @@ TArray<int32> UAgentCatalogSubsystem::GetEligibleMissions(FName AgentId) const
 
     const auto* Players = Game->GetSubsystem<UStarshatterPlayerSubsystem>();
     const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
+    if (Agent->MissionIds.Contains(FreeFlightAssignment::Id) && Pilot && Players && FreeFlightAssignment::Unlocked(Pilot->GetRank(),Players->GetPlayerInfo()))
+        Eligible.Add(FreeFlightAssignment::Id);
     if (!Pilot) return Eligible;
     const FName Key = AgentAI::PilotKey(*Pilot);
     const auto* Skills = Game->GetSubsystem<USkillsSubsystem>();
@@ -147,7 +169,7 @@ TArray<int32> UAgentCatalogSubsystem::GetEligibleMissions(FName AgentId) const
         for(int32 Id:DynamicMissionAI::Offers(Players->GetPlayerInfo(),AgentId,FDateTime::UtcNow().ToUnixTimestamp()))Eligible.AddUnique(Id);
     // Authored campaign assignments remain owned by their original campaign.
     if (!Game->IsTrainingTestSession())
-        if (auto* Active = Campaign::GetCampaign(); Active && Active->IsActive() && IsCampaignIssuer(AgentId, Active->GetCampaignId()))
+        if (auto* Active = Campaign::GetCampaign(); Active && Active->IsActive() && !NeedsCampaignDeployment(Active->GetCampaignId()) && IsCampaignIssuer(AgentId, Active->GetCampaignId()))
         {
             TArray<MissionInfo*> Missions;
             for (int32 Index=0; Index<Active->GetMissionList().size(); ++Index) Missions.Add(Active->GetMissionList()[Index]);
@@ -198,13 +220,18 @@ bool UAgentCatalogSubsystem::CanReplayTrainingTest(int32 MissionId,FName AgentId
     auto* Game=Cast<USSWGameInstance>(GetGameInstance());
     const auto* Pilot=PlayerCharacter::GetCurrentPlayer();
     const auto* Agent=FindAgent(AgentId);
-    if(!Game || !Game->IsTrainingTestSession() || !Pilot || !Agent || Agent->Class!=EAgentClass::Training ||
+    if(!Game || !Pilot || !Agent || Agent->Class!=EAgentClass::Training ||
         !Agent->MissionIds.Contains(MissionId) || !FTrainingTestRules::IsLesson(MissionId) || !CanContact(AgentId))return false;
     const FName Key=AgentAI::PilotKey(*Pilot);
     const FName Skill=FTrainingTestRules::RequiredSkill(MissionId);
     const auto* Skills=Game->GetSubsystem<USkillsSubsystem>();
-    return Pilot->GetRank()>=FTrainingTestRules::RequiredRank(MissionId) && (Skill.IsNone() || (Skills && Skills->HasSkill(Skill))) &&
-        Game->GetTrainingAgent().IsCompleted(Key,MissionId) && Game->GetTrainingAgent().GetQueue(Key).IsEmpty();
+    const auto* Players=Game->GetSubsystem<UStarshatterPlayerSubsystem>();
+    const bool Completed=Game->GetTrainingAgent().IsCompleted(Key,MissionId) ||
+        (Players && Players->GetPlayerInfo().HasCompletedMission(Campaign::TRAINING_CAMPAIGN,MissionId));
+    const auto Queue=Game->GetTrainingAgent().GetQueue(Key);
+    const bool QueueAvailable=Queue.IsEmpty() || (FStationServices::IsDocked() &&
+        !Queue.ContainsByPredicate([](const AgentAI::FAssignment& Item){return Item.MissionId<101 || Item.MissionId>107 || Item.bTestReplay;}));
+    return Pilot->GetRank()>=FTrainingTestRules::RequiredRank(MissionId) && (Skill.IsNone() || (Skills && Skills->HasSkill(Skill))) && Completed && QueueAvailable;
 }
 
 bool UAgentCatalogSubsystem::CanAccept(int32 MissionId, FName AgentId) const
@@ -214,6 +241,13 @@ bool UAgentCatalogSubsystem::CanAccept(int32 MissionId, FName AgentId) const
     const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
     const auto* Agent = FindAgent(AgentId);
     if (!Game || !Pilot || !Agent || Pilot->GetRank() < Agent->MinimumRank) return false;
+    if(MissionId==FreeFlightAssignment::Id)
+    {
+        const auto* Progress=Game->GetSubsystem<UStarshatterPlayerSubsystem>();
+        const auto Queue=Game->GetTrainingAgent().GetQueue(AgentAI::PilotKey(*Pilot));
+        if(Queue.ContainsByPredicate([](const AgentAI::FAssignment& Assignment){return Assignment.MissionId!=FreeFlightAssignment::Id;}))return false;
+        return Progress && Agent->MissionIds.Contains(MissionId) && FreeFlightAssignment::Unlocked(Pilot->GetRank(),Progress->GetPlayerInfo()) && FStationServices::IsDocked();
+    }
     if(DynamicMissionAI::IsDynamic(MissionId))
     {
         const auto* Players=Game->GetSubsystem<UStarshatterPlayerSubsystem>();FText Reason;
@@ -238,7 +272,7 @@ bool UAgentCatalogSubsystem::CanAccept(int32 MissionId, FName AgentId) const
     const auto Queue = Game->GetTrainingAgent().GetQueue(AgentAI::PilotKey(*Pilot));
     if (!Queue.IsEmpty() && Queue[0].MissionId == MissionId && Queue[0].Issuer == AgentId && Queue[0].State == AgentAI::EState::Accepted)
     {
-        if (FTrainingTestRules::IsLesson(MissionId)) return !Queue[0].bTestReplay || Game->IsTrainingTestSession();
+        if (FTrainingTestRules::IsLesson(MissionId)) return true;
         int32 CampaignId, OriginalId;
         if (AgentMissionRules::Decode(MissionId, CampaignId, OriginalId))
         {
@@ -267,6 +301,7 @@ const FS_CampaignMission* UAgentCatalogSubsystem::FindScenario(int32 Id) const
 
 FText UAgentCatalogSubsystem::GetMissionTitle(int32 MissionId) const
 {
+    if(MissionId==FreeFlightAssignment::Id)return INVTEXT("Free Flight — Departure Clearance");
     if(DynamicMissionAI::IsDynamic(MissionId))if(auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>())return DynamicMissionAI::Title(Players->GetPlayerInfo(),MissionId);
 
     int32 CampaignId, OriginalId;
@@ -301,6 +336,17 @@ Campaign* UAgentCatalogSubsystem::GetRepository(int32 MissionId)
 
 Mission* UAgentCatalogSubsystem::GetMission(int32 MissionId)
 {
+    if(MissionId==FreeFlightAssignment::Id)
+    {
+        if(auto* Existing=RegionalMissions.Find(MissionId))return Existing->Get();
+        FS_CampaignMission Row;FString Json;
+        if(!FFileHelper::LoadFileToString(Json,*(FPaths::ProjectContentDir()/TEXT("GameData/Agents/free_flight.json"))) || !FJsonObjectConverter::JsonObjectStringToUStruct(Json,&Row,0,0))return nullptr;
+        auto Model=MakeShared<Mission>(MissionId);
+        Model->SetName(TCHAR_TO_UTF8(*Row.MissionName));
+        Model->SetSituation(TCHAR_TO_UTF8(*Row.Sitrep));
+        Model->SetObjective(TCHAR_TO_UTF8(*Row.Objective));
+        return RegionalMissions.Add(MissionId,MoveTemp(Model)).Get();
+    }
     if(DynamicMissionAI::IsDynamic(MissionId))
     {
         auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();FS_CampaignMission Row;
@@ -356,6 +402,20 @@ FText UAgentCatalogSubsystem::GetAssignmentStatus(FName AgentId) const
 
 FText UAgentCatalogSubsystem::GetTrainingRequirement(int32 Id) const
 {
+    if(Id==FreeFlightAssignment::Id)
+    {
+        auto* Context=Cast<USSWGameInstance>(GetGameInstance());
+        const auto* Character=PlayerCharacter::GetCurrentPlayer();
+        if(!Character || Character->GetRank()<2)return INVTEXT("Requires Ensign rank or higher.");
+        const auto* Progress=Context?Context->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+        if(!Progress || !FreeFlightAssignment::Unlocked(Character->GetRank(),Progress->GetPlayerInfo()))
+            return INVTEXT("Complete T1–T4 before requesting independent flight.");
+        const auto Queue=Context->GetTrainingAgent().GetQueue(AgentAI::PilotKey(*Character));
+        if(Queue.ContainsByPredicate([](const AgentAI::FAssignment& Assignment){return Assignment.MissionId!=FreeFlightAssignment::Id;}))
+            return INVTEXT("Complete or abandon your current assignment before requesting Free Flight.");
+        if(!FStationServices::IsDocked())return INVTEXT("Dock at a friendly base to request departure clearance.");
+        return INVTEXT("Accept and start this clearance, then use Launch. Fly your active craft in the live universe. Repeatable; no mission rewards.");
+    }
     auto* Game = Cast<USSWGameInstance>(GetGameInstance());
     const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
     if (!Game || !Pilot || !FTrainingTestRules::IsLesson(Id)) return INVTEXT("Unavailable");
@@ -437,6 +497,148 @@ bool UAgentCatalogSubsystem::CanOfferCampaignMission(const FS_AgentCatalogRow& A
         (!Info.region.length() || GroupRegion.Equals(UTF8_TO_TCHAR(Info.region.data()), ESearchCase::IgnoreCase));
 }
 
+bool UAgentCatalogSubsystem::NeedsCampaignDeployment(int32 Id) const
+{
+    const auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if(!Players || Id!=2)return false;
+    if(CampaignPresentationRules::HasPendingFleetDeployment(Players->GetPlayerInfo(),Id))return true;
+    auto* Simulation=Sim::GetSim();
+    auto* Pilot=Simulation?Simulation->GetPlayerShip():nullptr;
+    auto* Base=Pilot?Pilot->GetCarrier():nullptr;
+    return CampaignPresentationRules::NeedsFleetReturnRecovery(Players->GetPlayerInfo(),
+        Simulation && Simulation->GetMission() && Simulation->GetMission()->IsFreeFlight(),
+        Base && FCStringAnsi::Stricmp(Base->GetName(),"Janek Station")==0 && Pilot->GetFlightPhase()<=EOPSMode::ALERT);
+}
+
+void UAgentCatalogSubsystem::CompleteCampaignDeploymentOnArrival()
+{
+    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if(!Players || !CampaignPresentationRules::HasPendingFleetDeployment(Players->GetPlayerInfo(),2))return;
+    const auto* Data=GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>();
+    const auto* Row=Data?Data->GetCampaignByIndex1Based(2):nullptr;
+    if(!Row)return;
+    auto* Simulation=Sim::GetSim();
+    auto* Pilot=Simulation?Simulation->GetPlayerShip():nullptr;
+    auto* Carrier=Pilot?Pilot->GetCarrier():nullptr;
+    auto* Region=Carrier?Carrier->GetRegion():nullptr;
+    if(!Region || Carrier->IsStatic() || Region!=Simulation->GetActiveRegion() || !Region->GetSystem() ||
+        !Row->System.Equals(UTF8_TO_TCHAR(Region->GetSystem()->GetName()),ESearchCase::IgnoreCase) ||
+        !Row->Region.Equals(UTF8_TO_TCHAR(Region->GetName()),ESearchCase::IgnoreCase))return;
+    auto& Info=Players->GetMutablePlayerInfo();
+    // Commit the destination world before marking the one-time deployment complete.
+    // Otherwise a crash can pair a completed pilot flag with an older Janek checkpoint.
+    Info.PendingFleetDeploymentCampaign=0;
+    auto* State=GetGameInstance()->GetSubsystem<ULocalGameStateSubsystem>();
+    if(!(State?State->SaveCheckpointNow():Players->SaveActivePlayerProgress()))
+    {
+        Info.PendingFleetDeploymentCampaign=2;
+        Players->SaveActivePlayerProgress();
+    }
+    else
+    {
+        UE_LOG(LogTemp,Display,TEXT("[CampaignTransit] Meridian deployment completed and saved"));
+        AgentAI::OnJournalChanged().Broadcast();
+    }
+}
+
+bool UAgentCatalogSubsystem::IsAboardTrainingCarrier() const
+{
+    auto* Simulation=Sim::GetSim();auto* Pilot=Simulation?Simulation->GetPlayerShip():nullptr;
+    auto* Carrier=Pilot?Pilot->GetCarrier():nullptr;
+    return Carrier && !Carrier->IsStatic() && !Carrier->IsDead() && Carrier->Design() &&
+        FCStringAnsi::Stricmp(Carrier->Design()->name,"Orion")==0 && Pilot->GetFlightPhase()<=EOPSMode::ALERT;
+}
+
+int32 UAgentCatalogSubsystem::GetTrainingTransferStage() const
+{
+    const auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    auto* Simulation=Sim::GetSim();auto* Pilot=Simulation?Simulation->GetPlayerShip():nullptr;
+    auto* Base=Pilot?Pilot->GetCarrier():nullptr;
+    if(!Players)return 0;
+    return TrainingShuttleRules::TransferStage(Players->GetPlayerInfo(),
+        Simulation && Simulation->GetMission() && Simulation->GetMission()->IsFreeFlight(),
+        Pilot && Pilot->GetFlightPhase()<=EOPSMode::ALERT,IsAboardTrainingCarrier(),
+        Base && FCStringAnsi::Stricmp(Base->GetName(),"Janek Station")==0);
+}
+
+bool UAgentCatalogSubsystem::TransferTrainingPilot(FText& Reason)
+{
+    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    auto* Data=GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>();
+    auto* Simulation=Sim::GetSim();
+    const int32 Stage=GetTrainingTransferStage();
+    if(!Players || !Data || !Simulation || !Stage)
+    {Reason=INVTEXT("Training shuttle orders are unavailable. Complete T2 for TDY to Janek Station, or T4 to return to Orion, then dock.");return false;}
+    auto* Pilot=Simulation->GetPlayerShip();
+    Ship* Destination=nullptr;
+    if(Stage==1)
+    {
+        Simulation->EnsureTrainingSurfaceBase();
+        Destination=Simulation->FindShip("Janek Station");
+    }
+    else
+    {
+        for(ListIter<SimRegion> Region=Simulation->GetRegions();++Region;)
+            for(ListIter<Ship> Vessel=Region->GetShips();++Vessel;)
+                if(!Vessel->IsStatic() && !Vessel->IsDead() && !Vessel->IsDying() && Vessel->GetIFF()==Pilot->GetIFF() &&
+                    Vessel->Design() && FCStringAnsi::Stricmp(Vessel->Design()->name,"Orion")==0)Destination=Vessel.value();
+        if(!Destination)
+        {
+            FS_CampaignMission Entry;
+            if(!Data->ReadLooseMission(FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/01/Scenes/FreeFlight.json"),Entry))
+            {Reason=INVTEXT("Orion's return-transfer orders could not be loaded. Your position is unchanged.");return false;}
+            const auto* Authored=Entry.Element.FindByPredicate([](const auto& E){return E.Design==TEXT("Orion");});
+            auto* Design=Authored?ShipDesignRegistry::FindLegacy(FName(*Authored->Design)):nullptr;
+            auto* Region=Authored?CampaignFleetTransit::EnsureRegion(*Simulation,Entry.MissionSystem,
+                Authored->RegionName.IsEmpty()?Entry.MissionRegion:Authored->RegionName):nullptr;
+            if(Region && Design)
+            {
+                Destination=Simulation->CreateShip(TCHAR_TO_UTF8(*Authored->Name),"",Design,Region->GetName(),Authored->Location,Pilot->GetIFF(),Authored->CommandAI);
+                if(Destination)if(auto* Group=Simulation->CreateElement(TCHAR_TO_UTF8(*Authored->Name),Pilot->GetIFF()))Group->AddShip(Destination);
+            }
+        }
+    }
+    if(!Destination){Reason=INVTEXT("The training shuttle destination is unavailable. Remain docked and retry.");return false;}
+    if(!CampaignFleetTransit::BoardCarrier(*Simulation,*Destination,Reason))return false;
+    // Recover older Campaign 2 saves stranded at Janek without accepting anything new.
+    if(Stage==2 && Players->GetPlayerInfo().Campaign==2)
+        Players->GetMutablePlayerInfo().PendingFleetDeploymentCampaign=2;
+    auto* State=GetGameInstance()->GetSubsystem<ULocalGameStateSubsystem>();
+    if(!(State?State->SaveCheckpointNow():Players->SaveActivePlayerProgress()))
+    {Reason=INVTEXT("Shuttle arrival completed, but the checkpoint could not be saved. Save before exiting.");return false;}
+    Reason=Stage==1?INVTEXT("TDY to Janek Station. Report to the training agent for T3 and T4."):
+        INVTEXT("Returned to Orion. Your TDY is complete. Review Campaign 2 orders with the agent when ready.");
+    AgentAI::OnJournalChanged().Broadcast();
+    return true;
+}
+
+bool UAgentCatalogSubsystem::DeployCampaignFleet(int32 Id,FText& Reason)
+{
+    const auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    const auto* Data=GetGameInstance()->GetSubsystem<UStarshatterGameDataSubsystem>();
+    const auto* Row=Data?Data->GetCampaignByIndex1Based(Id):nullptr;
+    auto* Simulation=Sim::GetSim();
+    if(Id!=2 || !Players || Players->GetPlayerInfo().Campaign!=Id || !Row || !Simulation ||
+        !Simulation->GetMission() || !Simulation->GetMission()->IsFreeFlight() || !IsAboardTrainingCarrier())
+    {Reason=INVTEXT("Return to Orion, then accept Campaign 2 orders before deploying the fleet.");return false;}
+    return CampaignFleetTransit::Start(*Simulation,Row->System,Row->Region,Reason);
+}
+
+FName UAgentCatalogSubsystem::GetPostTrainingCampaignAgent() const
+{
+    auto* Game=Cast<USSWGameInstance>(GetGameInstance());
+    const auto* Players=Game?Game->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+    const auto* Pilot=PlayerCharacter::GetCurrentPlayer();
+    if(!Game || Game->IsTrainingTestSession() || !Players || !Pilot || !IsAboardTrainingCarrier())return NAME_None;
+    if(!CampaignPresentationRules::NeedsTrainingHandoff(Players->GetPlayerInfo(),
+        [&](int32 Id){return Game->GetTrainingAgent().IsCompleted(AgentAI::PilotKey(*Pilot),Id);}))return NAME_None;
+    TArray<FName> Issuers;
+    for(const auto& Pair:Catalog)
+        if(CanContact(Pair.Key) && IsCampaignIssuer(Pair.Key,2))Issuers.Add(Pair.Key);
+    Issuers.Sort(FNameLexicalLess());
+    return Issuers.IsEmpty()?NAME_None:Issuers[0];
+}
+
 bool UAgentCatalogSubsystem::CanActivateCampaign(FName AgentId, int32 Id) const
 {
     auto* Game = Cast<USSWGameInstance>(GetGameInstance());
@@ -446,8 +648,12 @@ bool UAgentCatalogSubsystem::CanActivateCampaign(FName AgentId, int32 Id) const
     const auto* Data = Game->GetSubsystem<UStarshatterGameDataSubsystem>();
     const auto* Row = Data ? Data->GetCampaignByIndex1Based(Id) : nullptr;
     auto* Simulation = Sim::GetSim();
-    if (Simulation && Simulation->GetMission() && (!Simulation->GetMission()->IsFreeFlight() || !Simulation->HasPlayerDocked())) return false;
+    if (Simulation && Simulation->GetMission() && (!Simulation->GetMission()->IsFreeFlight() || !FStationServices::IsDocked())) return false;
+    if(Id==2 && !IsAboardTrainingCarrier())return false;
     const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
+    if(Id==2 && Players && Players->GetPlayerInfo().Campaign==1 &&
+        !Players->GetPlayerInfo().HasCompletedMission(1,104) &&
+        (!Pilot || !Game->GetTrainingAgent().IsCompleted(AgentAI::PilotKey(*Pilot),104)))return false;
     return Players && Pilot && Pilot->GetRank() >= Agent->MinimumRank && Row && Row->bAvailable && IsCampaignOrigin(*Agent, *Row) &&
         CampaignPresentationRules::CanSelectCampaign(Players->GetPlayerInfo()) &&
         CampaignPresentationRules::IsCampaignUnlocked(Id, Players->GetPlayerInfo()) &&
@@ -467,6 +673,7 @@ bool UAgentCatalogSubsystem::ActivateCampaign(FName AgentId, int32 Id)
     auto& PendingPlayer = Players->GetMutablePlayerInfo();
     PendingPlayer.Campaign = Id;
     PendingPlayer.CampaignRowName = Row->RowName;
+    PendingPlayer.PendingFleetDeploymentCampaign = Id==2 ? Id : 0;
     if (!Players->SaveActivePlayerProgress())
     {
         Players->GetMutablePlayerInfo() = PreviousPlayer;

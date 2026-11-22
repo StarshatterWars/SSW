@@ -880,7 +880,7 @@ void UCmdTheaterDlg::ShowTheaterDlg()
     Mouse::Show(true);
 }
 
-void UCmdTheaterDlg::ExecFrame()
+void UCmdTheaterDlg::ExecFrame(double /*DeltaTime*/)
 {
     if (!Stars)
     {

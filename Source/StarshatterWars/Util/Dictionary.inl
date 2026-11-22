@@ -166,7 +166,7 @@ T Dictionary<T>::Find(const Text& key, T defval) const
 // +-------------------------------------------------------------------+
 
 template <class T> DictionaryIter<T>::DictionaryIter(Dictionary<T>& d)
-    : dict(&d), chain(0), here(0)
+    : dict(&d), here(0), chain(0)
 { }
 
 template <class T> DictionaryIter<T>::~DictionaryIter()

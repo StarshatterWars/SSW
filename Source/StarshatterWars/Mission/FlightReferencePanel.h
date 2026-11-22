@@ -45,22 +45,21 @@ public:
                 Stats.ReplaceInline(MarkupTag, TEXT(""));
                 Description.ReplaceInline(MarkupTag, TEXT(""));
             }
-            const TCHAR* Type;
             EShipSystemIcon Icon;
             switch (Design.Category)
             {
-            case EShipCategory::CapitalShip: Type = TEXT("Ship"); Icon = EShipSystemIcon::Ship; break;
-            case EShipCategory::Transport: Type = TEXT("Transport"); Icon = EShipSystemIcon::Transport; break;
-            case EShipCategory::Shuttle: Type = TEXT("Shuttle"); Icon = EShipSystemIcon::Transport; break;
-            case EShipCategory::Station: Type = TEXT("Station"); Icon = EShipSystemIcon::Station; break;
-            case EShipCategory::Platform: Type = TEXT("Platform"); Icon = EShipSystemIcon::Station; break;
-            case EShipCategory::Building: Type = TEXT("Building"); Icon = EShipSystemIcon::Building; break;
-            case EShipCategory::Fighter: Type = TEXT("Fighter"); Icon = EShipSystemIcon::Fighter; break;
+            case EShipCategory::CapitalShip: Icon = EShipSystemIcon::Ship; break;
+            case EShipCategory::Transport: Icon = EShipSystemIcon::Transport; break;
+            case EShipCategory::Shuttle: Icon = EShipSystemIcon::Transport; break;
+            case EShipCategory::Station: Icon = EShipSystemIcon::Station; break;
+            case EShipCategory::Platform: Icon = EShipSystemIcon::Station; break;
+            case EShipCategory::Building: Icon = EShipSystemIcon::Building; break;
+            case EShipCategory::Fighter: Icon = EShipSystemIcon::Fighter; break;
             default: continue;
             }
             Catalog.Add(MakeShared<FEntry>(
-                Icon, FString::Printf(TEXT("%s: %s"), Type, *Name),
-                MoveTemp(Stats), MoveTemp(Description), Key));
+                Icon, Name,
+                MoveTemp(Stats), MoveTemp(Description), Key, int32(Design.Category)));
         }
         for (const auto& [Key, Design] : WeaponDesignRegistry::GetAll())
         {
@@ -72,7 +71,7 @@ public:
                 UTacRefDlg::BuildWeaponTexts(*Legacy, Name, Stats, Description);
             if (Stats.IsEmpty())
                 Stats = FString::Printf(TEXT("Range  %.0f m\nProjectile speed  %.0f m/s"), Design.MaxRange, Design.Speed);
-            Catalog.Add(MakeShared<FEntry>(EShipSystemIcon::Weapon, TEXT("Weapon · ") + Name,
+            Catalog.Add(MakeShared<FEntry>(EShipSystemIcon::Weapon, Name,
                 MoveTemp(Stats), MoveTemp(Description)));
         }
         TArray<FString> LoreTitles;
@@ -116,6 +115,22 @@ public:
         AddFilter(EShipSystemIcon::Gazetteer, INVTEXT("Gazetteer"));
 
         using ESection = UTacRefDlg::EGazetteerSection;
+        auto Subfilters=SNew(SHorizontalBox);
+        const auto AddSubtype=[&](const TCHAR* Label,int32 Type,EShipSystemIcon Category)
+        {
+            Subfilters->AddSlot().AutoWidth().Padding(0,0,6,0)
+            [SNew(SButton).ContentPadding(FMargin(10,5)).ToolTipText(FText::FromString(Label))
+                .Visibility_Lambda([this,Category](){return ActiveCategory==Category?EVisibility::Visible:EVisibility::Collapsed;})
+                .ButtonColorAndOpacity_Lambda([this,Type](){return Subcategory==Type?MissionUIStyle::RowSelectedBG:MissionUIStyle::RowBG;})
+                .OnClicked_Lambda([this,Type](){SelectSubcategory(Type);return FReply::Handled();})
+                [SNew(STextBlock).Text(FText::FromString(Label)).ColorAndOpacity(FLinearColor::White).Font(MissionUIStyle::GetRowFont(12))]];
+        };
+        AddSubtype(TEXT("ALL"),-1,EShipSystemIcon::Station);
+        AddSubtype(TEXT("STATIONS"),int32(EShipCategory::Station),EShipSystemIcon::Station);
+        AddSubtype(TEXT("PLATFORMS"),int32(EShipCategory::Platform),EShipSystemIcon::Station);
+        AddSubtype(TEXT("ALL"),-1,EShipSystemIcon::Transport);
+        AddSubtype(TEXT("TRANSPORTS"),int32(EShipCategory::Transport),EShipSystemIcon::Transport);
+        AddSubtype(TEXT("SHUTTLES"),int32(EShipCategory::Shuttle),EShipSystemIcon::Transport);
         auto Sections = SNew(SHorizontalBox);
         const auto AddSection = [&](ESection Section, EShipSystemIcon Icon, const FText& Label)
         {
@@ -147,6 +162,8 @@ public:
             SNew(SVerticalBox)
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 10)
             [ Filters ]
+            + SVerticalBox::Slot().AutoHeight().Padding(0,0,0,8)
+            [SNew(SBox).Visibility_Lambda([this](){return ActiveCategory==EShipSystemIcon::Station || ActiveCategory==EShipSystemIcon::Transport?EVisibility::Visible:EVisibility::Collapsed;})[Subfilters]]
             + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 0, 10)
             [
                 SNew(SBox).Visibility_Lambda([this]()
@@ -211,19 +228,24 @@ private:
         FString Stats;
         FString Description;
         FName DesignKey;
+        int32 HullCategory=-1;
 
         FString DisplayName() const
         {
             return Category == EShipSystemIcon::Gazetteer ? UTacRefDlg::GetGazetteerDisplayName(Name) : Name;
         }
     };
+public:
+    TArray<FString> GetVisibleNames()const {TArray<FString> Names;for(const auto& Entry:Entries)Names.Add(Entry->DisplayName());return Names;}
+    void SelectSubcategory(int32 Type){Subcategory=Type;SelectCategory(ActiveCategory);}
     void SelectCategory(EShipSystemIcon Category)
     {
+        if(ActiveCategory!=Category)Subcategory=-1;
         ActiveCategory = Category;
         Entries.Reset();
         for (const auto& Entry : Catalog)
         {
-            if (Entry->Category == Category && (Category != EShipSystemIcon::Gazetteer ||
+            if (Entry->Category == Category && (Subcategory<0 || Entry->HullCategory==Subcategory) && (Category != EShipSystemIcon::Gazetteer ||
                 UTacRefDlg::GetGazetteerSection(Entry->Name) == GazetteerSection))
                 Entries.Add(Entry);
         }
@@ -237,6 +259,7 @@ private:
         SetEntry(First);
     }
 
+private:
     void SetEntry(TSharedPtr<FEntry> Entry)
     {
         if (Selected == Entry) return;
@@ -251,6 +274,7 @@ private:
     TFunction<void(const FString&)> UpdateGazetteerMap;
     UTacRefDlg::EGazetteerSection GazetteerSection = UTacRefDlg::EGazetteerSection::Systems;
     EShipSystemIcon ActiveCategory = EShipSystemIcon::Ship;
+    int32 Subcategory=-1;
     TArray<TSharedPtr<FEntry>> Catalog;
     TArray<TSharedPtr<FEntry>> Entries;
     TSharedPtr<SComboBox<TSharedPtr<FEntry>>> Picker;

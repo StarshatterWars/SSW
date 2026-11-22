@@ -407,7 +407,7 @@ void UShipBriefingPreview::NativeConstruct()
 void UShipBriefingPreview::ClearVisual()
 {
     bDragging = false;
-    if (HasMouseCapture() && FSlateApplication::IsInitialized()) FSlateApplication::Get().ReleaseMouseCapture();
+    if (HasMouseCapture() && FSlateApplication::IsInitialized()) FSlateApplication::Get().ReleaseAllPointerCapture();
     if (AActor* Visual = PreviewVisual.Get()) Visual->Destroy();
     PreviewVisual.Reset();
     if (AActor* Visual = RouteShip.Get()) Visual->Destroy();
@@ -426,7 +426,7 @@ void UShipBriefingPreview::NativeDestruct()
     Super::NativeDestruct();
 }
 
-bool UShipBriefingPreview::SetShipDesign(const FShipDesign* Design, const TArray<const FWeaponDesign*>& Stores)
+bool UShipBriefingPreview::SetShipDesign(const FShipDesign* Design, const TArray<const FWeaponDesign*>& Stores, const FShipSkin* Skin)
 {
     if (bMissionScene)
     {
@@ -444,6 +444,7 @@ bool UShipBriefingPreview::SetShipDesign(const FShipDesign* Design, const TArray
     const FString ShipKey = NewKey;
     for (const FWeaponDesign* Store : Stores)
         NewKey += TEXT("|") + (Store ? Store->Name : FString());
+    if (Skin) NewKey += TEXT("|SKIN:")+Skin->Name;
     const bool bSameShip = !ShipKey.IsEmpty() && (DesignKey == ShipKey || DesignKey.StartsWith(ShipKey + TEXT("|")));
     if (DesignKey == NewKey && !Parts.IsEmpty()) { UpdateVisual(); return true; }
     ClearVisual();
@@ -453,6 +454,24 @@ bool UShipBriefingPreview::SetShipDesign(const FShipDesign* Design, const TArray
         (Design->Category == EShipCategory::CapitalShip || Design->Category == EShipCategory::Station ||
          Design->Category == EShipCategory::Platform || Design->Category == EShipCategory::Fighter);
     if (!Design || !BriefingShipPreview::ResolveParts(*Design, Parts, Stores)) return false;
+    if(Skin)for(auto& Part:Parts)
+    {
+        if(!Part.Mesh)continue;
+        const auto& Slots=Part.Mesh->GetStaticMaterials();
+        for(int32 Index=Part.Materials.Num();Index<Slots.Num();++Index)Part.Materials.Add(Part.Mesh->GetMaterial(Index));
+        for(int32 MaterialIndex=0;MaterialIndex<Part.Materials.Num();++MaterialIndex)
+            for(const auto& Cell:Skin->Cells)
+            {
+                const FString SlotName=Slots.IsValidIndex(MaterialIndex)?Slots[MaterialIndex].MaterialSlotName.ToString():FString();
+                const bool Matches=Cell.CellIndex==MaterialIndex || (!Cell.MaterialName.IsEmpty() &&
+                    (Cell.MaterialName.Equals(SlotName,ESearchCase::IgnoreCase) ||
+                     (Slots.IsValidIndex(MaterialIndex) && FName(*Cell.MaterialName)==Slots[MaterialIndex].ImportedMaterialSlotName) ||
+                     (Cell.MaterialName.Equals(TEXT("Hull"),ESearchCase::IgnoreCase) && SlotName.EndsWith(TEXT("Hull"),ESearchCase::IgnoreCase)) ||
+                     (Cell.MaterialName.Equals(TEXT("Main"),ESearchCase::IgnoreCase) && SlotName.StartsWith(TEXT("Main_"),ESearchCase::IgnoreCase))));
+                if(Matches){if(auto* Material=Cell.UnrealMaterial.LoadSynchronous())Part.Materials[MaterialIndex]=Material;break;}
+            }
+    }
+
     if (!bSameShip)
     {
         ResetView();

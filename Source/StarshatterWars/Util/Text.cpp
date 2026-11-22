@@ -20,7 +20,12 @@
 TextRep        TextRep::nullrep;
 
 TextRep::TextRep()
-    : ref(1234567), data(0), length(0), hash(0), sensitive(true)
+    : 
+    data(0),
+    ref(1234567),
+    length(0),
+    hash(0),
+    sensitive(true)
 {
     data = new char[4];
 
@@ -41,7 +46,7 @@ TextRep::TextRep(const char* s)
     data = new char[length + 1];
 
     if (data) {
-        if (s) ::strcpy(data, s);
+        if (s) ::memcpy(data, s, length+1);
         else   data[length] = '\0';
 
         dohash();
@@ -87,7 +92,7 @@ TextRep::TextRep(const TextRep* rep)
     sensitive = rep->sensitive;
 
     if (data)
-        ::strcpy(data, rep->data);
+        ::memcpy(data, rep->data, length+1);
 }
 
 TextRep::~TextRep()
@@ -243,7 +248,8 @@ Text::operator+(char c)
     char* buf = new char[rep->length + 2];
 
     if (buf) {
-        ::strcpy(buf, sym);
+        ::memcpy(buf, sym, rep->length);
+        buf[rep->length]=0;
         buf[rep->length] = c;
         buf[rep->length + 1] = '\0';
         Text retval(buf);
@@ -262,8 +268,9 @@ Text::operator+(const char* s)
     char* buf = new char[::strlen(s) + rep->length + 1];
 
     if (buf) {
-        ::strcpy(buf, sym);
-        ::strcat(buf, s);
+        ::memcpy(buf, sym, rep->length);
+        buf[rep->length]=0;
+        ::memcpy(buf+rep->length,s,::strlen(s)+1);
         Text retval(buf);
         delete[] buf;
         return retval;
@@ -280,8 +287,9 @@ Text::operator+(const Text& s)
     char* buf = new char[s.rep->length + rep->length + 1];
 
     if (buf) {
-        ::strcpy(buf, sym);
-        ::strcat(buf, s.sym);
+        ::memcpy(buf, sym, rep->length);
+        buf[rep->length]=0;
+        ::memcpy(buf+rep->length,s.sym,s.rep->length+1);
         Text retval(buf);
         delete[] buf;
         return retval;
@@ -310,7 +318,8 @@ Text::append(char c)
     char* buf = new char[rep->length + 2];
 
     if (buf) {
-        ::strcpy(buf, sym);
+        ::memcpy(buf, sym, rep->length);
+        buf[rep->length]=0;
         buf[rep->length] = c;
         buf[rep->length + 1] = '\0';
         if (rep->deref() == 0) delete rep;
@@ -333,8 +342,9 @@ Text::append(const char* s)
     char* buf = new char[::strlen(s) + rep->length + 1];
 
     if (buf) {
-        ::strcpy(buf, sym);
-        ::strcat(buf, s);
+        ::memcpy(buf, sym, rep->length);
+        buf[rep->length]=0;
+        ::memcpy(buf+rep->length,s,::strlen(s)+1);
         if (rep->deref() == 0) delete rep;
 
         rep = new TextRep(buf);
@@ -396,7 +406,7 @@ Text::clone()
 char
 Text::operator[](int index) const
 {
-    if (index < (int)rep->length)
+    if (index >= 0 && index < (int)rep->length)
         return sym[index];
     else {
         return '\0';
@@ -412,12 +422,13 @@ Text::operator()(int index) const
 char&
 Text::operator[](int index)
 {
-    if (index < (int)rep->length) {
+    if (index >= 0 && index < (int)rep->length) {
         clone();
         return (char&)sym[index];
     }
     else {
-        return (char&)sym[0];
+        static thread_local char InvalidIndex=0;
+        InvalidIndex=0; return InvalidIndex;
     }
 }
 
@@ -431,19 +442,19 @@ Text::operator()(int index)
 Text
 Text::operator()(int start, int len) const
 {
-    if (start > rep->length || len <= 0)
+    if (start < 0 || start > rep->length || len <= 0)
         return Text();
 
-    if (start + len > rep->length)
+    if (len > rep->length-start)
         len = rep->length - start;
 
     char* buf = new char[len + 1];
 
     if (buf) {
-        ::strncpy(buf, sym + start, len);
+        ::memcpy(buf, sym + start, len);
         buf[len] = '\0';
 
-        Text retval(buf);
+        Text retval(buf, len);
         delete[] buf;
         return retval;
     }

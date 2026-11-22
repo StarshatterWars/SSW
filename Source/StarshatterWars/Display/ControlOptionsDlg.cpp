@@ -78,7 +78,7 @@ void UControlOptionsDlg::NativeConstruct()
     BuildControlModelListIfNeeded();
     BuildControlRows();
 
-    UE_LOG(LogControlOptionsDlg, Warning, TEXT("[ControlOptionsDlg] AutoVBox children after BuildControlRows: %d"),
+    UE_LOG(LogControlOptionsDlg, Log, TEXT("[ControlOptionsDlg] AutoVBox children after BuildControlRows: %d"),
         VBox->GetChildrenCount());
 
     if (bClosed)

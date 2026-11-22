@@ -42,6 +42,9 @@ public class StarshatterWars : ModuleRules
             "DeveloperSettings",
             "Json",
             "JsonUtilities",
+            "OnlineSubsystemEOS",
+            "EOSShared",
+            "EOSSDK",
             "WorldScapeCore",
             "WorldScapeVolume",
             // WorldScapeRoot.h includes these modules' generated headers.
@@ -56,6 +59,11 @@ public class StarshatterWars : ModuleRules
             PrivateDependencyModuleNames.Add("WorldScapeEditor");
             PrivateDependencyModuleNames.Add("MovieSceneCapture");
         }
+
+        bool bPlatformAvatars = Target.Platform == UnrealTargetPlatform.Win64 && Target.Type != TargetType.Server;
+        PublicDefinitions.Add("SSW_STEAM_AVATARS=" + (bPlatformAvatars ? "1" : "0"));
+        if (bPlatformAvatars)
+            AddEngineThirdPartyPrivateStaticDependencies(Target, "Steamworks");
 
         // Vorbis rules token exists in UE 5.6:
         AddEngineThirdPartyPrivateStaticDependencies(Target, "Vorbis");

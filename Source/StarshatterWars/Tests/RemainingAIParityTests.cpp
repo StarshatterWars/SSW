@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "ShipAI.h"
 #include "StarshipAI.h"
@@ -241,6 +242,7 @@ bool FRemainingRegionTest::RunTest(const FString& Parameters)
     const TArray<int> ExpectA={2,1,1,1,2},ExpectB={1,2,1,1,1},ExpectPlayer={2,2,2,2,2};
     TestTrue(TEXT("Legacy sensor round robin and wrap gap preserved"),A->Modes==ExpectA && B->Modes==ExpectB);
     TestTrue(TEXT("Player receives full sensor assessment every frame"),C->Modes==ExpectPlayer);
+    AddExpectedError(TEXT("Docked with NULL carrier"),EAutomationExpectedErrorFlags::Contains,1);
     B->SetFlightPhase(EOPSMode::DOCKED);R.ExecFrame(.02);
     TestFalse(TEXT("Normal region frame consumes a docked ship"),R.GetShips().contains(B));
     TestTrue(TEXT("Other ships remain owned by the region"),R.GetShips().contains(A)&&R.GetShips().contains(C));
@@ -346,6 +348,7 @@ bool FRecoveryNativeScaleTest::RunTest(const FString& Parameters)
     ON_SCOPE_EXIT {if(OwnLoader)DataLoader::Close();};
     Ship Carrier("Carrier","",Designs.Add(TEXT("RecoveryScaleCarrier"),CLASSIFICATION::CARRIER),1,0,nullptr,false);
     auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     ON_SCOPE_EXIT {Carrier.BindNativePresentation(nullptr);World->DestroyWorld(false);};
     auto* Actor=World->SpawnActor<ACarrierActor>();Actor->SetActorScale3D(FVector(4));Actor->BindRuntimeShip(&Carrier);Carrier.BindNativePresentation(Actor);
     FlightDeck Deck;Deck.SetRecoveryDeck();Deck.SetCarrier(&Carrier);

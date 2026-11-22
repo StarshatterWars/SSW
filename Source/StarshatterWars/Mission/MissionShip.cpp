@@ -22,14 +22,15 @@
 // +--------------------------------------------------------------------+
 
 MissionShip::MissionShip()
-    : loc(-1e9f, -1e9f, -1e9f),
+    : 
+    skin(nullptr),
+    loc(-1e9f, -1e9f, -1e9f),
     velocity(-1e9f, -1e9f, -1e9f),
     respawns(0),
     heading(0),
     integrity(100),
     decoys(-10),
-    probes(-10),
-    skin(nullptr)
+    probes(-10)
 {
     for (int i = 0; i < MAX_AMMO; i++)
         ammo[i] = -10;

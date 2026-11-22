@@ -423,7 +423,7 @@ bool ParticleManager::CheckVisibility(SimProjector& projector)
 	return true;
 }
 
-void ParticleManager::Render(Video* video, uint32 flags)
+void ParticleManager::Render(Video* video, DWORD flags)
 {
 	(void)video;
 	(void)flags;

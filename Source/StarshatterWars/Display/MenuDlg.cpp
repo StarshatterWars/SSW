@@ -23,6 +23,7 @@
 =============================================================================*/
 
 #include "MenuDlg.h"
+#include "FractalVerseStatusWidget.h"
 #include "ReleasePresentation.h"
 #include "RuntimeFeaturePolicy.h"
 #include "Serialization/JsonReader.h"
@@ -194,6 +195,9 @@ void UMenuDlg::BuildModernMenu()
     UniverseTimeText=Label(TEXT("--"),17,White,720,965,480,32);UniverseTimeText->SetJustification(ETextJustify::Center);
     Label(TEXT("PILOT"),12,Cyan,1330,930,434,25)->SetJustification(ETextJustify::Right);
     PlayerIdentityText=Label(TEXT("PLAYER NOT LOADED"),19,White,1330,960,434,32);PlayerIdentityText->SetJustification(ETextJustify::Right);
+    auto* UniverseStatus=WidgetTree->ConstructWidget<UNativeWidgetHost>();
+    UniverseStatus->SetContent(SNew(SFractalVerseIndicator).GameInstance(GetGameInstance()));
+    Place(UniverseStatus,104,930,520,44);
     UnitText=Label(TEXT("UNASSIGNED"),12,Muted,1330,1000,434,25);UnitText->SetJustification(ETextJustify::Right);
     DescriptionText=Label(TEXT(""),13,Muted,1100,846,664,42);
     const auto Release=SSWReleasePresentation::Read();
@@ -444,7 +448,7 @@ void UMenuDlg::NativeConstruct()
     {
         BtnMulti->OnClicked.RemoveDynamic(this, &UMenuDlg::OnMultiplayer);
         BtnMulti->OnClicked.AddDynamic(this, &UMenuDlg::OnMultiplayer);
-        UE_LOG(LogMenuDlg, Warning, TEXT("[MultiplayerNav] Construct: BtnMulti bound, enabled=%d"), BtnMulti->GetIsEnabled() ? 1 : 0);
+        UE_LOG(LogMenuDlg, Log, TEXT("[MultiplayerNav] Construct: BtnMulti bound, enabled=%d"), BtnMulti->GetIsEnabled() ? 1 : 0);
     }
     else
     {

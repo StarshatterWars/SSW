@@ -70,7 +70,7 @@ void ULoadDlg::RegisterControls()
 
 // --------------------------------------------------------------------
 
-void ULoadDlg::ExecFrame()
+void ULoadDlg::ExecFrame(double /*DeltaTime*/)
 {
     UGameInstance* GI = GetGameInstance();
     if (!GI)

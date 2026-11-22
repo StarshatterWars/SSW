@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "MissionDebriefResult.h"
 #include "CampaignSave.h"
 #include "Kismet/GameplayStatics.h"
@@ -85,6 +86,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FMissionDebriefUiTest,"Starshatter.Mission.Debr
 bool FMissionDebriefUiTest::RunTest(const FString&)
 {
     UWorld* World=UWorld::CreateWorld(EWorldType::Game,false);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     auto* GI=NewObject<UGameInstance>(); World->SetGameInstance(GI);
     ON_SCOPE_EXIT {ShipStats::Initialize(); World->DestroyWorld(false);};
     UClass* Class=LoadClass<UMissionDebriefDlg>(nullptr,TEXT("/Game/Screens/Mission/WBP_MissionDebrief.WBP_MissionDebrief_C"));

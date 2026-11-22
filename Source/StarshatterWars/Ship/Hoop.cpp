@@ -1,6 +1,6 @@
 /*  Project Starshatter Wars
 	Fractal Dev Studios
-	Copyright © 2025-2026. All Rights Reserved.
+	Copyright Â© 2025-2026. All Rights Reserved.
 
 	ORIGINAL AUTHOR AND STUDIO: John DiCamillo / Destroyer Studios LLC
 
@@ -15,6 +15,7 @@
 */
 
 #include "Hoop.h"
+#include "Bitmap.h"
 
 #include "Math/Vector.h"
 #include "Math/UnrealMathUtility.h"
@@ -43,12 +44,15 @@ Hoop::Hoop()
 	foreground = 1;
 	radius = (float)width;
 
-	DataLoader* loader = DataLoader::GetLoader();
-
-	loader->SetDataPath("HUD/");
-	loader->LoadTexture("ILS.pcx", hoop_texture, /*Bitmap::BMP_TRANSLUCENT*/ 0);
-	loader->SetDataPath(0);
-
+	// Imported texture, shared with the current UI/HUD asset set.
+    hoop_texture=Bitmap::CheckCache("/Game/UI/HUD/ILS");
+    if(!hoop_texture)
+    {
+        auto* Image=new Bitmap;
+        if(DataLoader::GetLoader()->LoadHUDTexture("ILS",*Image,Bitmap::BMP_TRANSLUCENT))
+        { Bitmap::AddToCache(Image);hoop_texture=Image; }
+        else delete Image;
+    }
 	CreatePolys();
 }
 

@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net9.0-windows</TargetFramework><UseWPF>true</UseWPF><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><Version>0.1.0</Version><ApplicationIcon>../Launcher/Assets/SSW_Modern.ico</ApplicationIcon></PropertyGroup>
+ <ItemGroup><Compile Include="../Launcher/UniverseServerManager.cs" Link="UniverseServerManager.cs"/><InternalsVisibleTo Include="FractalVerseAdmin.Tests"/></ItemGroup>
+ <ItemGroup><Resource Include="../Launcher/Assets/SSW_Modern.ico" Link="Assets/SSW.ico"/><Resource Include="../ArtSource/Splash/SSW_OrionLaunch_UE_Splash_800x450.png" Link="Orion.png"/></ItemGroup>
+</Project>

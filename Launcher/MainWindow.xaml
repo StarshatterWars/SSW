@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:wv="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
-        Title="Starshatter Wars by Fractal Dev Games" Width="1000" Height="720" MinWidth="850" MinHeight="550"
+        Icon="Assets/SSW.ico" Title="Starshatter Wars by Fractal Dev Games" Width="1000" Height="720" MinWidth="850" MinHeight="550"
         Background="#0B1420" Foreground="#EAF4FF" WindowStartupLocation="CenterScreen">
     <Window.Resources>
         <Style TargetType="Button">
@@ -13,7 +13,7 @@
     </Window.Resources>
     <Grid Margin="24">
         <Grid.RowDefinitions>
-            <RowDefinition Height="180"/>
+            <RowDefinition Height="210"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -28,11 +28,13 @@
                     <TextBlock Text="STARSHATTER WARS" FontSize="38" FontWeight="Bold"/>
                     <TextBlock Text="by Fractal Dev Games" FontSize="18" Foreground="#A9DCEE" Margin="1,5,0,0"/>
                     <TextBlock x:Name="ReleaseStage" FontSize="15" FontWeight="SemiBold" Foreground="#F2BB60" Margin="1,8,0,0"/>
+                    <TextBlock x:Name="UniverseIndicator" Text="UNIVERSE · DISCONNECTED" FontSize="12" Foreground="#ACC4D5" Margin="1,7,0,0" ToolTip="Connection to the authoritative universe server"/>
                     <TextBlock x:Name="AlphaWarning" FontSize="12" Foreground="#E1C99E" TextWrapping="Wrap" Margin="1,4,0,0"/>
                 </StackPanel>
             </Border>
         </Border>
-        <DockPanel Grid.Row="1" Margin="0,18,0,10">
+        <StackPanel Grid.Row="1" Margin="0,12,0,10">
+            <WrapPanel HorizontalAlignment="Right" Margin="0,0,0,10">
             <Button x:Name="RepairButton" DockPanel.Dock="Right" Content="Repair ▾" Click="Repair_Click" Padding="10,9" ToolTip="Repair and recovery tools">
                 <Button.ContextMenu>
                     <ContextMenu>
@@ -44,11 +46,14 @@
             <Button DockPanel.Dock="Right" Content="Locate Game…" Click="LocateGame_Click"/>
             <Button x:Name="UpdateButton" DockPanel.Dock="Right" Content="Check for Updates" Click="Update_Click"/>
             <Button x:Name="MusicButton" DockPanel.Dock="Right" Content="Music On" Click="Music_Click"/>
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            </WrapPanel>
+            <WrapPanel>
                 <Button x:Name="NewsTabButton" Content="NEWS" Click="NewsTab_Click" Background="#24465A" Foreground="#EAF4FF" Padding="12,8" Margin="0,0,6,0"/>
                 <Button x:Name="StoreTabButton" Content="STORE" Click="StoreTab_Click" Background="#172B3B" Foreground="#A9DCEE" Padding="12,8" Margin="0"/>
-            </StackPanel>
-        </DockPanel>
+                <Button x:Name="ServerTabButton" Content="SERVER" Click="ServerTab_Click" Background="#172B3B" Foreground="#A9DCEE" Padding="12,8" Margin="6,0,0,0"/>
+                <Button x:Name="RoadmapTabButton" Content="ROADMAP" Click="RoadmapTab_Click" Background="#172B3B" Foreground="#A9DCEE" Padding="12,8" Margin="6,0,0,0"/>
+            </WrapPanel>
+        </StackPanel>
         <Border x:Name="AboutPatch" Grid.Row="2" Background="#122131" Padding="12,8" Margin="0,0,0,10" Visibility="Collapsed">
             <StackPanel>
                 <TextBlock Text="About this update" FontWeight="SemiBold"/>
@@ -77,6 +82,30 @@
                             <ControlTemplate.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Background" Value="#1A3041"/><Setter Property="Foreground" Value="#8198A8"/></Trigger></ControlTemplate.Triggers>
                         </ControlTemplate></Button.Template>
                     </Button>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+        <Border x:Name="ServerPanel" Grid.Row="3" Background="#122131" Padding="22" Visibility="Collapsed">
+            <Grid>
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <TextBlock Text="UNIVERSE SERVER" FontSize="25" FontWeight="SemiBold"/>
+                <TextBlock x:Name="ServerSummary" Grid.Row="1" Foreground="#ACC4D5" TextWrapping="Wrap" Margin="0,10,0,14" Text="No server connection."/>
+                <Grid Grid.Row="2" Background="#203747" Margin="0,0,0,1">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="140"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="PLAYER" Foreground="#80D9F6" Margin="10,8"/>
+                    <TextBlock Grid.Column="1" Text="PING" Foreground="#80D9F6" Margin="10,8"/>
+                </Grid>
+                <ListBox x:Name="ServerPlayers" Grid.Row="3" Background="#172B3B" Foreground="#EAF4FF" BorderBrush="#2B495D" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate><DataTemplate><Grid Margin="8,6"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="124"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/><TextBlock Grid.Column="1" Text="{Binding Ping}"/></Grid></DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+        </Border>
+        <Border x:Name="RoadmapPanel" Grid.Row="3" Background="#122131" Padding="22" Visibility="Collapsed">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+                    <TextBlock Text="DEVELOPMENT ROADMAP" FontSize="25" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="RoadmapNotice" Foreground="#ACC4D5" TextWrapping="Wrap" Margin="0,8,0,18"/>
+                    <StackPanel x:Name="RoadmapItems"/>
                 </StackPanel>
             </ScrollViewer>
         </Border>

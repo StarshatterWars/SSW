@@ -36,9 +36,14 @@ void AExplosionActor::OnConstruction(const FTransform& Transform)
 void AExplosionActor::PlayExplosion(float ExplosionScale,float ParticleScale,float SimulationLifetime)
 {
  bPersistent=SimulationLifetime<0;Remaining=SimulationLifetime>0?SimulationLifetime:FallbackLifetime;
- // Pack-specific scale calibration is cosmetic; legacy simulation scale is unchanged.
- NiagaraEffect->SetRelativeScale3D(FVector(FMath::Max(.001f,VisualScale*FMath::Abs(ExplosionScale))));
- ParticleEffect->SetRelativeScale3D(FVector(FMath::Max(.001f,VisualScale*FMath::Abs(ExplosionScale))));
+ // This pack was authored at full size; SSW models use its 1:100 presentation.
+ // Keep the separately calibrated gun flashes and quantum systems unchanged.
+ const bool bExplosionPack = ParticleSystem && ParticleSystem->GetPathName().StartsWith(TEXT("/Game/Space_Explosion_Pack/"));
+ const float PackScale = bExplosionPack && ExplosionType != EExplosionType::NONE ? .01f : 1.f;
+ const float Scale = FMath::IsFinite(ExplosionScale) && FMath::IsFinite(VisualScale)
+     ? FMath::Max(.00001f, PackScale * VisualScale * FMath::Abs(ExplosionScale)) : .00001f;
+ NiagaraEffect->SetRelativeScale3D(FVector(Scale));
+ ParticleEffect->SetRelativeScale3D(FVector(Scale));
  NiagaraEffect->SetVariableFloat(TEXT("User.LegacyParticleScale"),ParticleScale);
  ParticleEffect->SetFloatParameter(TEXT("LegacyParticleScale"),ParticleScale);
  if(NiagaraSystem){NiagaraEffect->SetAsset(NiagaraSystem);NiagaraEffect->Activate(true);}

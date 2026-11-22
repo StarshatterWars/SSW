@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "DroneActor.h"
 #include "FighterActor.h"
 #include "Components/SceneComponent.h"
@@ -23,6 +24,7 @@ bool FDroneActorDefaultsTest::RunTest(const FString& Parameters)
         .CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     UWorld* World = UWorld::CreateWorld(EWorldType::EditorPreview, false, NAME_None, nullptr, true,
         ERHIFeatureLevel::Num, &Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     if (TestNotNull(TEXT("Drone preview world"), World))
     {
         ADroneActor* Spawned = World->SpawnActor<ADroneActor>();

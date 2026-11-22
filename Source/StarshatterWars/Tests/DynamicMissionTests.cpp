@@ -42,7 +42,7 @@ bool FIndependentSurveyFlowTest::RunTest(const FString&)
  const auto Old=ShipDesignRegistry::GetAll();ON_SCOPE_EXIT{ShipDesignRegistry::Clear();for(const auto& Pair:Old)ShipDesignRegistry::RegisterDesign(Pair.Key,Pair.Value);};
  FShipDesign D;D.ShipName=TEXT("Falcon");D.ShipType=2;D.Category=EShipCategory::Fighter;D.ShipEmpire=EShipEmpire::All;D.BaseCost=100;D.CargoCapacity.Tonnes=1;D.Integrity=1000;D.Mass=20;D.Scale=1;ShipDesignRegistry::RegisterDesign(FName(TEXT("Falcon")),D);
  const bool OwnLoader=!DataLoader::GetLoader();if(OwnLoader)DataLoader::Initialize();ON_SCOPE_EXIT{if(OwnLoader)DataLoader::Close();};TUniquePtr<Sim> Owned;
- if(!Sim::GetSim()){AddExpectedError(TEXT("ERROR: could notxparse 'Explosions.def'"),EAutomationExpectedErrorFlags::Contains,1);Owned=MakeUnique<Sim>(nullptr);}
+ if(!Sim::GetSim()){Owned=MakeUnique<Sim>(nullptr);}
  auto& S=*Sim::GetSim();auto* Previous=S.mission;auto* OldRegion=S.active_region;auto* OldSystem=S.star_system;
  Mission Free(Mission::FreeFlightId);Free.SetName("Independent fixture");StarSystem System("Independent Janus",FVector::ZeroVector);OrbitalRegion Orbit(&System,"Independent Janek",0,1,1);auto* Region=new SimRegion(&S,&Orbit);S.regions.append(Region);S.mission=&Free;S.active_region=Region;S.star_system=&System;
  ON_SCOPE_EXIT{S.regions.remove(Region);S.mission=Previous;S.active_region=OldRegion;S.star_system=OldSystem;delete Region;};

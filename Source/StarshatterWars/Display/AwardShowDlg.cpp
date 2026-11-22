@@ -21,6 +21,9 @@
 #include "MenuScreen.h"
 #include "AwardInfoRegistry.h"
 #include "AudioRouting.h"
+#include "Sim.h"
+#include "SSWRuntimeSubsystem.h"
+#include "GameFramework/PlayerController.h"
 
 // UMG:
 #include "Components/TextBlock.h"
@@ -59,7 +62,9 @@ void UAwardShowDlg::EnsureUi()
     }
     auto* Box=EnsureAutoVerticalBoxWithOffsets(FMargin(24));if(!Box)return;
     if(RootCanvas)for(auto* Child:RootCanvas->GetAllChildren())if(Child!=Box)Child->SetVisibility(ESlateVisibility::Collapsed);
+    Box->RemoveFromParent();
     AwardPresentation::Build(WidgetTree,Box,lbl_name,lbl_info,img_rank,btn_close);
+    AwardFrame=AwardPresentation::Mount(WidgetTree,RootCanvas,Box);
     bModernUiBuilt=true;BindFormWidgets();btn_close->OnClicked.AddUniqueDynamic(this,&UAwardShowDlg::OnCloseClicked);
 }
 
@@ -81,13 +86,11 @@ FReply UAwardShowDlg::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEve
 {
     const FKey Key = InKeyEvent.GetKey();
 
-    if (Key == EKeys::Enter || Key == EKeys::Virtual_Accept ||
-        Key == EKeys::Escape || Key == EKeys::Virtual_Back)
+    if (Key == EKeys::Enter || Key == EKeys::Virtual_Gamepad_Accept.GetVirtualKey() ||
+        Key == EKeys::Escape || Key == EKeys::Virtual_Gamepad_Back.GetVirtualKey())
     {
-        bool bHandled = false;
-        UpdateExitLatchFromInput(InKeyEvent, bHandled);
-        if (bHandled)
-            return FReply::Handled();
+        if (!InKeyEvent.IsRepeat()) OnCloseClicked();
+        return FReply::Handled();
     }
 
     // Any other key releases latch (simple approximation of legacy key-up gating).
@@ -102,8 +105,8 @@ void UAwardShowDlg::UpdateExitLatchFromInput(const FKeyEvent& InKeyEvent, bool& 
 
     const FKey Key = InKeyEvent.GetKey();
 
-    const bool bIsAccept = (Key == EKeys::Enter || Key == EKeys::Virtual_Accept);
-    const bool bIsBack = (Key == EKeys::Escape || Key == EKeys::Virtual_Back);
+    const bool bIsAccept = (Key == EKeys::Enter || Key == EKeys::Virtual_Gamepad_Accept.GetVirtualKey());
+    const bool bIsBack = (Key == EKeys::Escape || Key == EKeys::Virtual_Gamepad_Back.GetVirtualKey());
 
     if (!bIsAccept && !bIsBack)
         return;
@@ -155,6 +158,17 @@ void UAwardShowDlg::ShowDialog()
     SetVisibility(ESlateVisibility::Visible);
 
     ShowAward();
+    SetIsFocusable(true);
+    if (APlayerController* PC = GetOwningPlayer() ? GetOwningPlayer() : (GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr))
+    {
+        FInputModeUIOnly Mode;
+        Mode.SetWidgetToFocus(TakeWidget());
+        Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+        PC->SetInputMode(Mode);
+        PC->bShowMouseCursor = true;
+        SetUserFocus(PC);
+    }
+    SetKeyboardFocus();
     if (Rank >= 0)
         if (const FRankInfo* Row = UAwardInfoRegistry::FindRank(Rank))
             if (USoundBase* Sound = Row->GrantSound.LoadSynchronous())
@@ -195,7 +209,7 @@ void UAwardShowDlg::ShowAward()
         if (img_rank)
         {
             if(const auto* Row=UAwardInfoRegistry::FindRank(Rank))
-                if(auto* Texture=Row->LargeImage.LoadSynchronous())img_rank->SetBrushFromTexture(Texture);
+                if(auto* Texture=Row->LargeImage.LoadSynchronous())img_rank->SetBrushFromTexture(Texture, true);
             img_rank->SetVisibility(ESlateVisibility::Visible);
         }
     }
@@ -210,7 +224,7 @@ void UAwardShowDlg::ShowAward()
         if (img_rank)
         {
             if(const auto* Row=UAwardInfoRegistry::FindMedal(Medal))
-                if(auto* Texture=Row->LargeImage.LoadSynchronous())img_rank->SetBrushFromTexture(Texture);
+                if(auto* Texture=Row->LargeImage.LoadSynchronous())img_rank->SetBrushFromTexture(Texture, true);
             img_rank->SetVisibility(ESlateVisibility::Visible);
         }
     }
@@ -229,6 +243,35 @@ void UAwardShowDlg::ShowAward()
 void UAwardShowDlg::OnCloseClicked()
 {
     if(auto* P=PlayerCharacter::GetCurrentPlayer())P->ClearShowAward();
-    if(auto* Menu=GetMenuManager()){Menu->ShowPlayerDlg();return;}
-    SetVisibility(ESlateVisibility::Hidden);
+    SetVisibility(ESlateVisibility::Collapsed);
+    auto* GI=GetGameInstance();auto* Runtime=GI?GI->GetSubsystem<USSWRuntimeSubsystem>():nullptr;
+    if(Runtime && Runtime->GetGameMode()==EGameMode::PLAY && UMenuScreen::HasLivePlayerSession() && Sim::GetSim() && !Sim::GetSim()->IsComplete())
+    {
+        if(auto* Menu=GetMenuManager())Menu->DismissLivePopup(this);
+        if(auto* PC=GetOwningPlayer()){PC->SetInputMode(FInputModeGameAndUI());PC->bShowMouseCursor=true;}
+        return;
+    }
+    if(auto* Menu=GetMenuManager())Menu->ReturnFromMissionBriefing();
+
+}
+
+void UAwardShowDlg::NativeTick(const FGeometry& Geometry,float Seconds)
+{ Super::NativeTick(Geometry,Seconds); AwardPresentation::Resize(RootCanvas,AwardFrame); }
+FReply UAwardShowDlg::NativeOnMouseButtonDown(const FGeometry& Geometry,const FPointerEvent& Event)
+{
+    auto* AwardTitle=WidgetTree?WidgetTree->FindWidget(TEXT("AwardTitleBar")):nullptr;
+    if(Event.GetEffectingButton()==EKeys::LeftMouseButton && AwardTitle && AwardTitle->GetCachedGeometry().IsUnderLocation(Event.GetScreenSpacePosition()))
+    { bDraggingAward=true;return FReply::Handled().CaptureMouse(TakeWidget()); }
+    return Super::NativeOnMouseButtonDown(Geometry,Event);
+}
+FReply UAwardShowDlg::NativeOnMouseMove(const FGeometry& Geometry,const FPointerEvent& Event)
+{
+    if(bDraggingAward){AwardPresentation::Drag(RootCanvas,AwardFrame,Event);return FReply::Handled();}
+    return Super::NativeOnMouseMove(Geometry,Event);
+}
+FReply UAwardShowDlg::NativeOnMouseButtonUp(const FGeometry& Geometry,const FPointerEvent& Event)
+{
+    if(bDraggingAward && Event.GetEffectingButton()==EKeys::LeftMouseButton)
+    {bDraggingAward=false;return FReply::Handled().ReleaseMouseCapture();}
+    return Super::NativeOnMouseButtonUp(Geometry,Event);
 }

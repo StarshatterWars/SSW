@@ -1,4 +1,6 @@
 #include "IndustryJobsPanel.h"
+#include "ChangeDrivenPanel.h"
+
 #include "BlueprintCatalogSubsystem.h"
 #include "MissionUIStyle.h"
 #include "ShipSystemIcon.h"
@@ -20,9 +22,9 @@ using FJobRow=TSharedPtr<FIndustryJob>;
 bool Operational(const FIndustryJob& Job)
 {
     auto* Simulation=Sim::GetSim();
-    const FString Name=Job.Facility.ToString();
-    const auto* Station=Simulation?Simulation->FindShip(TCHAR_TO_UTF8(*Name)):nullptr;
-    return Station && !Station->IsDead() && !Station->IsDying();
+    if(!Simulation)return false;
+    const auto& Economy=Simulation->ReadEconomy();const auto* Input=Economy.Inventories.Find(Job.Input);const auto* Output=Economy.Inventories.Find(Job.Output);
+    return Input && Output && Input->bOperational && Output->bOperational;
 }
 FText JobState(const FIndustryJob& Job)
 {
@@ -31,7 +33,7 @@ FText JobState(const FIndustryJob& Job)
     case EIndustryJobState::Completed:return INVTEXT("COMPLETED");
     case EIndustryJobState::Cancelled:return INVTEXT("CANCELLED");
     case EIndustryJobState::Blocked:return INVTEXT("BLOCKED");
-    case EIndustryJobState::Running:return Operational(Job)?INVTEXT("RUNNING"):INVTEXT("PAUSED");
+    case EIndustryJobState::Running:return !Operational(Job)?INVTEXT("PAUSED"):Job.Remaining<=0?INVTEXT("OUTPUT BLOCKED"):INVTEXT("RUNNING");
     default:return INVTEXT("QUEUED");
     }
 }
@@ -74,7 +76,7 @@ public:
             +SVerticalBox::Slot().AutoHeight().Padding(8)[SNew(STextBlock).Text(INVTEXT("YOUR MANUFACTURING JOBS")).Font(MissionUIStyle::GetRowFont(16))]
             +SVerticalBox::Slot().FillHeight(.62f).Padding(8)[MissionUIStyle::MakeDataPane(List.ToSharedRef())]
             +SVerticalBox::Slot().FillHeight(.38f).Padding(8)[MissionUIStyle::MakeDataPane(
-                SNew(SScrollBox)+SScrollBox::Slot()[SNew(STextBlock).AutoWrapText(true).Font(MissionUIStyle::GetRowFont(12)).Text_Lambda([this](){return Details();})])]
+                SNew(SScrollBox)+SScrollBox::Slot()[SNew(SChangeDrivenText).Font(MissionUIStyle::GetRowFont(12)).SelectionRevision_Lambda([this](){return GetTypeHash(Selected);}).Text_Lambda([this](){return Details();})])]
             +SVerticalBox::Slot().AutoHeight().Padding(8)[SNew(SHorizontalBox)
                 +SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([this](){return Feedback;})]
                 +SHorizontalBox::Slot().AutoWidth()[SNew(SButton)
@@ -83,9 +85,13 @@ public:
                     .OnClicked_Lambda([this](){if(Catalog.IsValid())Catalog->CancelPlayerJob(Selected,Feedback);Refresh(0,0);return FReply::Handled();})
                     [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Abort)]]]];
         Refresh(0,0);
-        RegisterActiveTimer(.5f,FWidgetActiveTimerDelegate::CreateSP(this,&SPlayerIndustryJobs::Refresh));
+        ChangeHandle=FSimDataEvents::Changed().AddSP(this,&SPlayerIndustryJobs::OnDataChanged);
     }
+    ~SPlayerIndustryJobs(){FSimDataEvents::Changed().Remove(ChangeHandle);}
+    void Tick(const FGeometry& G,double Time,float Delta)override{SCompoundWidget::Tick(G,Time,Delta);if(bDataDirty && Time>=NextDispatch){bDataDirty=false;NextDispatch=Time+1;Refresh(0,0);}}
 private:
+    FDelegateHandle ChangeHandle;bool bDataDirty=false;double NextDispatch=0;
+    void OnDataChanged(const FEconomyState& State){if(const auto* Simulation=Sim::GetSim();Simulation && &Simulation->ReadEconomy()==&State)bDataDirty=true;}
     const FIndustryJob* FindSelected() const
     { const auto* Simulation=Sim::GetSim();return Simulation?Simulation->ReadEconomy().Jobs.FindByPredicate([this](const auto& Job){return Job.Id==Selected && Job.Owner==FEconomyLedger::Pilot();}):nullptr; }
     EActiveTimerReturnType Refresh(double,float)

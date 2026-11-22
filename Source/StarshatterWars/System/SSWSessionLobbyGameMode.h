@@ -45,6 +45,11 @@ struct FSSWReplicatedProjectileState
 
     UPROPERTY(BlueprintReadOnly) int64 ObjectId = 0;
     UPROPERTY(BlueprintReadOnly) int64 OwnerId = 0;
+    UPROPERTY() FString WeaponDesign;
+    UPROPERTY() uint8 GraphicType = 0;
+    UPROPERTY() FVector Heading=FVector(0,0,1);
+    UPROPERTY() FVector Up=FVector(0,1,0);
+    UPROPERTY() bool bIgnited=false;
     UPROPERTY(BlueprintReadOnly) FVector VisualStart = FVector::ZeroVector;
     UPROPERTY(BlueprintReadOnly) FVector VisualEnd = FVector::ZeroVector;
     UPROPERTY(BlueprintReadOnly) bool bMissile = false;
@@ -252,6 +257,7 @@ public:
     double GetRespawnDeadline() const { return RespawnDeadline; }
     const TArray<TPair<double, FString>>& GetDepartureNotices() const { return DepartureNotices; }
     const FSSWReplicatedShipState* GetAssignedShipState() const;
+    bool HasFlightPresentation() const { return FlightCamera && FlightMiniHUD.IsValid() && ClientSceneBuilder.IsValid() && RemoteFighters.Contains(MissionShipId); }
     const TArray<FSSWReplicatedShipState>* GetFlightContacts() const;
 
     UFUNCTION(Server, Reliable, BlueprintCallable, Category="Multiplayer")
@@ -261,6 +267,10 @@ public:
     TArray<FSSWSessionChatMessage> PrivateChatHistory;
 
 protected:
+    virtual bool CanUseNetworkFlight() const { return true; }
+    virtual bool ShouldPollFlightInput() const { return true; }
+    virtual bool CanSendNetworkCommand() const { return HasAuthority(); }
+    virtual bool UsesVerifiedPilotIdentity() const { return false; }
     virtual void BeginPlay() override;
     virtual bool InputKey(const FInputKeyEventArgs& Params) override;
 
@@ -341,7 +351,10 @@ private:
     UPROPERTY(Transient) TObjectPtr<AActor> ArenaBarrier;
     TSharedPtr<SFighterHUDDetails> FlightMiniHUD;
     UPROPERTY(Transient) TMap<int64, TObjectPtr<AShipActor>> RemoteFighters;
+    UPROPERTY(Transient) TMap<int64, TObjectPtr<class ABoltWeaponActor>> RemoteBolts;
+    UPROPERTY(Transient) TMap<int64, TObjectPtr<AActor>> RemoteMissiles;
 
+protected:
     virtual void PlayerTick(float DeltaTime) override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;

@@ -22,12 +22,16 @@ public partial class MainWindow : Window
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "StarshatterWars", "LauncherInstall.txt");
     private bool busy;
     private bool pilotRecoveryActive;
+    private bool refreshingPatchNotes;
     private readonly CancellationTokenSource closing = new();
     private readonly LocalFeedServer localFeedServer = new();
+    private readonly UniverseServerManager universeServer = new();
 
     public MainWindow()
     {
         InitializeComponent();
+        LoadRoadmap();
+        ServerPlayers.ItemsSource=Array.Empty<UniversePeer>();
         ReleaseStage.Text=ReleasePresentation.Stage.ToUpperInvariant();
         AlphaWarning.Text=ReleasePresentation.Warning;
         LauncherVersion.Text = $"Launcher {typeof(MainWindow).Assembly.GetName().Version!.ToString(3)}";
@@ -63,16 +67,43 @@ public partial class MainWindow : Window
         Loaded += async (_, _) =>
         {
             StartMusic();
+            _ = MonitorUniverseAsync();
             await PrepareLocalFeedServerAsync();
             if (!closing.IsCancellationRequested) await Task.WhenAll(LoadFeedAsync(), LoadPatchNotesAsync());
         };
-        Closed += (_, _) => { closing.Cancel(); localFeedServer.Dispose(); music.Close(); NewsView.Dispose(); };
+        Closed += (_, _) => { closing.Cancel(); localFeedServer.Dispose(); universeServer.Dispose(); music.Close(); NewsView.Dispose(); };
+        Activated += async (_, _) =>
+        {
+            if (IsLoaded && !busy && !closing.IsCancellationRequested) await LoadPatchNotesAsync();
+        };
         Closing += (_, e) =>
         {
             if (!pilotRecoveryActive) return;
             e.Cancel = true;
             LaunchStatus.Text = "Please wait for pilot recovery to finish before closing the launcher.";
         };
+    }
+
+    private async Task MonitorUniverseAsync()
+    {
+        while (!closing.IsCancellationRequested)
+        {
+            try
+            {
+                var config=JsonSerializer.Deserialize<LauncherSettings>(await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory,"launcher.json"),closing.Token),JsonOptions);
+                var connection=await universeServer.RefreshAsync(config?.UniverseServer??new UniverseServerSettings(),game,closing.Token);
+                UniverseIndicator.Text="UNIVERSE · "+connection.Label;
+                UniverseIndicator.Foreground=new System.Windows.Media.SolidColorBrush(connection.Status?.Online==true?System.Windows.Media.Color.FromRgb(100,215,160):System.Windows.Media.Color.FromRgb(172,196,213));
+                var state=connection.Status;
+                ServerSummary.Text=connection.Detail+(state is null?"":$"\n{state.Server} · {state.ConnectedClients}/{state.MaximumClients} clients · revision {state.Revision:N0}\nUniverse GMT: {state.UniverseUtc} · uptime {TimeSpan.FromSeconds(Math.Max(0,state.UptimeSeconds)):g}");
+                ServerPlayers.ItemsSource=state?.Players??[];
+            }
+            catch(OperationCanceledException) when(closing.IsCancellationRequested){break;}
+            catch(ObjectDisposedException) when(closing.IsCancellationRequested){break;}
+            catch(Exception ex) when(ex is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException or System.ComponentModel.Win32Exception)
+            {UniverseIndicator.Text="UNIVERSE · DISCONNECTED";ServerSummary.Text=ex.Message;}
+            try{await Task.Delay(2000,closing.Token);}catch(OperationCanceledException){break;}
+        }
     }
 
     private Task EnsureLocalFeedServerAsync(LauncherSettings? config, CancellationToken token) =>
@@ -96,11 +127,40 @@ public partial class MainWindow : Window
     }
 
     private Uri? storeUri;
-    private void NewsTab_Click(object sender, RoutedEventArgs e)
+    private void SelectContentTab(string tab)
     {
-        NewsPanel.Visibility=Visibility.Visible;StorePanel.Visibility=Visibility.Collapsed;
-        NewsTabButton.Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(36,70,90));
-        StoreTabButton.Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(23,43,59));
+        NewsPanel.Visibility=tab=="news"?Visibility.Visible:Visibility.Collapsed;
+        StorePanel.Visibility=tab=="store"?Visibility.Visible:Visibility.Collapsed;
+        RoadmapPanel.Visibility=tab=="roadmap"?Visibility.Visible:Visibility.Collapsed;
+        ServerPanel.Visibility=tab=="server"?Visibility.Visible:Visibility.Collapsed;
+        foreach(var button in new[]{NewsTabButton,StoreTabButton,RoadmapTabButton,ServerTabButton})
+            button.Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(23,43,59));
+        var active=tab=="server"?ServerTabButton:tab=="roadmap"?RoadmapTabButton:tab=="store"?StoreTabButton:NewsTabButton;
+        active.Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(36,70,90));
+    }
+    private void NewsTab_Click(object sender, RoutedEventArgs e) => SelectContentTab("news");
+    private void ServerTab_Click(object sender, RoutedEventArgs e) => SelectContentTab("server");
+    private void RoadmapTab_Click(object sender, RoutedEventArgs e) => SelectContentTab("roadmap");
+    private sealed record RoadmapPhase(string Title,string Status,string Description);
+    private sealed record RoadmapDocument(string Updated,string Notice,RoadmapPhase[] Phases);
+    private void LoadRoadmap()
+    {
+        try
+        {
+            var document=JsonSerializer.Deserialize<RoadmapDocument>(File.ReadAllText(Path.Combine(AppContext.BaseDirectory,"roadmap.json")),JsonOptions);
+            if(document?.Phases is not {Length:>0})throw new InvalidDataException("Empty roadmap");
+            RoadmapNotice.Text=$"Updated {document.Updated} · {document.Notice}";
+            foreach(var phase in document.Phases)
+            {
+                var body=new System.Windows.Controls.StackPanel();
+                body.Children.Add(new System.Windows.Controls.TextBlock{Text=phase.Status,FontSize=11,Foreground=System.Windows.Media.Brushes.LightSkyBlue});
+                body.Children.Add(new System.Windows.Controls.TextBlock{Text=phase.Title,FontSize=18,FontWeight=FontWeights.SemiBold,TextWrapping=TextWrapping.Wrap,Margin=new Thickness(0,5,0,6)});
+                body.Children.Add(new System.Windows.Controls.TextBlock{Text=phase.Description,FontSize=13,TextWrapping=TextWrapping.Wrap});
+                RoadmapItems.Children.Add(new System.Windows.Controls.Border{Child=body,Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(26,48,65)),CornerRadius=new CornerRadius(5),Padding=new Thickness(16),Margin=new Thickness(0,0,0,12)});
+            }
+        }
+        catch(Exception ex) when(ex is IOException or UnauthorizedAccessException or JsonException)
+        {RoadmapNotice.Text="The roadmap is unavailable in this installation. Install, update and play remain available.";}
     }
     internal Task StoreRefresh { get; private set; } = Task.CompletedTask;
     private void StoreTab_Click(object sender, RoutedEventArgs e)
@@ -109,9 +169,7 @@ public partial class MainWindow : Window
     }
     private async Task RefreshStoreAsync()
     {
-        NewsPanel.Visibility=Visibility.Collapsed;StorePanel.Visibility=Visibility.Visible;
-        StoreTabButton.Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(36,70,90));
-        NewsTabButton.Background=new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(23,43,59));
+        SelectContentTab("store");
         try
         {
             var config=JsonSerializer.Deserialize<LauncherSettings>(await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory,"launcher.json"),closing.Token),JsonOptions);
@@ -264,6 +322,7 @@ public partial class MainWindow : Window
     private void SetBusy(bool value)
     {
         busy = value;
+        if(!value) universeServer.ResumeAutoStart();
         RepairButton.IsEnabled = !value && game is not null;
         InstallButton.IsEnabled = !value;
         UpdateButton.IsEnabled = !value;
@@ -381,6 +440,7 @@ public partial class MainWindow : Window
                 "Overwrite Starshatter Wars", MessageBoxButton.YesNo, MessageBoxImage.Warning,
                 MessageBoxResult.No) != MessageBoxResult.Yes) return;
             if (overwrite && GameIsRunning()) throw new IOException("Close Starshatter Wars before overwriting.");
+            if(overwrite) await universeServer.StopForUpdateAsync(closing.Token);
             using var installLock = new FileStream(Path.Combine(install, LocalInstaller.LockName),
                 FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 1, FileOptions.DeleteOnClose);
             var progress = new Progress<string>(message => LaunchStatus.Text = message);
@@ -419,6 +479,7 @@ public partial class MainWindow : Window
             await File.WriteAllTextAsync(InstallRecord, game, closing.Token);
             InstalledVersion.Text = DescribeBuild(game);
             LaunchStatus.Text = $"Installed to {Path.GetDirectoryName(game)}";
+            await LoadPatchNotesAsync();
         }
         catch (OperationCanceledException) { }
         catch (Exception ex) when (ex is IOException or InvalidDataException or UnauthorizedAccessException or ArgumentException
@@ -452,6 +513,7 @@ public partial class MainWindow : Window
                 return;
             }
             if (GameIsRunning()) { LaunchStatus.Text = "Close Starshatter Wars before updating."; return; }
+            await universeServer.StopForUpdateAsync(closing.Token);
 
             using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
             {
@@ -471,6 +533,7 @@ public partial class MainWindow : Window
             }, timeout.Token);
             LaunchStatus.Text = result;
             InstalledVersion.Text = DescribeBuild(game);
+            await LoadPatchNotesAsync();
         }
         catch (OperationCanceledException)
         {
@@ -486,6 +549,8 @@ public partial class MainWindow : Window
 
     private async Task LoadPatchNotesAsync()
     {
+        if (refreshingPatchNotes || closing.IsCancellationRequested) return;
+        refreshingPatchNotes = true;
         try
         {
             string settings = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "launcher.json"), closing.Token);
@@ -513,6 +578,7 @@ public partial class MainWindow : Window
             if (!closing.IsCancellationRequested)
                 AvailableVersion.Text = "Latest build unavailable · check the localhost connection.";
         }
+        finally { refreshingPatchNotes = false; }
     }
 
     private IProgress<string> CreateReleaseNotesProgress() => new Progress<string>(ShowPatchNotes);
@@ -682,7 +748,7 @@ public partial class MainWindow : Window
         return html.Append("</html>").ToString();
     }
 
-    private sealed record LauncherSettings(string? FeedUrl, uint SteamAppId, string? PatchManifestUrl, string? PatchPublicKeyPem, string? GameArchiveUrl, bool UseEasyAntiCheatBootstrapper, LocalFeedServerSettings? LocalFeedServer = null, string? StoreUrl = null);
+    private sealed record LauncherSettings(string? FeedUrl, uint SteamAppId, string? PatchManifestUrl, string? PatchPublicKeyPem, string? GameArchiveUrl, bool UseEasyAntiCheatBootstrapper, LocalFeedServerSettings? LocalFeedServer = null, string? StoreUrl = null, UniverseServerSettings? UniverseServer = null);
     private sealed record Feed(FeedEntry[]? Entries);
     private sealed record FeedEntry(string? Category, string? Title, string? Date, string? Body);
 }

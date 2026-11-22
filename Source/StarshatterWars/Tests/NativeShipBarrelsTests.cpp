@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "ShipActor.h"
 #include "ShipWeaponMountComponent.h"
 #include "Components/ChildActorComponent.h"
@@ -153,6 +154,7 @@ bool FNativeShipBarrelsTest::RunTest(const FString& Parameters)
     const UWorld::InitializationValues Options = UWorld::InitializationValues().AllowAudioPlayback(false)
         .CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     UWorld* World = UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     AOrionShipActor* Orion = World->SpawnActor<AOrionShipActor>();
     TestEqual(TEXT("Orion retains ten weapons"), Orion->HullWeaponMounts.Num(),10);
     TestEqual(TEXT("Orion retains ten turret mounts"),Orion->AuthoredTurretPointComponents.Num(),10);

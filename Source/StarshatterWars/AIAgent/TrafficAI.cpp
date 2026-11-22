@@ -1,4 +1,5 @@
 #include "TrafficAI.h"
+#include "SimDataEvents.h"
 #include "EconomyAI.h"
 #include "EconomyRuntime.h"
 #include "Algo/Reverse.h"
@@ -148,7 +149,7 @@ bool TrafficAI::Advance(FGalaxyTrafficJourney& Job,FEconomyState& Economy,double
         {Job.Phase=EGalaxyTrafficPhase::Blocked;Job.BlockedReason=TEXT("Destination storage unavailable; cargo remains aboard.");return false;}
         if(Job.TradeCredits>0 && !Job.bTradeSettled)
         {
-            if(!FEconomyLedger::Pay(Economy,FreightEscrow(Job),Job.Seller,Job.TradeCredits,FGuid::NewGuid(),TEXT("NPC freight delivery settlement")))
+            if(!FEconomyLedger::Pay(Economy,FreightEscrow(Job),Job.Seller,Job.TradeCredits,FGuid::NewGuid(),TEXT("NPC freight delivery settlement"),ECommercePurpose::Purchase))
             {FEconomyLedger::Transfer(Economy,Owner,Job.DestinationInventory,Job.Hold,Job.Item,Job.Quantity);Job.Phase=EGalaxyTrafficPhase::Blocked;return false;}
             Job.bTradeSettled=true;
             if(const auto* Destination=Economy.Inventories.Find(Job.DestinationInventory))EconomyAI::RecordTrade(Economy,Destination->System,Job.Item,Job.Quantity,double(Job.TradeCredits));
@@ -308,4 +309,40 @@ void TrafficAI::Dispatch(FGalaxyTrafficState& Traffic,FEconomyState& Economy,con
     for(const auto& Pair:Sectors)
     {const double Served=Traffic.SectorLastServed.FindRef(Pair.Key);if(Served<Oldest || (Served==Oldest && (Least.IsNone() || Pair.Key.LexicalLess(Least)))){Oldest=Served;Least=Pair.Key;}}
     if(!Least.IsNone() && Traffic.Journeys.Num()<MaxJourneys)ScheduleSector(Traffic,Economy,Sectors,Endpoints,Least);
+}
+
+bool TrafficAI::AdvanceScheduled(FGalaxyTrafficJourney& Job,FEconomyState& Economy,double Now,bool Realized,bool Arrived,bool InventoryChanged,double HopSeconds,double Rate)
+{
+    if(Job.IsFinished() || !FMath::IsFinite(Now) || Now<0)return false;
+    if(Job.Phase!=Job.ScheduledPhase || Job.RouteIndex!=Job.ScheduledRouteIndex)
+        Job.TransitionAt=0;
+    if(InventoryChanged && Job.IsCargo())
+    {
+        // A storage or facility change can interrupt a route immediately; no repeated retry timer.
+        if(const auto* Drop=Economy.Inventories.Find(Job.DestinationInventory);!Drop || !Drop->bOperational)
+        {if(Job.Phase==EGalaxyTrafficPhase::Traveling || Job.Phase==EGalaxyTrafficPhase::Unloading){Job.Phase=EGalaxyTrafficPhase::Blocked;Job.BlockedReason=TEXT("Destination offline. Awaiting recovery event.");Job.TransitionAt=0;}}
+    }
+    if(Job.Phase==EGalaxyTrafficPhase::Blocked)
+    {
+        if(InventoryChanged)Advance(Job,Economy,UE_SMALL_NUMBER,Realized,Arrived,HopSeconds,Rate);
+        if(Job.Phase==EGalaxyTrafficPhase::Blocked && Job.TransitionAt<=0 && Job.BlockedSeconds<60){Job.LastTransitionAt=Now;Job.TransitionAt=Now+60-Job.BlockedSeconds;}
+        Job.ScheduledPhase=Job.Phase;Job.ScheduledRouteIndex=Job.RouteIndex;return false;
+    }
+    if(Realized && !Arrived && (Job.Phase==EGalaxyTrafficPhase::Loading || Job.Phase==EGalaxyTrafficPhase::Unloading))
+    {Job.TransitionAt=0;Job.LastTransitionAt=Now;return false;}
+    if(Job.TransitionAt<=0)
+    {
+        Job.LastTransitionAt=Now;Job.TransitionAt=Now+FMath::Max(UE_SMALL_NUMBER,Job.Remaining);
+        Job.ScheduledPhase=Job.Phase;Job.ScheduledRouteIndex=Job.RouteIndex;
+    }
+    if(Now<Job.TransitionAt)return false;
+    // Realized arrivals are continuous gameplay events, never a timer teleport.
+    if(Realized && Job.Phase==EGalaxyTrafficPhase::Traveling && !Arrived)return false;
+    const double Boundary=Job.TransitionAt;const double Elapsed=FMath::Max(UE_SMALL_NUMBER,Boundary-Job.LastTransitionAt);
+    const auto Before=Job.Phase;const int32 Leg=Job.RouteIndex;
+    const bool Complete=Advance(Job,Economy,Elapsed,Realized,Arrived,HopSeconds,Rate);
+    Job.LastTransitionAt=Now;Job.TransitionAt=Job.IsFinished() || Job.Phase==EGalaxyTrafficPhase::Blocked?0:Now+FMath::Max(UE_SMALL_NUMBER,Job.Remaining);
+    Job.ScheduledPhase=Job.Phase;Job.ScheduledRouteIndex=Job.RouteIndex;
+    if(Before!=Job.Phase || Leg!=Job.RouteIndex)FSimDataEvents::Publish(Economy);
+    return Complete;
 }

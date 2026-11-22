@@ -1,4 +1,5 @@
 #include "GuildCatalogSubsystem.h"
+#include "OwnedHullLocation.h"
 #include "PlayerCharacter.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "StationServices.h"
@@ -220,7 +221,7 @@ bool UGuildCatalogSubsystem::ClaimStarter(FName Id,FText& Reason)
         FPlayerHangarShip Hull;Hull.HullId=FGuid::NewGuid();Hull.Design=Design;Hull.Name=Definition->DisplayName+TEXT(" starter");Hull.HullValue=FMath::Clamp(Row->BaseCost,0LL,1000000000000000LL);
         Hull.bCashPurchased=false;Hull.bAssigned=false;Hull.bLost=false;Hull.bHasCondition=true;Hull.HullCondition=1;
         auto* Simulation=Sim::GetSim();const auto* Craft=Simulation?Simulation->GetPlayerShip():nullptr;
-        Hull.Location=Craft && Craft->GetCarrier()?UTF8_TO_TCHAR(Craft->GetCarrier()->GetName()):Profile.HomeRegion.ToString();
+        Hull.Location=Craft?OwnedHullLocation::Dock(*Craft):FString();
         if(!Row->Loadout.IsEmpty()){Hull.LoadoutName=Row->Loadout[0].Name;Hull.LoadoutStations=Row->Loadout[0].Stations;}
         Profile.HangarShips.Add(MoveTemp(Hull));Message=INVTEXT("Starter ship added to your hangar with standard insurance eligibility. Your current mission ship is unchanged.");return true;
     },Reason);

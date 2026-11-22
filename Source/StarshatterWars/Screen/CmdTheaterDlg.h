@@ -80,7 +80,7 @@ public:
     void SetParentCmdDlg(UCmdDlg* InParentCmdDlg);
 
     void ShowTheaterDlg();
-    void ExecFrame();
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
 
 protected:
     enum ESelectionMode

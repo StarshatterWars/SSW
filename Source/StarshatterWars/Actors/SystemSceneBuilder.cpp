@@ -15,6 +15,8 @@
 */
 
 #include "SystemSceneBuilder.h"
+#include "JanekSurfaceGrade.h"
+#include "JanekRunwayClearanceComponent.h"
 #include "HAL/IConsoleManager.h"
 #include "WorldScapeRoot.h"
 #include "HeightMapVolume.h"
@@ -258,7 +260,7 @@ void ASystemSceneBuilder::ClearSpawnedBodies()
     EndMissionSpace();
     if (bEnableDebugLogs)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Display,
             TEXT("[SystemSceneBuilder] ClearSpawnedBodies Actors=%d Bodies=%d Regions=%d RuntimeBodyMap=%d BodyActorMap=%d"),
             SpawnedActors.Num(),
             SpawnedBodies.Num(),
@@ -419,7 +421,7 @@ void ASystemSceneBuilder::BuildFromRuntimeSystem(StarSystem* RuntimeSystem)
 
     if (bEnableDebugLogs)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Display,
             TEXT("[SystemSceneBuilder] Building runtime system '%s' primary star '%s' anchored at %s RuntimeStarLoc=%s ScaleMode=%d"),
             ANSI_TO_TCHAR(RuntimeSystem->GetName()),
             ANSI_TO_TCHAR(PrimaryStar->GetName()),
@@ -506,7 +508,7 @@ void ASystemSceneBuilder::BuildRuntimeStar(
 
     if (bEnableDebugLogs)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Display,
             TEXT("[SystemSceneBuilder] STAR '%s' RuntimeLoc=%s SceneLoc=%s RadiusKm=%.2f RadiusUnits=%.2f Actor=%s"),
             *StarName,
             *StarBody->Location().ToString(),
@@ -577,7 +579,7 @@ void ASystemSceneBuilder::BuildRuntimePlanet(
             ScaleSettings.MaxGasGiantScaleUnits);
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Display,
         TEXT("[PlanetRadius] %s Type=%d RadiusMeters=%.2f RadiusUnits=%.2f"),
         *PlanetName,
         (int32)PlanetType,
@@ -956,7 +958,7 @@ void ASystemSceneBuilder::TrackRuntimeBody(
 
     if (bEnableDebugLogs)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Display,
             TEXT("[SystemSceneBuilder] TrackRuntimeBody Name='%s' Body=%p Actor=%s RuntimeBodyMap=%d BodyActorMap=%d"),
             *BodyName,
             Body,
@@ -964,6 +966,14 @@ void ASystemSceneBuilder::TrackRuntimeBody(
             RuntimeBodyMap.Num(),
             BodyActorMap.Num());
     }
+}
+
+void ASystemSceneBuilder::EnsureMissionSystem(StarSystem* System)
+{
+    if(!System || (LastResolvedName.Equals(UTF8_TO_TCHAR(System->GetName()),ESearchCase::IgnoreCase) && !SpawnedBodies.IsEmpty()))return;
+    EndMissionSpace();ClearSpawnedBodies();
+    LastResolvedName=UTF8_TO_TCHAR(System->GetName());
+    BuildFromRuntimeSystem(System);
 }
 
 void ASystemSceneBuilder::RefreshRuntimeBodyRotations()
@@ -1167,7 +1177,9 @@ void SetJanekPresentationRadius(AActor& Planet, double Radius)
     if (AuthoredRadius <= 0.0) return;
     PlanetScale->SetPropertyValue_InContainer(&Planet, Radius);
     for (const FName PropertyName : {FName(TEXT("NoiseIntensity")),
-        FName(TEXT("TriangleSize")), FName(TEXT("OceanTriangleSize"))})
+        FName(TEXT("TriangleSize")), FName(TEXT("OceanTriangleSize")),
+        FName(TEXT("PlanetaryMapHeight")), FName(TEXT("PlanetaryAltitude")),
+        FName(TEXT("PlanetaryMinOceanHeight")), FName(TEXT("PlanetaryMaxOceanHeight"))})
     {
         if (const auto* Property = FindFProperty<FFloatProperty>(Planet.GetClass(), PropertyName))
             Property->SetPropertyValue_InContainer(&Planet,
@@ -1312,7 +1324,7 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
     {
         Planet->SetPlanetRadius(SafeRadius);
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Display,
             TEXT("[SystemSceneBuilder] PlanetActor '%s' RadiusUnits=%.2f"),
             *BodyName,
             SafeRadius);
@@ -1326,7 +1338,7 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
 
         Spawned->SetActorScale3D(FVector(FinalScale));
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Display,
             TEXT("[SystemSceneBuilder] GenericActor '%s' Scale=%.2f"),
             *BodyName,
             FinalScale);
@@ -1360,7 +1372,7 @@ AActor* ASystemSceneBuilder::SpawnBodyActor(
     SpawnedActors.Add(Spawned);
     BodyActorMap.Add(BodyName, Spawned);
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Display,
         TEXT("[SystemSceneBuilder] SpawnBodyActor SUCCESS '%s' Actor=%s Class=%s Loc=%s RadiusUnits=%.2f Parent=%s"),
         *BodyName,
         *GetNameSafe(Spawned),
@@ -1794,7 +1806,7 @@ void ASystemSceneBuilder::LogRuntimeSystemSummary(StarSystem* RuntimeSystem) con
 
 void ASystemSceneBuilder::LogTrackedBodies(const TCHAR* Label) const
 {
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Display,
         TEXT("[SystemSceneBuilder] %s RuntimeBodyMap=%d BodyActorMap=%d"),
         Label ? Label : TEXT("TrackedBodies"),
         RuntimeBodyMap.Num(),
@@ -1806,7 +1818,7 @@ void ASystemSceneBuilder::LogTrackedBodies(const TCHAR* Label) const
         OrbitalBody* Body = Pair.Value;
         const TObjectPtr<AActor>* FoundActor = BodyActorMap.Find(Name);
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Display,
             TEXT("[SystemSceneBuilder]   %s Body=%p Type=%d RuntimeLoc=%s Actor=%s ActorLoc=%s"),
             *Name,
             Body,
@@ -2305,7 +2317,7 @@ TSubclassOf<AActor> ASystemSceneBuilder::ResolvePlanetActorClass(EPlanetType Pla
             }
         }
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Display,
             TEXT("[SystemSceneBuilder] ResolvePlanetActorClass FALLBACK Type=%d bIsMoon=%s -> %s"),
             (int32)PlanetType,
             bIsMoon ? TEXT("true") : TEXT("false"),
@@ -2420,7 +2432,7 @@ void ASystemSceneBuilder::BuildRuntimeRegionForBody(
     const float OuterRadiusUnits =
         InnerRadiusUnits + StandardRegionRadiusUnits;
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Display,
         TEXT("[SystemSceneBuilder] BuildRuntimeRegionForBody: Body='%s' Loc=%s Inner=%.2f Outer=%.2f Grid=%.2f bIsMoon=%s BodyActor=%s BodyScale=%s"),
         *BodyName,
         *BodyWorldLocation.ToString(),
@@ -2449,7 +2461,7 @@ void ASystemSceneBuilder::BuildRuntimeRegionForBody(
 
     if (bEnableDebugLogs)
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Display,
             TEXT("[SystemSceneBuilder] REGION '%s_REGION' Anchor='%s' Loc=%s Inner=%.2f Outer=%.2f Grid=%.2f Actor=%s ActorScale=%s HiddenActor=%d"),
             *BodyName,
             *BodyName,
@@ -2536,7 +2548,7 @@ AActor* ASystemSceneBuilder::SpawnRegionActor(
          */
         SMC->SetRelativeScale3D(FVector(OuterRadiusUnits));
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Display,
             TEXT("[RegionDebug] %s ActorHidden=%d MeshVisible=%d MeshHiddenInGame=%d MeshScale=%s Mat=%s"),
             *FullName,
             Spawned->IsHidden() ? 1 : 0,
@@ -2609,7 +2621,7 @@ AActor* ASystemSceneBuilder::SpawnRegionActor(
 
     SpawnedActors.Add(Spawned);
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Display,
         TEXT("[SystemSceneBuilder] Spawned region '%s' Actor=%s Loc=%s ActorScale=%s RootWorldScale=%s OuterRadiusUnits=%.2f Parent=%s"),
         *FullName,
         *GetNameSafe(Spawned),
@@ -2694,7 +2706,7 @@ void ASystemSceneBuilder::RegisterSpawnedRegion(
 
     SpawnedRegions.Add(Entry);
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Display,
         TEXT("[SystemSceneBuilder] RegisterSpawnedRegion: Region='%s' Anchor='%s' Inner=%.2f Outer=%.2f Count=%d ActorScale=%s"),
         *RegionName,
         *AnchorBodyName,
@@ -2973,34 +2985,52 @@ AWorldScapeRoot* ASystemSceneBuilder::ConfigureJanekSurface(const FVector& Obser
         Globe->SetActorLocationAndRotation(GlobeCenter, ToSurface);
     Globe->bOverridePlayerPosition = true;
     Globe->OverridedPlayerPosition = GetActorLocation() + Observer;
+    const bool NeedsSurfaceGrade = !JanekRunwayGrade.IsValid();
     Globe->bGenerateWorldScape = true;
-    Globe->bFreezeGeneration = false;
+    Globe->bFreezeGeneration = NeedsSurfaceGrade;
     Globe->bGenerateCollision = true;
     Globe->bGenerateFoliages = true;
+    Globe->bEnableVolumes = true;
     Globe->SetActorHiddenInGame(false);
     UpdateJanekOrbitRendering(*Globe, false);
     ScaleJanekOceanWaves(*Globe);
 
     if (!JanekRunwayGrade.IsValid())
     {
-        auto* Data = LoadObject<UHeightMapVolumeData>(nullptr,
-            TEXT("/Game/Models/Universe/Planets/Janek/HM_Janek.HM_Janek"));
-        if (!Data) return nullptr;
-        const FTransform Pose(FQuat::Identity, WorldSite, FVector(95.0));
+        const FTransform Pose(FQuat::Identity, WorldSite, FVector(JanekSurfaceGrade::HalfWidth / 50.0));
         auto* Grade = GetWorld()->SpawnActorDeferred<AHeightMapVolume>(AHeightMapVolume::StaticClass(),
             Pose, this, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
         if (!Grade) return nullptr;
-        Grade->HeightMapData = Data;
+        // A constant native mask cannot disappear because an imported heightmap
+        // is absent, ignored, or stripped during cooking. Its only job is grading.
+        auto* FlatData = NewObject<UHeightMapVolumeData>(Grade);
+        FlatData->BaseWidth = FlatData->BaseHeight = 2;
+        FlatData->StoredHeightMapData.Init(0, 4);
+        FlatData->StoredWaterHeightMapData.Init(0, 4);
+        FlatData->bIgnoreOceanHeightMap = false;
+        FlatData->bIgnoreHeightMap = false;
+        Grade->HeightMapData = FlatData;
         Grade->Height = true;
         Grade->HeightAlpha = false;
         Grade->OverrideHeight = true;
-        Grade->Altitude = static_cast<float>(SiteOnGlobe.Size() - Body->Radius());
+        // Keep the terrain two simulation metres below the runway datum.
+        Grade->Altitude = static_cast<float>(SiteOnGlobe.Size() - Globe->PlanetScale + JanekSurfaceGrade::SoilHeight);
         Grade->MapHeight = 0.0f;
-        Grade->EdgeFalloff = 0.18f;
-        Grade->Priority = 100;
+        // The ocean has its own LOD mesh. Grade it below the airport as well,
+        // rather than letting independent water tiles cut through the soil.
+        Grade->OceanHeight = true;
+        Grade->OceanHeightAlpha = false;
+        Grade->MinOceanHeight = FMath::Min(Globe->OceanHeight, Grade->Altitude - 20.0f);
+        Grade->MaxOceanHeight = Grade->MinOceanHeight;
+        Grade->UseBlending = false;
+        Grade->EdgeFalloff = JanekSurfaceGrade::EdgeFraction;
+        // WorldScape evaluates descending priority, with the last override winning.
+        // The runway must therefore follow the lake and the demo's terrain masks.
+        Grade->Priority = JanekSurfaceGrade::RunwayPriority;
         Grade->FinishSpawning(Pose);
         Grade->AttachToActor(Globe, FAttachmentTransformRules::KeepWorldTransform);
         Grade->WS_ForceRefresh();
+        Globe->HeightMapVolumeList.AddUnique(Grade);
         Globe->CollisionDependantActor.AddUnique(Grade);
         JanekRunwayGrade = Grade;
         UE_LOG(LogTemp, Display, TEXT("[JanekSurface] Live WorldScape runway grade at %s, altitude %.1f m"),
@@ -3009,7 +3039,7 @@ AWorldScapeRoot* ASystemSceneBuilder::ConfigureJanekSurface(const FVector& Obser
 
     if (!JanekRunwayFoliageMask.IsValid())
     {
-        const FTransform Pose(FQuat::Identity, WorldSite, FVector(50.0));
+        const FTransform Pose(FQuat::Identity, WorldSite, FVector(JanekSurfaceGrade::HalfWidth / 50.0));
         auto* Mask = GetWorld()->SpawnActorDeferred<AFoliageMaskVolume>(AFoliageMaskVolume::StaticClass(),
             Pose, this, nullptr, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
         if (Mask)
@@ -3019,6 +3049,7 @@ AWorldScapeRoot* ASystemSceneBuilder::ConfigureJanekSurface(const FVector& Obser
             Mask->FinishSpawning(Pose);
             Mask->AttachToActor(Globe, FAttachmentTransformRules::KeepWorldTransform);
             Mask->WS_ForceRefresh();
+            Globe->FoliageMaskList.AddUnique(Mask);
             JanekRunwayFoliageMask = Mask;
         }
     }
@@ -3043,19 +3074,46 @@ AWorldScapeRoot* ASystemSceneBuilder::ConfigureJanekSurface(const FVector& Obser
                 Lake->MinOceanHeight = 150.0f;
                 Lake->MaxOceanHeight = 150.0f;
                 Lake->EdgeFalloff = 0.20f;
-                Lake->Priority = 90;
+                Lake->Priority = JanekSurfaceGrade::LakePriority;
                 Lake->FinishSpawning(Pose);
                 Lake->AttachToActor(Globe, FAttachmentTransformRules::KeepWorldTransform);
                 Lake->WS_ForceRefresh();
+                Globe->HeightMapVolumeList.AddUnique(Lake);
                 JanekRunwayLake = Lake;
             }
         }
+    }
+    // WorldScape skips sorting for short lists and rotated globes. Keep the
+    // canonical list in evaluation order too, so mesh jobs and height queries agree.
+    if (NeedsSurfaceGrade)
+    {
+        Globe->HeightMapVolumeList.Sort([](const AHeightMapVolume& A, const AHeightMapVolume& B)
+        {
+            return A.Priority > B.Priority;
+        });
+        // Discard orbital/pre-grade LODs. All replacement jobs must capture the
+        // completed runway volume, not the former mountainous surface.
+        Globe->WS_ForceRegenerate_WS(true);
+    }
+    Globe->bFreezeGeneration = false;
+    if (NeedsSurfaceGrade)
+    {
+        auto* Clearance=Globe->FindComponentByClass<UJanekRunwayClearanceComponent>();
+        if(!Clearance)
+        {
+            Clearance=NewObject<UJanekRunwayClearanceComponent>(Globe);
+            Globe->AddInstanceComponent(Clearance);
+            Clearance->RegisterComponent();
+        }
+        Clearance->Protect(WorldSite,JanekSurfaceGrade::HalfWidth);
     }
     return Globe;
 }
 
 void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const FVector& Observer, const Orbital* FocusBody, const FVector& CameraForwardUE, bool bSurfaceView)
 {
+    // Streaming teardown can detach this actor before the next presentation update.
+    if (!IsValid(GetWorld()) || IsActorBeingDestroyed()) return;
     if (!bMissionSpace)
     {
         ResetTemporaryCutsceneBodyScales();
@@ -3159,15 +3217,17 @@ void ASystemSceneBuilder::UpdateMissionSpace(const FVector& SectorOrigin, const 
             {
                 Globe->bGenerateCollision = false;
                 Globe->bGenerateFoliages = false;
+                if(auto* Clearance=Globe->FindComponentByClass<UJanekRunwayClearanceComponent>())Clearance->StopProtection();
                 if (auto* Mask = JanekRunwayFoliageMask.Get()) Mask->Destroy();
                 JanekRunwayFoliageMask.Reset();
                 if (auto* Grade = JanekRunwayGrade.Get())
                 {
                     Globe->CollisionDependantActor.Remove(Grade);
+                    Globe->HeightMapVolumeList.Remove(Grade);
                     Grade->Destroy();
                 }
                 JanekRunwayGrade.Reset();
-                if (auto* Lake = JanekRunwayLake.Get()) Lake->Destroy();
+                if (auto* Lake = JanekRunwayLake.Get()) { Globe->HeightMapVolumeList.Remove(Lake); Lake->Destroy(); }
                 JanekRunwayLake.Reset();
             }
             if (auto* Globe = Cast<AWorldScapeRoot>(BodyActor))
@@ -3392,7 +3452,12 @@ void ASystemSceneBuilder::EndMissionSpace()
         Globe->bGenerateCollision = false;
         Globe->bGenerateFoliages = false;
         Globe->bOverridePlayerPosition = false;
-        if (auto* Grade = JanekRunwayGrade.Get()) Globe->CollisionDependantActor.Remove(Grade);
+        if (auto* Grade = JanekRunwayGrade.Get())
+        {
+            Globe->CollisionDependantActor.Remove(Grade);
+            Globe->HeightMapVolumeList.Remove(Grade);
+        }
+        if (auto* Lake = JanekRunwayLake.Get()) Globe->HeightMapVolumeList.Remove(Lake);
     }
     if (auto* Grade = JanekRunwayGrade.Get()) Grade->Destroy();
     JanekRunwayGrade.Reset();

@@ -10,6 +10,7 @@
 #include "Camera.h"
 #include "Instruction.h"
 #include "Mission.h"
+#include "MissionElement.h"
 #include "MissionEvent.h"
 #include "Weapon.h"
 #include "WeaponGroup.h"
@@ -18,10 +19,13 @@
 #include "OwnedHullCondition.h"
 #include "Game.h"
 #include "FlightDeck.h"
+#include "Hangar.h"
 #include "DeckResumeState.h"
+#include "CampaignFleetTransit.h"
 void FLocalWorldStateCodec::Capture(Sim& Simulation,ULocalUniverseState& Out)
 {
     if(!Simulation.mission || Simulation.IsNetworked() || !Simulation.GetPlayerShip())return;
+    Out.NavigationCoordinatesVersion=1;
     const auto OldShips=Out.Ships;const bool Same=Out.MissionId==Simulation.mission->GetIdentity();
     Out.AgentAssignmentId=Simulation.AssignedAgentMissionId;Out.MissionId=Simulation.mission->GetIdentity();Out.MissionName=UTF8_TO_TCHAR(Simulation.mission->GetName());Out.bMissionComplete=Simulation.mission->IsComplete();
     Out.MissionElapsed=double(Game::GetGameTime()-Simulation.start_time)/1000.0;Out.Ships.Reset();Out.Asteroids.Reset();Out.MiningRuns.Reset();Out.EventIds.Reset();Out.EventStatuses.Reset();
@@ -31,6 +35,7 @@ void FLocalWorldStateCodec::Capture(Sim& Simulation,ULocalUniverseState& Out)
         for(ListIter<Ship> S=Region->GetShips();++S;)
         {
             auto* Vessel=S.value();if(!Vessel || !Vessel->Design())continue;FLocalShipState Row;
+            Row.bMagazineIssue=Vessel->HasMagazineIssue();
             Row.Name=UTF8_TO_TCHAR(Vessel->GetName());Row.Design=UTF8_TO_TCHAR(Vessel->DesignName());Row.Region=UTF8_TO_TCHAR(Region->GetName());Row.System=Region->GetSystem()?UTF8_TO_TCHAR(Region->GetSystem()->GetName()):TEXT("");
             Row.Element=Vessel->GetElement()?UTF8_TO_TCHAR(Vessel->GetElement()->GetName()):TEXT("");Row.IFF=Vessel->GetIFF();Row.bDestroyed=Vessel->IsDead() || Vessel->IsDying();
             Row.Position=Vessel->GetLocation();Row.Velocity=Vessel->GetVelocity();Row.Forward=Vessel->GetHeading();Row.Up=Vessel->GetLiftLine();Row.Right=Vessel->GetBeamLine();Row.Throttle=Vessel->GetThrottle();
@@ -58,11 +63,15 @@ void FLocalWorldStateCodec::Capture(Sim& Simulation,ULocalUniverseState& Out)
 }
 bool FLocalWorldStateCodec::Restore(Sim& Simulation,const ULocalUniverseState& In)
 {
-    if(!Simulation.mission || Simulation.IsNetworked() || In.MissionId!=Simulation.mission->GetIdentity() || In.MissionName!=UTF8_TO_TCHAR(Simulation.mission->GetName()) || In.bMissionComplete)return false;
+    if(!Simulation.mission || Simulation.IsNetworked() || In.MissionId!=Simulation.mission->GetIdentity() ||
+        (!Simulation.mission->IsFreeFlight() && In.MissionName!=UTF8_TO_TCHAR(Simulation.mission->GetName())) || In.bMissionComplete)return false;
+    // Region transfers clear the previous region's player pointer. Retain the
+    // actual provisioned pilot until all saved transforms/decks have been applied.
+    Ship* ResumePilot=Simulation.GetPlayerShip();
     for(const auto& Row:In.Ships)
     {
         if(Row.Position.ContainsNaN() || Row.Velocity.ContainsNaN())continue;
-        auto* Region=Simulation.FindRegion(Row.Region);if(!Region || !Region->GetSystem() || Row.System!=UTF8_TO_TCHAR(Region->GetSystem()->GetName()))continue;
+        auto* Region=CampaignFleetTransit::EnsureRegion(Simulation,Row.System,Row.Region);if(!Region)continue;
         Ship* Vessel=Simulation.FindShip(TCHAR_TO_UTF8(*Row.Name));
         if(!Vessel && !Row.bDestroyed){auto* Design=ShipDesignRegistry::FindLegacy(FName(*Row.Design));if(Design)Vessel=Simulation.CreateShip(TCHAR_TO_UTF8(*Row.Name),"",Design,TCHAR_TO_UTF8(*Row.Region),OtherHand(Row.Position),Row.IFF);}
         if(!Vessel || Row.Design!=UTF8_TO_TCHAR(Vessel->DesignName()))continue;
@@ -71,16 +80,34 @@ bool FLocalWorldStateCodec::Restore(Sim& Simulation,const ULocalUniverseState& I
         Camera Frame=Vessel->GetCam();Frame.SetOrientation(Row.Right,Row.Up,Row.Forward);Vessel->CloneCam(Frame);
         FOwnedHullCondition::Apply(*Vessel,Row.Condition);Vessel->RestoreSavedCargoInventory(Row.CargoId);
         if(Row.bDestroyed){Vessel->SetIntegrity(0);Vessel->SetTransition(0,Ship::TRANSITION_DEAD,Row.Position);continue;}
+        Vessel->SetMagazineIssue(Row.bMagazineIssue);
         int32 Index=0;for(ListIter<WeaponGroup> Groups=Vessel->GetWeapons();++Groups;)for(ListIter<Weapon> Weapons=Groups->GetWeapons();++Weapons;)if(Row.Ammo.IsValidIndex(Index))Weapons->SetAmmo(FMath::Max(0,Row.Ammo[Index++]));
         Index=0;for(ListIter<PowerSource> Reactors=Vessel->GetReactors();++Reactors;)if(Row.Fuel.IsValidIndex(Index))Reactors->SetCapacity(FMath::Clamp(Row.Fuel[Index++],0.0,100.0));
         if(Vessel->GetShield())Vessel->GetShield()->SetNetShieldLevel(FMath::Clamp(Row.Shield,0,100));
         if(Row.bHasFlightPlan)
         {
+            MissionElement* AuthoredElement=nullptr;
+            if(In.NavigationCoordinatesVersion==0)
+                for(ListIter<MissionElement> E=Simulation.mission->GetElements();++E;)
+                    if(Row.Element==UTF8_TO_TCHAR(E->GetName().data())){AuthoredElement=E.value();break;}
+            // Repair only a complete, exact match to the old coordinate swap.
+            // User-edited routes and already-correct checkpoints remain intact.
+            bool RepairSwappedRoute=AuthoredElement && Row.FlightPlan.Num()>0 && AuthoredElement->NavList().size()==Row.FlightPlan.Num();
+            for(int32 N=0;RepairSwappedRoute && N<Row.FlightPlan.Num();++N)
+            {
+                const Instruction* Authored=AuthoredElement->NavList()[N];
+                RepairSwappedRoute=Authored && Row.FlightPlan[N].Action==int32(Authored->GetAction()) &&
+                    Row.FlightPlan[N].Position.Equals(OtherHand(Authored->GetLocation()),.01);
+            }
+            if(RepairSwappedRoute)UE_LOG(LogTemp,Display,TEXT("[LocalState] Repaired swapped flight-plan coordinates for %s"),*Row.Element);
             Vessel->ClearFlightPlan();
+            int32 NavIndex=0;
             for(const auto& N:Row.FlightPlan)
             {
+                const int32 SourceIndex=NavIndex++;
                 if(N.Position.ContainsNaN() || !FMath::IsFinite(N.Hold))continue;
-                auto* Nav=new Instruction(TCHAR_TO_UTF8(*N.Region),OtherHand(N.Position),static_cast<EInstruction>(N.Action));
+                const FVector Position=RepairSwappedRoute?AuthoredElement->NavList()[SourceIndex]->GetLocation():N.Position;
+                auto* Nav=new Instruction(TCHAR_TO_UTF8(*N.Region),Position,static_cast<EInstruction>(N.Action));
                 Nav->SetStatus(static_cast<INSTRUCTION_STATUS>(N.Status));Nav->SetFormation(static_cast<INSTRUCTION_FORMATION>(N.Formation));Nav->SetTarget(TCHAR_TO_UTF8(*N.Target));
                 Nav->SetSpeed(N.Speed);Nav->SetPriority(N.Priority);Nav->SetEMCON(N.Emcon);Nav->SetWeaponsFree(N.WeaponsFree);Nav->SetFarcast(N.Farcast);Nav->SetHoldTime(N.Hold);
                 Vessel->AddNavPoint(Nav);
@@ -98,7 +125,11 @@ bool FLocalWorldStateCodec::Restore(Sim& Simulation,const ULocalUniverseState& I
                 DeckResumeState::Release(*Carrier->GetFlightDeck(I),*Vessel);
     for(const auto& Row:In.Ships)if(auto* Vessel=Simulation.FindShip(TCHAR_TO_UTF8(*Row.Name));Vessel && !Row.bDestroyed)
     {
-        if(auto* Carrier=Simulation.FindShip(TCHAR_TO_UTF8(*Row.Carrier));Carrier && Row.Deck>=0 && Row.Deck<Carrier->NumFlightDecks())Vessel->SetCarrier(Carrier,Carrier->GetFlightDeck(Row.Deck));
+        auto* PreviousCarrier=Vessel->GetCarrier();
+        auto* SavedCarrier=Simulation.FindShip(TCHAR_TO_UTF8(*Row.Carrier));
+        if(PreviousCarrier && PreviousCarrier!=SavedCarrier)
+            if(auto* Inventory=PreviousCarrier->GetHangar()){Inventory->Update(Vessel);Inventory->Ignore(Vessel);}
+        if(auto* Carrier=SavedCarrier;Carrier && Row.Deck>=0 && Row.Deck<Carrier->NumFlightDecks())Vessel->SetCarrier(Carrier,Carrier->GetFlightDeck(Row.Deck));
         else if(Row.FlightPhase>static_cast<int32>(EOPSMode::ALERT))Vessel->SetCarrier(nullptr,nullptr);
         Vessel->SetFlightPhase(static_cast<EOPSMode>(FMath::Clamp(Row.FlightPhase,0,int32(EOPSMode::DOCKING))));Vessel->SetThrottle(FMath::Clamp(Row.Throttle,0.0,100.0));
         // Deck-controlled snapshots restart safely at their authored spot, using
@@ -106,8 +137,21 @@ bool FLocalWorldStateCodec::Restore(Sim& Simulation,const ULocalUniverseState& I
         if(Row.FlightPhase>=int32(EOPSMode::DOCKED) && Row.FlightPhase<=int32(EOPSMode::LOCKED))
         {
             if(auto* Deck=Vessel->GetDock();Deck && Deck->IsLaunchDeck())
-                if(!DeckResumeState::Park(*Deck,*Vessel))
+            {
+                bool Parked=false;
+                if(auto* Carrier=Vessel->GetCarrier();Carrier && Carrier->GetHangar())
+                {
+                    auto* Inventory=Carrier->GetHangar();
+                    if((Inventory->CanStow(Vessel) || Inventory->CreateSquadron(Text("Resumed craft"),nullptr,Vessel->Design(),1,Vessel->GetIFF(),nullptr,0,1)) && Inventory->Stow(Vessel))
+                    {
+                        Vessel->SetFlightPhase(EOPSMode::DOCKED);
+                        Parked=Inventory->RestagePlayer(Vessel);
+                    }
+                }
+                else Parked=DeckResumeState::Park(*Deck,*Vessel);
+                if(!Parked)
                     UE_LOG(LogTemp,Warning,TEXT("[LocalState] No compatible deck spot for resumed ship '%hs'"),Vessel->GetName());
+            }
         }
         else if(Row.FlightPhase==int32(EOPSMode::LAUNCH) || Row.FlightPhase==int32(EOPSMode::TAKEOFF))
             Vessel->BeginCarrierLaunchClearance();
@@ -119,6 +163,12 @@ bool FLocalWorldStateCodec::Restore(Sim& Simulation,const ULocalUniverseState& I
     for(const auto& Work:In.MiningRuns)if(auto* Vessel=Simulation.FindShip(TCHAR_TO_UTF8(*Work.Ship)))
     {auto& Run=Simulation.JanekMiningRuns.FindOrAdd(Vessel->GetIdentity());Run.Time=Work.Time;Run.NextPulse=Work.NextPulse;Run.bDelivering=Work.bDelivering;Run.LoadedTonnes=Work.LoadedTonnes;if(Work.DepositId!=INDEX_NONE)Run.DepositId=Work.DepositId;Run.Contract.RestoreReservation(Simulation.ReadEconomy(),Work.Reservation);}
     if(FMath::IsFinite(In.MissionElapsed) && In.MissionElapsed>=0 && In.MissionElapsed<7*86400)Simulation.start_time=Game::GetGameTime()-static_cast<uint32>(In.MissionElapsed*1000);
+    if(ResumePilot && ResumePilot->GetRegion())
+    {
+        ResumePilot->GetRegion()->SetPlayerShip(ResumePilot);
+        Simulation.ActivateRegion(ResumePilot->GetRegion());
+        UE_LOG(LogTemp,Display,TEXT("[LocalState] Resumed pilot %hs in active sector %hs"),ResumePilot->GetName(),ResumePilot->GetRegion()->GetName());
+    }
     return true;
 }
 

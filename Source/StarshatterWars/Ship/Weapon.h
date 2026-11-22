@@ -83,6 +83,7 @@ public:
 
     // needed to set proper ammo level when joining multiplayer in progress:
     void               SetAmmo(int a);
+    FSimpleMulticastDelegate OnStoresChanged;
 
     bool               IsPrimary() const;
     bool               IsDrone()   const;

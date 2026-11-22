@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "Engine/World.h"
 #include "ExplosionActor.h"
@@ -72,6 +73,7 @@ bool FExplosionPresentationTest::RunTest(const FString&)
  Attached.Update(&Source);TestEqual(TEXT("Legacy source destruction retains four-second tail"),Attached.GetLife(),4.0);
  const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
  auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
  if(!TestNotNull(TEXT("Preview world"),World))return false;ON_SCOPE_EXIT{World->DestroyWorld(false);};
  for(int I=1;I<=15;++I){
   const auto Type=static_cast<EExplosionType>(I);UClass* Native=AExplosionActor::NativeClass(Type).Get();UClass* Class=AExplosionActor::VisualClass(Type).Get();
@@ -87,7 +89,11 @@ bool FExplosionPresentationTest::RunTest(const FString&)
    if(TestNotNull(TEXT("Quantum has a camera-facing flash"),Flash))
     TestNotNull(TEXT("Quantum flash has the pack material"),Flash->GetMaterial(0));
   } else TestTrue(TEXT("Pack effect assigned"),A->NiagaraSystem!=nullptr || A->ParticleSystem!=nullptr);
-  A->PlayExplosion(2,3,.2f);TestTrue(TEXT("Cosmetic scale applied once"),A->NiagaraEffect->GetRelativeScale3D().Equals(FVector(2*A->VisualScale)));
+  A->PlayExplosion(2,3,.2f);
+  const bool bPack = A->ParticleSystem && A->ParticleSystem->GetPathName().StartsWith(TEXT("/Game/Space_Explosion_Pack/"));
+  TestTrue(TEXT("Explosion pack receives one 1:100 conversion; quantum retains its calibration"),A->ParticleEffect->GetRelativeScale3D().Equals(FVector(2*A->VisualScale*(bPack?.01f:1.f)),.00001));
+  A->PlayExplosion(2,3,.2f);
+  TestTrue(TEXT("Replaying does not compound the pack scale"),A->ParticleEffect->GetRelativeScale3D().Equals(FVector(2*A->VisualScale*(bPack?.01f:1.f)),.00001));
   A->SetPresentationClock(true,2);TestTrue(TEXT("Niagara follows runtime pause"),A->NiagaraEffect->IsPaused());A->SetPresentationClock(false,2);
   A->AdvancePresentation(.3);TestTrue(TEXT("Transient visual expires"),A->IsActorBeingDestroyed());
  }

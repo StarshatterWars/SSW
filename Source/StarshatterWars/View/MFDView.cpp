@@ -5,6 +5,7 @@
 #include "View.h"
 #include "Mouse.h"
 #include "Bitmap.h"
+#include "DataLoader.h"
 
 #include "FontManager.h"     // You said this only resolves reliably when included in .h; move if needed.
 #include "Ship.h"
@@ -39,17 +40,11 @@ void MFDView::Initialize()
     if (bInitialized)
         return;
 
-    // If you kept HUDView::PrepareBitmap + shade tables, keep this.
-    // Otherwise: load into Bitmap without shade.
-    HUDView::PrepareBitmap("sensor_fov.pcx", SensorFOV, SensorFOVShade);
-    HUDView::PrepareBitmap("sensor_fwd.pcx", SensorFWD, SensorFWDShade);
-    HUDView::PrepareBitmap("sensor_hsd.pcx", SensorHSD, SensorHSDShade);
-    HUDView::PrepareBitmap("sensor_3d.pcx", Sensor3D, Sensor3DShade);
-
-    SensorFOV.SetType(Bitmap::BMP_TRANSLUCENT);
-    SensorFWD.SetType(Bitmap::BMP_TRANSLUCENT);
-    SensorHSD.SetType(Bitmap::BMP_TRANSLUCENT);
-    Sensor3D.SetType(Bitmap::BMP_TRANSLUCENT);
+    auto* Loader=DataLoader::GetLoader();
+    Loader->LoadHUDTexture("sensor_fov",SensorFOV,Bitmap::BMP_TRANSLUCENT);
+    Loader->LoadHUDTexture("sensor_fwd",SensorFWD,Bitmap::BMP_TRANSLUCENT);
+    Loader->LoadHUDTexture("sensor_hsd",SensorHSD,Bitmap::BMP_TRANSLUCENT);
+    Loader->LoadHUDTexture("sensor_3d",Sensor3D,Bitmap::BMP_TRANSLUCENT);
 
     bInitialized = true;
 }
@@ -207,36 +202,13 @@ void MFDView::Draw()
             return;
     }
 
-    // Draw sensor background bitmap (legacy sprite frame) for sensor modes.
-    if ((int32)Mode >= (int32)EMFDMode::FOV)
+    if(window && !CockpitHUDTexture)
     {
-        Bitmap* Frame = nullptr;
-
-        switch (Mode)
+        Bitmap* Frame=Mode==EMFDMode::FOV?&SensorFOV:Mode==EMFDMode::HSD?&SensorHSD:Mode==EMFDMode::RADAR3D?&Sensor3D:nullptr;
+        if(Frame && Frame->GetTexture())
         {
-        case EMFDMode::FOV: Frame = &SensorFOV; break;
-        case EMFDMode::HSD: Frame = &SensorHSD; break;
-        case EMFDMode::RADAR3D: Frame = &Sensor3D; break;
-        default: break;
-        }
-
-        if (Frame && Frame->Width() > 0 && Frame->Height() > 0)
-        {
-            if (CockpitHUDTexture)
-            {
-                const int32 x1 = Index * 128;
-                const int32 y1 = 256;
-                CockpitHUDTexture->BitBlt(x1, y1, *Frame, 0, 0, Frame->Width(), Frame->Height());
-            }
-            else if (window)
-            {
-                const int32 cx = RectPx.x + RectPx.w / 2;
-                const int32 cy = RectPx.y + RectPx.h / 2;
-                const int32 w2 = Frame->Width() / 2;
-                const int32 h2 = Frame->Height() / 2;
-
-                DrawBitmap(cx - w2, cy - h2, cx + w2, cy + h2, Frame /*, blend if your API supports */);
-            }
+            const int32 X=RectPx.x+RectPx.w/2,Y=RectPx.y+RectPx.h/2;
+            DrawBitmap(X-Frame->Width()/2,Y-Frame->Height()/2,X+Frame->Width()/2,Y+Frame->Height()/2,Frame);
         }
     }
 
@@ -495,7 +467,7 @@ static void MFDFill(View* V, Bitmap* Tex, int X1, int Y1, int X2, int Y2, const 
         const FVector2D Pos((float)X1, (float)Y1);
         const FVector2D Size((float)(X2 - X1), (float)(Y2 - Y1));
         FSlateDrawElement::MakeBox(
-            Ctx->OutDrawElements, Layer, Geo->ToPaintGeometry(Pos, Size),
+            Ctx->OutDrawElements, Layer, Geo->ToPaintGeometry(FVector2f(Size), FSlateLayoutTransform(FVector2f(Pos))),
             FCoreStyle::Get().GetBrush("WhiteBrush"),
             ESlateDrawEffect::None, MFDToLinear(C));
         return;

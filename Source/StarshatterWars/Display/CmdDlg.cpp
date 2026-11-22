@@ -878,7 +878,7 @@ void UCmdDlg::OnCancelButtonClicked()
 
     if (manager)
     {
-        manager->ShowCampaignSelectDlg();
+        manager->ReturnFromMissionBriefing();
     }
     else
     {

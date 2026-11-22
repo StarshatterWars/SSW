@@ -340,6 +340,8 @@ public:
     void              SetWard(Ship* s);
 
     // SHIELD SYSTEMS:
+    using Physical::InflictDamage;
+    void InflictDamage(double Damage,int Type) override { Physical::InflictDamage(Damage,Type); }
     virtual double    InflictDamage(double damage, SimShot* shot = 0, int hit_type = 3, FVector hull_impact = FVector(0, 0, 0));
     virtual double    InflictSystemDamage(double damage, SimShot* shot, FVector impact);
 
@@ -552,6 +554,8 @@ public:
     // SYSTEM ACCESSORS:
     List<SimSystem>&        GetSystems() { return systems; }
     List<WeaponGroup>&      GetWeapons() { return weapons; }
+    bool HasMagazineIssue() const {return bMagazineIssue;}
+    void SetMagazineIssue(bool Issued) {bMagazineIssue=Issued;}
     List<Drive>&            GetDrives() { return drives; }
     List<Computer>&         GetComputers() { return computers; }
     List<FlightDeck>&       GetFlightDecks() { return flight_decks; }
@@ -601,6 +605,7 @@ protected:
     double            throttle;
     double            throttle_request;
     bool bManualThrottle = false;
+    bool bMagazineIssue = false;
     bool bManualRotation = false;
     FVector ManualRotationInput = FVector::ZeroVector;
     FVector SmoothedManualRotation = FVector::ZeroVector;

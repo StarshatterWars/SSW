@@ -19,9 +19,9 @@ bool FShipSystemCalibrationTest::RunTest(const FString&)
     const auto* ZolonDestroyer = Ships->FindRow<FShipDesign>(TEXT("ZZDD"), TEXT("Balance calibration"), false);
     if (!TestNotNull(TEXT("Falcon credit anchor exists"), Falcon) || !TestNotNull(TEXT("Carrier role exists"), Orion) ||
         !TestNotNull(TEXT("Unmodeled frigate remains in catalog"), Berents) || !TestNotNull(TEXT("Unmodeled destroyer remains in catalog"), ZolonDestroyer)) return false;
-    TestEqual(TEXT("Falcon remains the SSW credit anchor, not an ISK price"), Falcon->BaseCost, int64(574000));
-    TestEqual(TEXT("Carrier normalized role price is ingested"), Orion->BaseCost, int64(461926000));
-    TestEqual(TEXT("Frigate price obeys bounded normalization"), Berents->BaseCost, int64(10190000));
+    TestEqual(TEXT("Falcon remains the SSW credit anchor, not an ISK price"), Falcon->BaseCost, int64(57400));
+    TestEqual(TEXT("Carrier normalized role price is ingested"), Orion->BaseCost, int64(46192600));
+    TestEqual(TEXT("Frigate price obeys bounded normalization"), Berents->BaseCost, int64(1019000));
     TestTrue(TEXT("Data-only Berents model stays absent"), Berents->Model.IsEmpty());
     TestTrue(TEXT("Data-only Zolon destroyer model stays absent"), ZolonDestroyer->Model.IsEmpty());
     if (!TestFalse(TEXT("Falcon physical reactor retained"), Falcon->Power.IsEmpty()) ||

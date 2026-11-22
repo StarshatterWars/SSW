@@ -68,6 +68,20 @@ protected:
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
     void ApplyVisual();
+#if WITH_DEV_AUTOMATION_TESTS
+public:
+    uint64 GetVisualUpdateCount() const { return VisualUpdateCount; }
+protected:
+    uint64 VisualUpdateCount = 0;
+#endif
+    TWeakObjectPtr<UNiagaraSystem> PresentedSystem;
+    FVector PresentedLocalEnd = FVector::ZeroVector;
+    FLinearColor PresentedColor = FLinearColor::Black;
+    float PresentedWidth = -1;
+    float PresentedReferenceWidth = -1;
+    bool bVisualParametersInitialized = false;
+    uint8 PackVectorParameters = 0;
+
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Beam")
     TObjectPtr<USceneComponent> Root;

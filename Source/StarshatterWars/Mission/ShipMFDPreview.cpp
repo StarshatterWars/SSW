@@ -178,8 +178,8 @@ bool FShipMFDPreview::BeginCapture(const FString& NextKey, const FBox& Bounds)
     FActorSpawnParameters Params;Params.ObjectFlags|=RF_Transient;
     Capture=World->SpawnActor<ASceneCapture2D>(Params);
     if(!Capture.IsValid()){Clear();return false;}
-    const FVector CameraLocation=bPlayerPanel ? FVector(0.f,-350.f,180.f) : FVector(-290.f,-290.f,170.f);
-    Capture->SetActorLocationAndRotation(CameraLocation,(-CameraLocation).Rotation());
+    const FVector CameraLocation=bPlayerPanel ? FVector(0.f,0.f,400.f) : FVector(-290.f,-290.f,170.f);
+    Capture->SetActorLocationAndRotation(CameraLocation,bPlayerPanel?FRotator(-90,90,0):(-CameraLocation).Rotation());
     USceneCaptureComponent2D* Component=Capture->GetCaptureComponent2D();
     Component->TextureTarget=Target.Get();Component->FOVAngle=40.f;
     Component->CaptureSource=SCS_SceneColorHDR;

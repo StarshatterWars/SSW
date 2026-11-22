@@ -20,8 +20,6 @@ bool FWeaponReferenceTest::RunTest(const FString& Parameters)
     int32 Expected=0;TSet<FName> Seen;
     for (const auto& Pair:WeaponDesignRegistry::GetAll())
         if (auto* D=WeaponDesign::Find(TCHAR_TO_ANSI(*Pair.Key.ToString()))) if (!D->secret) Seen.Add(Pair.Key);
-    for (int32 I=0;I<WeaponDesign::catalog.size();++I)
-        if(auto* D=WeaponDesign::catalog[I]) if(!D->secret) Seen.Add(FName(ANSI_TO_TCHAR(D->name.data())));
     Expected=Seen.Num();
     TestTrue(TEXT("Project weapon registry is populated"),Expected>0);
     TestEqual(TEXT("Every public weapon has a dropdown row"),Dlg->ShipCombo->GetOptionCount(),Expected);

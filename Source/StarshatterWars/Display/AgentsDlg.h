@@ -17,6 +17,7 @@ class STARSHATTERWARS_API UAgentsDlg : public UBaseScreen
 public:
     void UseStandaloneFrame() { bStandaloneFrame = true; CanLaunch.BindLambda([] { return true; }); }
     void SetCanLaunch(TDelegate<bool()> InCanLaunch) { CanLaunch = MoveTemp(InCanLaunch); }
+    void SetOnTransitStarted(FSimpleDelegate Action) { OnTransitStarted = MoveTemp(Action); }
     void RefreshBoard();
 
 protected:
@@ -41,6 +42,7 @@ private:
     bool bJournalDirty=false;
     bool bStandaloneFrame = false;
     TDelegate<bool()> CanLaunch;
+    FSimpleDelegate OnTransitStarted;
     FText Feedback;
     FName SelectedAgent;
     FName SelectedSystem;

@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Components/StaticMeshComponent.h"
 #include "BoltWeaponActor.h"
 #include "Components/MaterialBillboardComponent.h"
@@ -11,7 +12,8 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FBoltPhotonVisibilityTest,"Starshatter.Weapons.
 bool FBoltPhotonVisibilityTest::RunTest(const FString&)
 {
  const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
- auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);if(!TestNotNull(TEXT("World"),World))return false;
+ auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);if(!TestNotNull(TEXT("World"),World))return false;
  const TCHAR* Names[]={TEXT("Alpha Cannon"),TEXT("Delta Cannon"),TEXT("Heavy Cannon"),TEXT("Fighter Turret"),TEXT("LCA Turret"),TEXT("Blockade Cannon"),TEXT("Vulcan Cannon"),TEXT("Phalanx Cannon"),TEXT("Viking Cannon"),TEXT("Ursa Cannon"),TEXT("Orca Cannon"),TEXT("Orca Inverted"),TEXT("Orca 2 Cannon"),TEXT("Orca 2 Inverted"),TEXT("Vanguard"),TEXT("Helicon"),TEXT("Light-PDB"),TEXT("Rail-5"),TEXT("Rail-12"),TEXT("Rail-12 Inverted"),TEXT("Rail-15"),TEXT("Mag-18"),TEXT("AAA Cannon"),TEXT("Quad AAA"),TEXT("Zolon Cannon"),TEXT("Plasma Cannon")};
  for(auto* Name:Names){auto* B=World->SpawnActor<ABoltWeaponActor>(ABoltWeaponActor::BlueprintClassForWeapon(Name));if(!TestNotNull(Name,B))continue;B->BeginSimulationFlight();
   TArray<UNiagaraComponent*> FX;B->GetComponents(FX);bool NativeBolt=false;

@@ -52,7 +52,7 @@
           "ReplaceTime": 24000.0,
           "Spares": 0,
           "Affects": 3,
-          "BaseCost": 36500
+          "BaseCost": 3650
         },
         {
           "Name": "Fuel System",
@@ -61,7 +61,7 @@
           "ReplaceTime": 1200.0,
           "Spares": 0,
           "Affects": 1,
-          "BaseCost": 12500
+          "BaseCost": 1250
         },
         {
           "Name": "Presequencer",
@@ -70,7 +70,7 @@
           "ReplaceTime": 400.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 4500
+          "BaseCost": 450
         },
         {
           "Name": "Radiation Shield",
@@ -79,7 +79,7 @@
           "ReplaceTime": 300.0,
           "Spares": 1,
           "Affects": 2,
-          "BaseCost": 3500
+          "BaseCost": 350
         },
         {
           "Name": "Power Regulator",
@@ -88,7 +88,7 @@
           "ReplaceTime": 60.0,
           "Spares": 2,
           "Affects": 4,
-          "BaseCost": 1100
+          "BaseCost": 110
         },
         {
           "Name": "Heat Exchanger",
@@ -97,7 +97,7 @@
           "ReplaceTime": 3600.0,
           "Spares": 1,
           "Affects": 6,
-          "BaseCost": 36500
+          "BaseCost": 3650
         },
         {
           "Name": "Coolant Tanks",
@@ -106,7 +106,7 @@
           "ReplaceTime": 1800.0,
           "Spares": 0,
           "Affects": 6,
-          "BaseCost": 18500
+          "BaseCost": 1850
         }
       ]
     },
@@ -120,7 +120,7 @@
           "ReplaceTime": 2400.0,
           "Spares": 0,
           "Affects": 3,
-          "BaseCost": 24500
+          "BaseCost": 2450
         },
         {
           "Name": "Reactant",
@@ -129,7 +129,7 @@
           "ReplaceTime": 600.0,
           "Spares": 0,
           "Affects": 1,
-          "BaseCost": 6500
+          "BaseCost": 650
         },
         {
           "Name": "Injector",
@@ -138,7 +138,7 @@
           "ReplaceTime": 500.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 5500
+          "BaseCost": 550
         },
         {
           "Name": "Magnetic Coil",
@@ -147,7 +147,7 @@
           "ReplaceTime": 300.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 3500
+          "BaseCost": 350
         },
         {
           "Name": "Radiation Shield",
@@ -156,7 +156,7 @@
           "ReplaceTime": 300.0,
           "Spares": 1,
           "Affects": 2,
-          "BaseCost": 3500
+          "BaseCost": 350
         },
         {
           "Name": "Power Regulator",
@@ -165,7 +165,7 @@
           "ReplaceTime": 60.0,
           "Spares": 2,
           "Affects": 4,
-          "BaseCost": 1100
+          "BaseCost": 110
         },
         {
           "Name": "Heat Exchanger",
@@ -174,7 +174,7 @@
           "ReplaceTime": 3600.0,
           "Spares": 0,
           "Affects": 6,
-          "BaseCost": 36500
+          "BaseCost": 3650
         },
         {
           "Name": "Coolant Tanks",
@@ -183,7 +183,7 @@
           "ReplaceTime": 1800.0,
           "Spares": 0,
           "Affects": 6,
-          "BaseCost": 18500
+          "BaseCost": 1850
         }
       ]
     },
@@ -197,7 +197,7 @@
           "ReplaceTime": 2400.0,
           "Spares": 0,
           "Affects": 3,
-          "BaseCost": 24500
+          "BaseCost": 2450
         },
         {
           "Name": "Reactant",
@@ -206,7 +206,7 @@
           "ReplaceTime": 1200.0,
           "Spares": 0,
           "Affects": 1,
-          "BaseCost": 12500
+          "BaseCost": 1250
         },
         {
           "Name": "Reactant Valves",
@@ -215,7 +215,7 @@
           "ReplaceTime": 1200.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 12500
+          "BaseCost": 1250
         },
         {
           "Name": "Power Regulator",
@@ -224,7 +224,7 @@
           "ReplaceTime": 60.0,
           "Spares": 2,
           "Affects": 4,
-          "BaseCost": 1100
+          "BaseCost": 110
         }
       ]
     },
@@ -238,7 +238,7 @@
           "ReplaceTime": 1800.0,
           "Spares": 0,
           "Affects": 3,
-          "BaseCost": 18500
+          "BaseCost": 1850
         },
         {
           "Name": "Presequence Injector",
@@ -247,7 +247,7 @@
           "ReplaceTime": 600.0,
           "Spares": 1,
           "Affects": 5,
-          "BaseCost": 6500
+          "BaseCost": 650
         },
         {
           "Name": "Plasma Impeller",
@@ -256,7 +256,7 @@
           "ReplaceTime": 900.0,
           "Spares": 1,
           "Affects": 5,
-          "BaseCost": 9500
+          "BaseCost": 950
         },
         {
           "Name": "Magnetic Resonance Focuser",
@@ -265,7 +265,7 @@
           "ReplaceTime": 30.0,
           "Spares": 2,
           "Affects": 1,
-          "BaseCost": 800
+          "BaseCost": 80
         },
         {
           "Name": "Radiation Shield",
@@ -274,7 +274,7 @@
           "ReplaceTime": 1200.0,
           "Spares": 1,
           "Affects": 2,
-          "BaseCost": 12500
+          "BaseCost": 1250
         },
         {
           "Name": "Heat Exchanger",
@@ -283,7 +283,7 @@
           "ReplaceTime": 3600.0,
           "Spares": 0,
           "Affects": 6,
-          "BaseCost": 36500
+          "BaseCost": 3650
         }
       ]
     },
@@ -297,7 +297,7 @@
           "ReplaceTime": 3600.0,
           "Spares": 1,
           "Affects": 131,
-          "BaseCost": 36500
+          "BaseCost": 3650
         },
         {
           "Name": "Spinal Thrust Motors",
@@ -306,7 +306,7 @@
           "ReplaceTime": 3600.0,
           "Spares": 1,
           "Affects": 131,
-          "BaseCost": 36500
+          "BaseCost": 3650
         },
         {
           "Name": "Braking Thrusters",
@@ -315,7 +315,7 @@
           "ReplaceTime": 3600.0,
           "Spares": 1,
           "Affects": 131,
-          "BaseCost": 36500
+          "BaseCost": 3650
         },
         {
           "Name": "Plasma Grid",
@@ -324,7 +324,7 @@
           "ReplaceTime": 7200.0,
           "Spares": 1,
           "Affects": 3,
-          "BaseCost": 36500
+          "BaseCost": 3650
         }
       ]
     },
@@ -338,7 +338,7 @@
           "ReplaceTime": 3600.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 36500
+          "BaseCost": 3650
         },
         {
           "Name": "Graviscalar Bias Node B",
@@ -347,7 +347,7 @@
           "ReplaceTime": 3600.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 36500
+          "BaseCost": 3650
         },
         {
           "Name": "Quantum Wave Containment Generator",
@@ -356,7 +356,7 @@
           "ReplaceTime": 1200.0,
           "Spares": 1,
           "Affects": 2,
-          "BaseCost": 12500
+          "BaseCost": 1250
         },
         {
           "Name": "Dimensional Waveguide",
@@ -365,7 +365,7 @@
           "ReplaceTime": 400.0,
           "Spares": 2,
           "Affects": 3,
-          "BaseCost": 4500
+          "BaseCost": 450
         },
         {
           "Name": "Power Filter/Sync Lock",
@@ -374,7 +374,7 @@
           "ReplaceTime": 60.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 1100
+          "BaseCost": 110
         }
       ]
     },
@@ -388,7 +388,7 @@
           "ReplaceTime": 300.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 3500
+          "BaseCost": 350
         },
         {
           "Name": "Fusion Power Adaptor",
@@ -397,7 +397,7 @@
           "ReplaceTime": 30.0,
           "Spares": 2,
           "Affects": 3,
-          "BaseCost": 800
+          "BaseCost": 80
         },
         {
           "Name": "Harmonic Oscillator",
@@ -406,7 +406,7 @@
           "ReplaceTime": 60.0,
           "Spares": 2,
           "Affects": 5,
-          "BaseCost": 1100
+          "BaseCost": 110
         },
         {
           "Name": "Tactical Computer Interface",
@@ -415,7 +415,7 @@
           "ReplaceTime": 60.0,
           "Spares": 1,
           "Affects": 5,
-          "BaseCost": 1100
+          "BaseCost": 110
         }
       ]
     },
@@ -429,7 +429,7 @@
           "ReplaceTime": 120.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 1700
+          "BaseCost": 170
         },
         {
           "Name": "Receive Array",
@@ -438,7 +438,7 @@
           "ReplaceTime": 120.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 1700
+          "BaseCost": 170
         },
         {
           "Name": "Spacial Filter",
@@ -447,7 +447,7 @@
           "ReplaceTime": 60.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 1100
+          "BaseCost": 110
         },
         {
           "Name": "Processor",
@@ -456,7 +456,7 @@
           "ReplaceTime": 90.0,
           "Spares": 2,
           "Affects": 1,
-          "BaseCost": 1400
+          "BaseCost": 140
         },
         {
           "Name": "System Interface",
@@ -465,7 +465,7 @@
           "ReplaceTime": 60.0,
           "Spares": 2,
           "Affects": 1,
-          "BaseCost": 1100
+          "BaseCost": 110
         }
       ]
     },
@@ -479,7 +479,7 @@
           "ReplaceTime": 30.0,
           "Spares": 2,
           "Affects": 1,
-          "BaseCost": 800
+          "BaseCost": 80
         },
         {
           "Name": "Storage",
@@ -488,7 +488,7 @@
           "ReplaceTime": 60.0,
           "Spares": 2,
           "Affects": 1,
-          "BaseCost": 1100
+          "BaseCost": 110
         },
         {
           "Name": "System Interface",
@@ -497,7 +497,7 @@
           "ReplaceTime": 30.0,
           "Spares": 2,
           "Affects": 1,
-          "BaseCost": 800
+          "BaseCost": 80
         }
       ]
     },
@@ -511,7 +511,7 @@
           "ReplaceTime": 2400.0,
           "Spares": 1,
           "Affects": 3,
-          "BaseCost": 24500
+          "BaseCost": 2450
         },
         {
           "Name": "Power Flux Coupling",
@@ -520,7 +520,7 @@
           "ReplaceTime": 300.0,
           "Spares": 2,
           "Affects": 3,
-          "BaseCost": 3500
+          "BaseCost": 350
         },
         {
           "Name": "Beam Focuser",
@@ -529,7 +529,7 @@
           "ReplaceTime": 30.0,
           "Spares": 2,
           "Affects": 1,
-          "BaseCost": 800
+          "BaseCost": 80
         },
         {
           "Name": "Flashback Supressor",
@@ -538,7 +538,7 @@
           "ReplaceTime": 1500.0,
           "Spares": 1,
           "Affects": 6,
-          "BaseCost": 15500
+          "BaseCost": 1550
         },
         {
           "Name": "Tactical Computer Interface",
@@ -547,7 +547,7 @@
           "ReplaceTime": 30.0,
           "Spares": 1,
           "Affects": 5,
-          "BaseCost": 800
+          "BaseCost": 80
         }
       ],
       "ComponentGrades": [
@@ -603,7 +603,7 @@
           "ReplaceTime": 1800.0,
           "Spares": 1,
           "Affects": 3,
-          "BaseCost": 18500
+          "BaseCost": 1850
         },
         {
           "Name": "Power Flux Coupling",
@@ -612,7 +612,7 @@
           "ReplaceTime": 300.0,
           "Spares": 2,
           "Affects": 3,
-          "BaseCost": 3500
+          "BaseCost": 350
         },
         {
           "Name": "Tactical Computer Interface",
@@ -621,7 +621,7 @@
           "ReplaceTime": 60.0,
           "Spares": 1,
           "Affects": 5,
-          "BaseCost": 1100
+          "BaseCost": 110
         }
       ],
       "ComponentGrades": [
@@ -677,7 +677,7 @@
           "ReplaceTime": 300.0,
           "Spares": 1,
           "Affects": 3,
-          "BaseCost": 3500
+          "BaseCost": 350
         },
         {
           "Name": "Plasma Coupling",
@@ -686,7 +686,7 @@
           "ReplaceTime": 300.0,
           "Spares": 2,
           "Affects": 3,
-          "BaseCost": 3500
+          "BaseCost": 350
         },
         {
           "Name": "Radiation Shield",
@@ -695,7 +695,7 @@
           "ReplaceTime": 900.0,
           "Spares": 1,
           "Affects": 2,
-          "BaseCost": 9500
+          "BaseCost": 950
         },
         {
           "Name": "Heat Exchanger",
@@ -704,7 +704,7 @@
           "ReplaceTime": 1800.0,
           "Spares": 1,
           "Affects": 6,
-          "BaseCost": 18500
+          "BaseCost": 1850
         },
         {
           "Name": "Tactical Computer Interface",
@@ -713,7 +713,7 @@
           "ReplaceTime": 30.0,
           "Spares": 1,
           "Affects": 5,
-          "BaseCost": 800
+          "BaseCost": 80
         }
       ],
       "ComponentGrades": [
@@ -769,7 +769,7 @@
           "ReplaceTime": 3000.0,
           "Spares": 1,
           "Affects": 3,
-          "BaseCost": 30500
+          "BaseCost": 3050
         },
         {
           "Name": "Ordnance Trolley/Loader",
@@ -778,7 +778,7 @@
           "ReplaceTime": 6000.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 36500
+          "BaseCost": 3650
         },
         {
           "Name": "Power Flux Coupling",
@@ -787,7 +787,7 @@
           "ReplaceTime": 30.0,
           "Spares": 2,
           "Affects": 3,
-          "BaseCost": 800
+          "BaseCost": 80
         },
         {
           "Name": "Tactical Computer Interface",
@@ -796,7 +796,7 @@
           "ReplaceTime": 240.0,
           "Spares": 1,
           "Affects": 5,
-          "BaseCost": 2900
+          "BaseCost": 290
         }
       ]
     },
@@ -810,7 +810,7 @@
           "ReplaceTime": 3000.0,
           "Spares": 1,
           "Affects": 3,
-          "BaseCost": 30500
+          "BaseCost": 3050
         },
         {
           "Name": "Probe Caddy/Loader",
@@ -819,7 +819,7 @@
           "ReplaceTime": 6000.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 36500
+          "BaseCost": 3650
         },
         {
           "Name": "Power Flux Coupling",
@@ -828,7 +828,7 @@
           "ReplaceTime": 30.0,
           "Spares": 2,
           "Affects": 3,
-          "BaseCost": 800
+          "BaseCost": 80
         },
         {
           "Name": "System Computer Interface",
@@ -837,7 +837,7 @@
           "ReplaceTime": 240.0,
           "Spares": 1,
           "Affects": 5,
-          "BaseCost": 2900
+          "BaseCost": 290
         }
       ]
     },
@@ -851,7 +851,7 @@
           "ReplaceTime": 1800.0,
           "Spares": 1,
           "Affects": 3,
-          "BaseCost": 18500
+          "BaseCost": 1850
         },
         {
           "Name": "Hangar Access Causeway",
@@ -860,7 +860,7 @@
           "ReplaceTime": 6000.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 36500
+          "BaseCost": 3650
         },
         {
           "Name": "ILS Transponder",
@@ -869,7 +869,7 @@
           "ReplaceTime": 2000.0,
           "Spares": 1,
           "Affects": 1,
-          "BaseCost": 20500
+          "BaseCost": 2050
         },
         {
           "Name": "Power Coupling",
@@ -878,7 +878,7 @@
           "ReplaceTime": 30.0,
           "Spares": 2,
           "Affects": 3,
-          "BaseCost": 800
+          "BaseCost": 80
         },
         {
           "Name": "Navigational Computer Interface",
@@ -887,7 +887,7 @@
           "ReplaceTime": 240.0,
           "Spares": 1,
           "Affects": 5,
-          "BaseCost": 2900
+          "BaseCost": 290
         }
       ]
     }

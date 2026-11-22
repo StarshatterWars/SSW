@@ -10,6 +10,7 @@
 #include "Ship.h"
 #include "FlightDeck.h"
 #include "SimRegion.h"
+#include "Terrain.h"
 #include "SSWRuntimeSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "MissionTargetOverlay.h"
@@ -83,10 +84,10 @@ struct FMissionCameraRig
 
     void UpdateTacticalGrid(ACameraActor* Camera, Ship* Player, SimRegion* Region, const FVector& Focus)
     {
-        const auto* Profile = PlayerCharacter::GetCurrentPlayer();
+        const auto* PilotState = PlayerCharacter::GetCurrentPlayer();
         const auto* OrbitalRegion = Region->GetOrbitalRegion();
         if ((Mode != Orbit && Mode != Overview) || Player->IsAirborne() ||
-            Player->InTransition() || (Profile && Profile->GridMode() == 0) || !OrbitalRegion)
+            Player->InTransition() || (PilotState && PilotState->GridMode() == 0) || !OrbitalRegion)
         {
             if (auto* Lines = TacticalGrid.Get()) Lines->SetVisibility(false);
             return;
@@ -363,7 +364,25 @@ struct FMissionCameraRig
             const Ship* Carrier = ActiveDeck->GetCarrier();
             USSWRuntimeSubsystem* Runtime = PC->GetGameInstance()
                 ? PC->GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>() : nullptr;
-            if (ActiveDeck->IsLaunchDeck() && Carrier && Carrier->GetRegion() && Runtime)
+            if (ActiveDeck->IsLaunchDeck() && Carrier && Carrier->IsGroundUnit())
+            {
+                const FVector GroundUp = FVector::UpVector;
+                FVector GroundForward = FVector::VectorPlaneProject(Forward, GroundUp).GetSafeNormal();
+                if (GroundForward.IsNearlyZero()) GroundForward = FVector::ForwardVector;
+                const FBox FighterWorld = MissionTargetLocalBounds(Visual).TransformBy(Pose);
+                const FVector Target = FighterWorld.GetCenter();
+                const double HullRadius = FMath::Max(10.0, FighterWorld.GetExtent().Size());
+                Eye = Target - GroundForward * (HullRadius * 3.0) + GroundUp * (HullRadius * 1.1);
+                if (Runtime && Region->GetTerrain())
+                {
+                    const FVector Origin = Runtime->GetVisualLocationForRegion(Region, FVector::ZeroVector);
+                    const FVector Local = Eye - Origin;
+                    const double GroundZ = Origin.Z + Region->GetTerrain()->Height(Local.Y, Local.X);
+                    if (FMath::IsFinite(GroundZ)) Eye.Z = FMath::Max(Eye.Z, GroundZ + HullRadius * 0.75);
+                }
+                Rotation = Aim(Target - Eye, GroundUp, ShipRotation);
+            }
+            else if (ActiveDeck->IsLaunchDeck() && Carrier && Carrier->GetRegion() && Runtime)
             {
                 // Use the launch-bay chase pose in the same rendered frame as the fighter.
                 const auto& CarrierBasis = Carrier->GetCam();

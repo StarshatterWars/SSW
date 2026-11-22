@@ -1,17 +1,22 @@
 #include "ShipStoreDlg.h"
-#include "SkillsSubsystem.h"
+#include "ShipStoreSubsystem.h"
+#include "ShipSkinCatalog.h"
+#include "ShipBriefingPreview.h"
+#include "ShipDesignRegistry.h"
 #include "ShipInsuranceSubsystem.h"
-
-#include "Engine/GameInstance.h"
-#include "GameStructs.h"
-#include "MissionUIStyle.h"
-#include "PlayerCharacter.h"
-#include "Ship.h"
-#include "Sim.h"
+#include "StarshatterPlayerSubsystem.h"
 #include "StarshatterShipDesignSubsystem.h"
-#include "StarshatterSystemDesignSubsystem.h"
+#include "SkillsSubsystem.h"
+#include "MissionUIStyle.h"
+#include "ShipSystemIcon.h"
+#include "PlayerCharacter.h"
+#include "Engine/GameInstance.h"
+#include "Misc/Paths.h"
 #include "Widgets/Input/SButton.h"
-#include "Widgets/Layout/SWidgetSwitcher.h"
+#include "Widgets/Input/SEditableTextBox.h"
+#include "Widgets/Input/SSpinBox.h"
+#include "Widgets/Layout/SBox.h"
+#include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Views/SHeaderRow.h"
@@ -22,255 +27,193 @@ namespace
 {
 struct FStoreEntry
 {
-    FString Name;
-    FName Design;
-    FText Category;
-    FText Grade;
-    FText Access;
-    FText Empire;
-    int32 RequiredRank = 0;
-    int64 Credits = 0;
+    FShipStoreOffer Offer;
+    FString Empire;
+    int32 RequiredRank=0,Owned=0;
 };
-
-using FStoreRow = TSharedPtr<FStoreEntry>;
-using FStoreRows = TArray<FStoreRow>;
-
+using FStoreRow=TSharedPtr<FStoreEntry>;
+struct FStoreView : TSharedFromThis<FStoreView>
+{
+    TWeakObjectPtr<UShipStoreSubsystem> Store;
+    TWeakObjectPtr<UShipInsuranceSubsystem> Sales;
+    TWeakObjectPtr<UStarshatterPlayerSubsystem> Players;
+    TWeakObjectPtr<UShipBriefingPreview> Preview;
+    TArray<FShipSkinCatalogEntry> Skins;
+    TArray<FStoreRow> All,Visible;
+    TWeakPtr<SListView<FStoreRow>> List;
+    FStoreRow Selected;
+    EShipStoreCategory Tab=EShipStoreCategory::Hulls;
+    FString Search;
+    FText Feedback;
+    FName SortColumn="Item";
+    EColumnSortMode::Type SortMode=EColumnSortMode::Ascending;
+    int32 Quantity=1;
+    int32 BuyQuantity() const {return Tab==EShipStoreCategory::Hulls || Tab==EShipStoreCategory::Skins?1:Quantity;}
+    void Refresh()
+    {
+        Visible.Reset();
+        for(const auto& Row:All)
+        {
+            if(Store.IsValid())Row->Owned=Store->Stored(Row->Offer.Id);
+            if(Row->Offer.Category==EShipStoreCategory::Skins && Players.IsValid())
+                Row->Owned=Players->GetPlayerInfo().OwnedShipSkins.Contains(Row->Offer.Id)?1:0;
+            if(Row->Offer.Category==Tab && (Search.IsEmpty() || Row->Offer.Name.Contains(Search) || Row->Offer.Group.Contains(Search)))Visible.Add(Row);
+        }
+        Visible.StableSort([this](const auto& Left,const auto& Right)
+        {
+            const auto& A=*(SortMode==EColumnSortMode::Descending?Right:Left);
+            const auto& B=*(SortMode==EColumnSortMode::Descending?Left:Right);
+            if((SortColumn=="Price" || SortColumn=="Total" || SortColumn=="Charges") && A.Offer.Price!=B.Offer.Price)return A.Offer.Price<B.Offer.Price;
+            if(SortColumn=="Owned" && A.Owned!=B.Owned)return A.Owned<B.Owned;
+            if(SortColumn=="Grade" && A.Offer.Grade!=B.Offer.Grade)return A.Offer.Grade<B.Offer.Grade;
+            if(SortColumn=="Group" && A.Offer.Group!=B.Offer.Group)return A.Offer.Group.Compare(B.Offer.Group,ESearchCase::IgnoreCase)<0;
+            return A.Offer.Name.Compare(B.Offer.Name,ESearchCase::IgnoreCase)<0;
+        });
+        if(Selected && !Visible.Contains(Selected)){Selected.Reset();UpdatePreview();}
+        if(const auto Widget=List.Pin())Widget->RequestListRefresh();
+    }
+    void UpdatePreview()
+    {
+        if(!Preview.IsValid())return;
+        const auto* Skin=Selected && Tab==EShipStoreCategory::Skins?Skins.FindByPredicate([this](const auto& Entry){return Entry.Id==Selected->Offer.Id;}):nullptr;
+        const auto* Hull=Selected && (Tab==EShipStoreCategory::Hulls || Skin)?ShipDesignRegistry::Find(Selected->Offer.Design):nullptr;
+        Preview->SetShipDesign(Hull,{},Skin?ShipSkinCatalog::Resolve(*Skin):nullptr);
+    }
+    bool CanBuy(FText& Reason) const
+    {
+        if(!Selected){Reason=INVTEXT("Select an item to review its quote.");return false;}
+        if(Tab==EShipStoreCategory::Hulls)
+        {if(Sales.IsValid())return Sales->CanPurchaseHull(Selected->Offer.Design,Reason);return false;}
+        return Store.IsValid() && Store->CanPurchase(Selected->Offer.Id,BuyQuantity(),Reason);
+    }
+    void Buy()
+    {
+        FText Reason;if(!CanBuy(Reason)){Feedback=Reason;return;}
+        if(Tab==EShipStoreCategory::Hulls)Sales->PurchaseHull(Selected->Offer.Design,Feedback);
+        else Store->Purchase(Selected->Offer.Id,BuyQuantity(),Selected->Offer.Price*BuyQuantity(),Feedback);
+        Refresh();
+    }
+};
 class SStoreRow : public SMultiColumnTableRow<FStoreRow>
 {
 public:
-    SLATE_BEGIN_ARGS(SStoreRow) {}
-        SLATE_ARGUMENT(FStoreRow, Entry)
-    SLATE_END_ARGS()
-
-    void Construct(const FArguments& Args, const TSharedRef<STableViewBase>& Owner)
-    {
-        Entry = Args._Entry;
-        SMultiColumnTableRow<FStoreRow>::Construct(FSuperRowType::FArguments().Style(&MissionUIStyle::FlightTableRowStyle()), Owner);
-    }
-
+    SLATE_BEGIN_ARGS(SStoreRow){} SLATE_ARGUMENT(FStoreRow,Entry) SLATE_END_ARGS()
+    void Construct(const FArguments& Args,const TSharedRef<STableViewBase>& Owner)
+    {Entry=Args._Entry;SMultiColumnTableRow::Construct(FSuperRowType::FArguments().Style(&MissionUIStyle::FlightTableRowStyle()),Owner);}
     TSharedRef<SWidget> GenerateWidgetForColumn(const FName& Column) override
     {
         FText Label;
-        if (Column == "Item") Label = FText::FromString(Entry->Name);
-        else if (Column == "Category") Label = Entry->Category;
-        else if (Column == "Grade") Label = Entry->Grade;
-        else if (Column == "Access") Label = Entry->Access;
-        else if (Column == "Empire") Label = Entry->Empire;
-        else if (Column == "Price") Label = FText::AsNumber(Entry->Credits);
-
-        return SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Margin(FMargin(8, 4))
-            .Text(Label.ToUpper()).ToolTipText(Label.ToUpper()).OverflowPolicy(ETextOverflowPolicy::Ellipsis)
-            .Justification(Column == "Price" ? ETextJustify::Right : ETextJustify::Left);
+        if(Column=="Item")Label=FText::FromString(Entry->Offer.Name);
+        else if(Column=="Group")Label=FText::FromString(Entry->Offer.Group);
+        else if(Column=="Grade")Label=Entry->Offer.Grade>0?FText::FromString(FString::FromInt(Entry->Offer.Grade)):INVTEXT("—");
+        else if(Column=="Price")Label=FText::AsNumber(CommerceCharges::Quote(Entry->Offer.Price,ECommercePurpose::Purchase).Base);
+        else if(Column=="Charges"){const auto Quote=CommerceCharges::Quote(Entry->Offer.Price,ECommercePurpose::Purchase);Label=FText::AsNumber(Quote.Tax+Quote.Fee);}
+        else if(Column=="Total")Label=FText::AsNumber(Entry->Offer.Price);
+        else if(Column=="Owned")Label=FText::AsNumber(Entry->Owned);
+        else if(Column=="Access")Label=FText::FromString(Entry->Offer.Access);
+        return SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).Margin(FMargin(8,5)).Text(Label.ToUpper())
+            .ToolTipText(Column=="Charges"?CommerceCharges::Quote(Entry->Offer.Price,ECommercePurpose::Purchase).Breakdown():Label).OverflowPolicy(ETextOverflowPolicy::Ellipsis)
+            .Justification(Column=="Price" || Column=="Owned"?ETextJustify::Right:ETextJustify::Left);
     }
-
-private:
-    FStoreRow Entry;
+private:FStoreRow Entry;
 };
-
-TSharedRef<SWidget> MakeCatalog(const TSharedRef<FStoreRows>& Rows, bool bComponents,const TSharedRef<FName>& Selected)
-{
-    if (Rows->IsEmpty())
-        return SNew(STextBlock).Margin(FMargin(8)).Text(INVTEXT("No catalog entries available."));
-
-    struct FSortState
-    {
-        FName Column = "Item";
-        EColumnSortMode::Type Mode = EColumnSortMode::Ascending;
-        TWeakPtr<SListView<FStoreRow>> List;
-    };
-    auto SortState = MakeShared<FSortState>();
-    const auto Sort = [Rows, SortState]()
-    {
-        Rows->StableSort([&SortState](const FStoreRow& Left, const FStoreRow& Right)
-        {
-            const FStoreEntry& A = *(SortState->Mode == EColumnSortMode::Descending ? Right : Left);
-            const FStoreEntry& B = *(SortState->Mode == EColumnSortMode::Descending ? Left : Right);
-            const FName Column = SortState->Column;
-            if (Column == "Price" && A.Credits != B.Credits) return A.Credits < B.Credits;
-            if (Column == "Access" && A.RequiredRank != B.RequiredRank) return A.RequiredRank < B.RequiredRank;
-            if (Column == "Grade" && A.RequiredRank != B.RequiredRank) return A.RequiredRank < B.RequiredRank;
-            if (Column == "Category")
-            {
-                const int32 Order = A.Category.ToString().Compare(B.Category.ToString(), ESearchCase::IgnoreCase);
-                if (Order != 0) return Order < 0;
-            }
-            if (Column == "Empire")
-            {
-                const int32 Order = A.Empire.ToString().Compare(B.Empire.ToString(), ESearchCase::IgnoreCase);
-                if (Order != 0) return Order < 0;
-            }
-            return A.Name.Compare(B.Name, ESearchCase::IgnoreCase) < 0;
-        });
-        if (auto List = SortState->List.Pin()) List->RequestListRefresh();
-    };
-
-    auto Header = SNew(SHeaderRow);
-    const auto AddColumn = [&Header, SortState, Sort](FName Column, FText Label, float Width)
-    {
-        Header->AddColumn(SHeaderRow::Column(Column).DefaultLabel(Label).FillWidth(Width)
-            .SortMode_Lambda([SortState, Column]()
-            {
-                return SortState->Column == Column ? SortState->Mode : EColumnSortMode::None;
-            })
-            .OnSort_Lambda([SortState, Sort](EColumnSortPriority::Type, const FName& Id, EColumnSortMode::Type Mode)
-            {
-                SortState->Column = Id;
-                SortState->Mode = Mode;
-                Sort();
-            }));
-    };
-    AddColumn("Item", bComponents ? INVTEXT("COMPONENT") : INVTEXT("HULL"), 2.f);
-    AddColumn("Category", bComponents ? INVTEXT("SYSTEM") : INVTEXT("CLASS"), 1.3f);
-    if (bComponents)
-        AddColumn("Grade", INVTEXT("GRADE"), 0.6f);
-    else
-    {
-        AddColumn("Empire", INVTEXT("EMPIRE"), 1.4f);
-        AddColumn("Access", INVTEXT("RANK / SKILL"), 1.2f);
-    }
-    AddColumn("Price", INVTEXT("BASE COST (CR)"), 1.1f);
-
-    Sort();
-    auto List = SNew(SListView<FStoreRow>).ListItemsSource(&*Rows).HeaderRow(Header)
-        .SelectionMode(ESelectionMode::Single)
-        .OnSelectionChanged_Lambda([Selected,bComponents](FStoreRow Row,ESelectInfo::Type){*Selected=Row && !bComponents?Row->Design:NAME_None;})
-        .OnGenerateRow_Lambda([Rows](FStoreRow Entry, const TSharedRef<STableViewBase>& Owner) -> TSharedRef<ITableRow>
-        {
-            return SNew(SStoreRow, Owner).Entry(Entry);
-        });
-    SortState->List = List;
-    return List;
-}
 }
 
 TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
 {
-    auto Hulls = MakeShared<FStoreRows>();
-    auto Components = MakeShared<FStoreRows>();
-    auto* Game = GetGameInstance();
-    FText ReserveReason;
-    if(auto* Sales=Game?Game->GetSubsystem<UShipInsuranceSubsystem>():nullptr)Sales->PrepareCarrierFighterSales(ReserveReason);
-    const auto* ShipCatalog = Game ? Game->GetSubsystem<UStarshatterShipDesignSubsystem>() : nullptr;
-    const auto* SystemCatalog = Game ? Game->GetSubsystem<UStarshatterSystemDesignSubsystem>() : nullptr;
-    if (ShipCatalog)
+    const auto View=MakeShared<FStoreView>();auto* Game=GetGameInstance();
+    if(Game)
     {
-        const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
-        const int32 Rank = Pilot ? Pilot->GetRank() : 0;
-        const auto* EmpireEnum = StaticEnum<EShipEmpire>();
-        const int64 PilotEmpire = Pilot ? EmpireEnum->GetValueByNameString(
-            StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(static_cast<int64>(Pilot->GetEmpire()))) : INDEX_NONE;
-        for (const auto& Entry : ShipCatalog->GetDesignsByName())
+        View->Store=Game->GetSubsystem<UShipStoreSubsystem>();View->Sales=Game->GetSubsystem<UShipInsuranceSubsystem>();
+        View->Players=Game->GetSubsystem<UStarshatterPlayerSubsystem>();
+        if(View->Players.IsValid() && View->Players->HasLoaded())View->Players->GetEconomy();
+        if(View->Sales.IsValid())View->Sales->PrepareCarrierFighterSales(View->Feedback);
+        if(View->Store.IsValid() && View->Store->RefreshCatalog(View->Feedback))
+            for(const auto& Offer:View->Store->GetOffers()){auto Row=MakeShared<FStoreEntry>();Row->Offer=Offer;View->All.Add(Row);}
+        const auto* Catalog=Game->GetSubsystem<UStarshatterShipDesignSubsystem>();
+        const auto* Pilot=PlayerCharacter::GetCurrentPlayer();const int32 Rank=Pilot?Pilot->GetRank():0;
+        const auto* Empire=StaticEnum<EShipEmpire>();
+        const int64 PilotEmpire=Pilot?Empire->GetValueByNameString(StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(int64(Pilot->GetEmpire()))):INDEX_NONE;
+        if(Catalog)for(const auto& Pair:Catalog->GetDesignsByName())
         {
-            const FShipDesign* Hull = &Entry.Value;
-            if (Hull->Hidden || (Hull->Category != EShipCategory::CapitalShip &&
-                Hull->Category != EShipCategory::Fighter && Hull->Category != EShipCategory::Shuttle &&
-                Hull->Category != EShipCategory::Transport))
-                continue;
-
-            const int32 RequiredRank = PlayerCharacter::HullRankRequired(Hull->ShipType,Hull->ShipName);
-            if (Rank < RequiredRank || Hull->BaseCost <= 0 ||
-                (Hull->ShipEmpire != EShipEmpire::All && Hull->ShipEmpire != EShipEmpire::Neutral && static_cast<int64>(Hull->ShipEmpire) != PilotEmpire))
-                continue;
-
-            auto Row = MakeShared<FStoreEntry>();
-            Row->Design=FName(*Hull->ShipName);
-            Row->Name = Hull->DisplayName.IsEmpty() ? Hull->ShipName : Hull->DisplayName;
-            Row->Category = FText::FromString(Hull->ShipClass);
-            Row->Empire = EmpireEnum->GetDisplayNameTextByValue(static_cast<int64>(Hull->ShipEmpire));
-            Row->RequiredRank = RequiredRank;
-            Row->Access = FText::FromString(ANSI_TO_TCHAR(PlayerCharacter::RankName(RequiredRank)));
-            const FName RequiredSkill=USkillsSubsystem::RequiredHullSkill(Hull->ShipType);
-            if (!RequiredSkill.IsNone())
-            {
-                const auto* Skills=GetGameInstance()->GetSubsystem<USkillsSubsystem>();
-                const auto* Definition=Skills ? Skills->GetCatalog().Find(RequiredSkill) : nullptr;
-                Row->Access=FText::Format(INVTEXT("{0} + {1} ({2})"),Row->Access,
-                    Definition ? FText::FromString(Definition->DisplayName) : FText::FromName(RequiredSkill),
-                    Skills && Skills->HasSkill(RequiredSkill) ? INVTEXT("COMPLETE") : INVTEXT("REQUIRED"));
-            }
-            const auto* Sales=Game->GetSubsystem<UShipInsuranceSubsystem>();
-            Row->Credits = Sales?Sales->HullPurchasePrice(Row->Design):Hull->BaseCost;
-            Hulls->Add(Row);
-        }
-
-    }
-
-    if (SystemCatalog)
-    {
-        static const TCHAR* GradeNames[] = { TEXT("I"), TEXT("II"), TEXT("III"), TEXT("IV"), TEXT("V") };
-        for (const auto& Entry : SystemCatalog->GetDesignsByName())
-        {
-            const FSystemDesign* System = &Entry.Value;
-            for (const auto& Part : System->Components)
-            {
-                for (const auto& Grade : System->ComponentGrades)
-                {
-                    if (Grade.Level < 1 || Grade.Level > UE_ARRAY_COUNT(GradeNames))
-                        continue;
-
-                    auto Row = MakeShared<FStoreEntry>();
-                    Row->Name = Part.Name;
-                    Row->Category = FText::FromString(System->Name);
-                    Row->RequiredRank = Grade.Level;
-                    Row->Grade = FText::FromString(GradeNames[Grade.Level - 1]);
-                    const auto Variant = SystemCatalog->FindComponentGrade(Entry.Key, FName(*Part.Name), Grade.Level);
-                    Row->Credits = Variant ? Variant->BaseCost : 0;
-                    Components->Add(Row);
-                }
-            }
+            const auto& Hull=Pair.Value;
+            if(Hull.Hidden || Hull.BaseCost<=0 || (Hull.Category!=EShipCategory::CapitalShip && Hull.Category!=EShipCategory::Fighter &&
+                Hull.Category!=EShipCategory::Shuttle && Hull.Category!=EShipCategory::Transport))continue;
+            const int32 Required=PlayerCharacter::HullRankRequired(Hull.ShipType,Hull.ShipName);
+            if(Rank<Required || (Hull.ShipEmpire!=EShipEmpire::All && Hull.ShipEmpire!=EShipEmpire::Neutral && int64(Hull.ShipEmpire)!=PilotEmpire))continue;
+            auto Row=MakeShared<FStoreEntry>();Row->Offer.Category=EShipStoreCategory::Hulls;Row->Offer.Id=Pair.Key;
+            Row->Offer.Design=FName(*Hull.ShipName);Row->Offer.Name=Hull.DisplayName.IsEmpty()?Hull.ShipName:Hull.DisplayName;
+            Row->Offer.Group=Hull.ShipClass;Row->Offer.Description=Hull.Description;Row->RequiredRank=Required;
+            Row->Offer.Access=ANSI_TO_TCHAR(PlayerCharacter::RankName(Required));
+            const auto* Skills=Game->GetSubsystem<USkillsSubsystem>();const auto Skill=USkillsSubsystem::RequiredHullSkill(Hull.ShipType);
+            if(!Skill.IsNone())Row->Offer.Access+=Skills && Skills->HasSkill(Skill)?TEXT(" / SKILL MET"):TEXT(" / SKILL REQUIRED");
+            Row->Empire=Empire->GetDisplayNameTextByValue(int64(Hull.ShipEmpire)).ToString();
+            Row->Offer.Price=View->Sales.IsValid()?View->Sales->HullPurchasePrice(Row->Offer.Design):Hull.BaseCost;View->All.Add(Row);
         }
     }
-
-    Sim* Simulation = Sim::GetSim();
-    const Ship* ActiveShip = Simulation ? Simulation->GetPlayerShip() : nullptr;
-    const FText CurrentHull = ActiveShip
-        ? FText::Format(INVTEXT("Current ship: {0}"), FText::FromString(ANSI_TO_TCHAR(ActiveShip->GetObserverName())))
-        : INVTEXT("No active ship");
-
-    const auto Selected=MakeShared<FName>();const auto Feedback=MakeShared<FText>(ReserveReason);
-    auto Tabs = SNew(SWidgetSwitcher)
-        + SWidgetSwitcher::Slot()[MakeCatalog(Hulls, false,Selected)]
-        + SWidgetSwitcher::Slot()[MakeCatalog(Components, true,Selected)];
-
-    const auto SelectTab = [Switcher = TWeakPtr<SWidgetSwitcher>(Tabs)](int32 Index)
+    FString SkinError;ShipSkinCatalog::Load(FPaths::ProjectContentDir()/TEXT("GameData/Ships/skins.json"),View->Skins,SkinError);
+    Preview=NewObject<UShipBriefingPreview>(this);Preview->SetReferencePreview();View->Preview=Preview;
+    const auto Weak=TWeakPtr<FStoreView>(View);
+    auto Header=SNew(SHeaderRow);
+    const auto Column=[&](FName Id,FText Label,float Width)
     {
-        if (const auto Widget = Switcher.Pin())
-            Widget->SetActiveWidgetIndex(Index);
-        return FReply::Handled();
+        Header->AddColumn(SHeaderRow::Column(Id).DefaultLabel(Label).FillWidth(Width)
+            .SortMode_Lambda([Weak,Id](){const auto State=Weak.Pin();return State && State->SortColumn==Id?State->SortMode:EColumnSortMode::None;})
+            .OnSort_Lambda([Weak](EColumnSortPriority::Type,const FName& Id,EColumnSortMode::Type Mode){if(auto State=Weak.Pin()){State->SortColumn=Id;State->SortMode=Mode;State->Refresh();}}));
     };
-
+    Column("Item",INVTEXT("ITEM"),2);Column("Group",INVTEXT("TYPE / HULL"),1.2f);Column("Grade",INVTEXT("GRADE"),.55f);
+    Column("Price",INVTEXT("BASE CR"),.8f);Column("Charges",INVTEXT("TAX / FEES"),.7f);Column("Total",INVTEXT("TOTAL CR"),.8f);Column("Owned",INVTEXT("AT DOCK"),.65f);Column("Access",INVTEXT("ACCESS / CATEGORY"),1.3f);
+    auto List=SNew(SListView<FStoreRow>).ListItemsSource(&View->Visible).HeaderRow(Header).SelectionMode(ESelectionMode::Single)
+        .OnGenerateRow_Lambda([](FStoreRow Row,const TSharedRef<STableViewBase>& Owner)->TSharedRef<ITableRow>{return SNew(SStoreRow,Owner).Entry(Row);})
+        .OnSelectionChanged_Lambda([Weak](FStoreRow Row,ESelectInfo::Type){if(auto State=Weak.Pin()){State->Selected=Row;State->UpdatePreview();}});
+    View->List=List;View->Refresh();
+    auto Tabs=SNew(SHorizontalBox);
+    const TCHAR* Names[]={TEXT("HULLS"),TEXT("SKINS"),TEXT("COMPONENTS"),TEXT("MISSILES"),TEXT("DRONES")};
+    const EShipSystemIcon Icons[]={EShipSystemIcon::Ship,EShipSystemIcon::Appearance,EShipSystemIcon::Reactor,EShipSystemIcon::MediumRangeMissile,EShipSystemIcon::MiningDrone};
+    for(int32 Index=0;Index<5;++Index)
+        Tabs->AddSlot().FillWidth(1).Padding(2,0)[SNew(SButton).ToolTipText(FText::FromString(Names[Index]))
+            .ButtonColorAndOpacity_Lambda([View,Index](){return int32(View->Tab)==Index?MissionUIStyle::RowSelectedBG:MissionUIStyle::RowBG;})
+            .OnClicked_Lambda([View,Index](){View->Tab=EShipStoreCategory(Index);View->Selected.Reset();View->Refresh();View->UpdatePreview();return FReply::Handled();})
+            [SNew(SHorizontalBox)+SHorizontalBox::Slot().AutoWidth()[SNew(SShipSystemIcon).Icon(Icons[Index])]
+                +SHorizontalBox::Slot().FillWidth(1).Padding(5,0)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).Text(FText::FromString(Names[Index]))]]];
     return SNew(SVerticalBox)
-        + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
-        [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(14)).Text(CurrentHull)]
-        + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
-        [SNew(STextBlock).Text(INVTEXT("Carrier aircraft availability follows the OOB squadrons. Training Stormhawk price: 400,000 CR. Completed ships and refits are available at shipyards."))]
-        + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
-        [
-            SNew(SHorizontalBox)
-            + SHorizontalBox::Slot().AutoWidth().Padding(0, 0, 6, 0)
-            [SNew(SButton).Text(INVTEXT("Hulls")).OnClicked_Lambda([SelectTab]() { return SelectTab(0); })]
-            + SHorizontalBox::Slot().AutoWidth()
-            [SNew(SButton).Text(INVTEXT("Components")).OnClicked_Lambda([SelectTab]() { return SelectTab(1); })]
-        ]
-        + SVerticalBox::Slot().FillHeight(1.f).Padding(8, 4)[MissionUIStyle::MakeDataPane(Tabs, FMargin(0))]
-        + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
-        [
-            SNew(SHorizontalBox)
-            + SHorizontalBox::Slot()
-            [SNew(SButton).Text(INVTEXT("PURCHASE HULL"))
-                .IsEnabled_Lambda([this,Selected,WeakTabs=TWeakPtr<SWidgetSwitcher>(Tabs)](){FText Why;const auto T=WeakTabs.Pin();const auto* Service=GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>();return T && T->GetActiveWidgetIndex()==0 && Service && Service->CanPurchaseHull(*Selected,Why);})
-                .ToolTipText_Lambda([this,Selected](){FText Why;if(const auto* Service=GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>())Service->CanPurchaseHull(*Selected,Why);return Why;})
-                .OnClicked_Lambda([this,Selected,Feedback](){if(auto* Service=GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>())Service->PurchaseHull(*Selected,*Feedback);return FReply::Handled();})]
-            + SHorizontalBox::Slot().Padding(6, 0)
-            [SNew(SButton).IsEnabled(false).Text(INVTEXT("Refit Current Ship"))]
-            + SHorizontalBox::Slot()
-            [SNew(SButton).IsEnabled(false).Text(INVTEXT("Insure Current Ship"))]
-        ]
-        + SVerticalBox::Slot().AutoHeight().Padding(8,4)[SNew(STextBlock).AutoWrapText(true).Text_Lambda([Feedback](){return *Feedback;})]
-        + SVerticalBox::Slot().AutoHeight().Padding(8, 4)
-        [
-            MissionUIStyle::MakeDataPane(
-                SNew(STextBlock).AutoWrapText(true)
-                .Text(INVTEXT("Full coverage includes the hull and all installed components.\nCash-purchased ships include lifetime full coverage.")))
-        ];
+        +SVerticalBox::Slot().AutoHeight().Padding(8,5)[Tabs]
+        +SVerticalBox::Slot().AutoHeight().Padding(8,5)[SNew(SHorizontalBox)
+            +SHorizontalBox::Slot().FillWidth(1)[SNew(SEditableTextBox).HintText(INVTEXT("SEARCH ITEMS"))
+                .OnTextChanged_Lambda([View](const FText& Text){View->Search=Text.ToString();View->Refresh();})]
+            +SHorizontalBox::Slot().AutoWidth().Padding(12,0)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12))
+                .Text_Lambda([View](){return FText::Format(INVTEXT("WALLET  {0} CR"),FText::AsNumber(View->Store.IsValid()?View->Store->Balance():0));})]]
+        +SVerticalBox::Slot().FillHeight(.45f).Padding(8,4)[MissionUIStyle::MakeDataPane(List,FMargin(0))]
+        +SVerticalBox::Slot().FillHeight(.55f).Padding(8,4)[SNew(SBox)
+            [SNew(SHorizontalBox)+SHorizontalBox::Slot().FillWidth(2)[MissionUIStyle::MakeDataPane(SNew(SScrollBox)+SScrollBox::Slot()[SNew(STextBlock)
+                .Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([View]()
+                {
+                    if(!View->Selected)return INVTEXT("SELECT AN ITEM\nHulls retain rank, skill, empire and local-stock restrictions. Equipment is delivered to this dock, not automatically equipped.");
+                    const auto& Row=*View->Selected;
+                    return FText::FromString(Row.Offer.Name.ToUpper()+TEXT("\n")+Row.Offer.Description+TEXT("\n")+
+                        (Row.Empire.IsEmpty()?FString():TEXT("EMPIRE: ")+Row.Empire+TEXT("  |  "))+
+                        TEXT("DELIVERY: ")+(View->Store.IsValid()?View->Store->Dock():TEXT("DOCK REQUIRED")));
+                })])]
+                +SHorizontalBox::Slot().FillWidth(1).Padding(8,0,0,0)[MissionUIStyle::MakeDataPane(Preview->TakeWidget())]]]
+        +SVerticalBox::Slot().AutoHeight().Padding(8,4)[SNew(SHorizontalBox)
+            +SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)[SNew(STextBlock).Text(INVTEXT("QUANTITY")).Font(MissionUIStyle::GetRowFont(11))]
+            +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SBox).WidthOverride(100)[SNew(SSpinBox<int32>).MinValue(1).MaxValue(1000)
+                .Value_Lambda([View](){return View->BuyQuantity();}).IsEnabled_Lambda([View](){return View->Tab!=EShipStoreCategory::Hulls && View->Tab!=EShipStoreCategory::Skins;})
+                .OnValueChanged_Lambda([View](int32 Value){View->Quantity=FMath::Clamp(Value,1,1000);})]]
+            +SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).AutoWrapText(true)
+                .Text_Lambda([View](){FText Reason;View->CanBuy(Reason);
+                    return View->Selected?FText::Format(INVTEXT("{0}\n{1}"),Reason,CommerceCharges::Quote(View->Selected->Offer.Price*View->BuyQuantity(),ECommercePurpose::Purchase).Breakdown()):Reason;})]
+            +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton)
+                .Visibility_Lambda([View](){return View->Selected && View->Selected->Offer.Id==FName(TEXT("Drone/MiningDrone"))?EVisibility::Visible:EVisibility::Collapsed;})
+                .ToolTipText(INVTEXT("Transfer purchased mining drones from this dock to cargo; then use Mining Drone Controls to load a bay"))
+                .IsEnabled_Lambda([View](){FText Reason;return View->Store.IsValid() && View->Store->CanTransferMiningDrone(View->BuyQuantity(),Reason);})
+                .OnClicked_Lambda([View](){if(View->Store.IsValid())View->Store->TransferMiningDrone(View->BuyQuantity(),View->Feedback);View->Refresh();return FReply::Handled();})
+                [SNew(STextBlock).Text(INVTEXT("TO CARGO")).Font(MissionUIStyle::GetRowFont(11))]]
+            +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton)
+                .IsEnabled_Lambda([View](){FText Reason;return View->CanBuy(Reason);})
+                .ToolTipText(INVTEXT("Purchase the quoted item and quantity with credits"))
+                .OnClicked_Lambda([View](){View->Buy();return FReply::Handled();})
+                [SNew(SHorizontalBox)+SHorizontalBox::Slot().AutoWidth()[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Marketplace)]
+                    +SHorizontalBox::Slot().AutoWidth().Padding(6,0)[SNew(STextBlock).Text(INVTEXT("PURCHASE")).Font(MissionUIStyle::GetRowFont(12))]]]]
+        +SVerticalBox::Slot().AutoHeight().Padding(8,4)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).AutoWrapText(true).Text_Lambda([View](){return View->Feedback;})];
 }

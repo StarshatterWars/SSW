@@ -16,6 +16,7 @@
 */
 
 #include "SSWBootSubsystem.h"
+#include "FractalVerseSubsystem.h"
 
 #include "Engine/GameInstance.h"
 #include "Engine/DataTable.h"
@@ -157,7 +158,7 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
         return;
     }
 
-    if (IsRunningDedicatedServer())
+    if (IsRunningDedicatedServer() || UFractalVerseSubsystem::ProcessRole() != EFractalVerseRole::Disabled)
     {
         auto* Assets = GI->GetSubsystem<UStarshatterAssetRegistrySubsystem>();
         if (!Assets || !Assets->InitRegistry())
@@ -174,7 +175,18 @@ void USSWBootSubsystem::Initialize(FSubsystemCollectionBase& Collection)
         BootAgentCatalogLoader();
         BootGalaxyLoader(Ctx);
         BootCombatGroupLoader(Ctx);
-        BootGameDataLoader(false);
+        if (UFractalVerseSubsystem::ProcessRole()==EFractalVerseRole::Client && !GUsingNullRHI)
+        {
+            BootUIStyle(Ctx);
+            BootFonts(Ctx);
+            BootAudio(Ctx);
+            BootVideo(Ctx);
+            BootControls(Ctx);
+            BootKeyboard(Ctx);
+        }
+        // FractalVerse starts native world services, not an arena mission catalog.
+        if (UFractalVerseSubsystem::ProcessRole() == EFractalVerseRole::Disabled)
+            BootGameDataLoader(false);
         MarkBootComplete();
         return;
     }
@@ -310,15 +322,14 @@ bool USSWBootSubsystem::BootAssets()
 
     const TArray<FName> Required =
     {
-        TEXT("Data.WeaponDesignTable"),
-        TEXT("Data.SystemDesignTable"),
         TEXT("Data.ShipDesignTable"),
 
+        TEXT("Data.GalaxyMapTable"),
+        TEXT("Data.SystemMapTable"),
+        TEXT("Data.RegionsTable"),
         TEXT("Data.CampaignTable"),
         TEXT("Data.CampaignActionTable"),
         TEXT("Data.CampaignOOBTable"),
-        TEXT("Data.GalaxyMapTable"),
-        TEXT("Data.SystemMapTable"),
         TEXT("Data.CutsceneTable"),
         TEXT("Data.MultiplayerMissionTable"),
         TEXT("Data.CustomMissionTable"),
@@ -326,7 +337,6 @@ bool USSWBootSubsystem::BootAssets()
 
         TEXT("Data.OrderOfBattleTable"),
 
-        TEXT("Data.RegionsTable"),
         TEXT("Data.ZonesTable"),
 
         TEXT("UI.MenuScreenClass"),
@@ -370,6 +380,7 @@ bool USSWBootSubsystem::BootAssets()
         TEXT("UI.HangarPopupClass"),
         TEXT("UI.InsurancePopupClass"),
         TEXT("UI.ShipFitPopupClass"),
+        TEXT("UI.ShipSkinPopupClass"),
         TEXT("UI.SkillsPopupClass"),
         TEXT("UI.SkillsPopupClass"),
         TEXT("UI.AwardPopupClass"),

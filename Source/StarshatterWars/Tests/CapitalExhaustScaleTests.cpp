@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "ShipActor.h"
 #include "ShipDesign.h"
@@ -14,6 +15,7 @@ bool FCapitalExhaustScaleTest::RunTest(const FString&)
     const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false)
         .CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     if(!TestNotNull(TEXT("Exhaust fixture world"),World))return false;
     ON_SCOPE_EXIT {World->DestroyWorld(false);};
     for(float LegacyScale:{1.15f,5.f,7.f,8.f})

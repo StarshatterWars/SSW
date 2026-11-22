@@ -523,7 +523,7 @@ bool GetDefText(Text& dst, TermDef* def, const char* file)
 	return false;
 }
 
-bool GetDefText(char* dst, TermDef* def, const char* file)
+bool GetDefText(TArrayView<char> dst, TermDef* def, const char* file)
 {
 	if (!def || !def->term()) {
 		UE_LOG(LogTemp, Warning,
@@ -534,7 +534,10 @@ bool GetDefText(char* dst, TermDef* def, const char* file)
 
 	TermText* tn = def->term()->isText();
 	if (tn) {
-		strcpy(dst, tn->value()); // keep legacy behavior
+		if(dst.IsEmpty()) return false;
+        const char* Source=tn->value();
+        if(strlen(Source)>=size_t(dst.Num())) return false;
+        memcpy(dst.GetData(),Source,strlen(Source)+1);
 		return true;
 	}
 

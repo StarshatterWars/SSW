@@ -77,7 +77,7 @@ public:
 
 	// ------------------------------------------------------------
 	// Classic software particles (kept for compatibility):
-	virtual void   Render(Video* video, uint32 flags);
+	void Render(Video* video, DWORD flags) override;
 	virtual void   ExecFrame(double seconds);
 	virtual void   TranslateBy(const FVector& ref) { offset = ref; loc = loc - ref; }
 	virtual bool   CheckVisibility(SimProjector& projector);

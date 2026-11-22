@@ -1,5 +1,9 @@
 
 #include "SSWRuntimeSubsystem.h"
+#include "RuntimeShipVisualLifetime.h"
+#include "AgentCatalogSubsystem.h"
+#include "SurfaceFlightRoute.h"
+#include "BoltVisualPoolSubsystem.h"
 #include "LocalGameStateSubsystem.h"
 #include "SSWSessionLobbyGameMode.h"
 #include "StarshatterEnvironmentSubsystem.h"
@@ -48,6 +52,7 @@
 #include "WaypointActor.h"
 #include "Instruction.h"
 #include "Terrain.h"
+#include "TerrainRegion.h"
 #include "WorldScapeRoot.h"
 #include "SimContact.h"
 #include "WaypointArrival.h"
@@ -494,6 +499,7 @@ void USSWRuntimeSubsystem::UpdateWorld()
                 const FVector Observer = Pilot ? ConvertLegacyShipLocationToUE(Pilot->GetLocation()) : FVector::ZeroVector;
                 LiveJanek = Builder->ConfigureJanekSurface(Observer);
                 Region->GetTerrain()->SetLiveSurface(LiveJanek, GetVisualLocationForRegion(Region, FVector::ZeroVector));
+                if (LiveJanek && !bSurfaceFlightPlanPrepared) PrepareSurfaceFlightPlan(Region);
             }
         }
 
@@ -539,10 +545,10 @@ void USSWRuntimeSubsystem::UpdateWorld()
         if(SimRegion* Region=SimInstance->GetActiveRegion())
         {
             Terrain* LocalTerrain = LiveJanek && IsJanekSurface(Region) ? nullptr : Region->GetTerrain();
-            if(LocalTerrain && !NativeTerrain.IsValid() && GetWorld())NativeTerrain=GetWorld()->SpawnActor<ANativeTerrainActor>();
+            if((LocalTerrain || Region->GetTerrain()) && !NativeTerrain.IsValid() && GetWorld())NativeTerrain=GetWorld()->SpawnActor<ANativeTerrainActor>();
             if (auto* Surface = NativeTerrain.Get())
             {
-                Surface->SetSurfaceSky(LocalTerrain && IsJanekSurface(Region));
+                Surface->SetSurfaceSky(Region->GetTerrain()!=nullptr, !LiveJanek, Region->GetTerrain() && Region->GetTerrain()->GetRegion() ? float(Region->GetTerrain()->GetRegion()->SurfaceSunIntensity()) : 4.f);
                 Surface->UpdateTerrain(LocalTerrain,
                     SimInstance->GetPlayerShip() ? SimInstance->GetPlayerShip()->GetLocation() : FVector::ZeroVector,
                     GetVisualLocationForRegion(Region, FVector::ZeroVector));
@@ -651,6 +657,9 @@ void USSWRuntimeSubsystem::UpdateWorld()
         {
             if (SimRegion* ActiveRegion = SimInstance->GetActiveRegion())
             {
+                Builder->EnsureMissionSystem(ActiveRegion->GetSystem());
+                if(auto* Agents=GetGameInstance()->GetSubsystem<UAgentCatalogSubsystem>())
+                    Agents->CompleteCampaignDeploymentOnArrival();
                 Ship* PlayerShip = SimInstance->GetPlayerShip();
                 FVector Observer = PlayerShip
                     ? ConvertLegacyShipLocationToUE(PlayerShip->GetLocation())
@@ -1251,37 +1260,12 @@ bool USSWRuntimeSubsystem::HasTravelThreats(Ship* Pilot)
 
 bool USSWRuntimeSubsystem::CanAccelerateTravel() const
 {
-    const UWorld* World = GetWorld();
-    if (GameMode != EGameMode::PLAY || bPaused || !World || World->GetNetMode() != NM_Standalone ||
-        !SimInstance || !SimInstance->GetMission()) return false;
-
-    Ship* Pilot = SimInstance->GetPlayerShip();
-    SimRegion* Region = SimInstance->GetActiveRegion();
-    if (!Pilot || !Region || Pilot->GetRegion() != Region || Pilot->IsDead() || Pilot->IsDying() ||
-        Pilot->InTransition() || Pilot->GetInbound() || Pilot->IsAutoLandEngaged() ||
-        Pilot->GetFlightPhase() != EOPSMode::ACTIVE || HasTravelThreats(Pilot)) return false;
-
-    const FVector Position = Pilot->GetLocation();
-    const double ArrivalBuffer = FMath::Max(1500.0, Pilot->GetVelocity().Size() * 5.0);
-    if (Pilot->IsAutoTrackEngaged())
-    {
-        if (const FVector* Point = Pilot->GetFixedAutoTrackPoint())
-            return FVector::DistSquared(Position, *Point) > FMath::Square(3000.0 + ArrivalBuffer);
-        if (const Ship* Target = Pilot->GetAutoTrackTarget())
-            return FVector::DistSquared(Position, Target->GetLocation()) > FMath::Square(7000.0 + ArrivalBuffer);
-        return false;
-    }
-
-    Instruction* Route = Pilot->IsAutoNavEngaged() ? Pilot->GetNextNavPoint() : nullptr;
-    if (!Route) return false;
-    SimRegion* Destination = Route->GetRegion();
-    if (Destination && Destination != Region) return false;
-    const double RouteArrival = LegacyWaypointArrival::Radius(Pilot->GetNavigationHullRadius());
-    return FVector::DistSquared(Position, OtherHand(Route->GetLocation())) > FMath::Square(RouteArrival + ArrivalBuffer);
+    return false; // Persistent universe time is never accelerated by a pilot.
 }
 
 void USSWRuntimeSubsystem::SetTimeCompression(uint32 Comp)
 {
+    if (Comp != 1) return;
     if (Comp == TimeCompression) return;
     if (GameMode == EGameMode::PLAY && Comp > 1 &&
         ((Comp != 2 && Comp != 5 && Comp != 10 && Comp != 20) || !CanAccelerateTravel())) return;
@@ -1355,6 +1339,7 @@ void USSWRuntimeSubsystem::GetPlayerCam(int32 Mode)
 AShipActor*
 USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
 {
+    if(IsRunningDedicatedServer() || (GetWorld() && GetWorld()->GetNetMode()==NM_DedicatedServer)) return nullptr;
     if (!RuntimeShip)
     {
         return nullptr;
@@ -1422,7 +1407,8 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
     const bool bJanekAirbase = ShipRegion &&
         FCStringAnsi::Stricmp(ShipRegion->GetName(), "Janek Station") == 0 &&
         FCStringAnsi::Stricmp(RuntimeShip->GetName(), "Janek Station") == 0 &&
-        DesignName.Equals(TEXT("Airbase1"), ESearchCase::IgnoreCase);
+        (DesignName.Equals(TEXT("Airbase1"), ESearchCase::IgnoreCase) ||
+         DesignName.Equals(TEXT("JanekStation"), ESearchCase::IgnoreCase));
     UClass* BPClass = bJanekAirbase
         ? ShipVisualCatalog::Resolve(TEXT("Airbase1"), TEXT("Base1"))
         : ShipVisualCatalog::Resolve(DesignName, Row->Model);
@@ -1441,11 +1427,7 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
     Params.SpawnCollisionHandlingOverride =
         ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-    if (ASystemSceneBuilder* Builder = MissionPresentationBuilder.Get())
-    {
-        Params.Owner = Builder;
-        Params.OverrideLevel = Builder->GetLevel();
-    }
+    RuntimeShipVisualLifetime::ConfigureSpawn(Params,*World);
     AShipActor* ShipActor =
         World->SpawnActor<AShipActor>(
             BPClass,
@@ -1488,8 +1470,11 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
             ShipActor->HullMesh->SetWorldLocationAndRotation(
                 ShipActor->GetActorLocation(),
                 ShipActor->GetActorQuat() * FQuat(FVector::UpVector, HALF_PI));
-            if (UMaterialInterface* Material = LoadObject<UMaterialInterface>(nullptr,
-                TEXT("/Game/Assets/Ground/Airbases/M_Airbase_PBR.M_Airbase_PBR")))
+            UMaterialInterface* Material = LoadObject<UMaterialInterface>(nullptr,
+                TEXT("/Game/Assets/Ground/Airbases/M_JanekRunway_PBR.M_JanekRunway_PBR"));
+            if (!Material) Material = LoadObject<UMaterialInterface>(nullptr,
+                TEXT("/Game/Assets/Ground/Airbases/M_Airbase_PBR.M_Airbase_PBR"));
+            if (Material)
             {
                 for (int32 Slot = 0; Slot < Runway->GetStaticMaterials().Num(); ++Slot)
                     ShipActor->HullMesh->SetMaterial(Slot, Material);
@@ -1720,7 +1705,12 @@ void USSWRuntimeSubsystem::ClearProjectileVisuals()
     for (auto& Entry : DebrisVisuals)
         if (auto* Actor = Entry.Value.Get()) Actor->Destroy();
     DebrisVisuals.Reset();
-    for(auto& Pair:ProjectileVisuals)if(Pair.Value.IsValid())Pair.Value->Destroy();
+    auto* Pool=GetWorld()?GetWorld()->GetSubsystem<UBoltVisualPoolSubsystem>():nullptr;
+    for(auto& Pair:ProjectileVisuals)if(auto* Actor=Pair.Value.Get())
+    {
+        if(auto* Bolt=Cast<ABoltWeaponActor>(Actor);Bolt && Pool) Pool->Release(Bolt);
+        else Actor->Destroy();
+    }
     ProjectileVisuals.Empty(); ProjectileMeshes.Empty(); ProjectileFallbackMesh=nullptr;
 }
 void USSWRuntimeSubsystem::UpdateDebrisVisuals()
@@ -1888,7 +1878,9 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
                     FActorSpawnParameters Params;
                     Params.ObjectFlags |= RF_Transient;
                     Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-                    Bolt = World->SpawnActor<ABoltWeaponActor>(BoltClass, Position, Direction.Rotation(), Params);
+                    if(auto* Pool=World->GetSubsystem<UBoltVisualPoolSubsystem>())
+                        Bolt=Pool->Acquire(BoltClass,Position,Direction.Rotation());
+                    else Bolt=World->SpawnActor<ABoltWeaponActor>(BoltClass,Position,Direction.Rotation(),Params);
                     if (Bolt)
                     {
                         const bool bDeltaBolt =
@@ -1965,8 +1957,15 @@ void USSWRuntimeSubsystem::UpdateProjectileVisuals()
         }
         if (Visual) Visual->SetActorLocationAndRotation(Position, MissileRotation);
     }
-    for(auto It=ProjectileVisuals.CreateIterator();It;++It)if(!Alive.Contains(It.Key())){
-        if(It.Value().IsValid())It.Value()->Destroy();It.RemoveCurrent();
+    auto* Pool=World->GetSubsystem<UBoltVisualPoolSubsystem>();
+    for(auto It=ProjectileVisuals.CreateIterator();It;++It)if(!Alive.Contains(It.Key()))
+    {
+        if(auto* Actor=It.Value().Get())
+        {
+            if(auto* Bolt=Cast<ABoltWeaponActor>(Actor);Bolt && Pool) Pool->Release(Bolt);
+            else Actor->Destroy();
+        }
+        It.RemoveCurrent();
     }
 }
 
@@ -1981,11 +1980,44 @@ FVector USSWRuntimeSubsystem::GetVisualLocationForRegion(SimRegion* Region, cons
     return Local;
 }
 
+void USSWRuntimeSubsystem::PrepareSurfaceFlightPlan(SimRegion* Region)
+{
+    Sim* LiveSim = Sim::GetSim();
+    Terrain* Ground = Region ? Region->GetTerrain() : nullptr;
+    if (!LiveSim || !Ground) return;
+    int32 PreparedPoints = 0;
+    ListIter<SimElement> Elements = LiveSim->GetElements();
+    while (++Elements)
+    {
+        SimElement* Element = Elements.value();
+        if (!Element || Element->IsSquadron()) continue;
+        Ship* Lead = Element->GetShip(1);
+        if (!Lead || Lead->GetRegion()!=Region || Lead->IsGroundUnit()) continue;
+        FVector Previous = OtherHand(Lead->GetLocation());
+        ListIter<Instruction> Plan = Element->GetFlightPlan();
+        while (++Plan)
+        {
+            Instruction* Point = Plan.value();
+            if (!Point) continue;
+            const double Before = Point->GetLocation().Z;
+            if (!SurfaceFlightRoute::PrepareWaypoint(*Point, Region, Region->GetName(), Previous,
+                [Ground](double X, double Y) { return Ground->Height(-X, Y); })) continue;
+            ++PreparedPoints;
+            if (Previous.Z>Before)
+            {
+                UE_LOG(LogSSWRuntime, Display, TEXT("[SurfaceRoute] Raised '%hs' flight waypoint above live terrain to %.1f m"), Element->GetName().data(), Previous.Z);
+            }
+        }
+    }
+    bSurfaceFlightPlanPrepared = PreparedPoints > 0;
+}
+
 void USSWRuntimeSubsystem::ClearMissionWaypoints()
 {
     for (auto& Pair : MissionWaypoints) if (Pair.Value.IsValid()) Pair.Value->Destroy();
     MissionWaypoints.Empty();
     WaypointRefreshSeconds = 0;
+    bSurfaceFlightPlanPrepared = false;
     WaypointClass = nullptr;
     bWaypointClassResolved = false;
 }

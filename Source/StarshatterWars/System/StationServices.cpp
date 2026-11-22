@@ -179,6 +179,8 @@ bool FStationServices::QuoteMarket(UGameInstance* Instance,FName Item,double Qua
     auto* Region=Craft->GetRegion();const FString System=Region && Region->GetSystem()?UTF8_TO_TCHAR(Region->GetSystem()->GetName()):TEXT("");
     const auto Rule=MarketRule(System,Item,Goods->bIllicit);
     if(!Rule.Found || Rule.Restricted){Quote.Reason=INVTEXT("This item is restricted in the local market.");return false;}
+    if (const auto* Catalog = Instance->GetSubsystem<UCargoCatalogSubsystem>())
+        FEconomyRuntime::InitializeMarkets(Sim::GetSim()->GetEconomy(), *Catalog);
     const auto& State=Sim::GetSim()->ReadEconomy();const FName Hold=Craft->GetCargoInventoryKey();
     const FName Market=FEconomyRuntime::Warehouse(System,TEXT("NPC Market"),TEXT("Stock"));
     Quote.Source=Buy?Market:Hold;Quote.Destination=Buy?Hold:Market;Quote.Buyer=Buy?FEconomyLedger::Pilot():FEconomyRuntime::IndustryOwner();
@@ -205,14 +207,16 @@ bool FStationServices::QuoteMarket(UGameInstance* Instance,FName Item,double Qua
     if((Buy?Quote.Available:Quote.InHold)+1.e-9<Quantity){Quote.Reason=Buy?INVTEXT("Insufficient unreserved NPC stock."):INVTEXT("Insufficient unreserved cargo in the ship.");return false;}
     if(Free+1.e-9<Quantity*Goods->Size){Quote.Reason=INVTEXT("The destination has insufficient cargo space.");return false;}
     if(State.Wallets.FindRef(Quote.Buyer)<Quote.TotalCredits){Quote.Reason=Buy?INVTEXT("Insufficient credits."):INVTEXT("The NPC market has insufficient credits for this purchase.");return false;}
-    Quote.bAllowed=true;Quote.Reason=FText::Format(Buy?INVTEXT("BUY {0} {1} FOR {2} CR"):INVTEXT("SELL {0} {1} FOR {2} CR"),FText::AsNumber(Quantity),FText::FromString(Quote.Unit).ToUpper(),FText::AsNumber(Quote.TotalCredits));return true;
+    Quote.bAllowed=true;const auto Charges=CommerceCharges::Quote(Quote.TotalCredits,ECommercePurpose::MarketSale);
+    Quote.Reason=FText::Format(Buy?INVTEXT("BUY {0} {1} FOR {2} CR"):INVTEXT("SELL {0} {1} FOR {2} CR"),FText::AsNumber(Quantity),FText::FromString(Quote.Unit).ToUpper(),FText::AsNumber(Buy?Quote.TotalCredits:Charges.Base));
+    Quote.Reason=FText::Format(INVTEXT("{0}\n{1}"),Quote.Reason,Charges.Breakdown());return true;
 }
 bool FStationServices::CommitMarketTrade(FEconomyState& State,const FStationMarketQuote& Quote,FGuid Receipt,TFunctionRef<bool()> Persist,FText& Reason)
 {
     if(!Quote.bAllowed || Quote.Item.IsNone() || Quote.Item.ToString().StartsWith(TEXT("Courier/")) || !FMath::IsFinite(Quote.Quantity) || Quote.Quantity<=0 || Quote.TotalCredits<1)
     {Reason=INVTEXT("A valid market quote is required.");return false;}
     const auto Before=State;
-    if(!FEconomyLedger::Trade(State,Quote.Buyer,Quote.Seller,Quote.Source,Quote.Destination,Quote.Item,Quote.Quantity,Quote.TotalCredits,Receipt))
+    if(!FEconomyLedger::Trade(State,Quote.Buyer,Quote.Seller,Quote.Source,Quote.Destination,Quote.Item,Quote.Quantity,Quote.TotalCredits,Receipt,ECommercePurpose::MarketSale))
     {State=Before;Reason=INVTEXT("Trade unavailable: stock, space, credits or receipt changed. Nothing was exchanged.");return false;}
     if(!Persist())
     {State=Before;Reason=INVTEXT("Could not save the trade. Cargo and credits were restored.");return false;}

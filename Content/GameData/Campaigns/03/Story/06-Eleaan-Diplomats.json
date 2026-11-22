@@ -1,5 +1,8 @@
 {
 	"storyCampaignId": 0,
+	"requiredEmpire": "Neutral",
+	"narrativeCampaignId": 0,
+	"counterpartMissionId": 0,
 	"storyUnlockScene": "06-Eleaan-Diplomats",
 	"storyPoints": 250,
 	"rowName": "None",

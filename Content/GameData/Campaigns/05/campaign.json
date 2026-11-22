@@ -1,0 +1,119 @@
+{
+	"rowName": "None",
+	"name": "Operation Nightfall",
+	"description": "Two Force:Space fleets press on through major population centers on the road to the Marakan homeworld. Civilians back home begin to question the Alliance's involvement in the war, even as shadows fall upon the climactic battle.",
+	"situation": "Operation Firestorm was not the strategic success we once believed it to be. Force:Intel field agents have been unable to recover either the Borovan Archaelith or any of the illegal technite from the Korian and Kolchev systems.  We have now determined that the technite has already been shipped out of Kolchev to the Garrison system, and we believe that the Archaelith cannot be far behind.  Garrison is a major military stronghold for the Hegemony, close to the Marak system itself. We cannot estimate how long we have before the Hegemony will be able to produce a Quantum Disruptor weapon system.We are therefore commencing Operation Nightfall to recover the artifacts from the Garrison system. Our first task is to gain military control of the Radix and Isham star systems. Force First Fleet will take the northern route and secure the Isham system, while Second Fleet holds their southern flank by controlling the Radix system. Our combined forces will then converge on the Garrison system as soon as they can manage it.",
+	"start": "01/00:00:00",
+	"orders": [
+		"* First Fleet: Engage military targets in the Isham system.",
+		"* Second Fleet: Secure the Radix system.",
+		"* Both fleets to converge on the Garrison system as soon as possible."
+	],
+	"bScripted": false,
+	"bSequential": false,
+	"bAvailable": true,
+	"bCompleted": false,
+	"system": "Jarnell",
+	"region": "Adonis",
+	"mainImage": "main",
+	"actionSize": 0,
+	"combatantSize": 5,
+	"index": 4,
+	"combatant": [
+		{
+			"name": "Terellian",
+			"size": 2,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 1
+				},
+				{
+					"type": "FLEET",
+					"id": 2
+				}
+			]
+		},
+		{
+			"name": "Marakan",
+			"size": 12,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 1
+				},
+				{
+					"type": "FLEET",
+					"id": 2
+				},
+				{
+					"type": "FLEET",
+					"id": 9
+				},
+				{
+					"type": "FLEET",
+					"id": 10
+				},
+				{
+					"type": "BATTALION",
+					"id": 4
+				},
+				{
+					"type": "BATTALION",
+					"id": 15
+				},
+				{
+					"type": "BATTALION",
+					"id": 19
+				},
+				{
+					"type": "BATTALION",
+					"id": 12
+				},
+				{
+					"type": "WAR_PRODUCTION",
+					"id": 5000
+				},
+				{
+					"type": "INFRASTRUCTURE",
+					"id": 5000
+				},
+				{
+					"type": "WAR_PRODUCTION",
+					"id": 6000
+				},
+				{
+					"type": "INFRASTRUCTURE",
+					"id": 7000
+				}
+			]
+		},
+		{
+			"name": "Zolon",
+			"size": 3,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 1
+				},
+				{
+					"type": "FLEET",
+					"id": 2
+				},
+				{
+					"type": "FLEET",
+					"id": 3
+				}
+			]
+		}
+	],
+	"action": [],
+	"zone": [],
+	"missionList": [],
+	"templateList": [],
+	"missions": [],
+	"storyMissions": [],
+	"templateMissions": [],
+	"scriptedMissions": [],
+	"campaignImage": "None"
+}

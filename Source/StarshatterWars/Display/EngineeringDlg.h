@@ -86,7 +86,7 @@ public:
     UFUNCTION() virtual void OnPriorityDecrease();
     UFUNCTION() virtual void OnClose();
 
-    void              ExecFrame(float DeltaTime);
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
     void              UpdateRouteTables();
     void              UpdateSelection();
     void              SetShip(Ship* s);

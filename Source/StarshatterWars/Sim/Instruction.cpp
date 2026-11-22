@@ -36,19 +36,20 @@ DEFINE_LOG_CATEGORY_STATIC(LogTempInstruction, Log, All);
 // +----------------------------------------------------------------------+
 
 Instruction::Instruction(EInstruction act, const char* tgt)
-	: region(0),
-	action(act),
-	formation(INSTRUCTION_FORMATION::DIAMOND),
-	tgt_name(tgt),
-	status(INSTRUCTION_STATUS::PENDING),
-	RadioAction(RadioMessageAction::NONE),
-	speed(0),
-	target(0),
-	emcon(0),
-	wep_free(0),
-	priority(PRIMARY),
-	farcast(0),
-	hold_time(0)
+	: 
+    region(0),
+    action(act),
+    formation(INSTRUCTION_FORMATION::DIAMOND),
+    status(INSTRUCTION_STATUS::PENDING),
+    RadioAction(RadioMessageAction::NONE),
+    speed(0),
+    tgt_name(tgt),
+    target(0),
+    emcon(0),
+    wep_free(0),
+    priority(PRIMARY),
+    farcast(0),
+    hold_time(0)
 {
 }
 
@@ -91,22 +92,23 @@ Instruction::Instruction(SimRegion* rgn, FVector loc, EInstruction act)
 }
 
 Instruction::Instruction(const Instruction& instr)
-	: region(instr.region),
-	rgn_name(instr.rgn_name),
-	rloc(instr.rloc),
-	action(instr.action),
-	formation(instr.formation),
-	status(instr.status),
-	RadioAction(instr.RadioAction),
-	speed(instr.speed),
-	target(0),
-	tgt_name(instr.tgt_name),
-	tgt_desc(instr.tgt_desc),
-	emcon(instr.emcon),
-	wep_free(instr.wep_free),
-	priority(instr.priority),
-	farcast(instr.farcast),
-	hold_time(instr.hold_time)
+	: 
+    rgn_name(instr.rgn_name),
+    region(instr.region),
+    rloc(instr.rloc),
+    action(instr.action),
+    formation(instr.formation),
+    status(instr.status),
+    RadioAction(instr.RadioAction),
+    speed(instr.speed),
+    tgt_name(instr.tgt_name),
+    tgt_desc(instr.tgt_desc),
+    target(0),
+    emcon(instr.emcon),
+    wep_free(instr.wep_free),
+    priority(instr.priority),
+    farcast(instr.farcast),
+    hold_time(instr.hold_time)
 {
 	SetTarget(instr.target);
 }

@@ -30,7 +30,7 @@
 
 bool GetDefBool(bool& dst, TermDef* def, const char* file);
 bool GetDefText(Text& dst, TermDef* def, const char* file);
-bool GetDefText(char* dst, TermDef* def, const char* file);
+bool GetDefText(TArrayView<char> dst, TermDef* def, const char* file);
 bool GetDefNumber(int& dst, TermDef* def, const char* file);
 bool GetDefNumber(DWORD& dst, TermDef* def, const char* file);
 bool GetDefNumber(float& dst, TermDef* def, const char* file);

@@ -1031,6 +1031,24 @@ bool UStarshatterAssetRegistrySubsystem::InitRegistry()
         }
     }
 
+    // UI.ShipSkinPopupClass
+    if (!Cache.Contains(TEXT("UI.ShipSkinPopupClass")))
+    {
+        if (!Settings->ShipSkinPopupClass.IsNull())
+        {
+            const FSoftObjectPath Path = Settings->ShipSkinPopupClass.ToSoftObjectPath();
+            Cache.Add(TEXT("UI.ShipSkinPopupClass"), TSoftObjectPtr<UObject>(Path));
+
+            UE_LOG(LogStarshatterAssetRegistry, Log, TEXT("[ASSETS] Bind UI.ShipSkinPopupClass -> %s"),
+                *Path.ToString());
+        }
+        else
+        {
+            Cache.Add(TEXT("UI.ShipSkinPopupClass"), TSoftObjectPtr<UObject>(
+                FSoftObjectPath(TEXT("/Script/StarshatterWars.ShipSkinDlg"))));
+        }
+    }
+
     // UI.CustomMissionScreenClass
     if (!Cache.Contains(TEXT("UI.CustomMissionScreenClass")))
     {

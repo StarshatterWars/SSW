@@ -1,4 +1,5 @@
 #include "AcceptanceAI.h"
+#include "CommerceCharges.h"
 
 using namespace ContractTransactions;
 
@@ -50,7 +51,7 @@ bool AcceptanceAI::Publish(FContractTransaction& Contract, FContractAccounts& Ac
     return true;
 }
 
-bool AcceptanceAI::Accept(FContractTransaction& Contract, FContractAccounts& Accounts, FName Actor, FDateTime Now)
+bool AcceptanceAI::Accept(FContractTransaction& Contract, FContractAccounts& Accounts, FName Actor, FDateTime Now, bool bApplyGst)
 {
     if (!MayTake(Contract, Actor, Now))
         return false;
@@ -75,19 +76,25 @@ bool AcceptanceAI::Accept(FContractTransaction& Contract, FContractAccounts& Acc
         if (Buyer->Credits < Terms.PriceCredits || !CanReceiveCredits(*Issuer, Terms.PriceCredits) ||
             !CanReceiveCredits(*Buyer, Terms.RewardCredits))
             return false;
+        const auto Sale=CommerceCharges::Quote(Terms.PriceCredits,bApplyGst?ECommercePurpose::MarketSale:ECommercePurpose::None);
+        const auto Reward=CommerceCharges::Quote(Terms.RewardCredits,bApplyGst?ECommercePurpose::MarketSale:ECommercePurpose::None);
+        const int64 Tax=Sale.Tax+Reward.Tax;
+        if(Tax && (Actor==CommerceCharges::TaxAccount() || Contract.Issuer==CommerceCharges::TaxAccount() ||
+            !CanReceiveCredits(Accounts.FindRef(CommerceCharges::TaxAccount()),Tax)))return false;
         FContractAccount BuyerAfter = *Buyer;
         FContractAccount IssuerAfter = *Issuer;
         if (!TakeItems(BuyerAfter, Terms.PickupStationId, Terms.RequestedItems) ||
             !GiveItems(IssuerAfter, Terms.PickupStationId, Terms.RequestedItems) ||
             !GiveItems(BuyerAfter, Terms.PickupStationId, Terms.OfferedItems))
             return false;
-        BuyerAfter.Credits += Terms.RewardCredits - Terms.PriceCredits;
-        IssuerAfter.Credits += Terms.PriceCredits;
+        BuyerAfter.Credits += Reward.Base - Terms.PriceCredits;
+        IssuerAfter.Credits += Sale.Base;
         RecordWallet(BuyerAfter,-Terms.PriceCredits,TEXT("Contract purchase"),Contract.Id);
-        RecordWallet(BuyerAfter,Terms.RewardCredits,TEXT("Contract reward"),Contract.Id);
-        RecordWallet(IssuerAfter,Terms.PriceCredits,TEXT("Contract sale"),Contract.Id);
+        RecordWallet(BuyerAfter,Reward.Base,TEXT("Contract reward"),Contract.Id);
+        RecordWallet(IssuerAfter,Sale.Base,TEXT("Contract sale"),Contract.Id);
         *Buyer = MoveTemp(BuyerAfter);
         *Issuer = MoveTemp(IssuerAfter);
+        if(Tax){auto& Revenue=Accounts.FindOrAdd(CommerceCharges::TaxAccount());Revenue.Credits+=Tax;RecordWallet(Revenue,Tax,TEXT("Contract included GST"),Contract.Id);}
         Contract.State = EContractState::Completed;
     }
     else

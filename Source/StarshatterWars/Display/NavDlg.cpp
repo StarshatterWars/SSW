@@ -351,7 +351,7 @@ UNavDlg::SetEditorMode(bool e)
 
 // +--------------------------------------------------------------------+
 
-void UNavDlg::ExecFrame()
+void UNavDlg::ExecFrame(double /*DeltaTime*/)
 {
     Sim* sim = Sim::GetSim();
 

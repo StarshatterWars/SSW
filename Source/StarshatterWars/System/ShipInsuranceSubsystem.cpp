@@ -1,4 +1,10 @@
 #include "ShipInsuranceSubsystem.h"
+#include "ShipStoreAI.h"
+#include "OrdnanceMagazine.h"
+#include "Weapon.h"
+#include "WeaponGroup.h"
+#include "AgentAI.h"
+#include "SSWGameInstance.h"
 #include "ShipyardAI.h"
 #include "CarrierFighterSalesAI.h"
 #include "Hangar.h"
@@ -8,6 +14,7 @@
 #include "StationServiceCatalog.h"
 #include "TransactionAI.h"
 #include "OwnedHullCondition.h"
+#include "OwnedHullLocation.h"
 #include "PlayerHullLoss.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "Engine/GameInstance.h"
@@ -98,6 +105,13 @@ void UShipInsuranceSubsystem::RefreshAssignment()
     auto* Craft = Simulation ? Simulation->GetPlayerShip() : nullptr;
     if (!Players || !Craft || !Craft->Design() || !Simulation->HasSimulationAuthority() || Simulation->IsNetworked()) return;
     auto& Pilot = Players->GetMutablePlayerInfo();
+    for (auto& Hull : Pilot.HangarShips)
+    {
+        const auto* Base = Craft->GetCarrier();
+        const FString Dock = OwnedHullLocation::Dock(*Craft);
+        if (Base && Dock.StartsWith(TEXT("Carrier / ")) && Hull.Location.Equals(UTF8_TO_TCHAR(Base->GetName()), ESearchCase::IgnoreCase)) Hull.Location = Dock;
+        else OwnedHullLocation::RecoverPurchase(Pilot, Hull);
+    }
     const FName Design(UTF8_TO_TCHAR(Craft->Design()->name));
     auto* Current = Pilot.HangarShips.FindByPredicate([&Pilot](const auto& Item)
         { return Item.HullId == Pilot.AssignedHangarHull; });
@@ -114,9 +128,12 @@ void UShipInsuranceSubsystem::RefreshAssignment()
     }
     // Mission-assigned craft never inherit an owned hull solely because their designs match.
     if (!FreeFlight && Current && !Current->bAssigned) Current=nullptr;
+    if (FreeFlight && Current && !Current->bAssigned &&
+        !FOwnedHullCondition::IsOwnedLive(*Current, Pilot.AssignedHangarHull, Design, Craft->GetCargoInventoryKey(), true) &&
+        !OwnedHullLocation::CanProvision(*Current, *Simulation->GetMission(), true)) Current = nullptr;
     if (FreeFlight)
         if (auto* Selected=Pilot.HangarShips.FindByPredicate([&](const auto& Row)
-            {return Row.HullId==Pilot.SelectedHangarHull && !Row.bAssigned && !Row.bLost && Row.Design==Design;}))
+            {return Row.HullId==Pilot.SelectedHangarHull && !Row.bAssigned && !Row.bLost && Row.Design==Design && OwnedHullLocation::IsAt(Row,OwnedHullLocation::Dock(*Craft));}))
         { Current=Selected; Pilot.AssignedHangarHull=Selected->HullId; }
     if (!Current || Current->Design != Design || Current->bLost)
     {
@@ -136,7 +153,10 @@ void UShipInsuranceSubsystem::RefreshAssignment()
     if (Craft->GetFlightPhase() <= EOPSMode::ALERT)
     {
         if (bRestoreLoadout && !Current->LoadoutStations.IsEmpty())
+        {
             Craft->ApplyDockedLoadout(Current->LoadoutStations);
+            if(FreeFlight)FOwnedHullCondition::ApplyAmmo(*Craft,*Current);
+        }
         bRestoreLoadout = false;
         if (int* Loadout = Craft->GetLoadout())
         {
@@ -214,8 +234,10 @@ void UShipInsuranceSubsystem::RefreshAssignment()
         FOwnedHullCondition::Capture(*Craft,*Current);
     }
     Current->Name = UTF8_TO_TCHAR(Craft->GetObserverName());
-    if (Craft->GetRegion()) Current->Location = UTF8_TO_TCHAR(Craft->GetRegion()->GetName());
+    const FString Place = OwnedHullLocation::Current(*Craft);
+    if (!Place.IsEmpty()) Current->Location = Place;
     Players->MarkDirty();
+    if(bNeedsMagazineIssue && !FreeFlight && Craft->GetFlightPhase()<=EOPSMode::ALERT)ProvisionMissionMagazine();
 }
 
 FGuid UShipInsuranceSubsystem::RegisterOwnedShip(FName Design, const FString& Name,
@@ -230,6 +252,7 @@ FGuid UShipInsuranceSubsystem::RegisterOwnedShip(FName Design, const FString& Na
     Entry.HullId = FGuid::NewGuid();
     Entry.Design = Design;
     Entry.Name = Name;
+    if (auto* Craft = Simulation ? Simulation->GetPlayerShip() : nullptr) Entry.Location = OwnedHullLocation::Dock(*Craft);
     Entry.HullValue = FMath::Min(HullValue, MaximumValue);
     Entry.InstalledComponentValue = FMath::Min(ComponentValue, MaximumValue);
     Entry.bCashPurchased = bPurchasedWithCash;
@@ -270,7 +293,7 @@ bool UShipInsuranceSubsystem::PurchasePolicy(FGuid Hull, EShipInsuranceTier Tier
     if (Offer.Payout <= 0 || GetBalance() < Offer.Premium)
     { Result = INVTEXT("Insufficient credits for this premium."); return false; }
     const auto Previous = Pilot;
-    if (!FEconomyLedger::Pay(Players->GetEconomy(), FEconomyLedger::Pilot(), TEXT("Insurance fund"), Offer.Premium, FGuid::NewGuid(), TEXT("Insurance premium"))) return false;
+    if (!FEconomyLedger::Pay(Players->GetEconomy(), FEconomyLedger::Pilot(), TEXT("Insurance fund"), Offer.Premium, FGuid::NewGuid(), TEXT("Insurance premium"),ECommercePurpose::Service)) return false;
     auto& PremiumReceipt = Players->GetEconomy().Journal.Last(); PremiumReceipt.Item = Entry->Design;
     PremiumReceipt.Quantity = 1; PremiumReceipt.UnitPrice = double(Offer.Premium); PremiumReceipt.Reference = Hull;
     Entry->Insurance.Tier = Tier;
@@ -336,6 +359,9 @@ bool UShipInsuranceSubsystem::SelectHull(FGuid Hull, FText& Result)
     const auto* Entry = FindShip(Hull);
     if (!Players || !CanModifyHull(Hull) || !Entry || Entry->bLost)
     { Result = INVTEXT("Dock to select an available hull."); return false; }
+    auto* Simulation = Sim::GetSim(); auto* Craft = Simulation ? Simulation->GetPlayerShip() : nullptr;
+    if (!Craft || !OwnedHullLocation::IsAt(*Entry, OwnedHullLocation::Dock(*Craft)))
+    { Result = FText::Format(INVTEXT("This craft is stored at {0}. Travel there to select it."), FText::FromString(Entry->Location)); return false; }
     const auto* Design = ShipDesignRegistry::Find(Entry->Design);
     const auto* PilotCharacter = PlayerCharacter::GetCurrentPlayer();
     if (!Design || !PilotCharacter || PilotCharacter->GetRank() < PlayerCharacter::HullRankRequired(Design->ShipType,Design->ShipName))
@@ -404,6 +430,16 @@ bool UShipInsuranceSubsystem::ValidateFitting(FGuid Hull, int32 Slot, int32 Leve
     Result = INVTEXT("Compatible fitting. Power budget valid."); return true;
 }
 
+int32 UShipInsuranceSubsystem::StoredComponentCount(FGuid Hull,int32 Slot,int32 Level) const
+{
+    const auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    auto* Simulation=Sim::GetSim();const auto* Craft=Simulation?Simulation->GetPlayerShip():nullptr;
+    const auto* Entry=FindShip(Hull);
+    if(!Players || !Craft || !Entry || !Entry->Components.IsValidIndex(Slot))return 0;
+    const auto& Part=Entry->Components[Slot];
+    return ShipStoreAI::Stored(Players->GetPlayerInfo(),ShipStoreAI::ComponentId(Part.SystemDesign,Part.Component,Level),OwnedHullLocation::Dock(*Craft));
+}
+
 bool UShipInsuranceSubsystem::FitComponent(FGuid Hull, int32 Slot, int32 Level, FText& Result)
 {
     auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
@@ -429,24 +465,24 @@ bool UShipInsuranceSubsystem::FitComponent(FGuid Hull, int32 Slot, int32 Level, 
     if (Fitted.ComponentIndex < 0 || Fitted.ComponentIndex >= Components.size() || !Components[Fitted.ComponentIndex])
         return false;
     if (!ValidateFitting(Hull, Slot, Level, Result)) return false;
-    const int64 Price = Variant->BaseCost;
-    if (GetBalance() < Price)
-    { Result = INVTEXT("Insufficient credits for this refit."); return false; }
     const auto Previous = Pilot;
     FPlayerHangarShip PreviousCondition; FOwnedHullCondition::Capture(*Craft,PreviousCondition);
     SimComponent* NativePart=Components[Fitted.ComponentIndex];
     const SimComponent PreviousPart(*NativePart);
-    if (!FEconomyLedger::Pay(Players->GetEconomy(), FEconomyLedger::Pilot(), TEXT("Shipyard"), Price, FGuid::NewGuid(), TEXT("Component refit"))) return false;
-    Entry->Components[Slot].Level = Level;
-    Entry->Components[Slot].ItemId = FGuid::NewGuid();
-    auto& RefitReceipt = Players->GetEconomy().Journal.Last(); RefitReceipt.Item = FName(*Variant->Name);
-    RefitReceipt.Quantity = 1; RefitReceipt.UnitPrice = double(Price); RefitReceipt.Reference = Entry->Components[Slot].ItemId;
-    Entry->Components[Slot].bHasCondition=true;
-    Entry->Components[Slot].ConditionPercent=100;
-    Entry->Components[Slot].ConditionStatus=static_cast<int32>(SYSTEM_STATUS::NOMINAL);
-    Entry->Components[Slot].MaintenanceSeconds=0;
-    Entry->Components[Slot].JerryCount=0;
-    Entry->Components[Slot].SpareCount=Variant->Spares;
+    FHangarComponent Incoming;
+    if(!ShipStoreAI::TakeComponent(Pilot,Fitted.SystemDesign,Fitted.Component,Level,OwnedHullLocation::Dock(*Craft),Incoming))
+    {Result=INVTEXT("Purchase this component grade in Ship Store and keep it at this dock before fitting.");return false;}
+    FOwnedHullCondition::Capture(*Craft,*Entry);
+    const FHangarComponent Removed=Entry->Components[Slot];
+    if(!Entry->bAssigned)ShipStoreAI::StoreComponent(Pilot,Removed,OwnedHullLocation::Dock(*Craft));
+    Incoming.SystemIndex=Removed.SystemIndex;Incoming.ComponentIndex=Removed.ComponentIndex;Incoming.SystemName=Removed.SystemName;
+    if(!Incoming.bHasCondition)
+    {
+        Incoming.bHasCondition=true;Incoming.ConditionPercent=100;
+        Incoming.ConditionStatus=static_cast<int32>(SYSTEM_STATUS::NOMINAL);
+        Incoming.MaintenanceSeconds=0;Incoming.JerryCount=0;Incoming.SpareCount=Variant->Spares;
+    }
+    Entry->Components[Slot]=Incoming;
     ComponentDesign Native;
     Native.name = TCHAR_TO_UTF8(*Variant->Name);
     Native.abrv = TCHAR_TO_UTF8(*Variant->Abbrev);
@@ -458,13 +494,15 @@ bool UShipInsuranceSubsystem::FitComponent(FGuid Hull, int32 Slot, int32 Level, 
     Native.spares = Variant->Spares;
     Native.affects = Variant->Affects;
     NativePart->InstallDesign(Native);
+    FOwnedHullCondition::ApplyComponent(*NativePart,Incoming);
+    Systems[Incoming.SystemIndex]->CalcStatus();
     if (!Entry->bAssigned) FOwnedHullCondition::Capture(*Craft,*Entry);
     if (!Players->SaveActivePlayerProgress())
     {
         Pilot=Previous; *NativePart=PreviousPart; FOwnedHullCondition::Apply(*Craft,PreviousCondition);
-        Result=INVTEXT("Could not save this fitting. Component, condition and credits restored."); return false;
+        Result=INVTEXT("Could not save this fitting. Stored equipment, fitting and condition restored."); return false;
     }
-    Result = INVTEXT("Component refitted.");
+    Result = INVTEXT("Owned component fitted. No second purchase charge; removed owned equipment stays at this dock.");
     RefreshAssignment();
     return true;
 }
@@ -472,6 +510,7 @@ bool UShipInsuranceSubsystem::FitComponent(FGuid Hull, int32 Slot, int32 Level, 
 void UShipInsuranceSubsystem::BeginMission()
 {
     bRestoreLoadout = true;
+    bNeedsMagazineIssue = true;
     RefreshAssignment();
 }
 
@@ -499,10 +538,111 @@ bool UShipInsuranceSubsystem::CanModifyHull(FGuid Hull) const
     if (!CanInsure()) return false;
     const auto* Entry = FindShip(Hull);
     if (!Entry || Entry->bLost) return false;
+    auto* Live = Sim::GetSim(); auto* Craft = Live ? Live->GetPlayerShip() : nullptr;
+    if (!Craft || !OwnedHullLocation::IsAt(*Entry, OwnedHullLocation::Dock(*Craft))) return false;
     auto* Simulation = Sim::GetSim();
     const auto* Mission = Simulation ? Simulation->GetMission() : nullptr;
     const auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
     return Players && (!Mission || Mission->IsFreeFlight() || Players->GetPlayerInfo().AssignedHangarHull == Hull);
+}
+
+namespace
+{
+TArray<int32> CurrentStations(Ship& Craft)
+{
+    TArray<int32> Out;
+    if(Craft.Design())for(int32 Index=0;Index<Craft.Design()->hardpoints.size();++Index)Out.Add(Craft.GetLoadout()?Craft.GetLoadout()[Index]:-1);
+    return Out;
+}
+void EmptyMissiles(Ship& Craft)
+{
+    for(ListIter<WeaponGroup> Groups=Craft.GetWeapons();++Groups;)
+        for(ListIter<Weapon> Weapons=Groups->GetWeapons();++Weapons;)
+            if(!Weapons->IsPrimary() && Weapons->Ammo()>=0)Weapons->SetAmmo(0);
+}
+}
+void UShipInsuranceSubsystem::ProvisionMissionMagazine()
+{
+    auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();auto* Simulation=Sim::GetSim();
+    auto* Craft=Simulation?Simulation->GetPlayerShip():nullptr;
+    if(!P || !Craft || !Craft->Design() || !Craft->GetCarrier() || !Simulation->HasSimulationAuthority() || Simulation->IsNetworked())return;
+    bNeedsMagazineIssue=false;
+    auto& Pilot=P->GetMutablePlayerInfo();
+    auto* Hull=Pilot.HangarShips.FindByPredicate([&](const auto& Row){return Row.HullId==Pilot.AssignedHangarHull;});if(!Hull)return;
+    int64 Accepted=0;
+    if(auto* Game=Cast<USSWGameInstance>(GetGameInstance()))
+        if(const auto* NativePilot=PlayerCharacter::GetCurrentPlayer())
+            if(const auto* Assignment=Game->GetTrainingAgent().Find(AgentAI::PilotKey(*NativePilot)))Accepted=Assignment->AcceptedUtc;
+    const FName Issue(*FString::Printf(TEXT("Magazine issue/%s/%d/%lld/%s"),*Pilot.Name,
+        Simulation->GetMission()?Simulation->GetMission()->GetIdentity():0,Accepted,*Hull->HullId.ToString(EGuidFormats::Digits)));
+    if(Pilot.Economy.InitializedMarkets.Contains(Issue))
+    {
+        if(Hull->OrdnanceIssueKey==Issue)FOwnedHullCondition::ApplyAmmo(*Craft,*Hull);
+        Craft->SetMagazineIssue(true);return;
+    }
+    const auto Before=Pilot;
+    const FName Magazine=OrdnanceMagazine::Ensure(Pilot.Economy,*Craft->GetCarrier(),LastLoadoutReason);
+    TMap<FName,int32> Wanted;
+    if(Magazine.IsNone() || !OrdnanceMagazine::Required(*Craft,CurrentStations(*Craft),Wanted,LastLoadoutReason) ||
+        !OrdnanceMagazine::Exchange(Pilot,OwnedHullLocation::Dock(*Craft),Magazine,{},Wanted,LastLoadoutReason))
+    {EmptyMissiles(*Craft);return;}
+    if(!Craft->ApplyDockedLoadout(CurrentStations(*Craft)))
+    {Pilot=Before;EmptyMissiles(*Craft);return;}
+    // The profile array may have been copied by rollback; reacquire its element.
+    Hull=Pilot.HangarShips.FindByPredicate([&](const auto& Row){return Row.HullId==Pilot.AssignedHangarHull;});
+    Hull->OrdnanceIssueKey=Issue;Pilot.Economy.InitializedMarkets.Add(Issue);FOwnedHullCondition::CaptureAmmo(*Craft,*Hull);
+    Craft->SetMagazineIssue(true);P->MarkDirty();
+    if(!P->SaveActivePlayerProgress()){Pilot=Before;EmptyMissiles(*Craft);LastLoadoutReason=INVTEXT("Magazine issue could not be saved. Missiles were not issued.");}
+}
+
+bool UShipInsuranceSubsystem::ApplyStoredLoadout(const TArray<int32>& Choices,const FString& Name,FText& Reason)
+{
+    auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();auto* Simulation=Sim::GetSim();
+    auto* Craft=Simulation?Simulation->GetPlayerShip():nullptr;
+    if(!P || !Craft || !Simulation->HasSimulationAuthority() || Simulation->IsNetworked() || !CanModifyHull(P->GetPlayerInfo().AssignedHangarHull))
+    {Reason=INVTEXT("Dock with the active assigned fighter to change missile stores.");LastLoadoutReason=Reason;return false;}
+    auto& Pilot=P->GetMutablePlayerInfo();const auto Before=Pilot;const auto PreviousStations=CurrentStations(*Craft);
+    FPlayerHangarShip PreviousCondition;FOwnedHullCondition::Capture(*Craft,PreviousCondition);
+    const bool Issued=Simulation->GetMission() && !Simulation->GetMission()->IsFreeFlight();
+    FName Magazine;
+    if(Issued && Craft->GetCarrier())Magazine=OrdnanceMagazine::Ensure(Pilot.Economy,*Craft->GetCarrier(),Reason);
+    TMap<FName,int32> Wanted;
+    if((Issued && Magazine.IsNone()) || !OrdnanceMagazine::Required(*Craft,Choices,Wanted,Reason) ||
+        !OrdnanceMagazine::Exchange(Pilot,OwnedHullLocation::Dock(*Craft),Magazine,OrdnanceMagazine::Loaded(*Craft),Wanted,Reason))
+    {Pilot=Before;LastLoadoutReason=Reason;return false;}
+    if(!Craft->ApplyDockedLoadout(Choices)){Pilot=Before;return false;}
+    auto Health=PreviousCondition;
+    // Preserve gun ammo and system damage; only the reconciled missile stores are refilled.
+    for(ListIter<WeaponGroup> Groups=Craft->GetWeapons();++Groups;)
+        for(ListIter<Weapon> Weapons=Groups->GetWeapons();++Weapons;)
+            if(!Weapons->IsPrimary()){Health.SavedWeaponAmmo.Remove(Weapons->GetIndex());Health.SavedWeaponTypes.Remove(Weapons->GetIndex());}
+    FOwnedHullCondition::Apply(*Craft,Health);
+    auto* Hull=Pilot.HangarShips.FindByPredicate([&](const auto& Row){return Row.HullId==Pilot.AssignedHangarHull;});
+    if(Hull){Hull->LoadoutStations=Choices;Hull->LoadoutName=Name;FOwnedHullCondition::CaptureAmmo(*Craft,*Hull);}
+    if(!Hull || !P->SaveActivePlayerProgress())
+    {
+        Pilot=Before;Craft->ApplyDockedLoadout(PreviousStations);FOwnedHullCondition::Apply(*Craft,PreviousCondition);
+        Reason=INVTEXT("Loadout could not be saved. Aircraft and missile stores restored.");LastLoadoutReason=Reason;return false;
+    }
+    LastLoadoutReason=Reason;return true;
+}
+
+FText UShipInsuranceSubsystem::LoadoutStoresText() const
+{
+    auto* Simulation=Sim::GetSim();auto* Craft=Simulation?Simulation->GetPlayerShip():nullptr;
+    const auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if(!Craft || !Players)return INVTEXT("MISSILE STORES — LIVE SESSION REQUIRED");
+    const bool Issued=Simulation->GetMission() && !Simulation->GetMission()->IsFreeFlight();
+    const FName Magazine=Issued && Craft->GetCarrier()?OrdnanceMagazine::Key(*Craft->GetCarrier()):NAME_None;
+    FString Text=Issued?TEXT("BASE MAGAZINE"):TEXT("PLAYER MISSILE STORES");
+    Text+=TEXT(" / ")+OwnedHullLocation::Dock(*Craft);
+    for(const auto& Pair:OrdnanceMagazine::Loaded(*Craft))
+    {
+        const double Available=Issued?FEconomyLedger::Available(Simulation->ReadEconomy(),Magazine,Pair.Key):ShipStoreAI::Stored(Players->GetPlayerInfo(),Pair.Key,OwnedHullLocation::Dock(*Craft));
+        Text+=FString::Printf(TEXT("\n%s: %d LOADED / %.0f STORED"),*Pair.Key.ToString().ToUpper(),Pair.Value,Available);
+    }
+    if(!LastLoadoutReason.IsEmpty())Text+=TEXT("\n")+LastLoadoutReason.ToString();
+    return FText::FromString(Text);
 }
 
 bool UShipInsuranceSubsystem::RememberLoadout(const TArray<int32>& Stations, const FString& Name)
@@ -594,8 +734,8 @@ bool UShipInsuranceSubsystem::PurchaseHull(FName Design,FText& Reason)
     auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* Hull=ShipDesignRegistry::Find(Design);const auto Before=P->GetPlayerInfo();
     auto& Pilot=P->GetMutablePlayerInfo();auto* Craft=Sim::GetSim()->GetPlayerShip();auto* Base=Craft->GetCarrier();
     const auto Offer=DockedCarrierOffer(Pilot,Design);
-    if(Offer.IsSet())return Base->GetHangar() && CarrierFighterSalesAI::Purchase(Pilot,*Hull,*Base->GetHangar(),Offer.GetValue(),DockedHullStock(Design,true),UTF8_TO_TCHAR(Craft->GetRegion()->GetName()),FGuid::NewGuid(),[P](){return P->SaveActivePlayerProgress();},Reason);
-    if(!ShipyardAI::Purchase(Pilot,*Hull,DockedHullStock(Design,false),UTF8_TO_TCHAR(Craft->GetRegion()->GetName()),FGuid::NewGuid(),Reason))return false;
+    if(Offer.IsSet())return Base->GetHangar() && CarrierFighterSalesAI::Purchase(Pilot,*Hull,*Base->GetHangar(),Offer.GetValue(),DockedHullStock(Design,true),OwnedHullLocation::Dock(*Craft),FGuid::NewGuid(),[P](){return P->SaveActivePlayerProgress();},Reason);
+    if(!ShipyardAI::Purchase(Pilot,*Hull,DockedHullStock(Design,false),OwnedHullLocation::Dock(*Craft),FGuid::NewGuid(),Reason))return false;
     if(!P->SaveActivePlayerProgress()){Pilot=Before;Reason=INVTEXT("Could not save the purchase. Hull stock and credits restored.");return false;}return true;
 }
 bool UShipInsuranceSubsystem::PrepareCarrierFighterSales(FText& Why)

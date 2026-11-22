@@ -48,6 +48,12 @@ TSharedRef<SWidget> UMissionsDlg::RebuildWidget()
                 [SNew(STextBlock).Text(Brief).Font(MissionUIStyle::GetRowFont(13)).AutoWrapText(true)]]
             + SVerticalBox::Slot().FillHeight(Supplement.IsValid() ? .65f : 0.f)
             [Supplement.IsValid() ? Supplement.ToSharedRef() : SNullWidget::NullWidget]]
+        + SVerticalBox::Slot().AutoHeight().Padding(0, 10, 0, 0)
+        [SNew(STextBlock)
+            .Text_Lambda([this]() { return LaunchFeedback; })
+            .Visibility_Lambda([this]() { return LaunchFeedback.IsEmpty() ? EVisibility::Collapsed : EVisibility::Visible; })
+            .Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true)
+            .ColorAndOpacity(FLinearColor(.4f, .85f, .95f))]
         + SVerticalBox::Slot().AutoHeight().HAlign(HAlign_Right).Padding(0, 10, 0, 0)
         [
             SNew(SHorizontalBox)

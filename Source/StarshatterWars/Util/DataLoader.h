@@ -56,6 +56,7 @@ public:
     int         ListFiles(const char* filter, List<Text>& list, bool recurse = false);
 
     int         LoadBuffer(const char* name, BYTE*& buf, bool null_terminate = false, bool optional = false);
+    int LoadHUDTexture(const char* name, Bitmap& bitmap, int type = 0);
     int         LoadGameBitmap(const char* name, Bitmap& bmp, int type = 0, bool optional = false);
     int         LoadTexture(const char* name, Bitmap*& bmp, int type = 0, bool preload_cache = false, bool optional = false);
     int         LoadSound(const char* fname, USound*& snd, DWORD flags = 0, bool optional = false);

@@ -15,6 +15,7 @@
 */
 
 #include "Terrain.h"
+#include "JanekSurfaceGrade.h"
 #include "WorldScapeRoot.h"
 #include "TerrainApron.h"
 #include "TerrainClouds.h"
@@ -643,6 +644,11 @@ Terrain::Height(double x, double y) const
         };
         h = BlendGrid(JanekSurroundingHeights, 1500.0, 24000.0, h);
         h = BlendGrid(LakesideHeights, 250.0, 8000.0, h);
+    }
+    if (region && FCStringAnsi::Stricmp(region->GetName(), "Janek Station") == 0)
+    {
+        const FVector Station = TerrainRegion::JanekStationLocalPosition();
+        h = JanekSurfaceGrade::Apply(h,x-Station.X,y-Station.Z);
     }
 	return h;
 }

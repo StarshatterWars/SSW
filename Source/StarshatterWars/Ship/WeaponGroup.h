@@ -68,9 +68,9 @@ public:
 	// operations:
 	bool              GetTrigger()               const { return trigger; }
 	void              SetTrigger(bool t = true) { trigger = t; }
-	int               Ammo()                     const { return ammo; }
-	float             Mass()                     const { return mass; }
-	float             Resistance()               const { return resist; }
+	int               Ammo()                     const { EnsureStores(); return ammo; }
+	float             Mass()                     const { EnsureStores(); return mass; }
+	float             Resistance()               const { EnsureStores(); return resist; }
 	void              CheckAmmo();
 
 	void              SetTarget(SimObject* t, SimSystem* sub = 0);
@@ -90,6 +90,17 @@ public:
 
 	void              SetPowerOn();
 	void              SetPowerOff();
+
+#if WITH_DEV_AUTOMATION_TESTS
+    uint32 GetStoresRebuildCount() const {return StoresRebuildCount;}
+#endif
+private:
+    void InvalidateStores(){bStoresDirty=true;}
+    void EnsureStores() const {if(bStoresDirty)const_cast<WeaponGroup*>(this)->CheckAmmo();}
+    bool bStoresDirty=true;
+#if WITH_DEV_AUTOMATION_TESTS
+    uint32 StoresRebuildCount=0;
+#endif
 
 protected:
 	// Displayable name:

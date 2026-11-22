@@ -31,9 +31,9 @@ public:
 	virtual void   AddController(MotionController* c);
 	virtual void   MapKeys(KeyMapEntry* mapping, int nkeys) override;
 
-	// NOTE: base GetSwapYawRoll() is non-const, but original MultiController exposed const.
+	// Read-only access shares the base controller virtual signature.
 	// We keep the original signature here (const) without "override".
-	virtual int    GetSwapYawRoll() const;
+	int GetSwapYawRoll() const override;
 	virtual void   SwapYawRoll(int swap) override;
 
 	// sample the physical device:

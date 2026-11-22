@@ -1,4 +1,6 @@
 #include "SSWDesignIngestionCommandlet.h"
+#include "GalaxyJsonCatalog.h"
+#include "JsonObjectConverter.h"
 #include "OOBJsonCatalog.h"
 #include "NativeSkinDefinition.h"
 
@@ -9,6 +11,12 @@
 #include "ShipDesignRegistry.h"
 #include "CargoCatalogSubsystem.h"
 #include "Engine/GameInstance.h"
+#include "Engine/Engine.h"
+#include "Engine/World.h"
+#include "Misc/ScopeExit.h"
+#include "Dom/JsonObject.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 #include "Misc/PackageName.h"
 #include "Misc/Parse.h"
 #include "Misc/FileHelper.h"
@@ -261,6 +269,68 @@ bool ExportVerifiedShipCatalog(UDataTable& Legacy)
     return true;
 }
 
+bool MeasureShipHullBounds()
+{
+    const FString Path=FPaths::ProjectContentDir()/TEXT("GameData/Ships/ships.json");
+    FString Source;
+    TArray<TSharedPtr<FJsonValue>> Objects;
+    if(!FFileHelper::LoadFileToString(Source,*Path) || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Source),Objects)) return false;
+    auto* Table=NewObject<UDataTable>();
+    if(!UStarshatterShipDesignSubsystem::ImportJsonCatalog(*Table,Path)) return false;
+    const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
+    auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    if(!World || !GEngine) return false;
+    GEngine->CreateNewWorldContext(World->WorldType).SetCurrentWorld(World);
+    ON_SCOPE_EXIT { GEngine->DestroyWorldContext(World); World->DestroyWorld(false); };
+    TArray<TSharedPtr<FJsonValue>> Report;
+    int32 Measured=0,Unmodeled=0;
+    for(const auto& Value:Objects)
+    {
+        const auto Object=Value->AsObject();
+        const FString Key=Object->GetStringField(TEXT("Row"));
+        auto* Row=Table->FindRow<FShipDesign>(FName(*Key),TEXT("Hull measurement"),false);
+        if(!Row) return false;
+        const auto Record=MakeShared<FJsonObject>(); Record->SetStringField(TEXT("design"),Key);
+        auto* Class=ShipVisualCatalog::Resolve(Key,Row->Model);
+        auto* Actor=Class?World->SpawnActor<AShipActor>(Class):nullptr;
+        if(Actor && (Key.Equals(TEXT("Asteroid Base")) || Key.Equals(TEXT("Mining Station")))) Actor->SetActorScale3D(FVector(Row->Scale));
+        FAssetCompilingManager::Get().FinishAllCompilation();
+        if(!Actor || !Actor->HullMesh || !Actor->HullMesh->GetStaticMesh())
+        {
+            Record->SetStringField(TEXT("status"),TEXT("No authored hull mesh; no measurement invented"));
+            Record->SetStringField(TEXT("model"),Row->Model); ++Unmodeled;
+            Row->CollisionRadius=0; Object->SetNumberField(TEXT("CollisionRadius"),0);
+        }
+        else
+        {
+            const FTransform FlightFrame(Actor->GetActorQuat(),Actor->GetActorLocation(),FVector::OneVector);
+            const FTransform HullFrame=Actor->HullMesh->GetComponentTransform().GetRelativeTransform(FlightFrame);
+            const auto Bounds=Actor->HullMesh->CalcBounds(HullFrame);
+            const double Radius=Bounds.Origin.Size()+Bounds.SphereRadius;
+            if(!FMath::IsFinite(Radius) || Radius<=0) return false;
+            Row->CollisionRadius=static_cast<float>(Radius); Object->SetNumberField(TEXT("CollisionRadius"),Row->CollisionRadius);
+            Record->SetStringField(TEXT("status"),TEXT("Measured"));
+            Record->SetStringField(TEXT("class"),Class->GetPathName());
+            Record->SetStringField(TEXT("mesh"),Actor->HullMesh->GetStaticMesh()->GetPathName());
+            Record->SetNumberField(TEXT("radiusMetres"),Row->CollisionRadius);
+            Record->SetStringField(TEXT("center"),Bounds.Origin.ToString());
+            Record->SetStringField(TEXT("extent"),Bounds.BoxExtent.ToString()); ++Measured;
+        }
+        Report.Add(MakeShared<FJsonValueObject>(Record));
+        if(Actor) Actor->Destroy();
+    }
+    FString ReportJson,Updated;
+    const FString ReportPath=FPaths::ProjectSavedDir()/TEXT("Analysis/Phase5MeasuredHullBounds.json");
+    if(!FJsonSerializer::Serialize(Report,TJsonWriterFactory<>::Create(&ReportJson)) ||
+       !FFileHelper::SaveStringToFile(ReportJson,*ReportPath,FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM) ||
+       !FJsonSerializer::Serialize(Objects,TJsonWriterFactory<>::Create(&Updated))) return false;
+    if(!FFileHelper::SaveStringToFile(Source,*(FPaths::ProjectSavedDir()/TEXT("Analysis/Phase5PreMeasurementShips.json")),FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM) ||
+       !FFileHelper::SaveStringToFile(Updated,*Path,FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM)) return false;
+    if(!SaveOutputTable(*Table,TEXT("DT_ShipDesign"),false)) return false;
+    UE_LOG(LogTemp,Display,TEXT("[HullMeasurement] %d measured, %d without authored mesh; %d total. Report: %s"),Measured,Unmodeled,Objects.Num(),*ReportPath);
+    return true;
+}
+
 bool WriteShipAndWeaponJsonTables()
 {
     auto* Ships = NewObject<UDataTable>();
@@ -383,6 +453,7 @@ USSWDesignIngestionCommandlet::USSWDesignIngestionCommandlet()
 int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
 {
 #if WITH_EDITOR
+    if(FParse::Param(*Params,TEXT("MeasureShipHullBounds"))) return MeasureShipHullBounds()?0:1;
     if(FParse::Param(*Params,TEXT("WriteShipJsonTable")))
     {
         auto* Table=NewObject<UDataTable>();
@@ -539,6 +610,38 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
         return SaveOutputTable(*Data->CampaignDataTable,TEXT("DT_Campaign"),false) &&
             SaveOutputTable(*Data->CampaignActionDataTable,TEXT("DT_CampaignAction"),false) &&
             SaveOutputTable(*Data->ZonesDataTable,TEXT("DT_CampaignZone"),false)?0:35;
+    }
+    if(FParse::Param(*Params,TEXT("ConvertCampaignHeadersJson")))
+    {
+        auto* Context=NewObject<USSWGameInstance>();auto* Data=NewObject<UStarshatterGameDataSubsystem>(Context);
+        Data->CampaignDataTable=NewObject<UDataTable>(Context);Data->CampaignDataTable->RowStruct=FS_Campaign::StaticStruct();
+        Data->CampaignActionDataTable=NewObject<UDataTable>(Context);Data->CampaignActionDataTable->RowStruct=FS_CampaignAction::StaticStruct();
+        Data->ZonesDataTable=NewObject<UDataTable>(Context);Data->ZonesDataTable->RowStruct=FS_CampaignZone::StaticStruct();
+        for(int32 I=1;I<=5;++I)
+        {
+            const FString Directory=FPaths::ProjectContentDir()/FString::Printf(TEXT("GameData/Campaigns/%02d"),I);
+            const auto File=StringCast<ANSICHAR>(*(Directory/TEXT("campaign.def")));
+            Data->LoadCampaignData(File.Get(),true,false);
+            const FS_Campaign* Source=nullptr;
+            for(const auto& Pair:Data->CampaignDataTable->GetRowMap())if(reinterpret_cast<const FS_Campaign*>(Pair.Value)->Index==I-1)Source=reinterpret_cast<const FS_Campaign*>(Pair.Value);
+            if(!Source)return 1;
+            FS_Campaign Header=*Source;
+            Header.Action.Reset();Header.Zone.Reset();Header.MissionList.Reset();Header.TemplateList.Reset();Header.Missions.Reset();Header.StoryMissions.Reset();Header.TemplateMissions.Reset();Header.ScriptedMissions.Reset();Header.ActionSize=0;
+            FString Json;
+            if(!FJsonObjectConverter::UStructToJsonObjectString(Header,Json) || !FFileHelper::SaveStringToFile(Json,*(Directory/TEXT("campaign.json")),FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))return 1;
+        }
+        return 0;
+    }
+    if (FParse::Param(*Params,TEXT("ConvertCareerEntryJson")))
+    {
+        auto* Data=NewObject<UStarshatterGameDataSubsystem>(NewObject<USSWGameInstance>());
+        for(const TCHAR* Relative:{TEXT("GameData/Campaigns/01/Scenes/FreeFlight.def"),TEXT("GameData/Tests/JanekTest.def")})
+        {
+            const FString Path=FPaths::ProjectContentDir()/Relative;FS_CampaignMission Row;FString Json;
+            if(!Data->ReadLooseMission(Path,Row,false) || !FJsonObjectConverter::UStructToJsonObjectString(Row,Json) ||
+                !FFileHelper::SaveStringToFile(Json,*FPaths::ChangeExtension(Path,TEXT("json")),FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))return 1;
+        }
+        return 0;
     }
     if (FParse::Param(*Params, TEXT("ConvertMissionJson")))
     {
@@ -726,6 +829,21 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
             SaveOutputTable(*Table, TEXT("DT_ProductionRecipes"), false) ? 0 : 1;
     }
 
+    if(FParse::Param(*Params,TEXT("ExportGalaxyJson")))
+    {
+        auto* Context=NewObject<USSWGameInstance>();
+        auto* Environment=NewObject<UStarshatterEnvironmentSubsystem>(Context);Environment->SSWInstance=Context;
+        if (!Environment->LoadGalaxyMap()) return 1;
+        TArray<FRegion> Regions;
+        if(!Environment->RegionsDataTable)return 1;
+        for(const FName Key:Environment->RegionsDataTable->GetRowNames())
+            if(const auto* Row=Environment->RegionsDataTable->FindRow<FRegion>(Key,TEXT("Galaxy export")))Regions.Add(*Row);
+        FString Error;const FString Path=FPaths::ProjectContentDir()/TEXT("GameData/Galaxy/galaxy.json");
+        if(!GalaxyJsonCatalog::Save(Path,Environment->GalaxyDataArray,Regions,Error))
+        {UE_LOG(LogTemp,Error,TEXT("%s"),*Error);return 1;}
+        UE_LOG(LogTemp,Display,TEXT("Exported validated galaxy JSON: %d systems, %d regions"),Environment->GalaxyDataArray.Num(),Regions.Num());return 0;
+    }
+
     if (FParse::Param(*Params, TEXT("WriteJanusProduction")))
     {
         auto* Table = NewObject<UDataTable>();
@@ -742,7 +860,7 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
         Environment->GalaxyDataTable->RowStruct = FS_Galaxy::StaticStruct();
         Environment->RegionsDataTable = NewObject<UDataTable>(Context);
         Environment->RegionsDataTable->RowStruct = FRegion::StaticStruct();
-        Environment->LoadGalaxyMap();
+        if (!Environment->LoadGalaxyMap()) return 1;
         auto* LiveGalaxy = LoadObject<UDataTable>(nullptr, TEXT("/Game/Game/DT_GalaxyMap.DT_GalaxyMap"));
         if (!LiveGalaxy || LiveGalaxy->GetRowStruct() != FS_Galaxy::StaticStruct()) return 2;
         auto* Updated = DuplicateObject<UDataTable>(LiveGalaxy, GetTransientPackage());
@@ -779,7 +897,7 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
         Environment->GalaxyDataTable->RowStruct = FS_Galaxy::StaticStruct();
         Environment->RegionsDataTable = NewObject<UDataTable>(Context);
         Environment->RegionsDataTable->RowStruct = FRegion::StaticStruct();
-        Environment->LoadGalaxyMap();
+        if (!Environment->LoadGalaxyMap()) return 1;
         const auto SaveWorlds = [](const auto& Authored, const TCHAR* Name, const auto& RowType)
         {
             using FBody = typename TDecay<decltype(RowType)>::Type;
@@ -895,7 +1013,7 @@ int32 USSWDesignIngestionCommandlet::Main(const FString& Params)
     Environment->GalaxyDataTable = Stage(TEXT("DT_GalaxyMap"));
     Environment->RegionsDataTable = Stage(TEXT("DT_Region"));
     if (!Environment->GalaxyDataTable || !Environment->RegionsDataTable) return 1;
-    Environment->LoadGalaxyMap();
+    if (!Environment->LoadGalaxyMap()) return 1;
 
     if (Campaign->CampaignDataTable->GetRowMap().Num() != 5)
     {

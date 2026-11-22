@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "ShipWeaponMountComponent.h"
 #include "Engine/World.h"
 #include "BerentsShipActor.h"
@@ -13,6 +14,7 @@ bool FAuthoredMountAnglesTest::RunTest(const FString& Parameters)
 {
     const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     UWorld* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     { auto* Actor=World->SpawnActor<ABerentsShipActor>();
       TestTrue(TEXT("Berents station 2 uses def radians as degrees"), Actor->AuthoredWeaponPointComponents[1]->GetRelativeRotation().Equals(FRotator(0.000000000,-8.594366927,0),0.001));
       TestTrue(TEXT("Berents station 3 uses def radians as degrees"), Actor->AuthoredWeaponPointComponents[2]->GetRelativeRotation().Equals(FRotator(0.000000000,8.594366927,0),0.001));

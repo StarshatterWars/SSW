@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "QuantumTravel.h"
 #include "NiagaraComponent.h"
 #include "QuantumEffectsActor.h"
@@ -148,6 +149,7 @@ bool FFarcasterEffectsTest::RunTest(const FString& Parameters)
     };
 
     UWorld* World = UWorld::CreateWorld(EWorldType::Game, false);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     ON_SCOPE_EXIT { World->DestroyWorld(false); };
     FShipDesign Row;
     Row.ShipName = TEXT("FarcasterEffectFixture");

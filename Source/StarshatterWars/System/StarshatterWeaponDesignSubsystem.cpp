@@ -15,6 +15,7 @@
 */
 
 #include "StarshatterWeaponDesignSubsystem.h"
+#include "JsonRecordCatalog.h"
 
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
@@ -100,23 +101,7 @@ void UStarshatterWeaponDesignSubsystem::Initialize(FSubsystemCollectionBase& Col
     Super::Initialize(Collection);
     UE_LOG(LogTemp, Log, TEXT("[WEAPONDESIGN] Initialize()"));
 
-    UStarshatterAssetRegistrySubsystem* Assets =
-        GetGameInstance()->GetSubsystem<UStarshatterAssetRegistrySubsystem>();
-
-    if (!Assets)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[WEAPONDESIGN] Asset Registry missing"));
-        return;
-    }
-
-    WeaponDesignDataTable =
-        Assets->GetDataTable(TEXT("Data.WeaponDesignTable"), true);
-
-    if (!WeaponDesignDataTable)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[WEAPONDESIGN] WeaponDesignTable not found"));
-        return;
-    }
+    // Runtime JSON catalogs do not resolve or require the editor DataTable asset.
 }
 
 void UStarshatterWeaponDesignSubsystem::Deinitialize()
@@ -134,21 +119,38 @@ void UStarshatterWeaponDesignSubsystem::LoadAll(bool bFull)
 
 void UStarshatterWeaponDesignSubsystem::LoadWeaponDesigns()
 {
-    const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Weapons/wep.json");
-    auto* Imported = NewObject<UDataTable>(this);
-    if (ImportJsonCatalog(*Imported, Path))
+    FString Error;
+    if(!ReloadJsonCatalog(FPaths::ProjectContentDir()/TEXT("GameData/Weapons/wep.json"),Error))
+        UE_LOG(LogTemp,Error,TEXT("[WEAPON] %s; existing native catalog retained"),*Error);
+}
+
+bool UStarshatterWeaponDesignSubsystem::ReadJsonCatalog(const FString& Path,TMap<FName,FWeaponDesign>& Out,FString& Error)
+{
+    TMap<FName,FWeaponDesign> Candidate;
+    if(!SSWJsonRecords::Load(Path,Candidate,Error))return false;
+    for(const auto& Pair:Candidate)
     {
-        const bool bUpdateTable = WeaponDesignDataTable &&
-            WeaponDesignDataTable->GetRowStruct() == FWeaponDesign::StaticStruct();
-        if (bUpdateTable)
-            WeaponDesignDataTable->CreateTableFromOtherTable(Imported);
-        else
-            WeaponDesignDataTable = Imported;
-        UE_LOG(LogTemp, Display, TEXT("[WEAPON] Imported %d designs from %s"), Imported->GetRowMap().Num(), *Path);
+        const auto& W=Pair.Value;
+        if(!FMath::IsFinite(W.Damage) || W.Damage < -1){Error=TEXT("Invalid weapon damage: ")+Pair.Key.ToString();return false;}
+        for(double Value:{double(W.Charge),double(W.RefireDelay),double(W.Life),double(W.MaxRange),double(W.MinRange),double(W.Length),double(W.Width)})
+            if(!FMath::IsFinite(Value) || Value<0){Error=TEXT("Invalid weapon numeric field: ")+Pair.Key.ToString();return false;}
     }
-    else
-        UE_LOG(LogTemp, Warning, TEXT("[WEAPON] Using the existing data table because %s could not be loaded"), *Path);
-    ReadWeaponDesignData();
+    TMap<FName,FWeaponDesign> Named;
+    for(const auto& Pair:Candidate)Named.Add(FName(*Pair.Value.Name.TrimStartAndEnd()),Pair.Value);
+    Out=MoveTemp(Named);Error.Reset();return true;
+}
+
+bool UStarshatterWeaponDesignSubsystem::ReloadJsonCatalog(const FString& Path,FString& Error)
+{
+    TMap<FName,FWeaponDesign> Candidate;
+    if(!ReadJsonCatalog(Path,Candidate,Error))return false;
+    DesignsByName=MoveTemp(Candidate);WeaponDesignDataTable=nullptr;
+    WeaponDesignRegistry::Clear();
+    TArray<FName> Keys;DesignsByName.GetKeys(Keys);Keys.Sort(FNameLexicalLess());
+    for(FName Key:Keys)WeaponDesignRegistry::RegisterDesign(Key,DesignsByName[Key]);
+    EnsureLaserWeapon();
+    UE_LOG(LogTemp,Display,TEXT("[WEAPON] Loaded %d native designs from JSON; no runtime DataTable"),DesignsByName.Num());
+    return true;
 }
 
 bool UStarshatterWeaponDesignSubsystem::ImportJsonCatalog(UDataTable& Table, const FString& Path)
@@ -633,7 +635,7 @@ void UStarshatterWeaponDesignSubsystem::LoadWeaponDesign(const char* Filename)
                 }
             }
 
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, Log,
                 TEXT("[WEAPON] Registered row='%s' name='%s' group='%s' carry=%f registry=%d"),
                 *RowName.ToString(),
                 *W.Name,

@@ -203,7 +203,7 @@ void APlanetActor::SetPlanetRadius(float InRadiusUnits)
      */
     PlanetMesh->SetRelativeScale3D(FVector(Scale));
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Display,
         TEXT("[PlanetActor] SetPlanetRadius: Actor=%s RadiusUnits=%.2f MeshScale=%.3f UseInternalBPMaterials=%d"),
         *GetName(),
         InRadiusUnits,

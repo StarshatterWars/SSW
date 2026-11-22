@@ -22,15 +22,16 @@
 // +----------------------------------------------------------------------+
 
 WeaponGroup::WeaponGroup(const char* n)
-	: selected(0)
-	, trigger(false)
-	, orders(WeaponsOrders::MANUAL)
-	, control(WeaponsControl::SINGLE_FIRE)
-	, sweep(WeaponsSweep::SWEEP_TIGHT)
-	, mass(0.0f)
-	, resist(0.0f)
-	, name(n)
-	, ammo(0)
+	: 
+    name(n),
+    selected(0),
+    trigger(false),
+    ammo(0),
+    orders(WeaponsOrders::MANUAL),
+    control(WeaponsControl::SINGLE_FIRE),
+    sweep(WeaponsSweep::SWEEP_TIGHT),
+    mass(0.0f),
+    resist(0.0f)
 {
 }
 
@@ -107,7 +108,12 @@ bool WeaponGroup::IsBeam() const
 
 void WeaponGroup::AddWeapon(Weapon* w)
 {
-	if (w && !weapons.contains(w)) weapons.append(w);
+    if(w && !weapons.contains(w))
+    {
+        weapons.append(w);
+        w->OnStoresChanged.AddRaw(this,&WeaponGroup::InvalidateStores);
+        InvalidateStores();
+    }
 }
 
 int WeaponGroup::NumWeapons() const
@@ -166,24 +172,18 @@ bool WeaponGroup::CanTarget(uint32 tgt_class) const
 
 void WeaponGroup::ExecFrame(double seconds)
 {
-	ammo = 0;
-	mass = 0.0f;
-	resist = 0.0f;
-
-	ListIter<Weapon> iter = weapons;
-	while (++iter) {
-		Weapon* w = iter.value();
-        if (!w) continue;
-		w->ExecFrame(seconds);
-
-		ammo += w->Ammo();
-		mass += w->Mass();
-		resist += w->Resistance();
-	}
+    for(ListIter<Weapon> Weapons=weapons;++Weapons;)
+        if(auto* Weapon=Weapons.value()) Weapon->ExecFrame(seconds);
+    // Totals are refreshed on demand after an ammo/loadout event, not per frame.
 }
 
 void WeaponGroup::CheckAmmo()
 {
+    bStoresDirty=false;
+#if WITH_DEV_AUTOMATION_TESTS
+    ++StoresRebuildCount;
+#endif
+
 	ammo = 0;
 	mass = 0.0f;
 	resist = 0.0f;

@@ -21,6 +21,7 @@
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Misc/Paths.h"
+#include "Misc/ConfigCacheIni.h"
 #include "Misc/FileHelper.h"
 #include "HAL/PlatformFilemanager.h"
 
@@ -287,6 +288,9 @@ void UStarshatterVideoSubsystem::ApplySettingsToRuntime()
     if(GEngine) GEngine->DisplayGamma=FMath::Clamp(2.2f*CurrentConfig.GammaLevel/128.f,0.5f,4.f);
     auto SetCVar=[](const TCHAR* Name,int32 Value){if(auto* C=IConsoleManager::Get().FindConsoleVariable(Name))C->Set(Value,ECVF_SetByGameSetting);};
     SetCVar(TEXT("r.LensFlareQuality"),CurrentConfig.bLensFlare?2:0);
+    int32 AAMethod=0;
+    if(GConfig && GConfig->GetInt(TEXT("Starshatter.Video"),TEXT("AntiAliasingMethod"),AAMethod,GGameUserSettingsIni) &&
+        (AAMethod==0 || AAMethod==1 || AAMethod==2 || AAMethod==4))SetCVar(TEXT("r.AntiAliasingMethod"),AAMethod);
 
     if (UWorld* World = GetGameInstance()->GetWorld())
     {

@@ -29,13 +29,13 @@
 // +--------------------------------------------------------------------+
 
 Bolt::Bolt(double len, double wid, Bitmap* tex, int share)
-    : vset(4),
-    poly(0),
-    texture(tex),
-    shared(share),
-    length(len),
+    : length(len),
     width(wid),
     shade(1.0),
+    poly(0),
+    vset(4),
+    texture(tex),
+    shared(share),
     vpn(FVector(0.0f, 1.0f, 0.0f)),
     origin(FVector::ZeroVector)
 {

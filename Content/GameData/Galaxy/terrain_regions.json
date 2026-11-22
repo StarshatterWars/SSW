@@ -1,0 +1,463 @@
+{
+  "schemaVersion": 1,
+  "regions": [
+    {
+      "name": "Vestapol",
+      "radius": 480000.0,
+      "grid": 20000.0,
+      "patch": "Borova/Vestapol/terrain.pcx",
+      "patch_texture": "Borova/Vestapol/terrain_texture.pcx",
+      "apron": "Borova/Vestapol/terrain_apron.pcx",
+      "apron_texture": "Borova/Vestapol/terrain_apron_tex.pcx",
+      "sky_color": "Borova/Vestapol/terrain_sky.pcx",
+      "clouds_high": "Janus/Janek/terrain_cloud0.pcx",
+      "clouds_low": "Janus/Janek/terrain_cloud1.pcx",
+      "shades_low": "Janus/Janek/terrain_cloud1a.pcx",
+      "clouds_alt_high": 17500.0,
+      "clouds_alt_low": 11200.0,
+      "scale": 1600.0,
+      "mtnscale": 50.0,
+      "haze_fade": 0.3,
+      "fog_density": 0.6,
+      "fog_scale": 5.6,
+      "weather_period": 655555.0,
+      "weather_high_clouds": 20.0,
+      "weather_moderate_clouds": 40.0,
+      "weather_overcast": 10.0,
+      "weather_fog": 5.0,
+      "weather_storm": 5.0,
+      "system": "Borova",
+      "parent": "Borova",
+      "layers": [
+        {
+          "tile": "Borova/Vestapol/Layer0.pcx",
+          "height": 0.0,
+          "detail": "Borova/Vestapol/noise0.pcx"
+        },
+        {
+          "tile": "Borova/Vestapol/Layer1.pcx",
+          "height": 700.0,
+          "detail": "Borova/Vestapol/noise1.pcx"
+        },
+        {
+          "tile": "Borova/Vestapol/Layer2.pcx",
+          "height": 2000.0,
+          "detail": "Borova/Vestapol/noise1.pcx"
+        }
+      ],
+      "presentation": {
+        "surfaceMaterial": "/Game/Maps/Ground/M_JanekGround.M_JanekGround",
+        "sunIntensityLux": 4.0,
+        "biomeProfile": "EarthLike",
+        "weatherProfile": "Temperate"
+      }
+    },
+    {
+      "name": "Tantalus",
+      "radius": 480000.0,
+      "grid": 20000.0,
+      "patch": "Haiche/Tantalus/terrain.pcx",
+      "patch_texture": "Haiche/Tantalus/terrain_big.pcx",
+      "apron": "Haiche/Tantalus/terrain_apron.pcx",
+      "apron_texture": "Haiche/Tantalus/terrain_apron_tex.pcx",
+      "sky_color": "Haiche/Tantalus/terrain_sky.pcx",
+      "clouds_high": "Haiche/Tantalus/terrain_cloud0.pcx",
+      "clouds_low": "Haiche/Tantalus/terrain_cloud1.pcx",
+      "shades_low": "Haiche/Tantalus/terrain_cloud1a.pcx",
+      "clouds_alt_high": 16900.0,
+      "clouds_alt_low": 12100.0,
+      "scale": 1500.0,
+      "mtnscale": 50.0,
+      "haze_fade": 0.5,
+      "fog_density": 0.5,
+      "fog_scale": 5.0,
+      "weather_period": 59876.0,
+      "weather_high_clouds": 25.0,
+      "weather_moderate_clouds": 40.0,
+      "weather_overcast": 0.0,
+      "weather_fog": 0.0,
+      "weather_storm": 5.0,
+      "system": "Haiche",
+      "parent": "Haiche",
+      "layers": [
+        {
+          "tile": "Haiche/Tantalus/Layer0.pcx",
+          "height": 0.0,
+          "detail": "Haiche/Tantalus/noise0.pcx"
+        },
+        {
+          "tile": "Haiche/Tantalus/Layer1.pcx",
+          "height": 3300.0,
+          "detail": "Haiche/Tantalus/noise1.pcx"
+        },
+        {
+          "tile": "Haiche/Tantalus/Layer2.pcx",
+          "height": 9500.0,
+          "detail": "Haiche/Tantalus/noise1.pcx"
+        }
+      ],
+      "presentation": {
+        "surfaceMaterial": "/Game/Maps/Ground/M_JanekGround.M_JanekGround",
+        "sunIntensityLux": 4.0,
+        "biomeProfile": "EarthLike",
+        "weatherProfile": "Temperate"
+      }
+    },
+    {
+      "name": "Tiger Bay",
+      "radius": 480000.0,
+      "grid": 20000.0,
+      "patch": "Isham/Garden/terrain.pcx",
+      "patch_texture": "Isham/Garden/terrain_big.pcx",
+      "apron": "Isham/Garden/terrain_apron.pcx",
+      "apron_texture": "Isham/Garden/terrain_apron_tex.pcx",
+      "sky_color": "Isham/Garden/terrain_sky.pcx",
+      "water_texture": "Isham/Garden/Water.pcx",
+      "clouds_high": "Isham/Garden/terrain_cloud0.pcx",
+      "clouds_low": "Isham/Garden/terrain_cloud1.pcx",
+      "shades_low": "Isham/Garden/terrain_cloud1a.pcx",
+      "clouds_alt_high": 17500.0,
+      "clouds_alt_low": 12100.0,
+      "scale": 1500.0,
+      "mtnscale": 65.0,
+      "haze_fade": 0.4,
+      "fog_density": 0.4,
+      "fog_scale": 5.0,
+      "weather_period": 659876.0,
+      "weather_high_clouds": 25.0,
+      "weather_moderate_clouds": 40.0,
+      "weather_overcast": 0.0,
+      "weather_fog": 0.0,
+      "weather_storm": 0.0,
+      "system": "Isham",
+      "parent": "Garden",
+      "layers": [
+        {
+          "tile": "Isham/Garden/Sand.pcx",
+          "height": 0.0,
+          "detail": "Haiche/Tantalus/noise0.pcx"
+        },
+        {
+          "tile": "Isham/Garden/Forest.pcx",
+          "height": 3000.0,
+          "detail": "Isham/Garden/noise1.pcx"
+        },
+        {
+          "tile": "Isham/Garden/Rock.pcx",
+          "height": 9500.0,
+          "detail": "Isham/Garden/noise1.pcx"
+        }
+      ],
+      "presentation": {
+        "surfaceMaterial": "/Game/Maps/Ground/M_JanekGround.M_JanekGround",
+        "sunIntensityLux": 4.0,
+        "biomeProfile": "EarthLike",
+        "weatherProfile": "Temperate"
+      }
+    },
+    {
+      "name": "Janek Station",
+      "radius": 480000.0,
+      "grid": 20000.0,
+      "patch": "Janus System/Janek/terrain.pcx",
+      "patch_texture": "Janus System/Janek/terrain_big+.pcx",
+      "apron": "Janus System/Janek/terrain_apron.pcx",
+      "apron_texture": "Janus System/Janek/terrain_apron_tex.pcx",
+      "sky_color": "Janus System/Janek/terrain_sky.pcx",
+      "clouds_high": "Janus System/Janek/terrain_cloud0.pcx",
+      "clouds_low": "Janus System/Janek/terrain_cloud1.pcx",
+      "shades_low": "Janus System/Janek/terrain_cloud1a.pcx",
+      "clouds_alt_high": 16500.0,
+      "clouds_alt_low": 10200.0,
+      "scale": 1500.0,
+      "mtnscale": 60.0,
+      "haze_fade": 0.4,
+      "fog_density": 0.4,
+      "fog_scale": 5.0,
+      "weather_period": 659876.0,
+      "weather_high_clouds": 25.0,
+      "weather_moderate_clouds": 40.0,
+      "weather_overcast": 0.0,
+      "weather_fog": 0.0,
+      "weather_storm": 0.0,
+      "system": "Janus",
+      "parent": "Janek",
+      "layers": [
+        {
+          "tile": "Janus System/Janek/Layer0.pcx",
+          "height": 0.0,
+          "detail": "Janus System/Janek/noise0.pcx"
+        },
+        {
+          "tile": "Janus System/Janek/Layer1.pcx",
+          "height": 2800.0,
+          "detail": "Janus System/Janek/noise1.pcx"
+        },
+        {
+          "tile": "Janus System/Janek/Layer2.pcx",
+          "height": 9800.0,
+          "detail": "Janus System/Janek/noise1.pcx"
+        }
+      ],
+      "presentation": {
+        "surfaceMaterial": "/Game/Maps/Ground/M_JanekGround.M_JanekGround",
+        "sunIntensityLux": 4.0,
+        "biomeProfile": "EarthLike",
+        "weatherProfile": "Temperate"
+      }
+    },
+    {
+      "name": "Lovo",
+      "radius": 480000.0,
+      "grid": 20000.0,
+      "patch": "Kolchev/Lovo/terrain.pcx",
+      "patch_texture": "Kolchev/Lovo/terrain_big.pcx",
+      "apron": "Kolchev/Lovo/terrain_apron.pcx",
+      "apron_texture": "Kolchev/Lovo/terrain_apron_tex.pcx",
+      "sky_color": "Kolchev/Lovo/terrain_sky.pcx",
+      "clouds_high": "Kolchev/Lovo/terrain_cloud0.pcx",
+      "clouds_low": "Kolchev/Lovo/terrain_cloud1.pcx",
+      "shades_low": "Kolchev/Lovo/terrain_cloud1a.pcx",
+      "clouds_alt_high": 18300.0,
+      "clouds_alt_low": 15100.0,
+      "scale": 1750.0,
+      "mtnscale": 75.0,
+      "haze_fade": 0.35,
+      "fog_density": 0.45,
+      "fog_scale": 4.5,
+      "weather_period": 49876.0,
+      "weather_high_clouds": 100.0,
+      "weather_moderate_clouds": 0.0,
+      "weather_overcast": 0.0,
+      "weather_fog": 0.0,
+      "weather_storm": 0.0,
+      "system": "Kolchev",
+      "parent": "Kolchev",
+      "layers": [
+        {
+          "tile": "Kolchev/Lovo/Layer0.pcx",
+          "height": 0.0,
+          "detail": "Kolchev/Lovo/noise0.pcx"
+        },
+        {
+          "tile": "Kolchev/Lovo/Layer1.pcx",
+          "height": 4500.0,
+          "detail": "Kolchev/Lovo/noise0.pcx"
+        },
+        {
+          "tile": "Kolchev/Lovo/Layer2.pcx",
+          "height": 11500.0,
+          "detail": "Kolchev/Lovo/noise0.pcx"
+        }
+      ],
+      "presentation": {
+        "surfaceMaterial": "/Game/Maps/Ground/M_JanekGround.M_JanekGround",
+        "sunIntensityLux": 4.0,
+        "biomeProfile": "EarthLike",
+        "weatherProfile": "Temperate"
+      }
+    },
+    {
+      "name": "Tanis",
+      "radius": 480000.0,
+      "grid": 20000.0,
+      "patch": "Korius/Tanis/terrain.pcx",
+      "patch_texture": "Korius/Tanis/terrain_big.pcx",
+      "apron": "Korius/Tanis/terrain_apron.pcx",
+      "apron_texture": "Korius/Tanis/terrain_apron_tex.pcx",
+      "sky_color": "Korius/Tanis/terrain_sky.pcx",
+      "clouds_high": "Korius/Tanis/terrain_cloud0.pcx",
+      "clouds_low": "Korius/Tanis/terrain_cloud1.pcx",
+      "shades_low": "Korius/Tanis/terrain_cloud1a.pcx",
+      "clouds_alt_high": 16300.0,
+      "clouds_alt_low": 13100.0,
+      "scale": 1750.0,
+      "mtnscale": 55.0,
+      "haze_fade": 0.35,
+      "fog_density": 0.65,
+      "fog_scale": 5.0,
+      "weather_period": 49876.0,
+      "weather_high_clouds": 50.0,
+      "weather_moderate_clouds": 35.0,
+      "weather_overcast": 0.0,
+      "weather_fog": 0.0,
+      "weather_storm": 2.0,
+      "system": "Korius",
+      "parent": "Adantar",
+      "layers": [
+        {
+          "tile": "Korius/Tanis/Layer0.pcx",
+          "height": 0.0,
+          "detail": "Korius/Tanis/noise0.pcx"
+        },
+        {
+          "tile": "Korius/Tanis/Layer1.pcx",
+          "height": 3000.0,
+          "detail": "Radix/Canyon/noise1.pcx"
+        },
+        {
+          "tile": "Korius/Tanis/Layer2.pcx",
+          "height": 9000.0,
+          "detail": "Radix/Canyon/noise1.pcx"
+        }
+      ],
+      "presentation": {
+        "surfaceMaterial": "/Game/Maps/Ground/M_JanekGround.M_JanekGround",
+        "sunIntensityLux": 4.0,
+        "biomeProfile": "EarthLike",
+        "weatherProfile": "Temperate"
+      }
+    },
+    {
+      "name": "Shadow Canyon",
+      "radius": 480000.0,
+      "grid": 20000.0,
+      "patch": "Radix/Canyon/terrain.pcx",
+      "patch_texture": "Radix/Canyon/terrain_big.pcx",
+      "apron": "Radix/Canyon/terrain_apron.pcx",
+      "apron_texture": "Radix/Canyon/terrain_apron_tex.pcx",
+      "sky_color": "Radix/Canyon/terrain_sky.pcx",
+      "clouds_high": "Radix/Canyon/terrain_cloud0.pcx",
+      "clouds_low": "Radix/Canyon/terrain_cloud1.pcx",
+      "shades_low": "Radix/Canyon/terrain_cloud1a.pcx",
+      "clouds_alt_high": 16300.0,
+      "clouds_alt_low": 13100.0,
+      "scale": 1750.0,
+      "mtnscale": 80.0,
+      "haze_fade": 0.5,
+      "fog_density": 0.5,
+      "fog_scale": 5.0,
+      "weather_period": 59876.0,
+      "weather_high_clouds": 50.0,
+      "weather_moderate_clouds": 15.0,
+      "weather_overcast": 0.0,
+      "weather_fog": 0.0,
+      "weather_storm": 0.0,
+      "system": "Radix",
+      "parent": "Radix",
+      "layers": [
+        {
+          "tile": "Radix/Canyon/Layer0.pcx",
+          "height": 0.0,
+          "detail": "Radix/Canyon/noise0.pcx"
+        },
+        {
+          "tile": "Radix/Canyon/Layer1.pcx",
+          "height": 3000.0,
+          "detail": "Radix/Canyon/noise1.pcx"
+        },
+        {
+          "tile": "Radix/Canyon/Layer2.pcx",
+          "height": 9000.0,
+          "detail": "Radix/Canyon/noise1.pcx"
+        }
+      ],
+      "presentation": {
+        "surfaceMaterial": "/Game/Maps/Ground/M_JanekGround.M_JanekGround",
+        "sunIntensityLux": 4.0,
+        "biomeProfile": "EarthLike",
+        "weatherProfile": "Temperate"
+      }
+    },
+    {
+      "name": "Telmera",
+      "radius": 480000.0,
+      "grid": 20000.0,
+      "patch": "Solus/Telmera/terrain.pcx",
+      "patch_texture": "Solus/Telmera/terrain_big.pcx",
+      "apron": "Solus/Telmera/terrain_apron.pcx",
+      "apron_texture": "Solus/Telmera/terrain_apron_tex.pcx",
+      "sky_color": "Solus/Telmera/terrain_sky.pcx",
+      "detail_texture_0": "Solus/Telmera/noise0.pcx",
+      "clouds_high": "Solus/Telmera/terrain_cloud0.pcx",
+      "clouds_low": "Solus/Telmera/terrain_cloud1.pcx",
+      "shades_low": "Solus/Telmera/terrain_cloud1a.pcx",
+      "clouds_alt_high": 17500.0,
+      "clouds_alt_low": 12100.0,
+      "scale": 1500.0,
+      "mtnscale": 65.0,
+      "haze_fade": 0.4,
+      "fog_density": 0.4,
+      "fog_scale": 5.0,
+      "weather_period": 659876.0,
+      "weather_high_clouds": 25.0,
+      "weather_moderate_clouds": 75.0,
+      "weather_overcast": 0.0,
+      "weather_fog": 0.0,
+      "weather_storm": 0.0,
+      "system": "Solus",
+      "parent": "Solus",
+      "layers": [
+        {
+          "tile": "Solus/Telmera/Layer0.pcx",
+          "height": 0.0
+        },
+        {
+          "tile": "Solus/Telmera/Layer1.pcx",
+          "height": 3300.0
+        },
+        {
+          "tile": "Solus/Telmera/Layer2.pcx",
+          "height": 9500.0
+        }
+      ],
+      "presentation": {
+        "surfaceMaterial": "/Game/Maps/Ground/M_JanekGround.M_JanekGround",
+        "sunIntensityLux": 4.0,
+        "biomeProfile": "EarthLike",
+        "weatherProfile": "Temperate"
+      }
+    },
+    {
+      "name": "Hell's Kitchen",
+      "radius": 480000.0,
+      "grid": 20000.0,
+      "patch": "Trocanther/Hell/terrain.pcx",
+      "patch_texture": "Trocanther/Hell/terrain_big.pcx",
+      "apron": "Trocanther/Hell/terrain_apron.pcx",
+      "apron_texture": "Trocanther/Hell/terrain_apron_tex.pcx",
+      "sky_color": "Trocanther/Hell/terrain_sky.pcx",
+      "clouds_high": "Trocanther/Hell/terrain_cloud0.pcx",
+      "clouds_low": "Trocanther/Hell/terrain_cloud1.pcx",
+      "shades_low": "Trocanther/Hell/terrain_cloud1a.pcx",
+      "clouds_alt_high": 16300.0,
+      "clouds_alt_low": 13100.0,
+      "scale": 1750.0,
+      "mtnscale": 60.0,
+      "haze_fade": 0.5,
+      "fog_density": 0.5,
+      "fog_scale": 5.0,
+      "weather_period": 59876.0,
+      "weather_high_clouds": 0.0,
+      "weather_moderate_clouds": 0.0,
+      "weather_overcast": 0.0,
+      "weather_fog": 0.0,
+      "weather_storm": 100.0,
+      "system": "Trocanther",
+      "parent": "Volante",
+      "layers": [
+        {
+          "tile": "Trocanther/Hell/Layer0.pcx",
+          "height": 0.0,
+          "detail": "Radix/Canyon/noise0.pcx"
+        },
+        {
+          "tile": "Trocanther/Hell/Layer1.pcx",
+          "height": 3000.0,
+          "detail": "Radix/Canyon/noise1.pcx"
+        },
+        {
+          "tile": "Trocanther/Hell/Layer2.pcx",
+          "height": 9000.0,
+          "detail": "Radix/Canyon/noise1.pcx"
+        }
+      ],
+      "presentation": {
+        "surfaceMaterial": "/Game/Maps/Ground/M_JanekGround.M_JanekGround",
+        "sunIntensityLux": 4.0,
+        "biomeProfile": "EarthLike",
+        "weatherProfile": "Temperate"
+      }
+    }
+  ]
+}

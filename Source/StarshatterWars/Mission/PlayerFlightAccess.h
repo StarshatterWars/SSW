@@ -1,6 +1,6 @@
 #pragma once
-// Cadets fly assigned training sorties. Unassigned flight opens at Ensign.
+// Every departure requires an assigned sortie, including independent Free Flight.
 namespace PlayerFlightAccess
 {
-    inline bool CanLaunch(bool bAssignedMission,int32 Rank) { return bAssignedMission || Rank>=1; }
+    inline bool CanLaunch(bool bAssignedMission,int32 /*Rank*/) { return bAssignedMission; }
 }

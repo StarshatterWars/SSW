@@ -1,4 +1,6 @@
 #include "GalaxyTrafficSubsystem.h"
+#include "FractalVerseSubsystem.h"
+#include "Galaxy.h"
 #include "ProductionCatalog.h"
 #include "DynamicMissionAI.h"
 #include "AgentAI.h"
@@ -10,6 +12,9 @@
 #include "SSWRuntimeSubsystem.h"
 #include "OfflineCutsceneExport.h"
 #include "EconomyRuntime.h"
+#include "SimDataEvents.h"
+#include "ManufacturingAI.h"
+#include "Async/Async.h"
 #include "Sim.h"
 #include "Ship.h"
 #include "ShipDesign.h"
@@ -64,21 +69,55 @@ bool UGalaxyTrafficSubsystem::LoadEconomyCatalogs()
         if(Id.IsEmpty() || System.IsEmpty() || Region.IsEmpty() || Item.IsEmpty() || !FMath::IsFinite(Mine.Reserve) || Mine.Reserve<=0 || !FMath::IsFinite(Mine.Rate) || Mine.Rate<=0 || !FMath::IsFinite(Mine.Capacity) || Mine.Capacity<=0)return false;
         Mine.Id=FName(*Id);Mine.System=FName(*System);Mine.Region=FName(*Region);Mine.Item=DataTableUtils::MakeValidName(Item);NewMines.Add(Mine);}
     for(const auto& Pair:NewFacilities)if(!NewRecipes.Contains(Pair.Value.Recipe))return false;
-    Facilities=MoveTemp(NewFacilities);Recipes=MoveTemp(NewRecipes);Mines=MoveTemp(NewMines);
+    Facilities=MoveTemp(NewFacilities);Recipes=MoveTemp(NewRecipes);Mines=MoveTemp(NewMines);bCatalogsLoaded=true;
     UE_LOG(LogTemp,Display,TEXT("[Economy] Native catalogs: %d facilities, %d recipes, %d background mining crews. No level actors required."),Facilities.Num(),Recipes.Num(),Mines.Num());return true;
 }
 void UGalaxyTrafficSubsystem::TickEconomy(FEconomyState& State,double Seconds,int64 Now)
 {
+    auto* Catalog=GetGameInstance()->GetSubsystem<UCargoCatalogSubsystem>();
+    if(Catalog)FEconomyRuntime::InitializeMarkets(State,*Catalog);
     if(!bCatalogsLoaded || !FMath::IsFinite(Seconds) || Seconds<=0)return;
-    EconomyAccumulator+=Seconds;if(EconomyAccumulator<1)return;
-    const double Step=EconomyAccumulator;EconomyAccumulator=0;State.EconomyClockSeconds+=Step;
-    for(const auto& Mine:Mines)EconomyAI::AdvanceMine(State,Mine.Id,FEconomyRuntime::Warehouse(Mine.System.ToString(),Mine.Region.ToString(),TEXT("Ore")),Mine.System,Mine.Item,Mine.Reserve,Mine.Rate,Mine.Capacity,Step);
-    EconomyAI::AdvanceFacilities(State,Facilities,Recipes,Step);
-    if(auto* Catalog=GetGameInstance()->GetSubsystem<UCargoCatalogSubsystem>())
-    {FEconomyRuntime::InitializeMarkets(State,*Catalog);EconomyController.Advance(State,*Catalog,Step,Now);}
+    State.EconomyClockSeconds+=Seconds;const double NowClock=State.EconomyClockSeconds;
+    bool GroundChanged=BoundEconomy!=&State || GroundFactoryCount!=State.GroundFactories.Num();
+    if(!GroundChanged && bEconomyChanged)for(const auto& Pair:State.GroundFactories)if(!Facilities.Contains(Pair.Key)){GroundChanged=true;break;}
+    if(GroundChanged)
+    {
+        BoundEconomy=&State;GroundFactoryCount=State.GroundFactories.Num();SSWProductionCatalog::RestoreGround(State);
+        for(const auto& Pair:State.GroundFactories)
+        {FSSWProductionFacility Site;if(SSWProductionCatalog::ResolveGround(Pair.Value,Site))Facilities.Add(Pair.Key,MoveTemp(Site));}
+        for(auto It=Facilities.CreateIterator();It;++It)
+            if(It.Key().ToString().StartsWith(TEXT("Ground/")) && !State.GroundFactories.Contains(It.Key()))It.RemoveCurrent();
+        EconomyController.WakeProduction();
+    }
+    const auto* ActivePlayers=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    const bool LocalWorker=!IsRunningCommandlet() && GetWorld() && ActivePlayers && ActivePlayers->HasLoaded() &&
+        &ActivePlayers->GetPlayerInfo().Economy==&State && UFractalVerseSubsystem::ProcessRole()==EFractalVerseRole::Disabled;
+    const auto Due=[NowClock](double At){return At>0 && NowClock>=At;};
+    if(LocalWorker && bWorkerInitialized && !bEconomyChanged && !Due(State.NextBackgroundMineAt) && !Due(State.NextRegionalPriceAt) && !Due(WorkerProductionAt))return;
+    if(LocalWorker && EconomyWorker && EconomyWorker->IsBusy())return;
+    FNativeEconomyInput Input;Input.State=State;Input.Facilities=Facilities;Input.Recipes=Recipes;Input.NowUtc=Now;
+    Input.Revision=EconomyMutationRevision;Input.Profile=LocalWorker?EconomyProfileToken():TEXT("Native authority");Input.bInventoryChanged=bEconomyChanged;
+    for(auto& Pair:Input.Recipes)Pair.Value.NativeMineralKeys=ManufacturingAI::MineralKeys(Pair.Value);
+    for(const auto& Mine:Mines)Input.Mines.Add({Mine.Id,Mine.System,Mine.Region,Mine.Item,Mine.Reserve,Mine.Rate,Mine.Capacity});
+    if(Catalog)Catalog->ForEachDefinition([&](FName Id,const FS_CargoCatalogRow& Row){Input.Goods.Add(Id,Row);});
+    if(LocalWorker)
+    {
+        if(!EconomyWorker)EconomyWorker=MakeUnique<FNativeEconomyWorker>();
+        const TWeakObjectPtr<UGalaxyTrafficSubsystem> Weak(this);
+        EconomyWorker->Submit(MoveTemp(Input),[Weak](){AsyncTask(ENamedThreads::GameThread,[Weak](){if(auto* Owner=Weak.Get())Owner->EconomyWorkerCompleted();});});
+    }
+    else
+    {
+        auto Result=FNativeEconomyWorker::Calculate(MoveTemp(Input));WorkerProductionAt=Result.NextProductionAt;
+        FNativeEconomyWorker::Commit(MoveTemp(Result),State,EconomyMutationRevision,TEXT("Native authority"));
+    }
 }
 void UGalaxyTrafficSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
+    ProductionChangeHandle=FSimDataEvents::Changed().AddWeakLambda(this,[this](const FEconomyState& Changed){
+        if(BoundEconomy && BoundEconomy!=&Changed)return;
+        ++EconomyMutationRevision;if(bApplyingWorkerResult)return;
+        EconomyController.WakeProduction();bEconomyChanged=true;ScheduleManagement();});
     Super::Initialize(Collection);bCatalogsLoaded=LoadEconomyCatalogs();FString Json;TSharedPtr<FJsonObject> Config;
     FString PatrolText;TArray<TSharedPtr<FJsonValue>> PatrolRows;
     if(FFileHelper::LoadFileToString(PatrolText,*(FPaths::ProjectContentDir()/TEXT("GameData/Traffic/patrols.json"))) && FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(PatrolText),PatrolRows))
@@ -98,7 +137,10 @@ void UGalaxyTrafficSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 void UGalaxyTrafficSubsystem::Deinitialize()
 {
     if(auto* Simulation=Sim::GetSim()){TArray<FGuid> Ids;LiveShips.GetKeys(Ids);for(FGuid Id:Ids)Despawn(*Simulation,Id);}
-    if(auto* Simulation=Sim::GetSim())Simulation->OnMissionUnloading.RemoveAll(this);
+    if(auto* Simulation=Sim::GetSim()){Simulation->OnMissionUnloading.RemoveAll(this);Simulation->OnShipRetired.RemoveAll(this);}
+    EconomyWorker.Reset();
+    if(GetWorld())GetWorld()->GetTimerManager().ClearTimer(ManagementTimer);
+    FSimDataEvents::Changed().Remove(ProductionChangeHandle);
     LiveShips.Reset();LiveGoals.Reset();Sectors.Reset();Endpoints.Reset();Super::Deinitialize();
 }
 FName UGalaxyTrafficSubsystem::SectorKey(SimRegion* Region)const
@@ -110,6 +152,8 @@ void UGalaxyTrafficSubsystem::DetachLive()
 }
 void UGalaxyTrafficSubsystem::BuildGraph(Sim& Simulation)
 {
+    Simulation.OnShipRetired.RemoveAll(this);
+    Simulation.OnShipRetired.AddUObject(this,&UGalaxyTrafficSubsystem::GroundBuildingRetired);
     Simulation.OnMissionUnloading.RemoveAll(this);
     Simulation.OnMissionUnloading.AddUObject(this,&UGalaxyTrafficSubsystem::DetachLive);
     Sectors.Reset();Endpoints.Reset();TMap<FName,StarSystem*> Systems;
@@ -174,6 +218,24 @@ void UGalaxyTrafficSubsystem::BuildGraph(Sim& Simulation)
             FGalaxyTrafficEndpoint Endpoint;Endpoint.Sector=Sector;Endpoint.System=Node->System;Endpoint.Region=Node->Region;Endpoint.Station=FName(UTF8_TO_TCHAR(Station->GetName()));
             Endpoint.Id=FName(*(Sector.ToString()+TEXT("/")+Endpoint.Station.ToString()));Endpoint.Location=Station->GetLocation();Endpoint.bSurface=Node->bSurface;Endpoint.bPhysical=true;Endpoints.Add(Endpoint.Id,Endpoint);
         }
+    if(auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();Players && Players->HasLoaded() && Simulation.HasSimulationAuthority() && !Simulation.IsNetworked())
+    {
+        auto& Economy=Players->GetEconomy();
+        for(ListIter<SimRegion> Regions=Simulation.GetRegions();++Regions;)
+        {
+            auto* Ground=Regions.value();if(!Ground || !Ground->GetSystem() || !Ground->IsAirSpace())continue;
+            for(ListIter<Ship> Buildings=Ground->GetShips();++Buildings;)
+            {
+                const auto* Building=Buildings.value();if(!Building || !Building->Design())continue;
+                FGroundFactorySite Site;Site.BuildingDesign=FName(UTF8_TO_TCHAR(Building->Design()->name));
+                Site.Facility=UTF8_TO_TCHAR(Building->GetName());Site.System=UTF8_TO_TCHAR(Ground->GetSystem()->GetName());
+                Site.Region=UTF8_TO_TCHAR(Ground->GetName());Site.Planet=Site.Region;
+                Site.Empire=Building->GetIFF()==1?TEXT("Terellian Alliance"):Building->GetIFF()==2?TEXT("Marakan Hegemony"):Building->GetIFF()==3?TEXT("Dantari"):TEXT("Neutral");
+                SSWProductionCatalog::RegisterGround(Economy,Site);
+            }
+        }
+        SSWProductionCatalog::RestoreGround(Economy);
+    }
     UE_LOG(LogTemp,Display,TEXT("[GalaxyTraffic] Coverage: %d systems, %d sectors, %d endpoints; active ship budget %d. Surface traffic remains abstract."),Systems.Num(),Sectors.Num(),Endpoints.Num(),ActiveBudget);
 }
 FVector UGalaxyTrafficSubsystem::Goal(Sim& Simulation,const FGalaxyTrafficEndpoint& Endpoint,Ship& Craft)const
@@ -276,7 +338,7 @@ void UGalaxyTrafficSubsystem::UpdateLive(Sim& Simulation,FGalaxyTrafficState& Tr
         auto* Craft=Simulation.FindShip(TCHAR_TO_UTF8(**Name));
         if(!Craft || Craft->IsDead() || Craft->IsDying()) {TrafficAI::Lose(Job,Economy);LiveShips.Remove(Job.Id);LiveGoals.Remove(Job.Id);continue;}
         Job.CurrentSector=SectorKey(Craft->GetRegion());const int32 Actual=Job.Route.IndexOfByKey(Job.CurrentSector);if(Actual!=INDEX_NONE)Job.RouteIndex=Actual;
-        if(Job.IsCargo())Craft->ApplyCargoInventoryToManifest();
+
         if(!Observed(Simulation,*Craft)){Despawn(Simulation,Job.Id);continue;}
         const bool Pickup=Job.Phase==EGalaxyTrafficPhase::Waiting || Job.Phase==EGalaxyTrafficPhase::Loading;
         const auto* Endpoint=Endpoints.Find(Pickup?Job.Origin:Job.Destination);if(!Endpoint){Craft->SetAutoNav(false);Craft->StopScriptedMotion();continue;}
@@ -287,6 +349,8 @@ void UGalaxyTrafficSubsystem::UpdateLive(Sim& Simulation,FGalaxyTrafficState& Tr
         {Craft->SetAutoNav(false);TransportAI::FlyToRegion(*Craft,*Region,Seconds);continue;}
         const FVector Destination=Goal(Simulation,*Endpoint,*Craft);
         const bool Arrived=FVector::DistSquared(Craft->GetLocation(),Destination)<FMath::Square(FMath::Max(800.0,LegacyWaypointArrival::Radius(Craft->GetNavigationHullRadius())));
+        if(Arrived && !LiveArrivals.Contains(Job.Id)){LiveArrivals.Add(Job.Id);ScheduleManagement();}
+        if(!Arrived)LiveArrivals.Remove(Job.Id);
         if(Arrived && Job.bPatrol){Swap(Job.Origin,Job.Destination);LiveGoals.Remove(Job.Id);Craft->SetAutoNav(false);continue;}
         if(Arrived){Craft->SetAutoNav(false);Craft->StopScriptedMotion();}
         else if(!LiveGoals.Contains(Job.Id) || !LiveGoals.FindChecked(Job.Id).Equals(Destination,100))
@@ -295,8 +359,9 @@ void UGalaxyTrafficSubsystem::UpdateLive(Sim& Simulation,FGalaxyTrafficState& Tr
         }
     }
 }
-void UGalaxyTrafficSubsystem::Tick(float DeltaSeconds)
+void UGalaxyTrafficSubsystem::AdvanceManagement(float DeltaSeconds)
 {
+    if (UFractalVerseSubsystem::ProcessRole() != EFractalVerseRole::Disabled) return;
     auto* Simulation=Sim::GetSim();auto* Runtime=GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>();auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
     const auto* Director=Starshatter::GetInstance();
     const bool Playing=Simulation && Simulation->GetMission() && Runtime && Runtime->GetGameMode()==EGameMode::PLAY;
@@ -322,8 +387,12 @@ void UGalaxyTrafficSubsystem::Tick(float DeltaSeconds)
 
     if(Simulation && LastMission!=Simulation->GetMission())
     {TArray<FGuid> Old;LiveShips.GetKeys(Old);for(FGuid Id:Old)Despawn(*Simulation,Id);LiveShips.Reset();LiveGoals.Reset();LastMission=Simulation->GetMission();BuildGraph(*Simulation);}
-    if(Simulation)UpdateLive(*Simulation,Traffic,Economy,Seconds);Accumulator+=Seconds;ScheduleElapsed+=Seconds;if(Accumulator<1)return;
-    const double Step=Accumulator;Accumulator=0;Traffic.Clock+=Step;CheckpointElapsed+=Step;bool Changed=TrafficAI::RecoverBlocked(Traffic,Economy,Sectors,Endpoints)>0;
+    ScheduleElapsed+=Seconds;const double Step=Seconds;Traffic.Clock+=Step;CheckpointElapsed+=Step;
+    const bool InventoryChanged=bEconomyChanged;bEconomyChanged=false;
+    bool RecoveryDue=false;
+    for(auto& Job:Traffic.Journeys)if(Job.Phase==EGalaxyTrafficPhase::Blocked && Job.TransitionAt>0 && Traffic.Clock>=Job.TransitionAt)
+    {Job.BlockedSeconds+=FMath::Max(0.0,Traffic.Clock-Job.LastTransitionAt);Job.LastTransitionAt=Traffic.Clock;Job.TransitionAt=0;RecoveryDue=true;}
+    bool Changed=(InventoryChanged || RecoveryDue) && TrafficAI::RecoverBlocked(Traffic,Economy,Sectors,Endpoints)>0;
     if(Playing && Instance)if(auto* Character=PlayerCharacter::GetCurrentPlayer())Changed|=DynamicMissionAI::Advance(*Simulation,Pilot,const_cast<USSWGameInstance*>(Instance)->GetTrainingAgent(),AgentAI::PilotKey(*Character),Step);
 
     for(auto& Job:Traffic.Journeys)
@@ -338,9 +407,11 @@ void UGalaxyTrafficSubsystem::Tick(float DeltaSeconds)
             {const FVector Destination=Goal(*Simulation,*Endpoint,*Craft);Arrived=FVector::DistSquared(Craft->GetLocation(),Destination)<FMath::Square(FMath::Max(800.0,LegacyWaypointArrival::Radius(Craft->GetNavigationHullRadius())));}
         }
         const auto PreviousPhase=Job.Phase;const int32 PreviousLeg=Job.RouteIndex;const FName PreviousHold=Job.Hold;
-        TrafficAI::Advance(Job,Economy,Step,Realized,Arrived,HopSeconds,TransferTonnesPerSecond);
+        TrafficAI::AdvanceScheduled(Job,Economy,Traffic.Clock,Realized,Arrived,InventoryChanged,HopSeconds,TransferTonnesPerSecond);
         if(Simulation && Realized && Job.IsFinished())Despawn(*Simulation,Job.Id);
         else if(Simulation && !Realized && !Job.IsFinished())Realize(*Simulation,Job,Economy);
+        if(Simulation && Realized && PreviousPhase!=Job.Phase)
+            if(auto* Craft=Simulation->FindShip(TCHAR_TO_UTF8(*LiveShips.FindRef(Job.Id))))Craft->ApplyCargoInventoryToManifest();
         Changed|=PreviousPhase!=Job.Phase || PreviousLeg!=Job.RouteIndex || PreviousHold!=Job.Hold;
     }
     Traffic.Journeys.RemoveAll([](const auto& Job){return Job.IsFinished() && Job.Age>120;});
@@ -366,4 +437,147 @@ void UGalaxyTrafficSubsystem::Tick(float DeltaSeconds)
         {bPersistenceBlocked=true;PersistenceRetry=0;LiveGoals.Reset();UE_LOG(LogTemp,Error,TEXT("[GalaxyTraffic] Checkpoint failed; traffic suspended pending atomic save retry."));}
         else CheckpointElapsed=0;
     }
+}
+
+// Dedicated economy: no Sim, player save, actor or loaded mission is required.
+void UGalaxyTrafficSubsystem::AdvanceServerWorld(FFractalVerseWorld& World, double Seconds)
+{
+    TickEconomy(World.Economy, Seconds, FDateTime::UtcNow().ToUnixTimestamp());
+    if (!bAuthorityGraphReady)
+    {
+        auto* NativeGalaxy = Galaxy::GetInstance();
+        if (!NativeGalaxy || NativeGalaxy->GetSystemList().isEmpty()) return;
+        TMap<FName, StarSystem*> Systems;
+        for (ListIter<StarSystem> Iter = NativeGalaxy->GetSystemList(); ++Iter;)
+        {
+            auto* System = Iter.value(); if (!System) continue;
+            const FName Id(UTF8_TO_TCHAR(System->GetName())); Systems.Add(Id, System);
+            for (ListIter<OrbitalRegion> Regions = System->GetAllRegions(); ++Regions;)
+            {
+                auto* Region = Regions.value(); if (!Region) continue;
+                FGalaxyTrafficSector Node; Node.System=Id; Node.Region=FName(UTF8_TO_TCHAR(Region->GetName()));
+                Node.Id=NodeKey(Id,Node.Region); Node.bSurface=Region->GetType()==Orbital::TERRAIN;
+                Node.Affiliation=System->GetAffiliation(); Sectors.Add(Node.Id,Node);
+            }
+        }
+        const auto AddEndpoint = [this, &Systems](FName System, FName Region, FName Station)
+        {
+            if (!Systems.Contains(System)) return;
+            const FName Sector=NodeKey(System,Region);
+            if (!Sectors.Contains(Sector))
+            { FGalaxyTrafficSector Node; Node.Id=Sector; Node.System=System; Node.Region=Region; Node.Affiliation=Systems.FindChecked(System)->GetAffiliation(); Sectors.Add(Sector,Node); }
+            FGalaxyTrafficEndpoint Endpoint; Endpoint.Id=FName(*(Sector.ToString()+TEXT("/")+Station.ToString()));
+            Endpoint.Sector=Sector; Endpoint.System=System; Endpoint.Region=Region; Endpoint.Station=Station;
+            Endpoints.Add(Endpoint.Id,Endpoint);
+        };
+        for (const auto& Mine : Mines) AddEndpoint(Mine.System,Mine.Region,Mine.Region);
+        for (const auto& Pair : Facilities)
+            AddEndpoint(FName(*Pair.Value.System),FName(*Pair.Value.Region),FName(*Pair.Value.Facility));
+        for (const auto& Pair : CombatGroupRegistry::GetAll())
+        {
+            const auto& Group=Pair.Value;
+            bool Station=Ship::IsTransferStationName(Group.Name);
+            for (const auto& Unit : Group.Unit)
+                Station |= Unit.UnitDesign.Contains(TEXT("Station"),ESearchCase::IgnoreCase) || Unit.UnitDesign.Contains(TEXT("Processing"),ESearchCase::IgnoreCase);
+            if (Station) AddEndpoint(FName(*Group.System),FName(*Group.Region),FName(*Group.Name));
+        }
+        for (auto& Pair : Sectors) for (const auto& Other : Sectors)
+            if (Pair.Key!=Other.Key && (Pair.Value.System==Other.Value.System ||
+                Systems.FindChecked(Pair.Value.System)->HasLinkTo(Systems.FindChecked(Other.Value.System)))) Pair.Value.Neighbors.AddUnique(Other.Key);
+        bAuthorityGraphReady=true;
+        UE_LOG(LogTemp,Display,TEXT("[FractalVerse] Native freight graph: %d systems, %d sectors, %d endpoints; no scene ships."),Systems.Num(),Sectors.Num(),Endpoints.Num());
+    }
+    auto& Traffic=World.Traffic; auto& Economy=World.Economy;
+    Traffic.Clock+=Seconds;
+    const bool InventoryChanged=bEconomyChanged;bEconomyChanged=false;bool RecoveryDue=false;
+    for(auto& Job:Traffic.Journeys)if(Job.Phase==EGalaxyTrafficPhase::Blocked && Job.TransitionAt>0 && Traffic.Clock>=Job.TransitionAt)
+    {Job.BlockedSeconds+=FMath::Max(0.0,Traffic.Clock-Job.LastTransitionAt);Job.LastTransitionAt=Traffic.Clock;Job.TransitionAt=0;RecoveryDue=true;}
+    if(InventoryChanged || RecoveryDue)TrafficAI::RecoverBlocked(Traffic,Economy,Sectors,Endpoints);
+    for (auto& Journey : Traffic.Journeys)
+    {
+        if (Journey.IsFinished()) { Journey.Age+=Seconds; continue; }
+        TrafficAI::AdvanceScheduled(Journey,Economy,Traffic.Clock,false,false,InventoryChanged,HopSeconds,TransferTonnesPerSecond);
+    }
+    Traffic.Journeys.RemoveAll([](const auto& Journey){return Journey.IsFinished() && Journey.Age>120;});
+    ScheduleElapsed+=Seconds;
+    if (ScheduleElapsed>=ScheduleSeconds)
+    {
+        ScheduleElapsed=0;
+        TrafficAI::Dispatch(Traffic,Economy,Sectors,Endpoints,NAME_None,MaxJourneys);
+    }
+}
+
+void UGalaxyTrafficSubsystem::GroundBuildingRetired(const Ship& Building,const SimRegion& Ground)
+{
+    auto* Simulation=Sim::GetSim();
+    if(!Simulation || !Simulation->HasSimulationAuthority() || Simulation->IsNetworked() || !Building.IsDead() || !Building.GetRegion() || !Building.GetRegion()->GetSystem() || !Building.Design())return;
+    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();if(!Players || !Players->HasLoaded())return;
+    FGroundFactorySite Site;Site.BuildingDesign=FName(UTF8_TO_TCHAR(Building.Design()->name));
+    Site.Facility=UTF8_TO_TCHAR(Building.GetName());Site.System=UTF8_TO_TCHAR(Building.GetRegion()->GetSystem()->GetName());Site.Region=UTF8_TO_TCHAR(Ground.GetName());Site.Planet=Site.Region;
+    auto& Economy=Players->GetEconomy();
+    for(const auto& Pair:Facilities)if(Pair.Value.System==Site.System && Pair.Value.Region==Site.Region && Pair.Value.Facility==Site.Facility)
+    {Economy.OfflineFacilities.Add(Pair.Key);FSimDataEvents::Publish(Economy);}
+    if(SSWProductionCatalog::RegisterGround(Economy,Site))
+    {
+        Economy.OfflineFacilities.Add(SSWProductionCatalog::GroundKey(Site));
+        FSimDataEvents::Publish(Economy);
+        UE_LOG(LogTemp,Display,TEXT("[Industry] Ground facility destroyed: %s / %s / %s; production offline."),*Site.System,*Site.Region,*Site.Facility);
+    }
+}
+
+void UGalaxyTrafficSubsystem::ScheduleManagement(double Delay)
+{
+    if(bManagementRunning){bManagementWake=true;return;}
+    auto* World=GetWorld();if(!World || IsRunningCommandlet() || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)return;
+    World->GetTimerManager().ClearTimer(ManagementTimer);
+    World->GetTimerManager().SetTimer(ManagementTimer,this,&UGalaxyTrafficSubsystem::RunManagement,float(FMath::Max(.01,Delay)),false);
+}
+void UGalaxyTrafficSubsystem::RunManagement()
+{
+    const double Wall=FPlatformTime::Seconds();const double Elapsed=LastManagementTime>0?FMath::Max(UE_SMALL_NUMBER,Wall-LastManagementTime):UE_SMALL_NUMBER;LastManagementTime=Wall;
+    bManagementRunning=true;bManagementWake=false;AdvanceManagement(float(Elapsed));bManagementRunning=false;
+    double Delay=60;
+    if(auto* Simulation=Sim::GetSim();Simulation && Simulation->GetMission())
+    if(auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();Players && Players->HasLoaded())
+    {
+        const auto& State=Players->GetMutablePlayerInfo();const double Clock=State.Economy.EconomyClockSeconds;
+        const auto Earlier=[&](double At){if(At>0)Delay=FMath::Min(Delay,FMath::Max(.01,At-Clock));};
+        Earlier(State.Economy.NextBackgroundMineAt);Earlier(State.Economy.NextRegionalPriceAt);Earlier(WorkerProductionAt);
+        Delay=FMath::Min(Delay,FMath::Max(.01,ScheduleSeconds-ScheduleElapsed));
+        if(bPersistenceBlocked)Delay=FMath::Min(Delay,2.0);
+        for(const auto& Job:State.Traffic.Journeys)
+            if(Job.TransitionAt>State.Traffic.Clock)Delay=FMath::Min(Delay,Job.TransitionAt-State.Traffic.Clock);
+    }
+    ScheduleManagement(bManagementWake?.01:Delay);
+}
+void UGalaxyTrafficSubsystem::Tick(float DeltaSeconds)
+{
+    if(UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled || IsRunningCommandlet() || !GetWorld())return;
+    if(!GetWorld()->GetTimerManager().IsTimerActive(ManagementTimer) && !bManagementRunning)ScheduleManagement();
+    auto* Simulation=Sim::GetSim();const auto* Director=Starshatter::GetInstance();
+    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if(!Simulation || !Simulation->GetMission() || !Players || !Players->HasLoaded() || !Simulation->HasSimulationAuthority() || Simulation->IsNetworked() || GetWorld()->IsPaused() || (Director && Director->InCutscene()) || OfflineCutsceneExport::IsRequested())return;
+    if(LastMission!=Simulation->GetMission() && !bManagementWake){bManagementWake=true;ScheduleManagement();}
+    // The only frame-driven work here is the movement/presentation of realized ships.
+    UpdateLive(*Simulation,Players->GetMutablePlayerInfo().Traffic,Players->GetEconomy(),DeltaSeconds);
+}
+
+FString UGalaxyTrafficSubsystem::EconomyProfileToken()const
+{
+    const auto* Players=GetGameInstance()?GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+    return Players?Players->GetSlotName()+TEXT("/")+Players->GetActiveSavedPlayerSlot()+FString::Printf(TEXT("/%d/%lld"),Players->GetUserIndex(),Players->GetPlayerInfo().LocalStateRevision):FString();
+}
+void UGalaxyTrafficSubsystem::EconomyWorkerCompleted()
+{
+    check(IsInGameThread());if(!EconomyWorker)return;auto Result=EconomyWorker->TakeResult();if(!Result)return;
+    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if(!Players || !Players->HasLoaded() || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)return;
+    if(const auto* Simulation=Sim::GetSim();Simulation && (!Simulation->HasSimulationAuthority() || Simulation->IsNetworked()))return;
+    bApplyingWorkerResult=true;
+    const double Next=Result->NextProductionAt;
+    const bool Accepted=FNativeEconomyWorker::Commit(MoveTemp(*Result),Players->GetEconomy(),EconomyMutationRevision,EconomyProfileToken());
+    bApplyingWorkerResult=false;
+    if(Accepted){WorkerProductionAt=Next;bWorkerInitialized=true;Players->MarkDirty();}
+    else{bEconomyChanged=true;EconomyController.WakeProduction();}
+    ScheduleManagement();
 }

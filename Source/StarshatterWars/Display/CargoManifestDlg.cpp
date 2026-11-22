@@ -1,4 +1,5 @@
 #include "CargoManifestDlg.h"
+#include "ChangeDrivenPanel.h"
 #include "RecordDetails.h"
 #include "StationServices.h"
 #include "Algo/AllOf.h"
@@ -138,12 +139,8 @@ namespace
                         if (Stack.Quantity <= 0) continue;
                         FS_Cargo Row; Row.Name = Stack.Type.ToString(); Row.DisplayName = Row.Name;
                         Row.Size = Stack.UnitTonnes; Row.Quantity = Stack.Quantity;
-                        if (Catalog.IsValid()) Catalog->ForEachDefinition([&](FName Name, const FS_CargoCatalogRow& Definition)
-                        {
-                            if (Name != Stack.Type) return;
-                            Row.DisplayName = Definition.DisplayName; Row.Type = Definition.Type; Row.Unit = Definition.Unit;
-                            Row.Value = Definition.Value; Row.Rarity = Definition.Rarity; Row.bIllicit = Definition.bIllicit; Row.Image = Definition.Image;
-                        });
+                        if (Catalog.IsValid()) if(const auto* Definition=Catalog->FindCargoByKey(Stack.Type))
+                        {Row.DisplayName=Definition->DisplayName;Row.Type=Definition->Type;Row.Unit=Definition->Unit;Row.Value=Definition->Value;Row.Rarity=Definition->Rarity;Row.bIllicit=Definition->bIllicit;Row.Image=Definition->Image;}
                         if (Row.Name.StartsWith(TEXT("Courier/"))) { Row.DisplayName = TEXT("Sealed Courier Package"); Row.Unit = TEXT("crate"); }
                         Row.UpdateTotalValue(); Current.Add(MoveTemp(Row));
                     }
@@ -235,13 +232,8 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
         });
     Table->List = List;
     Table->Refresh();
-    List->RegisterActiveTimer(0.25f, FWidgetActiveTimerDelegate::CreateLambda([Table](double, float)
-    {
-        Table->Refresh();
-        return EActiveTimerReturnType::Continue;
-    }));
     const auto Font = MissionUIStyle::GetRowFont(13);
-    return SNew(SVerticalBox)
+    return SNew(SChangeDrivenPanel).OnChanged_Lambda([Table](){Table->Refresh();})[SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(20, 18, 20, 8)
         [
             SNew(STextBlock).Font(MissionUIStyle::GetHeaderFont(20))
@@ -270,7 +262,7 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
         [MissionUIStyle::MakeDataPane(List, FMargin(0))]
         + SVerticalBox::Slot().AutoHeight().Padding(20,8)
         [SNew(SBox).MaxDesiredHeight(190)[MissionUIStyle::MakeDataPane(SNew(SScrollBox)+SScrollBox::Slot()
-            [SNew(SRecordDetails).Record_Lambda([Table]() {
+            [SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([Table](){return GetTypeHash(Table->SelectedName);}).Record_Lambda([Table]() {
                 FRecordDetails D;D.Icon=EShipSystemIcon::Cargo;
                 const FCargoItem* Found=Table->Rows.FindByPredicate([Table](const FCargoItem& Row){return Row && Row->Name==Table->SelectedName;});
                 if(!Found){D.Title=INVTEXT("SELECT CARGO");D.Description=INVTEXT("Select an entry to inspect its quantity, mass and value.");return D;}
@@ -350,5 +342,5 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
                 .OnClicked_Lambda([Table, WeakInstance = TWeakObjectPtr<UGameInstance>(GetGameInstance())]()
                 { FStationServices::RepairAll(WeakInstance.Get(), Table->ServiceMessage); return FReply::Handled(); })
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Repair)]]
-        ];
+        ]];
 }

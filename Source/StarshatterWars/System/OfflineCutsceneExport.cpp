@@ -67,7 +67,7 @@ bool OfflineCutsceneExport::TryStart(UMenuScreen* Menu)
     Game->SelectedCampaignIndex=Number;Game->SelectedCampaignRowName=Row->RowName;Game->SelectedCampaignDisplayName=Row->Name;
     FS_PlayerGameInfo Pilot;Pilot.Name=TEXT("Cutscene Export");Pilot.Callsign=TEXT("RENDER");Pilot.Campaign=Number;Pilot.CampaignRowName=Row->RowName;Pilot.Rank=6;Pilot.bTrainingGraduate=true;
     PlayerCharacter::Initialize();PlayerCharacter::GetCurrentPlayer()->FromPlayerInfo(Pilot);
-    Menu->ShowCmpnScreen();return true;
+    Menu->ReturnFromMissionBriefing();return true;
 #else
     return false;
 #endif

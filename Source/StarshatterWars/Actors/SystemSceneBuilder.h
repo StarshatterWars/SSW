@@ -190,6 +190,7 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Starshatter|SystemScene")
     void BuildSystemScene();
+    void EnsureMissionSystem(class StarSystem* System);
 
     // Name from the last successfully resolved runtime system.
     const FString& GetLastResolvedSystemName() const { return LastResolvedName; }

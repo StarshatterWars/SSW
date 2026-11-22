@@ -59,107 +59,109 @@ static inline double RandomSigned()
 // +--------------------------------------------------------------------+
 
 Physical::Physical()
-	: id(id_key++)
-	, obj_type(ESimObject::NONE)
-	, rep(0)
-	, light(0)
-	, velocity(FVector::ZeroVector)
-	, arcade_velocity(FVector::ZeroVector)
-	, accel(FVector::ZeroVector)
-	, thrust(0.0f)
-	, trans_x(0.0f)
-	, trans_y(0.0f)
-	, trans_z(0.0f)
-	, drag(0.0f)
-	, roll(0.0f)
-	, pitch(0.0f)
-	, yaw(0.0f)
-	, dr(0.0f)
-	, dp(0.0f)
-	, dy(0.0f)
-	, dr_acc(0.0f)
-	, dp_acc(0.0f)
-	, dy_acc(0.0f)
-	, dr_drg(0.0f)
-	, dp_drg(0.0f)
-	, dy_drg(0.0f)
-	, flight_path_yaw(0.0f)
-	, flight_path_pitch(0.0f)
-	, primary_loc(FVector::ZeroVector)
-	, primary_mass(0)
-	, g_accel(0.0f)
-	, Do(0.0f)
-	, CL(0.0f)
-	, CD(0.0f)
-	, alpha(0.0f)
-	, stall(0.0f)
-	, lat_thrust(false)
-	, straight(false)
-	, shake(0.0f)
-	, vibration(FVector::ZeroVector)
-	, roll_rate(1.0f)
-	, pitch_rate(1.0f)
-	, yaw_rate(1.0f)
-	, life(-1.0)
-	, radius(0.0f)
-	, mass(1.0f)
-	, integrity(1.0f)
-	, dir(0)
+	: 
+    id(id_key++),
+    obj_type(ESimObject::NONE),
+    velocity(FVector::ZeroVector),
+    arcade_velocity(FVector::ZeroVector),
+    accel(FVector::ZeroVector),
+    thrust(0.0f),
+    trans_x(0.0f),
+    trans_y(0.0f),
+    trans_z(0.0f),
+    drag(0.0f),
+    roll(0.0f),
+    pitch(0.0f),
+    yaw(0.0f),
+    dr(0.0f),
+    dp(0.0f),
+    dy(0.0f),
+    dr_acc(0.0f),
+    dp_acc(0.0f),
+    dy_acc(0.0f),
+    dr_drg(0.0f),
+    dp_drg(0.0f),
+    dy_drg(0.0f),
+    flight_path_yaw(0.0f),
+    flight_path_pitch(0.0f),
+    primary_loc(FVector::ZeroVector),
+    primary_mass(0),
+    g_accel(0.0f),
+    Do(0.0f),
+    CL(0.0f),
+    CD(0.0f),
+    alpha(0.0f),
+    stall(0.0f),
+    lat_thrust(false),
+    straight(false),
+    shake(0.0f),
+    vibration(FVector::ZeroVector),
+    roll_rate(1.0f),
+    pitch_rate(1.0f),
+    yaw_rate(1.0f),
+    life(-1.0),
+    radius(0.0f),
+    mass(1.0f),
+    integrity(1.0f),
+    rep(0),
+    light(0),
+    dir(0)
 {
-	std::strcpy(name, "unknown object");
+	strcpy_s(name, sizeof(name), "unknown object");
 }
 
 // +--------------------------------------------------------------------+
 
 Physical::Physical(const char* n, ESimObject t)
-	: id(id_key++)
-	, obj_type(t)
-	, rep(0)
-	, light(0)
-	, velocity(FVector::ZeroVector)
-	, arcade_velocity(FVector::ZeroVector)
-	, accel(FVector::ZeroVector)
-	, thrust(0.0f)
-	, trans_x(0.0f)
-	, trans_y(0.0f)
-	, trans_z(0.0f)
-	, drag(0.0f)
-	, roll(0.0f)
-	, pitch(0.0f)
-	, yaw(0.0f)
-	, dr(0.0f)
-	, dp(0.0f)
-	, dy(0.0f)
-	, dr_acc(0.0f)
-	, dp_acc(0.0f)
-	, dy_acc(0.0f)
-	, dr_drg(0.0f)
-	, dp_drg(0.0f)
-	, dy_drg(0.0f)
-	, flight_path_yaw(0.0f)
-	, flight_path_pitch(0.0f)
-	, primary_loc(FVector::ZeroVector)
-	, primary_mass(0)
-	, g_accel(0.0f)
-	, Do(0.0f)
-	, CL(0.0f)
-	, CD(0.0f)
-	, alpha(0.0f)
-	, stall(0.0f)
-	, lat_thrust(false)
-	, straight(false)
-	, shake(0.0f)
-	, vibration(FVector::ZeroVector)
-	, roll_rate(1.0f)
-	, pitch_rate(1.0f)
-	, yaw_rate(1.0f)
-	, life(-1.0)
-	, radius(0.0f)
-	, mass(1.0f)
-	, integrity(1.0f)
-	, dir(0)
+	: 
+    id(id_key++),
+    obj_type(t),
+    velocity(FVector::ZeroVector),
+    arcade_velocity(FVector::ZeroVector),
+    accel(FVector::ZeroVector),
+    thrust(0.0f),
+    trans_x(0.0f),
+    trans_y(0.0f),
+    trans_z(0.0f),
+    drag(0.0f),
+    roll(0.0f),
+    pitch(0.0f),
+    yaw(0.0f),
+    dr(0.0f),
+    dp(0.0f),
+    dy(0.0f),
+    dr_acc(0.0f),
+    dp_acc(0.0f),
+    dy_acc(0.0f),
+    dr_drg(0.0f),
+    dp_drg(0.0f),
+    dy_drg(0.0f),
+    flight_path_yaw(0.0f),
+    flight_path_pitch(0.0f),
+    primary_loc(FVector::ZeroVector),
+    primary_mass(0),
+    g_accel(0.0f),
+    Do(0.0f),
+    CL(0.0f),
+    CD(0.0f),
+    alpha(0.0f),
+    stall(0.0f),
+    lat_thrust(false),
+    straight(false),
+    shake(0.0f),
+    vibration(FVector::ZeroVector),
+    roll_rate(1.0f),
+    pitch_rate(1.0f),
+    yaw_rate(1.0f),
+    life(-1.0),
+    radius(0.0f),
+    mass(1.0f),
+    integrity(1.0f),
+    rep(0),
+    light(0),
+    dir(0)
 {
-	std::strncpy(name, n ? n : "unknown object", NAMELEN - 1);
+	strncpy_s(name, sizeof(name), n ? n : "unknown object", _TRUNCATE);
 	name[NAMELEN - 1] = 0;
 }
 

@@ -179,7 +179,7 @@ void UTacRefDlg::Show()
         ShipRowNames.Num(), SelectedShipIndex, (int32)ActiveCategory);
 }
 
-void UTacRefDlg::ExecFrame()
+void UTacRefDlg::ExecFrame(double /*DeltaTime*/)
 {
     // Optional per-frame logic
 }
@@ -677,8 +677,6 @@ void UTacRefDlg::PopulateWeaponDropdown()
 {
     RefreshCategoryStyles();
     TSet<FName> Names;
-    for (int32 I=0; I<WeaponDesign::catalog.size(); ++I)
-        if (const auto* D=WeaponDesign::catalog[I]) Names.Add(FName(ANSI_TO_TCHAR(D->name.data())));
     for (const auto& Pair : WeaponDesignRegistry::GetAll()) Names.Add(Pair.Key);
     WeaponNames.Reset();
     for (FName Name : Names)

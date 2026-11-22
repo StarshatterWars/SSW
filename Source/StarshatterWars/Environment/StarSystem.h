@@ -14,7 +14,7 @@
     ========
     StarSystem
     - Defines a stellar system and its orbiting objects (bodies, regions, terrain)
-    - Parses system definition data and provides runtime access to orbitals
+    - Hydrates JSON-backed system data and provides runtime access to orbitals
     - Also supports runtime hydration from Galaxy table data
 */
 
@@ -22,7 +22,6 @@
 
 #include "Types.h"
 #include "Text.h"
-#include "Term.h"
 #include "List.h"
 
 // Minimal Unreal includes:
@@ -61,7 +60,6 @@ public:
     // -----------------------------------------------------------------
     // operations:
     // -----------------------------------------------------------------
-    virtual void   Load();
     virtual void   Create();
     virtual void   Destroy();
 
@@ -167,12 +165,6 @@ protected:
     // -----------------------------------------------------------------
     // parsing:
     // -----------------------------------------------------------------
-    void          ParseStar(TermStruct* val);
-    void          ParsePlanet(TermStruct* val);
-    void          ParseMoon(TermStruct* val);
-    void          ParseRegion(TermStruct* val);
-    void          ParseTerrain(TermStruct* val, Orbital* Parent = nullptr);
-    void          ParseLayer(TerrainRegion* rgn, TermStruct* val);
 
     // -----------------------------------------------------------------
     // creation helpers:

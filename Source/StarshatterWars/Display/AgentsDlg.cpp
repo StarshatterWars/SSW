@@ -1,5 +1,7 @@
 
 #include "AgentsDlg.h"
+#include "StationServices.h"
+#include "FreeFlightAssignment.h"
 #include "FactionTrainingCatalog.h"
 #include "RecordDetails.h"
 #include "StarshatterEnvironmentSubsystem.h"
@@ -78,6 +80,47 @@ void UAgentsDlg::RefreshBoard()
     auto* Catalog = Game ? Game->GetSubsystem<UAgentCatalogSubsystem>() : nullptr;
     if (!Catalog || PilotId().IsNone()) return;
     auto& Agent = Game->GetTrainingAgent();
+    const int32 TransferStage=Catalog->GetTrainingTransferStage();
+    if(TransferStage)
+        Board->AddSlot().AutoHeight().Padding(0,4,0,12)
+            [SNew(SButton).Text(TransferStage==1?INVTEXT("TDY TO JANEK STATION"):INVTEXT("RETURN TO ORION"))
+                .ToolTipText(TransferStage==1?INVTEXT("Begin temporary duty at Janek Station for T3 and T4. This does not accept a new campaign."):
+                    INVTEXT("End your TDY and return aboard Orion. Campaign 2 orders and fleet deployment are separate steps."))
+                .OnClicked(FOnClicked::CreateWeakLambda(this,[this,Catalog]()
+                {Catalog->TransferTrainingPilot(Feedback);RefreshBoard();return FReply::Handled();}))];
+    if(Catalog->NeedsCampaignDeployment(2) && Catalog->IsAboardTrainingCarrier())
+        Board->AddSlot().AutoHeight().Padding(0,4,0,12)
+            [MissionUIStyle::MakeDataPane(SNew(SVerticalBox)
+                +SVerticalBox::Slot().AutoHeight()[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true)
+                    .Text(INVTEXT("CAMPAIGN 2 ORDERS ACCEPTED. Deploy Orion and its group to Meridian when ready."))]
+                +SVerticalBox::Slot().AutoHeight().Padding(0,6)
+                    [SNew(SButton).Text(INVTEXT("DEPLOY ORION GROUP TO MERIDIAN"))
+                        .ToolTipText(INVTEXT("Begin fleet deployment while aboard Orion. This does not perform a training shuttle transfer."))
+                        .IsEnabled(FStationServices::IsDocked())
+                        .OnClicked(FOnClicked::CreateWeakLambda(this,[this,Catalog]()
+                        {Catalog->DeployCampaignFleet(2,Feedback);RefreshBoard();return FReply::Handled();}))])];
+    const FName NextOfficer=Catalog->GetPostTrainingCampaignAgent();
+    if(const auto* Referral=Catalog->FindAgent(NextOfficer);Referral && NextOfficer!=SelectedAgent)
+    {
+        Board->AddSlot().AutoHeight().Padding(0,4,0,10)
+            [MissionUIStyle::MakeDataPane(SNew(SVerticalBox)
+                +SVerticalBox::Slot().AutoHeight()[SNew(STextBlock).Font(MissionUIStyle::GetHeaderFont(14))
+                    .Text(INVTEXT("FLIGHT QUALIFICATIONS COMPLETE"))]
+                +SVerticalBox::Slot().AutoHeight().Padding(0,6)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true)
+                    .Text(FText::FromString(FString::Printf(TEXT("Your first four lessons are complete. %s has your Campaign 2 orders at %s, %s, %s System. Review and accept the next operation when docked."),
+                        *Referral->DisplayName,*Referral->Station,*Referral->Region,*Referral->System)))]
+                +SVerticalBox::Slot().AutoHeight()[SNew(SButton).Text(INVTEXT("VIEW CAMPAIGN 2 ORDERS"))
+                    .OnClicked(FOnClicked::CreateWeakLambda(this,[this,Catalog,NextOfficer]()
+                    {
+                        if(const auto* Officer=Catalog->FindAgent(NextOfficer))
+                        {
+                            CloseDetails();DirectoryScope=EAgentDirectoryScope::EmpireWide;
+                            SelectedSystem=FName(*Officer->System);SelectedAgent=NextOfficer;
+                            RefreshDirectory();RefreshBoard();
+                        }
+                        return FReply::Handled();
+                    }))])];
+    }
     Board->AddSlot().AutoHeight().Padding(8,4,8,8)[SNew(SHorizontalBox)
         + SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).Text(INVTEXT("ASSIGNMENT / STATUS")).Font(MissionUIStyle::GetRowFont(10))]
         + SHorizontalBox::Slot().AutoWidth()[SNew(STextBlock).Text(INVTEXT("OFFER EXPIRY (GMT)")).Font(MissionUIStyle::GetRowFont(10))]];
@@ -121,7 +164,7 @@ void UAgentsDlg::RefreshBoard()
                 const bool bCompleted=Agent.IsCompleted(PilotId(),Id) || (!Game->IsTrainingTestSession() && Players && Players->GetPlayerInfo().HasCompletedMission(Campaign::TRAINING_CAMPAIGN,Id));
                 const FLinearColor RowColor=bCompleted?FLinearColor(.35f,.9f,.45f):FLinearColor::White;
                 const bool bSelectable = bOperationAccepted && (bReplay || (bOffered && Catalog->CanAccept(Id,SelectedAgent)));
-                const FText Reason = !bOperationAccepted ? INVTEXT("Accept your training operation first") : bReplay ? INVTEXT("COMPLETE - REPLAY (NO POINTS)") : bCompleted ? INVTEXT("COMPLETE") : Catalog->GetTrainingRequirement(Id);
+                const FText Reason = !bOperationAccepted ? INVTEXT("Accept your training operation first") : bReplay ? INVTEXT("COMPLETE - REPLAY (NO REWARDS)") : bCompleted ? INVTEXT("COMPLETE") : Catalog->GetTrainingRequirement(Id);
                 Board->AddSlot().AutoHeight().Padding(0,3)
                     [SNew(SHorizontalBox)
                         + SHorizontalBox::Slot().FillWidth(.44f).Padding(0,0,12,0)
@@ -156,7 +199,8 @@ void UAgentsDlg::RefreshBoard()
                     {
                         if (CanLaunch.IsBound() && CanLaunch.Execute() && Catalog->ActivateCampaign(SelectedAgent,CampaignId))
                         {
-                            Feedback = INVTEXT("Campaign orders accepted. Request your next assignment from this agent.");
+                            Feedback = CampaignId==2?INVTEXT("Campaign 2 orders accepted. Deploy Orion's group to Meridian when ready."):
+                                INVTEXT("Campaign orders accepted. Request your next assignment from this agent.");
                             RefreshBoard();
                         }
                         else
@@ -252,6 +296,7 @@ void UAgentsDlg::RefreshBoard()
 
 bool UAgentsDlg::CanStartMission(int32 MissionId) const
 {
+    if(MissionId==FreeFlightAssignment::Id)return FStationServices::IsDocked();
     if((MissionId==103 || MissionId==104) && PlayerCharacter::GetCurrentPlayer() && PlayerCharacter::GetCurrentPlayer()->GetEmpire()==EEMPIRE_NAME::Terellian)
         if(auto* S=Sim::GetSim()) if(S->GetMission() && S->GetMission()->IsFreeFlight()) return true;
     if (!DynamicMissionAI::IsDynamic(MissionId)) return CanLaunch.IsBound() && CanLaunch.Execute();
@@ -272,8 +317,24 @@ void UAgentsDlg::StartMission(int32 MissionId)
     World->GetTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this, [this, Menu, MissionId]()
     {
         if (!CanStartMission(MissionId)) return;
-        if (bStandaloneFrame) RemoveFromParent();
-        Menu->OpenQueuedAssignment(MissionId, !bStandaloneFrame);
+        // Surface lessons can request transit without changing the live mission.
+        // Keep the briefing open and show its instructions instead of hiding the result behind it.
+        FText Reason;
+        const bool Started = Menu->OpenQueuedAssignment(MissionId, !bStandaloneFrame, &Reason);
+        if (!Started && Reason.IsEmpty())
+            Reason = INVTEXT("The mission could not start. Reopen Agents and check your assignment.");
+        Feedback = Reason;
+        if (IsValid(Details)) Details->SetLaunchFeedback(Reason);
+        UE_LOG(LogTemp, Display, TEXT("[Agents] Mission %d start %s: %s"), MissionId,
+            Started ? TEXT("accepted") : TEXT("blocked"), *Reason.ToString());
+        if (Started && !bStandaloneFrame && (MissionId == 103 || MissionId == 104) && !Reason.IsEmpty()
+            && OnTransitStarted.IsBound())
+        {
+            // Return to the live launch-bay camera so the pilot can see Orion jump.
+            OnTransitStarted.Execute();
+            return;
+        }
+        if (Started && Reason.IsEmpty() && bStandaloneFrame) RemoveFromParent();
     }));
 }
 
@@ -309,7 +370,9 @@ void UAgentsDlg::OpenDetails(int32 MissionId, bool bOffer)
             Feedback=INVTEXT("This offer expired or is no longer available. Request a new assignment.");
             const bool bAccepted=CommitAgentCommand(Instance,[&]()
             {
-                return bReplay ? Instance->GetTrainingAgent().QueueTestReplay(PilotId(),MissionId,Issuer)
+                return bReplay ? Instance->GetTrainingAgent().QueueTestReplay(PilotId(),MissionId,Issuer,
+                    [Players](int32 Id){return Players && Players->GetPlayerInfo().HasCompletedMission(Campaign::TRAINING_CAMPAIGN,Id);},
+                    FStationServices::IsDocked())
                     : Catalog->CanAccept(MissionId,Issuer) && Instance->GetTrainingAgent().Accept(PilotId(),MissionId,RegionalHistory(Instance));
             },Feedback);
             if (!bAccepted) { CloseDetails(); RefreshBoard(); return; }
@@ -334,7 +397,7 @@ void UAgentsDlg::OpenDetails(int32 MissionId, bool bOffer)
             RefreshBoard();
         });
 
-    FName Issuer=SelectedAgent; FText Status=Catalog->CanReplayTrainingTest(MissionId,Issuer)?INVTEXT("TEST REPLAY - NO POINTS OR PROGRESSION"):bOffer ? INVTEXT("OFFERED") : INVTEXT("QUEUED");
+    FName Issuer=SelectedAgent; FText Status=Catalog->CanReplayTrainingTest(MissionId,Issuer)?INVTEXT("TRAINING REPLAY - NO REWARDS OR PROGRESSION"):bOffer ? INVTEXT("OFFERED") : INVTEXT("QUEUED");
     for (const auto& Assignment : Game->GetTrainingAgent().GetQueue(PilotId()))
         if (Assignment.MissionId==MissionId) { Issuer=Assignment.Issuer; if(Assignment.State==State::InProgress)Status=INVTEXT("IN PROGRESS"); break; }
     FText Expiry=AgentAI::IsTrainingMission(MissionId)?INVTEXT("NO EXPIRY"):INVTEXT("NO DEADLINE");
@@ -349,7 +412,11 @@ void UAgentsDlg::OpenDetails(int32 MissionId, bool bOffer)
     AgentMissionRules::Decode(MissionId,RewardCampaign,RewardMission);
     auto Reward=FMissionRewardCatalog::Get().Quote(RewardCampaign,RewardMission,false,0,0);
     if(DynamicMissionAI::IsDynamic(MissionId))if(auto* Players=Game->GetSubsystem<UStarshatterPlayerSubsystem>()){Reward.Base=DynamicMissionAI::Reward(Players->GetPlayerInfo(),MissionId);Reward.CompletionPoints=DynamicMissionAI::Points(Players->GetPlayerInfo(),MissionId);Reward.Recovery=Reward.Objectives=Reward.Time=0;}
-    Status=FText::Format(INVTEXT("{0}  /  {1} POINTS  /  {2} CR + ELIGIBLE BONUSES"),Status,FText::AsNumber(Reward.CompletionPoints),FText::AsNumber(Reward.Base));
+    if(MissionId==FreeFlightAssignment::Id){Reward.Base=Reward.CompletionPoints=Reward.Recovery=Reward.Objectives=Reward.Time=0;}
+    if(MissionId==FreeFlightAssignment::Id)
+        Status=FText::Format(INVTEXT("{0} / INDEPENDENT FLIGHT / ACTIVE CRAFT / NO REWARDS"),Status);
+    else
+        Status=FText::Format(INVTEXT("{0}  /  {1} POINTS  /  {2} CR + ELIGIBLE BONUSES"),Status,FText::AsNumber(Reward.CompletionPoints),FText::AsNumber(Reward.Base));
     for(const auto& Assignment:Queue)if(Assignment.MissionId==MissionId && Assignment.AcceptedUtc>0)
         Status=FText::Format(INVTEXT("{0}\nACCEPTED {1} GMT"),Status,FText::FromString(FDateTime::FromUnixTimestamp(Assignment.AcceptedUtc).ToString(TEXT("%d %b %H:%M"))));
     Details->SetAssignmentMetadata(Officer?FText::FromString(Officer->DisplayName):INVTEXT("Mission Control"),Status,Expiry);
@@ -545,7 +612,7 @@ TSharedRef<SWidget> UAgentsDlg::RebuildWidget()
                             [SNew(STextBlock).Text_Lambda([this,AgentLabel]() { return AgentLabel(SelectedAgent); }).Font(MissionUIStyle::GetHeaderFont(15))]]]
                 ]
                 + SVerticalBox::Slot().AutoHeight().Padding(0, 0, 12, 12)
-                [SNew(SRecordDetails).Record_Lambda([this, Catalog]()
+                [SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([this](){return GetTypeHash(SelectedAgent);}).Record_Lambda([this, Catalog]()
                     {
                         FRecordDetails D;D.Icon=EShipSystemIcon::Agent;
                         const auto* Agent=Catalog?Catalog->FindAgent(SelectedAgent):nullptr;

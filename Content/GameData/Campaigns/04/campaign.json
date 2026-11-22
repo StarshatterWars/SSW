@@ -1,0 +1,131 @@
+{
+	"rowName": "None",
+	"name": "Operation Firestorm",
+	"description": "The war comes to an unexpected turning point as new discoveries come to light.  Alliance war fleets continue to push into Hegemony territory as new forces are brought into the battle.",
+	"situation": "A small Hegemony outpost has been detected in the Ostara system.  Force:Space Sixth Fleet (Atlas) has been tasked with eliminating this threat, as a prelude to the planned invasion of the Tarsus system. Force 9th Carrier Group (Atlas) will reduce the Hegemony fighter component, while the 14th Battle Group (Stormwind) addresses the naval component.",
+	"start": "01/00:00:00",
+	"orders": [
+		"* Reduce or eliminate the Hegemony presence in Ostara.",
+		"* Prepare the region for a general invasion of Tarsus.",
+		"* Protect Alliance assets in the area.\\n"
+	],
+	"bScripted": false,
+	"bSequential": false,
+	"bAvailable": true,
+	"bCompleted": false,
+	"system": "Jarnell",
+	"region": "Adonis",
+	"mainImage": "main",
+	"actionSize": 0,
+	"combatantSize": 4,
+	"index": 3,
+	"combatant": [
+		{
+			"name": "Terellian",
+			"size": 2,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 6
+				},
+				{
+					"type": "FLEET",
+					"id": 7
+				}
+			]
+		},
+		{
+			"name": "Marakan",
+			"size": 8,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 3
+				},
+				{
+					"type": "FLEET",
+					"id": 5
+				},
+				{
+					"type": "BATTALION",
+					"id": 9
+				},
+				{
+					"type": "BATTALION",
+					"id": 10
+				},
+				{
+					"type": "WAR_PRODUCTION",
+					"id": 4000
+				},
+				{
+					"type": "INFRASTRUCTURE",
+					"id": 3000
+				},
+				{
+					"type": "INFRASTRUCTURE",
+					"id": 4000
+				},
+				{
+					"type": "INFRASTRUCTURE",
+					"id": 5000
+				}
+			]
+		},
+		{
+			"name": "Dantari",
+			"size": 3,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 2
+				},
+				{
+					"type": "BATTALION",
+					"id": 3
+				},
+				{
+					"type": "WAR_PRODUCTION",
+					"id": 3000
+				}
+			]
+		},
+		{
+			"name": "Pirate",
+			"size": 2,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 2
+				},
+				{
+					"type": "FLEET",
+					"id": 3
+				}
+			]
+		},
+		{
+			"name": "Zolon",
+			"size": 2,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 1
+				},
+				{
+					"type": "NON_COM",
+					"id": 1
+				}
+			]
+		}
+	],
+	"action": [],
+	"zone": [],
+	"missionList": [],
+	"templateList": [],
+	"missions": [],
+	"storyMissions": [],
+	"templateMissions": [],
+	"scriptedMissions": [],
+	"campaignImage": "None"
+}

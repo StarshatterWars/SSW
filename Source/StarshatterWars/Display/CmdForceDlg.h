@@ -63,7 +63,7 @@ public:
     void SetManager(UCmpnScreen* InManager);
     void SetParentCmdDlg(UCmdDlg* InParentCmdDlg);
     void ShowForceDlg();
-    void ExecFrame();
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
     void SetModeAndHighlight(ECOMMAND_MODE InMode);
 
 private:

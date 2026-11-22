@@ -8,7 +8,7 @@
 #include "GameStructs_products.generated.h"
 
 UENUM(BlueprintType)
-enum class ESSWProductionFacilityType : uint8 { Refinery, Factory, Shipyard };
+enum class ESSWProductionFacilityType : uint8 { Refinery, Factory, Shipyard, Storage };
 
 USTRUCT(BlueprintType)
 struct FSSWProductionFacility : public FTableRowBase
@@ -17,6 +17,9 @@ struct FSSWProductionFacility : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     FString Facility;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FString Role;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FString StorageRole;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<FName> AllowedItems;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) ESSWProductionFacilityType FacilityType=ESSWProductionFacilityType::Factory;
     // Player service terms; NPC background batches retain their authored recipe.
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FName ServiceProfile = TEXT("Standard");
@@ -53,6 +56,8 @@ struct FSSWProductionRecipe : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
     TArray<ESSWMineral> Minerals;
+    // Resolved on the game thread before native worker dispatch; never reflected on a worker.
+    TArray<FName> NativeMineralKeys;
     // An assembled hull is stock, not a spawned combat ship or a free player grant.
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FName ShipDesign;
 

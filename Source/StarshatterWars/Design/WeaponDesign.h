@@ -50,7 +50,6 @@ public:
 
 	int operator == (const WeaponDesign& rhs) const { return (type == rhs.type) || (name == rhs.name); }
 
-	static void            Initialize(const char* filename);
 	static void            Close();
 
 	static WeaponDesign* GetWeaponDesign(int type);
@@ -80,10 +79,6 @@ public:
 
     bool ResolveSoundResource();
 
-	// Do NOT define a file-scope `static List<WeaponDesign> catalog;` anywhere.
-	static List<WeaponDesign> catalog;
-	static List<WeaponDesign> mod_catalog;
-	static bool               degrees;
 
 	// identification:
 	int               type;             // unique id
@@ -215,5 +210,4 @@ public:
 	int               trail_dim;
 
 private:
-	static void LoadDesign(const char* path, const char* filename, bool mod = false);
 };

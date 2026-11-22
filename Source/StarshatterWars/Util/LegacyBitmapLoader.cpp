@@ -3,6 +3,8 @@
 #include "ImageCore.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "HAL/FileManager.h"
+#include "HAL/FileManager.h"
 bool LegacyBitmapLoader::DecodePCX(TConstArrayView<uint8> B,int32& W,int32& H,TArray<FColor>& Pixels)
 {
     W=H=0;Pixels.Reset();
@@ -42,6 +44,8 @@ bool LegacyBitmapLoader::DecodePCX(TConstArrayView<uint8> B,int32& W,int32& H,TA
 bool LegacyBitmapLoader::Load(const FString& Path,int32& W,int32& H,TArray<FColor>& Pixels)
 {
     W=H=0;Pixels.Reset();TArray<uint8> Bytes;
+    if(!IFileManager::Get().FileExists(*Path))return false;
+    if(!IFileManager::Get().FileExists(*Path))return false;
     if(!FFileHelper::LoadFileToArray(Bytes,*Path))return false;
     if(FPaths::GetExtension(Path).Equals(TEXT("pcx"),ESearchCase::IgnoreCase))return DecodePCX(Bytes,W,H,Pixels);
     FImage Image;

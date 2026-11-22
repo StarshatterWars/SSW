@@ -1,0 +1,120 @@
+{
+  "version": "2.4.71",
+  "build": "2026-11-12",
+  "verification": "Publisher HTTPS SHA-256 matched; retained PGP signature was not verified",
+  "checksum": "https://www.apachelounge.com/download/VS18/binaries/httpd-2.4.71-261112-Win64-VS18.zip.txt",
+  "externalWindowsImports": [
+    "ADVAPI32.dll",
+    "api-ms-win-crt-conio-l1-1-0.dll",
+    "api-ms-win-crt-convert-l1-1-0.dll",
+    "api-ms-win-crt-environment-l1-1-0.dll",
+    "api-ms-win-crt-heap-l1-1-0.dll",
+    "api-ms-win-crt-locale-l1-1-0.dll",
+    "api-ms-win-crt-math-l1-1-0.dll",
+    "api-ms-win-crt-runtime-l1-1-0.dll",
+    "api-ms-win-crt-stdio-l1-1-0.dll",
+    "api-ms-win-crt-string-l1-1-0.dll",
+    "api-ms-win-crt-time-l1-1-0.dll",
+    "api-ms-win-crt-utility-l1-1-0.dll",
+    "KERNEL32.dll",
+    "RPCRT4.dll",
+    "SHELL32.dll",
+    "VCRUNTIME140.dll",
+    "WS2_32.dll"
+  ],
+  "files": [
+    {
+      "path": "ABOUT_APACHE.txt",
+      "sha256": "45D42044775F2434A0AAF41C5C306AEBDDA32834D035D6AC65DB939F6F28CE74",
+      "size": 13741
+    },
+    {
+      "path": "bin/httpd.exe",
+      "sha256": "4708BC74F2B394CCC16E8BE65DB9557197F2256ACF96F2405839AAE6DEA992FE",
+      "size": 29696
+    },
+    {
+      "path": "bin/libapr-1.dll",
+      "sha256": "64209904C53C280B63D82B1E13A5B81A11DB3D4854E027F522183544A4849166",
+      "size": 213504
+    },
+    {
+      "path": "bin/libapriconv-1.dll",
+      "sha256": "84DC46AC5F2ACB4CB6E31A68B9F9F68D03C7960C3A0E4B136E6DF6EA7BA6B00D",
+      "size": 34304
+    },
+    {
+      "path": "bin/libaprutil-1.dll",
+      "sha256": "56D0AA9195595156114933FA488ED2ECCFE11F649F322812CB1E855300DB0733",
+      "size": 162304
+    },
+    {
+      "path": "bin/libexpat.dll",
+      "sha256": "E7A5F1595FE7506D6ED9F3668F64947F15D0C7B141D48AD33645CD702A92C84D",
+      "size": 173056
+    },
+    {
+      "path": "bin/libhttpd.dll",
+      "sha256": "E45F75689E5A8EB5CF1449CC73BA4E8348DF28643423DCD6BA8A79374F3CF41F",
+      "size": 464384
+    },
+    {
+      "path": "bin/pcre2-8.dll",
+      "sha256": "DC8B34D800C7CF77784E5E43F37E180119204C02222D1AC6DDE9234D3D094C08",
+      "size": 385536
+    },
+    {
+      "path": "conf/mime.types",
+      "sha256": "66FE7422F9D0598E2C98ED4D2EFE9DF140E9CFFC63A83690FBBE6802E0DA1A9C",
+      "size": 62973
+    },
+    {
+      "path": "Distribution-ReadMe.txt",
+      "sha256": "5D4864CFA0CE9FAC7A08B971A033F665D2D4278183BE9E79D405D3BC252E0315",
+      "size": 2488
+    },
+    {
+      "path": "Distribution-Security.txt",
+      "sha256": "4571918EA097E4FEAF12082BBB1EA026C619DAA52F9C59DA53BEBCD8D442F29D",
+      "size": 121
+    },
+    {
+      "path": "LICENSE.txt",
+      "sha256": "CA43CB44970E9EBA2572BF267F03B6EA7F6836D927BA3E53A4BC9C8858A48548",
+      "size": 44494
+    },
+    {
+      "path": "modules/mod_alias.so",
+      "sha256": "5A5203885AEE1DDB9AEE194E4477E709306B0CAB27B51A14581A580C442B8C66",
+      "size": 21504
+    },
+    {
+      "path": "modules/mod_authz_core.so",
+      "sha256": "160434F5843CDF3911967DA4E5E7E2BB52B391FFB530467627D7E01CF23FF740",
+      "size": 24064
+    },
+    {
+      "path": "modules/mod_authz_host.so",
+      "sha256": "CAEA5B56E7C185B49816A15919671DCFAAD1A4A4C7ADB121A2690F721A18B451",
+      "size": 16896
+    },
+    {
+      "path": "modules/mod_dir.so",
+      "sha256": "0BBBC2CF64DC4DDD79439FC29E45937939FAD41EE4267357849FFB4C09D2C70B",
+      "size": 15872
+    },
+    {
+      "path": "modules/mod_mime.so",
+      "sha256": "770CF0C864BBCA34A390B5F31E2F918DE3A14F72647601A939DEA63F0727B2C4",
+      "size": 23040
+    },
+    {
+      "path": "NOTICE.txt",
+      "sha256": "805141EE24A6AF53470ED9591B6663C3C80DAA66B45170AF1C9AB781BAC68713",
+      "size": 2865
+    }
+  ],
+  "windowsPrerequisite": "Visual C++ x64 runtime 14.52.37029 or later (per distributor)",
+  "source": "https://www.apachelounge.com/download/VS18/binaries/httpd-2.4.71-261112-Win64-VS18.zip",
+  "archiveSha256": "44961A929DFF16B767B3ADBCEA55760A942A00239B2891DC55806BE34029E1FC"
+}

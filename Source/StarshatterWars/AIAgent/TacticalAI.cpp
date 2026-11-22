@@ -45,15 +45,16 @@ static int exec_time_seed = 0;
 // +--------------------------------------------------------------------+
 
 TacticalAI::TacticalAI(ShipAI* ai)
-	: ship(0)
-	, ship_ai(0)
-	, carrier_ai(0)
-	, navpt(0)
-	, orders(0)
-	, action(RadioMessageAction::NONE)
-	, threat_level(0)
-	, support_level(1)
-	, directed_tgtid(0)
+	: 
+    ship(0),
+    ship_ai(0),
+    carrier_ai(0),
+    navpt(0),
+    orders(0),
+    action(RadioMessageAction::NONE),
+    directed_tgtid(0),
+    threat_level(0),
+    support_level(1)
 {
 	if (ai) {
 		ship_ai = ai;

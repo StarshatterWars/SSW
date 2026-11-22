@@ -217,6 +217,8 @@ void UMiningDroneSubsystem::Tick(float DeltaTime)
     if(!Fleet){for(auto& Pair:Visuals)if(Pair.Value.IsValid())Pair.Value->Destroy();Visuals.Reset();return;}
     if(!BoundFleets.Contains(Key) && !Owner->IsDead() && !Owner->IsDying()){FText Reason;if(!PrepareBay(Reason))return;Fleet=State.MiningDrones.Find(Key);if(!Fleet)return;}
     UpdateVisuals(*Owner,*Fleet);Accumulator+=DeltaTime;if(Accumulator<.5)return;const double Seconds=FMath::Min(Accumulator,1.0);Accumulator=0;
+    // Docked/lost fleets cannot change: avoid copying the complete economy.
+    if(!Fleet->Drones.ContainsByPredicate([](const FMiningDroneState& Drone){return Drone.State!=EMiningDroneState::Docked && Drone.State!=EMiningDroneState::Lost;})) return;
     const auto Before=State;const auto* Bay=GetBay(Owner);const auto* Weapon=WeaponDesignRegistry::FindLegacy(Bay->MiningWeapon);
     const double Rate=Weapon?Weapon->MiningTonnesPerSecond*Bay->MiningRateScale:0;bool Changed=false;TArray<TPair<Asteroid*,double>> Extracted;
     const FName Region=Owner->GetRegion()?FName(UTF8_TO_TCHAR(Owner->GetRegion()->GetName())):NAME_None;

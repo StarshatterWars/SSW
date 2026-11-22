@@ -319,7 +319,7 @@ void UCampaignSceneDlg::BuildRuntimeWidgets()
         UE_LOG(LogTemp, Error, TEXT("[SceneDlg] BuildRuntimeWidgets: failed to create CaptionTextBottom"));
     }
 
-    UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] Runtime widgets created"));
+    UE_LOG(LogTemp, Log, TEXT("[SceneDlg] Runtime widgets created"));
 }
 
 void UCampaignSceneDlg::ResetSceneState()
@@ -639,7 +639,7 @@ FString UCampaignSceneDlg::ResolveSceneSoundPath(const FString& SoundToken) cons
 
     for (const FString& Path : CandidatePaths)
     {
-        if (LoadObject<USoundBase>(nullptr, *Path))
+        if (LoadObject<USoundBase>(nullptr, *Path, nullptr, LOAD_NoWarn | LOAD_Quiet))
         {
             return Path;
         }
@@ -797,7 +797,7 @@ void UCampaignSceneDlg::ExecuteDisplayBlockAtTime(double BlockTime)
         MessageSubtitleText->SetText(FText::FromString(SubtitleLines));
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[SceneDlg] DISPLAY BLOCK @ %.2f Title='%s' Subtitle='%s'"),
         BlockTime,
         *TitleLine,
@@ -806,7 +806,7 @@ void UCampaignSceneDlg::ExecuteDisplayBlockAtTime(double BlockTime)
 
 void UCampaignSceneDlg::ExecuteDisplayEvent(const FS_MissionEvent& Event)
 {
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[SceneDlg] ExecuteDisplayEvent: Time=%.2f Image='%s' Target='%s' Message='%s' Fade=(%.2f, %.2f, %.2f)"),
         Event.EventTime,
         *Event.EventImage,
@@ -949,7 +949,7 @@ FString UCampaignSceneDlg::ResolveScenePanelPath(const FString& ImageToken) cons
     FString Token = ImageToken.TrimStartAndEnd();
     if (Token.IsEmpty())
     {
-        UE_LOG(LogTemp, Warning, TEXT("[SceneDlg] ResolveScenePanelPath: empty token"));
+        UE_LOG(LogTemp, Log, TEXT("[SceneDlg] ResolveScenePanelPath: empty token"));
         return FString();
     }
 
@@ -961,7 +961,7 @@ FString UCampaignSceneDlg::ResolveScenePanelPath(const FString& ImageToken) cons
         const FString InnerPath = Token.Mid(FirstQuote + 1, LastQuote - FirstQuote - 1).TrimStartAndEnd();
         if (InnerPath.StartsWith(TEXT("/Game/")))
         {
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, Log,
                 TEXT("[SceneDlg] ResolveScenePanelPath: quoted -> %s"),
                 *InnerPath);
             return InnerPath;
@@ -970,7 +970,7 @@ FString UCampaignSceneDlg::ResolveScenePanelPath(const FString& ImageToken) cons
 
     if (Token.StartsWith(TEXT("/Game/")))
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[SceneDlg] ResolveScenePanelPath: direct -> %s"),
             *Token);
         return Token;
@@ -987,7 +987,7 @@ FString UCampaignSceneDlg::ResolveScenePanelPath(const FString& ImageToken) cons
     const FString CampaignPath = FString::Printf(TEXT("/Game/UI/Campaigns/%02d/%s.%s"), PanelCampaign, *Token, *Token);
     if (LoadObject<UTexture2D>(nullptr, *CampaignPath))
     {
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[SceneDlg] ResolveScenePanelPath: token '%s' -> '%s'"),
             *Token, *CampaignPath);
         return CampaignPath;

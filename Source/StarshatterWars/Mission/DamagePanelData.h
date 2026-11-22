@@ -181,4 +181,74 @@ namespace SSWDamagePanel
             FVector2D(FMath::Max(Width, TextWidth + 24), 28) * Scale);
         Text({12,-26}, Detail, 12, Status == SYSTEM_STATUS::CRITICAL ? FLinearColor::Red : FLinearColor::White, 4);
     }
+    struct FDiagramPoint
+    {
+        FVector2D UV;double Health=100;FString Name;EShipSystemIcon Icon=EShipSystemIcon::Auxiliary;
+        SYSTEM_STATUS Status=SYSTEM_STATUS::NOMINAL;
+        bool HasDamage()const{return FMath::IsFinite(Health) && (Health<99.9 || Status==SYSTEM_STATUS::DESTROYED || Status==SYSTEM_STATUS::CRITICAL || Status==SYSTEM_STATUS::DEGRADED);}
+    };
+    // Orthographic player schematic is nose-left / engine-aft-right.
+    inline FVector2D DefaultLocation(EShipSystemIcon Icon,int32 Index=0,bool Capital=false)
+    {
+        switch(Icon)
+        {
+        case EShipSystemIcon::Sensor:return {.18,.5};
+        case EShipSystemIcon::Navigation:return {.28,.45};
+        case EShipSystemIcon::Computer:return {.35,.5};
+        case EShipSystemIcon::Reactor:return {.52,.5};
+        case EShipSystemIcon::Engine:return {.84,Index%2?.62:.38};
+        case EShipSystemIcon::Jump:return {.69,.5};
+        case EShipSystemIcon::Shield:return {.52,.77};
+        case EShipSystemIcon::Deck:return {Capital?.65:.5,.67};
+        case EShipSystemIcon::Thruster:return {Index%2?.78:.25,Index%4<2?.18:.82};
+        case EShipSystemIcon::Weapon:case EShipSystemIcon::Projectile:return {.38+.12*(Index/2),Index%2?.74:.26};
+        default:return {.55,Index%2?.65:.35};
+        }
+    }
+    inline int32 DamageCount(TConstArrayView<FDiagramPoint> Points)
+    {int32 Count=0;for(const auto& Point:Points)if(Point.HasDamage())++Count;return Count;}
+    constexpr double SchematicHeight=224;
+    inline void PaintSchematic(TConstArrayView<FDiagramPoint> Points,const FSlateBrush* Hull,double HullHealth,
+        FSlateWindowElementList& Elements,int32 Layer,const FGeometry& Geometry,FVector2D Origin,float Scale,
+        FLinearColor Theme,TOptional<FVector2D> LocalCursor)
+    {
+        constexpr double Width=FlightPanelStyle::CenterPanelWidth;
+        FlightPanelStyle::PaintGlass(Elements,Layer,Geometry,Origin,FVector2D(Width,SchematicHeight)*Scale);
+        FlightPanelStyle::PaintHeader(Elements,Layer+1,Geometry,Origin,Width,Scale,TEXT("CAUTION"),Theme);
+        const FVector2D ImageOrigin=Origin+FVector2D(12,36)*Scale,ImageSize=FVector2D(Width-24,(Width-24)*.5)*Scale;
+        if(Hull)FSlateDrawElement::MakeBox(Elements,Layer+2,Geometry.ToPaintGeometry(FVector2f(ImageSize),FSlateLayoutTransform(FVector2f(ImageOrigin))),Hull,ESlateDrawEffect::None,FLinearColor(.65f,.85f,.95f,1));
+        const FDiagramPoint* Hovered=nullptr;TArray<FVector2D,TInlineAllocator<32>> Occupied;
+        for(const auto& Point:Points)
+        {
+            if(!Point.HasDamage())continue;
+            FVector2D Center=ImageOrigin+Point.UV*ImageSize;
+            Center.X=FMath::Clamp(Center.X,ImageOrigin.X+12*Scale,ImageOrigin.X+ImageSize.X-12*Scale);
+            Center.Y=FMath::Clamp(Center.Y,ImageOrigin.Y+12*Scale,ImageOrigin.Y+ImageSize.Y-12*Scale);
+            const FVector2D Mount=Center;
+            const auto Fits=[&](FVector2D Position){return !Occupied.ContainsByPredicate([&](FVector2D Other){return (Position-Other).SizeSquared()<FMath::Square(22*Scale);});};
+            if(!Fits(Center))
+            {
+                const FVector2D Directions[]={{0,-1},{0,1},{-1,0},{1,0},{-1,-1},{1,-1},{-1,1},{1,1}};
+                bool Placed=false;
+                for(int32 Ring=1;Ring<=4 && !Placed;++Ring)for(const auto& Direction:Directions)
+                {
+                    FVector2D Candidate=Mount+Direction*(24*Ring*Scale);
+                    Candidate.X=FMath::Clamp(Candidate.X,ImageOrigin.X+12*Scale,ImageOrigin.X+ImageSize.X-12*Scale);
+                    Candidate.Y=FMath::Clamp(Candidate.Y,ImageOrigin.Y+12*Scale,ImageOrigin.Y+ImageSize.Y-12*Scale);
+                    if(Fits(Candidate)){Center=Candidate;Placed=true;break;}
+                }
+            }
+            Occupied.Add(Center);
+            if(!Center.Equals(Mount))FSlateDrawElement::MakeLines(Elements,Layer+3,Geometry.ToPaintGeometry(),{Mount,Center},ESlateDrawEffect::None,Theme*.5f,true,1);
+            const FLinearColor Tint=Point.Status==SYSTEM_STATUS::DESTROYED || Point.Health<=0?FLinearColor(1,.18f,.14f,1):Point.Health<50?FLinearColor(1,.3f,.12f,1):FLinearColor(1,.78f,.15f,1);
+            FSlateDrawElement::MakeBox(Elements,Layer+3,Geometry.ToPaintGeometry(FVector2f(24*Scale,24*Scale),FSlateLayoutTransform(FVector2f(Center-FVector2D(12,12)*Scale))),FCoreStyle::Get().GetBrush("WhiteBrush"),ESlateDrawEffect::None,FLinearColor(.015f,.025f,.04f,.95f));
+            SShipSystemIcon::PaintIcon(Elements,Layer+4,Geometry,Center-FVector2D(10,10)*Scale,Point.Icon,Tint,Scale*.9f);
+            if(LocalCursor && FVector2D::Distance(*LocalCursor,Center)<15*Scale)Hovered=&Point;
+        }
+        FString Detail=Hovered?FString::Printf(TEXT("%s  %.0f%%"),*Hovered->Name.ToUpper().Left(35),Hovered->Health):
+            !Hull?TEXT("SCHEMATIC LOADING"):DamageCount(Points)>0?FString::Printf(TEXT("HULL %.0f%%  /  %d DAMAGED SYSTEMS"),HullHealth,DamageCount(Points)):TEXT("NO SYSTEM DAMAGE");
+        FSlateDrawElement::MakeText(Elements,Layer+5,Geometry.ToPaintGeometry(FVector2f(Width-24,20),FSlateLayoutTransform(FVector2f(Origin+FVector2D(12,SchematicHeight-25)*Scale))),Detail,
+            FCoreStyle::GetDefaultFontStyle("Regular",FMath::Max(8,FMath::RoundToInt(10*Scale))),ESlateDrawEffect::None,Hovered?FLinearColor(1,.8f,.25f,1):Theme);
+    }
+
 }

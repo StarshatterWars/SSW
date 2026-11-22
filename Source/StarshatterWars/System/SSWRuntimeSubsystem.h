@@ -142,6 +142,8 @@ private:
     void ClearMissionWaypoints();
     TArray<FString> SelectedJumpRoute;
     double WaypointRefreshSeconds = 0;
+    bool bSurfaceFlightPlanPrepared = false;
+    void PrepareSurfaceFlightPlan(SimRegion* Region);
     bool bWaypointClassResolved = false;
     UPROPERTY(Transient) TSubclassOf<AWaypointActor> WaypointClass;
     TMap<FString, TWeakObjectPtr<AWaypointActor>> MissionWaypoints;

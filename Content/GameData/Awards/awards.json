@@ -641,109 +641,109 @@
       },
       {
         "id": 1,
-        "credits": 50000
+        "credits": 5000
       },
       {
         "id": 2,
-        "credits": 125000
+        "credits": 12500
       },
       {
         "id": 3,
-        "credits": 250000
+        "credits": 25000
       },
       {
         "id": 4,
-        "credits": 500000
+        "credits": 50000
       },
       {
         "id": 5,
-        "credits": 1000000
+        "credits": 100000
       },
       {
         "id": 6,
-        "credits": 2000000
+        "credits": 200000
       },
       {
         "id": 7,
-        "credits": 4000000
+        "credits": 400000
       },
       {
         "id": 8,
-        "credits": 6000000
+        "credits": 600000
       },
       {
         "id": 9,
-        "credits": 8000000
+        "credits": 800000
       },
       {
         "id": 10,
-        "credits": 10000000
+        "credits": 1000000
       }
     ],
     "medals": [
       {
         "id": 1,
-        "credits": 150000
+        "credits": 15000
       },
       {
         "id": 2,
-        "credits": 150000
+        "credits": 15000
       },
       {
         "id": 4,
-        "credits": 150000
+        "credits": 15000
       },
       {
         "id": 8,
-        "credits": 75000
-      },
-      {
-        "id": 16,
-        "credits": 150000
-      },
-      {
-        "id": 32,
-        "credits": 25000
-      },
-      {
-        "id": 64,
-        "credits": 10000
-      },
-      {
-        "id": 128,
-        "credits": 20000
-      },
-      {
-        "id": 256,
-        "credits": 50000
-      },
-      {
-        "id": 512,
-        "credits": 100000
-      },
-      {
-        "id": 1024,
         "credits": 7500
       },
       {
+        "id": 16,
+        "credits": 15000
+      },
+      {
+        "id": 32,
+        "credits": 2500
+      },
+      {
+        "id": 64,
+        "credits": 1000
+      },
+      {
+        "id": 128,
+        "credits": 2000
+      },
+      {
+        "id": 256,
+        "credits": 5000
+      },
+      {
+        "id": 512,
+        "credits": 10000
+      },
+      {
+        "id": 1024,
+        "credits": 750
+      },
+      {
         "id": 2048,
-        "credits": 50000
+        "credits": 5000
       },
       {
         "id": 4096,
-        "credits": 75000
+        "credits": 7500
       },
       {
         "id": 8192,
-        "credits": 100000
+        "credits": 10000
       },
       {
         "id": 16384,
-        "credits": 250000
+        "credits": 25000
       },
       {
         "id": 32768,
-        "credits": 500000
+        "credits": 50000
       }
     ]
   }

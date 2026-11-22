@@ -14,6 +14,7 @@ public:
     TStatId GetStatId() const override {RETURN_QUICK_DECLARE_CYCLE_STAT(ULocalGameStateSubsystem,STATGROUP_Tickables);}
     bool BeginAutosave();
     bool SaveAtExit();
+    bool SaveCheckpointNow();
     void CaptureBeforeMissionUnload();
     bool RestoreAccount(FS_PlayerGameInfo&,const FString& ProfileSlot);
     bool RestoreWorld(class Sim&);

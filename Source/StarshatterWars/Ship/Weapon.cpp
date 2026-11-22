@@ -48,33 +48,33 @@ Weapon::Weapon(WeaponDesign* d, int nmuz, FVector* muzzles, double az, double el
         d->capacity, d->capacity, d->recharge_rate),
     design(d),
     group(d->group),
+    turret(0),
+    turret_base(0),
+    active_barrel(0),
+    refire(0.0f),
     ammo(-1),
     ripple_count(0),
+    mass(d->carry_mass),
+    resist(d->carry_resist),
+    guided(d->guided),
+    enabled(true),
+    locked(false),
+    centered(false),
+    firing(false),
+    blocked(false),
+    shot_speed(d->speed),
+    index(0),
+    orders(WeaponsOrders::MANUAL),
+    control(WeaponsControl::SINGLE_FIRE),
+    sweep(WeaponsSweep::SWEEP_TIGHT),
+    target(0),
+    subtarget(0),
     aim_azimuth((float)az),
     aim_elevation((float)el),
     old_azimuth(0.0f),
     old_elevation(0.0f),
     aim_time(0),
-    enabled(true),
-    refire(0.0f),
-    mass(d->carry_mass),
-    resist(d->carry_resist),
-    guided(d->guided),
-    shot_speed(d->speed),
-    active_barrel(0),
-    locked(false),
-    centered(false),
-    firing(false),
-    blocked(false),
-    index(0),
-    target(0),
-    subtarget(0),
-    beams(0),
-    orders(WeaponsOrders::MANUAL),
-    control(WeaponsControl::SINGLE_FIRE),
-    sweep(WeaponsSweep::SWEEP_TIGHT),
-    turret(0),
-    turret_base(0)
+    beams(0)
 {
     FMemory::Memzero(visible_stores, sizeof(visible_stores));
     FMemory::Memzero(muzzle_pts, sizeof(muzzle_pts));
@@ -133,39 +133,39 @@ Weapon::Weapon(WeaponDesign* d, int nmuz, FVector* muzzles, double az, double el
 Weapon::Weapon(const Weapon& w)
     : SimSystem(w),
     design(w.design),
+    group(w.group),
+    turret(0),
+    turret_base(0),
+    active_barrel(0),
+    refire(0.0f),
     ammo(-1),
     ripple_count(0),
-    enabled(true),
-    refire(0.0f),
     mass(w.mass),
     resist(w.resist),
-    aim_azimuth(w.aim_azimuth),
-    aim_elevation(w.aim_elevation),
-    old_azimuth(0.0f),
-    old_elevation(0.0f),
-    aim_time(0),
     guided(w.guided),
-    shot_speed(w.shot_speed),
-    active_barrel(0),
+    enabled(true),
     locked(false),
     centered(false),
     firing(false),
     blocked(false),
-    target(0),
-    subtarget(0),
-    beams(0),
+    shot_speed(w.shot_speed),
     orders(WeaponsOrders::MANUAL),
     control(WeaponsControl::SINGLE_FIRE),
     sweep(WeaponsSweep::SWEEP_TIGHT),
-    group(w.group),
+    target(0),
+    subtarget(0),
+    aim_azimuth(w.aim_azimuth),
+    aim_elevation(w.aim_elevation),
+    old_azimuth(0.0f),
+    old_elevation(0.0f),
     aim_az_max(w.aim_az_max),
     aim_az_min(w.aim_az_min),
     aim_az_rest(w.aim_az_rest),
     aim_el_max(w.aim_el_max),
     aim_el_min(w.aim_el_min),
     aim_el_rest(w.aim_el_rest),
-    turret(0),
-    turret_base(0)
+    aim_time(0),
+    beams(0)
 {
     Mount(w);
     FMemory::Memzero(visible_stores, sizeof(visible_stores));
@@ -297,6 +297,7 @@ void Weapon::SetAmmo(int a)
 {
     if (a < 0)
         return;
+    const int PreviousAmmo=ammo;
 
     // Drop carried stores down to the requested count. Advance even when no
     // legacy store mesh exists so this cannot spin forever on a null store.
@@ -331,6 +332,7 @@ void Weapon::SetAmmo(int a)
             }
         }
     }
+    if(ammo!=PreviousAmmo) OnStoresChanged.Broadcast();
 }
 
 // +--------------------------------------------------------------------+
@@ -525,6 +527,7 @@ void Weapon::SetTarget(SimObject* targ, SimSystem* sub)
 
     // if ok, target this object:
     if (target != targ) {
+        Ignore(target);
         target = targ;
 
         if (target)
@@ -825,7 +828,10 @@ SimShot* Weapon::FireBarrel(int n)
         if(!bRackRelease && (design->flash.length() || design->flash_img) && design->flash_scale>0)
             Explosion::QueueMuzzleFlash(FlashPosition,shot->GetCam().vpn(),design->flash_scale,region,ship,ANSI_TO_TCHAR(design->flash.data()));
         if (ammo > 0)
-            ammo--;
+        {
+            --ammo;
+            OnStoresChanged.Broadcast();
+        }
 
         if (guided && target)
             shot->SeekTarget(target, subtarget);
@@ -904,7 +910,7 @@ void Weapon::Orient(const Physical* rep)
 
     // Defensive orthonormalization:
     ZAxis = (ZAxis - FVector::DotProduct(ZAxis, XAxis) * XAxis).GetSafeNormal();
-    YAxis = FVector::CrossProduct(XAxis, ZAxis).GetSafeNormal();
+    YAxis = FVector::CrossProduct(ZAxis, XAxis).GetSafeNormal();
 
     // UE orientation matrix (rotation only):
     const FMatrix ShipRotM(
@@ -913,16 +919,6 @@ void Weapon::Orient(const Physical* rep)
         FPlane(ZAxis.X, ZAxis.Y, ZAxis.Z, 0.0f),
         FPlane(0.0f, 0.0f, 0.0f, 1.0f)
     );
-
-    // Full transform with translation:
-    const FMatrix ShipM(
-        FPlane(XAxis.X, XAxis.Y, XAxis.Z, 0.0f),
-        FPlane(YAxis.X, YAxis.Y, YAxis.Z, 0.0f),
-        FPlane(ZAxis.X, ZAxis.Y, ZAxis.Z, 0.0f),
-        FPlane(ShipLoc.X, ShipLoc.Y, ShipLoc.Z, 1.0f)
-    );
-
-    const FTransform ShipXform(ShipM);
 
     // Align graphics with camera:
     if (turret)
@@ -940,7 +936,7 @@ void Weapon::Orient(const Physical* rep)
         AimZ = AimZ.GetSafeNormal();
 
         AimZ = (AimZ - FVector::DotProduct(AimZ, AimX) * AimX).GetSafeNormal();
-        AimY = FVector::CrossProduct(AimX, AimZ).GetSafeNormal();
+        AimY = FVector::CrossProduct(AimZ, AimX).GetSafeNormal();
 
         const FMatrix AimRotM(
             FPlane(AimX.X, AimX.Y, AimX.Z, 0.0f),

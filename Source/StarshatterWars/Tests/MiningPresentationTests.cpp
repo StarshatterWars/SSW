@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "MiningCrystalCatalog.h"
@@ -74,6 +75,7 @@ bool FMiningContactPresentationTest::RunTest(const FString&)
 {
     const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     if(!TestNotNull(TEXT("Preview world"),World))return false;
     auto* Beam=World->SpawnActor<AMiningBeamActor>();
     if(!TestNotNull(TEXT("Native mining actor"),Beam)){World->DestroyWorld(false);return false;}

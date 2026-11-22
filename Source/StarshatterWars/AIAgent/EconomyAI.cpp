@@ -1,5 +1,7 @@
 #include "EconomyAI.h"
 #include "EconomyRuntime.h"
+#include "ProductionEvents.h"
+#include "SimDataEvents.h"
 #include "ManufacturingAI.h"
 #include "TransactionAI.h"
 #include "CargoCatalogSubsystem.h"
@@ -45,13 +47,18 @@ bool EconomyAI::Snapshot(FEconomyState& State,FName System,FName Item,double Sup
 }
 bool EconomyAI::Advance(FEconomyState& State,const UCargoCatalogSubsystem& Catalog,double Seconds,int64 Now)
 {
+    TMap<FName,FS_CargoCatalogRow> Goods;Catalog.ForEachDefinition([&](FName Id,const FS_CargoCatalogRow& Row){Goods.Add(Id,Row);});
+    return AdvancePlain(State,Goods,Seconds,Now);
+}
+bool EconomyAI::AdvancePlain(FEconomyState& State,const TMap<FName,FS_CargoCatalogRow>& Definitions,double Seconds,int64 Now)
+{
     if(!FMath::IsFinite(Seconds) || Seconds<=0 || Seconds>3600 || Now<=0)return false;
     State.EconomyStepSeconds+=Seconds;if(State.EconomyStepSeconds<60 && !State.RegionalMarkets.IsEmpty())return false;
     const double Step=State.EconomyStepSeconds;State.EconomyStepSeconds=0;
     static const TMap<FName,double> DemandScales=[](){TMap<FName,double> M;FString Json;TArray<TSharedPtr<FJsonValue>> Rows;
         if(FFileHelper::LoadFileToString(Json,*(FPaths::ProjectContentDir()/TEXT("GameData/Cargo/economy.json"))) && FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Rows))
             for(const auto& V:Rows){const auto O=V->AsObject();FString Name;double Scale=1;if(O && O->TryGetStringField(TEXT("Name"),Name)){O->TryGetNumberField(TEXT("DemandScale"),Scale);M.Add(FName(*Name),FMath::Clamp(Scale,.1,10.0));}}return M;}();
-    TMap<FName,const FS_CargoCatalogRow*> Goods;Catalog.ForEachDefinition([&](FName Id,const FS_CargoCatalogRow& Row){Goods.Add(Id,&Row);});
+    TMap<FName,const FS_CargoCatalogRow*> Goods;for(const auto& Pair:Definitions)Goods.Add(Pair.Key,&Pair.Value);
     for(auto& Pair:State.Inventories)
         if(Pair.Value.bMarket && !Pair.Value.bSupplyOnly && Pair.Value.Owner==FEconomyRuntime::IndustryOwner())
             for(const auto& Good:Goods)
@@ -127,7 +134,7 @@ bool EconomyAI::Advance(FEconomyState& State,const UCargoCatalogSubsystem& Catal
                     const auto& Store=State.Inventories.FindChecked(Location);const FName Household(*(TEXT("Residents/")+System.ToString()));
                     const int64 Cost=FMath::Max(1LL,FMath::CeilToInt64(Use*Row.Value));
                     if(State.Wallets.FindRef(Household)>=Cost && State.Wallets.FindRef(Store.TradingOwner)<=MAX_int64-Cost && FEconomyLedger::Withdraw(State,Store.Owner,Location,Item,Use))
-                    {FEconomyLedger::Pay(State,Household,Store.TradingOwner,Cost,FGuid::NewGuid(),TEXT("Civilian end-use purchase"));RecordTrade(State,System,Item,Use,double(Cost));Remaining-=Use;}
+                    {FEconomyLedger::Pay(State,Household,Store.TradingOwner,Cost,FGuid::NewGuid(),TEXT("Civilian end-use purchase"),ECommercePurpose::Purchase);RecordTrade(State,System,Item,Use,double(Cost));Remaining-=Use;}
                 }
                 if(Remaining<=UE_SMALL_NUMBER)break;
             }
@@ -144,7 +151,19 @@ void EconomyAI::AdvanceFacilities(FEconomyState& State,const TMap<FName,FSSWProd
     if(!FMath::IsFinite(Seconds) || Seconds<=0)return;
     for(const auto& Pair:Facilities)
     {
-        const auto& Site=Pair.Value;const auto* Recipe=Recipes.Find(Site.Recipe);
+        const auto& Site=Pair.Value;
+        if(Site.FacilityType==ESSWProductionFacilityType::Storage)
+        {
+            const FName Stock=FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("Stock"));
+            FEconomyRuntime::EnsureWarehouse(State,Stock,FName(*Site.System),Site.CapacityTonnes);
+            if(auto* Inventory=State.Inventories.Find(Stock))
+            {
+                Inventory->bOperational=!State.OfflineFacilities.Contains(Pair.Key);
+                Inventory->AcceptedItems.Reset();for(FName Item:Site.AllowedItems)Inventory->AcceptedItems.Add(DataTableUtils::MakeValidName(Item.ToString()));
+            }
+            continue;
+        }
+        const auto* Recipe=Recipes.Find(Site.Recipe);
         if(!Recipe || (!Recipe->ShipDesign.IsNone() && Site.FacilityType!=ESSWProductionFacilityType::Shipyard) || Site.System.IsEmpty() || Site.Facility.IsEmpty() || Site.CapacityTonnes<=0)continue;
         const FName Input=FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("Input"));
         const FName Output=FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("Output"));
@@ -154,13 +173,13 @@ void EconomyAI::AdvanceFacilities(FEconomyState& State,const TMap<FName,FSSWProd
         In.bOperational=Out.bOperational=!State.OfflineFacilities.Contains(Pair.Key);
         Out.bSupplyOnly=true;Out.bHullStorage=Site.FacilityType==ESSWProductionFacilityType::Shipyard;
         for(const auto& Material:Recipe->Inputs)In.DesiredStock.Add(Material.Item,FMath::Min(Material.Quantity*20,Site.CapacityTonnes/FMath::Max(.001,Material.UnitTonnes)));
-        if(Recipe->Inputs.IsEmpty())for(auto Mineral:Recipe->Minerals)
-            In.DesiredStock.Add(DataTableUtils::MakeValidName(StaticEnum<ESSWMineral>()->GetNameStringByValue(int64(Mineral))),FMath::Min(Recipe->InputTonnes*5,Site.CapacityTonnes));
+        if(Recipe->Inputs.IsEmpty())for(FName Mineral:ManufacturingAI::MineralKeys(*Recipe))
+            In.DesiredStock.Add(Mineral,FMath::Min(Recipe->InputTonnes*5,Site.CapacityTonnes));
         const FName Product=DataTableUtils::MakeValidName(Recipe->CargoItem);
         const double Target=Recipe->OutputQuantity>0?Recipe->OutputQuantity*20:Recipe->OutputTonnes*20;
         const bool Overproduced=FEconomyLedger::Available(State,Output,Product)>Target && PriceTrend(State,FName(*Site.System),Product)<1;
-        const bool HasJob=State.Jobs.ContainsByPredicate([&](const auto& J){return J.Facility==FName(*Site.Facility) && J.State!=EIndustryJobState::Completed && J.State!=EIndustryJobState::Cancelled;});
-        if(!Overproduced || HasJob)ManufacturingAI::AdvanceLive(State,FName(*Site.Facility),Input,Output,Site.Recipe,*Recipe,In.bOperational,Seconds);
+        const bool HasJob=State.Jobs.ContainsByPredicate([&](const auto& J){return J.Facility==(Site.bSurface?Pair.Key:FName(*Site.Facility)) && J.State!=EIndustryJobState::Completed && J.State!=EIndustryJobState::Cancelled;});
+        if(!Overproduced || HasJob)ManufacturingAI::AdvanceLive(State,Site.bSurface?Pair.Key:FName(*Site.Facility),Input,Output,Site.Recipe,*Recipe,In.bOperational,Seconds);
     }
 }
 bool EconomyAI::AdvanceMine(FEconomyState& State,FName Deposit,FName Inventory,FName System,FName Mineral,double Initial,double Rate,double Capacity,double Seconds)
@@ -173,4 +192,79 @@ bool EconomyAI::AdvanceMine(FEconomyState& State,FName Deposit,FName Inventory,F
     const double Amount=FMath::Min3(FMath::Max(0.0,Remaining),Rate*Seconds,FMath::Max(0.0,Hold->CapacityTonnes-FEconomyLedger::Used(*Hold)));
     if(Amount<=0 || !FEconomyLedger::Deposit(State,Inventory,Mineral,Amount,1))return false;
     Remaining-=Amount;return true;
+}
+
+void EconomyAI::AdvanceProduction(FEconomyState& State,const TMap<FName,FSSWProductionFacility>& Facilities,const TMap<FName,FSSWProductionRecipe>& Recipes)
+{
+    const double Now=State.EconomyClockSeconds;
+    if(!FMath::IsFinite(Now) || Now<0)return;
+    if(ProductionState!=&State){ProductionState=&State;bProductionDirty=true;NextProductionDeadline=0;}
+    if(!bProductionDirty && (NextProductionDeadline<=0 || Now<NextProductionDeadline))return;
+    bProductionDirty=false;NextProductionDeadline=0;
+    FScopedSimDataChangeBatch Changes(State);
+    for(const auto& Pair:Facilities)
+    {
+        const auto& Site=Pair.Value;const bool Operational=!State.OfflineFacilities.Contains(Pair.Key);
+        if(Site.FacilityType==ESSWProductionFacilityType::Storage)
+        {
+            const FName Key=FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("Stock"));
+            FEconomyRuntime::EnsureWarehouse(State,Key,FName(*Site.System),Site.CapacityTonnes);
+            if(auto* Inventory=State.Inventories.Find(Key))
+            {if(Inventory->bOperational!=Operational)FSimDataEvents::Publish(State);Inventory->bOperational=Operational;Inventory->AcceptedItems.Reset();for(FName Item:Site.AllowedItems)Inventory->AcceptedItems.Add(DataTableUtils::MakeValidName(Item.ToString()));}
+            continue;
+        }
+        const auto* Recipe=Recipes.Find(Site.Recipe);
+        if(!Recipe || (!Recipe->ShipDesign.IsNone() && Site.FacilityType!=ESSWProductionFacilityType::Shipyard))continue;
+        const FName Facility=Site.bSurface?Pair.Key:FName(*Site.Facility);
+        const FName Input=FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("Input")),Output=FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("Output"));
+        FEconomyRuntime::EnsureWarehouse(State,Input,FName(*Site.System),Site.CapacityTonnes);
+        FEconomyRuntime::EnsureWarehouse(State,Output,FName(*Site.System),Site.CapacityTonnes);
+        auto* In=State.Inventories.Find(Input);auto* Out=State.Inventories.Find(Output);if(!In || !Out)continue;
+        if(In->bOperational!=Operational || Out->bOperational!=Operational)FSimDataEvents::Publish(State);
+        In->bOperational=Out->bOperational=Operational;Out->bSupplyOnly=true;Out->bHullStorage=Site.FacilityType==ESSWProductionFacilityType::Shipyard;
+        for(const auto& Material:Recipe->Inputs)In->DesiredStock.Add(Material.Item,FMath::Min(Material.Quantity*20,Site.CapacityTonnes/FMath::Max(.001,Material.UnitTonnes)));
+        if(Recipe->Inputs.IsEmpty())for(FName Mineral:ManufacturingAI::MineralKeys(*Recipe))In->DesiredStock.Add(Mineral,FMath::Min(Recipe->InputTonnes*5,Site.CapacityTonnes));
+        const auto Active=[&]()->FIndustryJob*{return State.Jobs.FindByPredicate([&](const auto& Job){return Job.Facility==Facility && Job.State!=EIndustryJobState::Completed && Job.State!=EIndustryJobState::Cancelled;});};
+        auto* Work=Active();
+        if(!Operational)
+        {
+            if(Work && Work->CompletionAt>0)
+            {
+                Work->Remaining=FMath::Max(0.0,Work->CompletionAt-Now);Work->CompletionAt=0;Work->LastProgressAt=0;
+                ProductionEvents::Emit(Facility,Work->Id,EProductionEvent::Stopped,INVTEXT("Facility offline; reserved materials retained."));FSimDataEvents::Publish(State);
+            }
+            continue;
+        }
+        if(Work && Work->State==EIndustryJobState::Running && Work->CompletionAt>0 && Now>=Work->CompletionAt)
+        {
+            const FGuid Id=Work->Id;
+            const double Elapsed=FMath::Max(UE_SMALL_NUMBER,Now-Work->LastProgressAt);
+            const int32 Finished=FEconomyLedger::AdvanceJobs(State,Elapsed,[Facility](FName Other){return Other==Facility;});
+            Work=Active();
+            ProductionEvents::Emit(Facility,Id,Finished>0?EProductionEvent::Completed:EProductionEvent::Blocked,Finished>0?INVTEXT("Batch completed."):INVTEXT("Output could not be committed; waiting for storage changes."));
+            if(Work){Work->CompletionAt=0;Work->LastProgressAt=Now;}
+        }
+        Work=Active();
+        if(!Work || Work->State!=EIndustryJobState::Running)
+        {
+            ManufacturingAI::AdvanceLive(State,Facility,Input,Output,Site.Recipe,*Recipe,true,UE_SMALL_NUMBER);
+            Work=Active();
+        }
+        else if(Work->Remaining<=0 && Work->CompletionAt<=0)
+        {
+            const FGuid Id=Work->Id;
+            if(FEconomyLedger::AdvanceJobs(State,UE_SMALL_NUMBER,[Facility](FName Other){return Other==Facility;})>0)
+                ProductionEvents::Emit(Facility,Id,EProductionEvent::Completed,INVTEXT("Output committed after storage became available."));
+            Work=Active();
+        }
+        if(Work && Work->State==EIndustryJobState::Running && Work->Remaining>0)
+        {
+            if(Work->CompletionAt<=0)
+            {
+                Work->LastProgressAt=Now;Work->CompletionAt=Now+Work->Remaining;
+                ProductionEvents::Emit(Facility,Work->Id,EProductionEvent::Started,INVTEXT("Batch scheduled."));FSimDataEvents::Publish(State);
+            }
+            if(NextProductionDeadline<=0 || Work->CompletionAt<NextProductionDeadline)NextProductionDeadline=Work->CompletionAt;
+        }
+    }
 }

@@ -105,7 +105,7 @@ public:
     void RefreshCategoryStyles();
     friend class FModernReferenceScreensTest;
     UPROPERTY(Transient) TObjectPtr<UWidget> ModernShell=nullptr;
-    void ExecFrame();
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
 
 protected:
     UPROPERTY(Transient) TObjectPtr<class UImage> FactionLogo;

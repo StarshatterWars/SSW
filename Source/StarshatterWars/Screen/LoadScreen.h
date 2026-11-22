@@ -72,7 +72,7 @@ public:
     // ----------------------------------------------------------------
     // Per-frame hook (called by external UI driver if needed)
     // ----------------------------------------------------------------
-    virtual void ExecFrame();
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
 
 protected:
     // ----------------------------------------------------------------

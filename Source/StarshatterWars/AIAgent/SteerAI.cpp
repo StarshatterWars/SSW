@@ -130,7 +130,7 @@ SteerAI::Create(SimObject* self, ESteerAIType Type)
 
     Ship* S = dynamic_cast<Ship*>(self);
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[SteerAI::Create] Ship='%s' RequestedType=%d Result=%p ResultType=%d"),
         S ? ANSI_TO_TCHAR(S->GetName()) : TEXT("NULL"),
         static_cast<int32>(Type),
@@ -143,7 +143,9 @@ SteerAI::Create(SimObject* self, ESteerAIType Type)
 // +----------------------------------------------------------------------+
 
 SteerAI::SteerAI(SimObject* ship)
-    : self(ship),
+    : 
+    seeking(0),
+    self(ship),
     target(0),
     subtarget(0),
     other(0),
@@ -152,7 +154,6 @@ SteerAI::SteerAI(SimObject* ship)
     distance(0.0),
     magnitude(0),
     evade_time(0),
-    seeking(0),
     seek_gain(20),
     seek_damp(0.5),
     ai_type(ESteerAIType::NONE)

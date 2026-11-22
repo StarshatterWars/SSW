@@ -38,7 +38,7 @@ void ShipLoad::SetName(const char* n)
         return;
     }
 
-    strncpy(name, n, 63);
+    strncpy_s(name, sizeof(name), n, _TRUNCATE);
     name[63] = 0;
 }
 

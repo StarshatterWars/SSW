@@ -64,7 +64,7 @@ public:
 	void OnClockTick();
 
 	UFUNCTION()
-	uint64 GetUniverseTimeSeconds() const { return UniverseTimeSeconds; }
+	uint64 GetUniverseTimeSeconds() const;
 
 	UFUNCTION()
 	void SetUniverseTimeSeconds(uint64 InSeconds) { UniverseTimeSeconds = InSeconds; }

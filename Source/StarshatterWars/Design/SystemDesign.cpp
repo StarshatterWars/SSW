@@ -29,8 +29,8 @@
 
 List<SystemDesign> SystemDesign::catalog;
 
-#define GET_DEF_TEXT(p,d,x) if(p->name()->value()==(#x))GetDefText(d->x,p,filename)
-#define GET_DEF_NUM(p,d,x)  if(p->name()->value()==(#x))GetDefNumber(d->x,p,filename)
+#define SSW_SYSTEM_GET_DEF_TEXT(p,d,x) if(p->name()->value()==(#x))GetDefText(d->x,p,filename)
+#define SSW_SYSTEM_GET_DEF_NUM(p,d,x)  if(p->name()->value()==(#x))GetDefNumber(d->x,p,filename)
 
 // +--------------------------------------------------------------------+
 

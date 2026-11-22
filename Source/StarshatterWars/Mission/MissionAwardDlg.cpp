@@ -20,6 +20,8 @@
 #include "MenuScreen.h"
 #include "AwardPresentation.h"
 #include "AudioRouting.h"
+#include "Sim.h"
+#include "GameFramework/PlayerController.h"
 
 // UMG:
 #include "Components/TextBlock.h"
@@ -54,7 +56,9 @@ void UMissionAwardDlg::EnsureUi()
     }
     auto* Box=EnsureAutoVerticalBoxWithOffsets(FMargin(24));if(!Box)return;
     if(RootCanvas)for(auto* Child:RootCanvas->GetAllChildren())if(Child!=Box)Child->SetVisibility(ESlateVisibility::Collapsed);
+    Box->RemoveFromParent();
     AwardPresentation::Build(WidgetTree,Box,lbl_name,lbl_info,img_rank,btn_close);
+    AwardFrame=AwardPresentation::Mount(WidgetTree,RootCanvas,Box);
     bModernUiBuilt=true;BindFormWidgets();btn_close->OnClicked.AddUniqueDynamic(this,&UMissionAwardDlg::OnCloseClicked);
 }
 
@@ -87,8 +91,8 @@ void UMissionAwardDlg::NativeConstruct()
 FReply UMissionAwardDlg::NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent)
 {
     const FKey Key = InKeyEvent.GetKey();
-    if (Key == EKeys::Enter || Key == EKeys::Virtual_Accept ||
-        Key == EKeys::Escape || Key == EKeys::Virtual_Back)
+    if (Key == EKeys::Enter || Key == EKeys::Virtual_Gamepad_Accept.GetVirtualKey() ||
+        Key == EKeys::Escape || Key == EKeys::Virtual_Gamepad_Back.GetVirtualKey())
     {
         if (!InKeyEvent.IsRepeat())
             OnCloseClicked();
@@ -253,6 +257,15 @@ void UMissionAwardDlg::ShowDialog()
         TitleBlock->SetText(FText::FromString(TEXT("Congratulations")));
     ShowPlayer();
     SetIsFocusable(true);
+    if (APlayerController* PC = GetOwningPlayer() ? GetOwningPlayer() : (GetWorld() ? GetWorld()->GetFirstPlayerController() : nullptr))
+    {
+        FInputModeUIOnly Mode;
+        Mode.SetWidgetToFocus(TakeWidget());
+        Mode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+        PC->SetInputMode(Mode);
+        PC->bShowMouseCursor = true;
+        SetUserFocus(PC);
+    }
     SetKeyboardFocus();
 }
 
@@ -292,7 +305,7 @@ void UMissionAwardDlg::ShowPlayer()
                 if (!Award.IsEmpty())
                     Tex = LoadObject<UTexture2D>(nullptr, *FString::Printf(TEXT("/Game/UI/Awards/%s.%s"), *Award, *Award));
             }
-            if (Tex) img_rank->SetBrushFromTexture(Tex);
+            if (Tex) img_rank->SetBrushFromTexture(Tex, true);
 
             USoundBase* Sound = nullptr;
             if (RankInfo && RankInfo->GrantSound.ToSoftObjectPath().IsValid())
@@ -326,29 +339,33 @@ void UMissionAwardDlg::OnCloseClicked()
     SetVisibility(ESlateVisibility::Collapsed);
 
     UGameInstance* GI = GetGameInstance();
-    if (!GI)
+    auto* Runtime = GI ? GI->GetSubsystem<USSWRuntimeSubsystem>() : nullptr;
+    if (Runtime && Runtime->GetGameMode() == EGameMode::PLAY && UMenuScreen::HasLivePlayerSession() && Sim::GetSim() && !Sim::GetSim()->IsComplete())
     {
-        UE_LOG(LogTemp, Warning, TEXT("AwardDlg: GameInstance not found."));
+        if (auto* Menu=GetMenuManager()) Menu->DismissLivePopup(this);
+        if (auto* PC=GetOwningPlayer()) { PC->SetInputMode(FInputModeGameAndUI()); PC->bShowMouseCursor=true; }
         return;
     }
+    if (auto* Menu=GetMenuManager()) Menu->ReturnFromMissionBriefing();
 
-    USSWRuntimeSubsystem* RuntimeSS = GI->GetSubsystem<USSWRuntimeSubsystem>();
-    if (!RuntimeSS)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("AwardDlg: Runtime subsystem not found."));
-        return;
-    }
-
-    Campaign* Cmpn = Campaign::GetCampaign();
-    if (Cmpn && Cmpn->GetCampaignId() < Campaign::SINGLE_MISSIONS)
-    {
-        RuntimeSS->SetGameMode(EGameMode::CMPN);
-    }
-    else
-    {
-        RuntimeSS->SetGameMode(EGameMode::MENU);
-    }
-
-    if (UMenuScreen* Menu = GetMenuManager())
-        Menu->ReturnFromMissionBriefing();
+}
+void UMissionAwardDlg::NativeTick(const FGeometry& Geometry,float Seconds)
+{ Super::NativeTick(Geometry,Seconds); AwardPresentation::Resize(RootCanvas,AwardFrame); }
+FReply UMissionAwardDlg::NativeOnMouseButtonDown(const FGeometry& Geometry,const FPointerEvent& Event)
+{
+    auto* AwardTitle=WidgetTree?WidgetTree->FindWidget(TEXT("AwardTitleBar")):nullptr;
+    if(Event.GetEffectingButton()==EKeys::LeftMouseButton && AwardTitle && AwardTitle->GetCachedGeometry().IsUnderLocation(Event.GetScreenSpacePosition()))
+    { bDraggingAward=true;return FReply::Handled().CaptureMouse(TakeWidget()); }
+    return Super::NativeOnMouseButtonDown(Geometry,Event);
+}
+FReply UMissionAwardDlg::NativeOnMouseMove(const FGeometry& Geometry,const FPointerEvent& Event)
+{
+    if(bDraggingAward){AwardPresentation::Drag(RootCanvas,AwardFrame,Event);return FReply::Handled();}
+    return Super::NativeOnMouseMove(Geometry,Event);
+}
+FReply UMissionAwardDlg::NativeOnMouseButtonUp(const FGeometry& Geometry,const FPointerEvent& Event)
+{
+    if(bDraggingAward && Event.GetEffectingButton()==EKeys::LeftMouseButton)
+    {bDraggingAward=false;return FReply::Handled().ReleaseMouseCapture();}
+    return Super::NativeOnMouseButtonUp(Geometry,Event);
 }

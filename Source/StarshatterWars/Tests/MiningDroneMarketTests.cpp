@@ -4,6 +4,8 @@
 #include "EconomyRuntime.h"
 #include "GameStructs.h"
 #include "MiningDroneTypes.h"
+#include "PlayerSaveGame.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine/GameInstance.h"
 #include "JsonObjectConverter.h"
 #include "Misc/FileHelper.h"
@@ -98,6 +100,54 @@ bool FMiningDroneCatalogCapacityTest::RunTest(const FString&)
     }
     TestEqual(TEXT("Market and factory producer counts agree"), MarketSystems.Num(), FactorySystems.Num());
     for (FName System : FactorySystems) TestTrue(TEXT("Each drone-capable factory system advertises its production"), MarketSystems.Contains(System));
+    return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FNPCWarehouseBootstrapTest,"Starshatter.Economy.NPCWarehouseStockBootstrapAndPersistence",
+    EAutomationTestFlags_ApplicationContextMask | EAutomationTestFlags::EngineFilter)
+bool FNPCWarehouseBootstrapTest::RunTest(const FString&)
+{
+    auto* Context=NewObject<UGameInstance>();
+    auto* Catalog=NewObject<UCargoCatalogSubsystem>(Context);
+    FEconomyState Stock;
+    const FName Marker(TEXT("Authored initial market stock v1"));
+    const FName Warehouse=FEconomyRuntime::Warehouse(TEXT("Borova"),TEXT("NPC Market"),TEXT("Stock"));
+    const FName Item=DataTableUtils::MakeValidName(TEXT("avionics"));
+    FEconomyRuntime::InitializeMarkets(Stock,*Catalog);
+    TestFalse(TEXT("An unloaded catalog cannot consume the one-time warehouse seed"),Stock.InitializedMarkets.Contains(Marker));
+    TestTrue(TEXT("An unloaded catalog creates no empty warehouses"),Stock.Inventories.IsEmpty());
+    Catalog->LoadCatalog();
+    FEconomyRuntime::InitializeMarkets(Stock,*Catalog);
+    const double Opening=FEconomyLedger::Available(Stock,Warehouse,Item);
+    if(!TestTrue(TEXT("NPC goods exist before any factory runs"),Opening>2))return false;
+    const auto Reservation=FEconomyLedger::Reserve(Stock,FEconomyRuntime::IndustryOwner(),Warehouse,Item,1);
+    TestTrue(TEXT("Warehouse stock can be reserved for delivery"),Reservation.IsValid());
+    TestEqual(TEXT("Store availability excludes reserved units"),FEconomyLedger::Available(Stock,Warehouse,Item),Opening-1);
+    TestTrue(TEXT("Only actual stock leaves the warehouse"),FEconomyLedger::Withdraw(Stock,FEconomyRuntime::IndustryOwner(),Warehouse,Item,1));
+    const double Remaining=FEconomyLedger::Available(Stock,Warehouse,Item);
+    FEconomyRuntime::InitializeMarkets(Stock,*Catalog);
+    TestEqual(TEXT("Reopening the store never refills its warehouse"),FEconomyLedger::Available(Stock,Warehouse,Item),Remaining);
+    auto* Save=NewObject<UPlayerSaveGame>();Save->PlayerInfo.Economy=Stock;TArray<uint8> Bytes;
+    if(!TestTrue(TEXT("Warehouse stock saves with the economy"),UGameplayStatics::SaveGameToMemory(Save,Bytes)))return false;
+    auto* Loaded=Cast<UPlayerSaveGame>(UGameplayStatics::LoadGameFromMemory(Bytes));
+    if(!TestNotNull(TEXT("Warehouse save reloads"),Loaded))return false;
+    FEconomyRuntime::InitializeMarkets(Loaded->PlayerInfo.Economy,*Catalog);
+    TestEqual(TEXT("Saved stock and reservations survive restart without a refill"),FEconomyLedger::Available(Loaded->PlayerInfo.Economy,Warehouse,Item),Remaining);
+    FEconomyState Broken;Broken.InitializedMarkets.Add(Marker);
+    FEconomyRuntime::EnsureWarehouse(Broken,Warehouse,TEXT("Borova"),1.e12,true);
+    FEconomyRuntime::InitializeMarkets(Broken,*Catalog);
+    TestTrue(TEXT("The old empty-catalog startup can recover finite initial stock"),FEconomyLedger::Available(Broken,Warehouse,Item)>0);
+    FEconomyState Orphaned;Orphaned.InitializedMarkets.Add(Marker);
+    Orphaned.InitializedMarkets.Add(TEXT("Authored initial mining drone stock v1"));
+    FEconomyRuntime::InitializeMarkets(Orphaned,*Catalog);
+    TestTrue(TEXT("Orphaned startup markers cannot hide every warehouse"),FEconomyLedger::Available(Orphaned,Warehouse,Item)>0);
+    for(auto& Pair:Orphaned.Inventories)Pair.Value.Items.Reset();
+    FEconomyRuntime::InitializeMarkets(Orphaned,*Catalog);
+    TestEqual(TEXT("A genuinely depleted initialized warehouse stays empty"),FEconomyLedger::Available(Orphaned,Warehouse,Item),0.0);
+    FEconomyState Traded;Traded.InitializedMarkets.Add(Marker);
+    FEconomyRuntime::EnsureWarehouse(Traded,Warehouse,TEXT("Borova"),1.e12,true);
+    Traded.Journal.AddDefaulted_GetRef().Category=EWalletTransactionCategory::Market;
+    FEconomyRuntime::InitializeMarkets(Traded,*Catalog);
+    TestEqual(TEXT("Existing trading history prevents refilling spent legacy goods"),FEconomyLedger::Available(Traded,Warehouse,Item),0.0);
     return true;
 }
 #endif

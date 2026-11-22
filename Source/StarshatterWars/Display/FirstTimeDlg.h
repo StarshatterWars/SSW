@@ -55,7 +55,11 @@ protected:
 private:
     UPROPERTY(Transient) TObjectPtr<class UImage> FactionLogo;
     void BuildModernDialog();
+    UFUNCTION() UWidget* GenerateEmpireOption(FString Item);
     UFUNCTION() void OnEmpireLogoChanged(FString SelectedItem, ESelectInfo::Type SelectionType);
+    // UComboBoxString keeps the generated Slate row, not its backing UWidget.
+    // Retain those widgets so their brush attributes survive garbage collection.
+    UPROPERTY(Transient) TMap<FString, TObjectPtr<UWidget>> EmpireOptionWidgets;
     bool bModernDialogBuilt = false;
 
     // Helpers

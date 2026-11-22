@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "ShipWeaponMountComponent.h"
 #include "Weapon.h"
 #include "WeaponDesign.h"
@@ -9,6 +10,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FStorePresentationTest,"Starshatter.Audit.F13.S
 bool FStorePresentationTest::RunTest(const FString& Parameters)
 {
     UWorld* World=UWorld::CreateWorld(EWorldType::Game,false);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     AActor* Owner=World->SpawnActor<AActor>();
     auto* Mount=NewObject<UShipWeaponMountComponent>(Owner);Owner->AddInstanceComponent(Mount);
     Mount->bLoadoutHardpoint=true;Mount->RegisterComponent();Mount->SetChildActorClass(ATargetPoint::StaticClass());Mount->CreateChildActor();

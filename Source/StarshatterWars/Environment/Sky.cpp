@@ -291,7 +291,7 @@ PlanetRep::PlanetRep(const char* surface_name,
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("PlanetRep: constructing planet patch '%s'"), ANSI_TO_TCHAR(surface_name));
-	strncpy(name, surface_name, 31);
+	strncpy_s(name, sizeof(name), surface_name, _TRUNCATE);
 	name[31] = 0;
 
 	Bitmap* bmp_surf = 0;

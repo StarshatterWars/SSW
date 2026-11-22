@@ -53,7 +53,7 @@ class STARSHATTERWARS_API UMenuScreen : public UBaseScreen
     GENERATED_BODY()
 
 public:
-    void Initialize(UGameInstance* InGI);
+    void InitializeMenu(UGameInstance* InGI);
     UMenuScreen(const FObjectInitializer& ObjectInitializer);
 
     // ------------------------------------------------------------
@@ -89,7 +89,7 @@ public:
     void OpenModMissionTools();
     void StartFreeFlight();
     void StartTestMission(bool bResume = false);
-    bool OpenQueuedAssignment(int32 MissionId, bool bFromFreeFlight);
+    bool OpenQueuedAssignment(int32 MissionId, bool bFromFreeFlight, FText* OutReason = nullptr);
     void ShowCampaignSelectDlg();
     void ShowMissionSelectDlg(); // Entry: four-way mission driver
     void ShowSingleMissionDlg(); // Built-in single mission roster
@@ -111,6 +111,7 @@ public:
     void ShowMissionDlg();
     void ShowStandaloneMissionDlg(Mission* InMission, Campaign* InRepository);
     void ReturnFromMissionBriefing();
+    void DismissLivePopup(UBaseScreen* Popup);
     UMissionDebriefDlg* GetMissionDebriefDlg();
     void ShowMissionDebriefDlg(Campaign* TrainingCampaign = nullptr);
 

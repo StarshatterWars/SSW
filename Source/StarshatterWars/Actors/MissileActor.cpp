@@ -19,10 +19,13 @@ AMissileActor::AMissileActor()
     TrailComponent->SetHiddenInGame(true);
     TrailComponent->SetRelativeRotation(FRotator(0,180,0));
     TrailComponent->SetRelativeScale3D(FVector(0.05f));
+    if(!IsRunningDedicatedServer())
+    {
     static ConstructorHelpers::FObjectFinder<UNiagaraSystem> Exhaust(
         TEXT("/Game/Effects/Engines/NS_SSW_Nozzle_OrangeYellow.NS_SSW_Nozzle_OrangeYellow"));
     NativeTrailSystem=Exhaust.Object;
     if (NativeTrailSystem) TrailComponent->SetAsset(NativeTrailSystem);
+    }
     TrailComponent->SetAutoDestroy(false);
     TrailComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }

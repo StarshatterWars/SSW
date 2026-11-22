@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "Misc/Paths.h"
 #include "Misc/FileHelper.h"
@@ -65,6 +66,7 @@ bool FFleetEffectCoverageTest::RunTest(const FString&)
     auto* Table=NewObject<UDataTable>();Table->RowStruct=FShipDesign::StaticStruct();Importer->ShipDesignDataTable=Table;
     const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     ON_SCOPE_EXIT {World->DestroyWorld(false);};
     const bool bUseBootDesigns = IsRunningGame();
     if (bUseBootDesigns)

@@ -104,7 +104,7 @@ void WeaponDesignRegistry::RegisterDesign(const FName& RowName, const FWeaponDes
         LegacyDesignsByName.Add(FName(*Clean.Name), Legacy);
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[WeaponDesignRegistry] Registered Row='%s' Name='%s' Legacy=%p"),
         *RowName.ToString(),
         *Clean.Name,

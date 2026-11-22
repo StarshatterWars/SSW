@@ -33,6 +33,10 @@ TSharedRef<SWidget> UFlightLogbookDlg::BuildPanelContent(UGameInstance* Instance
             [SNew(SButton).ToolTipText(INVTEXT("Skills"))
                 .OnClicked_Lambda([Open = OnOpenSkills]() { Open.ExecuteIfBound(); return FReply::Handled(); })
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Skills)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(0,0,6,0)
+            [SNew(SButton).ToolTipText(INVTEXT("Player-owned ship and fighter skins"))
+                .OnClicked_Lambda([Open=OnOpenShipSkins](){Open.ExecuteIfBound();return FReply::Handled();})
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Appearance)]]
             + SHorizontalBox::Slot().AutoWidth()
             [SNew(SButton).ToolTipText(INVTEXT("Hangar"))
             .OnClicked_Lambda([Open = OnOpenHangar]() { Open.ExecuteIfBound(); return FReply::Handled(); })

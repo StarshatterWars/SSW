@@ -26,7 +26,7 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
     const auto Selected = MakeShared<FGuid>();
     const auto Feedback = MakeShared<FText>();
     const auto Header = SNew(SHorizontalBox);
-    for (const TCHAR* Label : {TEXT("SHIP / FIGHTER"), TEXT("DESIGN"), TEXT("LOCATION"), TEXT("COVERAGE"), TEXT("HULL")})
+    for (const TCHAR* Label : {TEXT("SHIP / FIGHTER"), TEXT("DESIGN"), TEXT("LOCATION"), TEXT("COVERAGE"), TEXT("HULL"), TEXT("STATUS")})
         Header->AddSlot().FillWidth(1).Padding(8, 5)
             [SNew(STextBlock).Text(FText::FromString(Label)).Font(MissionUIStyle::GetRowFont(12))];
     Header->AddSlot().AutoWidth()[SNew(SBox).WidthOverride(176)];
@@ -34,11 +34,19 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
     for (const auto& Hull : Insurance->GetShips())
     {
         const auto Line = SNew(SHorizontalBox);
-        for (const FString& Label : {Hull.Name, Hull.Design.ToString(), Hull.Location})
+        for (const FString& Label : {Hull.Name, Hull.Design.ToString()})
             Line->AddSlot().FillWidth(1).Padding(8, 6)
                 [SNew(STextBlock).Text(FText::FromString(Label).ToUpper())
                     .Font(MissionUIStyle::GetRowFont(12)).OverflowPolicy(ETextOverflowPolicy::Ellipsis)
                     .ToolTipText(FText::FromString(Label))];
+        const auto LocationText = [Weak = TWeakObjectPtr<UShipInsuranceSubsystem>(Insurance), Id = Hull.HullId]()
+        {
+            const auto* Entry = Weak.IsValid() ? Weak->FindShip(Id) : nullptr;
+            return Entry && !Entry->Location.IsEmpty() ? FText::FromString(Entry->Location).ToUpper() : INVTEXT("LOCATION UNKNOWN");
+        };
+        Line->AddSlot().FillWidth(1).Padding(8, 6)
+            [SNew(STextBlock).Text_Lambda(LocationText).ToolTipText_Lambda(LocationText)
+                .Font(MissionUIStyle::GetRowFont(12)).OverflowPolicy(ETextOverflowPolicy::Ellipsis)];
         Line->AddSlot().FillWidth(1).Padding(8, 6)
             [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12))
                 .Text_Lambda([Weak = TWeakObjectPtr<UShipInsuranceSubsystem>(Insurance), Id = Hull.HullId]()
@@ -59,6 +67,18 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
                     if (Entry->bAssigned)return INVTEXT("LOANER");
                     return FText::FromString(FString::Printf(TEXT("%.0f%%"),100.f*(Entry->bHasCondition?Entry->HullCondition:1.f)));
                 })];
+        Line->AddSlot().FillWidth(1).Padding(8, 6)
+            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12))
+                .Text_Lambda([Game = TWeakObjectPtr<UGameInstance>(Instance), Id = Hull.HullId]()
+                {
+                    const auto* Players = Game.IsValid() ? Game->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+                    if (!Players) return FText::GetEmpty();
+                    const auto& Profile = Players->GetPlayerInfo();
+                    if (Profile.AssignedHangarHull == Id) return INVTEXT("ACTIVE");
+                    if (Profile.SelectedHangarHull == Id) return INVTEXT("SELECTED");
+                    return INVTEXT("STORED");
+                })
+                .ToolTipText(INVTEXT("Active: craft currently assigned to you. Selected: saved choice for your next Free Verse entry. Stored: available in your hangar."))];
         const auto* Design = ShipDesignRegistry::Find(Hull.Design);
         const bool bFighter = Design && Design->Category == EShipCategory::Fighter;
         const auto Weak = TWeakObjectPtr<UShipInsuranceSubsystem>(Insurance);
@@ -70,7 +90,7 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
         };
         Line->AddSlot().AutoWidth().Padding(4)
             [
-                SNew(SButton).ToolTipText(INVTEXT("Select hull — docked service")).IsEnabled_Lambda(Docked)
+                SNew(SButton).ToolTipText(INVTEXT("Select hull for your next Free Verse entry — docked service. Training missions board their required fighter automatically.")).IsEnabled_Lambda(Docked)
                 .OnClicked_Lambda([Weak, Id = Hull.HullId, Feedback, Selected]()
                 {
                     if (auto* Service = Weak.Get())

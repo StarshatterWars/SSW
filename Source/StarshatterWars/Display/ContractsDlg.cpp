@@ -1,4 +1,6 @@
 #include "ContractsDlg.h"
+#include "CommerceCharges.h"
+#include "ChangeDrivenPanel.h"
 #include "RecordDetails.h"
 
 #include "MissionUIStyle.h"
@@ -55,6 +57,7 @@ namespace
         if(!Terms.PickupDivisionId.IsNone())D.Fact(INVTEXT("DIVISION"),FText::FromName(Terms.PickupDivisionId));
         const auto Credits=[&D](const FText& Label,int64 Amount){if(Amount>0)D.Fact(Label,FText::Format(INVTEXT("{0} CR"),FText::AsNumber(Amount)));};
         Credits(INVTEXT("PRICE"),Terms.PriceCredits);Credits(INVTEXT("REWARD"),Terms.RewardCredits);Credits(INVTEXT("COLLATERAL"),Terms.CollateralCredits);
+        if(Terms.PriceCredits>0){const auto Price=CommerceCharges::Quote(Terms.PriceCredits,ECommercePurpose::MarketSale);D.Fact(INVTEXT("INCLUDED GST"),FText::AsNumber(Price.Tax));D.Fact(INVTEXT("SELLER NET"),FText::AsNumber(Price.Base));}
         if(Terms.OfferExpiryMinutes>0)D.Fact(INVTEXT("OFFER WINDOW"),FText::Format(INVTEXT("{0} MIN"),FText::AsNumber(Terms.OfferExpiryMinutes)));
         if(Terms.CompletionDays>0)D.Fact(INVTEXT("COMPLETION WINDOW"),FText::Format(INVTEXT("{0} DAYS"),FText::AsNumber(Terms.CompletionDays)));
         D.Section(INVTEXT("OFFERED CARGO"),FText::FromString(DescribeItems(Terms.OfferedItems)));
@@ -303,7 +306,7 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
             return FReply::Handled();
         }));
 
-    return SNew(SVerticalBox)
+    return SNew(SChangeDrivenPanel).OnChanged_Lambda([Refresh](){Refresh();})[SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(12, 10)
         [Tabs]
         + SVerticalBox::Slot().AutoHeight().Padding(12, 0, 12, 8)
@@ -335,7 +338,7 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
                         SNew(SScrollBox)
                         + SScrollBox::Slot()
                         [
-                            SNew(SRecordDetails).Record_Lambda([Selected, GetSelectedOffer, Tab]()
+                            SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([Selected,GetSelectedOffer,Tab](){return uint32(*Tab)^((*Selected).IsSet()?GetTypeHash(Selected->GetValue().Id):PointerHash(GetSelectedOffer()));}).Record_Lambda([Selected, GetSelectedOffer, Tab]()
                             {
                                 if(*Tab==ETab::Hauls && Selected->IsSet())return DescribeContract(Selected->GetValue());
                                 const auto* Offer=GetSelectedOffer();
@@ -361,5 +364,5 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
                 + SVerticalBox::Slot().AutoHeight().Padding(0, 6, 0, 0)
                 [SNew(STextBlock).AutoWrapText(true).Text_Lambda([Feedback]() { return *Feedback; })]
             )
-        ];
+        ]];
 }

@@ -1,4 +1,12 @@
-﻿/*  Project Starshatter Wars
+#include "MissionBriefingDlg.h"
+#include "MissionSceneIsolation.h"
+#include "Widgets/SNullWidget.h"
+#include "Widgets/Layout/SSpacer.h"
+#include "TrainingReplay.h"
+#include "Widgets/SNullWidget.h"
+#include "SimDataEvents.h"
+#include "AgentAI.h"
+/*  Project Starshatter Wars
     Fractal Dev Studios
     Copyright (c) 2025-2026.
 
@@ -22,7 +30,7 @@
     - Calculates Time-On-Target using navigation instructions
 */
 
-#include "MissionBriefingDlg.h"
+
 #include "PanelCloseIcon.h"
 #include "MissionViewCamera.h"
 #include "StarshatterInputBindings.h"
@@ -69,6 +77,7 @@
 #include "NavigationDlg.h"
 #include "MissionCameraRig.h"
 #include "HangarDlg.h"
+#include "ShipSkinDlg.h"
 #include "SkillsDlg.h"
 #include "LoadoutsDlg.h"
 #include "ShipFitDlg.h"
@@ -236,9 +245,21 @@ void UMissionBriefingDlg::NativePreConstruct()
     }
 }
 
+TSharedRef<SWidget> UMissionBriefingDlg::RebuildWidget()
+{
+    // Retain the live mission controller and its timers, but never render the
+    // retired Blueprint preparation page, even if another caller reveals it.
+    return SNew(SSpacer);
+}
+
 void UMissionBriefingDlg::NativeConstruct()
 {
     Super::NativeConstruct();
+    FSimDataEvents::Changed().Remove(PanelDataHandle);
+    AgentAI::OnJournalChanged().Remove(PanelAgentHandle);
+    PanelDataHandle=FSimDataEvents::Changed().AddUObject(this,&UMissionBriefingDlg::OnPanelDataChanged);
+    PanelAgentHandle=AgentAI::OnJournalChanged().AddWeakLambda(this,[this](){bPanelAttentionDirty=true;});
+    bPanelAttentionDirty=true;
 
     if (RootSizeBox)
     {
@@ -352,6 +373,9 @@ void UMissionBriefingDlg::NativeConstruct()
 
 void UMissionBriefingDlg::NativeDestruct()
 {
+    FSimDataEvents::Changed().Remove(PanelDataHandle);PanelDataHandle.Reset();
+    AgentAI::OnJournalChanged().Remove(PanelAgentHandle);PanelAgentHandle.Reset();
+
     if (Sim* Simulation = Sim::GetSim()) Simulation->OnMissionUnloading.RemoveAll(this);
     if (UGameInstance* GI = GetGameInstance()) {
         if (UTimerSubsystem* Timer = GI->GetSubsystem<UTimerSubsystem>()) {
@@ -383,7 +407,7 @@ void UMissionBriefingDlg::NativeDestruct()
     Super::NativeDestruct();
 }
 
-void UMissionBriefingDlg::ExecFrame()
+void UMissionBriefingDlg::ExecFrame(double /*DeltaTime*/)
 {
     if (bStandaloneMission)
         return; // No story campaign score, unit or T+ for standalone missions.
@@ -440,10 +464,51 @@ static SimElement* FindTargetPracticeWave(Sim* Simulation)
     return nullptr;
 }
 
+void UMissionBriefingDlg::OnPanelDataChanged(const FEconomyState& State)
+{if(const auto* Simulation=Sim::GetSim();Simulation && &Simulation->ReadEconomy()==&State)bPanelAttentionDirty=true;}
+
+void UMissionBriefingDlg::UpdatePanelAttention()
+{
+    if(!bPanelAttentionDirty || FPlatformTime::Seconds()<NextPanelAttentionDispatch)return;
+    bPanelAttentionDirty=false;NextPanelAttentionDispatch=FPlatformTime::Seconds()+.5;
+    auto* Players=GetGameInstance()?GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+    auto* Simulation=Sim::GetSim();
+    if(!Players || !Simulation)return;
+    const auto& Info=Players->GetPlayerInfo();
+    PanelAttention.BeginSession(FString::Printf(TEXT("%s|%d|%s"),*Players->GetSlotName(),Info.Id,*Info.Name));
+    const auto& State=Simulation->ReadEconomy();
+    const auto* Craft=Simulation->GetPlayerShip();
+    const FName Owner=FEconomyLedger::Pilot();
+    auto Sample=[this](const TCHAR* Name,uint32 Revision,const TSharedPtr<SWidget>& Panel)
+    {PanelAttention.Observe(FName(Name),Revision,Panel.IsValid());};
+    uint32 Wallet=GetTypeHash(State.Wallets.FindRef(Owner));
+    for(const auto& Entry:State.Journal)
+        if(Entry.From==Owner || Entry.To==Owner || Entry.WalletDeltas.Contains(Owner))Wallet=HashCombine(Wallet,GetTypeHash(Entry.Id));
+    uint32 Skills=0;
+    for(const auto& Pair:Info.Skills)Skills^=HashCombine(GetTypeHash(Pair.Key),HashCombine(GetTypeHash(Pair.Value.TrainedLevel),GetTypeHash(Pair.Value.bAdvancedBookOwned)));
+    for(const auto& Entry:Info.SkillQueue)Skills^=HashCombine(GetTypeHash(Entry.Id),GetTypeHash(Entry.TargetLevel));
+    Sample(TEXT("Player Logbook"),HashCombine(Wallet,HashCombine(Skills,GetTypeHash(Info.HangarShips.Num()))),PlayersPopup);
+    uint32 Cargo=0;
+    if(Craft)if(const auto* Inventory=State.Inventories.Find(Craft->GetCargoInventoryKey()))
+        for(const auto& Item:Inventory->Items)Cargo^=HashCombine(GetTypeHash(Item.Id),HashCombine(GetTypeHash(Item.Type),GetTypeHash(Item.Quantity)));
+    Sample(TEXT("Cargo Manifest"),Cargo,CargoManifestPopup);
+    uint32 Jobs=0;
+    for(const auto& Job:State.Jobs)Jobs^=HashCombine(GetTypeHash(Job.Id),GetTypeHash(static_cast<uint8>(Job.State)));
+    Sample(TEXT("Production Facilities"),Jobs,ProductionPopup);
+    uint32 Contracts=0;
+    for(const auto& Pair:State.Contracts)Contracts^=HashCombine(GetTypeHash(Pair.Key),HashCombine(GetTypeHash(static_cast<uint8>(Pair.Value.State)),GetTypeHash(Pair.Value.HighBid)));
+    Sample(TEXT("Contracts"),Contracts,ContractsPopup);
+    const uint32 Missions=HashCombine(Skills,HashCombine(GetTypeHash(Info.AgentJournalJson),HashCombine(GetTypeHash(Info.DynamicAssignmentsJson),GetTypeHash(Info.CompletedMissions.Num()))));
+    Sample(TEXT("Agents"),Missions,AgentsPopup);Sample(TEXT("Mission"),Missions,MissionPopup);Sample(TEXT("Objectives"),Missions,ObjectivesPopup);
+    const auto* Story=Campaign::GetCampaign();
+    Sample(TEXT("Intel"),Story?HashCombine(GetTypeHash(Story->GetCampaignId()),GetTypeHash(Story->CountNewEvents())):0,IntelPopup);
+}
+
 void UMissionBriefingDlg::UpdateLiveMission()
 {
     if (!bLiveMissionStarted) return;
     SyncMissionNavigationTarget();
+    UpdatePanelAttention();
 
 #if !UE_BUILD_SHIPPING && !UE_BUILD_TEST
     if (GetDefault<USSWDiagnosticsSettings>()->bEnableCombatDebugMode &&
@@ -1698,9 +1763,16 @@ void UMissionBriefingDlg::HandleMissionSystemLevelShown()
     }
     if (!StartLiveMission())
     {
-        UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] Live mission startup failed; returning to briefing"));
+        UE_LOG(LogTemp, Error, TEXT("[MissionBriefing] Live mission startup failed; returning to main menu"));
+        if (auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
+        {
+            Runtime->SetPaused(true);
+            Runtime->EndMissionPresentation();
+        }
         CloseEmptySectorPreview();
-        if (manager) manager->ShowMissionDlg();
+        if (manager) manager->ShowMenuDlg();
+        if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 12.f, FColor::Red,
+            TEXT("Unable to start the live scene. Your pilot save has been kept. See the startup log."));
         return;
     }
     const double Radius = Bounds.BoxExtent.GetMax();
@@ -1956,16 +2028,26 @@ void UMissionBriefingDlg::InstallFlightPanelToolbar()
                     if (Toggle == &UMissionBriefingDlg::ToggleStationServices) return CanOpenStationServices();
                     return CanOpenFlightPanel() && Toggle && (!bRequiresLaunch || CanOpenCameraAndRadio());
                 })
-                .ButtonColorAndOpacity_Lambda([this, Panel]()
+                .ButtonColorAndOpacity_Lambda([this, Panel, Label]()
                 {
-                    return Panel && (this->*Panel).IsValid() ? FLinearColor(.25f, .75f, .95f) : FLinearColor(.25f, .38f, .48f);
+                    if(Panel && (this->*Panel).IsValid()){PanelAttention.Acknowledge(FName(Label));return FLinearColor(.25f,.75f,.95f);}
+                    if(PanelAttention.IsUnread(FName(Label)))
+                    {const float Glow=.75f+.15f*FMath::Sin(float(FPlatformTime::Seconds()*3));return FLinearColor(.1f,.8f*Glow,Glow);}
+                    return FLinearColor(.25f,.38f,.48f);
                 })
-                .OnClicked_Lambda([this, Toggle]()
+                .OnClicked_Lambda([this, Toggle, Panel, Label]()
                 {
                     if (Toggle) (this->*Toggle)();
+                    if(Panel && (this->*Panel).IsValid())PanelAttention.Acknowledge(FName(Label));
                     return FReply::Handled();
                 })
-                [SNew(SShipSystemIcon).Icon(Icon)]
+                [SNew(SOverlay)
+                    +SOverlay::Slot()[SNew(SShipSystemIcon).Icon(Icon)]
+                    +SOverlay::Slot().HAlign(HAlign_Right).VAlign(VAlign_Top).Padding(2)
+                    [SNew(SBox).WidthOverride(5).HeightOverride(5)
+                        .Visibility_Lambda([this,Label,Panel](){return PanelAttention.IsUnread(FName(Label)) && !(Panel && (this->*Panel).IsValid())?EVisibility::HitTestInvisible:EVisibility::Collapsed;})
+                        [SNew(SImage).Image(FCoreStyle::Get().GetBrush("WhiteBrush")).ColorAndOpacity(FLinearColor(.2f,.9f,1))]]
+                ]
             ]
         ];
     };
@@ -2364,10 +2446,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
 
     // Transient context remains for the wheel and existing HUD shortcuts only.
     MissionTargetContext = NewObject<UInputMappingContext>(this, NAME_None, RF_Transient);
-    UInputAction* TravelSpeedMenu = StarshatterInputBindings::MapTravelSpeed(MissionTargetContext.Get(), false);
-    UInputAction* TravelSpeedReset = StarshatterInputBindings::MapTravelSpeed(MissionTargetContext.Get(), true);
-    MissionMenuInput->BindAction(TravelSpeedMenu, ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleTravelSpeedMenu);
-    MissionMenuInput->BindAction(TravelSpeedReset, ETriggerEvent::Started, this, &UMissionBriefingDlg::ResetTravelSpeed);
+    // No player pause or travel-acceleration bindings in the persistent universe.
     // Use the editor-authored actions and IMC mappings, including chord triggers.
     PreviousMissionTargetAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_PreviousTarget.IA_PreviousTarget"));
     NextMissionTargetAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_NextTarget.IA_NextTarget"));
@@ -2501,9 +2580,7 @@ bool UMissionBriefingDlg::EnableMissionMenuInput()
     if (HUDWarningsAction && HUDWarningsAction->ValueType == EInputActionValueType::Boolean)
         MissionMenuInput->BindAction(HUDWarningsAction.Get(), ETriggerEvent::Started, this, &UMissionBriefingDlg::ToggleFighterCautionPanel);
     else UE_LOG(LogTemp, Warning, TEXT("[FighterHUD] Missing Boolean IA_HUDWarnings in /Game/Input."));
-    HUDInformationAction=LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_HUDInformation.IA_HUDInformation"));
-    if(HUDInformationAction && HUDInformationAction->ValueType==EInputActionValueType::Boolean)
-        MissionMenuInput->BindAction(HUDInformationAction.Get(),ETriggerEvent::Started,this,&UMissionBriefingDlg::ToggleFighterInformationPanel);
+    HUDInformationAction=nullptr; // Mission/radio messages control their own visibility.
     FighterMFDLeftAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_MFDLeftCycle.IA_MFDLeftCycle"));
     FighterMFDRightAction = LoadObject<UInputAction>(nullptr, TEXT("/Game/Input/IA_MFDRightCycle.IA_MFDRightCycle"));
     if (FighterMFDLeftAction && FighterMFDLeftAction->ValueType == EInputActionValueType::Boolean)
@@ -3287,14 +3364,17 @@ void UMissionBriefingDlg::HandleMissionMenuAction(uintptr_t Action)
 bool UMissionBriefingDlg::StartLiveMission()
 {
     if (bLiveMissionStarted) return true;
-    if (!MissionPtr || !MissionSystemLevel || !GetGameInstance()) return false;
+    if (!MissionPtr || !MissionSystemLevel || !GetGameInstance())
+    { UE_LOG(LogTemp, Error, TEXT("[LiveStart] Missing mission, streamed level or game instance")); return false; }
     auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>();
     auto* Environment = GetGameInstance()->GetSubsystem<UStarshatterEnvironmentSubsystem>();
-    if (!Runtime || !Environment) return false;
+    if (!Runtime || !Environment)
+    { UE_LOG(LogTemp, Error, TEXT("[LiveStart] Missing runtime or environment subsystem")); return false; }
     ASystemSceneBuilder* Builder = nullptr;
     for (TActorIterator<ASystemSceneBuilder> It(GetWorld()); It; ++It)
         if (It->GetLevel() == MissionSystemLevel->GetLoadedLevel()) { Builder = *It; break; }
-    if (!Builder || Builder->GetSpawnedRegions().IsEmpty()) return false;
+    if (!Builder || Builder->GetSpawnedRegions().IsEmpty())
+    { UE_LOG(LogTemp, Error, TEXT("[LiveStart] Streamed system has no scene builder or regions: %hs"), MissionPtr->GetSystem()); return false; }
     if (!Sim::GetSim()) Runtime->CreateWorld();
     Sim* Simulation = Sim::GetSim();
     if (!Simulation) return false;
@@ -3324,17 +3404,22 @@ bool UMissionBriefingDlg::StartLiveMission()
     Simulation->OnMissionUnloading.RemoveAll(this);
     Simulation->OnMissionUnloading.AddUObject(this, &UMissionBriefingDlg::HandleSimulationUnloading);
     Simulation->LoadMission(MissionPtr, false);
-    bLiveMissionStarted = true;
     bTestAgentIntroduced = false;
     bPrimaryObjectivesAnnounced = false;
     bMissionCompleteHandedOff = false;
     Simulation->ExecMission();
-    if (!Simulation->GetActiveRegion() || !Simulation->GetPlayerShip()) return false;
+    if (!Simulation->GetActiveRegion() || !Simulation->GetPlayerShip())
+    {
+        UE_LOG(LogTemp, Error, TEXT("[LiveStart] Mission %hs failed provisioning: region=%p player=%p"),
+            MissionPtr->GetName(), Simulation->GetActiveRegion(), Simulation->GetPlayerShip());
+        return false;
+    }
+    bLiveMissionStarted = true;
     if (!MissionPtr->IsFreeFlight() && CampaignPtr && (!bStandaloneMission || MissionPtr->IsStoryMission() || CampaignPtr->IsTraining()))
     {
         auto* Instance = Cast<USSWGameInstance>(GetGameInstance());
         const auto* Timer = GetGameInstance()->GetSubsystem<UTimerSubsystem>();
-        if (Instance && !Instance->IsTrainingTestSession() && Timer && Instance->CampaignSave &&
+        if (Instance && !Instance->IsTrainingTestSession() && !TrainingReplay::IsActive(Instance,MissionPtr->GetIdentity()) && Timer && Instance->CampaignSave &&
             Instance->CampaignSave->CampaignIndex == CampaignPtr->GetCampaignId())
         {
             const uint64 AuthoredStart = static_cast<uint64>(FMath::Max(0, MissionPtr->GetStart()));
@@ -3431,8 +3516,8 @@ void UMissionBriefingDlg::OnCommit()
     for (TActorIterator<AActor> It(World); It; ++It)
     {
         AActor* Actor = *It;
-        if (MissionSystemLevel && Actor->GetLevel() == MissionSystemLevel->GetLoadedLevel()) continue;
-        if (Actor->IsA<APlanetActor>() || Actor->IsA<AGasGiantActor>() ||
+        if (MissionSystemLevel && MissionSceneIsolation::BelongsToLevel(Actor,MissionSystemLevel->GetLoadedLevel())) continue;
+        if (MissionSceneIsolation::IsWorldSurface(Actor) ||
             Actor->IsA<ACentralSun>() || Actor->IsA<AShipActor>())
         {
             TArray<AActor*> VisualActors;
@@ -3586,14 +3671,7 @@ bool UMissionBriefingDlg::HandleContactsRadioKey(const FKey& Key)
 }
 void UMissionBriefingDlg::ToggleTravelSpeedMenu()
 {
-    if (!CanUseFighterHUD() || !FighterHUDDetails.IsValid() || !GetWorld() || GetWorld()->IsPaused()) return;
-    bFighterHUDVisible = true;
-    FighterHUDDetails->ToggleTravelSpeed();
-    Sim* Simulation = Sim::GetSim();
-    if (USSWRuntimeSubsystem::HasTravelThreats(Simulation ? Simulation->GetPlayerShip() : nullptr))
-        if (auto* GI = GetGameInstance())
-            if (auto* Runtime = GI->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetTimeCompression(1);
-    UpdateFighterRadioInput();
+    RadioView::Message("Travel acceleration is disabled. Universe time is server controlled.");
 }
 
 void UMissionBriefingDlg::ResetTravelSpeed()
@@ -3851,8 +3929,10 @@ void UMissionBriefingDlg::UpdateMissionTargetCamera()
     UWorld* World = GetWorld();
     APlayerController* PC = GetOwningPlayer();
     if (!World || !PC || !bLiveMissionStarted || bMissionCompleteHandedOff
-        || (Sim::GetSim() && Sim::GetSim()->HasPlayerDocked()) || !IsValid(MissionPreviewCamera)) return;
-    if (ReferencePopup || LiveOptionsPopup || CargoManifestPopup || MarketplacePopup || ProductionPopup || StationServicesPopup || ShipStorePopup || AgentsPopup || PlayersPopup || AwardsPopup || WalletPopup || GuildsPopup || MiningDronesPopup || SkillsPopup || HangarPopup || InsurancePopup || LoadoutsPopup || FittingPopup || ContractsPopup || EngineeringPopup.IsValid() || WeaponsPopup.IsValid() || IntelPopup.IsValid() || MissionPopup.IsValid() || ObjectivesPopup.IsValid() || FlightOpsPopup.IsValid() || NavigationPopup.IsValid() || (MissionQuitMenu && MissionQuitMenu->IsMenuShown()) || World->IsPaused()) return;
+        || !IsValid(MissionPreviewCamera)) return;
+    // Docking and floating panels must not freeze the camera at its first,
+    // pre-synchronization pose. Keep following the rendered parked hull too.
+    if (World->IsPaused()) return;
     Sim* Simulation = Sim::GetSim();
     SimRegion* Region = Simulation ? Simulation->GetActiveRegion() : nullptr;
     Ship* Player = Simulation ? Simulation->GetPlayerShip() : nullptr;
@@ -4328,6 +4408,7 @@ void UMissionBriefingDlg::TogglePlayers()
         ResolveFlightPopupClass<UFlightLogbookDlg>(GetGameInstance(), TEXT("UI.PlayersPopupClass")));
     if (PlayersWidget)
         {
+            PlayersWidget->OnOpenShipSkins=FSimpleDelegate::CreateUObject(this,&UMissionBriefingDlg::ToggleShipSkins);
             PlayersWidget->OnOpenHangar = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleHangar);
             PlayersWidget->OnOpenSkills = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleSkills);
             PlayersWidget->OnOpenAwards = FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::ToggleAwards);
@@ -4342,6 +4423,7 @@ void UMissionBriefingDlg::TogglePlayers()
 void UMissionBriefingDlg::ClosePlayers()
 {
     CloseGuilds();
+    CloseShipSkins();
     CloseWallet();
     CloseAwards();
     RemoveFloatingPanel(PlayersPopup);
@@ -4540,7 +4622,7 @@ void UMissionBriefingDlg::ToggleAgents()
     {
         const Sim* Simulation = Sim::GetSim();
         return MissionPtr && MissionPtr->IsFreeFlight() &&
-            (CanOpenMarketplace() || (Simulation && Simulation->HasPlayerDocked() && CanOpenFlightPanel()));
+            (CanOpenMarketplace() || (Simulation && FStationServices::IsDocked() && CanOpenFlightPanel()));
     }));
     AddFloatingPanel(AgentsPopup, AgentsWidget->TakeWidget(), TEXT("Agents"), 1,
         FSimpleDelegate::CreateUObject(this, &UMissionBriefingDlg::CloseAgents));
@@ -5328,11 +5410,13 @@ void UMissionBriefingDlg::UpdateTravelPresentation(float DeltaSeconds)
             PendingTravelLevel->SetShouldBeVisible(false);PendingTravelLevel->SetShouldBeLoaded(false);PendingTravelLevel->SetIsRequestingUnloadAndRemoval(true);PendingTravelLevel=nullptr;
         }
     }
-    const bool Loading = PendingTravelLevel || bTravelPresentationUnavailable;
-    QuantumDrive* Drive = Pilot->GetQuantumDrive();
-    if (!Drive && Pilot->GetCarrier()) Drive=Pilot->GetCarrier()->GetQuantumDrive();
+    // A failed stream is not an endless loading state. Keep the live simulation
+    // and panels available after timeout; the current native builder follows it.
+    const bool Loading = PendingTravelLevel != nullptr;
+    Ship* TravelSource = ResolveQuantumPresentationShip(Pilot);
+    QuantumDrive* Drive = TravelSource->GetQuantumDrive();
     const int32 DrivePhase=Drive ? Drive->ActiveState() : QuantumDrive::ACTIVE_READY;
-    const double Warp=Pilot->GetWarpFactor();
+    const double Warp=TravelSource->GetWarpFactor();
     EQuantumPresentationPhase CameraPhase=EQuantumPresentationPhase::Idle;
     if (Loading) CameraPhase=EQuantumPresentationPhase::Loading;
     else if (DrivePhase==QuantumDrive::ACTIVE_COUNTDOWN) CameraPhase=EQuantumPresentationPhase::Countdown;
@@ -5361,7 +5445,7 @@ void UMissionBriefingDlg::UpdateTravelPresentation(float DeltaSeconds)
             if (bAtmosphereTravel && !Loading)
                 TravelTransition->UpdateAtmosphere(AtmosphereTravelFade, bAtmosphereDescent);
             else
-                TravelTransition->Update(GetWorld()->IsPaused()?0.f:DeltaSeconds,Pilot->GetWarpFactor(),
+                TravelTransition->Update(GetWorld()->IsPaused()?0.f:DeltaSeconds,Warp,
                     Loading,UTF8_TO_TCHAR(Region->GetName()),bTravelPresentationUnavailable && !PendingTravelLevel);
         }
     }
@@ -5377,8 +5461,15 @@ void UMissionBriefingDlg::HandleTravelSystemShown()
     if (!PendingTravelLevel || !bLiveMissionStarted || !GetWorld()) return;
     ASystemSceneBuilder* Builder=nullptr;
     for(TActorIterator<ASystemSceneBuilder> It(GetWorld());It;++It)
-        if(It->GetLevel()==PendingTravelLevel->GetLoadedLevel() && !It->GetSpawnedRegions().IsEmpty()){Builder=*It;break;}
+        if(It->GetLevel()==PendingTravelLevel->GetLoadedLevel()){Builder=*It;break;}
     if(!Builder)return;
+    auto* Simulation=Sim::GetSim();
+    auto* Region=Simulation?Simulation->GetActiveRegion():nullptr;
+    if(!Region || !Region->GetSystem())return;
+    // Streamed maps may have no authored target names and BuildOnBeginPlay off.
+    // Initialize from the arrived simulation system instead of waiting forever.
+    Builder->EnsureMissionSystem(Region->GetSystem());
+    if(Builder->GetSpawnedBodies().IsEmpty())return;
     if(auto* Runtime=GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())Runtime->RefreshTravelPresentation(Builder);
     if(MissionSystemLevel)
     {
@@ -5427,4 +5518,17 @@ void UMissionBriefingDlg::ToggleSkills()
 void UMissionBriefingDlg::CloseSkills()
 {
     RemoveFloatingPanel(SkillsPopup); SkillsWidget = nullptr;
+}
+
+void UMissionBriefingDlg::ToggleShipSkins()
+{
+    if(ShipSkinPopup){CloseShipSkins();return;}
+    if(!CanOpenFlightPanel() || !FlightPanelCanvas)return;
+    ClearMissionRotationInput();
+    ShipSkinWidget=CreateWidget<UShipSkinDlg>(GetOwningPlayer(),ResolveFlightPopupClass<UShipSkinDlg>(GetGameInstance(),TEXT("UI.ShipSkinPopupClass")));
+    if(ShipSkinWidget)AddFloatingPanel(ShipSkinPopup,ShipSkinWidget->TakeWidget(),TEXT("SKIN - Spectral Khromatic Integrated Nanocoating"),2,FSimpleDelegate::CreateUObject(this,&UMissionBriefingDlg::CloseShipSkins));
+}
+void UMissionBriefingDlg::CloseShipSkins()
+{
+    RemoveFloatingPanel(ShipSkinPopup);ShipSkinWidget=nullptr;
 }

@@ -10,6 +10,7 @@ class STARSHATTERWARS_API UFlightLogbookDlg : public UBaseScreen
 
 public:
     FSimpleDelegate OnOpenHangar;
+    FSimpleDelegate OnOpenShipSkins;
     FSimpleDelegate OnOpenSkills;
     FSimpleDelegate OnOpenAwards;
     FSimpleDelegate OnOpenWallet;

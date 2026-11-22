@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Engine/GameInstance.h"
 #include "Misc/ScopeExit.h"
 #include "ShipActor.h"
@@ -63,6 +64,7 @@ bool FNativeHullSkinTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Mission text selects runtime skin"),MissionModel.GetElements().size()==1&&MissionModel.GetElements()[0]->GetSkin()==Blue);
     const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     UWorld* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     AShipActor* A=World->SpawnActor<AShipActor>();AShipActor* B=World->SpawnActor<AShipActor>();
     auto* Mesh=NewObject<UStaticMesh>(World);auto* Original=NewObject<UMaterial>(World);auto* Replacement=NewObject<UMaterial>(World);
     Mesh->GetStaticMaterials().Add(FStaticMaterial(Original,TEXT("Hull"),TEXT("Hull")));
@@ -84,7 +86,8 @@ bool FNativeHullSkinTest::RunTest(const FString& Parameters)
     A->RestoreHullSkin();World->DestroyWorld(false);
  auto* Table=NewObject<UDataTable>();if(!UStarshatterShipDesignSubsystem::ImportJsonCatalog(*Table,FPaths::ProjectContentDir()/TEXT("GameData/Ships/ships.json")))return false;
  const auto CatalogOptions=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
- auto* CatalogWorld=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&CatalogOptions);ON_SCOPE_EXIT{CatalogWorld->DestroyWorld(false);};int32 Count=0;
+ auto* CatalogWorld=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&CatalogOptions);
+    FScopedSSWTestWorldContext TestWorldContext2(CatalogWorld);ON_SCOPE_EXIT{CatalogWorld->DestroyWorld(false);};int32 Count=0;
  for(const auto& Pair:Table->GetRowMap())
  {
   const auto& CatalogRow=*reinterpret_cast<const FShipDesign*>(Pair.Value);if(CatalogRow.Skin.IsEmpty())continue;
@@ -102,7 +105,7 @@ bool FNativeHullSkinTest::RunTest(const FString& Parameters)
    Actor->ApplyHullSkin(nullptr);
   }
  }
- TestEqual(TEXT("All 23 native skin variants covered"),Count,23);
+ TestTrue(TEXT("All included hull finishes have cooked materials; starter coverage cannot shrink"),Count>=24);
     return true;
 }
 #endif

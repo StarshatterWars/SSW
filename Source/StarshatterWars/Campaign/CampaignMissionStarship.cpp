@@ -54,15 +54,16 @@
 // +--------------------------------------------------------------------+
 
 CampaignMissionStarship::CampaignMissionStarship(Campaign* c)
-    : campaign(c),
-    player_group(0),
+    : 
+    campaign(c),
     player_unit(0),
-    mission(0),
-    player(0),
+    player_group(0),
     strike_group(0),
     strike_target(0),
-    prime_target(0),
+    mission(0),
+    player(0),
     ward(0),
+    prime_target(0),
     escort(0),
     ownside(0),
     enemy(-1),

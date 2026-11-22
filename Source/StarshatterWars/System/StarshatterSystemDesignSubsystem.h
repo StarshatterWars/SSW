@@ -28,6 +28,8 @@ public:
     void LoadSystemDesigns();
 
     static bool ImportDefinitions(UDataTable& Table);
+    static bool ReadJsonCatalog(const FString& Path,TMap<FName,FSystemDesign>& Out,FString& Error);
+    bool ReloadJsonCatalog(const FString& Path,FString& Error);
     void LoadAll(bool bImportJson);
 
     const TMap<FName, FSystemDesign>& GetDesignsByName() const { return DesignsByName; }

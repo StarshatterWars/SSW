@@ -48,7 +48,7 @@ void UCmdTitleDlg::NativeConstruct()
 
     // Title card screens typically want focus so Enter/Escape works uniformly:
     SetDialogInputEnabled(true);
-    bIsFocusable = true;
+    SetIsFocusable(true);
 
     // If you want to force keyboard focus:
     // UWidgetBlueprintLibrary::SetFocusToGameViewport();
@@ -91,7 +91,7 @@ void UCmdTitleDlg::OnTitleFinished()
 
 }
 
-void UCmdTitleDlg::ExecFrame(float DeltaTime)
+void UCmdTitleDlg::ExecFrame(double DeltaTime)
 {
     if (bFinished)
         return;

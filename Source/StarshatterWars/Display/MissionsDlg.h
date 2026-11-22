@@ -14,6 +14,8 @@ public:
     void SetAssignmentMetadata(FText InAgent,FText InStatus,FText InExpiry) { MetadataAgent=MoveTemp(InAgent);MetadataStatus=MoveTemp(InStatus);MetadataExpiry=MoveTemp(InExpiry); }
     void SetStartMission(FSimpleDelegate Action, TDelegate<bool()> CanStart) { StartMission=MoveTemp(Action); CanStartMission=MoveTemp(CanStart); }
 
+    void SetLaunchFeedback(FText Message) { LaunchFeedback = MoveTemp(Message); }
+
     void SetSupplement(TSharedRef<SWidget> Content) { Supplement=Content; }
 
 protected:
@@ -24,6 +26,7 @@ protected:
 private:
     TSharedPtr<SWidget> Supplement;
     FText MetadataAgent,MetadataStatus,MetadataExpiry;
+    FText LaunchFeedback;
     FText Title;
     FText Brief;
     FSimpleDelegate Accept;

@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "OptionsScreen.h"
 #include "StarshatterControlsSettings.h"
 #include "MissionUIStyle.h"
@@ -72,6 +73,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOptionsModernizationTest,"Starshatter.Options.
 bool FOptionsModernizationTest::RunTest(const FString& Parameters)
 {
     UWorld* World=UWorld::CreateWorld(EWorldType::Game,false);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     UGameInstance* GI=NewObject<UGameInstance>();World->SetGameInstance(GI);
     ON_SCOPE_EXIT { World->DestroyWorld(false); };
     UClass* ScreenClass=LoadClass<UOptionsScreen>(nullptr,TEXT("/Game/Screens/Options/WBP_OptionsScreen.WBP_OptionsScreen_C"));

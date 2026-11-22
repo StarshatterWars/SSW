@@ -435,13 +435,13 @@ void UMissionNavDlg::RefreshFromMission()
     MissionPtr = ResolveMission();
     if (bInMissionNavigation) { RefreshLiveNavigation(); SyncSubPanels(); RefreshObjectListPanel(); RefreshDetailPanel(); return; }
 
-    UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] RefreshFromMission: MissionPtr=%p"), MissionPtr);
+    UE_LOG(LogTemp, Log, TEXT("[MissionNavDlg] RefreshFromMission: MissionPtr=%p"), MissionPtr);
 
     if (MissionPtr)
     {
         const FString MissionRegion = FString(ANSI_TO_TCHAR(MissionPtr->GetRegion())).TrimStartAndEnd();
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[MissionNavDlg] RefreshFromMission: MissionRegion='%s'"),
             *MissionRegion);
     }
@@ -1760,7 +1760,8 @@ void UMissionNavDlg::RebuildObjectList()
 
     if (!ObjectListView)
     {
-        UE_LOG(LogTemp, Warning, TEXT("[MissionNavDlg] RebuildObjectList: ObjectListView is null"));
+        // Selection may refresh before the widget tree is constructed.
+        if(GetCachedWidget().IsValid()) UE_LOG(LogTemp,Warning,TEXT("[MissionNavDlg] RebuildObjectList: ObjectListView is null"));
         return;
     }
 
@@ -2613,7 +2614,7 @@ void UMissionNavDlg::HandleGalaxySystemSelected(const FString& InSystemName)
     SyncSubPanels();
     UpdateSystemDetailsPanel(SelectedSystemName);
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[MissionNavDlg] HandleGalaxySystemSelected: Mission=%s Selected=%s"),
         *CurrentMissionSystemName,
         *SelectedSystemName);

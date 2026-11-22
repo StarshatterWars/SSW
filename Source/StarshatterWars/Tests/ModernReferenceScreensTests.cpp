@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "PlayerDlg.h"
 #include "TacRefDlg.h"
 #include "Engine/World.h"
@@ -48,7 +49,8 @@ bool FGazetteerJsonTest::RunTest(const FString&)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FModernReferenceScreensTest,"Starshatter.Menu.LogbookAndTacticalReference",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FModernReferenceScreensTest::RunTest(const FString& Parameters)
 {
-    auto* World=UWorld::CreateWorld(EWorldType::Game,false);World->SetGameInstance(NewObject<UGameInstance>());
+    auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false);
+    FScopedSSWTestWorldContext TestWorldContext1(World);World->SetGameInstance(NewObject<UGameInstance>());
     ON_SCOPE_EXIT {World->DestroyWorld(false);};
     auto* PlayerClass=LoadClass<UPlayerDlg>(nullptr,TEXT("/Game/Screens/Player/WBP_PlayerLogbook.WBP_PlayerLogbook_C"));
     auto* ReferenceClass=LoadClass<UTacRefDlg>(nullptr,TEXT("/Game/Screens/TacRef/WBP_TacRefScreen.WBP_TacRefScreen_C"));

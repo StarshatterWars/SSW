@@ -13,7 +13,7 @@ class STARSHATTERWARS_API ANativeTerrainActor : public AActor
     GENERATED_BODY()
 public:
     ANativeTerrainActor();
-    void SetSurfaceSky(bool bEnabled);
+    void SetSurfaceSky(bool bEnabled, bool bOwnAtmosphere = true, float SunIntensity = 4.0f);
     void UpdateTerrain(Terrain* Model,const FVector& Observer,const FVector& RegionOrigin);
     UPROPERTY(VisibleAnywhere,BlueprintReadOnly,Category="Terrain") TObjectPtr<UProceduralMeshComponent> Mesh;
 private:

@@ -38,6 +38,7 @@ bool FHangarInsuranceTest::RunTest(const FString&)
     Hull.Components.AddDefaulted_GetRef().Level = 5;
     Hull.LoadoutStations = {1, 2, -1};
     Hull.LoadoutName = TEXT("Custom");
+    Hull.Location = TEXT("Station / Janus / Janek Station");
     auto* Save = NewObject<UPlayerSaveGame>();
     Save->PlayerInfo.HangarShips.Add(Hull);
     Save->PlayerInfo.SelectedHangarHull = Hull.HullId;
@@ -48,6 +49,7 @@ bool FHangarInsuranceTest::RunTest(const FString&)
     if (!TestNotNull(TEXT("Read saved hangar"), Loaded)) return false;
     TestEqual(TEXT("One hull survives"), Loaded->PlayerInfo.HangarShips.Num(), 1);
     TestEqual(TEXT("Selected identity survives"), Loaded->PlayerInfo.SelectedHangarHull, Hull.HullId);
+    TestEqual(TEXT("Each hull retains its own stored base across save/load"), Loaded->PlayerInfo.HangarShips[0].Location, Hull.Location);
     TestTrue(TEXT("Cash provenance survives"), Loaded->PlayerInfo.HangarShips[0].bCashPurchased);
     TestEqual(TEXT("Fitted level survives"), Loaded->PlayerInfo.HangarShips[0].Components[0].Level, 5);
     TestEqual(TEXT("Stored loadout survives"), Loaded->PlayerInfo.HangarShips[0].LoadoutStations.Num(), 3);

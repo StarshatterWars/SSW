@@ -49,7 +49,7 @@ void UNavLightComponent::ApplyDefinition(const FShipNavLightDef& InDef)
     ApplyVisualSettings();
     ApplyRenderedVisibility(true);
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[NavLightComponent] ApplyDefinition: %s Loc=%s Color=%s Intensity=%.1f Radius=%.1f Mode=%d BlinkInterval=%.2f Phase=%.2f"),
         *GetName(),
         *LightDef.LocalOffset.ToString(),

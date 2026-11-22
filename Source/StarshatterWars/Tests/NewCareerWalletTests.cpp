@@ -15,7 +15,7 @@ bool FNewCareerWalletTest::RunTest(const FString&)
     TStrongObjectPtr<UStarshatterPlayerSubsystem> Players(NewObject<UStarshatterPlayerSubsystem>(Owner.Get()));
     Players->ResetToDefaults();
     auto& Economy=Players->GetEconomy();
-    TestEqual(TEXT("New pilot starts with exactly 50000 credits"),TransactionAI::Balance(Economy),50000LL);
+    TestEqual(TEXT("New pilot starts with exactly 5000 credits"),TransactionAI::Balance(Economy),5000LL);
     TestEqual(TEXT("Starting allowance has one wallet receipt"),Economy.Journal.Num(),1);
     TestTrue(TEXT("New career is distinguished from legacy T1 demo grants"),Economy.InitializedMarkets.Contains(TEXT("Career starting grant")));
     Players->GetEconomy();Players->GetEconomy();
@@ -26,7 +26,7 @@ bool FNewCareerWalletTest::RunTest(const FString&)
     const auto* Loaded=Cast<UPlayerSaveGame>(UGameplayStatics::LoadGameFromMemory(Bytes));
     if(!TestNotNull(TEXT("Career wallet reloads"),Loaded))return false;
     Players->GetMutablePlayerInfo()=Loaded->PlayerInfo;
-    TestEqual(TEXT("Reload never tops a spent wallet back up"),TransactionAI::Balance(Players->GetEconomy()),49500LL);
+    TestEqual(TEXT("Reload never tops a spent wallet back up"),TransactionAI::Balance(Players->GetEconomy()),4500LL);
     Players->GetMutablePlayerInfo()=FS_PlayerGameInfo();
     Players->GetMutablePlayerInfo().InsuranceCredits=1234;
     TestEqual(TEXT("Old career retains only its existing legacy balance"),TransactionAI::Balance(Players->GetEconomy()),1234LL);

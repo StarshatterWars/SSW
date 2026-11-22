@@ -160,7 +160,7 @@ void UFlightOpsDlg::SetShip(Ship* InShip)
 
 // +--------------------------------------------------------------------+
 
-void UFlightOpsDlg::ExecFrame()
+void UFlightOpsDlg::ExecFrame(double /*DeltaTime*/)
 {
     if (!ShipPtr || !ShipPtr->GetHangar())
     {

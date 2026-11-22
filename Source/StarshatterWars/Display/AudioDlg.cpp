@@ -73,7 +73,7 @@ void UAudioDlg::NativePreConstruct()
 {
     Super::NativePreConstruct();
 
-    UE_LOG(LogAudioDlg, Warning, TEXT("[AudioDlg] PreConstruct RootCanvas=%s WidgetTree=%s"),
+    UE_LOG(LogAudioDlg, Log, TEXT("[AudioDlg] PreConstruct RootCanvas=%s WidgetTree=%s"),
         RootCanvas ? TEXT("VALID") : TEXT("NULL"),
         WidgetTree ? TEXT("VALID") : TEXT("NULL"));
     EnsureAutoVerticalBox();
@@ -100,7 +100,7 @@ void UAudioDlg::NativeConstruct()
     BuildAudioRows();
 
     // Sanity log
-    UE_LOG(LogAudioDlg, Warning, TEXT("[AudioDlg] AutoVBox children after BuildAudioRows: %d"),
+    UE_LOG(LogAudioDlg, Log, TEXT("[AudioDlg] AutoVBox children after BuildAudioRows: %d"),
         VBox->GetChildrenCount());
 
     if (bClosed)
@@ -367,7 +367,7 @@ void UAudioDlg::BuildQualityListIfNeeded()
     if (!QualityCombo)
         return;
 
-    // If it already has items (BP or previous construct), don’t duplicate:
+    // If it already has items (BP or previous construct), donâ€™t duplicate:
     if (QualityCombo->GetOptionCount() > 0)
         return;
 

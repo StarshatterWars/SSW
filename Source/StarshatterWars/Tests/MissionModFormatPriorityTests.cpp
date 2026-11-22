@@ -32,8 +32,8 @@ bool FMissionModFormatPriorityTest::RunTest(const FString&)
     TArray<uint8> Bytes; bool bJson=false;
     const FString Authored=FPaths::ProjectContentDir()/TEXT("GameData")/(Leaf+TEXT(".def"));
     TestTrue(TEXT("Enabled override resolves"),SSWModFiles::ReadMission(Authored,Bytes,bJson));
-    TestFalse(TEXT("Higher-priority DEF beats lower-priority JSON"),bJson);
-    Bytes.Add(0);TestEqual(TEXT("Highest priority pack wins"),FString(UTF8_TO_TCHAR(reinterpret_cast<const char*>(Bytes.GetData()))),FString(TEXT("HIGH DEF")));
+    TestTrue(TEXT("Legacy DEF cannot override a JSON mod"),bJson);
+    Bytes.Add(0);TestEqual(TEXT("Valid JSON pack wins over obsolete DEF"),FString(UTF8_TO_TCHAR(reinterpret_cast<const char*>(Bytes.GetData()))),FString(TEXT("LOW JSON")));
     FFileHelper::SaveStringToFile(TEXT("HIGH JSON"),*(HighFolder/(Leaf+TEXT(".json"))),FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
     Bytes.Reset();TestTrue(TEXT("JSON override resolves"),SSWModFiles::ReadMission(Authored,Bytes,bJson));
     TestTrue(TEXT("Within same pack JSON replaces DEF"),bJson);

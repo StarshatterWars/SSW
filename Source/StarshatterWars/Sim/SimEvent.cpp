@@ -104,9 +104,24 @@ SimEvent::GetEventDesc() const
 // +====================================================================+
 
 ShipStats::ShipStats(const char* n, int i)
-	: name(n), iff(i), kill1(0), kill2(0), lost(0), coll(0), points(0),
-	cmd_points(0), gun_shots(0), gun_hits(0), missile_shots(0), missile_hits(0),
-	combat_group(0), combat_unit(0), player(false), ship_class(0), elem_index(-1)
+	: 
+    name(n),
+    combat_group(0),
+    combat_unit(0),
+    player(false),
+    elem_index(-1),
+    ship_class(0),
+    iff(i),
+    kill1(0),
+    kill2(0),
+    lost(0),
+    coll(0),
+    gun_shots(0),
+    gun_hits(0),
+    missile_shots(0),
+    missile_hits(0),
+    points(0),
+    cmd_points(0)
 {
 	if (!n || !n[0])
 		name = "Unknown";

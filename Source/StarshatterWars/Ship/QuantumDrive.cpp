@@ -57,13 +57,15 @@ static inline FVector RandomDirectionPoint()
 // +----------------------------------------------------------------------+
 
 QuantumDrive::QuantumDrive(SUBTYPE s, double cap, double rate)
-	: SimSystem(SYSTEM_CATEGORY::DRIVE, s, "Quantum", qdrive_value, (float)cap, (float)cap, (float)rate),
-	ship(nullptr), dst_loc(FVector::ZeroVector),
-	dst_rgn(0),
-	active_state(ACTIVE_READY),
-	warp_fov(1),
-	jump_time(0),
-	countdown(5)
+	: 
+    SimSystem(SYSTEM_CATEGORY::DRIVE, s, "Quantum", qdrive_value, (float)cap, (float)cap, (float)rate),
+    active_state(ACTIVE_READY),
+    ship(nullptr),
+    warp_fov(1),
+    jump_time(0),
+    countdown(5),
+    dst_rgn(0),
+    dst_loc(FVector::ZeroVector)
 {
 	name = "Quantum Drive";
 	abrv = "QD";
@@ -76,13 +78,15 @@ QuantumDrive::QuantumDrive(SUBTYPE s, double cap, double rate)
 // +----------------------------------------------------------------------+
 
 QuantumDrive::QuantumDrive(const QuantumDrive& d)
-	: SimSystem(d),
-	ship(nullptr), dst_loc(FVector::ZeroVector),
-	dst_rgn(0),
-	active_state(ACTIVE_READY),
-	warp_fov(1),
-	jump_time(0),
-	countdown(d.countdown)
+	: 
+    SimSystem(d),
+    active_state(ACTIVE_READY),
+    ship(nullptr),
+    warp_fov(1),
+    jump_time(0),
+    countdown(d.countdown),
+    dst_rgn(0),
+    dst_loc(FVector::ZeroVector)
 {
 	Mount(d);
 	SetAbbreviation(d.Abbreviation());

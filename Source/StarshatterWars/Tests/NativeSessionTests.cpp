@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "SSWSessionSubsystem.h"
 #include "GameStructs.h"
@@ -76,7 +77,7 @@ struct FSessionLANState {
  TSharedPtr<FOnlineSessionSearch> Search=MakeShared<FOnlineSessionSearch>();
  bool bCreated=false,bFound=false,bJoined=false,bCreateOK=false,bFindOK=false;EOnJoinSessionCompleteResult::Type JoinResult=EOnJoinSessionCompleteResult::UnknownError;
  int Stage=0;double Start=FPlatformTime::Seconds();FString Title;
- void Cleanup(){if(Host.IsValid()){Host->ClearOnCreateSessionCompleteDelegate_Handle(Create);Host->DestroySession(NAME_GameSession);}if(Client.IsValid()){Client->ClearOnFindSessionsCompleteDelegate_Handle(Find);Client->ClearOnJoinSessionCompleteDelegate_Handle(Join);Client->CancelFindSessions();Client->DestroySession(NAME_GameSession);}Host.Reset();Client.Reset();IOnlineSubsystem::Destroy(HostID);IOnlineSubsystem::Destroy(ClientID);
+ void Cleanup(){if(Host.IsValid()){Host->ClearOnCreateSessionCompleteDelegate_Handle(Create);Host->DestroySession(NAME_GameSession);}if(Client.IsValid()){Client->ClearOnFindSessionsCompleteDelegate_Handle(Find);Client->ClearOnJoinSessionCompleteDelegate_Handle(Join);if(Search->SearchState==EOnlineAsyncTaskState::InProgress)Client->CancelFindSessions();Client->DestroySession(NAME_GameSession);}Host.Reset();Client.Reset();IOnlineSubsystem::Destroy(HostID);IOnlineSubsystem::Destroy(ClientID);
  if(HostWorld){GEngine->DestroyWorldContext(HostWorld);HostWorld->DestroyWorld(false);HostWorld=nullptr;}
  if(ClientWorld){GEngine->DestroyWorldContext(ClientWorld);ClientWorld->DestroyWorld(false);ClientWorld=nullptr;}}
 };

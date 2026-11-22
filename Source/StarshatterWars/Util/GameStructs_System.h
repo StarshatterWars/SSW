@@ -1720,6 +1720,9 @@ struct FShipDesign : public FTableRowBase {
 	bool Hidden = false;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	float Scale;
+	// Simulation metres; independent of model scale and presentation actors.
+	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
+	float CollisionRadius = 0.0f;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)
 	float ExplosionScale;
 	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly)

@@ -25,14 +25,14 @@
 
  // +--------------------------------------------------------------------+
 
-void FormatNumber(char* txt, double n);
-void FormatNumberExp(char* txt, double n);
-void FormatTime(char* txt, double seconds);
-void FormatTimeOfDay(char* txt, double seconds);
-void FormatDayTime(char* txt, double seconds, bool short_format = false);
-void FormatDay(char* txt, double seconds);
+void FormatNumber(TArrayView<char> txt, double n);
+void FormatNumberExp(TArrayView<char> txt, double n);
+void FormatTime(TArrayView<char> txt, double seconds);
+void FormatTimeOfDay(TArrayView<char> txt, double seconds);
+void FormatDayTime(TArrayView<char> txt, double seconds, bool short_format = false);
+void FormatDay(TArrayView<char> txt, double seconds);
 FString FormatDayFromString(FString txt);
-void FormatPoint(char* txt, const Point& p);
+void FormatPoint(TArrayView<char> txt, const Point& p);
 Text FormatTimeString(int utc = 0);
 
 static const char* FormatTimeString(double seconds);

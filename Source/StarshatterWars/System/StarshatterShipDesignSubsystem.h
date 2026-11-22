@@ -91,7 +91,6 @@ public:
 
 	// ---------- load entry points ----------
 	// Scans directories and parses all design defs.
-	void InitializeShipDesigns();
 	void LoadAll(bool bFull = false);
 	void LoadShipDesign(const char* InFilename);
 	void ResetCurrentShipArrays();

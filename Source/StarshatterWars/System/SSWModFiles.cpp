@@ -117,6 +117,6 @@ bool SSWModFiles::Read(const FString& Path,TArray<uint8>& Bytes)
 bool SSWModFiles::ReadMission(const FString& Path,TArray<uint8>& Bytes,bool& bJson)
 {
     int32 Selected=INDEX_NONE;
-    const bool Found=ReadAlternatives({FPaths::ChangeExtension(Path,TEXT("json")),FPaths::ChangeExtension(Path,TEXT("def"))},Bytes,Selected);
+    const bool Found=ReadAlternatives({FPaths::ChangeExtension(Path,TEXT("json"))},Bytes,Selected);
     bJson=Found && Selected==0; return Found;
 }

@@ -5,7 +5,7 @@
 #include "SimSystem.h"
 #include "Widgets/SLeafWidget.h"
 
-enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore, Contracts, Gazetteer, PlanetMoon, Agent, Accept, Audio, Keyboard, Display, SettingsGear, Hangar, Insurance, Loadout, Skills, Mineral, Electronics, Medical, Liquid, Passengers, MissionPackage, Intel, Back, Joystick, Play, Awards, Wallet, Guilds, MiningDrone };
+enum class EShipSystemIcon : uint8 { Engine, Weapon, Projectile, Shield, Navigation, Reactor, Thruster, Sensor, Computer, Deck, Jump, Auxiliary, Repair, PowerOff, PowerOn, Override, Replace, Up, Down, Gun, MediumRangeMissile, Refresh, Abort, Reference, Options, Ship, Fighter, Station, Building, Transport, Exit, Camera, Radio, Marketplace, Cargo, Production, ShipStore, Contracts, Gazetteer, PlanetMoon, Agent, Accept, Audio, Keyboard, Display, SettingsGear, Hangar, Insurance, Loadout, Skills, Mineral, Electronics, Medical, Liquid, Passengers, MissionPackage, Intel, Back, Joystick, Play, Awards, Wallet, Guilds, MiningDrone, Appearance };
 
 class SShipSystemIcon : public SLeafWidget
 {
@@ -228,6 +228,9 @@ public:
                   {3,11},{3,8},{2,6},{5,3},{8,5}});
             Line({{11,7},{14,8},{16,11},{14,15},{11,16},{8,15},{6,11},{8,8},{11,7}});
             break;
+        case EShipSystemIcon::Appearance:
+            Line({{3,17},{5,12},{15,2},{20,7},{10,17},{5,19},{3,17}});
+            Line({{12,5},{17,10}});Line({{3,20},{10,20}});break;
         case EShipSystemIcon::Options: Line({{3,5},{19,5}}); Line({{7,2},{7,8}}); Line({{3,11},{19,11}}); Line({{15,8},{15,14}}); Line({{3,17},{19,17}}); Line({{9,14},{9,20}}); break;
         default: Line({{11,2},{20,11},{11,20},{2,11},{11,2}}); break;
         }

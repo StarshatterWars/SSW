@@ -9,5 +9,10 @@
     "port": 18787,
     "readyTimeoutSeconds": 12
   },
-  "storeUrl": null
+  "storeUrl": null,
+  "universeServer": {
+    "autoStartLocal": true,
+    "permanentStatusUrl": null,
+    "port": 17880
+  }
 }

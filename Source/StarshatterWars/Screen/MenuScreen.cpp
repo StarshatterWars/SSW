@@ -17,6 +17,10 @@
 #include "Ship.h"
 #include "ShipDesign.h"
 #include "FreeFlightHullRules.h"
+#include "MissionHullAccessRules.h"
+#include "TrainingShuttleRules.h"
+#include "FreeFlightAssignment.h"
+#include "StarshatterGameDataSubsystem.h"
 #include "LocalGameStateSubsystem.h"
 #include "DynamicMissionAI.h"
 #include "ExitDlg.h"
@@ -62,7 +66,7 @@
 
 // ------------------------------------------------------------
 
-void UMenuScreen::Initialize(UGameInstance* InGI)
+void UMenuScreen::InitializeMenu(UGameInstance* InGI)
 {
     if (!InGI) return;
 
@@ -152,7 +156,7 @@ void UMenuScreen::NativeConstruct()
 
     if (UGameInstance* GI = GetGameInstance())
     {
-        Initialize(GI);
+        InitializeMenu(GI);
     }
 }
 
@@ -280,11 +284,6 @@ void UMenuScreen::Setup()
     EnsureDialog<UAwardShowDlg>(AwardDlgClass, AwardDlg);
 
     EnsureDialog<UMissionBriefingDlg>(MissionScreenClass, MissionBriefingDlg);
-    EnsureDialog<UMissionSelectDlg>(MsnSelectDlgClass, MissionSelectDlg);
-    EnsureDialog<UCampaignSelectDlg>(CmpSelectDlgClass, CmpSelectDlg);
-    EnsureDialog<UCmdMissionsDlg>(CmdMissionsDlgClass, CmdMissionsDlg);
-    EnsureDialog<UCmdDlg>(CmdDlgClass, CmdDlg);
-    EnsureDialog<UCmpnScreen>(CmpnScreenClass, CmpnScreen);
 
     EnsureDialog<UMissionEditorDlg>(MsnEditDlgClass, MsnEditDlg);
     EnsureDialog<UMissionElementDlg>(MsnElemDlgClass, MsnElemDlg);
@@ -561,142 +560,26 @@ void UMenuScreen::ShowMenuDlg()
 
 void UMenuScreen::ShowCampaignSelectDlg()
 {
-    const UGameInstance* GI = GetGameInstance();
-    const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
-    if (!Players || !CampaignPresentationRules::CanSelectCampaign(Players->GetPlayerInfo())) return;
-
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowCampaignSelectDlg: BEGIN"));
-
-    if (!CmpSelectDlgClass)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowCampaignSelectDlg: CmpSelectDlgClass is NULL"));
-        return;
-    }
-
-    APlayerController* PC = GetOwningPlayer();
-    if (!PC)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowCampaignSelectDlg: OwningPlayer is NULL"));
-        return;
-    }
-
-    EnsureDialog<UCampaignSelectDlg>(CmpSelectDlgClass, CmpSelectDlg);
-    if (!CmpSelectDlg)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowCampaignSelectDlg: EnsureDialog failed (CmpSelectDlg is NULL)"));
-        return;
-    }
-
-    HideAll();
-
-    CmpSelectDlg->SetMenuManager(this);
-    CmpSelectDlg->InitializeDlg(this);
-
-    if (CmpSelectDlg->IsInViewport())
-    {
-        CmpSelectDlg->RemoveFromParent();
-    }
-
-    CmpSelectDlg->AddToViewport(200);
-
-    CmpSelectDlg->SetVisibility(ESlateVisibility::Visible);
-    CmpSelectDlg->SetIsEnabled(true);
-    CmpSelectDlg->SetIsFocusable(true);
-    CmpSelectDlg->SetDialogInputEnabled(true);
-
-    CurrentDialog = CmpSelectDlg;
-
-    ApplyUIFocus(PC, CmpSelectDlg);
-
-    CmpSelectDlg->Show();
-
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowCampaignSelectDlg: SHOWN InViewport=%d Vis=%d"),
-        CmpSelectDlg->IsInViewport() ? 1 : 0,
-        (int32)CmpSelectDlg->GetVisibility());
+    // Campaigns and single missions are now offered by agents in the live session.
+    ReturnFromMissionBriefing();
 }
 
 void UMenuScreen::ShowOperationsMissionsDlg()
 {
-    APlayerController* PC = GetOwningPlayer();
-    if (!PC || !CmpnScreenClass) return;
-    EnsureDialog<UCmpnScreen>(CmpnScreenClass, CmpnScreen);
-    if (!CmpnScreen) return;
-    HideAll();
-    CmpnScreen->SetMenuManager(this);
-    CmpnScreen->InitializeDlg(this);
-    if (!CmpnScreen->IsInViewport()) CmpnScreen->AddToViewport(300);
-    CmpnScreen->SetVisibility(ESlateVisibility::Visible);
-    CmpnScreen->SetIsEnabled(true);
-    CmpnScreen->SetDialogInputEnabled(true);
-    CurrentDialog = CmpnScreen;
-    bIsShown = true;
-    // Consume the Escape press that ended the mission.
-    TimeTilChange = 0.5;
-    bExitLatch = true;
-    bShowMissionsRequested = false;
-    CmpnScreen->ShowOperationsMissions();
-    if (UCmdDlg* Operations = CmpnScreen->GetCmdDlg())
-    {
-        if (Operations->GetVisibility() == ESlateVisibility::Visible) ApplyUIFocus(PC, Operations);
-    }
+    // Redirect stale menu/Blueprint callbacks into the live career session.
+    ReturnFromMissionBriefing();
 }
 
 void UMenuScreen::ShowOperationsDlg()
 {
-    // Legacy alias route during transition:
-    ShowCmpnScreen();
+    // Retired operation pages have no navigation entry.
+    ReturnFromMissionBriefing();
 }
 
 void UMenuScreen::ShowCmpnScreen()
 {
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowCmpnScreen: BEGIN"));
-
-    if (!CmpnScreenClass)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowCmpnScreen: CmpnScreenClass is NULL"));
-        return;
-    }
-
-    APlayerController* PC = GetOwningPlayer();
-    if (!PC)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowCmpnScreen: OwningPlayer is NULL"));
-        return;
-    }
-
-    EnsureDialog<UCmpnScreen>(CmpnScreenClass, CmpnScreen);
-    if (!CmpnScreen)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowCmpnScreen: EnsureDialog failed (CmpnScreen is NULL)"));
-        return;
-    }
-
-    HideAll();
-
-    CmpnScreen->SetMenuManager(this);
-    CmpnScreen->InitializeDlg(this);
-
-    if (CmpnScreen->IsInViewport())
-    {
-        CmpnScreen->RemoveFromParent();
-    }
-
-    CmpnScreen->AddToViewport(300);
-
-    CmpnScreen->SetVisibility(ESlateVisibility::Visible);
-    CmpnScreen->SetIsEnabled(true);
-    CmpnScreen->SetIsFocusable(true);
-    CmpnScreen->SetDialogInputEnabled(true);
-
-    CurrentDialog = CmpnScreen;
-
-    ApplyUIFocus(PC, CmpnScreen);
-
-    CmpnScreen->Show();
-
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowCmpnScreen: SHOWN InViewport=%d Vis=%d"),
-        CmpnScreen->IsInViewport() ? 1 : 0,
-        (int32)CmpnScreen->GetVisibility());
+    // Redirect stale menu/Blueprint callbacks into the live career session.
+    ReturnFromMissionBriefing();
 }
 
 void UMenuScreen::HideCmpnScreen()
@@ -716,24 +599,55 @@ void UMenuScreen::StartFreeFlight()
     if(auto* State=Game->GetSubsystem<ULocalGameStateSubsystem>())
     {
         const int32 Resume=State->ResumeMissionId();
-        if(Resume!=INDEX_NONE && Resume!=Mission::FreeFlightId && OpenQueuedAssignment(Resume,false))return;
+        const auto* Pilot=Game->GetSubsystem<UStarshatterPlayerSubsystem>();
+        const bool Eligible = Pilot && TrainingShuttleRules::CanResumeSavedMission(Pilot->GetPlayerInfo(), Resume);
+        if(Eligible && Resume!=INDEX_NONE && Resume!=Mission::FreeFlightId && OpenQueuedAssignment(Resume,true))return;
     }
 
+    const auto* PlayersForEntry = Game->GetSubsystem<UStarshatterPlayerSubsystem>();
+    const auto* EntryProfile = PlayersForEntry ? &PlayersForEntry->GetPlayerInfo() : nullptr;
+    const auto* ActiveHull = EntryProfile ? EntryProfile->HangarShips.FindByPredicate([&](const FPlayerHangarShip& Hull)
+        { return Hull.HullId == EntryProfile->AssignedHangarHull && !Hull.bLost; }) : nullptr;
+    const FString Dock = ActiveHull ? ActiveHull->Location : FString();
+    const bool SurfaceEntry = EntryProfile && (TrainingShuttleRules::AtJanek(*EntryProfile) ||
+        Dock.Equals(TEXT("Station / Janus / Janek Station"), ESearchCase::IgnoreCase));
+    const bool StationEntry = !SurfaceEntry && Dock.StartsWith(TEXT("Station / "));
+    // Rebuild the small entry definition so a change of dock cannot reuse the previous base.
+    Game->FreeFlightMission.Reset();
     if (!Game->FreeFlightMission)
     {
-        const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Campaigns/01/Scenes/FreeFlight.def");
-        FString Definition;
-        if (FFileHelper::LoadFileToString(Definition, *Path))
+        auto Model = MakeShared<Mission>(Mission::FreeFlightId);
+        FS_CampaignMission Row;
+        auto* Data = Game->GetSubsystem<UStarshatterGameDataSubsystem>();
+        const TCHAR* Scene = SurfaceEntry ? TEXT("FreeFlightSurface.json") :
+            StationEntry ? TEXT("FreeFlightStation.json") : TEXT("FreeFlight.json");
+        bool Loaded = Data && Data->ReadLooseMission(
+            FPaths::ProjectContentDir() / TEXT("GameData/Campaigns/01/Scenes") / Scene, Row);
+        if (Loaded && StationEntry)
         {
-            auto Model = MakeShared<Mission>(Mission::FreeFlightId);
-            if (Model->ParseMission(TCHAR_TO_UTF8(*Definition)) && Model->GetPlayer())
-                Game->FreeFlightMission = MoveTemp(Model);
+            // Resolve the saved dock against the authored local station scenery. Never use
+            // the selected remote hangar row as a destination or teleport its hull here.
+            TArray<FString> Parts;
+            Dock.ParseIntoArray(Parts, TEXT(" / "), true);
+            FS_CampaignMission CarrierScene;
+            Loaded = Parts.Num() == 3 && Data->ReadLooseMission(
+                FPaths::ProjectContentDir() / TEXT("GameData/Campaigns/01/Scenes/FreeFlight.json"), CarrierScene);
+            const FS_MissionElement* Base = Loaded ? CarrierScene.Element.FindByPredicate([&](const FS_MissionElement& Element)
+                { return Element.Name.Equals(Parts[2], ESearchCase::IgnoreCase) && Element.Carrier.IsEmpty(); }) : nullptr;
+            Loaded = Base && Parts[1].Equals(CarrierScene.MissionSystem, ESearchCase::IgnoreCase);
+            if (Loaded)
+            {
+                Row.MissionSystem = CarrierScene.MissionSystem;
+                Row.MissionRegion = Base->RegionName.IsEmpty() ? CarrierScene.MissionRegion : Base->RegionName;
+                Row.Element[0] = *Base;
+                for (int32 Index = 1; Index < Row.Element.Num(); ++Index)
+                    Row.Element[Index].Carrier = Row.Element[Index].Squadron.IsEmpty() ? Base->Name : FString();
+            }
         }
-        if (!Game->FreeFlightMission)
-        {
-            UE_LOG(LogTemp, Error, TEXT("Free Mode could not load %s"), *Path);
-            return;
-        }
+        Loaded = Loaded && Model->LoadFromCampaignMissionData(Row) && Model->GetPlayer();
+        if (!Loaded)
+        { UE_LOG(LogTemp, Error, TEXT("Career entry could not load %s"), SurfaceEntry ? TEXT("Janek Station") : TEXT("Orion")); return; }
+        Game->FreeFlightMission = MoveTemp(Model);
     }
 
     if(auto* Players=Game->GetSubsystem<UStarshatterPlayerSubsystem>())
@@ -752,10 +666,11 @@ void UMenuScreen::StartTestMission(bool bResume)
     if (!Repository) return;
     if (!Game->TestFlightMission)
     {
-        FString Definition;
-        const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Tests/JanekTest.def");
+        FS_CampaignMission Row;
+        auto* Data=Game->GetSubsystem<UStarshatterGameDataSubsystem>();
+        const FString Path = FPaths::ProjectContentDir() / TEXT("GameData/Tests/JanekTest.json");
         auto Model = MakeShared<Mission>(Mission::TestFlightId);
-        if (!FFileHelper::LoadFileToString(Definition, *Path) || !Model->ParseMission(TCHAR_TO_UTF8(*Definition)) || !Model->GetPlayer())
+        if (!Data || !Data->ReadLooseMission(Path,Row) || !Model->LoadFromCampaignMissionData(Row) || !Model->GetPlayer())
         { UE_LOG(LogTemp, Error, TEXT("[TestMission] Invalid Janek test environment.")); return; }
         Game->TestFlightMission = MoveTemp(Model);
     }
@@ -765,32 +680,56 @@ void UMenuScreen::StartTestMission(bool bResume)
     if (CurrentDialog == MissionBriefingDlg && MissionBriefingDlg) MissionBriefingDlg->OnCommit();
 }
 
-bool UMenuScreen::OpenQueuedAssignment(int32 MissionId, bool bFromFreeFlight)
+bool UMenuScreen::OpenQueuedAssignment(int32 MissionId, bool bFromFreeFlight, FText* OutReason)
 {
     TGuardValue<bool> DirectLaunch(bSkipMissionPreparation, true);
     auto* Game = Cast<USSWGameInstance>(GetGameInstance());
     auto* Catalog = Game ? Game->GetSubsystem<UAgentCatalogSubsystem>() : nullptr;
     const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
-    if (!Catalog || !Pilot) return false;
+    if (OutReason) *OutReason = FText::GetEmpty();
+    if (!Catalog || !Pilot)
+    {
+        if (OutReason) *OutReason = INVTEXT("Pilot or mission catalog is unavailable. Reopen Agents and retry.");
+        return false;
+    }
 
     const auto* Queued = Game->GetTrainingAgent().Find(AgentAI::PilotKey(*Pilot));
     if (!Queued || Queued->MissionId != MissionId || Queued->State != AgentAI::EState::Accepted ||
-        !Catalog->CanAccept(MissionId, Queued->Issuer)) return false;
-
-    if(bFromFreeFlight && Pilot->GetEmpire()==EEMPIRE_NAME::Terellian && (MissionId==103 || MissionId==104))
+        !Catalog->CanAccept(MissionId, Queued->Issuer))
     {
-        if(auto* Simulation=Sim::GetSim()) if(!Simulation->AtSurfaceTrainingDestination())
-        {
-            FText Reason;const bool Started=Simulation->BeginSurfaceTrainingTransit(MissionId,Reason);
-            HUDView::Message("%s",TCHAR_TO_UTF8(*Reason.ToString()));
-            return Started;
-        }
+        if (OutReason) *OutReason = INVTEXT("This mission is not the next accepted assignment, or its requirements are no longer met. Check your agent queue.");
+        return false;
     }
-    if(DynamicMissionAI::IsDynamic(MissionId)){FText Reason;return Catalog->StartIndependentAssignment(MissionId,Reason);}
+
+    if(MissionId==FreeFlightAssignment::Id || DynamicMissionAI::IsDynamic(MissionId))
+    {
+        FText Reason;
+        const bool Started = Catalog->StartIndependentAssignment(MissionId, Reason);
+        if (OutReason) *OutReason = Reason;
+        return Started;
+    }
     Mission* Model = Catalog->GetMission(MissionId);
     Campaign* Repository = Catalog->GetRepository(MissionId);
-    if (!Model || !Repository) return false;
-
+    if (!Model || !Repository)
+    {
+        if (OutReason) *OutReason = INVTEXT("The mission definition could not be loaded. Verify the installed game files.");
+        return false;
+    }
+    const auto* Players = Game->GetSubsystem<UStarshatterPlayerSubsystem>();
+    const auto* Flight = Model->GetPlayer();
+    const auto* Required = Flight ? Flight->GetShipDesign() : nullptr;
+    const FName RequiredHull = Required ? FName(*Required->ShipName) : NAME_None;
+    if (!Players || !MissionHullAccessRules::FindAvailable(Players->GetPlayerInfo(), RequiredHull))
+    {
+        const FText Reason = FText::Format(INVTEXT("This mission requires an available {0} in your hangar. Check the Ship Store."), FText::FromName(RequiredHull));
+        if (OutReason) *OutReason = Reason;
+        HUDView::Message("%s", TCHAR_TO_UTF8(*Reason.ToString()));
+        return false;
+    }
+    // Authored campaign/story craft and callsigns remain untouched. Ownership is
+    // an entry requirement; Free Verse selection is a separate provisioning path.
+    // Surface lessons use an implied shuttle transfer. Their authored start,
+    // aircraft and callsigns are used directly, without a carrier jump leg.
     bReturnToFreeFlight = bFromFreeFlight;
     if (auto* Runtime = Game->GetSubsystem<USSWRuntimeSubsystem>()) Runtime->SetGameMode(EGameMode::PREP);
     int32 CampaignId, OriginalId;
@@ -860,41 +799,9 @@ void UMenuScreen::ShowMissionDlg()
     MissionBriefingDlg->InitializeDlg(this);
 
     CurrentDialog = MissionBriefingDlg;
-    if (!bSkipMissionPreparation)
-    {
-        if (MissionBriefingDlg->IsInViewport())
-        {
-            UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: removing existing viewport instance"));
-            MissionBriefingDlg->RemoveFromParent();
-        }
-        if (CmpnScreen)
-        {
-            CmpnScreen->Hide();
-            CmpnScreen->SetVisibility(ESlateVisibility::Collapsed);
-        }
-    
-        UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before AddToViewport"));
-        MissionBriefingDlg->AddToViewport(700);
-    
-        MissionBriefingDlg->SetVisibility(ESlateVisibility::Visible);
-        MissionBriefingDlg->SetIsEnabled(true);
-        MissionBriefingDlg->SetIsFocusable(true);
-        MissionBriefingDlg->SetDialogInputEnabled(true);
-    
-    
-        UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before ApplyUIFocus"));
-        ApplyUIFocus(PC, MissionBriefingDlg);
-    
-        UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before Show"));
-        MissionBriefingDlg->Show();
-    
-    }
-    else
-    {
-        // Agent assignments already have a live briefing: never expose the retired prep screen.
-        MissionBriefingDlg->SetVisibility(ESlateVisibility::Collapsed);
-        UE_LOG(LogTemp, Display, TEXT("[Agents] Starting mission directly; preparation screen hidden"));
-    }
+    // This widget remains the live-scene controller, never a visible preparation page.
+    MissionBriefingDlg->SetDialogInputEnabled(false);
+    MissionBriefingDlg->SetVisibility(ESlateVisibility::Collapsed);
 
     UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionDlg: before ShowMsnDlg"));
     if (PendingStandaloneMission)
@@ -931,62 +838,33 @@ void UMenuScreen::ShowMissionDebriefDlg(Campaign* TrainingCampaign)
     }
 }
 
+void UMenuScreen::DismissLivePopup(UBaseScreen* Popup)
+{
+    HideDialog(Popup);
+    if (auto* PC=GetOwningPlayer())
+    {
+        PC->SetInputMode(FInputModeGameAndUI());
+        PC->bShowMouseCursor=true;
+    }
+}
+
 void UMenuScreen::ReturnFromMissionBriefing()
 {
-    if (bReturnToFreeFlight)
-    {
-        bReturnToFreeFlight = false;
-        if (auto* Game = Cast<USSWGameInstance>(GetGameInstance()); Game && Game->IsTrainingTestSession()) StartTestMission(true);
-        else StartFreeFlight();
-        return;
-    }
-    UBaseScreen* Caller = MissionBriefingCaller.Get();
+    // The live career shell replaces both retired preparation/operations screens.
+    bReturnToFreeFlight = false;
     MissionBriefingCaller.Reset();
-    if (Caller && (Caller == CmpnScreen || Caller == CmdDlg))
-    {
-        ShowOperationsMissionsDlg();
-        return;
-    }
-    if (!Caller || Caller == MissionBriefingDlg)
-    {
-        if (bBriefingCallerWasStandalone) ShowMissionSelectDlg();
-        else ShowOperationsMissionsDlg();
-        return;
-    }
-
-    // Restore the same mission-list instance and its current selection. Avoid
-    // RemoveFromParent/AddToViewport, which would reconstruct its controls.
-    HideAll();
-    if (!Caller->IsInViewport()) Caller->AddToViewport(300);
-    Caller->SetVisibility(ESlateVisibility::Visible);
-    Caller->SetIsEnabled(true);
-    Caller->SetIsFocusable(true);
-    Caller->SetDialogInputEnabled(true);
-    CurrentDialog = Caller;
-    if (Caller == MissionsPanelDriver) MissionsPanelDriver->Show();
-    bIsShown = true;
-    if (APlayerController* PC = GetOwningPlayer()) ApplyUIFocus(PC, Caller);
+    bBriefingCallerWasStandalone = false;
+    if (auto* Game = Cast<USSWGameInstance>(GetGameInstance()); Game && Game->IsTrainingTestSession())
+        StartTestMission(true);
+    else
+        StartFreeFlight();
 }
 
 void UMenuScreen::ShowMissionSelectDlg()
 {
     if(bModMissionToolsActive){ShowCustomMissionDlg();return;}
-    APlayerController* PC = GetOwningPlayer();
-    if (!PC) { UE_LOG(LogTemp, Error, TEXT("[MissionsDriver] Missing player controller")); return; }
-    if (!MissionsPanelDriver)
-        MissionsPanelDriver = CreateWidget<UMissionsPanelDriver>(PC, UMissionsPanelDriver::StaticClass());
-    if (!MissionsPanelDriver) return;
-    HideAll();
-    MissionsPanelDriver->SetMenuManager(this);
-    if (MissionsPanelDriver->IsInViewport()) MissionsPanelDriver->RemoveFromParent();
-    MissionsPanelDriver->AddToViewport(300);
-    MissionsPanelDriver->SetVisibility(ESlateVisibility::Visible);
-    MissionsPanelDriver->SetIsEnabled(true);
-    MissionsPanelDriver->SetIsFocusable(true);
-    MissionsPanelDriver->SetDialogInputEnabled(true);
-    CurrentDialog = MissionsPanelDriver;
-    ApplyUIFocus(PC, MissionsPanelDriver);
-    MissionsPanelDriver->Show();
+    // Redirect stale menu/Blueprint callbacks into the live career session.
+    ReturnFromMissionBriefing();
 }
 
 void UMenuScreen::ShowMultiplayerMissionDlg()
@@ -1012,69 +890,8 @@ void UMenuScreen::ShowMultiplayerMissionDlg()
 
 void UMenuScreen::ShowSingleMissionDlg()
 {
-    const UGameInstance* GI = GetGameInstance();
-    const auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
-    if (!Players || !CampaignPresentationRules::CanSelectCampaign(Players->GetPlayerInfo()))
-    {
-        ShowMissionSelectDlg();
-        return;
-    }
-    if (MissionsPanelDriver && MissionsPanelDriver->IsInViewport()) { MissionsPanelDriver->ShowSingleMode(); return; }
-
-    if (bReturnToCustomMissionsAfterEditor)
-    {
-        bReturnToCustomMissionsAfterEditor = false;
-        ShowCustomMissionDlg();
-        return;
-    }
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionSelectDlg: BEGIN"));
-
-    if (!MsnSelectDlgClass)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowMissionSelectDlg: MsnSelectDlgClass is NULL"));
-        return;
-    }
-
-    APlayerController* PC = GetOwningPlayer();
-    if (!PC)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowMissionSelectDlg: OwningPlayer is NULL"));
-        return;
-    }
-
-    EnsureDialog<UMissionSelectDlg>(MsnSelectDlgClass, MissionSelectDlg);
-    if (!MissionSelectDlg)
-    {
-        UE_LOG(LogTemp, Error, TEXT("[MenuScreen] ShowMissionSelectDlg: EnsureDialog failed (MissionSelectDlg is NULL)"));
-        return;
-    }
-
-    HideAll();
-
-    MissionSelectDlg->SetMenuManager(this);
-    MissionSelectDlg->InitializeDlg(this);
-
-    if (MissionSelectDlg->IsInViewport())
-    {
-        MissionSelectDlg->RemoveFromParent();
-    }
-
-    MissionSelectDlg->AddToViewport(200);
-
-    MissionSelectDlg->SetVisibility(ESlateVisibility::Visible);
-    MissionSelectDlg->SetIsEnabled(true);
-    MissionSelectDlg->SetIsFocusable(true);
-    MissionSelectDlg->SetDialogInputEnabled(true);
-
-    CurrentDialog = MissionSelectDlg;
-
-    ApplyUIFocus(PC, MissionSelectDlg);
-
-    MissionSelectDlg->Show();
-
-    UE_LOG(LogTemp, Warning, TEXT("[MenuScreen] ShowMissionSelectDlg: SHOWN InViewport=%d Vis=%d"),
-        MissionSelectDlg->IsInViewport() ? 1 : 0,
-        (int32)MissionSelectDlg->GetVisibility());
+    // Campaigns and single missions are now offered by agents in the live session.
+    ReturnFromMissionBriefing();
 }
 
 void UMenuScreen::ShowCustomMissionDlg()
@@ -1116,7 +933,7 @@ void UMenuScreen::ShowMissionEditorDlg()
     {
         if (UGameInstance* GI = GetGameInstance())
         {
-            Initialize(GI);
+            InitializeMenu(GI);
         }
     }
 

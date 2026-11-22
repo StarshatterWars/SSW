@@ -1,0 +1,30 @@
+{
+	"rowName": "None",
+	"name": "Operation Live Fire",
+	"description": "The Third Fleet of the Terellian Alliance is participating in live fire training exercises in the Janus star system.",
+	"situation": "The Third Fleet of the Terellian Alliance Space Force is participating in live fire training exercises in the Janus star system.  Operation Live Fire will give the fleet some much needed practice under conditions that are as close to combat reality as possible.\\n\\nThe schedule of training scenarios in this campaign has been designed to bring you up to speed on Force:Space combat operations.  The first several missions will give you some practice in fighter operations, both in space and in atmosphere.  You will also get a chance to practice some ground strike operations against static pre-planned targets.  The last few missions are designed to introduce you to the greater complexity of modern starship combat.\\n\\nTo begin the first mission, click the [MISSIONS] button on the left side of this screen.\\n\\n",
+	"start": "01/00:00:00",
+	"orders": [
+		"* Execute all of the training missions in this campaign."
+	],
+	"bScripted": true,
+	"bSequential": false,
+	"bAvailable": true,
+	"bCompleted": false,
+	"system": "Janus",
+	"region": "Janek",
+	"mainImage": "main",
+	"actionSize": 0,
+	"combatantSize": 0,
+	"index": 0,
+	"combatant": [],
+	"action": [],
+	"zone": [],
+	"missionList": [],
+	"templateList": [],
+	"missions": [],
+	"storyMissions": [],
+	"templateMissions": [],
+	"scriptedMissions": [],
+	"campaignImage": "None"
+}

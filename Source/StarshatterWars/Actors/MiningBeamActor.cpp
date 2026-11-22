@@ -12,16 +12,22 @@ AMiningBeamActor::AMiningBeamActor()
     WeaponDefinitionName = TEXT("Mining Laser");
     BeamColor = FLinearColor(0.35f, 3.2f, 2.4f, 1.0f);
     BeamWidth = 5.0f;
+    if(!IsRunningDedicatedServer())
+    {
     static ConstructorHelpers::FObjectFinder<UNiagaraSystem> Beam(
         TEXT("/Game/Beam_and_laserFX01/Particles/Niagara/NS_ky_laser01.NS_ky_laser01"));
     BeamSystem = Beam.Object;
+    }
     OreContactFX=CreateDefaultSubobject<UNiagaraComponent>(TEXT("OreContactFX"));
     OreContactFX->SetupAttachment(Root);OreContactFX->SetAutoActivate(false);OreContactFX->SetAutoDestroy(false);
     OreContactFX->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     OreContactFX->SetRelativeScale3D(FVector(.12f));
+    if(!IsRunningDedicatedServer())
+    {
     static ConstructorHelpers::FObjectFinder<UNiagaraSystem> Contact(
         TEXT("/Game/Beam_and_laserFX01/Particles/Niagara/NS_ky_hit01.NS_ky_hit01"));
     OreContactSystem=Contact.Object;
+    }
     OreContactGlow=CreateDefaultSubobject<UPointLightComponent>(TEXT("OreContactGlow"));
     OreContactGlow->SetupAttachment(Root);OreContactGlow->SetCastShadows(false);
     OreContactGlow->SetAttenuationRadius(140);OreContactGlow->SetSourceRadius(8);OreContactGlow->SetIntensity(0);
@@ -61,7 +67,9 @@ void AMiningBeamActor::SetBeamPoints(FVector Start,FVector End)
 }
 void AMiningBeamActor::SetMiningContact(bool Contact,FName Mineral,FName Crystal)
 {
-    bOreContact=Contact && !Mineral.IsNone();ContactMineral=Mineral;FocusCrystal=Crystal;
+    const bool NewContact=Contact && !Mineral.IsNone();
+    if(bOreContact==NewContact && ContactMineral==Mineral && FocusCrystal==Crystal) return;
+    bOreContact=NewContact;ContactMineral=Mineral;FocusCrystal=Crystal;
     UpdateMiningVisual();
 }
 void AMiningBeamActor::SetBeamActive(bool Active)
@@ -96,7 +104,7 @@ void AMiningBeamActor::UpdateMiningVisual()
         { OreContactFX->Activate(true);LastSparkTime=EffectTime; }
     }
     else
-    { OreContactFX->DeactivateImmediate();OreContactGlow->SetIntensity(0); }
+    { if(OreContactFX->IsActive()) OreContactFX->DeactivateImmediate();if(OreContactGlow->Intensity!=0) OreContactGlow->SetIntensity(0); }
     bLastContact=Contact;
 }
 void AMiningBeamActor::EndPlay(const EEndPlayReason::Type Reason)

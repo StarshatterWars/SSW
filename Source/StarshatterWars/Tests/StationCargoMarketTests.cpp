@@ -1,4 +1,5 @@
 #if WITH_DEV_AUTOMATION_TESTS
+#include "CommerceCharges.h"
 #include "Misc/AutomationTest.h"
 #include "StationServices.h"
 #include <limits>
@@ -62,7 +63,7 @@ bool FStationMarketPersistenceTest::RunTest(const FString&)
     TestEqual(TEXT("Failed save restores journal"),State.Journal.Num(),0);
     TestTrue(TEXT("Retry after failed save transfers and saves exactly once"),FStationServices::CommitMarketTrade(State,Quote,Receipt,[&](){++Saves;return true;},Reason));
     TestEqual(TEXT("Fractional ore retained exactly"),FEconomyLedger::Quantity(State,TEXT("Hold"),Ore),1.25);
-    TestEqual(TEXT("Purchase funds NPC wallet"),State.Wallets.FindRef(NPC),125LL);
+    TestEqual(TEXT("Purchase funds NPC wallet"),State.Wallets.FindRef(NPC),CommerceCharges::Quote(125,ECommercePurpose::MarketSale).Base);
     TestEqual(TEXT("Purchase debits pilot wallet"),State.Wallets.FindRef(Pilot),875LL);
     TestTrue(TEXT("Saved trade commits receipt"),State.CommittedTransactions.Contains(Receipt));
     const int JournalCount=State.Journal.Num();
@@ -75,8 +76,10 @@ bool FStationMarketPersistenceTest::RunTest(const FString&)
     Quote.TotalCredits=100;
     TestTrue(TEXT("Funded NPC sale transfers real cargo and credits"),FStationServices::CommitMarketTrade(State,Quote,FGuid::NewGuid(),[](){return true;},Reason));
     TestEqual(TEXT("Sold cargo removed"),FEconomyLedger::Quantity(State,TEXT("Hold"),Ore),0.0);
-    TestEqual(TEXT("NPC funded sale costs credits"),State.Wallets.FindRef(NPC),25LL);
-    TestEqual(TEXT("Pilot receives sale proceeds"),State.Wallets.FindRef(Pilot),975LL);
+    TestEqual(TEXT("NPC funded sale costs credits"),State.Wallets.FindRef(NPC),CommerceCharges::Quote(125,ECommercePurpose::MarketSale).Base-100);
+    TestEqual(TEXT("Pilot receives sale proceeds"),State.Wallets.FindRef(Pilot),875+CommerceCharges::Quote(100,ECommercePurpose::MarketSale).Base);
+    TestEqual(TEXT("Included GST reaches treasury"),State.Wallets.FindRef(CommerceCharges::TaxAccount()),CommerceCharges::Quote(125,ECommercePurpose::MarketSale).Tax+CommerceCharges::Quote(100,ECommercePurpose::MarketSale).Tax);
+    int64 TotalCredits=0;for(const auto& Pair:State.Wallets)TotalCredits+=Pair.Value;TestEqual(TEXT("Trades conserve all credits including tax"),TotalCredits,int64(1000));
     Quote.Item=TEXT("Courier/Test");
     TestFalse(TEXT("Sealed contract cargo cannot be traded"),FStationServices::CommitMarketTrade(State,Quote,FGuid::NewGuid(),[](){return true;},Reason));
     Quote.Item=Ore;Quote.Quantity=std::numeric_limits<double>::infinity();

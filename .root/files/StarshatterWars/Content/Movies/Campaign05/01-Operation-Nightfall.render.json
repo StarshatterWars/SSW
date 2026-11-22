@@ -1,0 +1,15 @@
+{
+  "Scene": "01-Operation-Nightfall",
+  "FrameRate": 30,
+  "Duration": 110.01887049525976,
+  "ScreenMessagesSuppressed": true,
+  "cinematic_finish": "contrast, subtle vignette and fades; ISN on documentary clips",
+  "video_encoder": "h264_nvenc",
+  "render_inputs_sha256": "cf4a1a3fb32e2e0ad690154c694b4d1102ce13450efc41e1fb8642bb91b5bdc2",
+  "campaign": 5,
+  "source_def": "D:\\SSW\\Content\\GameData\\Campaigns\\05\\Scenes\\01-Operation-Nightfall.def",
+  "source_sha256": "7e91c92bc939179f6c244a82829f917c68b07e3aab101fd184cfc73d389d2917",
+  "mp4_sha256": "2603712b274cf03ea05a5945e6b83c9851cf0abe39ba9c067c5b1d49b6fc02ea",
+  "captured_frames": 2574,
+  "render_directory": "D:\\SSW\\Saved\\CutsceneRenders\\Campaign05\\01-Operation-Nightfall\\20261119_165055"
+}

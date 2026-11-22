@@ -2,9 +2,21 @@
   "entries": [
     {
       "category": "Latest install build",
-      "title": "Alpha 4 - Build 20261120-053210Z ready to install",
+      "title": "Alpha 5 - Build 20261121-174954Z ready to install",
+      "date": "2026-11-21",
+      "body": "This release fixes Start Game reaching the retired NO MISSION briefing screen. Career entry creates the live pilot scene, and failed startup returns safely to the menu. Surface entry, T3 and T4 use the distinct Janek Station design and runway deck instead of Telmera. Janek terrain grading and foliage clearance keep the airport clear; water masking and terrain-aware flight waypoint clearance were updated. A complete packaged T3 flight remains to be checked. The airport uses a dedicated Nanite-compatible PBR material with crisp center/edge paint and runway numbers 27/09 and 31/13. Collision settings are retained. Unsupported translucent fighter glass stays on the regular renderer; freight Nanite flags are saved correctly. Unreal diagnostic overlays are disabled in gameplay; logs and game HUD messages remain. All 363 automated tests passed without test warnings, and Editor/client builds passed. Existing pilot saves are preserved. The existing packaged StarServer is included unchanged. Build-LauncherZip.cmd now publishes the ZIP, signed patch manifest, patch files and release news together, after verification, so the launcher cannot remain pointed at an older local release."
+    },
+    {
+      "category": "Release notes",
+      "title": "Alpha 5: panels, JSON catalogs and presentation",
       "date": "2026-11-20",
-      "body": "Alpha 4: carrier qualifications and purchases, live Janek surface transit, full WorldScape material, faction training and Zolon opposition. Fixes job refresh, production recipe access, missile exhaust, muzzle flashes and Flight Ops permissions. Launcher 1.0.15 and the main menu show matching game build numbers and alpha warnings. Includes the existing StarServer; server testing remains deferred."
+      "body": "This game build separates Chat Macros in Player Logbook, adds station/platform and transport/shuttle filters without redundant prefixes, and loads weapons and components directly from JSON. Mission messages reopen automatically and cannot be hidden by the pilot. Closed data panels show unread-update markers. CAUTION uses a top-down hull schematic with damage icons at authored or probable system locations; miniHUD hover and wheel magnification are removed. Cargo, marketplace, industry and wallet views refresh from changes instead of periodic table polling. Routine diagnostic messages use information logging; actual warnings remain under review. Capital-ship weapon status is integrated into the full Weapons panel. Player Logbook adds an account avatar: Steamworks supplies Steam images; Epic and offline accounts use a player icon because EOS exposes no avatar image. Live Steam verification remains pending. Launcher 1.0.17 includes the offline Roadmap tab. The cooked package is now available through the launcher. The local server conversion remains gated; further legacy-derived simulation changes wait for the owner commit."
+    },
+    {
+      "category": "Development update",
+      "title": "Alpha 5 — local universe server development",
+      "date": "2026-11-20",
+      "body": "Alpha 4 is verified and closed. Alpha 5 begins with direct JSON weapon and component loading, dedicated chat macros and cleaner reference filters, followed by the local FractalVerse client/server conversion. The server will own universe state, the economy and saved progress. Arena multiplayer and StarServer testing remain deferred. The latest downloadable game is still the verified Alpha 4 build until the new build is cooked, packaged and published. This is an alpha: bugs, crashes and save incompatibilities may occur. Launcher 1.0.17 adds an offline Roadmap tab: player-owned stations and corporations are planned for Alpha 8, and walkable hangars for Alpha 9 after the full-scale resize."
     },
     {
       "category": "Release notes",

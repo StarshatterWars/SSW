@@ -92,6 +92,7 @@ private:
 
 private:
     // Buttons
+    friend class FIntegratedVideoPresetTest;
     UFUNCTION() void OnLightPresetClicked();
     UFUNCTION() void OnApplyClicked();
     UFUNCTION() void OnCancelClicked();
@@ -155,6 +156,7 @@ private:
 protected:
     UPROPERTY(Transient) TArray<TObjectPtr<UComboBoxString>> QualityCombos;
     UPROPERTY(Transient) TObjectPtr<UComboBoxString> VSyncCombo;
+    UPROPERTY(Transient) TObjectPtr<UComboBoxString> AntiAliasingMethodCombo;
     UPROPERTY(Transient) TObjectPtr<UComboBoxString> FrameLimitCombo;
     UPROPERTY(Transient) TObjectPtr<USlider> RenderScaleSlider;
 

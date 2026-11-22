@@ -31,9 +31,11 @@
 #include "SimLight.h"
 #include "DataLoader.h"
 #include "SimScene.h"
-#include "ParseUtil.h"
 
 #include "Misc/DateTime.h"
+#include "Dom/JsonObject.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
 #include "Misc/FileHelper.h"
 #include "Misc/ScopeExit.h"
 #include "Misc/Timespan.h"
@@ -104,43 +106,6 @@ void StarSystem::CalcStardate()
  // +====================================================================+
 
 
-static inline Bitmap* LoadMapIconTexture(const char* IconName)
-{
-	if (!IconName || !*IconName)
-		return nullptr;
-
-	DataLoader* Loader = DataLoader::GetLoader();
-	if (!Loader)
-		return nullptr;
-
-	Bitmap* bmp = nullptr;
-
-	// flags = 0 (or your texture flags)
-	// use_alpha = true
-	// mipmaps = true (or false, depending on HUD usage)
-	int result = Loader->LoadTexture(
-		IconName,
-		bmp,
-		0,
-		true,
-		true
-	);
-
-	if (result < 0 || !bmp)
-		return nullptr;
-
-	// ----------------------------------------------------------------
-	// TEMPORARY: bitmap-to-texture bridge
-	// ----------------------------------------------------------------
-	// If you already have a Bitmap -> UTexture2D wrapper, call it here.
-	// Otherwise return nullptr for now and keep bitmap alive.
-	//
-	// Example (if implemented):
-	// return BitmapUtils::CreateTextureFromBitmap(bmp);
-
-	return nullptr;
-}
-
 // +====================================================================+
 
 StarSystem::StarSystem(const char* sys_name, FVector l, int iff, int s)
@@ -148,6 +113,7 @@ StarSystem::StarSystem(const char* sys_name, FVector l, int iff, int s)
 	, affiliation(iff)
 	, seq(s)
 	, loc(l)
+	, radius(0.0f)
 	, instantiated(false)
 	, sky_stars(0)
 	, sky_dust(0)
@@ -161,7 +127,6 @@ StarSystem::StarSystem(const char* sys_name, FVector l, int iff, int s)
 	, haze(0)
 	, center(0)
 	, active_region(0)
-	, radius(0.0f)
 	, tvpn(0, 0, 0)
 	, tvup(0, 0, 0)
 	, tvrt(0, 0, 0)
@@ -220,893 +185,70 @@ StarSystem::~StarSystem()
 
 // +--------------------------------------------------------------------+
 
-static OrbitalBody* primary_star = 0;
-static OrbitalBody* primary_planet = 0;
-static OrbitalBody* primary_moon = 0;
-
-void StarSystem::Load()
+OrbitalRegion* StarSystem::LoadTerrainRegion(const FString& CatalogPath, const char* RegionName, Orbital* Parent)
 {
-	CalcStardate();
-	active_region = 0;
-
-	BYTE* block = 0;
-	DataLoader* loader = DataLoader::GetLoader();
-	const FString DataPathString(datapath.data());
-	loader->SetDataPath(TCHAR_TO_ANSI(*DataPathString));
-
-	sprintf_s(filename, "%s/%s.def", (const char*)name, (const char*)name);
-
-	UE_LOG(LogTemp, Log, TEXT("Loading StarSystem: %s"), ANSI_TO_TCHAR(filename));
-	loader->LoadBuffer(filename, block, true);
-
-	if (!block) {
-		UE_LOG(LogTemp, Error, TEXT("ERROR: invalid star system file '%s'"), ANSI_TO_TCHAR(filename));
-		return;
-	}
-
-	Parser parser(new BlockReader((const char*)block));
-
-	Term* term = parser.ParseTerm();
-
-	if (!term) {
-		UE_LOG(LogTemp, Error, TEXT("ERROR: could not parse '%s'"), ANSI_TO_TCHAR(filename));
-		return;
-	}
-	else {
-		TermText* file_type = term->isText();
-		if (!file_type || file_type->value() != "STARSYSTEM") {
-			UE_LOG(LogTemp, Error, TEXT("ERROR: invalid star system file '%s'"), ANSI_TO_TCHAR(filename));
-			term->print(10);
-			return;
-		}
-	}
-
-	// parse the system:
-	do {
-		delete term;
-		term = parser.ParseTerm();
-
-		if (term) {
-			TermDef* def = term->isDef();
-			if (def) {
-				if (def->name()->value() == "name") {
-					char namebuf[NAMELEN];
-					namebuf[0] = 0;
-					GetDefText(namebuf, def, filename);
-
-					if (namebuf[0])
-						name = namebuf;
-				}
-
-				else if (def->name()->value() == "sky") {
-					if (!def->term() || !def->term()->isStruct()) {
-						UE_LOG(LogTemp, Warning, TEXT("WARNING: sky struct missing in '%s'"), ANSI_TO_TCHAR(filename));
-					}
-					else {
-						TermStruct* val = def->term()->isStruct();
-
-						char imgname[NAMELEN];
-						char magname[NAMELEN];
-						char hazname[NAMELEN];
-
-						imgname[0] = 0;
-						magname[0] = 0;
-						hazname[0] = 0;
-
-						for (int i = 0; i < val->elements()->size(); i++) {
-							TermDef* pdef = val->elements()->at(i)->isDef();
-							if (pdef) {
-								if (pdef->name()->value() == "poly_stars")
-									GetDefText(imgname, pdef, filename);
-
-								else if (pdef->name()->value() == "nebula")
-									GetDefText(magname, pdef, filename);
-
-								else if (pdef->name()->value() == "haze")
-									GetDefText(hazname, pdef, filename);
-							}
-						}
-
-						if (imgname[0])
-							sky_poly_stars = imgname;
-
-						if (magname[0])
-							sky_nebula = magname;
-
-						if (hazname[0])
-							sky_haze = hazname;
-					}
-				}
-
-				else if (def->name()->value() == "stars") {
-					GetDefNumber(sky_stars, def, filename);
-				}
-
-				else if (def->name()->value() == "ambient") {
-					FVector a(0, 0, 0);
-					GetDefVec(a, def, filename);
-
-					ambient = ScaleColor(
-						FColor((uint8)a.X, (uint8)a.Y, (uint8)a.Z),
-						2.5f
-					);
-				}
-
-				else if (def->name()->value() == "dust") {
-					GetDefNumber(sky_dust, def, filename);
-				}
-
-				else if (def->name()->value() == "star") {
-					if (!def->term() || !def->term()->isStruct()) {
-						UE_LOG(LogTemp, Warning, TEXT("WARNING: star struct missing in '%s'"), ANSI_TO_TCHAR(filename));
-					}
-					else {
-						TermStruct* val = def->term()->isStruct();
-						ParseStar(val);
-					}
-				}
-
-				else if (def->name()->value() == "planet") {
-					if (!def->term() || !def->term()->isStruct()) {
-						UE_LOG(LogTemp, Warning, TEXT("WARNING: planet struct missing in '%s'"), ANSI_TO_TCHAR(filename));
-					}
-					else {
-						TermStruct* val = def->term()->isStruct();
-						ParsePlanet(val);
-					}
-				}
-
-				else if (def->name()->value() == "moon") {
-					if (!def->term() || !def->term()->isStruct()) {
-						UE_LOG(LogTemp, Warning, TEXT("WARNING: moon struct missing in '%s'"), ANSI_TO_TCHAR(filename));
-					}
-					else {
-						TermStruct* val = def->term()->isStruct();
-						ParseMoon(val);
-					}
-				}
-
-				else if (def->name()->value() == "region") {
-					if (!def->term() || !def->term()->isStruct()) {
-						UE_LOG(LogTemp, Warning, TEXT("WARNING: region struct missing in '%s'"), ANSI_TO_TCHAR(filename));
-					}
-					else {
-						TermStruct* val = def->term()->isStruct();
-						ParseRegion(val);
-					}
-				}
-
-				else if (def->name()->value() == "terrain") {
-					if (!def->term() || !def->term()->isStruct()) {
-						UE_LOG(LogTemp, Warning, TEXT("WARNING: terrain struct missing in '%s'"), ANSI_TO_TCHAR(filename));
-					}
-					else {
-						TermStruct* val = def->term()->isStruct();
-						ParseTerrain(val);
-					}
-				}
-			}
-		}
-	} while (term);
-
-	loader->ReleaseBuffer(block);
-	RecalculateRadius();
-}
-
-// +--------------------------------------------------------------------+
-
-void StarSystem::ParseStar(TermStruct* val)
-{
-	char   star_name[NAMELEN] = { 0 };
-	char   img_name[NAMELEN] = { 0 };
-	char   map_name[NAMELEN] = { 0 };
-
-	double light = 0.0;
-	double star_radius = 0.0;
-	double rot = 0.0;
-	double mass = 0.0;
-	double orbit = 0.0;
-	double tscale = 1.0;
-	bool   retro = false;
-	FColor  color;
-	FColor  back;
-
-	for (int i = 0; i < val->elements()->size(); i++) {
-		TermDef* pdef = val->elements()->at(i)->isDef();
-		if (pdef) {
-			if (pdef->name()->value() == "name")
-				GetDefText(star_name, pdef, filename);
-
-			else if (pdef->name()->value() == "map" || pdef->name()->value() == "icon")
-				GetDefText(map_name, pdef, filename);
-
-			else if (pdef->name()->value() == "image")
-				GetDefText(img_name, pdef, filename);
-
-			else if (pdef->name()->value() == "mass")
-				GetDefNumber(mass, pdef, filename);
-
-			else if (pdef->name()->value() == "orbit")
-				GetDefNumber(orbit, pdef, filename);
-
-			else if (pdef->name()->value() == "radius")
-				GetDefNumber(star_radius, pdef, filename);
-
-			else if (pdef->name()->value() == "rotation")
-				GetDefNumber(rot, pdef, filename);
-
-			else if (pdef->name()->value() == "tscale")
-				GetDefNumber(tscale, pdef, filename);
-
-			else if (pdef->name()->value() == "light")
-				GetDefNumber(light, pdef, filename);
-
-			else if (pdef->name()->value() == "retro")
-				GetDefBool(retro, pdef, filename);
-
-			else if (pdef->name()->value() == "color") {
-				FVector a(0, 0, 0);
-				GetDefVec(a, pdef, filename);
-				color = FColor((BYTE)a.X, (BYTE)a.Y, (BYTE)a.Z);
-			}
-
-			else if (pdef->name()->value() == "back" || pdef->name()->value() == "back_color") {
-				FVector a(0, 0, 0);
-				GetDefVec(a, pdef, filename);
-				back = FColor((BYTE)a.X, (BYTE)a.Y, (BYTE)a.Z);
-			}
-		}
-	}
-
-	OrbitalBody* star = new OrbitalBody(this, star_name, Orbital::STAR, mass, star_radius, orbit, center);
-	star->map_name = map_name;
-	star->tex_name = img_name;
-	star->light = light;
-	star->tscale = tscale;
-	star->subtype = Star::G;
-	star->retro = retro;
-	star->rotation = rot * 3600;
-	star->color = color;
-	star->back = back;
-
-	// map icon:
-	if (*map_name) {
-		star->map_icon = LoadMapIconTexture(map_name);
-	}
-
-	bodies.append(star);
-	primary_star = star;
-	primary_planet = 0;
-	primary_moon = 0;
-
-	if (orbit > StarSystem::radius)
-		StarSystem::radius = orbit;
-}
-
-// +--------------------------------------------------------------------+
-
-void StarSystem::ParsePlanet(TermStruct* val)
-{
-	char pln_name[NAMELEN] = { 0 };
-	char img_name[NAMELEN] = { 0 };
-	char map_name[NAMELEN] = { 0 };
-	char hi_name[NAMELEN] = { 0 };
-	char img_ring[NAMELEN] = { 0 };
-	char glo_name[NAMELEN] = { 0 };
-	char glo_hi_name[NAMELEN] = { 0 };
-	char gloss_name[NAMELEN] = { 0 };
-
-	double pln_radius = 0.0;
-	double mass = 0.0;
-	double orbit = 0.0;
-	double Eccentricity = 0.0;
-	double InclinationDegrees = 0.0;
-	double rot = 0.0;
-	double minrad = 0.0;
-	double maxrad = 0.0;
-	double tscale = 1.0;
-	double tilt = 0.0;
-	bool   retro = false;
-	bool   lumin = false;
-	FColor  atmos = FColor::Black;
-
-	for (int i = 0; i < val->elements()->size(); i++) {
-		TermDef* pdef = val->elements()->at(i)->isDef();
-		if (pdef) {
-			if (pdef->name()->value() == "name")
-				GetDefText(pln_name, pdef, filename);
-
-			else if (pdef->name()->value() == "map" || pdef->name()->value() == "icon")
-				GetDefText(map_name, pdef, filename);
-
-			else if (pdef->name()->value() == "image")
-				GetDefText(img_name, pdef, filename);
-
-			else if (pdef->name()->value() == "image_west")
-				GetDefText(img_name, pdef, filename);
-
-			else if (pdef->name()->value() == "image_east")
-				GetDefText(img_name, pdef, filename);
-
-			else if (pdef->name()->value() == "glow")
-				GetDefText(glo_name, pdef, filename);
-
-			else if (pdef->name()->value() == "gloss")
-				GetDefText(gloss_name, pdef, filename);
-
-			else if (pdef->name()->value() == "high_res")
-				GetDefText(hi_name, pdef, filename);
-
-			else if (pdef->name()->value() == "high_res_west")
-				GetDefText(hi_name, pdef, filename);
-
-			else if (pdef->name()->value() == "high_res_east")
-				GetDefText(hi_name, pdef, filename);
-
-			else if (pdef->name()->value() == "glow_high_res")
-				GetDefText(glo_hi_name, pdef, filename);
-
-			else if (pdef->name()->value() == "mass")
-				GetDefNumber(mass, pdef, filename);
-
-			else if (pdef->name()->value() == "orbit")
-				GetDefNumber(orbit, pdef, filename);
-
-			else if (pdef->name()->value() == "eccentricity")
-				GetDefNumber(Eccentricity, pdef, filename);
-
-			else if (pdef->name()->value() == "inclination")
-				GetDefNumber(InclinationDegrees, pdef, filename);
-
-			else if (pdef->name()->value() == "retro")
-				GetDefBool(retro, pdef, filename);
-
-			else if (pdef->name()->value() == "luminous")
-				GetDefBool(lumin, pdef, filename);
-
-			else if (pdef->name()->value() == "rotation")
-				GetDefNumber(rot, pdef, filename);
-
-			else if (pdef->name()->value() == "radius")
-				GetDefNumber(pln_radius, pdef, filename);
-
-			else if (pdef->name()->value() == "ring")
-				GetDefText(img_ring, pdef, filename);
-
-			else if (pdef->name()->value() == "minrad")
-				GetDefNumber(minrad, pdef, filename);
-
-			else if (pdef->name()->value() == "maxrad")
-				GetDefNumber(maxrad, pdef, filename);
-
-			else if (pdef->name()->value() == "tscale")
-				GetDefNumber(tscale, pdef, filename);
-
-			else if (pdef->name()->value() == "tilt")
-				GetDefNumber(tilt, pdef, filename);
-
-			else if (pdef->name()->value() == "atmosphere") {
-				FVector a(0, 0, 0);
-				GetDefVec(a, pdef, filename);
-				atmos = FColor((BYTE)a.X, (BYTE)a.Y, (BYTE)a.Z);
-			}
-		}
-	}
-
-	OrbitalBody* planet = new OrbitalBody(this, pln_name, Orbital::PLANET, mass, pln_radius, orbit, primary_star);
-	planet->map_name = map_name;
-	planet->tex_name = img_name;
-	planet->tex_high_res = hi_name;
-	planet->tex_ring = img_ring;
-	planet->tex_glow = glo_name;
-	planet->tex_glow_high_res = glo_hi_name;
-	planet->tex_gloss = gloss_name;
-	planet->ring_min = minrad;
-	planet->ring_max = maxrad;
-	planet->tscale = tscale;
-	planet->tilt = tilt;
-	planet->retro = retro;
-	planet->SetOrbitShape(Eccentricity, InclinationDegrees);
-	planet->luminous = lumin;
-	planet->rotation = rot * 3600;
-	planet->atmosphere = atmos;
-
-	if (primary_star)
-		primary_star->satellites.append(planet);
-	else
-		bodies.append(planet);
-
-	primary_planet = planet;
-	primary_moon = 0;
-
-	if (orbit > StarSystem::radius)
-		StarSystem::radius = orbit;
-
-	// map icon:
-	if (map_name[0]) {
-		planet->map_icon = LoadMapIconTexture(map_name);
-	}
-}
-
-// +--------------------------------------------------------------------+
-
-void StarSystem::ParseMoon(TermStruct* val)
-{
-	char map_name[NAMELEN] = { 0 };
-	char pln_name[NAMELEN] = { 0 };
-	char img_name[NAMELEN] = { 0 };
-	char hi_name[NAMELEN] = { 0 };
-	char glo_name[NAMELEN] = { 0 };
-	char glo_hi_name[NAMELEN] = { 0 };
-	char gloss_name[NAMELEN] = { 0 };
-
-	double moon_radius = 0.0;
-	double mass = 0.0;
-	double orbit = 0.0;
-	double Eccentricity = 0.0;
-	double InclinationDegrees = 0.0;
-	double rot = 0.0;
-	double tscale = 1.0;
-	double tilt = 0.0;
-	bool   retro = false;
-	FColor  atmos = FColor::Black;
-
-	for (int i = 0; i < val->elements()->size(); i++) {
-		TermDef* pdef = val->elements()->at(i)->isDef();
-		if (pdef) {
-			if (pdef->name()->value() == "name")
-				GetDefText(pln_name, pdef, filename);
-
-			else if (pdef->name()->value() == "map" || pdef->name()->value() == "icon")
-				GetDefText(map_name, pdef, filename);
-
-			else if (pdef->name()->value() == "image")
-				GetDefText(img_name, pdef, filename);
-
-			else if (pdef->name()->value() == "glow")
-				GetDefText(glo_name, pdef, filename);
-
-			else if (pdef->name()->value() == "high_res")
-				GetDefText(hi_name, pdef, filename);
-
-			else if (pdef->name()->value() == "glow_high_res")
-				GetDefText(glo_hi_name, pdef, filename);
-
-			else if (pdef->name()->value() == "gloss")
-				GetDefText(gloss_name, pdef, filename);
-
-			else if (pdef->name()->value() == "mass")
-				GetDefNumber(mass, pdef, filename);
-
-			else if (pdef->name()->value() == "orbit")
-				GetDefNumber(orbit, pdef, filename);
-
-			else if (pdef->name()->value() == "eccentricity")
-				GetDefNumber(Eccentricity, pdef, filename);
-
-			else if (pdef->name()->value() == "inclination")
-				GetDefNumber(InclinationDegrees, pdef, filename);
-
-			else if (pdef->name()->value() == "rotation")
-				GetDefNumber(rot, pdef, filename);
-
-			else if (pdef->name()->value() == "retro")
-				GetDefBool(retro, pdef, filename);
-
-			else if (pdef->name()->value() == "radius")
-				GetDefNumber(moon_radius, pdef, filename);
-
-			else if (pdef->name()->value() == "tscale")
-				GetDefNumber(tscale, pdef, filename);
-
-			else if (pdef->name()->value() == "tilt")
-				GetDefNumber(tilt, pdef, filename);
-
-			else if (pdef->name()->value() == "atmosphere") {
-				FVector a(0, 0, 0);
-				GetDefVec(a, pdef, filename);
-				atmos = FColor((BYTE)a.X, (BYTE)a.Y, (BYTE)a.Z);
-			}
-		}
-	}
-
-	OrbitalBody* moon = new OrbitalBody(this, pln_name, Orbital::MOON, mass, moon_radius, orbit, primary_planet);
-	moon->map_name = map_name;
-	moon->tex_name = img_name;
-	moon->tex_high_res = hi_name;
-	moon->tex_glow = glo_name;
-	moon->tex_glow_high_res = glo_hi_name;
-	moon->tex_gloss = gloss_name;
-	moon->tscale = tscale;
-	moon->retro = retro;
-	moon->SetOrbitShape(Eccentricity, InclinationDegrees);
-	moon->rotation = rot * 3600;
-	moon->tilt = tilt;
-	moon->atmosphere = atmos;
-
-	if (primary_planet)
-		primary_planet->satellites.append(moon);
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("WARNING: no planet for moon %s in '%s', deleted."),
-			ANSI_TO_TCHAR(pln_name), ANSI_TO_TCHAR(filename));
-		delete moon;
-		moon = 0;
-	}
-
-	primary_moon = moon;
-
-	// map icon:
-	if (moon && map_name[0]) {
-		moon->map_icon = LoadMapIconTexture(map_name);
-	}
-}
-
-// +--------------------------------------------------------------------+
-
-void StarSystem::ParseRegion(TermStruct* val)
-{
-	char   rgn_name[NAMELEN] = { 0 };
-	char   lnk_name[NAMELEN] = { 0 };
-	double size = 1.0e6;
-	double orbit = 0.0;
-	double grid = 25000;
-	double inclination = 0.0;
-	int    asteroids = 0;
-
-	List<Text> links;
-
-	for (int i = 0; i < val->elements()->size(); i++) {
-		TermDef* pdef = val->elements()->at(i)->isDef();
-		if (pdef) {
-			if (pdef->name()->value() == "name")
-				GetDefText(rgn_name, pdef, filename);
-
-			else if (pdef->name()->value() == "link") {
-				GetDefText(lnk_name, pdef, filename);
-				if (lnk_name[0]) {
-					links.append(new Text(lnk_name));
-				}
-			}
-
-			else if (pdef->name()->value() == "orbit")
-				GetDefNumber(orbit, pdef, filename);
-
-			else if (pdef->name()->value() == "size")
-				GetDefNumber(size, pdef, filename);
-
-			else if (pdef->name()->value() == "radius")
-				GetDefNumber(size, pdef, filename);
-
-			else if (pdef->name()->value() == "grid")
-				GetDefNumber(grid, pdef, filename);
-
-			else if (pdef->name()->value() == "inclination")
-				GetDefNumber(inclination, pdef, filename);
-
-			else if (pdef->name()->value() == "asteroids")
-				GetDefNumber(asteroids, pdef, filename);
-		}
-	}
-
-	Orbital* primary = primary_moon;
-	if (!primary) primary = primary_planet;
-	if (!primary) primary = primary_star;
-
-	OrbitalRegion* region = new OrbitalRegion(this, rgn_name, 0, size, orbit, primary);
-	region->grid = grid;
-	region->inclination = inclination;
-	region->asteroids = asteroids;
-	region->links.append(links);
-
-	if (primary)
-		primary->regions.append(region);
-	else
-		regions.append(region);
-
-	all_regions.append(region);
-
-	if (orbit > StarSystem::radius)
-		StarSystem::radius = orbit;
-}
-
-// +--------------------------------------------------------------------+
-
-OrbitalRegion* StarSystem::LoadTerrainRegion(const FString& Definition, const char* RegionName, Orbital* Parent)
-{
-    if (!Parent)
-        return nullptr;
-
-    if (OrbitalRegion* Existing = FindRegion(RegionName))
-        return Existing->GetType() == Orbital::TERRAIN ? Existing : nullptr;
-
-    TArray<uint8> Source;
-    if (!FFileHelper::LoadFileToArray(Source, *Definition))
-        return nullptr;
-
-    Source.Add(0);
-    Parser Reader(new BlockReader(reinterpret_cast<const char*>(Source.GetData())));
-    TUniquePtr<Term> Header(Reader.ParseTerm());
-    if (!Header || !Header->isText() || Header->isText()->value() != "STARSYSTEM")
-        return nullptr;
-
-    DataLoader* Loader = DataLoader::GetLoader();
-    if (!Loader)
-        return nullptr;
-    const Text PreviousPath = Loader->GetDataPath();
-    Loader->SetDataPath("Galaxy/");
-    ON_SCOPE_EXIT { Loader->SetDataPath(PreviousPath.data()); };
-
-    for (TUniquePtr<Term> Entry(Reader.ParseTerm()); Entry; Entry.Reset(Reader.ParseTerm()))
+    FString Source;TSharedPtr<FJsonObject> Root;double Version=0;
+    const TArray<TSharedPtr<FJsonValue>>* Rows=nullptr;
+    if(!FFileHelper::LoadFileToString(Source,*CatalogPath) || !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Source),Root) ||
+        !Root || !Root->TryGetNumberField(TEXT("schemaVersion"),Version) || Version!=1 || !Root->TryGetArrayField(TEXT("regions"),Rows))
+    {UE_LOG(LogTemp,Error,TEXT("Invalid terrain JSON catalog: %s"),*CatalogPath);return nullptr;}
+    DataLoader* Loader=DataLoader::GetLoader();
+    const Text PreviousPath(Loader?Loader->GetDataPath():"");
+    if(Loader)Loader->SetDataPath("Galaxy/");
+    ON_SCOPE_EXIT{if(Loader)Loader->SetDataPath(PreviousPath.data());};
+    FString SystemName=UTF8_TO_TCHAR(GetName());SystemName.RemoveFromEnd(TEXT(" System"));
+    OrbitalRegion* Last=nullptr;
+    for(const auto& Value:*Rows)
     {
-        TermDef* Def = Entry->isDef();
-        if (!Def || Def->name()->value() != "terrain" || !Def->term())
-            continue;
-        TermStruct* TerrainDef = Def->term()->isStruct();
-        if (!TerrainDef)
-            continue;
-
-        for (int Index = 0; Index < TerrainDef->elements()->size(); ++Index)
+        const auto Row=Value.IsValid() && Value->Type==EJson::Object?Value->AsObject():nullptr;
+        FString System,Name,PrimaryName;
+        if(!Row || !Row->TryGetStringField(TEXT("system"),System) || !Row->TryGetStringField(TEXT("name"),Name) || !Row->TryGetStringField(TEXT("parent"),PrimaryName))
+        {UE_LOG(LogTemp,Error,TEXT("Invalid terrain identity in %s"),*CatalogPath);return nullptr;}
+        if(!System.Equals(SystemName,ESearchCase::IgnoreCase) || (RegionName && Name!=UTF8_TO_TCHAR(RegionName)))continue;
+        if(auto* Existing=FindRegion(TCHAR_TO_UTF8(*Name))){Last=Existing;continue;}
+        Orbital* Primary=Parent?Parent:FindOrbital(TCHAR_TO_UTF8(*PrimaryName));
+        double Radius=0;
+        if(!Primary || !Row->TryGetNumberField(TEXT("radius"),Radius) || !FMath::IsFinite(Radius) || Radius<=0)
+        {UE_LOG(LogTemp,Error,TEXT("Terrain %s has no valid primary/radius"),*Name);return nullptr;}
+        auto* Region=new TerrainRegion(this,TCHAR_TO_UTF8(*Name),Radius,Primary);
+        auto TextField=[&](const TCHAR* Key,Text& Target){FString V;if(Row->TryGetStringField(Key,V))Target=TCHAR_TO_UTF8(*V);};
+        auto Number=[&](const TCHAR* Key,double Fallback){double V=Fallback;Row->TryGetNumberField(Key,V);return FMath::IsFinite(V)?V:Fallback;};
+        Region->grid=Number(TEXT("grid"),25000);Region->inclination=Number(TEXT("inclination"),0);
+        Region->scale=Number(TEXT("scale"),10000);Region->mtnscale=Number(TEXT("mtnscale"),1000);
+        Region->fog_density=Number(TEXT("fog_density"),0);Region->fog_scale=Number(TEXT("fog_scale"),0);Region->haze_fade=Number(TEXT("haze_fade"),0);
+        Region->clouds_alt_high=Number(TEXT("clouds_alt_high"),0);Region->clouds_alt_low=Number(TEXT("clouds_alt_low"),0);
+        TextField(TEXT("patch"),Region->patch_name);TextField(TEXT("patch_texture"),Region->patch_texture);
+        TextField(TEXT("detail_texture_0"),Region->noise_tex0);TextField(TEXT("detail_texture_1"),Region->noise_tex1);
+        TextField(TEXT("apron"),Region->apron_name);TextField(TEXT("apron_texture"),Region->apron_texture);TextField(TEXT("water_texture"),Region->water_texture);
+        TextField(TEXT("haze"),Region->haze_name);TextField(TEXT("clouds_high"),Region->clouds_high);TextField(TEXT("clouds_low"),Region->clouds_low);
+        TextField(TEXT("shades_high"),Region->shades_high);TextField(TEXT("shades_low"),Region->shades_low);
+        TextField(TEXT("env_texture_positive_x"),Region->env_texture_positive_x);TextField(TEXT("env_texture_negative_x"),Region->env_texture_negative_x);
+        TextField(TEXT("env_texture_positive_y"),Region->env_texture_positive_y);TextField(TEXT("env_texture_negative_y"),Region->env_texture_negative_y);
+        TextField(TEXT("env_texture_positive_z"),Region->env_texture_positive_z);TextField(TEXT("env_texture_negative_z"),Region->env_texture_negative_z);
+        const TArray<TSharedPtr<FJsonValue>>* Layers=nullptr;
+        if(Row->TryGetArrayField(TEXT("layers"),Layers))for(const auto& LayerValue:*Layers)
         {
-            TermDef* Field = TerrainDef->elements()->at(Index)->isDef();
-            if (!Field || Field->name()->value() != "name")
-                continue;
-            Text Name;
-            GetDefText(Name, Field, TCHAR_TO_UTF8(*Definition));
-            if (Name == RegionName)
-            {
-                ParseTerrain(TerrainDef, Parent);
-                return FindRegion(RegionName);
-            }
-            break;
+            const auto Layer=LayerValue.IsValid() && LayerValue->Type==EJson::Object?LayerValue->AsObject():nullptr;FString Tile,Detail;double Height=0;
+            if(!Layer || !Layer->TryGetStringField(TEXT("tile"),Tile))continue;
+            Layer->TryGetStringField(TEXT("detail"),Detail);Layer->TryGetNumberField(TEXT("height"),Height);
+            Region->AddLayer(Height,TCHAR_TO_UTF8(*Tile),TCHAR_TO_UTF8(*Detail));
         }
+        Region->GetWeather().SetPeriod(Number(TEXT("weather_period"),0));
+        const TCHAR* Chances[]={TEXT("weather_clear"),TEXT("weather_high_clouds"),TEXT("weather_moderate_clouds"),TEXT("weather_overcast"),TEXT("weather_fog"),TEXT("weather_storm")};
+        for(int32 Index=0;Index<UE_ARRAY_COUNT(Chances);++Index)Region->GetWeather().SetChance(Index,Number(Chances[Index],0));
+        const TSharedPtr<FJsonObject>* Presentation=nullptr;
+        if(Row->TryGetObjectField(TEXT("presentation"),Presentation) && Presentation && Presentation->IsValid())
+        {
+            (*Presentation)->TryGetStringField(TEXT("surfaceMaterial"),Region->surface_material);
+            (*Presentation)->TryGetNumberField(TEXT("sunIntensityLux"),Region->surface_sun_intensity);
+            (*Presentation)->TryGetStringField(TEXT("biomeProfile"),Region->biome_profile);
+            (*Presentation)->TryGetStringField(TEXT("weatherProfile"),Region->weather_profile);
+        }
+        FString Sky;if(Loader && Row->TryGetStringField(TEXT("sky_color"),Sky))Region->LoadSkyColors(TCHAR_TO_UTF8(*Sky));
+        Primary->AddRegion(Region);all_regions.append(Region);Last=Region;
     }
-    return nullptr;
+    return Last;
 }
-
-void StarSystem::ParseTerrain(TermStruct* val, Orbital* Parent)
-{
-	Orbital* primary = Parent ? Parent : primary_moon;
-	if (!primary) primary = primary_planet;
-
-	if (!primary) {
-		UE_LOG(LogTemp, Warning, TEXT("WARNING: Terrain region with no primary ignored in '%s'"), ANSI_TO_TCHAR(filename));
-		return;
-	}
-
-	TerrainRegion* region = 0;
-
-	Text   rgn_name;
-	Text   patch_name;
-	Text   patch_texture;
-	Text   noise_tex0;
-	Text   noise_tex1;
-	Text   apron_name;
-	Text   apron_texture;
-	Text   water_texture;
-	Text   env_texture_positive_x;
-	Text   env_texture_negative_x;
-	Text   env_texture_positive_y;
-	Text   env_texture_negative_y;
-	Text   env_texture_positive_z;
-	Text   env_texture_negative_z;
-	Text   haze_name;
-	Text   sky_name;
-	Text   clouds_high;
-	Text   clouds_low;
-	Text   shades_high;
-	Text   shades_low;
-
-	double size = 1.0e6;
-	double grid = 25000;
-	double inclination = 0.0;
-	double scale = 10e3;
-	double mtnscale = 1e3;
-	double fog_density = 0;
-	double fog_scale = 0;
-	double haze_fade = 0;
-	double clouds_alt_high = 0;
-	double clouds_alt_low = 0;
-	double w_period = 0;
-	double w_chances[Weather::NUM_STATES];
-
-	FMemory::Memzero(w_chances, sizeof(w_chances));
-
-	for (int i = 0; i < val->elements()->size(); i++) {
-		TermDef* pdef = val->elements()->at(i)->isDef();
-		if (pdef) {
-			if (pdef->name()->value() == "name")
-				GetDefText(rgn_name, pdef, filename);
-
-			else if (pdef->name()->value() == "patch")
-				GetDefText(patch_name, pdef, filename);
-
-			else if (pdef->name()->value() == "patch_texture")
-				GetDefText(patch_texture, pdef, filename);
-
-			else if (pdef->name()->value() == "detail_texture_0")
-				GetDefText(noise_tex0, pdef, filename);
-
-			else if (pdef->name()->value() == "detail_texture_1")
-				GetDefText(noise_tex1, pdef, filename);
-
-			else if (pdef->name()->value() == "apron")
-				GetDefText(apron_name, pdef, filename);
-
-			else if (pdef->name()->value() == "apron_texture")
-				GetDefText(apron_texture, pdef, filename);
-
-			else if (pdef->name()->value() == "water_texture")
-				GetDefText(water_texture, pdef, filename);
-
-			else if (pdef->name()->value() == "env_texture_positive_x")
-				GetDefText(env_texture_positive_x, pdef, filename);
-
-			else if (pdef->name()->value() == "env_texture_negative_x")
-				GetDefText(env_texture_negative_x, pdef, filename);
-
-			else if (pdef->name()->value() == "env_texture_positive_y")
-				GetDefText(env_texture_positive_y, pdef, filename);
-
-			else if (pdef->name()->value() == "env_texture_negative_y")
-				GetDefText(env_texture_negative_y, pdef, filename);
-
-			else if (pdef->name()->value() == "env_texture_positive_z")
-				GetDefText(env_texture_positive_z, pdef, filename);
-
-			else if (pdef->name()->value() == "env_texture_negative_z")
-				GetDefText(env_texture_negative_z, pdef, filename);
-
-			else if (pdef->name()->value() == "clouds_high")
-				GetDefText(clouds_high, pdef, filename);
-
-			else if (pdef->name()->value() == "shades_high")
-				GetDefText(shades_high, pdef, filename);
-
-			else if (pdef->name()->value() == "clouds_low")
-				GetDefText(clouds_low, pdef, filename);
-
-			else if (pdef->name()->value() == "shades_low")
-				GetDefText(shades_low, pdef, filename);
-
-			else if (pdef->name()->value() == "haze")
-				GetDefText(haze_name, pdef, filename);
-
-			else if (pdef->name()->value() == "sky_color")
-				GetDefText(sky_name, pdef, filename);
-
-			else if (pdef->name()->value() == "size" || pdef->name()->value() == "radius")
-				GetDefNumber(size, pdef, filename);
-
-			else if (pdef->name()->value() == "grid")
-				GetDefNumber(grid, pdef, filename);
-
-			else if (pdef->name()->value() == "inclination")
-				GetDefNumber(inclination, pdef, filename);
-
-			else if (pdef->name()->value() == "scale")
-				GetDefNumber(scale, pdef, filename);
-
-			else if (pdef->name()->value() == "mtnscale" || pdef->name()->value() == "mtn_scale")
-				GetDefNumber(mtnscale, pdef, filename);
-
-			else if (pdef->name()->value() == "fog_density")
-				GetDefNumber(fog_density, pdef, filename);
-
-			else if (pdef->name()->value() == "fog_scale")
-				GetDefNumber(fog_scale, pdef, filename);
-
-			else if (pdef->name()->value() == "haze_fade")
-				GetDefNumber(haze_fade, pdef, filename);
-
-			else if (pdef->name()->value() == "clouds_alt_high")
-				GetDefNumber(clouds_alt_high, pdef, filename);
-
-			else if (pdef->name()->value() == "clouds_alt_low")
-				GetDefNumber(clouds_alt_low, pdef, filename);
-
-			else if (pdef->name()->value() == "weather_period")
-				GetDefNumber(w_period, pdef, filename);
-
-			else if (pdef->name()->value() == "weather_clear")
-				GetDefNumber(w_chances[0], pdef, filename);
-			else if (pdef->name()->value() == "weather_high_clouds")
-				GetDefNumber(w_chances[1], pdef, filename);
-			else if (pdef->name()->value() == "weather_moderate_clouds")
-				GetDefNumber(w_chances[2], pdef, filename);
-			else if (pdef->name()->value() == "weather_overcast")
-				GetDefNumber(w_chances[3], pdef, filename);
-			else if (pdef->name()->value() == "weather_fog")
-				GetDefNumber(w_chances[4], pdef, filename);
-			else if (pdef->name()->value() == "weather_storm")
-				GetDefNumber(w_chances[5], pdef, filename);
-
-			else if (pdef->name()->value() == "layer") {
-				if (!pdef->term() || !pdef->term()->isStruct()) {
-					UE_LOG(LogTemp, Warning, TEXT("WARNING: terrain layer struct missing in '%s'"), ANSI_TO_TCHAR(filename));
-				}
-				else {
-					if (!region)
-						region = new TerrainRegion(this, rgn_name, size, primary);
-
-					TermStruct* layer_val = pdef->term()->isStruct();
-					ParseLayer(region, layer_val);
-				}
-			}
-		}
-	}
-
-	if (!region)
-		region = new TerrainRegion(this, rgn_name, size, primary);
-
-	region->grid = grid;
-	region->inclination = inclination;
-	region->patch_name = patch_name;
-	region->patch_texture = patch_texture;
-	region->noise_tex0 = noise_tex0;
-	region->noise_tex1 = noise_tex1;
-	region->apron_name = apron_name;
-	region->apron_texture = apron_texture;
-	region->water_texture = water_texture;
-	region->haze_name = haze_name;
-	region->clouds_high = clouds_high;
-	region->shades_high = shades_high;
-	region->clouds_low = clouds_low;
-	region->shades_low = shades_low;
-	region->scale = scale;
-	region->mtnscale = mtnscale;
-	region->fog_density = fog_density;
-	region->fog_scale = fog_scale;
-	region->haze_fade = haze_fade;
-	region->clouds_alt_high = clouds_alt_high;
-	region->clouds_alt_low = clouds_alt_low;
-
-	region->env_texture_positive_x = env_texture_positive_x;
-	region->env_texture_negative_x = env_texture_negative_x;
-	region->env_texture_positive_y = env_texture_positive_y;
-	region->env_texture_negative_y = env_texture_negative_y;
-	region->env_texture_positive_z = env_texture_positive_z;
-	region->env_texture_negative_z = env_texture_negative_z;
-
-	Weather& weather = region->GetWeather();
-	weather.SetPeriod(w_period);
-
-	for (int i = 0; i < Weather::NUM_STATES; i++)
-		weather.SetChance(i, w_chances[i]);
-
-	region->LoadSkyColors(sky_name);
-
-	primary->regions.append(region);
-	all_regions.append(region);
-}
-
-// +--------------------------------------------------------------------+
-
-void StarSystem::ParseLayer(TerrainRegion* rgn, TermStruct* val)
-{
-	Text   tile_name;
-	Text   detail_name;
-	double height = 0;
-
-	for (int i = 0; i < val->elements()->size(); i++) {
-		TermDef* pdef = val->elements()->at(i)->isDef();
-		if (pdef) {
-			if (pdef->name()->value().indexOf("tile") == 0)
-				GetDefText(tile_name, pdef, filename);
-
-			else if (pdef->name()->value().indexOf("detail") == 0)
-				GetDefText(detail_name, pdef, filename);
-
-			else if (pdef->name()->value().contains("height") ||
-				pdef->name()->value().contains("alt"))
-				GetDefNumber(height, pdef, filename);
-		}
-	}
-
-	if (rgn)
-		rgn->AddLayer(height, tile_name, detail_name);
-}
-
-// +--------------------------------------------------------------------+
 
 void StarSystem::Create()
 {
@@ -2112,9 +1254,9 @@ OrbitalBody::OrbitalBody(StarSystem* s, const char* n, OrbitalType t, double m, 
 	, ring_min(0)
 	, ring_max(0)
 	, tilt(0)
+	, subtype(0)
 	, light_rep(0)
 	, back_light(0)
-	, subtype(0)
 	, color(FColor::White)
 	, back(FColor::Black)
 	, atmosphere(FColor::Black)
@@ -2242,7 +1384,7 @@ void StarSystem::RecalculateRadius()
             double Minimum=ParentRadii+FMath::Max(1000.0,ParentRadii*.01);
             if(Previous){const double Radii=Previous->ClearanceRadius()+Body->ClearanceRadius();Minimum=FMath::Max(Minimum,Previous->Orbit()+Radii+FMath::Max(1000.0,Radii*.01));}
             if(!FMath::IsFinite(Body->orbit) || Body->orbit<Minimum)
-            {UE_LOG(LogTemp,Warning,TEXT("[Orbit] Corrected %hs/%hs semi-major axis from %.0f to %.0f m for clearance."),GetName(),Body->GetName(),Body->orbit,Minimum);Body->orbit=Minimum;}
+            {UE_LOG(LogTemp,Display,TEXT("[Orbit] Corrected %hs/%hs semi-major axis from %.0f to %.0f m for clearance."),GetName(),Body->GetName(),Body->orbit,Minimum);Body->orbit=Minimum;}
             const double Mu=GRAV*(Parent->Mass()+FMath::Max(0.0,Body->Mass()));
             Body->velocity=Mu>0?FMath::Sqrt(Mu/Body->orbit):0;
             Body->period=Body->velocity>0?2*PI*Body->orbit/Body->velocity:0;Previous=Body;

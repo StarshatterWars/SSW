@@ -173,8 +173,8 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
     const auto& Config = UStarshatterKeyboardSettings::Get()->GetKeyboardConfig();
     TSet<FString> Seen;
     TMap<FKey, TArray<FString>> KeyFunctions;
-    KeyFunctions.FindOrAdd(EKeys::Escape).Add(TEXT("Mission pause / exit"));
-    Bindings.Emplace(TEXT("Mission pause / exit"), EKeys::Escape.GetDisplayName().ToString());
+    KeyFunctions.FindOrAdd(EKeys::Escape).Add(TEXT("Mission exit"));
+    Bindings.Emplace(TEXT("Mission exit"), EKeys::Escape.GetDisplayName().ToString());
     for (const auto* Context : Contexts)
         for (auto Mapping : Context->GetMappings())
         {
@@ -182,7 +182,7 @@ TSharedRef<SWidget> ULiveOptionsDlg::RebuildWidget()
             const FName Action = Mapping.Action->GetFName();
             if (Action == TEXT("IA_Quit") || Action == TEXT("IA_ViewCockpit") || Action == TEXT("IA_ViewVirtualCockpit") ||
                 Action == TEXT("IA_ViewChase") || Action == TEXT("IA_ViewOrbit") || Action == TEXT("IA_MouseZoom") ||
-                Action == TEXT("IA_GroundMode") || Action == TEXT("IA_HudMode")) continue;
+                Action == TEXT("IA_GroundMode") || Action == TEXT("IA_HudMode") || Action==TEXT("IA_HUDInformation")) continue;
             const FString Id = StarshatterInputBindings::Id(Mapping);
             if (Seen.Contains(Id)) continue;
             Seen.Add(Id);

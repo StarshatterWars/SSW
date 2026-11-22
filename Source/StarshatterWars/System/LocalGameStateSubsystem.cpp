@@ -14,6 +14,10 @@
 #include "HAL/FileManager.h"
 namespace
 {
+USaveGame* LoadExistingCheckpoint(const FString& Slot,int32 User)
+{
+    return UGameplayStatics::DoesSaveGameExist(Slot,User)?UGameplayStatics::LoadGameFromSlot(Slot,User):nullptr;
+}
 FString ProfileKey(UStarshatterPlayerSubsystem& Players){const FString Active=Players.GetActiveSavedPlayerSlot();return Active.IsEmpty()?Players.GetSlotName():Active;}
 bool LiveCareer(const ULocalGameStateSubsystem& Service)
 {
@@ -72,7 +76,7 @@ void ULocalGameStateSubsystem::OnAreaSaved(const FString& Slot,int32,bool Succes
 bool ULocalGameStateSubsystem::CommitManifest()
 {
     if(!PendingManifest || AreaIndex!=4)return false;
-    const FString Slot=ManifestSlot();auto* Obsolete=Cast<ULocalStateManifest>(UGameplayStatics::LoadGameFromSlot(Slot+TEXT("_previous"),UserIndex));auto* Previous=Cast<ULocalStateManifest>(UGameplayStatics::LoadGameFromSlot(Slot,UserIndex));
+    const FString Slot=ManifestSlot();auto* Obsolete=Cast<ULocalStateManifest>(LoadExistingCheckpoint(Slot+TEXT("_previous"),UserIndex));auto* Previous=Cast<ULocalStateManifest>(LoadExistingCheckpoint(Slot,UserIndex));
     if(Previous && !UGameplayStatics::SaveGameToSlot(Previous,Slot+TEXT("_previous"),UserIndex))return false;
     const bool Saved=UGameplayStatics::SaveGameToSlot(PendingManifest,Slot,UserIndex);
     if(!Saved && Previous)UGameplayStatics::SaveGameToSlot(Previous,Slot,UserIndex);
@@ -89,6 +93,18 @@ void ULocalGameStateSubsystem::Tick(float)
     if(bSaving){WriteNext();return;}
     const double Now=FPlatformTime::Seconds();if(LastSaveClock==0){LastSaveClock=Now;return;}
     if(Now-LastSaveClock>=300){LastSaveClock=Now;BeginAutosave();}
+}
+bool ULocalGameStateSubsystem::SaveCheckpointNow()
+{
+    if(bExiting || !LiveCareer(*this))return false;
+    // Supersede unfinished async writes using a new generation. Their callbacks
+    // cannot match these new slot names, and normal autosaving remains enabled.
+    bSaving=false;bIOPending=false;
+    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if(!Players || !Players->HasLoaded() || !Players->SaveActivePlayerProgress() || !CaptureGeneration())return false;
+    const bool Saved=FlushPendingSynchronously();
+    if(Saved)LastSaveClock=FPlatformTime::Seconds();
+    return Saved;
 }
 bool ULocalGameStateSubsystem::SaveAtExit()
 {
@@ -126,8 +142,8 @@ bool ULocalGameStateSubsystem::ReadCheckpoint(FS_PlayerGameInfo& Player,const FS
     const FString Slot=TEXT("State_")+FMD5::HashAnsiString(*Profile)+TEXT("_manifest");
     for(const FString Candidate:{Slot,Slot+TEXT("_previous")})
     {
-        auto* M=Cast<ULocalStateManifest>(UGameplayStatics::LoadGameFromSlot(Candidate,UserIndex));if(!M || M->ProfileSlot!=Profile || M->Slots.Num()!=4)continue;
-        TArray<ULocalStateArea*> Areas;for(const auto& S:M->Slots)Areas.Add(Cast<ULocalStateArea>(UGameplayStatics::LoadGameFromSlot(S,UserIndex)));
+        auto* M=Cast<ULocalStateManifest>(LoadExistingCheckpoint(Candidate,UserIndex));if(!M || M->ProfileSlot!=Profile || M->Slots.Num()!=4)continue;
+        TArray<ULocalStateArea*> Areas;for(const auto& S:M->Slots)Areas.Add(Cast<ULocalStateArea>(LoadExistingCheckpoint(S,UserIndex)));
         if(!ValidateGeneration(*M,Areas))continue;
         World=M->PlayerRevision>=Player.LocalStateRevision?CastChecked<ULocalUniverseState>(Areas[3]):nullptr;
         // A later atomic pilot transaction takes precedence over an older autosave.

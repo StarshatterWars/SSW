@@ -17,8 +17,10 @@ namespace
 USaveGame* Load(const FString& Directory,const FString& Slot)
 {
     TArray<uint8> Bytes;
-    return FFileHelper::LoadFileToArray(Bytes,*(Directory/(Slot+TEXT(".sav"))))
-        ? UGameplayStatics::LoadGameFromMemory(Bytes) : nullptr;
+    const FString Path=Directory/(Slot+TEXT(".sav"));
+    if(!FPaths::FileExists(Path) || !FFileHelper::LoadFileToArray(Bytes,*Path) || Bytes.Num()<8 ||
+        Bytes[0]!='G' || Bytes[1]!='V' || Bytes[2]!='A' || Bytes[3]!='S') return nullptr;
+    return UGameplayStatics::LoadGameFromMemory(Bytes);
 }
 bool Read(const FString& Directory,const FString& Slot,FS_PlayerGameInfo& Player,FString& Profile,int64& Utc)
 {

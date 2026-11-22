@@ -72,6 +72,13 @@ public:
     FText GetTrainingRequirement(int32 MissionId) const;
     FText GetCampaignOrders(FName AgentId) const;
     FText GetCampaignTitle(int32 CampaignId) const;
+    FName GetPostTrainingCampaignAgent() const;
+    bool NeedsCampaignDeployment(int32 CampaignId) const;
+    void CompleteCampaignDeploymentOnArrival();
+    bool DeployCampaignFleet(int32 CampaignId,FText& Reason);
+    bool IsAboardTrainingCarrier() const;
+    int32 GetTrainingTransferStage() const;
+    bool TransferTrainingPilot(FText& Reason);
     bool CanActivateCampaign(FName AgentId, int32 CampaignId) const;
     static bool IsCampaignOrigin(const FS_AgentCatalogRow& Agent, const FS_Campaign& Campaign);
     static bool CanOfferCampaignMission(const FS_AgentCatalogRow& Agent, int32 CampaignId, const MissionInfo& Info,

@@ -251,7 +251,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
     //-------------------------------------------------------------
     Legacy->type = static_cast<uint32>(Row.ShipType);
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[ShipDesignRegistry] Classification Row='%s' ShipType=0x%08X LegacyType=0x%08X"),
         *RowName.ToString(),
         static_cast<uint32>(Row.ShipType),
@@ -268,7 +268,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
 
     Legacy->mass = Row.Mass;
     Legacy->integrity = Row.Integrity;
-    Legacy->radius = Row.Scale;
+    Legacy->radius = FMath::IsFinite(Row.CollisionRadius) && Row.CollisionRadius > 0 ? Row.CollisionRadius : Row.Scale;
 
     //-------------------------------------------------------------
     // Movement + handling
@@ -398,7 +398,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         ApplyComponentDesign(*NewDrive, Src.DesignName);
         Legacy->drives.append(NewDrive);
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] Drive built Row='%s' Drive=%p Type=%d Thrust=%.2f Aug=%.2f Ports=%d"),
             *RowName.ToString(),
             NewDrive,
@@ -460,7 +460,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             NewThruster->SetPortData(PortIndex, Port);
         }
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] Thruster built Row='%s' Thruster=%p Ports=%d"),
             *RowName.ToString(),
             NewThruster,
@@ -475,7 +475,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
                 continue;
             }
 
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, Log,
                 TEXT("[ShipDesignRegistry]   Port[%d] Name='%s' Dir=%d Loc=%s Rot=%s Fire=0x%04X PortScale=%.2f FlareScale=%.2f TrailScale=%.2f"),
                 PortIndex,
                 *Port->PointName.ToString(),
@@ -511,7 +511,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
 
         Legacy->navsys = NewNavSys;
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] NavSys built Row='%s' NavSys=%p Name='%s' SourceIndex=%d HullFactor=%.2f"),
             *RowName.ToString(),
             Legacy->navsys,
@@ -547,7 +547,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         ApplyComponentDesign(*NewSensor, Src.DesignName);
         Legacy->sensors.append(NewSensor);
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] Sensor built Row='%s' Sensor=%p Name='%s' Ranges=%d SourceIndex=%d"),
             *RowName.ToString(),
             NewSensor,
@@ -608,7 +608,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
 
         Legacy->shields.append(NewShield);
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] Shield built Row='%s' Shield=%p Type=%d Name='%s' Cap=%.0f Cons=%.0f Factor=%.4f SourceIndex=%d"),
             *RowName.ToString(),
             NewShield,
@@ -682,7 +682,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         //---------------------------------------------------------
         // Debug (use ACTUAL runtime values)
         //---------------------------------------------------------
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] Computer built Row='%s' Computer=%p Type=%d Name='%hs' Abbrev='%hs' SourceIndex=%d"),
             *RowName.ToString(),
             NewComputer,
@@ -723,7 +723,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         ApplyComponentDesign(*NewQuantum, Src.DesignName);
         Legacy->quantum_drives.append(NewQuantum);
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] Quantum built Row='%s' Quantum=%p Name='%s' Type=%d Cap=%.0f Cons=%.0f Countdown=%.2f SourceIndex=%d"),
             *RowName.ToString(),
             NewQuantum,
@@ -771,7 +771,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         ApplyComponentDesign(*NewFarcaster, Src.DesignName);
         Legacy->farcasters.append(NewFarcaster);
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] Farcaster built Row='%s' Farcaster=%p Name='%s' Cap=%.0f Cons=%.0f SourceIndex=%d ApproachPts=%d"),
             *RowName.ToString(),
             NewFarcaster,
@@ -807,7 +807,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             }
             ApplyComponentDesign(*NewNavLight, Src.DesignName);
             Legacy->navlights.append(NewNavLight);
-            UE_LOG(LogTemp, Verbose, TEXT("[ShipDesignRegistry] NavLight Row='%s' First=%d Beacons=%d"),
+            UE_LOG(LogTemp, Log, TEXT("[ShipDesignRegistry] NavLight Row='%s' First=%d Beacons=%d"),
                 *RowName.ToString(), First, End-First);
         }
     }
@@ -856,9 +856,14 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             MuzzleCount = WpnDesign->turret.length() > 0 && WpnDesign->nbarrels > 0 ? 0 : 1;
             Muzzles[0] = WpnDesign->turret.length() > 0 ? FVector::ZeroVector : Src.Location;
 
-            UE_LOG(LogTemp, Warning,
-                TEXT("[ShipDesignRegistry] Weapon '%s' has no muzzles; using Location fallback"),
-                *Src.Name);
+            if (MuzzleCount == 0)
+            {
+                UE_LOG(LogTemp, Log, TEXT("[ShipDesignRegistry] Weapon '%s' uses authored turret barrels"), *Src.Name);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("[ShipDesignRegistry] Weapon '%s' has no muzzles; using Location fallback"), *Src.Name);
+            }
         }
 
         Weapon* NewWeapon = new Weapon(
@@ -916,7 +921,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         else if (WpnDesign->probe && !Legacy->probe) Legacy->probe = NewWeapon;
         else Legacy->weapons.append(NewWeapon);
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] Weapon built Row='%s' Weapon=%p Name='%s' Type='%s' Group='%s' Muzzles=%d SourceIndex=%d"),
             *RowName.ToString(),
             NewWeapon,
@@ -988,7 +993,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
 
             NewHardpoint->AddDesign(AllowedDesign);
 
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, Log,
                 TEXT("[ShipDesignRegistry]   Hardpoint allowed weapon Row='%s' Hardpoint='%s' WeaponType='%s' Design=%p"),
                 *RowName.ToString(),
                 *Src.Name,
@@ -998,7 +1003,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
 
         Legacy->hardpoints.append(NewHardpoint);
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] Hardpoint built Row='%s' Hardpoint=%p Name='%s' Design='%s' AllowedTypes=%d"),
             *RowName.ToString(),
             NewHardpoint,
@@ -1056,7 +1061,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
                 Item.Start,
                 Item.End);
 
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, Log,
                 TEXT("[ShipDesignRegistry]   LandingGear Item Row='%s' Model='%s' Start=%s End=%s"),
                 *RowName.ToString(),
                 *Item.ModelName,
@@ -1067,7 +1072,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         ApplyComponentDesign(*NewGear, Src.DesignName);
         Legacy->landing_gear.append(NewGear);
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] LandingGear built Row='%s' Gear=%p Name='%hs' Items=%d"),
             *RowName.ToString(),
             NewGear,
@@ -1168,7 +1173,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
         ApplyComponentDesign(*NewDeck, Src.DesignName);
         Legacy->flight_decks.append(NewDeck);
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] FlightDeck built Row='%s' Deck=%p Name='%s' Launch=%d Recovery=%d Spots=%d Approaches=%d"),
             *RowName.ToString(),
             NewDeck,
@@ -1221,7 +1226,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
 
         Legacy->squadrons.append(NewSquadron);
 
-        UE_LOG(LogTemp, Warning,
+        UE_LOG(LogTemp, Log,
             TEXT("[ShipDesignRegistry] Squadron built Row='%s' Squadron=%p Name='%s' Design='%s' Count=%d Avail=%d"),
             *RowName.ToString(),
             NewSquadron,
@@ -1305,7 +1310,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
             Legacy->explosion[i].SetLocation(SrcExplosion.Location);
             Legacy->explosion[i].SetFinal(SrcExplosion.bFinal);
 
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, Log,
                 TEXT("[ShipDesignRegistry] Explosion built Row='%s' Index=%d Type=%d Time=%.2f Loc=%s Final=%d"),
                 *RowName.ToString(),
                 i,
@@ -1315,7 +1320,7 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
                 SrcExplosion.bFinal ? 1 : 0);
         }
     }
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[ShipDesignRegistry] ConvertToLegacyDesign COMPLETE Row='%s' Reactors=%d Drives=%d Thrusters=%d NavSys=%d Sensors=%d Shields=%d Computers=%d Quantum=%d Farcasters=%d FlightDecks=%d LandingGear=%d Squadrons=%d Weapons=%d Hardpoints=%d"),
         *RowName.ToString(),
         Legacy->reactors.size(),

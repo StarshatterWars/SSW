@@ -45,6 +45,7 @@ public:
     virtual void   Update();
 
     // accessors / mutators
+    using Graphic::SetOrientation; // The native Matrix overload is intentional.
     virtual void   SetOrientation(const Matrix& o);
     void           SetDirection(const FVector& v);
     void           SetEndPoints(const FVector& from, const FVector& to);

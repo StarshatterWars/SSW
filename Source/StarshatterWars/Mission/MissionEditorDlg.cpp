@@ -628,7 +628,7 @@ void UMissionEditorDlg::CommitEditing(bool bScrape)
         if (mission_info) mission_info->name = mission->GetName();
     }
     bEditing = false;
-    if (Manager) Manager->ShowMissionSelectDlg();
+    if (Manager) Manager->ShowModEditorDlg();
 }
 
 void UMissionEditorDlg::CancelEditing()
@@ -654,7 +654,7 @@ void UMissionEditorDlg::CancelEditing()
     }
     bEditing = false;
     DrawPackages();
-    if (Manager) Manager->ShowMissionSelectDlg();
+    if (Manager) Manager->ShowModEditorDlg();
 }
 
 void UMissionEditorDlg::OnElemAddClicked()

@@ -1,4 +1,10 @@
 #include "SSWSessionLobbyGameMode.h"
+#include "BoltWeaponActor.h"
+#include "MissileActor.h"
+#include "MissileFlightPresentation.h"
+#include "WeaponBlueprintResolver.h"
+#include "WeaponDesignRegistry.h"
+#include "SSWNetworkShipControls.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "MultiplayerDlg.h"
@@ -226,8 +232,7 @@ FSSWReplicatedShipState ASSWSessionGameState::MakeShipState(const Ship& PilotShi
     for (int32 Index = 0; Index < FMath::Min(32, PilotShip.navlights.size()); ++Index)
         if (const auto* Light = PilotShip.navlights[Index]; Light && Light->IsEnabled())
             State.EnabledNavLights |= 1u << Index;
-    if (const auto* Visual = PilotShip.GetNativePresentation())
-        Visual->GetCarriedStoreTypes(State.CarriedStores);
+    SSWNetworkShipControls::CarriedStores(const_cast<Ship&>(PilotShip),State.CarriedStores);
     State.RespawnsRemaining = PilotShip.GetRespawnCount();
     if (const Drive* MainDrive = PilotShip.GetMainDrive())
         State.DrivePower = MainDrive->GetVisualPower();
@@ -333,6 +338,14 @@ void ASSWSessionGameState::PublishSimulation(Sim& Simulation, double Now)
                 State.Position = Shot->GetLocation();
                 State.Velocity = Shot->GetVelocity();
                 State.bMissile = Shot->IsMissile();
+                State.Heading=Shot->GetHeading();
+                State.Up=Shot->GetCam().vup();
+                State.bIgnited=!Shot->IsReleasingFromRack() && Shot->GetThrust()>UE_SMALL_NUMBER;
+                if(const auto* Design=Shot->GetDesign())
+                {
+                    State.WeaponDesign=UTF8_TO_TCHAR(Design->name.data());
+                    State.GraphicType=static_cast<uint8>(Design->graphic_type);
+                }
                 if (const auto* Runtime = GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>())
                 {
                     const FVector Tail = Shot->IsBeam() ? Shot->GetOrigin() :
@@ -355,6 +368,7 @@ void ASSWSessionLobbyController::SendSessionChat(const FString& Message)
 
 void ASSWSessionLobbyController::ServerSendSessionChat_Implementation(const FString& Message)
 {
+    if (!CanSendNetworkCommand()) return;
     UWorld* World = GetWorld();
     const APlayerState* Sender = GetPlayerState<APlayerState>();
     if (!World || !Sender || !AcceptChat(Message)) return;
@@ -440,6 +454,7 @@ void ASSWSessionLobbyController::SendMissionChat(ESSWChatChannel Channel, const 
 void ASSWSessionLobbyController::ServerSendMissionChat_Implementation(
     ESSWChatChannel Channel, const FString& Message, int64 RecipientShipId)
 {
+    if (!CanSendNetworkCommand()) return;
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     const auto* Sender = GetPlayerState<APlayerState>();
     if (!State || !State->bMissionStartReady || !Sender || !AcceptChat(Message)) return;
@@ -1207,6 +1222,7 @@ namespace
 
 void ASSWSessionLobbyController::ServerFlightInput_Implementation(uint64 PackedControls, uint8 Throttle)
 {
+    if (!CanSendNetworkCommand()) return;
     const double Now = FPlatformTime::Seconds();
     if (Now - LastFlightInput < 0.035) return;
 
@@ -1215,21 +1231,16 @@ void ASSWSessionLobbyController::ServerFlightInput_Implementation(uint64 PackedC
     if (!Fighter || Fighter->IsDead() || Fighter->IsDying()) return;
 
     LastFlightInput = Now;
-    if (!Fighter->IsAutoTrackEngaged())
-    {
-        Fighter->SetManualThrottle(Throttle * (100.0f / 255.0f));
-        Fighter->SetManualAugmenter((PackedControls & AugmenterBit) != 0);
-        for (int32 Axis = 0; Axis < 3; ++Axis)
-        {
-            Fighter->SetManualRotationAxis(Axis, DecodeFlightAxis(PackedControls, Axis));
-            Fighter->SetManualTranslationAxis(Axis, DecodeFlightAxis(PackedControls, Axis + 3));
-        }
-    }
-    if (PackedControls & PrimaryFireBit) Fighter->FirePrimary();
+    FVector Rotation,Translation;
+    for(int32 Axis=0;Axis<3;++Axis)
+    { Rotation[Axis]=DecodeFlightAxis(PackedControls,Axis); Translation[Axis]=DecodeFlightAxis(PackedControls,Axis+3); }
+    SSWNetworkShipControls::Apply(*Fighter,Rotation,Translation,Throttle*(100.f/255.f),
+        (PackedControls & AugmenterBit)!=0,(PackedControls & PrimaryFireBit)!=0);
 }
 
 void ASSWSessionLobbyController::ServerFireSecondary_Implementation()
 {
+    if (!CanSendNetworkCommand()) return;
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     Ship* Fighter = State && State->bMissionStartReady ? State->FindMissionShip(MissionShipId) : nullptr;
     if (Fighter && !Fighter->IsDead() && !Fighter->IsDying()) Fighter->FireSecondary();
@@ -1362,31 +1373,16 @@ void ASSWSessionLobbyController::ReleaseSensorRange(const FInputActionValue&, FN
 
 void ASSWSessionLobbyController::ServerSensorCommand_Implementation(FName Action)
 {
+    if (!CanSendNetworkCommand()) return;
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     Ship* Fighter = State && State->bMissionStartReady ? State->FindMissionShip(MissionShipId) : nullptr;
     if (!Fighter) return;
-    if (Action == TEXT("IA_EMCONUp")) Fighter->SetEMCON(Fighter->GetEMCON() + 1);
-    else if (Action == TEXT("IA_EMCONDown")) Fighter->SetEMCON(Fighter->GetEMCON() - 1);
-    else if (auto* Sensors = Fighter->GetSensor())
-    {
-        if (Action == TEXT("IA_SensorRangeUp")) Sensors->IncreaseRange();
-        else if (Action == TEXT("IA_SensorRangeDown")) Sensors->DecreaseRange();
-        else if (Action == TEXT("IA_SensorGroundMode"))
-        {
-            if (Fighter->IsAirborne() && Sensors->GetMode() < ESensorMode::PST) Fighter->SetSensorMode(ESensorMode::GM);
-        }
-        else if (Action == TEXT("IA_SensorMode"))
-        {
-            const auto Mode = Sensors->GetMode();
-            if (Mode >= ESensorMode::PST) Fighter->DropTarget();
-            else Fighter->SetSensorMode(Mode == ESensorMode::GM ? ESensorMode::PAS :
-                static_cast<ESensorMode>(static_cast<int32>(Mode) + 1));
-        }
-    }
+    SSWNetworkShipControls::SensorCommand(*Fighter,Action);
 }
 
 void ASSWSessionLobbyController::ServerSelfDestruct_Implementation()
 {
+    if (!CanSendNetworkCommand()) return;
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     Ship* Fighter = State && State->bMissionStartReady ? State->FindMissionShip(MissionShipId) : nullptr;
     if (!Fighter || !Fighter->HasNetworkPilot() || Fighter->GetFlightPhase() != EOPSMode::ACTIVE) return;
@@ -1397,6 +1393,7 @@ void ASSWSessionLobbyController::ServerSelfDestruct_Implementation()
 void ASSWSessionLobbyController::PlayerTick(float DeltaTime)
 {
     Super::PlayerTick(DeltaTime);
+    if (!CanUseNetworkFlight()) return;
 
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     if (!State) return;
@@ -1442,7 +1439,7 @@ void ASSWSessionLobbyController::PlayerTick(float DeltaTime)
         bPrimaryPressed = false;
     }
     UpdateFlightView(*State, *Fighter, DeltaTime);
-    if (MissionChatPanel || ResignDialog) return;
+    if (!ShouldPollFlightInput() || MissionChatPanel || ResignDialog) return;
     if (Fighter->bDestroyed || Fighter->bRetired) return;
 
     if (const auto* Radio = FlightActions.Find(TEXT("IA_RadioMenu"));
@@ -1600,6 +1597,71 @@ void ASSWSessionLobbyController::UpdateFlightView(
             ShipState.ThrusterBurns, ShipState.EnabledNavLights);
         Actor->UpdateSnapshotStores(ShipState.CarriedStores);
     }
+    TSet<int64> LiveBolts;
+    for(const auto& Shot:State.MissionProjectiles)
+    {
+        if(Shot.Region!=Fighter.Region || Shot.bMissile || Shot.GraphicType!=Graphic::BOLT) continue;
+        LiveBolts.Add(Shot.ObjectId);
+        auto& Bolt=RemoteBolts.FindOrAdd(Shot.ObjectId);
+        const FVector Direction=ToUE(Shot.Velocity).GetSafeNormal();
+        if(!Bolt && RemoteBolts.Num()<=512)
+        {
+            FActorSpawnParameters Spawn;
+            Spawn.ObjectFlags|=RF_Transient;
+            Spawn.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            Bolt=GetWorld()->SpawnActor<ABoltWeaponActor>(ABoltWeaponActor::ClassForWeapon(Shot.WeaponDesign),Shot.VisualEnd,Direction.Rotation(),Spawn);
+            if(Bolt)
+            {
+                Bolt->SetActorEnableCollision(false);
+                Bolt->BeginSimulationFlight();
+            }
+        }
+        if(Bolt) Bolt->SetActorLocationAndRotation(Shot.VisualEnd,Direction.Rotation());
+    }
+    TSet<int64> LiveMissiles;
+    for(const auto& Shot:State.MissionProjectiles)
+    {
+        if(Shot.Region!=Fighter.Region || !Shot.bMissile) continue;
+        LiveMissiles.Add(Shot.ObjectId);
+        auto& Missile=RemoteMissiles.FindOrAdd(Shot.ObjectId);
+        const FRotator Rotation=FRotationMatrix::MakeFromXZ(ToUE(Shot.Heading),ToUE(Shot.Up)).Rotator();
+        if(!Missile && RemoteMissiles.Num()<=512)
+        {
+            const auto* Design=WeaponDesignRegistry::FindLegacy(Shot.WeaponDesign);
+            UClass* Class=Design?WeaponBlueprintResolver::ResolveProjectile(UTF8_TO_TCHAR(Design->projectile.data())):nullptr;
+            if(!Class && Design) Class=WeaponBlueprintResolver::Resolve(UTF8_TO_TCHAR(Design->model.data()),Shot.WeaponDesign);
+            if(Class)
+            {
+                FActorSpawnParameters Spawn;
+                Spawn.ObjectFlags|=RF_Transient;
+                Spawn.SpawnCollisionHandlingOverride=ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+                Missile=GetWorld()->SpawnActor<AActor>(Class,Shot.VisualEnd,Rotation,Spawn);
+                if(Missile)
+                {
+                    Missile->SetActorEnableCollision(false);
+                    if(auto* Native=Cast<AMissileActor>(Missile)) Native->BeginSimulationFlight(Shot.bIgnited);
+                    else MissileFlightPresentation::Release(Missile);
+                }
+            }
+        }
+        if(Missile)
+        {
+            Missile->SetActorLocationAndRotation(Shot.VisualEnd,Rotation);
+            if(auto* Native=Cast<AMissileActor>(Missile)) Native->SetSimulationExhaust(Shot.bIgnited,false,1.f);
+        }
+    }
+    for(auto It=RemoteMissiles.CreateIterator();It;++It)
+        if(!LiveMissiles.Contains(It.Key()))
+        {
+            if(It.Value()) It.Value()->Destroy();
+            It.RemoveCurrent();
+        }
+    for(auto It=RemoteBolts.CreateIterator();It;++It)
+        if(!LiveBolts.Contains(It.Key()))
+        {
+            if(It.Value()) It.Value()->Destroy();
+            It.RemoveCurrent();
+        }
     for (auto It = RemoteFighters.CreateIterator(); It; ++It)
     {
         if (Visible.Contains(It.Key())) continue;
@@ -1628,6 +1690,12 @@ void ASSWSessionLobbyController::EndPlay(const EEndPlayReason::Type EndPlayReaso
     if (ArenaBarrier) ArenaBarrier->Destroy();
     for (auto& Entry : RemoteFighters)
         if (Entry.Value) Entry.Value->Destroy();
+    for(auto& Entry:RemoteBolts)
+        if(Entry.Value) Entry.Value->Destroy();
+    RemoteBolts.Empty();
+    for(auto& Entry:RemoteMissiles)
+        if(Entry.Value) Entry.Value->Destroy();
+    RemoteMissiles.Empty();
     if (LobbyDialog) LobbyDialog->RemoveFromParent();
     Super::EndPlay(EndPlayReason);
 }
@@ -1712,44 +1780,11 @@ void ASSWSessionGameState::OnRep_OrbitalPositions()
 
 void ASSWSessionLobbyController::ServerTargetCommand_Implementation(FName Action)
 {
+    if (!CanSendNetworkCommand()) return;
     const auto* State = GetWorld()->GetGameState<ASSWSessionGameState>();
     Ship* Fighter = State && State->bMissionStartReady ? State->FindMissionShip(MissionShipId) : nullptr;
     if (!Fighter || Fighter->IsDead() || Fighter->IsDying()) return;
-
-    if (Action == TEXT("SSW_TargetTracking"))
-    {
-        Fighter->SetAutoTrack(!Fighter->IsAutoTrackEngaged());
-        return;
-    }
-    if (Action == TEXT("IA_DropWeaponTarget"))
-    {
-        Fighter->DropTarget();
-        return;
-    }
-    if (Action == TEXT("IA_TargetNearest") || Action == TEXT("IA_TargetHostile"))
-    {
-        Fighter->LockTarget(ESimObject::SHIP, true, Action == TEXT("IA_TargetHostile"));
-        return;
-    }
-    const bool bPrevious = Action == TEXT("IA_PreviousTarget");
-    SimRegion* Region = Fighter->GetRegion();
-    if (!Region || (!bPrevious && Action != TEXT("IA_NextTarget"))) return;
-
-    TArray<Ship*> Candidates;
-    int32 CurrentIndex = INDEX_NONE;
-    for (ListIter<Ship> Ships = Region->GetShips(); ++Ships;)
-    {
-        Ship* Candidate = Ships.value();
-        if (!Candidate || Candidate == Fighter || Candidate->IsDead() || Candidate->IsDying() ||
-            Candidate->GetIFF() == Fighter->GetIFF() || Candidate->GetIFF() == 0) continue;
-        if (Candidate == Fighter->GetTarget()) CurrentIndex = Candidates.Num();
-        Candidates.Add(Candidate);
-    }
-    if (Candidates.IsEmpty()) return;
-    const int32 Offset = bPrevious ? -1 : 1;
-    const int32 NextIndex = CurrentIndex == INDEX_NONE ? (bPrevious ? Candidates.Num() - 1 : 0) :
-        (CurrentIndex + Offset + Candidates.Num()) % Candidates.Num();
-    Fighter->LockTarget(Candidates[NextIndex]);
+    SSWNetworkShipControls::Target(*Fighter,Action);
 }
 
 void ASSWSessionFlightHUD::DrawHUD()
@@ -1857,7 +1892,7 @@ void ASSWSessionFlightHUD::DrawHUD()
 
     for (const auto& Shot : State->MissionProjectiles)
     {
-        if (Shot.Region != Fighter->Region) continue;
+        if (Shot.Region != Fighter->Region || Shot.bMissile || Shot.GraphicType==Graphic::BOLT) continue;
         FVector2D Start, End;
         if (Controller->ProjectWorldLocationToScreen(Shot.VisualStart, Start) &&
             Controller->ProjectWorldLocationToScreen(Shot.VisualEnd, End))
@@ -1979,6 +2014,8 @@ void ASSWSessionLobbyGameMode::ShutdownDedicatedServer()
 
 void ASSWSessionLobbyController::ServerSetPlatformPilotName_Implementation(const FString& DisplayName)
 {
+    if (UsesVerifiedPilotIdentity()) return;
+    if (!CanSendNetworkCommand()) return;
     auto* PilotState = GetPlayerState<ASSWSessionPlayerState>();
     if (!PilotState || DisplayName.Len() > 64) return;
 

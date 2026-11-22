@@ -81,7 +81,7 @@ void ULoadScreen::TearDown()
 
 // +--------------------------------------------------------------------+
 
-void ULoadScreen::ExecFrame()
+void ULoadScreen::ExecFrame(double /*DeltaTime*/)
 {
     // Starshatter core used Color::Black; Unreal port uses FColor::Black.
     Game::SetScreenColor(FColor::Black);

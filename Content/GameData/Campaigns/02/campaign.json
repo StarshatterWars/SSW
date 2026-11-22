@@ -1,0 +1,138 @@
+{
+	"rowName": "None",
+	"name": "Operation Highland",
+	"description": "The Independent System of Solus is in danger of being destroyed by civil war.  Dantari Separatists seeking to join the Hegemony Prefecture of Renser have gained control of much of the Solus Star Fleet.  The Loyalist faction has requested military aid from the Terellian Alliance.  A Force:Space task force has been dispatched to break the blockade, evacuate Alliance citizens from Solus, and stabilize the military situation.",
+	"situation": "The Independent System of Solus has requested military assistance from Terellian Alliance Force:Command.  Dantari Separatists seeking to join the Hegemony Prefecture of Renser have gained control of much of the Solus Star Fleet and have established a blockade around the Trellis Gate.  The Loyalist forces and many Alliance civilians have been trapped on the inner planets of the system.Force:Intel believes that the Separatists are being backed with military support from the Prefecture of Renser, a Hegemony border system.  All Force:Space units are instructed to be on the lookout for any Hegemony involvement in this conflict.",
+	"start": "01/00:00:00",
+	"orders": [
+		"* Protect civilian and allied assets in the Independent System of Solus.",
+		"* Break the Separatist blockade of the inner planets.",
+		"* Apprehend or destroy military units of the Dantari Separatists.",
+		"* Determine the extent of Hegemony involvement in this conflict."
+	],
+	"bScripted": false,
+	"bSequential": false,
+	"bAvailable": true,
+	"bCompleted": false,
+	"system": "Solus",
+	"region": "Meridian",
+	"mainImage": "main",
+	"actionSize": 0,
+	"combatantSize": 7,
+	"index": 1,
+	"combatant": [
+		{
+			"name": "Terellian",
+			"size": 4,
+			"group": [
+				{
+					"type": "CARRIER_GROUP",
+					"id": 6
+				},
+				{
+					"type": "DESTROYER_SQUADRON",
+					"id": 43
+				},
+				{
+					"type": "DESTROYER_SQUADRON",
+					"id": 60
+				},
+				{
+					"type": "FREIGHT",
+					"id": 3000
+				}
+			]
+		},
+		{
+			"name": "Dantari",
+			"size": 5,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 1
+				},
+				{
+					"type": "BATTALION",
+					"id": 1
+				},
+				{
+					"type": "BATTALION",
+					"id": 2
+				},
+				{
+					"type": "WAR_PRODUCTION",
+					"id": 1
+				},
+				{
+					"type": "FREIGHT",
+					"id": 3000
+				},
+				{
+					"type": "MINEFIELD",
+					"id": 1
+				},
+				{
+					"type": "MINEFIELD",
+					"id": 2
+				},
+				{
+					"type": "MINEFIELD",
+					"id": 3
+				},
+				{
+					"type": "MINEFIELD",
+					"id": 4
+				},
+				{
+					"type": "MINEFIELD",
+					"id": 5
+				}
+			]
+		},
+		{
+			"name": "Marakan",
+			"size": 1,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 4
+				}
+			]
+		},
+		{
+			"name": "Solus",
+			"size": 5,
+			"group": [
+				{
+					"type": "INFRASTRUCTURE",
+					"id": 2000
+				},
+				{
+					"type": "TRANSPORT",
+					"id": 2100
+				},
+				{
+					"type": "CIVILIAN",
+					"id": 2200
+				},
+				{
+					"type": "FREIGHT",
+					"id": 3000
+				},
+				{
+					"type": "CIVILIAN",
+					"id": 5000
+				}
+			]
+		}
+	],
+	"action": [],
+	"zone": [],
+	"missionList": [],
+	"templateList": [],
+	"missions": [],
+	"storyMissions": [],
+	"templateMissions": [],
+	"scriptedMissions": [],
+	"campaignImage": "None"
+}

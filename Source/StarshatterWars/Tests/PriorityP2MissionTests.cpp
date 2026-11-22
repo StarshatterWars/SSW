@@ -25,6 +25,7 @@ bool FMissingShipDesignTest::RunTest(const FString& Parameters)
 {
     FS_CampaignMission Source;Source.StartTime=TEXT("1/00:00:00");FS_MissionElement E;E.Name=TEXT("Unknown ship");E.Design=TEXT("P2_Missing_Authored_Design");E.Player=1;Source.Element.Add(E);
     AddExpectedError(TEXT("Missing FShipDesign"),EAutomationExpectedErrorFlags::Contains,1);
+    AddExpectedError(TEXT("Missing authored ship design; mission cannot launch."),EAutomationExpectedErrorFlags::Contains,1);
     Mission Model;TestFalse(TEXT("Missing authored design prevents mission launch"),Model.LoadFromCampaignMissionData(Source));
     TestFalse(TEXT("Missing design never registers an invented fighter"),ShipDesignRegistry::Has(FName(*E.Design)));return true;
 }

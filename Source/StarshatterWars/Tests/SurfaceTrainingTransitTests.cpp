@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "ShipDesignRegistry.h"
 #include "StarshatterShipDesignSubsystem.h"
@@ -25,6 +26,12 @@
 #include "FlightDeck.h"
 #include "Skin.h"
 #include "WorldScapeRoot.h"
+#include "HeightMapVolume.h"
+#include "HeightMapVolumeData.h"
+#include "JanekSurfaceGrade.h"
+#include "SurfaceFlightRoute.h"
+#include "StarshatterGameDataSubsystem.h"
+#include "Terrain.h"
 #include "Materials/MaterialInterface.h"
 namespace {class FTransitFixture : public Sim {public:FTransitFixture():Sim(nullptr){}using Sim::mission;using Sim::active_region;using Sim::star_system;using Sim::regions;};class FPointDrive : public QuantumDrive {public:FPointDrive():QuantumDrive(QUANTUM,100,10){}using QuantumDrive::Jump;};}
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FSurfaceTrainingTransitTest,"Starshatter.Travel.LiveCarrierSurfaceRoundTrip",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
@@ -33,7 +40,7 @@ bool FSurfaceTrainingTransitTest::RunTest(const FString&)
  const auto OldDesigns=ShipDesignRegistry::GetAll();ON_SCOPE_EXIT{ShipDesignRegistry::Clear();for(const auto& P:OldDesigns)ShipDesignRegistry::RegisterDesign(P.Key,P.Value,false);};
  const bool OwnLoader=!DataLoader::GetLoader();if(OwnLoader)DataLoader::Initialize();ON_SCOPE_EXIT{if(OwnLoader)DataLoader::Close();};
  if(Sim::GetSim()){AddError(TEXT("Travel integration test requires an idle simulation"));return false;}
- AddExpectedError(TEXT("ERROR: could notxparse 'Explosions.def'"),EAutomationExpectedErrorFlags::Contains,1);auto Owned=MakeUnique<FTransitFixture>();
+ auto Owned=MakeUnique<FTransitFixture>();
  auto& S=*Owned;auto* OldMission=S.mission;auto* OldRegion=S.active_region;auto* OldSystem=S.star_system;
  FShipDesign D;D.ShipName=TEXT("Surface Test");D.ShipType=2;D.Category=EShipCategory::Fighter;D.Integrity=100;D.Mass=20;D.Scale=1;
  ShipDesignRegistry::RegisterDesign(FName(TEXT("Surface Test")),D,false);auto* Design=ShipDesignRegistry::FindLegacy(FName(TEXT("Surface Test")));
@@ -73,7 +80,8 @@ bool FOrionNavLightsTest::RunTest(const FString&)
  auto* Row=Table->FindRow<FShipDesign>(TEXT("Orion"),TEXT("Nav beacon audit"),false);if(!Row)return false;
  const auto Old=ShipDesignRegistry::GetAll();ON_SCOPE_EXIT{ShipDesignRegistry::Clear();for(const auto& P:Old)ShipDesignRegistry::RegisterDesign(P.Key,P.Value,false);};FShipDesign NavOnly=*Row;NavOnly.Weapon.Reset();NavOnly.Hardpoint.Reset();ShipDesignRegistry::RegisterDesign(FName(TEXT("Orion")),NavOnly,false);
  const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
- auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);ON_SCOPE_EXIT{World->DestroyWorld(false);};
+ auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);ON_SCOPE_EXIT{World->DestroyWorld(false);};
  auto* Class=ShipVisualCatalog::Resolve(TEXT("Orion"),TEXT("Orion"));if(!TestNotNull(TEXT("Orion Blueprint"),Class))return false;
  auto* Actor=World->SpawnActor<AShipActor>(Class);Actor->InitializeSnapshotPropulsion(ShipDesignRegistry::FindLegacy(FName(TEXT("Orion"))));
  TArray<UNavLightComponent*> Lights;Actor->GetComponents(Lights);int32 Red=0,Green=0;
@@ -92,6 +100,59 @@ bool FJanekFullMaterialTest::RunTest(const FString&)
  if(TestNotNull(TEXT("Full terrain material available"),SurfaceMaterial))TestTrue(TEXT("Janek uses the original WorldScape surface material"),SurfaceMaterial->GetPathName().StartsWith(TEXT("/WorldScape/")));
  TestTrue(TEXT("Original ocean remains available with the full material"),Default->bOcean);
  TestNotNull(TEXT("Runway grade heightmap is retained"),LoadObject<UObject>(nullptr,TEXT("/Game/Models/Universe/Planets/Janek/HM_Janek.HM_Janek")));
+ return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FJanekWaterClearanceTest,"Starshatter.Terrain.JanekGradeWaterClearance",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FJanekWaterClearanceTest::RunTest(const FString&)
+{
+ const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
+ auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+ FScopedSSWTestWorldContext Context(World);ON_SCOPE_EXIT{World->DestroyWorld(false);};
+ auto* Class=LoadClass<AWorldScapeRoot>(nullptr,TEXT("/Game/Models/Universe/BP_Janek.BP_Janek_C"));
+ auto* Globe=Class?World->SpawnActor<AWorldScapeRoot>(Class):nullptr;
+ if(!TestNotNull(TEXT("Janek WorldScape instance"),Globe))return false;
+ Globe->bGenerateWorldScape=false;Globe->bEnableVolumes=true;Globe->PlanetScale=5400000;Globe->PlanetScaleCode=5400000;
+ const FVector Site(0,0,5400542);
+ auto* Data=NewObject<UHeightMapVolumeData>(Globe);Data->BaseWidth=Data->BaseHeight=2;
+ Data->StoredHeightMapData.Init(0,4);Data->StoredWaterHeightMapData.Init(0,4);Data->bIgnoreHeightMap=false;Data->bIgnoreOceanHeightMap=false;
+ auto* Grade=World->SpawnActor<AHeightMapVolume>();Grade->SetActorLocation(Site);Grade->SetActorScale3D(FVector(240));
+ Grade->HeightMapData=Data;Grade->Height=true;Grade->HeightAlpha=false;Grade->OverrideHeight=true;Grade->Altitude=540;Grade->MapHeight=0;
+ Grade->OceanHeight=true;Grade->OceanHeightAlpha=false;Grade->MinOceanHeight=Grade->MaxOceanHeight=520;
+ Grade->UseBlending=false;Grade->Priority=JanekSurfaceGrade::RunwayPriority;Grade->WS_ForceRefresh();
+ auto* Lake=World->SpawnActor<AHeightMapVolume>();Lake->SetActorLocation(Site+FVector(8000,0,0));Lake->SetActorScale3D(FVector(180));
+ Lake->HeightMapData=Data;Lake->Height=false;Lake->OceanHeight=true;Lake->OceanHeightAlpha=false;
+ Lake->MinOceanHeight=Lake->MaxOceanHeight=542;Lake->UseBlending=false;Lake->Priority=JanekSurfaceGrade::LakePriority;Lake->WS_ForceRefresh();
+ Globe->HeightMapVolumeList={Lake,Grade};
+ for(const FVector Offset:{FVector::ZeroVector,FVector(2000,0,0),FVector(-2000,0,0)})
+ {
+  const FVector Sample=Site+Offset;
+  const double Soil=Globe->GetGroundHeight(Sample,false),Water=Globe->GetGroundHeight(Sample,true);
+  AddInfo(FString::Printf(TEXT("Janek site %s soil %.2f ocean %.2f"),*Offset.ToString(),Soil,Water));
+  TestTrue(TEXT("Live ground respects the runway grade"),FMath::IsNearlyEqual(Soil,540.0,1.0));
+  TestTrue(TEXT("Lake cannot override airport water clearance"),Water<=Soil-15.0);
+ }
+ // Test T4's authored route against the live planet, not only an analytic hill.
+ const auto* Defaults=Class->GetDefaultObject<AWorldScapeRoot>();
+ Globe->NoiseIntensity=Defaults->NoiseIntensity * Globe->PlanetScale / Defaults->PlanetScale;
+ auto* Catalog=NewObject<UStarshatterGameDataSubsystem>(NewObject<UGameInstance>());
+ FS_CampaignMission T4;
+ if(!TestTrue(TEXT("T4 JSON loads for live-planet route check"),Catalog->ReadLooseMission(FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/01/Scenes/T4.json"),T4)))return false;
+ const auto* Player=T4.Element.FindByPredicate([](const auto& E){return E.Player==1;});
+ if(!TestNotNull(TEXT("T4 route available"),Player))return false;
+ Terrain Ground(nullptr);
+ Ground.SetLiveSurface(Globe,Site+FVector(0,25000,0));
+ SimRegion Region(nullptr,"Janek Station",SimRegion::REAL_SPACE);
+ FVector Previous(25000,0,24);
+ for(const auto& Source:Player->Navpoint)
+ {
+  Instruction Point(TCHAR_TO_UTF8(*Source.OrderRegionName),Source.ObjectiveLocation,Source.Action);
+  TestTrue(TEXT("Live T4 waypoint prepared before Autonav"),SurfaceFlightRoute::PrepareWaypoint(Point,&Region,Region.GetName(),Previous,
+      [&Ground](double X,double Y){return Ground.Height(-X,Y);}));
+  const FVector P=Point.GetLocation();
+  const double Height=Ground.Height(-P.X,P.Y);
+  AddInfo(FString::Printf(TEXT("T4 %hs ground %.1f waypoint %.1f clearance %.1f"),Instruction::ActionName(Source.Action),Height,P.Z,P.Z-Height));
+  TestTrue(TEXT("T4 marker and simulation waypoint clear the live planet"),P.Z>=Height+SurfaceFlightRoute::CruiseClearance-1.0);
+ }
  return true;
 }
 #endif

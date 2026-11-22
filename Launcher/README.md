@@ -1,5 +1,66 @@
 # Starshatter Wars Launcher
 
+## Build, cook, package and deploy in one run
+
+Close Unreal Editor, then run `D:\SSW\Launcher\Build-Cook-Deploy.cmd`.
+It builds the Editor, runs the Starshatter automated tests, builds and cooks the
+Development Windows client, and packages into a fresh staging directory. Only
+after validation does it replace `Build/Windows`, ZIP the client with the existing
+packaged StarServer, and publish the signed launcher feed. It uses the installed
+UE 5.7 client engine; it does not rebuild StarServer.
+
+Any failed build, failed/incomplete test, test warning, stale package or mismatched
+executable stops publication. Keep source files unchanged during the run. The
+previous Windows package is retained under `Build/PreviousWindows`, and the
+publisher retains the previous feed. Logs and the build receipt are under
+`Saved/Logs/BuildCookDeploy-*`. Verified build metadata gets a local Git commit;
+unrelated staged changes are preserved and nothing is pushed.
+
+Use `Build-Cook-Deploy.cmd -PlanOnly` to check required paths without running the
+build. `-KeepStaging` keeps temporary cook output after success. Set
+`SSW_NO_PAUSE=1` for unattended CMD use. Release notes come from
+`Launcher/next-release-notes.txt`, or pass `-About "Your release description"`.
+After completion, use **Check for Updates** in the launcher. If publishing fails
+after packaging succeeds, fix the reported issue and run `Build-LauncherZip.cmd`
+to retry deployment without cooking again.
+
+## Create the launcher ZIP after cooking
+
+After packaging finishes, run `D:\SSW\Launcher\Build-LauncherZip.cmd`.
+It checks that `Build/Windows` has the current project's build identifier and
+compiled game executable before publishing. It also checks cooked containers,
+StarServer, the launcher's feed directory and the signing key. An older package
+is rejected before any ZIP or live feed is replaced.
+
+To check the package without creating or publishing anything:
+
+```powershell
+.\Launcher\Build-LauncherZip.cmd -ValidateOnly
+```
+
+The default release description comes from `Launcher/next-release-notes.txt`.
+Successful deployment writes `Build/Windows.zip.release.json` with the published
+version and paths. Open the launcher and choose **Check for Updates** afterward.
+The deployer retains the previous release and prevents simultaneous publishes.
+
+The CMD creates `D:\SSW\Build\Windows.zip` and `Windows.zip.sha256` from the current
+`Build/Windows` and `Build/StarServer/WindowsServer` packages. Pilot saves and
+debug symbols are excluded. The previous ZIP stays intact if compression fails.
+
+For another destination, use PowerShell 7:
+
+```powershell
+./Launcher/Build-LauncherZip.ps1 -Output 'E:/Releases/Windows.zip'
+```
+
+The CMD also publishes a matching signed manifest, patch files, ZIP and news to
+`Build/LauncherFeed/current`. It verifies every ZIP entry against the manifest
+and retains the previous feed. Run it only after cooking and packaging finishes.
+Use `-About 'Plain-English update description'` to set the release notes. The local
+signing key must match `launcher.localhost.json` and is never included in a release.
+Calling `Build-LauncherZip.ps1` directly still makes only the ZIP. An interrupted
+compression may leave an `.incomplete` file beside it for inspection.
+
 Open `Build/Launcher/StarshatterWarsLauncher.exe`. It finds `Build/Windows/StarshatterWars.exe` relative to the project directory. The installed build label shows the game binary's UTC build timestamp and its Unreal Engine version.
 
 **Play with Epic** signs in through the EOS SDK using the desktop client in the project-local `Config/UserEngine.ini`. The game attempts persistent authentication and loads the account-linked pilot save. **Play with Steam** checks the running Steam client for the SSW App ID configured as `steamAppId` in `launcher.json`. The game confirms the same Steam account. If either handoff fails, the game shows its existing sign-in screen. **Play Offline** launches with local-play settings. The Music button toggles the bundled SSW menu loop.

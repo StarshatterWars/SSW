@@ -26,9 +26,14 @@ bool FFreeFlightOwnedHullTest::RunTest(const FString&)
     FString Definition;
     if(!TestTrue(TEXT("Career entry definition readable"),FFileHelper::LoadFileToString(Definition,*(FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/01/Scenes/FreeFlight.def")))))return false;
     Mission Free(Mission::FreeFlightId);if(!TestTrue(TEXT("Career entry parses"),Free.ParseMission(TCHAR_TO_UTF8(*Definition))))return false;
-    FS_PlayerGameInfo Pilot;Pilot.Rank=PlayerCharacter::HullRankRequired(Miner.ShipType,Miner.ShipName);auto& Hull=Pilot.HangarShips.AddDefaulted_GetRef();Hull.HullId=FGuid::NewGuid();Hull.Design=TEXT("Prospector");Pilot.SelectedHangarHull=Hull.HullId;
+    FS_PlayerGameInfo Pilot;Pilot.Rank=PlayerCharacter::HullRankRequired(Miner.ShipType,Miner.ShipName);auto& Hull=Pilot.HangarShips.AddDefaulted_GetRef();Hull.HullId=FGuid::NewGuid();Hull.Design=TEXT("Prospector");Hull.Location=TEXT("Carrier / Archon");Pilot.SelectedHangarHull=Hull.HullId;
     TestTrue(TEXT("Owned starter selection applies"),FreeFlightHullRules::Apply(Free,Pilot));
     TestTrue(TEXT("Career entry uses selected mining shuttle"),Free.GetPlayer()->GetShipDesign()==ShipDesignRegistry::Find(FName(TEXT("Prospector"))));
+    Hull.Location=TEXT("Station / Solus / Remote Station");
+    FreeFlightHullRules::Apply(Free,Pilot);
+    TestTrue(TEXT("Remote stored ship is not teleported into the entry carrier"),Free.GetPlayer()->GetShipDesign()==ShipDesignRegistry::Find(FName(TEXT("Falcon"))));
+    TestEqual(TEXT("Remote stored ship keeps its original base"),Hull.Location,FString(TEXT("Station / Solus / Remote Station")));
+    Hull.Location=TEXT("Carrier / Archon");
     Hull.bLost=true;FreeFlightHullRules::Apply(Free,Pilot);
     TestTrue(TEXT("Lost selected hull falls back to Falcon"),Free.GetPlayer()->GetShipDesign()==ShipDesignRegistry::Find(FName(TEXT("Falcon"))));
     Mission Assigned(101);

@@ -42,6 +42,11 @@ inline FBox MissionTargetLocalBounds(AActor* Actor)
         {
             if (!IsValid(Mesh) || Seen.Contains(Mesh) || !Mesh->IsVisible() || Mesh->bHiddenInGame) continue;
             Seen.Add(Mesh);
+            // Interior cockpit assemblies are not part of an exterior hull's framing.
+            bool Interior = false;
+            for (const USceneComponent* Parent = Mesh; Parent; Parent = Parent->GetAttachParent())
+                if (Parent->GetName().Contains(TEXT("Cockpit"))) { Interior = true; break; }
+            if (Interior) continue;
             Bounds += Mesh->CalcBounds(Mesh->GetComponentTransform().GetRelativeTransform(Actor->GetActorTransform())).GetBox();
         }
     }
@@ -53,7 +58,7 @@ inline FBox MissionTargetLocalBounds(AActor* Actor)
 class SMissionTargetOverlay : public SLeafWidget
 {
 public:
-    SLATE_BEGIN_ARGS(SMissionTargetOverlay) : _TargetColor(FLinearColor::Yellow), _RangeKm(-1.0) {}
+    SLATE_BEGIN_ARGS(SMissionTargetOverlay) : _RangeKm(-1.0), _TargetColor(FLinearColor::Yellow) {}
         SLATE_ARGUMENT(TWeakObjectPtr<APlayerController>, Controller)
         SLATE_ATTRIBUTE(TWeakObjectPtr<AActor>, Target)
         SLATE_ATTRIBUTE(FText, TargetName)

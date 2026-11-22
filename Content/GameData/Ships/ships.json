@@ -19,7 +19,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 439610000,
+    "BaseCost": 43961000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -1524,7 +1524,8 @@
     "Squadron": [],
     "DeathSpiral": [],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 2614.386474609375
   },
   {
     "Row": "Archaelith",
@@ -1546,7 +1547,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 40000,
+    "BaseCost": 4000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -1768,7 +1769,8 @@
     "Squadron": [],
     "DeathSpiral": [],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 40.95454025268555
   },
   {
     "Row": "Asher",
@@ -1790,7 +1792,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 21986000,
+    "BaseCost": 2198600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -3883,7 +3885,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Asher.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1562.4212646484375
   },
   {
     "Row": "Avenger",
@@ -3905,7 +3908,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 970000,
+    "BaseCost": 97000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -5562,7 +5565,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Avenger.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 83.71751403808594
   },
   {
     "Row": "Baikal",
@@ -5584,7 +5588,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 10243000,
+    "BaseCost": 1024300,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -7053,7 +7057,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Baikal.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1125.1781005859375
   },
   {
     "Row": "Barracks",
@@ -7075,8 +7080,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
-    "ProductionRecipe": "None",
+    "BaseCost": 55600,
+    "ProductionRecipe": "Make_field_medical_supplies",
     "Mesh": "None",
     "PCS": 3,
     "ACS": 50000,
@@ -7230,7 +7235,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 141.60195922851562
   },
   {
     "Row": "Berents",
@@ -7252,7 +7258,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 10190000,
+    "BaseCost": 1019000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -9060,7 +9066,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Berents.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1101.8443603515625
   },
   {
     "Row": "BioDome",
@@ -9082,8 +9089,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 659000,
-    "ProductionRecipe": "None",
+    "BaseCost": 65900,
+    "ProductionRecipe": "Make_food",
     "Mesh": "None",
     "PCS": 0,
     "ACS": 0,
@@ -9196,7 +9203,8 @@
     "Squadron": [],
     "DeathSpiral": [],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 491.6572570800781
   },
   {
     "Row": "BioDome2",
@@ -9218,8 +9226,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 623000,
-    "ProductionRecipe": "None",
+    "BaseCost": 62300,
+    "ProductionRecipe": "Make_life_support_supplies",
     "Mesh": "None",
     "PCS": 0,
     "ACS": 0,
@@ -9332,7 +9340,8 @@
     "Squadron": [],
     "DeathSpiral": [],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 325.60430908203125
   },
   {
     "Row": "BioTrail",
@@ -9354,7 +9363,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 570000,
+    "BaseCost": 57000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 0,
@@ -9468,7 +9477,8 @@
     "Squadron": [],
     "DeathSpiral": [],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 434.92205810546875
   },
   {
     "Row": "Bldg00",
@@ -9490,8 +9500,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
-    "ProductionRecipe": "None",
+    "BaseCost": 55600,
+    "ProductionRecipe": "Make_sealed_documents",
     "Mesh": "None",
     "PCS": 3,
     "ACS": 50000,
@@ -9645,7 +9655,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 195.05628967285156
   },
   {
     "Row": "Bldg01",
@@ -9667,8 +9678,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
-    "ProductionRecipe": "None",
+    "BaseCost": 55600,
+    "ProductionRecipe": "Make_finished_electronics",
     "Mesh": "None",
     "PCS": 3,
     "ACS": 50000,
@@ -9822,7 +9833,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 277.4458312988281
   },
   {
     "Row": "Bldg02",
@@ -9844,7 +9856,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
+    "BaseCost": 55600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -9999,7 +10011,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 233.15695190429688
   },
   {
     "Row": "Bldg03",
@@ -10021,7 +10034,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
+    "BaseCost": 55600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -10176,14 +10189,15 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 245.7086944580078
   },
   {
     "Row": "Bldg04",
     "ShipName": "Bldg04",
     "DisplayName": "Office Tower",
     "Abrv": "BLDG",
-    "Description": "The Office Tower stands as a prominent administrative and commercial structure within the colony\uff92s urban district. Beyond its civilian fa\uffe7ade, its communications relays and data centers make it a strategically valuable objective during regional conflicts.",
+    "Description": "The Office Tower stands as a prominent administrative and commercial structure within the colonyﾒs urban district. Beyond its civilian fa￧ade, its communications relays and data centers make it a strategically valuable objective during regional conflicts.",
     "Model": "Bldg04-0",
     "ShipClass": "Building",
     "ShipEmpire": "All",
@@ -10198,8 +10212,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
-    "ProductionRecipe": "None",
+    "BaseCost": 55600,
+    "ProductionRecipe": "Make_avionics",
     "Mesh": "None",
     "PCS": 3,
     "ACS": 50000,
@@ -10353,7 +10367,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 362.01031494140625
   },
   {
     "Row": "Bldg05",
@@ -10375,7 +10390,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
+    "BaseCost": 55600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -10530,7 +10545,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 346.88104248046875
   },
   {
     "Row": "Broadsword",
@@ -10552,7 +10568,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 22414000,
+    "BaseCost": 2241400,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -12802,7 +12818,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Broadsword.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 2354.6884765625
   },
   {
     "Row": "CameraPod",
@@ -12824,7 +12841,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 40000,
+    "BaseCost": 4000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -13046,7 +13063,8 @@
     "Squadron": [],
     "DeathSpiral": [],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 110.85124969482422
   },
   {
     "Row": "IM3500",
@@ -13085,7 +13103,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 25594000,
+    "BaseCost": 2559400,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -14118,7 +14136,8 @@
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/CargoA.def"
       }
-    ]
+    ],
+    "CollisionRadius": 1033.2008056640625
   },
   {
     "Row": "IM4300",
@@ -14157,7 +14176,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 26208000,
+    "BaseCost": 2620800,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -15240,7 +15259,8 @@
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/CargoB.def"
       }
-    ]
+    ],
+    "CollisionRadius": 1356.1500244140625
   },
   {
     "Row": "IM2800",
@@ -15279,7 +15299,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 1469000,
+    "BaseCost": 146900,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -16366,7 +16386,8 @@
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/CargoC.def"
       }
-    ]
+    ],
+    "CollisionRadius": 917.54833984375
   },
   {
     "Row": "City00",
@@ -16388,8 +16409,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 601000,
-    "ProductionRecipe": "None",
+    "BaseCost": 60100,
+    "ProductionRecipe": "Make_food",
     "Mesh": "None",
     "PCS": 0,
     "ACS": 0,
@@ -16502,7 +16523,8 @@
     "Squadron": [],
     "DeathSpiral": [],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 521.6211547851562
   },
   {
     "Row": "City01",
@@ -16524,8 +16546,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 601000,
-    "ProductionRecipe": "None",
+    "BaseCost": 60100,
+    "ProductionRecipe": "Make_medical_supplies",
     "Mesh": "None",
     "PCS": 0,
     "ACS": 0,
@@ -16638,7 +16660,8 @@
     "Squadron": [],
     "DeathSpiral": [],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1587.1943359375
   },
   {
     "Row": "City02",
@@ -16660,8 +16683,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 601000,
-    "ProductionRecipe": "None",
+    "BaseCost": 60100,
+    "ProductionRecipe": "Make_finished_electronics",
     "Mesh": "None",
     "PCS": 0,
     "ACS": 0,
@@ -16774,14 +16797,15 @@
     "Squadron": [],
     "DeathSpiral": [],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1823.356689453125
   },
   {
     "Row": "City03",
     "ShipName": "City03",
     "DisplayName": "City Block",
     "Abrv": "BLDG",
-    "Description": "The City Block is a fully developed metropolitan sector featuring integrated habitation towers, transit corridors, and municipal support systems. Standardized across multiple colonies, it represents the core of civilian life and economic continuity, making its preservation\uff97or control\uff97a decisive factor in planetary campaigns.",
+    "Description": "The City Block is a fully developed metropolitan sector featuring integrated habitation towers, transit corridors, and municipal support systems. Standardized across multiple colonies, it represents the core of civilian life and economic continuity, making its preservationﾗor controlﾗa decisive factor in planetary campaigns.",
     "Model": "Vesta02",
     "ShipClass": "Building",
     "ShipEmpire": "All",
@@ -16796,8 +16820,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 659000,
-    "ProductionRecipe": "None",
+    "BaseCost": 65900,
+    "ProductionRecipe": "Make_life_support_supplies",
     "Mesh": "None",
     "PCS": 0,
     "ACS": 0,
@@ -16910,7 +16934,8 @@
     "Squadron": [],
     "DeathSpiral": [],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 2802.10693359375
   },
   {
     "Row": "Cobra",
@@ -16932,7 +16957,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 956000,
+    "BaseCost": 95600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -18647,14 +18672,15 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Cobra.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 76.69458770751953
   },
   {
     "Row": "Colony",
     "ShipName": "Colony",
     "DisplayName": "Colony Ship",
     "Abrv": "CLN",
-    "Description": "The Colony Ship is a massive interstellar ark designed to transport settlers, equipment, and prefabricated infrastructure to distant worlds. Though lightly armed and slow to maneuver, it carries the promise of expansion\uff97its survival often shaping the fate of entire frontier systems.",
+    "Description": "The Colony Ship is a massive interstellar ark designed to transport settlers, equipment, and prefabricated infrastructure to distant worlds. Though lightly armed and slow to maneuver, it carries the promise of expansionﾗits survival often shaping the fate of entire frontier systems.",
     "Model": "Colony",
     "ShipClass": "Station",
     "ShipEmpire": "Zolon",
@@ -18669,7 +18695,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 404700000,
+    "BaseCost": 40470000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -18917,7 +18943,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Colony.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 24528.234375
   },
   {
     "Row": "Cool00",
@@ -18939,7 +18966,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
+    "BaseCost": 55600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -19094,7 +19121,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 132.38241577148438
   },
   {
     "Row": "Courageous",
@@ -19116,7 +19144,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 50960000,
+    "BaseCost": 5096000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -21426,7 +21454,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Courageous.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1755.5076904296875
   },
   {
     "Row": "Courier",
@@ -21465,7 +21494,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 1463000,
+    "BaseCost": 146300,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -22667,7 +22696,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Courier.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 582.3246459960938
   },
   {
     "Row": "Cutlass",
@@ -22689,7 +22719,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 572000,
+    "BaseCost": 57200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -24051,7 +24081,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Cutlass.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 62.053565979003906
   },
   {
     "Row": "Devastator",
@@ -24073,7 +24104,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 52243000,
+    "BaseCost": 5224300,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -26607,7 +26638,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Devastator.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 2151.91015625
   },
   {
     "Row": "Dragon",
@@ -26629,7 +26661,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 461646000,
+    "BaseCost": 46164600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -28334,7 +28366,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Dragon.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 6299.3935546875
   },
   {
     "Row": "Dsrt00",
@@ -28356,7 +28389,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
+    "BaseCost": 55600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -28511,7 +28544,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 270.91961669921875
   },
   {
     "Row": "Dsrt01",
@@ -28533,7 +28567,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
+    "BaseCost": 55600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -28688,7 +28722,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 208.7168731689453
   },
   {
     "Row": "Dsrt02",
@@ -28710,7 +28745,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
+    "BaseCost": 55600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -28865,7 +28900,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 191.71279907226562
   },
   {
     "Row": "Dsrt03",
@@ -28887,7 +28923,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
+    "BaseCost": 55600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -29042,14 +29078,15 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 191.71279907226562
   },
   {
     "Row": "Dsrt04",
     "ShipName": "Dsrt04",
     "DisplayName": "Deserted",
     "Abrv": "BLDG",
-    "Description": "A Deserted Outpost is a remote installation abandoned after resource depletion or strategic withdrawal. Weathered by time and exposure, it stands as a silent relic of past expansion\uff97occasionally repurposed by scavengers, pirates, or covert operatives.",
+    "Description": "A Deserted Outpost is a remote installation abandoned after resource depletion or strategic withdrawal. Weathered by time and exposure, it stands as a silent relic of past expansionﾗoccasionally repurposed by scavengers, pirates, or covert operatives.",
     "Model": "Dsrt04",
     "ShipClass": "Building",
     "ShipEmpire": "All",
@@ -29064,7 +29101,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 647000,
+    "BaseCost": 64700,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -29219,7 +29256,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 556.3931274414062
   },
   {
     "Row": "Dsrt05",
@@ -29241,7 +29279,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 647000,
+    "BaseCost": 64700,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -29396,7 +29434,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 232.8229522705078
   },
   {
     "Row": "Eagle",
@@ -29418,7 +29457,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 577000,
+    "BaseCost": 57700,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -31065,7 +31104,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Eagle.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 68.75004577636719
   },
   {
     "Row": "Fact00",
@@ -31087,8 +31127,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
-    "ProductionRecipe": "None",
+    "BaseCost": 55600,
+    "ProductionRecipe": "Make_machine_parts",
     "Mesh": "None",
     "PCS": 3,
     "ACS": 50000,
@@ -31242,7 +31282,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 192.51426696777344
   },
   {
     "Row": "Fact01",
@@ -31264,8 +31305,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
-    "ProductionRecipe": "None",
+    "BaseCost": 55600,
+    "ProductionRecipe": "StructuralAlloy",
     "Mesh": "None",
     "PCS": 3,
     "ACS": 50000,
@@ -31419,7 +31460,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 304.835693359375
   },
   {
     "Row": "Fact02",
@@ -31441,8 +31483,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
-    "ProductionRecipe": "None",
+    "BaseCost": 55600,
+    "ProductionRecipe": "Make_avionics",
     "Mesh": "None",
     "PCS": 3,
     "ACS": 50000,
@@ -31596,7 +31638,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 329.4058837890625
   },
   {
     "Row": "Fact03",
@@ -31618,8 +31661,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
-    "ProductionRecipe": "None",
+    "BaseCost": 55600,
+    "ProductionRecipe": "Make_military_spare_parts",
     "Mesh": "None",
     "PCS": 3,
     "ACS": 50000,
@@ -31773,7 +31816,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 192.31399536132812
   },
   {
     "Row": "Fact04",
@@ -31795,8 +31839,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
-    "ProductionRecipe": "None",
+    "BaseCost": 55600,
+    "ProductionRecipe": "Make_engine_assembly",
     "Mesh": "None",
     "PCS": 3,
     "ACS": 50000,
@@ -31950,7 +31994,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 396.3779602050781
   },
   {
     "Row": "Falcon",
@@ -31972,7 +32017,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 574000,
+    "BaseCost": 57400,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -33518,7 +33563,393 @@
     "Squadron": [],
     "DeathSpiral": [],
     "Map": [],
-    "Skin": []
+    "Skin": [
+      {
+        "Name": "Naval Blue",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Falcon_D",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Falcon_Naval_Blue.MI_Falcon_Naval_Blue",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Arctic White",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Falcon_D",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Falcon_Arctic_White.MI_Falcon_Arctic_White",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Gunmetal",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Falcon_D",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Falcon_Gunmetal.MI_Falcon_Gunmetal",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Desert Sand",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Falcon_D",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Falcon_Desert_Sand.MI_Falcon_Desert_Sand",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Forest Green",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Falcon_D",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Falcon_Forest_Green.MI_Falcon_Forest_Green",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Rescue Orange",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Falcon_D",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Falcon_Rescue_Orange.MI_Falcon_Rescue_Orange",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Crimson",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Falcon_D",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Falcon_Crimson.MI_Falcon_Crimson",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Midnight",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Falcon_D",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Falcon_Midnight.MI_Falcon_Midnight",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      }
+    ],
+    "CollisionRadius": 61.27863311767578
   },
   {
     "Row": "Farcaster",
@@ -33540,7 +33971,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 262752000,
+    "BaseCost": 26275200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -34402,7 +34833,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Farcaster.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 4412.7109375
   },
   {
     "Row": "Marakan",
@@ -34424,7 +34856,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 262752000,
+    "BaseCost": 26275200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -35296,7 +35728,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Farcaster2.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 4376.4931640625
   },
   {
     "Row": "Airbase2",
@@ -35318,7 +35751,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 898890000,
+    "BaseCost": 89889000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -35875,7 +36308,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/TigerBayBase.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 3909.34814453125
   },
   {
     "Row": "Station3",
@@ -35897,7 +36331,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 414872000,
+    "BaseCost": 41487200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -36710,7 +37144,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Fortress.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 19244.396484375
   },
   {
     "Row": "Station1",
@@ -36732,7 +37167,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 414872000,
+    "BaseCost": 41487200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -37298,7 +37733,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/FreightXfer.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 7146.55322265625
   },
   {
     "Row": "AAA 1",
@@ -37320,7 +37756,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 156000,
+    "BaseCost": 15600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -37575,7 +38011,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Gnd_aaa1.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 359.0806884765625
   },
   {
     "Row": "AAA 2",
@@ -37597,7 +38034,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 156000,
+    "BaseCost": 15600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -37841,7 +38278,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Gnd_aaa2.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 359.0806884765625
   },
   {
     "Row": "SAM 1",
@@ -37863,7 +38301,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 156000,
+    "BaseCost": 15600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -38148,7 +38586,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Gnd_sam1.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 13.856406211853027
   },
   {
     "Row": "Goliath",
@@ -38170,7 +38609,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 459161000,
+    "BaseCost": 45916100,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -39565,7 +40004,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Goliath.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 3904.12646484375
   },
   {
     "Row": "Station2",
@@ -39587,7 +40027,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 421765000,
+    "BaseCost": 42176500,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -40211,7 +40651,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Harmony.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 10320.955078125
   },
   {
     "Row": "Hulk-Broadsword",
@@ -40233,7 +40674,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 59000,
+    "BaseCost": 5900,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -41327,7 +41768,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Hulk-Broadsword.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 2354.6884765625
   },
   {
     "Row": "Hulk-Dragon",
@@ -41349,7 +41791,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 66000,
+    "BaseCost": 6600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -42710,7 +43152,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Hulk-Dragon.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 6299.3935546875
   },
   {
     "Row": "Hulk-Imperial",
@@ -42732,7 +43175,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 64000,
+    "BaseCost": 6400,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -43826,7 +44269,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Hulk-Imperial.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 2841.767578125
   },
   {
     "Row": "Hulk-Tiger",
@@ -43848,7 +44292,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 55000,
+    "BaseCost": 5500,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -44700,7 +45144,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Hulk-Tiger.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1362.4334716796875
   },
   {
     "Row": "Hulk-Vendetta",
@@ -44722,7 +45167,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 65000,
+    "BaseCost": 6500,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -45917,7 +46362,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Hulk-Vendetta.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 3531.94384765625
   },
   {
     "Row": "Hulk-Volnaris",
@@ -45939,7 +46385,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 58000,
+    "BaseCost": 5800,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -46842,7 +47288,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Hulk-Volnaris.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 2242.404541015625
   },
   {
     "Row": "Imperial",
@@ -46864,7 +47311,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 54347000,
+    "BaseCost": 5434700,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -48302,7 +48749,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Imperial.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 2841.767578125
   },
   {
     "Row": "Intruder",
@@ -48324,7 +48772,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 587000,
+    "BaseCost": 58700,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -49842,7 +50290,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Intruder.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 59.71880340576172
   },
   {
     "Row": "Jackal",
@@ -49864,7 +50313,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 460000,
+    "BaseCost": 46000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -50859,7 +51308,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Jackal.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 121.50242614746094
   },
   {
     "Row": "Airbase1",
@@ -50881,7 +51331,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 898890000,
+    "BaseCost": 89889000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -51438,7 +51888,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/TelmeraStarport.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 3938.575439453125
   },
   {
     "Row": "Marauder",
@@ -51460,7 +51911,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 10177000,
+    "BaseCost": 1017700,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -52768,7 +53219,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Marauder.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1226.3055419921875
   },
   {
     "Row": "Blockade Mine",
@@ -52790,7 +53242,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 29000,
+    "BaseCost": 2900,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -53147,7 +53599,8 @@
         "SourceFile": "D:/SSW/Content/GameData/Ships/Mine1.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 144.04690551757812
   },
   {
     "Row": "Observatory",
@@ -53169,7 +53622,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 414872000,
+    "BaseCost": 41487200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -53581,7 +54034,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Observatory.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 6245.22216796875
   },
   {
     "Row": "Orion",
@@ -53603,7 +54057,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 461926000,
+    "BaseCost": 46192600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -55940,7 +56394,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Orion.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 5433.30029296875
   },
   {
     "Row": "Platform",
@@ -55962,7 +56417,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 578000,
+    "BaseCost": 57800,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -56117,7 +56572,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 301.931640625
   },
   {
     "Row": "QShip",
@@ -56148,7 +56604,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 25446000,
+    "BaseCost": 2544600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -57313,7 +57769,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/QShip.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1140.0450439453125
   },
   {
     "Row": "Raptor",
@@ -57335,7 +57792,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 587000,
+    "BaseCost": 58700,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -58984,7 +59441,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 69.76380157470703
   },
   {
     "Row": "Razor",
@@ -59006,7 +59464,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 574000,
+    "BaseCost": 57400,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -60717,7 +61175,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Razor.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 64.6415786743164
   },
   {
     "Row": "Reac01",
@@ -60739,7 +61198,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
+    "BaseCost": 55600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -60894,7 +61353,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 283.33795166015625
   },
   {
     "Row": "Relay1",
@@ -60916,7 +61376,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 155000,
+    "BaseCost": 15500,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -61065,7 +61525,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Relay1.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 670.2369995117188
   },
   {
     "Row": "Station5",
@@ -61087,7 +61548,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 414872000,
+    "BaseCost": 41487200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -62155,7 +62616,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/S5.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 15408.6435546875
   },
   {
     "Row": "Station6",
@@ -62177,7 +62639,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 414872000,
+    "BaseCost": 41487200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -62767,7 +63229,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/S6.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 11414.1240234375
   },
   {
     "Row": "Station7",
@@ -62789,7 +63252,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 418818000,
+    "BaseCost": 41881800,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -63585,7 +64048,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/S7.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 13288.0537109375
   },
   {
     "Row": "Saber",
@@ -63607,7 +64071,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 574000,
+    "BaseCost": 57400,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -64757,7 +65221,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Saber.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 63.9552116394043
   },
   {
     "Row": "Senate",
@@ -64779,8 +65244,8 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 693000,
-    "ProductionRecipe": "None",
+    "BaseCost": 69300,
+    "ProductionRecipe": "Make_sealed_documents",
     "Mesh": "None",
     "PCS": 0,
     "ACS": 0,
@@ -64893,7 +65358,8 @@
     "Squadron": [],
     "DeathSpiral": [],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 3341.287841796875
   },
   {
     "Row": "Spectre",
@@ -64915,7 +65381,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 22262000,
+    "BaseCost": 2226200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -67099,7 +67565,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Spectre.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1665.10205078125
   },
   {
     "Row": "Stormhawk",
@@ -67121,7 +67588,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 574000,
+    "BaseCost": 57400,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -68974,7 +69441,393 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Stormhawk.def"
       }
     ],
-    "Skin": []
+    "Skin": [
+      {
+        "Name": "Naval Blue",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Hull",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Stormhawk_Naval_Blue.MI_Stormhawk_Naval_Blue",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Arctic White",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Hull",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Stormhawk_Arctic_White.MI_Stormhawk_Arctic_White",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Gunmetal",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Hull",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Stormhawk_Gunmetal.MI_Stormhawk_Gunmetal",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Desert Sand",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Hull",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Stormhawk_Desert_Sand.MI_Stormhawk_Desert_Sand",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Forest Green",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Hull",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Stormhawk_Forest_Green.MI_Stormhawk_Forest_Green",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Rescue Orange",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Hull",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Stormhawk_Rescue_Orange.MI_Stormhawk_Rescue_Orange",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Crimson",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Hull",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Stormhawk_Crimson.MI_Stormhawk_Crimson",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Midnight",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Hull",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Stormhawk_Midnight.MI_Stormhawk_Midnight",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      }
+    ],
+    "CollisionRadius": 63.72167205810547
   },
   {
     "Row": "Airbase3",
@@ -68996,7 +69849,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 898890000,
+    "BaseCost": 89889000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -69553,7 +70406,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/TanisBase.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 3909.34814453125
   },
   {
     "Row": "Tank00",
@@ -69575,7 +70429,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 556000,
+    "BaseCost": 55600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -69730,7 +70584,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 152.7824249267578
   },
   {
     "Row": "IM1906",
@@ -69769,7 +70624,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 25594000,
+    "BaseCost": 2559400,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -70832,7 +71687,8 @@
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/TankerA.def"
       }
-    ]
+    ],
+    "CollisionRadius": 995.32421875
   },
   {
     "Row": "IM1912",
@@ -70871,7 +71727,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 25986000,
+    "BaseCost": 2598600,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -71934,7 +72790,8 @@
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/TankerB.def"
       }
-    ]
+    ],
+    "CollisionRadius": 1302.4420166015625
   },
   {
     "Row": "TargetDrone",
@@ -71956,7 +72813,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 38000,
+    "BaseCost": 3800,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -72246,7 +73103,8 @@
       }
     ],
     "Map": [],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 34.89962387084961
   },
   {
     "Row": "Thunderbolt",
@@ -72268,7 +73126,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 975000,
+    "BaseCost": 97500,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -74313,7 +75171,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Thunderbolt.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 74.77278137207031
   },
   {
     "Row": "Tiger",
@@ -74335,7 +75194,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 9982000,
+    "BaseCost": 998200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -76169,7 +77028,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Tiger.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1362.4334716796875
   },
   {
     "Row": "Transport",
@@ -76232,7 +77092,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 160
     },
-    "BaseCost": 1474000,
+    "BaseCost": 147400,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -77289,7 +78149,8 @@
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Transport.def"
       }
-    ]
+    ],
+    "CollisionRadius": 1114.2103271484375
   },
   {
     "Row": "Vendetta",
@@ -77311,7 +78172,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 55161000,
+    "BaseCost": 5516100,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -78850,7 +79711,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Vendetta.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 3531.94384765625
   },
   {
     "Row": "Viper",
@@ -78872,7 +79734,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 572000,
+    "BaseCost": 57200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -80355,7 +81217,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 53.92045974731445
   },
   {
     "Row": "Volnaris",
@@ -80377,7 +81240,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 22215000,
+    "BaseCost": 2221500,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -82436,7 +83299,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Volnaris.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 2242.404541015625
   },
   {
     "Row": "Wolf",
@@ -82458,7 +83322,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 22000000,
+    "BaseCost": 2200000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -84275,7 +85139,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Wolf.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1289.6988525390625
   },
   {
     "Row": "Zodiac",
@@ -84297,7 +85162,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 16
     },
-    "BaseCost": 459000,
+    "BaseCost": 45900,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -85339,8 +86204,393 @@
           }
         ],
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      },
+      {
+        "Name": "Naval Blue",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Naval_Blue.MI_Zodiac_Naval_Blue",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Arctic White",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Arctic_White.MI_Zodiac_Arctic_White",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Gunmetal",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Gunmetal.MI_Zodiac_Gunmetal",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Desert Sand",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Desert_Sand.MI_Zodiac_Desert_Sand",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Forest Green",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Forest_Green.MI_Zodiac_Forest_Green",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Rescue Orange",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Rescue_Orange.MI_Zodiac_Rescue_Orange",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Crimson",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Crimson.MI_Zodiac_Crimson",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Midnight",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Midnight.MI_Zodiac_Midnight",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
       }
-    ]
+    ],
+    "CollisionRadius": 173.98605346679688
   },
   {
     "Row": "ZZA",
@@ -85362,7 +86612,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 960000,
+    "BaseCost": 96000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -86021,7 +87271,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/ZZA.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 222.80899047851562
   },
   {
     "Row": "ZZCA",
@@ -86043,7 +87294,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 53571000,
+    "BaseCost": 5357100,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -87108,7 +88359,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/ZZCA.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 4717.79345703125
   },
   {
     "Row": "ZZCS",
@@ -87130,7 +88382,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 53571000,
+    "BaseCost": 5357100,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -88195,7 +89447,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/ZZCS.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 14770.1533203125
   },
   {
     "Row": "ZZDD",
@@ -88217,7 +89470,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 22967000,
+    "BaseCost": 2296700,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -89190,7 +90443,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/ZZDD.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 2462.956298828125
   },
   {
     "Row": "ZZF",
@@ -89212,7 +90466,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 578000,
+    "BaseCost": 57800,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -89871,7 +91125,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/ZZF.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 74.26966094970703
   },
   {
     "Row": "ZZFF",
@@ -89893,7 +91148,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 10702000,
+    "BaseCost": 1070200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -90958,7 +92213,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/ZZFF.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1657.46142578125
   },
   {
     "Row": "BlockadeMine",
@@ -90980,7 +92236,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 29000,
+    "BaseCost": 2900,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -91337,7 +92593,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Mine1.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 144.04690551757812
   },
   {
     "Row": "Station4",
@@ -91359,7 +92616,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 414872000,
+    "BaseCost": 41487200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -92291,7 +93548,8 @@
         "SourceFile": "D:/SSW/Content/GameData/Ships/S4.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 15086.0927734375
   },
   {
     "Row": "Asteroid Base",
@@ -92313,7 +93571,7 @@
       "UnloadTonnesPerSecond": 3,
       "PassengerBerths": 0
     },
-    "BaseCost": 414872000,
+    "BaseCost": 41487200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -92754,7 +94012,8 @@
         "SourceFile": "D:/SSW/Content/GameData/Ships/AsteroidBase.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 533.3076171875
   },
   {
     "Row": "Mining Station",
@@ -92776,7 +94035,7 @@
       "UnloadTonnesPerSecond": 3,
       "PassengerBerths": 0
     },
-    "BaseCost": 414872000,
+    "BaseCost": 41487200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -93091,7 +94350,8 @@
         "SourceFile": "D:/SSW/Content/GameData/Ships/MiningStation.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 134.63829040527344
   },
   {
     "Row": "Processing Facility",
@@ -93113,7 +94373,7 @@
       "UnloadTonnesPerSecond": 6,
       "PassengerBerths": 0
     },
-    "BaseCost": 414872000,
+    "BaseCost": 41487200,
     "ProductionRecipe": "JanusConcentrate",
     "Mesh": "None",
     "PCS": 3,
@@ -93679,7 +94939,8 @@
         "SourceFile": "D:/SSW/Content/GameData/Ships/ProcessingFacility.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1429.3106689453125
   },
   {
     "Row": "Prospector",
@@ -93701,7 +94962,7 @@
       "UnloadTonnesPerSecond": 1,
       "PassengerBerths": 0
     },
-    "BaseCost": 463000,
+    "BaseCost": 46300,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -94677,8 +95938,393 @@
           }
         ],
         "SourceFile": "D:/SSW/Content/GameData/Ships/Prospector.def"
+      },
+      {
+        "Name": "Naval Blue",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Naval_Blue.MI_Zodiac_Naval_Blue",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Arctic White",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Arctic_White.MI_Zodiac_Arctic_White",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Gunmetal",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Gunmetal.MI_Zodiac_Gunmetal",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Desert Sand",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Desert_Sand.MI_Zodiac_Desert_Sand",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Forest Green",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Forest_Green.MI_Zodiac_Forest_Green",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Rescue Orange",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Rescue_Orange.MI_Zodiac_Rescue_Orange",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Crimson",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Crimson.MI_Zodiac_Crimson",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Midnight",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Midnight.MI_Zodiac_Midnight",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
       }
-    ]
+    ],
+    "CollisionRadius": 173.98605346679688
   },
   {
     "Row": "Rockhopper",
@@ -94700,7 +96346,7 @@
       "UnloadTonnesPerSecond": 3,
       "PassengerBerths": 0
     },
-    "BaseCost": 25594000,
+    "BaseCost": 2559400,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -95812,7 +97458,8 @@
         ],
         "SourceFile": "D:/SSW/Content/GameData/Ships/Rockhopper.def"
       }
-    ]
+    ],
+    "CollisionRadius": 1033.2008056640625
   },
   {
     "Row": "FoothillBase",
@@ -95834,7 +97481,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 898890000,
+    "BaseCost": 89889000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -96391,14 +98038,15 @@
         "SourceFile": "D:/SSW/Content/GameData/Ships/FoothillBase.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 3909.34814453125
   },
   {
     "Row": "JanekStation",
-    "ShipName": "Airbase1",
+    "ShipName": "JanekStation",
     "DisplayName": "Janek Station",
     "Abrv": "SB",
-    "Description": "Janek Station is a Terellian frontier starbase serving as a forward staging ground for fighter wings and patrol flotillas. Its expansive hangar bays and hardened defensive grid make it a critical anchor point along the Alliance\uff92s outer perimeter.",
+    "Description": "Janek Station is a Terellian frontier starbase serving as a forward staging ground for fighter wings and patrol flotillas. Its expansive hangar bays and hardened defensive grid make it a critical anchor point along the Allianceﾒs outer perimeter.",
     "Model": "Base1",
     "ShipClass": "STARBASE",
     "ShipEmpire": "Terellian",
@@ -96413,7 +98061,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 898890000,
+    "BaseCost": 89889000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -96970,7 +98618,8 @@
         "SourceFile": "D:/SSW/Content/GameData/Ships/JanekStation.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 3938.575439453125
   },
   {
     "Row": "RadixBase",
@@ -96992,7 +98641,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 898890000,
+    "BaseCost": 89889000,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -97549,7 +99198,8 @@
         "SourceFile": "D:/SSW/Content/GameData/Ships/RadixBase.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 3909.34814453125
   },
   {
     "Row": "Shipyard",
@@ -97571,7 +99221,7 @@
       "UnloadTonnesPerSecond": 6,
       "PassengerBerths": 0
     },
-    "BaseCost": 1800000000,
+    "BaseCost": 180000000,
     "ProductionRecipe": "Build_Falcon",
     "Mesh": "None",
     "PCS": 3,
@@ -98137,7 +99787,8 @@
         "SourceFile": "D:/SSW/Content/GameData/Ships/ProcessingFacility.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 1429.3106689453125
   },
   {
     "Row": "Dantari Raptor",
@@ -98159,7 +99810,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 587000,
+    "BaseCost": 58700,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -99808,7 +101459,8 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Raptor.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 69.76380157470703
   },
   {
     "Row": "Dantari Viper",
@@ -99830,7 +101482,7 @@
       "UnloadTonnesPerSecond": 0,
       "PassengerBerths": 0
     },
-    "BaseCost": 572000,
+    "BaseCost": 57200,
     "ProductionRecipe": "None",
     "Mesh": "None",
     "PCS": 3,
@@ -101313,6 +102965,1365 @@
         "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Viper.def"
       }
     ],
-    "Skin": []
+    "Skin": [],
+    "CollisionRadius": 53.92045974731445
+  },
+  {
+    "Row": "CrewShuttle",
+    "ShipName": "CrewShuttle",
+    "DisplayName": "Zodiac Crew Shuttle",
+    "Abrv": "CST",
+    "Description": "A quantum-equipped Zodiac crew transport for personnel transfers between carriers, orbital facilities and surface stations. Uses the Zodiac hull as a temporary visual until a dedicated crew-shuttle model is installed.",
+    "Model": "Zodiac",
+    "ShipClass": "LCA",
+    "ShipEmpire": "Terellian",
+    "Category": "Fighter",
+    "CockpitName": "FalconPit",
+    "BeautyName": "",
+    "HudIconName": "ZodiacHud",
+    "CargoManifest": [],
+    "CargoCapacity": {
+      "Tonnes": 20,
+      "LoadTonnesPerSecond": 0,
+      "UnloadTonnesPerSecond": 0,
+      "PassengerBerths": 12
+    },
+    "BaseCost": 45000,
+    "ProductionRecipe": "None",
+    "Mesh": "None",
+    "PCS": 3,
+    "ACS": 1,
+    "Detet": 250000,
+    "RepairTeams": 2,
+    "ShipType": 8,
+    "Hidden": false,
+    "Scale": 0.44999998807907104,
+    "ExplosionScale": 0,
+    "Mass": 87,
+    "Vlimit": 250,
+    "Agility": 25,
+    "AirFactor": 0.10000000149011612,
+    "RollRate": 350,
+    "PitchRate": 0,
+    "YawRate": 0,
+    "TurnBank": 0.39269909262657166,
+    "CockpitScale": 0.02,
+    "AutoRoll": 0,
+    "CL": 0.004999999888241291,
+    "CD": 9.999999747378752e-05,
+    "Stall": 0.4000000059604645,
+    "Drag": 2.499999936844688e-05,
+    "ArcadeDrag": 1,
+    "RollDrag": 5,
+    "PitchDrag": 5,
+    "YawDrag": 5,
+    "PrepTime": 30,
+    "AvoidTime": 0,
+    "AvoidFighter": 7,
+    "AvoidStrike": 0,
+    "AvoidTarget": 0,
+    "CommitRange": 0,
+    "SplashRadius": -1,
+    "Scuttle": 5000,
+    "RepairSpeed": 1,
+    "Integrity": 5250,
+    "Secret": false,
+    "RepairAuto": false,
+    "RepairScreen": false,
+    "WepScreen": false,
+    "Degrees": false,
+    "EFactor": [
+      0.10000000149011612,
+      0.30000001192092896,
+      1
+    ],
+    "Trans": {
+      "X": 2800,
+      "Y": 2800,
+      "Z": 2800
+    },
+    "Offset": [
+      {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      },
+      {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      },
+      {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      },
+      {
+        "X": 0,
+        "Y": 0,
+        "Z": 0
+      }
+    ],
+    "Spin": {
+      "X": 0,
+      "Y": 0,
+      "Z": 0
+    },
+    "BeautyCam": {
+      "X": 0,
+      "Y": 0,
+      "Z": 0
+    },
+    "ChaseVec": {
+      "X": 0,
+      "Y": -674.9999821186066,
+      "Z": 67.49999821186066
+    },
+    "BridgeVec": {
+      "X": 0,
+      "Y": 65.2499982714653,
+      "Z": 3.5999999046325684
+    },
+    "Power": [
+      {
+        "DesignName": "",
+        "PName": "Fusion Reactor",
+        "PAbrv": "FUSION",
+        "Type": "FUSION",
+        "SType": 0,
+        "EType": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "ExplosionType": 0,
+        "Output": 80,
+        "Fuel": 0,
+        "Size": 32,
+        "Hull": 0.5,
+        "Loc": {
+          "X": 0,
+          "Y": 0,
+          "Z": 0
+        }
+      }
+    ],
+    "Drive": [
+      {
+        "Name": "Plasma Drive",
+        "Abbrev": "DRIVE",
+        "DesignName": "Plasma Drive",
+        "Type": "PLASMA",
+        "Thrust": 45,
+        "Augmenter": 0,
+        "DriveScale": 0.75,
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": -80
+        },
+        "Size": 16,
+        "HullFactor": 0.5,
+        "ExplosionType": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "bShowTrail": true,
+        "Ports": [
+          {
+            "PointName": "Drive_0",
+            "SocketName": "",
+            "Location": {
+              "X": -143.0999962091446,
+              "Y": -8.999999761581421,
+              "Z": 4.4999998807907104
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "FlareScale": 0.75,
+            "TrailScale": 0.75,
+            "bShowFlare": true,
+            "bShowTrail": true,
+            "EngineColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "CurrentIntensity": 0
+          },
+          {
+            "PointName": "Drive_1",
+            "SocketName": "",
+            "Location": {
+              "X": -143.0999962091446,
+              "Y": 8.999999761581421,
+              "Z": 4.4999998807907104
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "FlareScale": 0.75,
+            "TrailScale": 0.75,
+            "bShowFlare": true,
+            "bShowTrail": true,
+            "EngineColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "CurrentIntensity": 0
+          }
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      }
+    ],
+    "Quantum": [
+      {
+        "DesignName": "Quantum Drive",
+        "Abbrev": "",
+        "Type": "QUANTUM",
+        "Capacity": 25000,
+        "Consumption": 50,
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": -120
+        },
+        "Size": 24,
+        "HullFactor": 0.5,
+        "Countdown": 5,
+        "SourceIndex": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "CrewShuttle.def"
+      }
+    ],
+    "Farcaster": [],
+    "Thruster": [
+      {
+        "Type": "PLASMA",
+        "Thrust": 100,
+        "ThrusterScale": 0.5,
+        "DesignName": "Thruster",
+        "Location": {
+          "X": 0,
+          "Y": -20,
+          "Z": 128
+        },
+        "Size": 24,
+        "HullFactor": 0.30000001192092896,
+        "Ports": [
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port",
+            "SocketName": "None",
+            "Location": {
+              "X": 3.5999999046325684,
+              "Y": -19.799999475479126,
+              "Z": -12.59999966621399
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 0,
+            "PortScale": 0.5,
+            "FlareScale": 0.5,
+            "TrailScale": 0.5,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port",
+            "SocketName": "None",
+            "Location": {
+              "X": 3.5999999046325684,
+              "Y": 19.799999475479126,
+              "Z": -12.59999966621399
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 0,
+            "PortScale": 0.5,
+            "FlareScale": 0.5,
+            "TrailScale": 0.5,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port",
+            "SocketName": "None",
+            "Location": {
+              "X": -74.24999803304672,
+              "Y": -19.799999475479126,
+              "Z": -12.59999966621399
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 0,
+            "PortScale": 0.5,
+            "FlareScale": 0.5,
+            "TrailScale": 0.5,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "BOTTOM",
+            "PointName": "port",
+            "SocketName": "None",
+            "Location": {
+              "X": -74.24999803304672,
+              "Y": 19.799999475479126,
+              "Z": -12.59999966621399
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 0,
+            "PortScale": 0.5,
+            "FlareScale": 0.5,
+            "TrailScale": 0.5,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "FORE",
+            "PointName": "port_fore",
+            "SocketName": "None",
+            "Location": {
+              "X": 3.5999999046325684,
+              "Y": -86.84999769926071,
+              "Z": -4.9499998688697815
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 68,
+            "PortScale": 0.5,
+            "FlareScale": 0.5,
+            "TrailScale": 0.5,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "FORE",
+            "PointName": "port_fore",
+            "SocketName": "None",
+            "Location": {
+              "X": 3.5999999046325684,
+              "Y": -85.94999772310257,
+              "Z": -12.149999678134918
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 68,
+            "PortScale": 0.5,
+            "FlareScale": 0.5,
+            "TrailScale": 0.5,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "FORE",
+            "PointName": "port_fore",
+            "SocketName": "None",
+            "Location": {
+              "X": 3.5999999046325684,
+              "Y": 85.94999772310257,
+              "Z": -12.149999678134918
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 132,
+            "PortScale": 0.5,
+            "FlareScale": 0.5,
+            "TrailScale": 0.5,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "FORE",
+            "PointName": "port_fore",
+            "SocketName": "None",
+            "Location": {
+              "X": 3.5999999046325684,
+              "Y": 86.84999769926071,
+              "Z": -4.9499998688697815
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 132,
+            "PortScale": 0.5,
+            "FlareScale": 0.5,
+            "TrailScale": 0.5,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "AFT",
+            "PointName": "port_aft",
+            "SocketName": "None",
+            "Location": {
+              "X": -71.5499981045723,
+              "Y": -86.84999769926071,
+              "Z": -4.9499998688697815
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 136,
+            "PortScale": 0.5,
+            "FlareScale": 0.5,
+            "TrailScale": 0.5,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "AFT",
+            "PointName": "port_aft",
+            "SocketName": "None",
+            "Location": {
+              "X": -71.5499981045723,
+              "Y": -85.94999772310257,
+              "Z": -12.149999678134918
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 136,
+            "PortScale": 0.5,
+            "FlareScale": 0.5,
+            "TrailScale": 0.5,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "AFT",
+            "PointName": "port_aft",
+            "SocketName": "None",
+            "Location": {
+              "X": -71.5499981045723,
+              "Y": 85.94999772310257,
+              "Z": -12.149999678134918
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 72,
+            "PortScale": 0.5,
+            "FlareScale": 0.5,
+            "TrailScale": 0.5,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          },
+          {
+            "Direction": "AFT",
+            "PointName": "port_aft",
+            "SocketName": "None",
+            "Location": {
+              "X": -71.5499981045723,
+              "Y": 86.84999769926071,
+              "Z": -4.9499998688697815
+            },
+            "Rotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Fire": 72,
+            "PortScale": 0.5,
+            "FlareScale": 0.5,
+            "TrailScale": 0.5,
+            "IntensityMultiplier": 1,
+            "AudioMultiplier": 1,
+            "ThrusterColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "bShowFlare": true,
+            "bShowTrail": true
+          }
+        ],
+        "SourceIndex": 0,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      }
+    ],
+    "Navlight": [
+      {
+        "Name": "Navigation Lights",
+        "Abbrev": "NAV",
+        "DesignName": "Navigation Lights",
+        "Scale": 1,
+        "Period": 0.5,
+        "Beacons": [
+          {
+            "Name": "Port",
+            "Location": {
+              "X": 5.3999998569488525,
+              "Y": -85.4999977350235,
+              "Z": -0.8999999761581421
+            },
+            "LocalRotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Type": "RED",
+            "Color": {
+              "R": 1,
+              "G": 0,
+              "B": 0,
+              "A": 1
+            },
+            "Intensity": 1250,
+            "Radius": 100,
+            "Mode": "Blink",
+            "BlinkInterval": 0.5,
+            "PhaseOffset": 0
+          },
+          {
+            "Name": "Starboard",
+            "Location": {
+              "X": 5.3999998569488525,
+              "Y": 85.4999977350235,
+              "Z": -0.8999999761581421
+            },
+            "LocalRotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Type": "GREEN",
+            "Color": {
+              "R": 0,
+              "G": 1,
+              "B": 0,
+              "A": 1
+            },
+            "Intensity": 1250,
+            "Radius": 100,
+            "Mode": "Blink",
+            "BlinkInterval": 0.5,
+            "PhaseOffset": 0.25
+          },
+          {
+            "Name": "Aft",
+            "Location": {
+              "X": -136.7999963760376,
+              "Y": 0,
+              "Z": 6.749999821186066
+            },
+            "LocalRotation": {
+              "Pitch": 0,
+              "Yaw": 0,
+              "Roll": 0
+            },
+            "Type": "WHITE",
+            "Color": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "Intensity": 1250,
+            "Radius": 100,
+            "Mode": "Blink",
+            "BlinkInterval": 0.5,
+            "PhaseOffset": 0
+          }
+        ],
+        "SourceFile": ""
+      }
+    ],
+    "FlightDeck": [],
+    "LandingGear": [
+      {
+        "Name": "Undercarriage",
+        "Abbrev": "Gear",
+        "DesignName": "",
+        "GearItems": [
+          {
+            "ModelName": "ZGearRight",
+            "Start": {
+              "X": 44,
+              "Y": -25,
+              "Z": -10
+            },
+            "End": {
+              "X": 74,
+              "Y": -60,
+              "Z": -10
+            }
+          },
+          {
+            "ModelName": "ZGearLeft",
+            "Start": {
+              "X": -44,
+              "Y": -25,
+              "Z": -10
+            },
+            "End": {
+              "X": -74,
+              "Y": -60,
+              "Z": -10
+            }
+          },
+          {
+            "ModelName": "ZGearRight",
+            "Start": {
+              "X": 44,
+              "Y": -25,
+              "Z": -128
+            },
+            "End": {
+              "X": 74,
+              "Y": -60,
+              "Z": -128
+            }
+          },
+          {
+            "ModelName": "ZGearLeft",
+            "Start": {
+              "X": -44,
+              "Y": -25,
+              "Z": -128
+            },
+            "End": {
+              "X": -74,
+              "Y": -60,
+              "Z": -128
+            }
+          }
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      }
+    ],
+    "Weapon": [],
+    "Hardpoint": [],
+    "Loadout": [],
+    "Sensor": [
+      {
+        "DesignName": "",
+        "Ranges": [
+          25000,
+          50000,
+          75000
+        ],
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": 100
+        },
+        "Size": 32,
+        "HullFactor": 0.10000000149011612,
+        "Emcon1": -1,
+        "Emcon2": -1,
+        "Emcon3": -1,
+        "SourceIndex": 0,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      }
+    ],
+    "NavSys": [
+      {
+        "DesignName": "",
+        "Location": {
+          "X": 0,
+          "Y": 0,
+          "Z": 60
+        },
+        "Size": 16,
+        "HullFactor": 0.10000000149011612,
+        "SourceIndex": 0,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      }
+    ],
+    "Computer": [
+      {
+        "Name": "Avionics Package",
+        "Abbrev": "HUD",
+        "DesignName": "Avionics",
+        "Type": "AVIONICS",
+        "Location": {
+          "X": 20,
+          "Y": 0,
+          "Z": 80
+        },
+        "Size": 16,
+        "HullFactor": 0.5,
+        "SourceIndex": 0,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      },
+      {
+        "Name": "Flight Computer",
+        "Abbrev": "Flight",
+        "DesignName": "Flight",
+        "Type": "FLIGHT",
+        "Location": {
+          "X": -20,
+          "Y": 0,
+          "Z": 80
+        },
+        "Size": 16,
+        "HullFactor": 0.20000000298023224,
+        "SourceIndex": 0,
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      }
+    ],
+    "Shield": [],
+    "Squadron": [],
+    "DeathSpiral": [
+      {
+        "Time": 1.2000000476837158,
+        "Explosions": [
+          {
+            "Time": 0.5,
+            "Type": "SMALL_EXPLOSION",
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": -28
+            },
+            "bFinal": false,
+            "SourceFile": ""
+          },
+          {
+            "Time": 1,
+            "Type": "SMALL_EXPLOSION",
+            "Location": {
+              "X": -10,
+              "Y": 10,
+              "Z": 30
+            },
+            "bFinal": false,
+            "SourceFile": ""
+          },
+          {
+            "Time": 0,
+            "Type": "LARGE_EXPLOSION",
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": -12
+            },
+            "bFinal": true,
+            "SourceFile": ""
+          },
+          {
+            "Time": 0,
+            "Type": "LARGE_BURST",
+            "Location": {
+              "X": 0,
+              "Y": 0,
+              "Z": -12
+            },
+            "bFinal": true,
+            "SourceFile": ""
+          }
+        ],
+        "Debris": [],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      }
+    ],
+    "Map": [
+      {
+        "SpriteName": "z_map0",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      },
+      {
+        "SpriteName": "z_map1",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      },
+      {
+        "SpriteName": "z_map2",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      },
+      {
+        "SpriteName": "z_map3",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      },
+      {
+        "SpriteName": "z_map4",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      },
+      {
+        "SpriteName": "z_map5",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      },
+      {
+        "SpriteName": "z_map6",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      },
+      {
+        "SpriteName": "z_map7",
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      }
+    ],
+    "Skin": [
+      {
+        "Name": "Green",
+        "Cells": [
+          {
+            "CellIndex": -1,
+            "MaterialName": "Main",
+            "TextureName": "Zodiac_D2",
+            "AuxTextureName": "",
+            "SpecularTextureName": "Zodiac_S",
+            "BumpTextureName": "Zodiac_B",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 0.21223075687885284,
+              "G": 0.21223075687885284,
+              "B": 0.21223075687885284,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 0.6038273572921753,
+              "G": 0.6038273572921753,
+              "B": 0.6038273572921753,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 0,
+              "G": 0,
+              "B": 0,
+              "A": 1
+            },
+            "SpecularPower": 20,
+            "BumpScale": 2,
+            "bHasAmbientColor": true,
+            "bHasDiffuseColor": true,
+            "bHasSpecularColor": true,
+            "bHasEmissiveColor": true,
+            "bHasSpecularPower": true,
+            "bHasBumpScale": true,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/MI_Zodiac_Green_Main.MI_Zodiac_Green_Main"
+          }
+        ],
+        "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Zodiac.def"
+      },
+      {
+        "Name": "Naval Blue",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Naval_Blue.MI_Zodiac_Naval_Blue",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Arctic White",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Arctic_White.MI_Zodiac_Arctic_White",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Gunmetal",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Gunmetal.MI_Zodiac_Gunmetal",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Desert Sand",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Desert_Sand.MI_Zodiac_Desert_Sand",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Forest Green",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Forest_Green.MI_Zodiac_Forest_Green",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Rescue Orange",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Rescue_Orange.MI_Zodiac_Rescue_Orange",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Crimson",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Crimson.MI_Zodiac_Crimson",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      },
+      {
+        "Name": "Midnight",
+        "SourceFile": "skins.json",
+        "Cells": [
+          {
+            "MaterialName": "Main_003",
+            "CellIndex": -1,
+            "UnrealMaterial": "/Game/Materials/Ships/Skins/Starter/MI_Zodiac_Midnight.MI_Zodiac_Midnight",
+            "TextureName": "",
+            "AuxTextureName": "",
+            "SpecularTextureName": "",
+            "BumpTextureName": "",
+            "EmissiveTextureName": "",
+            "AmbientColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "DiffuseColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "EmissiveColor": {
+              "R": 1,
+              "G": 1,
+              "B": 1,
+              "A": 1
+            },
+            "SpecularPower": 1,
+            "BumpScale": 1,
+            "bHasAmbientColor": false,
+            "bHasDiffuseColor": false,
+            "bHasSpecularColor": false,
+            "bHasEmissiveColor": false,
+            "bHasSpecularPower": false,
+            "bHasBumpScale": false
+          }
+        ]
+      }
+    ],
+    "CollisionRadius": 173.98605346679688
   }
 ]

@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ShipVisualCatalog.h"
 #include "CampaignSceneDlg.h"
 #include "Campaign.h"
 #include "Mission.h"
@@ -40,6 +41,7 @@ bool FCampaignScenePresentationTest::RunTest(const FString& Parameters)
     FS_MissionEvent Hold;Hold.EventId=4;Hold.EventType=MISSIONEVENT_TYPE::HOLD;Hold.EventTime=20;
     Hold.EventNParams=1;Hold.EventParam[0]=99;Hold.TriggerNParams=1;Hold.TriggerParam[0]=3;
     Hold.TriggerShip=TEXT("Proteus");Hold.EventDelay=6;Model.Event={Hold};
+    AddExpectedError(TEXT("Mission error: no elements"),EAutomationExpectedErrorFlags::Contains,1);
     Mission Converted;Converted.LoadFromCampaignMissionData(Model);
     if(TestEqual(TEXT("Cinematic runtime event retained"),Converted.GetEvents().size(),1))
     {
@@ -94,8 +96,8 @@ bool FCampaignScenePresentationTest::RunTest(const FString& Parameters)
                 Names.Add(Element.Design);
                 const FShipDesign* Design=Designs->FindRow<FShipDesign>(FName(*Element.Design),TEXT("Scene presentation audit"),false);
                 FString ModelName=Design&&!Design->Model.IsEmpty()?Design->Model:Element.Design;
-                if(!FPackageName::DoesPackageExist(FString::Printf(TEXT("/Game/Models/%s/BP_%s"),*ModelName,*ModelName)))
-                {++ModelsMissing;AddWarning(TEXT("Missing cinematic model blueprint: ")+ModelName+TEXT(" in ")+Mission.Scene);}
+                if(!FPackageName::DoesPackageExist(FPackageName::ObjectPathToPackageName(ShipVisualCatalog::CanonicalClassPath(Element.Design,ModelName))))
+                {++ModelsMissing;AddError(TEXT("Missing cinematic model blueprint: ")+ModelName+TEXT(" in ")+Mission.Scene);}
             }
             MissingModels+=ModelsMissing;
             Lines.Add(FString::Printf(TEXT("%d,%s,%d,%.2f,%d,%d,%d"),Row.Index+1,*Mission.Scene,Mission.Event.Num(),Scene->ResolveSceneDurationSeconds(),Panels,Voices,ModelsMissing));

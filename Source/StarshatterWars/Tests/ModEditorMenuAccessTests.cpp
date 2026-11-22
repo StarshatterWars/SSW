@@ -26,7 +26,7 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FModEditorPathPolicyTest,"Starshatter.UI.ModEdi
 bool FModEditorPathPolicyTest::RunTest(const FString&)
 {
     const FString Root=SSWMissionMods::Directory();
-    TestTrue(TEXT("User mod mission can be edited"),UModEditorDlg::IsEditableMissionPath(Root/TEXT("Example/Missions/Exercise.def")));
+    TestFalse(TEXT("Legacy DEF requires explicit conversion before editing"),UModEditorDlg::IsEditableMissionPath(Root/TEXT("Example/Missions/Exercise.def")));
     TestFalse(TEXT("Authored game mission is protected"),UModEditorDlg::IsEditableMissionPath(FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/01/Scenes/T1.def")));
     TestFalse(TEXT("Sibling directory cannot impersonate Mods"),UModEditorDlg::IsEditableMissionPath(Root+TEXT("_other/Exercise.def")));
     TestFalse(TEXT("Parent traversal cannot escape user Mods"),UModEditorDlg::IsEditableMissionPath(Root/TEXT("../Protected.def")));

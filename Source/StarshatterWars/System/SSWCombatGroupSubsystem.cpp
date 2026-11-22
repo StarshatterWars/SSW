@@ -233,38 +233,11 @@ void USSWCombatGroupSubsystem::InitializeCombatRoster()
         return;
     }
 
-    const FString JsonDirectory=FPaths::ProjectContentDir()/TEXT("GameData/Campaigns/OOB");
-    if(FPaths::DirectoryExists(JsonDirectory))
-    {
-        FString Error;if(!OOBJsonCatalog::ImportDirectory(*CombatGroupDataTable,JsonDirectory,Error))UE_LOG(LogTemp,Error,TEXT("[OOBJson] %s"),*Error);
-        return;
-    }
-    CombatGroupDataTable->EmptyTable();
+    const FString JsonDirectory = FPaths::ProjectContentDir() / TEXT("GameData/Campaigns/OOB");
+    FString Error;
+    if (!OOBJsonCatalog::ImportDirectory(*CombatGroupDataTable, JsonDirectory, Error))
+        UE_LOG(LogTemp, Error, TEXT("[OOBJson] %s"), *Error);
 
-    ProjectPath = FPaths::ProjectContentDir();
-    ProjectPath /= TEXT("GameData/Campaigns/");
-
-    TArray<FString> Files;
-    Files.Empty();
-
-    const FString Wildcard = ProjectPath / TEXT("*.def");
-    IFileManager::Get().FindFiles(Files, *Wildcard, true, false);
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[LoadCombatRoster] Found %d .def files in %s"),
-        Files.Num(),
-        *ProjectPath);
-
-    for (const FString& File : Files)
-    {
-        const FString FullPath = ProjectPath / File;
-        const FTCHARToUTF8 Utf8Path(*FullPath);
-        LoadCombatRoster(Utf8Path.Get(), -1);
-    }
-
-    UE_LOG(LogTemp, Warning,
-        TEXT("[LoadCombatRoster] DT row count after ingest: %d"),
-        CombatGroupDataTable ? CombatGroupDataTable->GetRowNames().Num() : 0);
 }
 
 void USSWCombatGroupSubsystem::LoadCombatRoster(const char* InFilename, int32 Team)
@@ -628,7 +601,7 @@ void USSWCombatGroupSubsystem::LoadCombatRoster(const char* InFilename, int32 Te
         TermPtr = nullptr;
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[LoadCombatRoster] SUMMARY file=%s Parsed=%d Added=%d SkippedInvalid=%d SkippedFilter=%d Overwritten=%d"),
         *OobFilePath,
         ParsedGroupCount,

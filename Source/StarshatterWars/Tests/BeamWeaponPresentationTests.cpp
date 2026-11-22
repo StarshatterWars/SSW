@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
@@ -17,7 +18,8 @@ bool FBeamWeaponPresentationTest::RunTest(const FString&)
  const auto Before=WeaponDesignRegistry::GetAll();ON_SCOPE_EXIT{WeaponDesignRegistry::Clear();for(const auto& P:Before)WeaponDesignRegistry::RegisterDesign(P.Key,P.Value);};
  auto* Importer=NewObject<UStarshatterWeaponDesignSubsystem>(NewObject<UGameInstance>());const FString File=FPaths::ProjectContentDir()/TEXT("GameData/Weapons/Wep.def");const auto Ansi=StringCast<ANSICHAR>(*File);Importer->LoadWeaponDesign(Ansi.Get());
  const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
- auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);if(!TestNotNull(TEXT("World"),World))return false;ON_SCOPE_EXIT{World->DestroyWorld(false);};
+ auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);if(!TestNotNull(TEXT("World"),World))return false;ON_SCOPE_EXIT{World->DestroyWorld(false);};
  const TCHAR* Names[]={TEXT("XRay Laser"),TEXT("Gamma Laser"),TEXT("Graser Turret"),TEXT("Zolon Laser")};
  const double Damages[]={3,4,6,30};const double Lives[]={1.5,3,3,3};const double Charges[]={1000,1500,1500,1500};
  for(int I=0;I<4;++I){
@@ -46,8 +48,14 @@ bool FBeamWeaponPresentationTest::RunTest(const FString&)
    const auto C=*reinterpret_cast<const FVector3f*>(Color);
    TestTrue(TEXT("Legacy dominant color retained"),I==0?(C.X>C.Z && C.Y>C.Z):(I==3?C.Y>C.X && C.Y>C.Z:C.Z>C.X && C.Z>C.Y));
   }
+  const uint64 StableUpdates=Beam->GetVisualUpdateCount();
+  for(int Frame=0;Frame<120;++Frame) Beam->SetBeamPoints(Start,Impact);
+  TestEqual(TEXT("Stationary beam avoids redundant Niagara writes"),Beam->GetVisualUpdateCount(),StableUpdates);
+  const FVector MovedImpact=Impact+FVector(1,0,0);Beam->SetBeamPoints(Start,MovedImpact);
+  TestEqual(TEXT("Actual endpoint change updates immediately"),Beam->GetVisualUpdateCount(),StableUpdates+1);
+  Beam->SetBeamPoints(Start,Impact);
   Beam->SetPresentationClock(true,2);TestTrue(TEXT("Runtime pause freezes beam"),FX->IsPaused());Beam->SetPresentationClock(false,2);TestFalse(TEXT("Runtime resume"),FX->IsPaused());
-  Camera Aim;SimShot Shot(FVector::ZeroVector,Aim,Design,nullptr);Shot.SetCharge(Design->charge*.5f);TestEqual(TEXT("Half energy retains legacy half duration"),Shot.GetLife(),Lives[I]*.5);
+  Camera Aim;SimShot Shot(FVector::ZeroVector,Aim,Design,nullptr);TestNull(TEXT("Niagara beam allocates no legacy render geometry"),Shot.GetRep());Shot.SetCharge(Design->charge*.5f);TestEqual(TEXT("Half energy retains legacy half duration"),Shot.GetLife(),Lives[I]*.5);
   Shot.SetBeamPoints(FVector::ZeroVector,FVector(0,0,5000));Shot.ExecFrame(.1);const double D=Shot.Damage();TestTrue(TEXT("Beam damage is nonzero despite Game::FrameTime stub"),D>0);TestTrue(TEXT("Legacy damage equation uses actual step"),FMath::IsNearlyEqual(D,Damages[I]*Charges[I]*.5*.1,.001));
   Shot.ExecFrame(.05);TestTrue(TEXT("Damage scales with simulation step"),FMath::IsNearlyEqual(Shot.Damage(),D*.5,.001));
   const double Life=Shot.GetLife();Beam->SetBeamPoints(Start,Impact);TestEqual(TEXT("FX updates do not drain energy or shorten life"),Shot.GetLife(),Life);TestNull(TEXT("No raw-coordinate fallback actor created"),Shot.GetBeamActor());

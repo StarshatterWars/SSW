@@ -27,14 +27,15 @@ EventDispatch* EventDispatch::dispatcher = nullptr;
 // +--------------------------------------------------------------------+
 
 EventDispatch::EventDispatch()
-	: capture(nullptr)
-	, current(nullptr)
-	, focus(nullptr)
-	, click_tgt(nullptr)
-	, mouse_x(0)
-	, mouse_y(0)
-	, mouse_l(0)
-	, mouse_r(0)
+	: 
+    mouse_x(0),
+    mouse_y(0),
+    mouse_l(0),
+    mouse_r(0),
+    capture(nullptr),
+    current(nullptr),
+    focus(nullptr),
+    click_tgt(nullptr)
 {
 }
 

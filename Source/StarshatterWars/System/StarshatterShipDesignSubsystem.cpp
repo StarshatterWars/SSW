@@ -242,7 +242,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable(bool bUseLegacyFallbac
 		}
 
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[SHIPDESIGN] DT row '%s' hardpoints=%d loadouts=%d"),
 			*Row->ShipName,
 			Row->Hardpoint.Num(),
@@ -253,7 +253,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesignTable(bool bUseLegacyFallbac
 		DesignsByName.Add(RowName, *Row);
 		ShipDesignRegistry::RegisterDesign(RowName, *Row, bUseLegacyFallbacks);
 
-		UE_LOG(LogTemp, Verbose,
+		UE_LOG(LogTemp, Log,
 			TEXT("[SHIPDESIGN] Cached row '%s' Display='%s' Class='%s'"),
 			*RowName.ToString(),
 			*Row->DisplayName,
@@ -346,7 +346,7 @@ void UStarshatterShipDesignSubsystem::LoadAll(bool bFull)
     }
 
     UE_LOG(LogTemp, Warning, TEXT("[SHIPDESIGN] Using the existing data table because %s could not be loaded"), *Path);
-    LoadShipDesignTable();
+    LoadShipDesignTable(false); // Recovery must not re-enter DEF price or skin loading.
 }
 
 bool UStarshatterShipDesignSubsystem::ImportJsonCatalog(UDataTable& Table, const FString& Path)
@@ -361,29 +361,6 @@ void UStarshatterShipDesignSubsystem::CompleteLegacyBaseCost(FName Key, FShipDes
     Row.BaseCost = SSWFreightManifest::LoadProfile(Definition).BaseCost;
     if (Row.BaseCost <= 0 && Definition != Key.ToString())
         Row.BaseCost = SSWFreightManifest::LoadProfile(Key.ToString()).BaseCost;
-}
-
-void UStarshatterShipDesignSubsystem::InitializeShipDesigns()
-{
-	UE_LOG(LogTemp, Log, TEXT("[SHIPDESIGN] LoadShipDesigns()"));
-
-	// Content/GameData/Ships/
-	ProjectPath = FPaths::ProjectContentDir();
-	ProjectPath /= TEXT("GameData/Ships/");
-
-	TArray<FString> Files;
-	const FString Wildcard = ProjectPath / TEXT("*.def");
-
-	IFileManager::Get().FindFiles(Files, *Wildcard, /*Files=*/true, /*Directories=*/false);
-
-	for (const FString& File : Files)
-	{
-		const FString FullPath = ProjectPath / File;
-
-		// Legacy API wants const char*; convert for the call only (do NOT store the pointer).
-		const FTCHARToUTF8 Utf8Path(*FullPath);
-		LoadShipDesign(Utf8Path.Get());
-	}
 }
 
 void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
@@ -904,7 +881,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 		{
 			ParseWeapon(Def->term()->isStruct(), fn);
 		}
-		else if (Key == "decoy")
+		else if (Key == "decoy" && Def->term() && Def->term()->isText())
 		{
 			Text Buf;
 			if (GetDefText(Buf, Def, fn))
@@ -912,7 +889,7 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 				CurrentShipDecoyWeaponType = FString(Buf);
 			}
 		}
-		else if (Key == "probe")
+		else if (Key == "probe" && Def->term() && Def->term()->isText())
 		{
 			Text Buf;
 			if (GetDefText(Buf, Def, fn))
@@ -920,6 +897,10 @@ void UStarshatterShipDesignSubsystem::LoadShipDesign(const char* InFilename)
 				CurrentShipProbeWeaponType = FString(Buf);
 			}
 		}
+        else if ((Key == "decoy" || Key == "probe") && Def->term() && Def->term()->isStruct())
+        {
+            ParseWeapon(Def->term()->isStruct(),fn);
+        }
 		else if (Key == "hardpoint" && Def->term() && Def->term()->isStruct())
 		{
 			ParseHardPoint(Def->term()->isStruct(), fn);
@@ -1062,7 +1043,7 @@ void UStarshatterShipDesignSubsystem::ResetCurrentShipArrays()
 	NewShipMapSpriteArray.Empty();
 	NewShipSkinArray.Empty();
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[ShipDesignSubsystem] ResetCurrentShipArrays COMPLETE"));
 }
 
@@ -2497,7 +2478,7 @@ void UStarshatterShipDesignSubsystem::ParseNavlight(
 				// Color
 				//-------------------------------------------------
 
-				else if (LightKey == "color")
+				else if (LightKey == "color" && LightDef->term() && LightDef->term()->isText())
 				{
 					Text ColorText = "";
 
@@ -2547,6 +2528,16 @@ void UStarshatterShipDesignSubsystem::ParseNavlight(
 						Beacon.Color = FLinearColor::White;
 					}
 				}
+
+                else if(LightKey == "color")
+                {
+                    FColor Value;
+                    if(GetDefFColor(Value,LightDef,Fn))
+                    {
+                        Beacon.Color=FLinearColor(Value);
+                        Beacon.Type=ENavLightType::WHITE;
+                    }
+                }
 
 				//-------------------------------------------------
 				// Intensity
@@ -2635,7 +2626,7 @@ void UStarshatterShipDesignSubsystem::ParseNavlight(
 
 			NewNav.Beacons.Add(Beacon);
 
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, Log,
 				TEXT("[ParseNavlight] Beacon='%s' Loc=(%.1f %.1f %.1f) Color=(%.2f %.2f %.2f) Intensity=%.1f Radius=%.1f Mode=%d Blink=%.2f Phase=%.2f"),
 				*Beacon.Name,
 				Beacon.Location.X,
@@ -2662,7 +2653,7 @@ void UStarshatterShipDesignSubsystem::ParseNavlight(
 
 	NewShipNavLightArray.Add(NewNav);
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[ParseNavlight] Added NavLight Name='%s' Period=%.2f Scale=%.2f Beacons=%d"),
 		*NewNav.Name,
 		NewNav.Period,
@@ -3576,7 +3567,7 @@ void UStarshatterShipDesignSubsystem::ParseLoadout(TermStruct* Val, const char* 
 			{
 				Count = FMath::Min((int32)Arr->elements()->size(), MaxStations);
 
-				UE_LOG(LogTemp, Warning,
+				UE_LOG(LogTemp, Log,
 					TEXT("[ShipDesign] ParseLoadout '%s' stations array count=%d"),
 					*NewLoadout.Name,
 					Count);
@@ -3606,7 +3597,7 @@ void UStarshatterShipDesignSubsystem::ParseLoadout(TermStruct* Val, const char* 
 			{
 				Count = FMath::Min((int32)StructVals->elements()->size(), MaxStations);
 
-				UE_LOG(LogTemp, Warning,
+				UE_LOG(LogTemp, Log,
 					TEXT("[ShipDesign] ParseLoadout '%s' stations struct count=%d"),
 					*NewLoadout.Name,
 					Count);
@@ -3641,7 +3632,7 @@ void UStarshatterShipDesignSubsystem::ParseLoadout(TermStruct* Val, const char* 
 
 			for (int32 i = 0; i < MaxStations; ++i)
 			{
-				UE_LOG(LogTemp, Warning,
+				UE_LOG(LogTemp, Log,
 					TEXT("[ShipDesign]   loadout '%s' stations[%d]=%d"),
 					*NewLoadout.Name,
 					i,
@@ -3929,7 +3920,7 @@ void UStarshatterShipDesignSubsystem::ParseComputer(TermStruct* Val, const char*
 	NewComp.SourceIndex =
 		(NewShipPowerArray.Num() > 0) ? (NewShipPowerArray.Num() - 1) : INDEX_NONE;
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[ParseComputer] Design='%s' Type=%d Name='%s' Abbrev='%s' SourceIndex=%d"),
 		*NewComp.DesignName,
 		(int32)NewComp.Type,
@@ -4037,7 +4028,7 @@ void UStarshatterShipDesignSubsystem::ParseShield(TermStruct* Val, const char* F
 				NewShield.Abbrev = TEXT("SHLD");
 			}
 
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, Log,
 				TEXT("[ParseShield] Design='%s' -> ShieldType=%d Name='%s'"),
 				*DesignStr,
 				(int32)NewShield.ShieldType,

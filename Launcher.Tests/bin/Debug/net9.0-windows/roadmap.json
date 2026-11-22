@@ -1,0 +1,41 @@
+{
+  "updated": "2026-11-20",
+  "notice": "Development roadmap — scope and order may change. Planned features are not available until implemented and verified.",
+  "phases": [
+    {
+      "title": "Alpha 4 · Gameplay and economy",
+      "status": "VERIFIED / CLOSED",
+      "description": "Legacy feature coverage, mining and production, agents and progression, inventory and wallet, launcher installation and recovery. Owner verification completed."
+    },
+    {
+      "title": "Alpha 5 · FractalVerse local server",
+      "status": "CURRENT · IN DEVELOPMENT",
+      "description": "Finish direct JSON ingestion and regression tests, then separate SSW into a client and local authoritative universe server. Server-owned economy, ships, inventory, progression and persistence; simulation continues in unloaded systems. Planned custom 256x256 pilot avatar uploads with server-side image validation and a choice of custom or platform avatar."
+    },
+    {
+      "title": "Alpha 6 · Arena multiplayer",
+      "status": "PLANNED",
+      "description": "StarServer matches, sessions, player ownership, movement and combat replication, reconnects, cleanup and matching results. Kept separate from the persistent FractalVerse server."
+    },
+    {
+      "title": "Alpha 7 · Full-scale universe presentation",
+      "status": "PLANNED",
+      "description": "Resize Unreal assets and environments while preserving simulation distances and timing. Verify cockpits, cameras, nozzles, collision, landing bays and launch/recovery alignment throughout the fleet."
+    },
+    {
+      "title": "Alpha 8 · Free Verse ownership and corporations",
+      "status": "PLANNED",
+      "description": "Player-owned stations and production facilities; acquisition, permissions, upkeep, storage and supply routes. Player corporations with membership, roles, shared wallets, hangars and assets, audit history and controlled access. Existing career guilds remain distinct. Expand docked production, market and logistics management."
+    },
+    {
+      "title": "Alpha 9 · Walkable hangars and station spaces",
+      "status": "PLANNED · AFTER FULL-SCALE RESIZE",
+      "description": "Walkable hangars at correct human and ship scale, boarding and disembarking, station service access, collision and camera checks. Start with one hangar and one fighter before extending to carriers and stations."
+    },
+    {
+      "title": "Separate deferred workstreams",
+      "status": "DEFERRED",
+      "description": "Mod Editor, cinematic MP4 production and audiovisual polish. These receive their own verification and scheduling; no completion date is promised."
+    }
+  ]
+}

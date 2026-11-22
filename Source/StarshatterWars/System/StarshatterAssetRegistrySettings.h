@@ -300,6 +300,9 @@ public:
 
     UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
     TSoftClassPtr<UUserWidget> StationServicesPopupClass;
+
+    UPROPERTY(EditAnywhere, config, Category = "Starshatter|UI", meta = (AllowAbstract = "false"))
+    TSoftClassPtr<UUserWidget> ShipSkinPopupClass;
     // ------------------------------------------------------------------
 // Optional UI Theme bindings (config-backed)
 // ------------------------------------------------------------------

@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "ShipBriefingPreview.h"
 #include "GameStructs_System.h"
 #include "ShipActor.h"
@@ -41,9 +42,11 @@ bool FBriefingPreviewIsolationTest::RunTest(const FString& Parameters)
     const auto Options = UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false)
         .CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     UWorld* MainWorld = UWorld::CreateWorld(EWorldType::Game, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Options);
+    FScopedSSWTestWorldContext TestWorldContext1(MainWorld);
     TestTrue(TEXT("Factory refuses to spawn in the gameplay world"), BriefingShipPreview::CreateVisual(MainWorld, Parts) == nullptr);
     MainWorld->DestroyWorld(false);
     UWorld* PreviewWorld = UWorld::CreateWorld(EWorldType::EditorPreview, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Options);
+    FScopedSSWTestWorldContext TestWorldContext2(PreviewWorld);
     AActor* Visual = BriefingShipPreview::CreateVisual(PreviewWorld, Parts);
     if (TestNotNull(TEXT("Preview visual is created in an isolated world"), Visual))
     {

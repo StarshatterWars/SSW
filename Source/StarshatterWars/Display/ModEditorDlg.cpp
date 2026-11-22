@@ -33,8 +33,7 @@ bool UModEditorDlg::IsEditableMissionPath(const FString& Path)
     FPaths::NormalizeFilename(Full);FPaths::NormalizeFilename(Root);
     if(!FPaths::CollapseRelativeDirectories(Full))return false;
     return Full.StartsWith(Root+TEXT("/"),ESearchCase::IgnoreCase) &&
-        (Full.EndsWith(TEXT(".json"),ESearchCase::IgnoreCase) ||
-            (Full.EndsWith(TEXT(".def"),ESearchCase::IgnoreCase) && !FPaths::FileExists(FPaths::ChangeExtension(Full,TEXT("json")))));
+        Full.EndsWith(TEXT(".json"), ESearchCase::IgnoreCase);
 }
 bool UModEditorDlg::BeginEditingSession()
 {
@@ -131,10 +130,9 @@ struct FModWorkspace
         {Message=INVTEXT("THE STARTER MISSION COULD NOT BE READ.");return;}
         if(!FFileHelper::SaveStringToFile(Source,*Path,FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
         {Message=INVTEXT("COULD NOT SAVE THE MISSION COPY.");return;}
-        if(!Validate(Path)){IFileManager::Get().Delete(*Path);return;}
         auto* GI=Instance.Get();auto* Data=GI?GI->GetSubsystem<UStarshatterGameDataSubsystem>():nullptr;
         FS_CampaignMission Parsed; FString Json;
-        if(!Data || !Data->ReadLooseMission(Path,Parsed) || !FJsonObjectConverter::UStructToJsonObjectString(Parsed,Json) ||
+        if(!Data || !Data->ReadLooseMission(Path,Parsed,false) || !FJsonObjectConverter::UStructToJsonObjectString(Parsed,Json) ||
             !FFileHelper::SaveStringToFile(Json,*FPaths::ChangeExtension(Path,TEXT("json")),FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM))
         {IFileManager::Get().Delete(*Path);Message=INVTEXT("COULD NOT CREATE JSON MISSION SOURCE.");return;}
         IFileManager::Get().Delete(*Path);

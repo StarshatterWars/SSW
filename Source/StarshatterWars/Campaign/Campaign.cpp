@@ -44,12 +44,14 @@
 #include "Game.h"
 #include "Bitmap.h"
 #include "DataLoader.h"
-#include "ParseUtil.h"
 #include "FormatUtil.h"
 #include "GameScreen.h"
 #include "GameStructs.h"
 #include "FormattingUtils.h"
 #include "StarshatterGameDataSubsystem.h"
+#include "StandaloneMissionCatalog.h"
+#include "SSWMissionMods.h"
+#include "Engine/GameInstance.h"
 
 // Unreal minimal support:
 #include "CoreMinimal.h"
@@ -108,42 +110,44 @@ static void DumpCombatGroupTree(CombatGroup* Group, int Depth = 0)
 }
 
 Campaign::Campaign(int id, const char* n)
-    : campaign_id(id)
-    , name(n)
-    , mission_id(-1)
-    , mission(0)
-    , net_mission(0)
-    , scripted(IsScripted())
-    , sequential(false)
-    , time(0)
-    , startTime(0)
-    , loadTime(0)
-    , player_group(0)
-    , player_unit(0)
-    , campaign_status(ECampaignStatus::INIT)
-    , lockout(0)
-    , loaded_from_savegame(false)
+    :
+    campaign_id(id),
+    campaign_status(ECampaignStatus::INIT),
+    name(n),
+    scripted(IsScripted()),
+    sequential(false),
+    loaded_from_savegame(false),
+    player_group(0),
+    player_unit(0),
+    mission_id(-1),
+    mission(0),
+    net_mission(0),
+    time(0),
+    loadTime(0),
+    startTime(0),
+    lockout(0)
 {
     FMemory::Memzero(path, sizeof(path));
     Load();
 }
 
 Campaign::Campaign(int id, const char* n, const char* p)
-    : campaign_id(id)
-    , name(n)
-    , mission_id(-1)
-    , mission(0)
-    , net_mission(0)
-    , scripted(IsScripted())
-    , sequential(false)
-    , time(0)
-    , startTime(0)
-    , loadTime(0)
-    , player_group(0)
-    , player_unit(0)
-    , campaign_status(ECampaignStatus::INIT)
-    , lockout(0)
-    , loaded_from_savegame(false)
+    :
+    campaign_id(id),
+    campaign_status(ECampaignStatus::INIT),
+    name(n),
+    scripted(IsScripted()),
+    sequential(false),
+    loaded_from_savegame(false),
+    player_group(0),
+    player_unit(0),
+    mission_id(-1),
+    mission(0),
+    net_mission(0),
+    time(0),
+    loadTime(0),
+    startTime(0),
+    lockout(0)
 {
     FMemory::Memzero(path, sizeof(path));
     FCStringAnsi::Strncpy(path, p ? p : "", (int)sizeof(path));
@@ -151,22 +155,23 @@ Campaign::Campaign(int id, const char* n, const char* p)
 }
 
 Campaign::Campaign(int id, const char* n, bool bSkipLoad)
-    : campaign_id(id)
-    , campaign_status(ECampaignStatus::INIT)
-    , name(n)
-    , mission_id(-1)
-    , mission(0)
-    , net_mission(0)
-    , scripted(IsScripted())
-    , sequential(false)
-    , loaded_from_savegame(false)
-    , player_group(0)
-    , player_unit(0)
-    , time(0)
-    , loadTime(0)
-    , startTime(0)
-    , updateTime(0)
-    , lockout(0)
+    :
+    campaign_id(id),
+    campaign_status(ECampaignStatus::INIT),
+    name(n),
+    scripted(IsScripted()),
+    sequential(false),
+    loaded_from_savegame(false),
+    player_group(0),
+    player_unit(0),
+    mission_id(-1),
+    mission(0),
+    net_mission(0),
+    time(0),
+    loadTime(0),
+    startTime(0),
+    updateTime(0),
+    lockout(0)
 {
     FMemory::Memzero(filename, sizeof(filename));
     FMemory::Memzero(path, sizeof(path));
@@ -215,7 +220,7 @@ Campaign::Initialize()
         loader->UseFileSystem(true);
         loader->SetDataPath(TempPath);
 
-        if (loader->FindFile("campaign.def")) {
+        if (loader->FindFile("campaign.json")) {
             char txt[256];
             FCStringAnsi::Snprintf(txt, sizeof(txt), "Dynamic Campaign %02d", i);
 
@@ -288,7 +293,7 @@ void Campaign::SetMission(Mission* InMission)
 {
     ActiveMission = InMission;
 
-    UE_LOG(LogTemp, Warning, TEXT("[Campaign] SetMission: %s"),
+    UE_LOG(LogTemp, Log, TEXT("[Campaign] SetMission: %s"),
         ActiveMission ? ANSI_TO_TCHAR(ActiveMission->GetName()) : TEXT("NULL"));
 }
 
@@ -400,82 +405,58 @@ Campaign::Clear()
 void
 Campaign::Load()
 {
-    // first, unload any existing data:
     Unload();
-
-    if (!path[0]) {
-        // then load the campaign from files:
-        switch (campaign_id) {
-        case SINGLE_MISSIONS:      FCStringAnsi::Strcpy(path, "Missions/");       break;
-        case CUSTOM_MISSIONS:      FCStringAnsi::Strcpy(path, "Mods/Missions/");  break;
-        case MULTIPLAYER_MISSIONS: FCStringAnsi::Strcpy(path, "Multiplayer/");    break;
-        default:                   FCStringAnsi::Snprintf(path, sizeof(path), "Campaigns/%02d/", campaign_id); break;
+    if (!path[0])
+    {
+        switch (campaign_id)
+        {
+        case SINGLE_MISSIONS: FCStringAnsi::Strcpy(path, "Missions/"); break;
+        case MULTIPLAYER_MISSIONS: FCStringAnsi::Strcpy(path, "Multiplayer/"); break;
+        case CUSTOM_MISSIONS: FCStringAnsi::Strcpy(path, "Mods/Missions/"); break;
+        default: FCStringAnsi::Snprintf(path, sizeof(path), "Campaigns/%02d/", campaign_id); break;
         }
     }
-
-    DataLoader* loader = DataLoader::GetLoader();
-    loader->UseFileSystem(true);
-    loader->SetDataPath(path);
-    systems.clear();
-
-    if (loader->FindFile("zones.def"))
-        zones.append(CombatZone::Load("zones.def"));
-
-    for (int i = 0; i < zones.size(); i++) {
-        Text s = zones[i]->GetSystem();
-        bool found = false;
-
-        for (int n = 0; !found && n < systems.size(); n++) {
-            if (s == systems[n]->GetName())
-                found = true;
-        }
-
-        if (!found)
-            systems.append(Galaxy::GetInstance()->GetSystem(s));
+    const int32 Identity = campaign_id;
+    FString Directory = UTF8_TO_TCHAR(path);
+    if (FPaths::IsRelative(Directory)) Directory = FPaths::ProjectContentDir() / TEXT("GameData") / Directory;
+    FS_Campaign Definition;
+    bool Loaded = false;
+    if (Identity == SINGLE_MISSIONS)
+    {
+        FString Error;
+        Loaded = StandaloneMissionCatalog::Load(Directory, Definition.MissionList, Definition.Missions, Error);
+        if (!Loaded) UE_LOG(LogCampaign, Error, TEXT("[CampaignJson] %s"), *Error);
     }
-
-    loader->UseFileSystem(Starshatter::UseFileSystem());
-
-    if (loader->FindFile("campaign.def"))
-        LoadCampaign(loader);
-
-    if (campaign_id == CUSTOM_MISSIONS) {
-        loader->SetDataPath(path);
-        LoadCustomMissions(loader);
-    }
-    else {
-        bool found = false;
-
-        if (loader->FindFile("missions.def")) {
-            loader->SetDataPath(path);
-            LoadMissionList(loader);
-            found = true;
+    else if (Identity == CUSTOM_MISSIONS || Identity == MULTIPLAYER_MISSIONS)
+    {
+        auto* Reader = NewObject<UStarshatterGameDataSubsystem>(NewObject<UGameInstance>());
+        TArray<FString> Files;
+        if (Identity == CUSTOM_MISSIONS)
+        {
+            for (const auto& Pack : SSWMissionMods::Discover()) if (Pack.bEnabled) Files.Append(Pack.Missions);
         }
-
-        if (loader->FindFile("templates.def")) {
-            loader->SetDataPath(path);
-            LoadTemplateList(loader);
-            found = true;
+        else IFileManager::Get().FindFiles(Files, *(Directory / TEXT("*.json")), true, false);
+        Files.Sort();
+        for (const FString& File : Files)
+        {
+            const FString FullPath = FPaths::IsRelative(File) ? Directory / File : File;
+            FS_CampaignMission Row;
+            if (!Reader->ReadLooseMission(FullPath, Row)) continue;
+            FS_CampaignMissionList Entry;
+            Entry.Id = Row.Id; Entry.Name = Row.MissionName;
+            Entry.Script = FullPath; Entry.System = Row.MissionSystem; Entry.Region = Row.MissionRegion;
+            Entry.Available = true; Entry.Status = EMISSIONSTATUS::Available;
+            Definition.MissionList.Add(MoveTemp(Entry)); Definition.Missions.Add(MoveTemp(Row));
         }
-
-        if (!found) {
-            loader->SetDataPath(path);
-            LoadCustomMissions(loader);
-        }
+        Loaded = true;
     }
-
-    loader->UseFileSystem(true);
-    loader->SetDataPath(path);
-
-    if (loader->FindFile("image.pcx")) {
-        loader->LoadGameBitmap("image.pcx", image[0]);
-        loader->LoadGameBitmap("selected.pcx", image[1]);
-        loader->LoadGameBitmap("unavail.pcx", image[2]);
-        loader->LoadGameBitmap("banner.pcx", image[3]);
-    }
-
-    loader->SetDataPath(0);
-    loader->UseFileSystem(Starshatter::UseFileSystem());
+    else Loaded = UStarshatterGameDataSubsystem::ReadCampaignJsonDirectory(Directory, Definition);
+    if (!Loaded) return;
+    Definition.Index = Identity - 1;
+    if (Definition.Name.IsEmpty()) Definition.Name = UTF8_TO_TCHAR(name.data());
+    OwnedJsonDefinition = MakeUnique<FS_Campaign>(MoveTemp(Definition));
+    SetCampaignData(OwnedJsonDefinition.Get());
+    LoadFromData(*OwnedJsonDefinition);
 }
 
 void
@@ -497,507 +478,6 @@ Campaign::Unload()
 
     zones.destroy();
 }
-
-void
-Campaign::LoadCampaign(DataLoader* loader, bool full)
-{
-    BYTE* block = 0;
-    const char* SourceFilename = "campaign.def";
-
-    loader->UseFileSystem(true);
-    loader->LoadBuffer(SourceFilename, block, true);
-    loader->UseFileSystem(Starshatter::UseFileSystem());
-
-    Parser parser(new BlockReader((const char*)block));
-    Term* term = parser.ParseTerm();
-
-    if (!term) {
-        return;
-    }
-    else {
-        TermText* file_type = term->isText();
-        if (!file_type || file_type->value() != "CAMPAIGN") {
-            return;
-        }
-    }
-
-    do {
-        delete term; term = 0;
-        term = parser.ParseTerm();
-
-        if (term) {
-            TermDef* def = term->isDef();
-            if (def) {
-                if (def->name()->value() == "name") {
-                    if (!def->term() || !def->term()->isText()) {
-                        UE_LOG(LogCampaign, Warning, TEXT("WARNING: name missing in '%s/%s'"),
-                            ANSI_TO_TCHAR(loader->GetDataPath() ? loader->GetDataPath() : ""),
-                            ANSI_TO_TCHAR(SourceFilename));
-                    }
-                    else {
-                        name = def->term()->isText()->value();
-                        name = Game::GetText(name);
-                    }
-                }
-                else if (def->name()->value() == "desc") {
-                    if (!def->term() || !def->term()->isText()) {
-                        UE_LOG(LogCampaign, Warning, TEXT("WARNING: description missing in '%s/%s'"),
-                            ANSI_TO_TCHAR(loader->GetDataPath() ? loader->GetDataPath() : ""),
-                            ANSI_TO_TCHAR(SourceFilename));
-                    }
-                    else {
-                        description = def->term()->isText()->value();
-                        description = Game::GetText(description);
-                    }
-                }
-                else if (def->name()->value() == "situation") {
-                    if (!def->term() || !def->term()->isText()) {
-                        UE_LOG(LogCampaign, Warning, TEXT("WARNING: situation missing in '%s/%s'"),
-                            ANSI_TO_TCHAR(loader->GetDataPath() ? loader->GetDataPath() : ""),
-                            ANSI_TO_TCHAR(SourceFilename));
-                    }
-                    else {
-                        situation = def->term()->isText()->value();
-                        situation = Game::GetText(situation);
-                    }
-                }
-                else if (def->name()->value() == "orders") {
-                    if (!def->term() || !def->term()->isText()) {
-                        UE_LOG(LogCampaign, Warning, TEXT("WARNING: orders missing in '%s/%s'"),
-                            ANSI_TO_TCHAR(loader->GetDataPath() ? loader->GetDataPath() : ""),
-                            ANSI_TO_TCHAR(SourceFilename));
-                    }
-                    else {
-                        orders = def->term()->isText()->value();
-                        orders = Game::GetText(orders);
-                    }
-                }
-                else if (def->name()->value() == "scripted") {
-                    if (def->term() && def->term()->isBool()) {
-                        scripted = def->term()->isBool()->value();
-                    }
-                }
-                else if (def->name()->value() == "sequential") {
-                    if (def->term() && def->term()->isBool()) {
-                        sequential = def->term()->isBool()->value();
-                    }
-                }
-                else if (full && def->name()->value() == "combatant") {
-                    if (!def->term() || !def->term()->isStruct()) {
-                        UE_LOG(LogCampaign, Warning, TEXT("WARNING: combatant struct missing in '%s/%s'"),
-                            ANSI_TO_TCHAR(loader->GetDataPath() ? loader->GetDataPath() : ""),
-                            ANSI_TO_TCHAR(SourceFilename));
-                    }
-                    else {
-                        TermStruct* val = def->term()->isStruct();
-
-                        char        cname[64];
-                        CombatGroup* force = 0;
-                        CombatGroup* clone = 0;
-
-                        FMemory::Memzero(cname, sizeof(cname));
-
-                        for (int i = 0; i < val->elements()->size(); i++) {
-                            TermDef* pdef = val->elements()->at(i)->isDef();
-                            if (pdef) {
-                                if (pdef->name()->value() == "name") {
-                                    GetDefText(cname, pdef, SourceFilename);
-
-                                    force = CombatRoster::GetInstance()->GetForce(cname);
-
-                                    if (force)
-                                        clone = force->Clone(false); // shallow copy
-                                }
-                                else if (pdef->name()->value() == "group") {
-                                    ParseGroup(pdef->term()->isStruct(), force, clone, SourceFilename);
-                                }
-                            }
-                        }
-
-                        loader->SetDataPath(path);
-                        Combatant* c = new Combatant(cname, clone);
-                        if (c) {
-                            combatants.append(c);
-                        }
-                        else {
-                            Unload();
-                            return;
-                        }
-                    }
-                }
-                else if (full && def->name()->value() == "action") {
-                    if (!def->term() || !def->term()->isStruct()) {
-                        UE_LOG(LogCampaign, Warning, TEXT("WARNING: action struct missing in '%s/%s'"),
-                            ANSI_TO_TCHAR(loader->GetDataPath() ? loader->GetDataPath() : ""),
-                            ANSI_TO_TCHAR(SourceFilename));
-                    }
-                    else {
-                        TermStruct* val = def->term()->isStruct();
-                        ParseAction(val, SourceFilename);
-                    }
-                }
-            }
-        }
-    } while (term);
-
-    loader->ReleaseBuffer(block);
-}
-
-// +--------------------------------------------------------------------+
-
-void
-Campaign::ParseGroup(TermStruct* val, CombatGroup* force, CombatGroup* clone, const char* SourceFilename)
-{
-    if (!val) {
-        UE_LOG(LogCampaign, Warning, TEXT("invalid combat group in campaign %s"), ANSI_TO_TCHAR(name.data()));
-        return;
-    }
-
-    ECOMBATGROUP_TYPE type = ECOMBATGROUP_TYPE::NONE;
-    int id = 0;
-
-    for (int i = 0; i < val->elements()->size(); i++) {
-        TermDef* pdef = val->elements()->at(i)->isDef();
-        if (pdef) {
-            if (pdef->name()->value() == "type") {
-                char type_name[64];
-                GetDefText(type_name, pdef, SourceFilename);
-                type = CombatGroup::TypeFromName(type_name);
-            }
-            else if (pdef->name()->value() == "id") {
-                GetDefNumber(id, pdef, SourceFilename);
-            }
-        }
-    }
-
-    if ((int) type && id && force && clone) {
-        CombatGroup* g = force->FindGroup(type, id);
-
-        // found original group, now clone it over
-        if (g && g->GetParent()) {
-            CombatGroup* parent = CloneOver(force, clone, g->GetParent());
-            if (parent)
-                parent->AddComponent(g->Clone());
-        }
-    }
-}
-
-// +--------------------------------------------------------------------+
-
-void
-Campaign::ParseAction(TermStruct* val, const char* SourceFilename)
-{
-    if (!val) {
-        UE_LOG(LogCampaign, Warning, TEXT("invalid action in campaign %s"), ANSI_TO_TCHAR(name.data()));
-        return;
-    }
-
-    int     id = 0;
-    int     type = 0;
-    int     subtype = 0;
-    int     opp_type = -1;
-    int     team = 0;
-    ECombatEventSource     source = ECombatEventSource::NONE;
-    FVector loc(0.0f, 0.0f, 0.0f);
-
-    Text    system;
-    Text    region;
-    Text    file;
-    Text    image_file;
-    Text    scene_file;
-    Text    text;
-
-    int     count = 1;
-    int     start_before = TIME_NEVER;
-    int     start_after = 0;
-    int     min_rank = 0;
-    int     max_rank = 100;
-    int     delay = 0;
-    int     probability = 100;
-
-    int     asset_type = 0;
-    int     asset_id = 0;
-    int     target_type = 0;
-    int     target_id = 0;
-    int     target_iff = 0;
-
-    CombatAction* action = 0;
-
-    for (int i = 0; i < val->elements()->size(); i++) {
-        TermDef* pdef = val->elements()->at(i)->isDef();
-        if (pdef) {
-            if (pdef->name()->value() == "id") {
-                GetDefNumber(id, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "type") {
-                char txt[64];
-                GetDefText(txt, pdef, SourceFilename);
-                type = CombatAction::TypeFromName(txt);
-            }
-            else if (pdef->name()->value() == "subtype") {
-                if (pdef->term()->isNumber()) {
-                    GetDefNumber(subtype, pdef, SourceFilename);
-                }
-                else if (pdef->term()->isText()) {
-                    char txt[64];
-                    GetDefText(txt, pdef, SourceFilename);
-
-                    if (type == ECombatActionType::MISSION_TEMPLATE)
-                        subtype = Mission::TypeFromName(txt);
-                    else if (type == ECombatActionType::COMBAT_EVENT)
-                        subtype = (int) CombatEvent::GetTypeFromName(txt);
-                    else if (type == ECombatActionType::INTEL_EVENT)
-                        subtype = (int) Intel::GetIntelFromName(txt);
-                }
-            }
-            else if (pdef->name()->value() == "opp_type") {
-                if (pdef->term()->isNumber()) {
-                    GetDefNumber(opp_type, pdef, SourceFilename);
-                }
-                else if (pdef->term()->isText()) {
-                    char txt[64];
-                    GetDefText(txt, pdef, SourceFilename);
-
-                    if (type == ECombatActionType::MISSION_TEMPLATE)
-                        opp_type = Mission::TypeFromName(txt);
-                }
-            }
-            else if (pdef->name()->value() == "source") {
-                char txt[64];
-                GetDefText(txt, pdef, SourceFilename);
-                source = CombatEvent::GetSourceFromName(txt);
-            }
-            else if (pdef->name()->value() == "team" || pdef->name()->value() == "iff") {
-                GetDefNumber(team, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "count") {
-                GetDefNumber(count, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value().contains("before")) {
-                if (pdef->term()->isNumber()) {
-                    GetDefNumber(start_before, pdef, SourceFilename);
-                }
-                else {
-                    GetDefTime(start_before, pdef, SourceFilename);
-                    start_before -= ONE_DAY;
-                }
-            }
-            else if (pdef->name()->value().contains("after")) {
-                if (pdef->term()->isNumber()) {
-                    GetDefNumber(start_after, pdef, SourceFilename);
-                }
-                else {
-                    GetDefTime(start_after, pdef, SourceFilename);
-                    start_after -= ONE_DAY;
-                }
-            }
-            else if (pdef->name()->value() == "min_rank") {
-                if (pdef->term()->isNumber()) {
-                    GetDefNumber(min_rank, pdef, SourceFilename);
-                }
-                else {
-                    char rank_name[64];
-                    GetDefText(rank_name, pdef, SourceFilename);
-                    min_rank = PlayerCharacter::RankFromName(rank_name);
-                }
-            }
-            else if (pdef->name()->value() == "max_rank") {
-                if (pdef->term()->isNumber()) {
-                    GetDefNumber(max_rank, pdef, SourceFilename);
-                }
-                else {
-                    char rank_name[64];
-                    GetDefText(rank_name, pdef, SourceFilename);
-                    max_rank = PlayerCharacter::RankFromName(rank_name);
-                }
-            }
-            else if (pdef->name()->value() == "delay") {
-                GetDefNumber(delay, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "probability") {
-                GetDefNumber(probability, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "asset_type") {
-                char type_name[64];
-                GetDefText(type_name, pdef, SourceFilename);
-                asset_type = (int) CombatGroup::TypeFromName(type_name);
-            }
-            else if (pdef->name()->value() == "target_type") {
-                char type_name[64];
-                GetDefText(type_name, pdef, SourceFilename);
-                target_type = (int) CombatGroup::TypeFromName(type_name);
-            }
-            else if (pdef->name()->value() == "location" || pdef->name()->value() == "loc") {
-                GetDefVec(loc, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "system" || pdef->name()->value() == "sys") {
-                GetDefText(system, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "region" || pdef->name()->value() == "rgn" || pdef->name()->value() == "zone") {
-                GetDefText(region, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "file") {
-                GetDefText(file, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "image") {
-                GetDefText(image_file, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "scene") {
-                GetDefText(scene_file, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "text") {
-                GetDefText(text, pdef, SourceFilename);
-                text = Game::GetText(text);
-            }
-            else if (pdef->name()->value() == "asset_id") {
-                GetDefNumber(asset_id, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "target_id") {
-                GetDefNumber(target_id, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "target_iff") {
-                GetDefNumber(target_iff, pdef, SourceFilename);
-            }
-            else if (pdef->name()->value() == "asset_kill") {
-                if (!action)
-                    action = new CombatAction(id, type, subtype, team);
-
-                if (action) {
-                    char txt[64];
-                    GetDefText(txt, pdef, SourceFilename);
-                    action->AssetKills().append(new Text(txt));
-                }
-            }
-            else if (pdef->name()->value() == "target_kill") {
-                if (!action)
-                    action = new CombatAction(id, type, subtype, team);
-
-                if (action) {
-                    char txt[64];
-                    GetDefText(txt, pdef, SourceFilename);
-                    action->TargetKills().append(new Text(txt));
-                }
-            }
-            else if (pdef->name()->value() == "req") {
-                if (!action)
-                    action = new CombatAction(id, type, subtype, team);
-
-                if (!pdef->term() || !pdef->term()->isStruct()) {
-                    UE_LOG(LogCampaign, Warning, TEXT("WARNING: action req struct missing in '%s'"),
-                        SourceFilename ? ANSI_TO_TCHAR(SourceFilename) : TEXT("(null)"));
-                }
-                else if (action) {
-                    TermStruct* val2 = pdef->term()->isStruct();
-
-                    int  act = 0;
-                    int  stat = ECombatActionStatus::COMPLETE;
-                    bool not_flag = false;
-
-                    Combatant* c1 = 0;
-                    Combatant* c2 = 0;
-                    int        comp = 0;
-                    int        score = 0;
-                    int        intel = 0;
-                    ECOMBATGROUP_TYPE gtype = ECOMBATGROUP_TYPE::NONE;
-                    int        gid = 0;
-
-                    for (int j = 0; j < val2->elements()->size(); j++) {
-                        TermDef* pdef2 = val2->elements()->at(j)->isDef();
-                        if (pdef2) {
-                            if (pdef2->name()->value() == "action") {
-                                GetDefNumber(act, pdef2, SourceFilename);
-                            }
-                            else if (pdef2->name()->value() == "status") {
-                                char txt[64];
-                                GetDefText(txt, pdef2, SourceFilename);
-                                stat = CombatAction::StatusFromName(txt);
-                            }
-                            else if (pdef2->name()->value() == "not") {
-                                GetDefBool(not_flag, pdef2, SourceFilename);
-                            }
-                            else if (pdef2->name()->value() == "c1") {
-                                char txt[64];
-                                GetDefText(txt, pdef2, SourceFilename);
-                                c1 = GetCombatant(txt);
-                            }
-                            else if (pdef2->name()->value() == "c2") {
-                                char txt[64];
-                                GetDefText(txt, pdef2, SourceFilename);
-                                c2 = GetCombatant(txt);
-                            }
-                            else if (pdef2->name()->value() == "comp") {
-                                char txt[64];
-                                GetDefText(txt, pdef2, SourceFilename);
-                                comp = CombatActionReq::CompFromName(txt);
-                            }
-                            else if (pdef2->name()->value() == "score") {
-                                GetDefNumber(score, pdef2, SourceFilename);
-                            }
-                            else if (pdef2->name()->value() == "intel") {
-                                if (pdef2->term()->isNumber()) {
-                                    GetDefNumber(intel, pdef2, SourceFilename);
-                                }
-                                else if (pdef2->term()->isText()) {
-                                    char txt[64];
-                                    GetDefText(txt, pdef2, SourceFilename);
-                                    intel = (int) Intel::GetIntelFromName(txt);
-                                }
-                            }
-                            else if (pdef2->name()->value() == "group_type") {
-                                char type_name[64];
-                                GetDefText(type_name, pdef2, SourceFilename);
-                                gtype = CombatGroup::TypeFromName(type_name);
-                            }
-                            else if (pdef2->name()->value() == "group_id") {
-                                GetDefNumber(gid, pdef2, SourceFilename);
-                            }
-                        }
-                    }
-
-                    if (act)
-                        action->AddRequirement(act, stat, not_flag);
-                    else if ((int) gtype)
-                        action->AddRequirement(c1, gtype, gid, comp, score, intel);
-                    else
-                        action->AddRequirement(c1, c2, comp, score);
-                }
-            }
-        }
-    }
-
-    if (!action)
-        action = new CombatAction(id, type, subtype, team);
-
-    if (action) {
-        action->SetSource(source);
-        action->SetOpposingType(opp_type);
-        action->SetLocation(loc);
-        action->SetSystem(system);
-        action->SetRegion(region);
-        action->SetFilename(file);
-        action->SetImageFile(image_file);
-        action->SetSceneFile(scene_file);
-
-        action->SetCount(count);
-        action->SetStartAfter(start_after);
-        action->SetStartBefore(start_before);
-        action->SetMinRank(min_rank);
-        action->SetMaxRank(max_rank);
-        action->SetDelay(delay);
-        action->SetProbability(probability);
-
-        action->SetAssetId(asset_id);
-        action->SetAssetType(asset_type);
-        action->SetTargetId(target_id);
-        action->SetTargetIFF(target_iff);
-        action->SetTargetType(target_type);
-        action->SetText(text);
-
-        actions.append(action);
-    }
-}
-
-// +--------------------------------------------------------------------+
 
 CombatGroup*
 Campaign::CloneOver(CombatGroup* force, CombatGroup* clone, CombatGroup* group)
@@ -1022,447 +502,6 @@ Campaign::CloneOver(CombatGroup* force, CombatGroup* clone, CombatGroup* group)
     }
 
     return clone;
-}
-
-// +--------------------------------------------------------------------+
-
-void
-Campaign::LoadMissionList(DataLoader* loader)
-{
-    bool        ok = true;
-    BYTE* block = 0;
-    const char* SourceFilename = "Missions.def";
-
-    loader->UseFileSystem(true);
-    loader->LoadBuffer(SourceFilename, block, true);
-    loader->UseFileSystem(Starshatter::UseFileSystem());
-
-    Parser parser(new BlockReader((const char*)block));
-    Term* term = parser.ParseTerm();
-
-    if (!term) {
-        return;
-    }
-    else {
-        TermText* file_type = term->isText();
-        if (!file_type || file_type->value() != "MISSIONLIST") {
-            UE_LOG(LogCampaign, Warning, TEXT("WARNING: invalid mission list file '%s'"),
-                ANSI_TO_TCHAR(SourceFilename));
-            return;
-        }
-    }
-
-    do {
-        delete term; term = 0;
-        term = parser.ParseTerm();
-
-        if (term) {
-            TermDef* def = term->isDef();
-            if (def && def->name()->value() == "mission") {
-                if (!def->term() || !def->term()->isStruct()) {
-                    UE_LOG(LogCampaign, Warning, TEXT("WARNING: mission struct missing in '%s'"),
-                        ANSI_TO_TCHAR(SourceFilename));
-                }
-                else {
-                    TermStruct* val = def->term()->isStruct();
-
-                    int   id = 0;
-                    Text  mname;
-                    Text  desc;
-                    char  script[256];
-                    char  system[256];
-                    char  region[256];
-                    int   start = 0;
-                    int   type = 0;
-
-                    FMemory::Memzero(script, sizeof(script));
-                    FCStringAnsi::Strcpy(system, "Unknown");
-                    FCStringAnsi::Strcpy(region, "Unknown");
-
-                    for (int i = 0; i < val->elements()->size(); i++) {
-                        TermDef* pdef = val->elements()->at(i)->isDef();
-                        if (!pdef) continue;
-
-                        if (pdef->name()->value() == "id") {
-                            GetDefNumber(id, pdef, SourceFilename);
-                        }
-                        else if (pdef->name()->value() == "name") {
-                            GetDefText(mname, pdef, SourceFilename);
-                            mname = Game::GetText(mname);
-                        }
-                        else if (pdef->name()->value() == "desc") {
-                            GetDefText(desc, pdef, SourceFilename);
-                            if (desc.length() > 0 && desc.length() < 32)
-                                desc = Game::GetText(desc);
-                        }
-                        else if (pdef->name()->value() == "start") {
-                            GetDefTime(start, pdef, SourceFilename);
-                        }
-                        else if (pdef->name()->value() == "system") {
-                            GetDefText(system, pdef, SourceFilename);
-                        }
-                        else if (pdef->name()->value() == "region") {
-                            GetDefText(region, pdef, SourceFilename);
-                        }
-                        else if (pdef->name()->value() == "script") {
-                            GetDefText(script, pdef, SourceFilename);
-                        }
-                        else if (pdef->name()->value() == "type") {
-                            char typestr[64];
-                            GetDefText(typestr, pdef, SourceFilename);
-                            type = Mission::TypeFromName(typestr);
-                        }
-                    }
-
-                    MissionInfo* info = new MissionInfo;
-                    if (info) {
-                        info->id = id;
-                        info->name = mname;
-                        info->description = desc;
-                        info->system = system;
-                        info->region = region;
-                        info->script = script;
-                        info->start = start;
-                        info->type = type;
-                        info->mission = 0;
-
-                        info->script.setSensitive(false);
-
-                        missions.append(info);
-                    }
-                    else {
-                        ok = false;
-                    }
-                }
-            }
-        }
-    } while (term);
-
-    loader->ReleaseBuffer(block);
-
-    if (!ok)
-        Unload();
-}
-
-void
-Campaign::LoadCustomMissions(DataLoader* loader)
-{
-    if (!loader) {
-        UE_LOG(LogCampaign, Error, TEXT("Campaign::LoadCustomMissions: DataLoader is null"));
-        return;
-    }
-
-    bool ok = true;
-    List<Text> files;
-
-    loader->UseFileSystem(true);
-    loader->ListFiles("*.*", files);
-
-    for (int i = 0; i < files.size(); i++) {
-        if (!files[i])
-            continue;
-
-        Text file = *files[i];
-        file.setSensitive(false);
-
-        if (!file.contains(".def"))
-            continue;
-
-        BYTE* block = nullptr;
-        const char* SourceFilename = file.data();
-        if (!SourceFilename || !*SourceFilename)
-            continue;
-
-        loader->UseFileSystem(true);
-        loader->LoadBuffer(SourceFilename, block, true);
-        loader->UseFileSystem(Starshatter::UseFileSystem());
-
-        // LoadBuffer can leave block null for a missing, unreadable or empty file.
-        // Never pass that pointer to strstr/BlockReader.
-        if (!block) {
-            UE_LOG(LogCampaign, Warning,
-                TEXT("Campaign::LoadCustomMissions: skipping unreadable or empty file '%s'"),
-                ANSI_TO_TCHAR(SourceFilename));
-            continue;
-        }
-
-        // Only the MISSION file type is a custom mission; other .def files
-        // in the same directory must not be parsed as missions.
-        if (FCStringAnsi::Strncmp(reinterpret_cast<const char*>(block), "MISSION", 7) != 0) {
-            loader->ReleaseBuffer(block);
-            continue;
-        }
-
-        Text mname;
-        Text desc;
-        Text system = "Unknown";
-        Text region = "Unknown";
-        int start = 0;
-        int type = 0;
-        int msn_id = 0;
-        bool bValidMission = false;
-
-        // Keep the underlying buffer alive for the entire parser lifetime.
-        {
-            Parser parser(new BlockReader(reinterpret_cast<const char*>(block)));
-            Term* term = parser.ParseTerm();
-
-            if (!term) {
-                UE_LOG(LogCampaign, Warning,
-                    TEXT("ERROR: could not parse '%s'"), ANSI_TO_TCHAR(SourceFilename));
-            }
-            else {
-                TermText* file_type = term->isText();
-                if (!file_type || file_type->value() != "MISSION") {
-                    UE_LOG(LogCampaign, Warning,
-                        TEXT("ERROR: invalid mission file '%s'"), ANSI_TO_TCHAR(SourceFilename));
-                }
-                else {
-                    bValidMission = true;
-                    do {
-                        delete term;
-                        term = parser.ParseTerm();
-
-                        if (term) {
-                            TermDef* def = term->isDef();
-                            if (!def)
-                                continue;
-
-                            if (def->name()->value() == "name") {
-                                GetDefText(mname, def, SourceFilename);
-                                mname = Game::GetText(mname);
-                            }
-                            else if (def->name()->value() == "type") {
-                                char typestr[64] = {};
-                                GetDefText(typestr, def, SourceFilename);
-                                type = Mission::TypeFromName(typestr);
-                            }
-                            else if (def->name()->value() == "id") {
-                                GetDefNumber(msn_id, def, SourceFilename);
-                            }
-                            else if (def->name()->value() == "desc") {
-                                GetDefText(desc, def, SourceFilename);
-                                if (desc.length() > 0 && desc.length() < 32)
-                                    desc = Game::GetText(desc);
-                            }
-                            else if (def->name()->value() == "system") {
-                                GetDefText(system, def, SourceFilename);
-                            }
-                            else if (def->name()->value() == "region") {
-                                GetDefText(region, def, SourceFilename);
-                            }
-                            else if (def->name()->value() == "start") {
-                                GetDefTime(start, def, SourceFilename);
-                            }
-                        }
-                    } while (term);
-                }
-                delete term;
-            }
-        }
-
-        // Exactly one release per successful LoadBuffer; never release inside
-        // the parser and again at the bottom of this loop.
-        loader->ReleaseBuffer(block);
-        block = nullptr;
-
-        if (!bValidMission)
-            continue;
-
-        // Preserve the legacy inferred custom mission IDs.
-        if (FCStringAnsi::Strncmp(SourceFilename, "custom", 6) == 0) {
-            sscanf_s(SourceFilename + 6, "%d", &msn_id);
-            if (msn_id <= i)
-                msn_id = i + 1;
-        }
-        else if (msn_id < 1) {
-            msn_id = i + 1;
-        }
-
-        MissionInfo* info = new MissionInfo;
-        if (info) {
-            info->id = msn_id;
-            info->name = mname;
-            info->type = type;
-            info->description = desc;
-            info->system = system;
-            info->region = region;
-            info->script = SourceFilename;
-            info->start = start;
-            info->mission = 0;
-            info->script.setSensitive(false);
-            missions.append(info);
-        }
-        else {
-            ok = false;
-        }
-    }
-
-    files.destroy();
-
-    if (!ok)
-        Unload();
-    else
-        missions.sort();
-}
-
-void
-Campaign::LoadTemplateList(DataLoader* loader)
-{
-    BYTE* block = 0;
-    const char* SourceFilename = "Templates.def";
-
-    loader->UseFileSystem(true);
-    loader->LoadBuffer(SourceFilename, block, true);
-    loader->UseFileSystem(Starshatter::UseFileSystem());
-
-    Parser parser(new BlockReader((const char*)block));
-    Term* term = parser.ParseTerm();
-
-    if (!term) {
-        return;
-    }
-    else {
-        TermText* file_type = term->isText();
-        if (!file_type || file_type->value() != "TEMPLATELIST") {
-            UE_LOG(LogCampaign, Warning, TEXT("WARNING: invalid template list file '%s'"),
-                ANSI_TO_TCHAR(SourceFilename));
-            return;
-        }
-    }
-
-    do {
-        delete term; term = 0;
-        term = parser.ParseTerm();
-
-        if (term) {
-            TermDef* def = term->isDef();
-            if (def && def->name()->value() == "mission") {
-                if (!def->term() || !def->term()->isStruct()) {
-                    UE_LOG(LogCampaign, Warning, TEXT("WARNING: mission struct missing in '%s'"),
-                        ANSI_TO_TCHAR(SourceFilename));
-                }
-                else {
-                    TermStruct* val = def->term()->isStruct();
-
-                    char name_buf[256];
-                    char script[256];
-                    char region_buf[256];
-
-                    int  id = 0;
-                    int  msn_type = 0;
-                    int  grp_type = 0;
-
-                    int  min_rank = 0;
-                    int  max_rank = 0;
-                    int  action_id = 0;
-                    int  action_status = 0;
-                    int  exec_once = 0;
-                    int  start_before = TIME_NEVER;
-                    int  start_after = 0;
-
-                    name_buf[0] = 0;
-                    script[0] = 0;
-                    region_buf[0] = 0;
-
-                    for (int i = 0; i < val->elements()->size(); i++) {
-                        TermDef* pdef = val->elements()->at(i)->isDef();
-                        if (!pdef) continue;
-
-                        if (pdef->name()->value() == "id")
-                            GetDefNumber(id, pdef, SourceFilename);
-
-                        else if (pdef->name()->value() == "name")
-                            GetDefText(name_buf, pdef, SourceFilename);
-
-                        else if (pdef->name()->value() == "script")
-                            GetDefText(script, pdef, SourceFilename);
-
-                        else if (pdef->name()->value() == "rgn" || pdef->name()->value() == "region")
-                            GetDefText(region_buf, pdef, SourceFilename);
-
-                        else if (pdef->name()->value() == "type") {
-                            char typestr[64];
-                            GetDefText(typestr, pdef, SourceFilename);
-                            msn_type = Mission::TypeFromName(typestr);
-                        }
-
-                        else if (pdef->name()->value() == "group") {
-                            char typestr[64];
-                            GetDefText(typestr, pdef, SourceFilename);
-                            grp_type = (int) CombatGroup::TypeFromName(typestr);
-                        }
-
-                        else if (pdef->name()->value() == "min_rank")
-                            GetDefNumber(min_rank, pdef, SourceFilename);
-
-                        else if (pdef->name()->value() == "max_rank")
-                            GetDefNumber(max_rank, pdef, SourceFilename);
-
-                        else if (pdef->name()->value() == "action_id")
-                            GetDefNumber(action_id, pdef, SourceFilename);
-
-                        else if (pdef->name()->value() == "action_status")
-                            GetDefNumber(action_status, pdef, SourceFilename);
-
-                        else if (pdef->name()->value() == "exec_once")
-                            GetDefNumber(exec_once, pdef, SourceFilename);
-
-                        else if (pdef->name()->value().contains("before")) {
-                            if (pdef->term()->isNumber()) {
-                                GetDefNumber(start_before, pdef, SourceFilename);
-                            }
-                            else {
-                                GetDefTime(start_before, pdef, SourceFilename);
-                                start_before -= ONE_DAY;
-                            }
-                        }
-
-                        else if (pdef->name()->value().contains("after")) {
-                            if (pdef->term()->isNumber()) {
-                                GetDefNumber(start_after, pdef, SourceFilename);
-                            }
-                            else {
-                                GetDefTime(start_after, pdef, SourceFilename);
-                                start_after -= ONE_DAY;
-                            }
-                        }
-                    }
-
-                    MissionInfo* info = new MissionInfo;
-                    if (info) {
-                        info->id = id;
-                        info->name = name_buf;
-                        info->script = script;
-                        info->region = region_buf;
-                        info->type = msn_type;
-                        info->min_rank = min_rank;
-                        info->max_rank = max_rank;
-                        info->action_id = action_id;
-                        info->action_status = action_status;
-                        info->exec_once = exec_once;
-                        info->start_before = start_before;
-                        info->start_after = start_after;
-
-                        info->script.setSensitive(false);
-
-                        TemplateList* templist = GetTemplateList(msn_type, grp_type);
-
-                        if (!templist) {
-                            templist = new TemplateList;
-                            templist->mission_type = msn_type;
-                            templist->group_type = grp_type;
-                            templates.append(templist);
-                        }
-
-                        templist->missions.append(info);
-                    }
-                }
-            }
-        }
-    } while (term);
-
-    loader->ReleaseBuffer(block);
 }
 
 // +--------------------------------------------------------------------+
@@ -1686,7 +725,7 @@ Mission* Campaign::GetMission(int32 Id)
                 Info->mission = Loaded;
             }
 
-            UE_LOG(LogCampaign, Warning,
+            UE_LOG(LogCampaign, Log,
                 TEXT("[Campaign Static Mission] Id=%d Name='%s' Elements=%d Player=%s OK=%d"),
                 Id, ANSI_TO_TCHAR(Info->mission->GetName()),
                 Info->mission->GetElements().size(),
@@ -2683,7 +1722,7 @@ void Campaign::LoadFromData(const FS_Campaign& Data)
 
         if (!GalaxyInstance)
         {
-            UE_LOG(LogCampaign, Warning,
+            UE_LOG(LogCampaign, Verbose,
                 TEXT("[Campaign] LoadFromData: Galaxy not initialized yet"));
         }
         else if (!ZoneRow.System.IsEmpty())
@@ -3339,13 +2378,13 @@ void Campaign::DumpMissionList(const FString& Label, const List<MissionInfo>& So
 {
     const FString SafeLabel = Label.IsEmpty() ? TEXT("MissionList") : Label;
 
-    UE_LOG(LogCampaign, Warning, TEXT("[Campaign] ===== %s BEGIN ====="), *SafeLabel);
+    UE_LOG(LogCampaign, Log, TEXT("[Campaign] ===== %s BEGIN ====="), *SafeLabel);
 
     for (int i = 0; i < SourceList.size(); i++)
     {
         const MissionInfo& Info = *SourceList[i];
 
-        UE_LOG(LogCampaign, Warning,
+        UE_LOG(LogCampaign, Log,
             TEXT("[Campaign] %s[%d]: id=%d name=%s script=%s mission=%p"),
             *SafeLabel,
             i,
@@ -3355,20 +2394,20 @@ void Campaign::DumpMissionList(const FString& Label, const List<MissionInfo>& So
             Info.mission);
     }
 
-    UE_LOG(LogCampaign, Warning, TEXT("[Campaign] ===== %s END ====="), *SafeLabel);
+    UE_LOG(LogCampaign, Log, TEXT("[Campaign] ===== %s END ====="), *SafeLabel);
 }
 
 void Campaign::DumpTemplateBuckets(const FString& Label, const List<TemplateList>& SourceList) const
 {
     const FString SafeLabel = Label.IsEmpty() ? TEXT("Templates") : Label;
 
-    UE_LOG(LogCampaign, Warning, TEXT("[Campaign] ===== %s BEGIN ====="), *SafeLabel);
+    UE_LOG(LogCampaign, Log, TEXT("[Campaign] ===== %s BEGIN ====="), *SafeLabel);
 
     for (int i = 0; i < SourceList.size(); i++)
     {
         const TemplateList& Bucket = *SourceList[i];
 
-        UE_LOG(LogCampaign, Warning,
+        UE_LOG(LogCampaign, Log,
             TEXT("[Campaign] %s[%d]: mission_type=%d group_type=%d index=%d missions=%d"),
             *SafeLabel,
             i,
@@ -3382,22 +2421,22 @@ void Campaign::DumpTemplateBuckets(const FString& Label, const List<TemplateList
         DumpMissionList(NestedLabel, Bucket.missions);
     }
 
-    UE_LOG(LogCampaign, Warning, TEXT("[Campaign] ===== %s END ====="), *SafeLabel);
+    UE_LOG(LogCampaign, Log, TEXT("[Campaign] ===== %s END ====="), *SafeLabel);
 }
 
 void Campaign::DumpAllMissionState(const FString& Label) const
 {
     const FString SafeLabel = Label.IsEmpty() ? TEXT("CampaignState") : Label;
 
-    UE_LOG(LogCampaign, Warning, TEXT("[Campaign] ===== %s SUMMARY BEGIN ====="), *SafeLabel);
+    UE_LOG(LogCampaign, Log, TEXT("[Campaign] ===== %s SUMMARY BEGIN ====="), *SafeLabel);
 
-    UE_LOG(LogCampaign, Warning,
+    UE_LOG(LogCampaign, Log,
         TEXT("[Campaign] %s: Missions=%d Templates=%d"),
         *SafeLabel,
         missions.size(),
         templates.size());
 
-    UE_LOG(LogCampaign, Warning, TEXT("[Campaign] ===== %s SUMMARY END ====="), *SafeLabel);
+    UE_LOG(LogCampaign, Log, TEXT("[Campaign] ===== %s SUMMARY END ====="), *SafeLabel);
 
     DumpMissionList(TEXT("Missions"), missions);
     DumpTemplateBuckets(TEXT("Templates"), templates);

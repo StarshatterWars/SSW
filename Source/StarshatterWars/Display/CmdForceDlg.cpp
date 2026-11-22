@@ -471,7 +471,7 @@ void UCmdForceDlg::ShowForceDlg()
     SetVisibility(ESlateVisibility::Visible);
 }
 
-void UCmdForceDlg::ExecFrame()
+void UCmdForceDlg::ExecFrame(double /*DeltaTime*/)
 {
     if (!CampaignPtr)
     {

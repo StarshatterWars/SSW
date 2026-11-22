@@ -33,7 +33,7 @@ Token::Token(const Token& rhs)
     }
     else {
         mFullSymbol = new(char[mLength + 1]);
-        strcpy(mFullSymbol, rhs.mFullSymbol);
+        strcpy_s(mFullSymbol, mLength+1, rhs.mFullSymbol);
     }
 }
 
@@ -105,7 +105,7 @@ Token::operator = (const Token& rhs)
     }
     else {
         mFullSymbol = new(char[mLength + 1]);
-        strcpy(mFullSymbol, rhs.mFullSymbol);
+        strcpy_s(mFullSymbol, mLength+1, rhs.mFullSymbol);
     }
 
     mType = rhs.mType;
@@ -285,12 +285,18 @@ Scanner::Scanner(Reader* r)
 { }
 
 Scanner::Scanner(const Scanner& rhs)
-    : index(rhs.index), old_index(rhs.old_index), length(rhs.length),
+    : 
     reader(rhs.reader),
-    line(rhs.line), old_line(0), lineStart(rhs.lineStart)
+    index(rhs.index),
+    old_index(rhs.old_index),
+    length(rhs.length),
+    line(rhs.line),
+    old_line(0),
+    lineStart(rhs.lineStart)
 {
-    str = new(char[strlen(rhs.str) + 1]);
-    strcpy(str, rhs.str);
+    const char* Source=rhs.str?rhs.str:"";
+    str = new char[strlen(Source)+1];
+    strcpy_s(str,strlen(Source)+1,Source);
 }
 
 Scanner::Scanner(const Text& s)
@@ -298,7 +304,7 @@ Scanner::Scanner(const Text& s)
     old_line(0), lineStart(0)
 {
     str = new(char[s.length() + 1]);
-    strcpy(str, s.data());
+    strcpy_s(str, s.length()+1, s.data());
 }
 
 Scanner::~Scanner()
@@ -311,9 +317,10 @@ Scanner::~Scanner()
 Scanner&
 Scanner::operator = (const Scanner& rhs)
 {
-    delete[] str;
-    str = new(char[strlen(rhs.str) + 1]);
-    strcpy(str, rhs.str);
+    if(this==&rhs) return *this;
+    const char* Source=rhs.str?rhs.str:"";
+    char* Copy=new char[strlen(Source)+1]; strcpy_s(Copy,strlen(Source)+1,Source);
+    delete[] str; str=Copy;
 
     index = rhs.index;
     old_index = rhs.old_index;
@@ -332,7 +339,7 @@ Scanner::Load(const Text& s)
 {
     delete[] str;
     str = new(char[s.length() + 1]);
-    strcpy(str, s.data());
+    strcpy_s(str, s.length()+1, s.data());
 
     index = 0;
     old_index = 0;
@@ -459,7 +466,7 @@ Scanner::Get(Need need)
     if (line == 0) col++;
 
     char* buf = new(char[extent + 1]);
-    strncpy(buf, str + start, extent);
+    memcpy(buf, str + start, extent);
     buf[extent] = '\0';
 
     if (type == Token::Comment && Token::hidecom) {

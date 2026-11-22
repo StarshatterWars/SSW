@@ -26,28 +26,29 @@ static int32 Rand0_99()
 }
 
 CombatAction::CombatAction(int32 InId, int32 InType, int32 InSubtype, int32 InTeam)
-    : id(InId)
-    , title(nullptr)
-    , type((uint8)InType)
-    , subtype((uint8)InSubtype)
-    , opp_type((uint8)0xFF) // -1 in uint8
-    , team((uint8)InTeam)
-    , status((uint8)PENDING)
-    , min_rank(0)
-    , max_rank(100)
-    , source(ECombatEventSource::NONE)
-    , count(0)
-    , start_before((int32)1e9)
-    , start_after(0)
-    , delay(0)
-    , probability(100)
-    , rval(-1)
-    , time(0)
-    , asset_type(0)
-    , asset_id(0)
-    , target_type(0)
-    , target_id(0)
-    , target_iff(0)
+    : 
+    id(InId),
+    type((uint8)InType),
+    subtype((uint8)InSubtype),
+    opp_type((uint8)0xFF), // -1 in uint8
+    team((uint8)InTeam),
+    status((uint8)PENDING),
+    min_rank(0),
+    max_rank(100),
+    source(ECombatEventSource::NONE),
+    title(nullptr),
+    count(0),
+    start_before((int32)1e9),
+    start_after(0),
+    delay(0),
+    probability(100),
+    rval(-1),
+    time(0),
+    asset_type(0),
+    asset_id(0),
+    target_type(0),
+    target_id(0),
+    target_iff(0)
 {
 }
 

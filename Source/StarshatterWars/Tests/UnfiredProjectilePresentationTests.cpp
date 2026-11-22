@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "ShipActor.h"
 #include "ShipWeaponMountComponent.h"
@@ -11,6 +12,7 @@ bool FUnfiredProjectilePresentationTest::RunTest(const FString&)
 {
  const auto Options=UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
  UWorld* World=UWorld::CreateWorld(EWorldType::Game,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
  ON_SCOPE_EXIT{World->DestroyWorld(false);};
  auto* Bolt=World->SpawnActor<ABoltWeaponActor>();Bolt->DispatchBeginPlay();
  TestTrue(TEXT("Unfired game-world bolt is hidden"),Bolt->IsHidden());

@@ -48,7 +48,7 @@ void UQuitMissionMenu::BuildGeneratedContent()
 
     if (TitleText)
     {
-        TitleText->SetText(FText::FromString(TEXT("MISSION CONTROL  /  PAUSED")));
+        TitleText->SetText(FText::FromString(TEXT("MISSION CONTROL  /  LIVE")));
         TitleText->SetJustification(ETextJustify::Left);
         TitleText->SetColorAndOpacity(FSlateColor(FLinearColor(0.53f, 0.84f, 0.96f, 1.0f)));
     }

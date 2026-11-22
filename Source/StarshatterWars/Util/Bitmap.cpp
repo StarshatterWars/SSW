@@ -331,6 +331,15 @@ void Bitmap::ClearImage()
     TextureGuard.Reset();RenderTargetGuard.Reset();
 }
 
+void Bitmap::SetTexture(UTexture2D* InTexture, int t)
+{
+    ClearImage();
+    if(!InTexture) return;
+    Texture=InTexture;TextureGuard.Reset(InTexture);
+    width=InTexture->GetSizeX();height=InTexture->GetSizeY();mapsize=width*height;
+    type=t;texture=true;alpha_loaded=t!=BMP_SOLID;
+}
+
 void Bitmap::SetCPUImage(int w,int h,const FColor* pixels,int t,bool upload)
 {
     if(!pixels || w<1 || h<1 || int64(w)*h>16*1024*1024){ClearImage();return;}
@@ -398,7 +407,7 @@ void Bitmap::CopyImage(int w, int h, BYTE* p, int t)
 
 void Bitmap::CopyImage(int w, int h, ColorIndex* p, int t)
 {
-    // Convenience overload to fix ìcannot convert ColorIndex* to BYTE*î
+    // Convenience overload to fix ‚Äúcannot convert ColorIndex* to BYTE*‚Äù
     CopyImage(w, h, (BYTE*)p, t);
 }
 
@@ -685,7 +694,7 @@ void Bitmap::SetColor(int x, int y, FColor c)
     //last_modified = GetRealTime();
 }
 
-// Linear-index helpers (fix ìSetColor does not take 2 argumentsî call sites)
+// Linear-index helpers (fix ‚ÄúSetColor does not take 2 arguments‚Äù call sites)
 void Bitmap::SetColor(int i, FColor c)
 {
     if (width < 1 || height < 1) return;

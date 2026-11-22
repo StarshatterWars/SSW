@@ -1,13 +1,18 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Input/Events.h"
 #include "InputCoreTypes.h"
 #include "MissionAwardDlg.h"
 #include "AwardShowDlg.h"
+#include "AwardsJsonCatalog.h"
+#include "Misc/Paths.h"
 #include "Components/TextBlock.h"
 #include "Components/Button.h"
 #include "Components/SizeBox.h"
 #include "Components/Image.h"
+#include "Components/NativeWidgetHost.h"
+#include "Components/ScaleBox.h"
 #include "Engine/World.h"
 #include "Engine/GameInstance.h"
 #include "Slate/WidgetRenderer.h"
@@ -24,26 +29,41 @@
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FAwardPresentationTest,"Starshatter.Mission.AwardPresentation",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FAwardPresentationTest::RunTest(const FString&)
 {
-    auto* World=UWorld::CreateWorld(EWorldType::Game,false);auto* GI=NewObject<UGameInstance>();World->SetGameInstance(GI);
+    auto* World=UWorld::CreateWorld(EWorldType::EditorPreview,false);
+    FScopedSSWTestWorldContext TestWorldContext1(World);auto* GI=NewObject<UGameInstance>();World->SetGameInstance(GI);
     ON_SCOPE_EXIT{World->DestroyWorld(false);};
     auto* Mission=NewObject<UMissionAwardDlg>(World);Mission->Initialize();auto Widget=Mission->TakeWidget();Mission->EnsureUi();Mission->EnsureUi();
     auto* Logbook=NewObject<UAwardShowDlg>(World);Logbook->Initialize();Logbook->TakeWidget();Logbook->EnsureUi();Logbook->EnsureUi();
     for(auto* Button:{Mission->btn_close,Logbook->btn_close}){
-        if(!TestNotNull(TEXT("Modern checkmark accept button"),Button))continue;
-        TestEqual(TEXT("Award close uses standard tooltip"),Button->GetToolTipText().ToString(),FString(TEXT("Accept award and return")));
+        if(!TestNotNull(TEXT("Standard red close button"),Button))continue;
+        TestEqual(TEXT("Award close uses standard tooltip"),Button->GetToolTipText().ToString(),FString(TEXT("Close and return to the live session")));
         auto* Box=Cast<USizeBox>(Button->GetContent());TestNotNull(TEXT("No text on accept button"),Box);
-        auto* Icon=Box?Cast<UImage>(Box->GetContent()):nullptr;
-        if(TestNotNull(TEXT("Checkmark icon"),Icon))TestNotNull(TEXT("Icon asset loads"),Icon->GetBrush().GetResourceObject());
+        auto* Icon=Box?Cast<UNativeWidgetHost>(Box->GetContent()):nullptr;
+        if(TestNotNull(TEXT("Font-independent close icon"),Icon)){Icon->TakeWidget();TestTrue(TEXT("Close glyph is mounted"),Icon->GetContent().IsValid());}
     }
+    for(auto* Image:{Mission->img_rank,Logbook->img_rank})
+    {
+        auto* Fit=Image?Cast<UScaleBox>(Image->GetParent()):nullptr;
+        if(TestNotNull(TEXT("Rank and medal images preserve their aspect ratio"),Fit))
+            TestEqual(TEXT("Insignia is fitted, never stretched"),Fit->GetStretch(),EStretch::ScaleToFit);
+    }
+    Logbook->SetVisibility(ESlateVisibility::Visible);
+    const FKeyEvent CloseLogbook(EKeys::Escape,FModifierKeysState(),0,false,0,0);
+    Logbook->NativeOnKeyDown(FGeometry(),CloseLogbook);
+    TestFalse(TEXT("First Escape dismisses the logbook award without a latch"),Logbook->IsVisible());
     if(!TestNotNull(TEXT("Award title exists"),Mission->lbl_name) || !TestNotNull(TEXT("Award text exists"),Mission->lbl_info))return false;
     Mission->lbl_name->SetText(FText::FromString(TEXT("Rank of Ensign")));
     Mission->lbl_info->SetText(FText::FromString(TEXT("Flight training completed. You are promoted to Ensign.")));
-    if(auto* Ranks=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/FRankInfo.FRankInfo")))
-    {
-        TArray<FRankInfo*> Rows;Ranks->GetAllRows(TEXT("Award preview"),Rows);
-        for(auto* Row:Rows)if(Row->Name.Equals(TEXT("Ensign"),ESearchCase::IgnoreCase))
-            if(auto* Texture=Row->LargeImage.LoadSynchronous())Mission->img_rank->SetBrushFromTexture(Texture);
-    }
+    TArray<FRankInfo> Ranks;TArray<FMedalInfo> Medals;FString Error;
+    if(!TestTrue(TEXT("Promotion images load from the native awards catalog"),AwardsJsonCatalog::Load(FPaths::ProjectContentDir()/TEXT("GameData/Awards/awards.json"),Ranks,Medals,Error)))return false;
+    bool FoundEnsign=false;
+    for(const auto& Row:Ranks)if(Row.Name.Equals(TEXT("Ensign"),ESearchCase::IgnoreCase))
+        if(auto* Texture=Row.LargeImage.LoadSynchronous())
+        {
+            FoundEnsign=true;Mission->img_rank->SetBrushFromTexture(Texture,true);
+            TestTrue(TEXT("Insignia uses its texture's natural aspect"),Mission->img_rank->GetBrush().ImageSize.X==Texture->GetSizeX() && Mission->img_rank->GetBrush().ImageSize.Y==Texture->GetSizeY());
+        }
+    TestTrue(TEXT("Ensign insignia is available"),FoundEnsign);
     FString Capture;
     if(!GUsingNullRHI && FParse::Value(FCommandLine::Get(),TEXT("AwardCapture="),Capture)){
         FlushAsyncLoading();FAssetCompilingManager::Get().FinishAllCompilation();
@@ -52,11 +72,10 @@ bool FAwardPresentationTest::RunTest(const FString&)
         FWidgetRenderer* Renderer=new FWidgetRenderer(true);TStrongObjectPtr<UTextureRenderTarget2D> RT(FWidgetRenderer::CreateTargetFor(FVector2D(1280,720),TF_Bilinear,true));
         Renderer->DrawWidget(RT.Get(),Widget,FVector2D(1280,720),0);FlushRenderingCommands();
         Renderer->DrawWidget(RT.Get(),Widget,FVector2D(1280,720),.016f);FlushRenderingCommands();
-        TestTrue(TEXT("Accept button has visible layout width"),Mission->btn_close->GetCachedGeometry().GetLocalSize().X>40);
+        TestTrue(TEXT("Accept button has visible layout width"),Mission->btn_close->GetCachedGeometry().GetLocalSize().X>=28);
         TestNotNull(TEXT("Accept button background texture"),Mission->btn_close->GetStyle().Normal.GetResourceObject());
-        auto* RenderedIcon=Cast<UImage>(CastChecked<USizeBox>(Mission->btn_close->GetContent())->GetContent());
-        TestTrue(TEXT("Checkmark has nonzero rendered geometry"),RenderedIcon->GetCachedGeometry().GetLocalSize().X>30 && RenderedIcon->GetCachedGeometry().GetLocalSize().Y>30);
-        UE_LOG(LogTemp,Display,TEXT("[AwardIconTest] Size=%s DrawAs=%d"),*RenderedIcon->GetCachedGeometry().GetLocalSize().ToString(),int32(RenderedIcon->GetBrush().DrawAs));
+        auto* RenderedIcon=Cast<UNativeWidgetHost>(CastChecked<USizeBox>(Mission->btn_close->GetContent())->GetContent());
+        TestTrue(TEXT("Close icon has visible rendered geometry"),RenderedIcon && RenderedIcon->GetCachedGeometry().GetLocalSize().X>=18);
         TArray<FColor> Pixels;RT->GameThread_GetRenderTargetResource()->ReadPixels(Pixels);TArray64<uint8> PNG;FImageUtils::PNGCompressImageArray(1280,720,Pixels,PNG);
         TestTrue(TEXT("Award preview saved"),FFileHelper::SaveArrayToFile(PNG,*Capture));BeginCleanup(Renderer);
     }
@@ -65,7 +84,7 @@ bool FAwardPresentationTest::RunTest(const FString&)
 
     Mission->SetVisibility(ESlateVisibility::Visible);
     Mission->btn_close->OnClicked.Broadcast();
-    TestTrue(TEXT("Checkmark dismisses the mission award"), Mission->GetVisibility() == ESlateVisibility::Collapsed);
+    TestTrue(TEXT("Close dismisses the mission award"), Mission->GetVisibility() == ESlateVisibility::Collapsed);
 
     Mission->SetVisibility(ESlateVisibility::Visible);
     const FKeyEvent RepeatEnter(EKeys::Enter, FModifierKeysState(), 0, true, 0, 0);

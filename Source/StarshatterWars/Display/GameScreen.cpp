@@ -511,7 +511,7 @@ void UGameScreen::CycleHUDWarn() { if (hud_view) hud_view->CycleHUDWarn(); }
 // ExecFrame
 // ------------------------------------------------------------
 
-void UGameScreen::ExecFrame(float DeltaTime)
+void UGameScreen::ExecFrame(double DeltaTime)
 {
     sim = Sim::GetSim();
     if (!sim)

@@ -458,33 +458,33 @@ HUDView::HUDView(Screen* InScreen)
 	xcenter = (width / 2.0) - 0.5;
 	ycenter = (height / 2.0) + 0.5;
 
-	PrepareBitmap("HUDleftA.pcx", hud_left_air, hud_left_shade_air);
-	PrepareBitmap("HUDrightA.pcx", hud_right_air, hud_right_shade_air);
-	PrepareBitmap("HUDleft.pcx", hud_left_fighter, hud_left_shade_fighter);
-	PrepareBitmap("HUDright.pcx", hud_right_fighter, hud_right_shade_fighter);
-	PrepareBitmap("HUDleft1.pcx", hud_left_starship, hud_left_shade_starship);
-	PrepareBitmap("HUDright1.pcx", hud_right_starship, hud_right_shade_starship);
-	PrepareBitmap("INSTR_left.pcx", instr_left, instr_left_shade);
-	PrepareBitmap("INSTR_right.pcx", instr_right, instr_right_shade);
-	PrepareBitmap("CAUTION_left.pcx", warn_left, warn_left_shade);
-	PrepareBitmap("CAUTION_right.pcx", warn_right, warn_right_shade);
-	PrepareBitmap("hud_icon.pcx", icon_ship, icon_ship_shade);
-	PrepareBitmap("hud_icon.pcx", icon_target, icon_target_shade);
-
-	PrepareBitmap("lead.pcx", lead, lead_shade);
-	PrepareBitmap("cross.pcx", cross, cross_shade);
-	PrepareBitmap("cross1.pcx", cross1, cross1_shade);
-	PrepareBitmap("cross2.pcx", cross2, cross2_shade);
-	PrepareBitmap("cross3.pcx", cross3, cross3_shade);
-	PrepareBitmap("cross4.pcx", cross4, cross4_shade);
-	PrepareBitmap("fpm.pcx", fpm, fpm_shade);
-	PrepareBitmap("hpm.pcx", hpm, hpm_shade);
-	PrepareBitmap("chase_l.pcx", chase_left, chase_left_shade);
-	PrepareBitmap("chase_r.pcx", chase_right, chase_right_shade);
-	PrepareBitmap("chase_t.pcx", chase_top, chase_top_shade);
-	PrepareBitmap("chase_b.pcx", chase_bottom, chase_bottom_shade);
-	PrepareBitmap("ladder1.pcx", pitch_ladder_pos, pitch_ladder_pos_shade);
-	PrepareBitmap("ladder2.pcx", pitch_ladder_neg, pitch_ladder_neg_shade);
+	// Imported UE assets stay GPU-resident; Slate applies HUD tint.
+	DataLoader::GetLoader()->LoadHUDTexture("HUDleftA", hud_left_air, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("HUDrightA", hud_right_air, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("HUDleft", hud_left_fighter, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("HUDright", hud_right_fighter, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("HUDleft1", hud_left_starship, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("HUDright1", hud_right_starship, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("INSTR_left", instr_left, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("INSTR_right", instr_right, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("CAUTION_left", warn_left, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("CAUTION_right", warn_right, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("hud_icon", icon_ship, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("hud_icon", icon_target, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("lead", lead, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("cross", cross, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("cross1", cross1, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("cross2", cross2, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("cross3", cross3, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("cross4", cross4, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("fpm", fpm, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("hpm", hpm, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("chase_l", chase_left, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("chase_r", chase_right, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("chase_t", chase_top, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("chase_b", chase_bottom, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("ladder1", pitch_ladder_pos, Bitmap::BMP_TRANSLUCENT);
+	DataLoader::GetLoader()->LoadHUDTexture("ladder2", pitch_ladder_neg, Bitmap::BMP_TRANSLUCENT);
 
 	hud_left_air.SetType(Bitmap::BMP_TRANSLUCENT);
 	hud_right_air.SetType(Bitmap::BMP_TRANSLUCENT);
@@ -934,7 +934,7 @@ HUDView::Update(SimObject* obj)
 
 	if (obj == target) {
 		target = nullptr;
-		PrepareBitmap("hud_icon.pcx", icon_target, icon_target_shade);
+
 		ColorizeBitmap(icon_target, icon_target_shade, TextColor);
 	}
 
@@ -2518,7 +2518,7 @@ HUDView::SetTarget(SimObject* t)
 			TransferBitmap(tship->Design()->hud_icon, icon_target, icon_target_shade);
 		}
 		else {
-			PrepareBitmap("hud_icon.pcx", icon_target, icon_target_shade);
+
 		}
 
 		SetStatusColor((SYSTEM_STATUS)tgt_status);
@@ -2953,8 +2953,6 @@ HUDView::ExecFrame()
 	}
 }
 
-
-
 // +--------------------------------------------------------------------+
 // Local helpers
 // +--------------------------------------------------------------------+
@@ -3091,7 +3089,7 @@ void HUDView::CycleHUDMode()
 
 	if (arcade && mode != EHUDMode::Tactical)
 		mode = EHUDMode::Off;
-	else if (mode > EHUDMode::ILS) // enum class: don’t use mode < Off
+	else if (mode > EHUDMode::ILS) // enum class: donâ€™t use mode < Off
 		mode = EHUDMode::Off;
 	else if (ship && !ship->IsDropship() && mode == EHUDMode::ILS)
 		mode = EHUDMode::Off;
@@ -3335,31 +3333,6 @@ HUDView::ClearMessages()
 // +--------------------------------------------------------------------+
 
 void
-HUDView::PrepareBitmap(const char* name, Bitmap& img, uint8*& shades)
-{
-	delete[] shades;
-	shades = nullptr;
-
-	DataLoader* loader = DataLoader::GetLoader();
-
-	loader->SetDataPath("HUD/");
-	int loaded = loader->LoadGameBitmap(name, img, Bitmap::BMP_TRANSPARENT);
-	loader->SetDataPath(nullptr);
-
-	if (!loaded)
-		return;
-
-	const int w = img.Width();
-	const int h = img.Height();
-
-	shades = new uint8[w * h];
-
-	for (int y = 0; y < h; y++)
-		for (int x = 0; x < w; x++)
-			shades[y * w + x] = (uint8)(img.GetColor(x, y).R * 0.66f);
-}
-
-void
 HUDView::TransferBitmap(const Bitmap& src, Bitmap& img, uint8*& shades)
 {
 	delete[] shades;
@@ -3591,7 +3564,7 @@ void HUDView::DrawBars()
 		DrawHUDText(TXT_SPEED, txt, r, DT_LEFT);
 	}
 
-	// HEADING (center top) — no Ship::Orientation() available
+	// HEADING (center top) â€” no Ship::Orientation() available
 	{
 		// Derive heading from velocity direction (XY plane).
 		// If nearly stopped, heading is undefined; show 000.
@@ -3809,7 +3782,7 @@ void HUDView::DrawLCOS(SimObject* targ, double dist)
 	s->Show();
 	s->MoveTo(FVector((float)x, (float)y, 1));
 
-	// If you want a little “range cue”, draw a tiny box:
+	// If you want a little â€œrange cueâ€, draw a tiny box:
 	if (!arcade)
 	{
 		const int ix = (int)x;
@@ -3968,7 +3941,7 @@ void HUDView::DrawPitchLadder()
 	// Map +-90 deg to +-120 px (screen Y is down, so invert sign)
 	const float yOff = FMath::Clamp(-pitchDeg / 90.0f, -1.0f, 1.0f) * 120.0f;
 
-	// Show “zero” rung (index 15) at offset center.
+	// Show â€œzeroâ€ rung (index 15) at offset center.
 	const int idxZero = 15;
 	if (pitch_ladder[idxZero])
 	{
@@ -4061,7 +4034,7 @@ void HUDView::FillRect(const FSlateRect& R, const FLinearColor& C) const
 	FSlateDrawElement::MakeBox(
 		paint_ctx->OutDrawElements,
 		paint_layer,
-		paint_geo->ToPaintGeometry(Pos, Size),
+		paint_geo->ToPaintGeometry(FVector2f(Size), FSlateLayoutTransform(FVector2f(Pos))),
 		FCoreStyle::Get().GetBrush("WhiteBrush"),
 		ESlateDrawEffect::None,
 		C
@@ -4101,7 +4074,7 @@ void HUDView::DrawTextAt(const FVector2D& Pos, const FString& Text, const FSlate
 	FSlateDrawElement::MakeText(
 		paint_ctx->OutDrawElements,
 		paint_layer,
-		paint_geo->ToPaintGeometry(Pos, FVector2D(1, 1)),
+		paint_geo->ToPaintGeometry(FVector2f(FVector2D(1, 1)), FSlateLayoutTransform(FVector2f(Pos))),
 		Text,
 		FontInfo,
 		ESlateDrawEffect::None,

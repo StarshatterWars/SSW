@@ -96,7 +96,7 @@ void UStarshatterPlayerSubsystem::ResetToDefaults()
     // Loading a profile and migrating an old insurance balance never top up funds.
     auto& Economy=PlayerInfo.Economy;
     Economy.bLegacyWalletMigrated=true;
-    TransactionAI::ReconcileExternalBalance(Economy,FEconomyLedger::Pilot(),50000,
+    TransactionAI::ReconcileExternalBalance(Economy,FEconomyLedger::Pilot(),5000,
         TEXT("Career starting allowance"),TEXT("Career office"),EWalletTransactionCategory::OpeningBalance);
     Economy.InitializedMarkets.Add(TEXT("Career starting grant"));
     if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->GetPersistentTrainingAgent().RestoreJournal(TEXT(""));

@@ -19,15 +19,19 @@ FLinearColor StatusColor(const FText& Status) {
 }
 }
 void SRecordDetails::Construct(const FArguments& Args) {
-    Record=Args._Record;
+    Record=Args._Record;bEventDriven=Args._EventDriven;SelectionRevision=Args._SelectionRevision;
+    if(bEventDriven)ChangeHandle=FSimDataEvents::Changed().AddLambda([Weak=TWeakPtr<SRecordDetails>(SharedThis(this))](const FEconomyState&){if(auto Self=Weak.Pin())Self->bDirty=true;});
     ChildSlot[SAssignNew(Content,SVerticalBox)];
     Refresh(2);
 }
+SRecordDetails::~SRecordDetails(){FSimDataEvents::Changed().Remove(ChangeHandle);}
 void SRecordDetails::Tick(const FGeometry& Geometry,double Time,float Delta) {
     SCompoundWidget::Tick(Geometry,Time,Delta);
+    const float Width=Geometry.GetLocalSize().X;
+    const int32 Columns=Width>=1100?4:Width>=760?3:Width>=430?2:1;
+    if(bEventDriven){const uint32 Revision=SelectionRevision.Get();if(!bDirty && Revision==LastSelection && Columns==LastColumns)return;bDirty=false;LastSelection=Revision;Refresh(Columns);return;}
     if(Time<NextRefresh) return;
     NextRefresh=Time+.25;
-    const float Width=Geometry.GetLocalSize().X;
     Refresh(Width>=1100?4:Width>=760?3:Width>=430?2:1);
 }
 void SRecordDetails::Refresh(int32 Columns) {

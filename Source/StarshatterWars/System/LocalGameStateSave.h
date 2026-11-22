@@ -43,6 +43,7 @@ struct FLocalShipState
     UPROPERTY(SaveGame) int32 Shield=0;
     UPROPERTY(SaveGame) FPlayerHangarShip Condition;
     UPROPERTY(SaveGame) TArray<int32> Ammo;
+    UPROPERTY(SaveGame) bool bMagazineIssue = false;
     UPROPERTY(SaveGame) TArray<double> Fuel;
     UPROPERTY(SaveGame) TArray<int32> Navigation;
     UPROPERTY(SaveGame) TArray<FLocalNavState> FlightPlan;
@@ -109,6 +110,9 @@ class ULocalUniverseState : public ULocalStateArea
 {
     GENERATED_BODY()
 public:
+    // Flight-plan positions are authored X/Y horizontal, Z altitude.
+    // Zero identifies checkpoints written before the coordinate-restore fix.
+    UPROPERTY(SaveGame) int32 NavigationCoordinatesVersion=0;
     UPROPERTY(SaveGame) int32 MissionId=INDEX_NONE;
     UPROPERTY(SaveGame) int32 AgentAssignmentId=INDEX_NONE;
     UPROPERTY(SaveGame) FString MissionName;

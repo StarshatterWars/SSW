@@ -70,5 +70,6 @@ protected:
         const FVector& CockpitPosition, const TArray<FFighterLandingGearDefinition>& Definitions);
     void UpdateLandingGearPresentation();
     void ConfigureCockpitBlueprint();
+    void UpdateCockpitPresentation();
     int32 LastReportedGearState = INDEX_NONE;
 };

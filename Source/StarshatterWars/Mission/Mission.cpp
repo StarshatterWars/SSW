@@ -153,7 +153,7 @@ bool Mission::LoadMissionCommon(
 			continue;
 		}
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Mission.cpp] Copy SrcElem -> Elem: Name='%s' SrcRegion='%s'"),
 			*SrcElem.Name,
 			*SrcElem.RegionName);
@@ -255,7 +255,7 @@ bool Mission::LoadMissionCommon(
                 Elem->SetSkin(Legacy?Legacy->FindSkin(TCHAR_TO_ANSI(*SrcElem.SkinName)):nullptr);
             }
 
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, Log,
 				TEXT("[Mission::LoadMissionCommon] SetShipDesign Element='%s' Design='%s' Model='%s'"),
 				*SrcElem.Name,
 				*SrcElem.Design,
@@ -407,7 +407,7 @@ bool Mission::LoadMissionCommon(
 			Elem->AddNavPoint(
 				Nav);
 
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, Log,
 				TEXT("[Mission::LoadMissionCommon] Added navpoint Elem='%s' Cmd='%s' Region='%s' Objective='%s' Target='%s' Farcast=%d Action=%d Loc=%s Speed=%d"),
 				*SrcElem.Name,
 				*SrcNav.OrderName,
@@ -539,7 +539,7 @@ bool Mission::LoadMissionCommon(
 	Validate();
     if(bMissingDesign) {ok=false;AddError("Missing authored ship design; mission cannot launch.");}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[Mission::LoadMissionCommon] COMPLETE Elements=%d"),
 		elements.size());
 
@@ -552,22 +552,9 @@ Mission::Mission()
 }
 
 Mission::Mission(int identity, const char* fname, const char* pname)
-	: id(identity),
-	type(0),
-	team(1),
-	ok(false),
-	active(false),
-	complete(false),
-	star_system(0),
-	start(33 * 3600),
-    end(0),
-    DisplayType(),
-    bTemplate(false),
-	stardate(0),
-	target(0),
-	ward(0),
-	current(0),
-	degrees(false)
+    : id(identity), type(0), team(1), start(33*3600), end(0), stardate(0),
+      ok(false), active(false), complete(false), degrees(false), DisplayType(),
+      star_system(nullptr), bTemplate(false), target(nullptr), ward(nullptr), current(nullptr)
 {
 	objective = "Mission Unspecified";
 	sitrep = "Mission Unknown";
@@ -2517,28 +2504,10 @@ bool Mission::LoadFromTemplateMissionData(const FS_TemplateMission& InTemplate)
 static int elem_idkey = 1;
 
 MissionElement::MissionElement()
-	: id(elem_idkey++),
-	elem_id(0),
-	ship_design(nullptr),
-	skin(0),
-	count(1),
-	maint_count(0),
-	dead_count(0),
-	IFF_code(0),
-	player(0),
-	command_ai(1),
-	alert(false),
-	playable(false),
-	rogue(false),
-	invulnerable(false),
-	respawns(0),
-	hold_time(0),
-	zone_lock(0),
-	heading(0),
-	mission_role((int)EMissionType::OTHER),
-	intel(EIntel::SECRET),
-	combat_group(0),
-	combat_unit(0)
+    : id(elem_idkey++), elem_id(0), ship_design(nullptr), skin(nullptr), count(1),
+      maint_count(0), dead_count(0), IFF_code(0), mission_role((int)EMissionType::OTHER), intel(EIntel::SECRET),
+      respawns(0), hold_time(0), zone_lock(0), player(0), command_ai(1), alert(false), playable(false),
+      rogue(false), invulnerable(false), heading(0), combat_group(nullptr), combat_unit(nullptr)
 {
 }
 

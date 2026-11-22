@@ -70,7 +70,7 @@ private:
 	void BindFormWidgets();
 	void BuildTwoPanelLayout();
 	void RefreshIntelRows();
-	void ExecFrame();
+	virtual void ExecFrame(double DeltaTime = 0.0) override;
 	void RebuildNewsListIfCampaignChanged();
     static void EnsureTrainingIntroduction(Campaign* Story);
 	void AppendNewEventsIfAny();

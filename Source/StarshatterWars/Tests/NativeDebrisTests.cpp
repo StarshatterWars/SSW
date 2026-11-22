@@ -1,6 +1,7 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "Components/StaticMeshComponent.h"
 #include "DataLoader.h"
@@ -59,8 +60,6 @@ bool FNativeDebrisTest::RunTest(const FString&)
     if (!Sim::GetSim())
     {
         // The fixture needs no effects. Standalone editor tests run outside the game data directory.
-        if (!FPaths::FileExists(TEXT("Explosions/Explosions.def")))
-            AddExpectedError(TEXT("could notxparse 'Explosions.def'"), EAutomationExpectedErrorFlags::Contains, 1);
         OwnedSim = MakeUnique<FDeathSpiralSim>();
     }
 
@@ -111,6 +110,7 @@ bool FNativeDebrisTest::RunTest(const FString&)
     const auto Options = UWorld::InitializationValues().AllowAudioPlayback(false)
         .CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     UWorld* World = UWorld::CreateWorld(EWorldType::EditorPreview, false, NAME_None, nullptr, true, ERHIFeatureLevel::Num, &Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     if (!TestNotNull(TEXT("Debris test world"), World)) return false;
     ON_SCOPE_EXIT { World->DestroyWorld(false); };
     auto* Visual = World->SpawnActor<AShipActor>();

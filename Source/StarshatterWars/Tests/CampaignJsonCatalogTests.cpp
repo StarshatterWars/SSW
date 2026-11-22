@@ -68,4 +68,41 @@ bool FCampaignJsonCommitTest::RunTest(const FString&)
     TestTrue(TEXT("Duplicate rejection keeps original campaign"),FS_Campaign::StaticStruct()->CompareScriptStruct(&Before,&Row,0));
     return true;
 }
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FCampaignHeaderJsonTest, "Starshatter.Campaign.JsonHeaderAndMergedCatalogParity",
+    EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
+bool FCampaignHeaderJsonTest::RunTest(const FString&)
+{
+    auto* Data = NewObject<UStarshatterGameDataSubsystem>(NewObject<UGameInstance>());
+    Data->CampaignDataTable = NewObject<UDataTable>();
+    Data->CampaignDataTable->RowStruct = FS_Campaign::StaticStruct();
+    for (int32 Index = 1; Index <= 5; ++Index)
+    {
+        const FString Directory = FPaths::ProjectContentDir() / FString::Printf(TEXT("GameData/Campaigns/%02d"), Index);
+        const FTCHARToUTF8 Path(*(Directory / TEXT("campaign.def")));
+        Data->CampaignDataTable->EmptyTable(); Data->LoadCampaignData(Path.Get(), true, false);
+        if (!TestEqual(TEXT("Legacy reference campaign"), Data->CampaignDataTable->GetRowMap().Num(), 1)) return false;
+        const FS_Campaign Legacy = *reinterpret_cast<const FS_Campaign*>(Data->CampaignDataTable->GetRowMap().CreateConstIterator().Value());
+        Data->CampaignDataTable->EmptyTable(); Data->LoadCampaignData(Path.Get(), true, true);
+        if (!TestEqual(TEXT("JSON header and separate catalogs load"), Data->CampaignDataTable->GetRowMap().Num(), 1)) return false;
+        const FS_Campaign Native = *reinterpret_cast<const FS_Campaign*>(Data->CampaignDataTable->GetRowMap().CreateConstIterator().Value());
+        TestEqual(TEXT("Campaign name"), Native.Name, Legacy.Name);
+        TestEqual(TEXT("Description"), Native.Description, Legacy.Description);
+        TestEqual(TEXT("Situation"), Native.Situation, Legacy.Situation);
+        TestEqual(TEXT("Start date"), Native.Start, Legacy.Start);
+        TestTrue(TEXT("Orders"), Native.Orders == Legacy.Orders);
+        TestEqual(TEXT("System"), Native.System, Legacy.System);
+        TestEqual(TEXT("Region"), Native.Region, Legacy.Region);
+        TestEqual(TEXT("Identity"), Native.Index, Legacy.Index);
+        TestEqual(TEXT("Scripted"), Native.bScripted, Legacy.bScripted);
+        TestEqual(TEXT("Sequential"), Native.bSequential, Legacy.bSequential);
+        TestEqual(TEXT("Mission catalog count"), Native.MissionList.Num(), Legacy.MissionList.Num());
+        TestEqual(TEXT("Scene count"), Native.Missions.Num(), Legacy.Missions.Num());
+        TestEqual(TEXT("Template count"), Native.TemplateMissions.Num(), Legacy.TemplateMissions.Num());
+        TestEqual(TEXT("Script count"), Native.ScriptedMissions.Num(), Legacy.ScriptedMissions.Num());
+        TestEqual(TEXT("Action count"), Native.Action.Num(), Legacy.Action.Num());
+        TestEqual(TEXT("Zone count"), Native.Zone.Num(), Legacy.Zone.Num());
+    }
+    return true;
+}
 #endif

@@ -191,7 +191,7 @@ int32 USectorMapPanel::NativePaint(
 
         FSlateDrawElement::MakeBox(
             OutDrawElements, ++BaseLayer,
-            AllottedGeometry.ToPaintGeometry(Origin, FVector2D(Width, Height)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(Width, Height)), FSlateLayoutTransform(FVector2f(Origin))),
             FCoreStyle::Get().GetBrush("WhiteBrush"), ESlateDrawEffect::None,
             FLinearColor(0.025f, 0.04f, 0.065f, 0.94f));
 
@@ -200,8 +200,7 @@ int32 USectorMapPanel::NativePaint(
         {
             FSlateDrawElement::MakeText(
                 OutDrawElements, ++BaseLayer,
-                AllottedGeometry.ToPaintGeometry(
-                    Origin + FVector2D(14.0f, Y), FVector2D(Width - 28.0f, 22.0f)),
+                AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(Width - 28.0f, 22.0f)), FSlateLayoutTransform(FVector2f(Origin + FVector2D(14.0f, Y)))),
                 Text, FCoreStyle::GetDefaultFontStyle("Regular", FontSize),
                 ESlateDrawEffect::None, Color);
         };
@@ -255,14 +254,14 @@ int32 USectorMapPanel::NativePaint(
         const FVector2D Point = ProjectAsteroid(Position);
         if (Point.X < 0 || Point.Y < 0 || Point.X >= PanelSize.X || Point.Y >= PanelSize.Y) return;
         FSlateDrawElement::MakeBox(OutDrawElements, LayerId + 89,
-            AllottedGeometry.ToPaintGeometry(Point - FVector2D(1.5,1.5), FVector2D(3,3)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(3,3)), FSlateLayoutTransform(FVector2f(Point - FVector2D(1.5,1.5)))),
             FCoreStyle::Get().GetBrush("WhiteBrush"), ESlateDrawEffect::None, AsteroidTint);
     };
     const auto DrawAsteroidLabel = [&](const FVector& Position, const FString& Name)
     {
         const FVector2D Point = ProjectAsteroid(Position);
         FSlateDrawElement::MakeText(OutDrawElements, LayerId + 92,
-            AllottedGeometry.ToPaintGeometry(Point + FVector2D(8,-22), FVector2D(225,20)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(225,20)), FSlateLayoutTransform(FVector2f(Point + FVector2D(8,-22)))),
             Name, FCoreStyle::GetDefaultFontStyle("Bold", 11), ESlateDrawEffect::None, AsteroidTint);
     };
     Sim* Simulation = Sim::GetSim();
@@ -300,8 +299,7 @@ int32 USectorMapPanel::NativePaint(
         if (const Orbital* Parent = CachedRegion->Primary())
         {
             FSlateDrawElement::MakeText(OutDrawElements, LayerId + 91,
-                AllottedGeometry.ToPaintGeometry(Center + FVector2D(8.0f, 8.0f),
-                    FVector2D(200.0f, 20.0f)),
+                AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(200.0f, 20.0f)), FSlateLayoutTransform(FVector2f(Center + FVector2D(8.0f, 8.0f)))),
                 ANSI_TO_TCHAR(Parent->GetName()), FCoreStyle::GetDefaultFontStyle("Regular", 11),
                 ESlateDrawEffect::None, FLinearColor::White);
         }
@@ -349,7 +347,7 @@ int32 USectorMapPanel::NativePaint(
     if (!bOperationsView)
     {
         FSlateDrawElement::MakeText(OutDrawElements, LayerId + 500,
-            AllottedGeometry.ToPaintGeometry(FVector2D(16, 35), FVector2D(460, 20)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(460, 20)), FSlateLayoutTransform(FVector2f(FVector2D(16, 35)))),
             FString(TEXT("RMB PAN   /   MMB ORBIT   /   WHEEL ZOOM")),
             FCoreStyle::GetDefaultFontStyle("Regular", 10), ESlateDrawEffect::None,
             FLinearColor(0.35f, 0.63f, 0.76f));
@@ -358,9 +356,7 @@ int32 USectorMapPanel::NativePaint(
     FSlateDrawElement::MakeText(
         OutDrawElements,
         LayerId + 500,
-        AllottedGeometry.ToPaintGeometry(
-            FVector2D(16.0f, 12.0f),
-            FVector2D(520.0f, 20.0f)),
+        AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(520.0f, 20.0f)), FSlateLayoutTransform(FVector2f(FVector2D(16.0f, 12.0f)))),
         InfoString,
         FCoreStyle::GetDefaultFontStyle("Bold", 15),
         ESlateDrawEffect::None,
@@ -1194,7 +1190,7 @@ void USectorMapPanel::DrawMissionElement(
                     FSlateDrawElement::MakeBox(
                         OutDrawElements,
                         BaseLayerId + 1,
-                        AllottedGeometry.ToPaintGeometry(DrawPos, Brush.ImageSize),
+                        AllottedGeometry.ToPaintGeometry(FVector2f(Brush.ImageSize), FSlateLayoutTransform(FVector2f(DrawPos))),
                         &Brush,
                         ESlateDrawEffect::None,
                         GetMapIFFColor(Element));
@@ -1214,7 +1210,7 @@ void USectorMapPanel::DrawMissionElement(
         FSlateDrawElement::MakeBox(
             OutDrawElements,
             BaseLayerId + 1,
-            AllottedGeometry.ToPaintGeometry(TopLeft, DrawSize),
+            AllottedGeometry.ToPaintGeometry(FVector2f(DrawSize), FSlateLayoutTransform(FVector2f(TopLeft))),
             FCoreStyle::Get().GetBrush("WhiteBrush"),
             ESlateDrawEffect::None,
             MarkerColor);
@@ -1300,9 +1296,7 @@ void USectorMapPanel::DrawMissionElement(
         FSlateDrawElement::MakeText(
             OutDrawElements,
             BaseLayerId + 4,
-            AllottedGeometry.ToPaintGeometry(
-                FVector2D(ScreenPos.X + HalfSize + 3.0f, ScreenPos.Y - 6.0f),
-                FVector2D(220.0f, 16.0f)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(220.0f, 16.0f)), FSlateLayoutTransform(FVector2f(FVector2D(ScreenPos.X + HalfSize + 3.0f, ScreenPos.Y - 6.0f)))),
             LabelText,
             FCoreStyle::GetDefaultFontStyle("Regular", 10),
             ESlateDrawEffect::None,
@@ -1469,13 +1463,13 @@ void USectorMapPanel::DrawOperationsGroup(
         Brush.SetResourceObject(Texture);
         Brush.ImageSize = FVector2D(32.0f, 32.0f);
         FSlateDrawElement::MakeBox(OutDrawElements, BaseLayerId + 1,
-            AllottedGeometry.ToPaintGeometry(ScreenPos - Brush.ImageSize * 0.5f, Brush.ImageSize),
+            AllottedGeometry.ToPaintGeometry(FVector2f(Brush.ImageSize), FSlateLayoutTransform(FVector2f(ScreenPos - Brush.ImageSize * 0.5f))),
             &Brush, ESlateDrawEffect::None, MarkerColor);
     }
     else
     {
         FSlateDrawElement::MakeBox(OutDrawElements, BaseLayerId + 1,
-            AllottedGeometry.ToPaintGeometry(TopLeft, DrawSize),
+            AllottedGeometry.ToPaintGeometry(FVector2f(DrawSize), FSlateLayoutTransform(FVector2f(TopLeft))),
             FCoreStyle::Get().GetBrush("WhiteBrush"), ESlateDrawEffect::None, MarkerColor);
     }
     // Distinguish a planet-side starbase from an orbital station.
@@ -1569,9 +1563,7 @@ void USectorMapPanel::DrawOperationsGroup(
         FSlateDrawElement::MakeText(
             OutDrawElements,
             BaseLayerId + 5,
-            AllottedGeometry.ToPaintGeometry(
-                FVector2D(ScreenPos.X + HalfSize + 4.0f, ScreenPos.Y - 6.0f),
-                FVector2D(240.0f, 16.0f)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(240.0f, 16.0f)), FSlateLayoutTransform(FVector2f(FVector2D(ScreenPos.X + HalfSize + 4.0f, ScreenPos.Y - 6.0f)))),
             Label,
             FCoreStyle::GetDefaultFontStyle("Regular", 10),
             ESlateDrawEffect::None,
@@ -1726,7 +1718,7 @@ void USectorMapPanel::DrawSelectedOperationsGroupTag(
     FSlateDrawElement::MakeBox(
         OutDrawElements,
         LayerId,
-        AllottedGeometry.ToPaintGeometry(TagPos, TagSize),
+        AllottedGeometry.ToPaintGeometry(FVector2f(TagSize), FSlateLayoutTransform(FVector2f(TagPos))),
         FCoreStyle::Get().GetBrush("WhiteBrush"),
         ESlateDrawEffect::None,
         FLinearColor(
@@ -1751,9 +1743,7 @@ void USectorMapPanel::DrawSelectedOperationsGroupTag(
     FSlateDrawElement::MakeText(
         OutDrawElements,
         LayerId + 2,
-        AllottedGeometry.ToPaintGeometry(
-            FVector2D(TagPos.X + 6.0f, TagPos.Y + 3.0f),
-            FVector2D(250.0f, 14.0f)),
+        AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(250.0f, 14.0f)), FSlateLayoutTransform(FVector2f(FVector2D(TagPos.X + 6.0f, TagPos.Y + 3.0f)))),
         NameLine,
         FCoreStyle::GetDefaultFontStyle("Regular", 10),
         ESlateDrawEffect::None,
@@ -1762,9 +1752,7 @@ void USectorMapPanel::DrawSelectedOperationsGroupTag(
     FSlateDrawElement::MakeText(
         OutDrawElements,
         LayerId + 2,
-        AllottedGeometry.ToPaintGeometry(
-            FVector2D(TagPos.X + 6.0f, TagPos.Y + 17.0f),
-            FVector2D(250.0f, 14.0f)),
+        AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(250.0f, 14.0f)), FSlateLayoutTransform(FVector2f(FVector2D(TagPos.X + 6.0f, TagPos.Y + 17.0f)))),
         LocLine,
         FCoreStyle::GetDefaultFontStyle("Regular", 9),
         ESlateDrawEffect::None,
@@ -1935,9 +1923,7 @@ void USectorMapPanel::DrawMissionNavRouteForElement(
             FSlateDrawElement::MakeText(
                 OutDrawElements,
                 BaseLayerId + 3,
-                AllottedGeometry.ToPaintGeometry(
-                    FVector2D(NavScreen.X + MarkerHalf + 2.0f, NavScreen.Y - 8.0f),
-                    FVector2D(24.0f, 14.0f)),
+                AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(24.0f, 14.0f)), FSlateLayoutTransform(FVector2f(FVector2D(NavScreen.X + MarkerHalf + 2.0f, NavScreen.Y - 8.0f)))),
                 NavLabel,
                 FCoreStyle::GetDefaultFontStyle("Regular", 9),
                 ESlateDrawEffect::None,
@@ -2403,7 +2389,7 @@ void USectorMapPanel::DrawSelectedElementTag(
     FSlateDrawElement::MakeBox(
         OutDrawElements,
         LayerId,
-        AllottedGeometry.ToPaintGeometry(TagPos, TagSize),
+        AllottedGeometry.ToPaintGeometry(FVector2f(TagSize), FSlateLayoutTransform(FVector2f(TagPos))),
         FCoreStyle::Get().GetBrush("WhiteBrush"),
         ESlateDrawEffect::None,
         FLinearColor(IFFColor.R * 0.10f, IFFColor.G * 0.10f, IFFColor.B * 0.10f, 0.82f));
@@ -2424,9 +2410,7 @@ void USectorMapPanel::DrawSelectedElementTag(
     FSlateDrawElement::MakeText(
         OutDrawElements,
         LayerId + 2,
-        AllottedGeometry.ToPaintGeometry(
-            FVector2D(TagPos.X + 6.0f, TagPos.Y + 3.0f),
-            FVector2D(210.0f, 14.0f)),
+        AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(210.0f, 14.0f)), FSlateLayoutTransform(FVector2f(FVector2D(TagPos.X + 6.0f, TagPos.Y + 3.0f)))),
         NameLine,
         FCoreStyle::GetDefaultFontStyle("Regular", 10),
         ESlateDrawEffect::None,
@@ -2435,9 +2419,7 @@ void USectorMapPanel::DrawSelectedElementTag(
     FSlateDrawElement::MakeText(
         OutDrawElements,
         LayerId + 2,
-        AllottedGeometry.ToPaintGeometry(
-            FVector2D(TagPos.X + 6.0f, TagPos.Y + 17.0f),
-            FVector2D(210.0f, 14.0f)),
+        AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(210.0f, 14.0f)), FSlateLayoutTransform(FVector2f(FVector2D(TagPos.X + 6.0f, TagPos.Y + 17.0f)))),
         LocLine,
         FCoreStyle::GetDefaultFontStyle("Regular", 9),
         ESlateDrawEffect::None,
@@ -2508,10 +2490,10 @@ void USectorMapPanel::DrawLiveNavigation(FSlateWindowElementList& Elements,
     auto Label = [&](const FVector2D& Position, const FString& Text, const FLinearColor& Color)
     {
         FSlateDrawElement::MakeText(Elements, Layer + 2,
-            Geometry.ToPaintGeometry(Position, FVector2D(240, 20)), Text,
+            Geometry.ToPaintGeometry(FVector2f(FVector2D(240, 20)), FSlateLayoutTransform(FVector2f(Position))), Text,
             FCoreStyle::GetDefaultFontStyle("Regular", 11), ESlateDrawEffect::None, Color);
     };
-    FVector2D Previous;
+    FVector2D Previous=FVector2D::ZeroVector;
     bool HasPrevious = false;
     for (const auto& Waypoint : LiveWaypoints)
     {
@@ -2557,7 +2539,7 @@ void USectorMapPanel::DrawLiveNavigation(FSlateWindowElementList& Elements,
                         Brush.SetResourceObject(Tex);
                         Brush.ImageSize = FVector2D(SpriteSize, SpriteSize);
                         FSlateDrawElement::MakeBox(Elements, Layer + 1,
-                            Geometry.ToPaintGeometry(Position - Brush.ImageSize * 0.5f, Brush.ImageSize),
+                            Geometry.ToPaintGeometry(FVector2f(Brush.ImageSize), FSlateLayoutTransform(FVector2f(Position - Brush.ImageSize * 0.5f))),
                             &Brush, ESlateDrawEffect::None, Contact.Color);
                         bDrewSprite = true;
                     }

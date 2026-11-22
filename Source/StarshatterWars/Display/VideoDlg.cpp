@@ -22,6 +22,8 @@
 
 #include "VideoDlg.h"
 #include "Engine/Engine.h"
+#include "HAL/IConsoleManager.h"
+#include "Misc/ConfigCacheIni.h"
 #include "GameFramework/GameUserSettings.h"
 
 // UMG
@@ -104,7 +106,7 @@ void UVideoDlg::NativePreConstruct()
 {
     Super::NativePreConstruct();
 
-    UE_LOG(LogVideoDlg, Warning, TEXT("[VideoDlg] PreConstruct RootCanvas=%s WidgetTree=%s"),
+    UE_LOG(LogVideoDlg, Log, TEXT("[VideoDlg] PreConstruct RootCanvas=%s WidgetTree=%s"),
         RootCanvas ? TEXT("VALID") : TEXT("NULL"),
         WidgetTree ? TEXT("VALID") : TEXT("NULL"));
 
@@ -291,6 +293,9 @@ void UVideoDlg::RefreshFromModel()
     if (ModeCombo)
         ModeCombo->SetSelectedOption(FString::Printf(TEXT("%dx%d"), Width, Height));
 
+    if (AntiAliasingMethodCombo)
+        if (const auto* Method = IConsoleManager::Get().FindConsoleVariable(TEXT("r.AntiAliasingMethod")))
+            AntiAliasingMethodCombo->SetSelectedIndex(Method->GetInt() == 4 ? 3 : FMath::Clamp(Method->GetInt(), 0, 2));
     if (const UGameUserSettings* Settings = GEngine ? GEngine->GetGameUserSettings() : nullptr)
     {
         for (int32 Index = 0; Index < QualityCombos.Num(); ++Index)
@@ -345,7 +350,7 @@ void UVideoDlg::PushToModel(bool bApplyRuntimeToo)
 
     if (bApplyRuntimeToo)
     {
-        if (UGameUserSettings* Settings = GEngine ? GEngine->GetGameUserSettings() : nullptr)
+    if (UGameUserSettings* Settings = GEngine ? GEngine->GetGameUserSettings() : nullptr)
         {
             for (int32 Index = 0; Index < QualityCombos.Num(); ++Index)
                 if (const int32 Level = QualityCombos[Index]->GetSelectedIndex(); Level >= 0)
@@ -358,6 +363,13 @@ void UVideoDlg::PushToModel(bool bApplyRuntimeToo)
                     Settings->SetFrameRateLimit(FrameLimits[Index]);
             }
             if (RenderScaleSlider) Settings->SetResolutionScaleNormalized(RenderScaleSlider->GetValue());
+            if(AntiAliasingMethodCombo && AntiAliasingMethodCombo->GetSelectedIndex()>=0)
+            {
+                const int32 Selected=AntiAliasingMethodCombo->GetSelectedIndex();
+                const int32 Method=Selected==3?4:Selected;
+                if(auto* Variable=IConsoleManager::Get().FindConsoleVariable(TEXT("r.AntiAliasingMethod")))Variable->Set(Method,ECVF_SetByGameSetting);
+                if(GConfig){GConfig->SetInt(TEXT("Starshatter.Video"),TEXT("AntiAliasingMethod"),Method,GGameUserSettingsIni);GConfig->Flush(false,GGameUserSettingsIni);}
+            }
         }
 
         if (UStarshatterVideoSubsystem* VideoSS = GetVideoSubsystem())
@@ -455,7 +467,7 @@ void UVideoDlg::BuildListsIfNeeded()
     // Mode list (keep minimal/stable)
     if (ModeCombo)
     {
-        // 16:9 � standard
+        // 16:9 – standard
         ModeCombo->AddOption(TEXT("1280x720"));    // HD
         ModeCombo->AddOption(TEXT("1600x900"));    // HD+
         ModeCombo->AddOption(TEXT("1920x1080"));   // Full HD
@@ -559,7 +571,7 @@ void UVideoDlg::BuildVideoRows()
     LightLabel->SetText(NSLOCTEXT("VideoOptions", "LightPreset", "LIGHT"));
     LightButton->AddChild(LightLabel);
     LightButton->SetToolTipText(NSLOCTEXT("VideoOptions", "LightPresetTip",
-        "Integrated GPU preset. Keeps medium textures and high anti-aliasing. Select Apply to save."));
+        "Integrated GPU preset. Keeps hull textures, native-resolution UI and visible effects; uses TAA at 90% with cheaper lighting. Select Apply to save."));
     LightButton->OnClicked.AddUniqueDynamic(this, &UVideoDlg::OnLightPresetClicked);
     AddLabeledRow(TEXT("INTEGRATED GPU PRESET"), LightButton, 520.f);
 
@@ -584,6 +596,9 @@ void UVideoDlg::BuildVideoRows()
         FrameLimitCombo->AddOption(Limit == 0.0f ? TEXT("UNLIMITED") : FString::Printf(TEXT("%.0f FPS"), Limit));
     FrameLimitCombo->AddOption(TEXT("CUSTOM"));
 
+    AntiAliasingMethodCombo=AddCombo(TEXT("ANTI-ALIASING METHOD"));
+    for(const TCHAR* Method:{TEXT("OFF"),TEXT("FXAA — FAST"),TEXT("TAA — LIGHT"),TEXT("TSR — QUALITY")})AntiAliasingMethodCombo->AddOption(Method);
+    AntiAliasingMethodCombo->SetToolTipText(INVTEXT("TAA is the lighter temporal reconstruction path. TSR favors image stability at a higher GPU cost. UI stays at native resolution."));
     for (const auto& Quality : QualityControls)
     {
         auto* Combo = AddCombo(Quality.Label);
@@ -609,8 +624,9 @@ void UVideoDlg::OnLightPresetClicked()
         float Normalized, Current, Minimum, Maximum;
         Settings->GetResolutionScaleInformationEx(Normalized, Current, Minimum, Maximum);
         if (Maximum > Minimum)
-            RenderScaleSlider->SetValue(FMath::Clamp((85.0f - Minimum) / (Maximum - Minimum), 0.0f, 1.0f));
+            RenderScaleSlider->SetValue(FMath::Clamp((90.0f - Minimum) / (Maximum - Minimum), 0.0f, 1.0f));
     }
+    if(AntiAliasingMethodCombo)AntiAliasingMethodCombo->SetSelectedIndex(2);
     if (FrameLimitCombo)
         FrameLimitCombo->SetSelectedOption(TEXT("30 FPS"));
     if (LensFlareCombo)

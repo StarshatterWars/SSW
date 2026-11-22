@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "StarshatterInputBindings.h"
 #include "StarshatterKeyboardSettings.h"
 #include "StarshatterSettingsSaveGame.h"
@@ -104,7 +105,8 @@ bool FKeyboardRemappingTest::RunTest(const FString& Parameters)
     if (TestNotNull(TEXT("Reload options payload"),Loaded)) TestEqual(TEXT("Enhanced binding survives options save/reload"),Loaded->KeyboardConfig.EnhancedBindings.FindRef(NegativeId),EKeys::F10);
 
     Settings->SetKeyboardConfig(Previous);StarshatterInputBindings::Refresh();
-    UWorld* World=UWorld::CreateWorld(EWorldType::Game,false);World->SetGameInstance(NewObject<UGameInstance>());
+    UWorld* World=UWorld::CreateWorld(EWorldType::Game,false);
+    FScopedSSWTestWorldContext TestWorldContext1(World);World->SetGameInstance(NewObject<UGameInstance>());
     ON_SCOPE_EXIT {World->DestroyWorld(false);};
     auto* Class=LoadClass<UKeyDlg>(nullptr,TEXT("/Game/Screens/Options/WBP_KeyboardDlg.WBP_KeyboardDlg_C"));
     if (!TestNotNull(TEXT("Authored keyboard page loads"),Class)) return false;

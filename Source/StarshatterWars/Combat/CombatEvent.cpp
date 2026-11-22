@@ -27,7 +27,7 @@ CombatEvent::CombatEvent(Campaign* c,
     , image(nullptr)
     , audio(nullptr)
 {
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[CombatEvent] ctor: campaign=%p type=%s time=%d team=%d src=%d region='%s'"),
         campaign,
         *GetTypeName(type),

@@ -605,6 +605,8 @@ public:
     void ConfigureForCutscene();
 
     UFUNCTION(BlueprintCallable, Category = "Ship")
+    void EnsureHullAttachmentHierarchy();
+    UFUNCTION(BlueprintCallable, Category = "Ship")
     void SpawnVisualActor();
 
     UFUNCTION(BlueprintCallable, Category = "Ship")

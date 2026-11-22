@@ -1,4 +1,5 @@
 #if WITH_DEV_AUTOMATION_TESTS
+#include "CommerceCharges.h"
 #include "Misc/AutomationTest.h"
 #include "EconomyAI.h"
 #include "ShipyardAI.h"
@@ -169,8 +170,8 @@ bool FNPCFreightBudgetTest::RunTest(const FString&)
     TestTrue(TEXT("Budget-backed haul accepted"),Id.IsValid());TestEqual(TEXT("Buyer escrows agreed cost"),E.Wallets.FindRef(TEXT("Works business")),920LL);
     TestEqual(TEXT("Supplier not paid before arrival"),E.Wallets.FindRef(TEXT("Mine business")),0LL);
     auto& J=T.Journeys[0];for(int32 I=0;I<5;++I)TrafficAI::Advance(J,E,10,false,false,10,1);
-    TestEqual(TEXT("Supplier paid once on unload"),E.Wallets.FindRef(TEXT("Mine business")),80LL);
-    TrafficAI::Advance(J,E,100,false,false,10,1);TestEqual(TEXT("Duplicate tick cannot repay supplier"),E.Wallets.FindRef(TEXT("Mine business")),80LL);
+    TestEqual(TEXT("Supplier paid once on unload"),E.Wallets.FindRef(TEXT("Mine business")),CommerceCharges::Quote(80,ECommercePurpose::Purchase).Base);
+    TrafficAI::Advance(J,E,100,false,false,10,1);TestEqual(TEXT("Duplicate tick cannot repay supplier"),E.Wallets.FindRef(TEXT("Mine business")),CommerceCharges::Quote(80,ECommercePurpose::Purchase).Base);
     TestEqual(TEXT("Pilot funds untouched"),E.Wallets.FindRef(FEconomyLedger::Pilot()),0LL);
     const auto Lost=TrafficAI::Schedule(T,E,A,B,{A.Sector,B.Sector},Source,Drop,Item,4,1);TestTrue(TEXT("Second haul accepted"),Lost.IsValid());
     auto& Failure=T.Journeys.Last();TrafficAI::Advance(Failure,E,10,false,false,10,1);TrafficAI::Advance(Failure,E,10,false,false,10,1);

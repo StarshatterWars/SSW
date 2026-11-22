@@ -1,4 +1,8 @@
 #include "OwnedHullCondition.h"
+#include "Weapon.h"
+#include "WeaponGroup.h"
+#include "WeaponDesign.h"
+#include "OwnedHullLocation.h"
 #include "Ship.h"
 #include "ShipDesign.h"
 #include "SimSystem.h"
@@ -16,16 +20,36 @@ bool FOwnedHullCondition::IsOwnedLive(const FPlayerHangarShip& Row,FGuid Assigne
 bool FOwnedHullCondition::CaptureActive(FS_PlayerGameInfo& Player)
 {
     auto* Simulation=Sim::GetSim(); auto* Craft=Simulation?Simulation->GetPlayerShip():nullptr;
-    if(!Craft || !Craft->Design() || !Simulation->HasSimulationAuthority() || Simulation->IsNetworked() ||
-        !Simulation->GetMission() || !Simulation->GetMission()->IsFreeFlight())return false;
+    if(!Craft || !Craft->Design() || !Simulation->HasSimulationAuthority() || Simulation->IsNetworked() || !Simulation->GetMission())return false;
+    if(auto* Current=Player.HangarShips.FindByPredicate([&](const auto& Row){return Row.HullId==Player.AssignedHangarHull && !Row.bLost && Row.Design==FName(UTF8_TO_TCHAR(Craft->Design()->name));}))CaptureAmmo(*Craft,*Current);
+    if(!Simulation->GetMission()->IsFreeFlight())return false;
     auto* Owned=Player.HangarShips.FindByPredicate([&](const auto& Row){return IsOwnedLive(Row,Player.AssignedHangarHull,
         FName(UTF8_TO_TCHAR(Craft->Design()->name)),Craft->GetCargoInventoryKey(),true);});
     if(!Owned)return false;
-    Capture(*Craft,*Owned); return true;
+    Capture(*Craft,*Owned);
+    const FString Place = OwnedHullLocation::Current(*Craft);
+    if (!Place.IsEmpty()) Owned->Location = Place;
+    return true;
 }
 
+void FOwnedHullCondition::CaptureAmmo(Ship& Craft,FPlayerHangarShip& Row)
+{
+    Row.SavedWeaponAmmo.Reset();Row.SavedWeaponTypes.Reset();
+    for(ListIter<WeaponGroup> Groups=Craft.GetWeapons();++Groups;)
+        for(ListIter<Weapon> Weapons=Groups->GetWeapons();++Weapons;)
+            if(Weapons->Design() && Weapons->Ammo()>=0)
+            {Row.SavedWeaponAmmo.Add(Weapons->GetIndex(),Weapons->Ammo());Row.SavedWeaponTypes.Add(Weapons->GetIndex(),FName(UTF8_TO_TCHAR(Weapons->Design()->name.data())));}
+}
+void FOwnedHullCondition::ApplyAmmo(Ship& Craft,const FPlayerHangarShip& Row)
+{
+    for(ListIter<WeaponGroup> Groups=Craft.GetWeapons();++Groups;)
+        for(ListIter<Weapon> Weapons=Groups->GetWeapons();++Weapons;)
+            if(Weapons->Design())if(const auto* Count=Row.SavedWeaponAmmo.Find(Weapons->GetIndex()))
+                if(*Count>=0 && *Count<=1000000 && Row.SavedWeaponTypes.FindRef(Weapons->GetIndex())==FName(UTF8_TO_TCHAR(Weapons->Design()->name.data())))Weapons->SetAmmo(*Count);
+}
 void FOwnedHullCondition::Capture(Ship& Craft,FPlayerHangarShip& Row)
 {
+    CaptureAmmo(Craft,Row);
     Row.bHasCondition=true;
     Row.HullCondition=Craft.Design() && Craft.Design()->integrity>0 ? FMath::Clamp(static_cast<float>(Craft.GetIntegrity()/Craft.Design()->integrity),0.f,1.f) : 1.f;
     Row.SystemConditions.Reset(); Row.RepairQueue.Reset();
@@ -56,8 +80,18 @@ void FOwnedHullCondition::Capture(Ship& Craft,FPlayerHangarShip& Row)
         for(int32 SystemIndex=0;SystemIndex<Systems.size();++SystemIndex)
             if(Queue[Index]==Systems[SystemIndex]) {Row.RepairQueue.Add(SystemIndex);break;}
 }
+void FOwnedHullCondition::ApplyComponent(SimComponent& Part,const FHangarComponent& Stored)
+{
+    if(!Stored.bHasCondition)return;
+    Part.availability=FMath::Clamp(FMath::IsFinite(Stored.ConditionPercent)?Stored.ConditionPercent:100.f,0.f,100.f);
+    Part.Status=static_cast<SYSTEM_STATUS>(FMath::Clamp(Stored.ConditionStatus,static_cast<int32>(SYSTEM_STATUS::DESTROYED),static_cast<int32>(SYSTEM_STATUS::UNKNOWN)));
+    Part.time_remaining=FMath::Max(0.f,FMath::IsFinite(Stored.MaintenanceSeconds)?Stored.MaintenanceSeconds:0.f);
+    Part.spares=FMath::Max(0,Stored.SpareCount);Part.jerried=FMath::Max(0,Stored.JerryCount);
+}
+
 void FOwnedHullCondition::Apply(Ship& Craft,const FPlayerHangarShip& Row)
 {
+    ApplyAmmo(Craft,Row);
     if(!Row.bHasCondition || !Craft.Design())return;
     Craft.SetIntegrity(FMath::Clamp(FMath::IsFinite(Row.HullCondition)?Row.HullCondition:1.f,0.f,1.f)*Craft.Design()->integrity);
     auto& Systems=Craft.GetSystems();
@@ -121,7 +155,7 @@ bool FOwnedHullCondition::RepairAndSave(UGameInstance* Instance,Ship& Craft,int6
     auto* Owned=Player.HangarShips.FindByPredicate([&](const auto& Row){return IsOwnedLive(Row,Player.AssignedHangarHull,
         Craft.Design()?FName(UTF8_TO_TCHAR(Craft.Design()->name)):NAME_None,Craft.GetCargoInventoryKey(),Simulation->GetMission() && Simulation->GetMission()->IsFreeFlight());});
     const bool OK=RepairTransaction(Craft,Player,Owned,
-        [&](){return FEconomyLedger::Pay(Players->GetEconomy(),FEconomyLedger::Pilot(),TEXT("Station repair service"),Cost,FGuid::NewGuid(),TEXT("Full ship repairs"));},
+        [&](){return FEconomyLedger::Pay(Players->GetEconomy(),FEconomyLedger::Pilot(),TEXT("Station repair service"),Cost,FGuid::NewGuid(),TEXT("Full ship repairs"),ECommercePurpose::Service);},
         [&](){return Craft.RepairAtStation();},[&](){return Players->SaveActivePlayerProgress();});
     Reason=OK?INVTEXT("Hull and all installed systems fully repaired and saved. Grades and loadout retained."):
         INVTEXT("Repair could not be saved. Ship condition and credits were restored. Please retry.");

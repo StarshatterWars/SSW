@@ -239,7 +239,7 @@ void UCampaignSelectDlg::BuildWidgetTreeIfNeeded()
     ArtPanel->SetContent(ArtCanvas);
     CampaignImage = WidgetTree->ConstructWidget<UImage>(
         UImage::StaticClass(), TEXT("CampaignSelect_CampaignImage"));
-    CampaignImage->SetBrushSize(FVector2D(1024.f, 1024.f));
+    CampaignImage->SetDesiredSizeOverride(FVector2D(1024.f, 1024.f));
     CampaignImage->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
     if (UCanvasPanelSlot* WidgetSlot = ArtCanvas->AddChildToCanvas(CampaignImage))
     {
@@ -1032,7 +1032,7 @@ void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
     if (!IsCampaignUnlocked(CampaignIndex1Based))
     {
         manager->HideCmpLoadDlg();
-        manager->ShowCampaignSelectDlg();
+        manager->ReturnFromMissionBriefing();
         return;
     }
     const FS_Campaign* CampaignData = DataSubsystem->GetCampaignByIndex1Based(CampaignIndex1Based);
@@ -1130,7 +1130,7 @@ void UCampaignSelectDlg::FinishSelectedCampaignFlow(bool bRestart)
     {
         if (manager)
         {
-            manager->ShowOperationsDlg();
+            manager->ReturnFromMissionBriefing();
         }
         return;
     }
@@ -1154,7 +1154,7 @@ void UCampaignSelectDlg::TryFinishCampaignLoadTransition()
     UCmpLoadDlg* LoadDlg = manager->GetCmpLoadDlg();
     if (!LoadDlg)
     {
-        manager->ShowOperationsDlg();
+        manager->ReturnFromMissionBriefing();
         return;
     }
 
@@ -1168,7 +1168,7 @@ void UCampaignSelectDlg::TryFinishCampaignLoadTransition()
         World->GetTimerManager().ClearTimer(CampaignLoadFinishTimer);
     }
 
-    manager->ShowOperationsDlg();
+    manager->ReturnFromMissionBriefing();
 }
 
 UTexture2D* UCampaignSelectDlg::LoadCampaignTexture(int32 CampaignIndex1Based) const

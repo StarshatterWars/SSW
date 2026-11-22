@@ -1,0 +1,95 @@
+{
+	"rowName": "None",
+	"name": "Operation Shining Fortress",
+	"description": "The war begins. Hegemony forces have begun to invade the core Alliance systems.  Starfleets from Loris and Kolchev, moving through the independent systems Silessia and Haiche, have attacked key targets in the Janus and Borovan systems.  The Alliance Fourth and Fifth Fleets are fighting a defensive battle trying to halt the Hegemony advance, evacuate civilians, and form an effective counterattack.",
+	"situation": "The Terellian Alliance is facing the first true interstellar war in nearly five hundred years.  Hegemony forces have begun to invade the core Alliance systems.  Starfleets from Loris and Kolchev, moving through the independent systems Silessia and Haiche, have attacked key targets in the Janus and Borovan systems.\\n\\nForce:Space Fourth Fleet (Titan) is stationed in the Borovan system, and is deploying in a defensive posture to meet the invasion threat. Fifth Fleet (Hyperion) is divided.  Task force TF5.15 is assigned to the Janus proving grounds for training exercises.  The remainder of Fifth Fleet is spread throughout the Athenar system.",
+	"start": "01/00:00:00",
+	"orders": [
+		"* Protect Alliance civilians and assets in Janus and Borova.",
+		"* Evacuate civilians and government personnel as necessary.",
+		"* Stop the Hegemony advance until a counterattack can be mounted."
+	],
+	"bScripted": false,
+	"bSequential": false,
+	"bAvailable": true,
+	"bCompleted": false,
+	"system": "Borova",
+	"region": "Borova",
+	"mainImage": "main",
+	"actionSize": 0,
+	"combatantSize": 3,
+	"index": 2,
+	"combatant": [
+		{
+			"name": "Terellian",
+			"size": 6,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 4
+				},
+				{
+					"type": "FLEET",
+					"id": 5
+				},
+				{
+					"type": "BATTALION",
+					"id": 5
+				},
+				{
+					"type": "CIVILIAN",
+					"id": 2100
+				},
+				{
+					"type": "FREIGHT",
+					"id": 3000
+				},
+				{
+					"type": "INFRASTRUCTURE",
+					"id": 5000
+				}
+			]
+		},
+		{
+			"name": "Marakan",
+			"size": 4,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 6
+				},
+				{
+					"type": "FLEET",
+					"id": 7
+				},
+				{
+					"type": "BATTALION",
+					"id": 8
+				},
+				{
+					"type": "WAR_PRODUCTION",
+					"id": 3000
+				}
+			]
+		},
+		{
+			"name": "Pirate",
+			"size": 1,
+			"group": [
+				{
+					"type": "FLEET",
+					"id": 2
+				}
+			]
+		}
+	],
+	"action": [],
+	"zone": [],
+	"missionList": [],
+	"templateList": [],
+	"missions": [],
+	"storyMissions": [],
+	"templateMissions": [],
+	"scriptedMissions": [],
+	"campaignImage": "None"
+}

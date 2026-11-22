@@ -43,7 +43,7 @@ public:
     virtual FString GetLegacyFormText() const override;
 
     /** Called every tick (legacy ExecFrame equivalent) */
-    virtual void ExecFrame(float DeltaTime);
+    virtual void ExecFrame(double DeltaTime = 0.0) override;
 
     /** Optional manager hook (legacy CmpnScreen*) */
     void SetManager(UCmpnScreen* InManager) { Manager = InManager; }

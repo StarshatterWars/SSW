@@ -1,4 +1,5 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
+#include "CommerceCharges.h"
 #include "Misc/AutomationTest.h"
 #include "Misc/ScopeExit.h"
 #include "Misc/SecureHash.h"
@@ -28,8 +29,8 @@ bool FAlternateBuyerTest::RunTest(const FString&)
  TestEqual(TEXT("First buyer refunded"),E.Wallets.FindRef(Old),1000LL);TestEqual(TEXT("Second buyer escrows same supplier price"),E.Wallets.FindRef(New),920LL);
  TestEqual(TEXT("Rerouting alone credits no cargo"),FEconomyLedger::Quantity(E,New,Ore),0.0);TestEqual(TEXT("Supplier remains unpaid until unload"),E.Wallets.FindRef(TEXT("Seller")),0LL);
  for(int32 I=0;I<5;++I)TrafficAI::Advance(J,E,100,false,false,10,1);
- TestEqual(TEXT("New buyer receives cargo once"),FEconomyLedger::Quantity(E,New,Ore),8.0);TestEqual(TEXT("Supplier settled once"),E.Wallets.FindRef(TEXT("Seller")),80LL);
- TrafficAI::Advance(J,E,100,false,false,10,1);TestEqual(TEXT("Retry cannot duplicate payout"),E.Wallets.FindRef(TEXT("Seller")),80LL);
+ TestEqual(TEXT("New buyer receives cargo once"),FEconomyLedger::Quantity(E,New,Ore),8.0);TestEqual(TEXT("Supplier settled once"),E.Wallets.FindRef(TEXT("Seller")),CommerceCharges::Quote(80,ECommercePurpose::Purchase).Base);
+ TrafficAI::Advance(J,E,100,false,false,10,1);TestEqual(TEXT("Retry cannot duplicate payout"),E.Wallets.FindRef(TEXT("Seller")),CommerceCharges::Quote(80,ECommercePurpose::Purchase).Base);
  return true;
 }
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPatrolPolicyTest,"Starshatter.Traffic.FighterPatrolPolicyAndPersistence",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
@@ -79,7 +80,7 @@ bool FLostFreightRecoveryTest::RunTest(const FString&)
  TestEqual(TEXT("Lost cargo is destroyed, not returned or delivered"),FEconomyLedger::Quantity(State,Source,Item),12.0);TestEqual(TEXT("Destination receives nothing on loss"),FEconomyLedger::Quantity(State,Drop,Item),0.0);TestEqual(TEXT("Lost cargo hold emptied"),FEconomyLedger::Quantity(State,Lost.Hold,Item),0.0);
  TestTrue(TEXT("New delivery uses remaining real stock"),TrafficAI::Schedule(Traffic,State,A,B,{A.Sector,B.Sector},Source,Drop,Item,8,1).IsValid());
  for(int32 I=0;I<7;++I)TrafficAI::Advance(Traffic.Journeys.Last(),State,100,false,false,10,1);
- TestEqual(TEXT("Replacement delivery arrives once"),FEconomyLedger::Quantity(State,Drop,Item),8.0);TestEqual(TEXT("Supplier paid only for successful delivery"),State.Wallets.FindRef(TEXT("Seller")),80LL);TestEqual(TEXT("Destroyed cargo never respawned"),FEconomyLedger::Quantity(State,Source,Item),4.0);
+ TestEqual(TEXT("Replacement delivery arrives once"),FEconomyLedger::Quantity(State,Drop,Item),8.0);TestEqual(TEXT("Supplier paid only for successful delivery"),State.Wallets.FindRef(TEXT("Seller")),CommerceCharges::Quote(80,ECommercePurpose::Purchase).Base);TestEqual(TEXT("Destroyed cargo never respawned"),FEconomyLedger::Quantity(State,Source,Item),4.0);
  return true;
 }
 

@@ -17,6 +17,9 @@
 
 #include "NavAI.h"
 #include "WaypointArrival.h"
+#include "SurfaceFlightRoute.h"
+#include "Terrain.h"
+#include "SimRegion.h"
 
 #include "TacticalAI.h"
 #include "Instruction.h"
@@ -802,8 +805,13 @@ NavAI::AvoidTerrain()
         return Avoid;
 
     if (ship->IsAirborne() && ship->GetFlightPhase() == EOPSMode::ACTIVE) {
-        // too low?
-        if (ship->GetAltitudeAGL() < 1000) {
+        Terrain* Ground = ship->GetRegion()->GetTerrain();
+        const FVector Position = ship->GetLocation();
+        const double RequiredAltitude = Ground
+            ? SurfaceFlightRoute::RecoveryAltitude(Position, ship->GetVelocity(),
+                [Ground](double X, double Z) { return Ground->Height(X, Z); })
+            : Position.Y;
+        if (RequiredAltitude > Position.Y || ship->GetAltitudeAGL() < 1000) {
             terrain_warning = 1;
             ship->SetDirectorInfo("Too Low");
 
@@ -813,7 +821,8 @@ NavAI::AvoidTerrain()
             }
 
             // where will we be?
-            FVector SelfPt = ship->GetLocation() + ship->GetVelocity() + FVector(0, 10e3, 0);
+            FVector SelfPt = Position + ship->GetVelocity() * 8.0;
+            SelfPt.Y = FMath::Max(RequiredAltitude, Position.Y + 2000.0);
 
             // transform into camera coords:
             FVector Obj = Transform(SelfPt);

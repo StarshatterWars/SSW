@@ -62,8 +62,8 @@ public:
     void CycleMFD(int32 Index);
     bool CycleFlightHUDMode(bool bCurrentlyVisible);
     void ToggleWeaponsPanel() { bShowWeapons = !bShowWeapons; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
-    void ToggleCautionPanel() { bShowCaution = !bShowCaution; if (bShowCaution) bShowInformation = false; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
-    void ToggleInformationPanel() { bShowInformation = !bShowInformation; if (bShowInformation) bShowCaution = false; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
+    void ToggleCautionPanel() { if (!InformationCaptions.IsEmpty()) bRestoreCautionAfterMessages = !bRestoreCautionAfterMessages; else bShowCaution = !bShowCaution; bLoggedPanelPaint = false; Invalidate(EInvalidateWidgetReason::Paint); }
+    void ToggleInformationPanel() {} // Compatibility only: pilots cannot hide game messages.
     void CycleWeapon(bool bPrimary);
     static FString FormatWeaponReadout(const WeaponGroup* Group);
     static FString FormatStatusReadout(const FString& Label, double Percent, bool bAugmenter=false);
@@ -122,7 +122,8 @@ private:
     mutable bool bLoggedPanelPaint = false;
     bool bShowWeapons = true;
     bool bShowCaution = false;
-    bool bShowInformation = true;
+    bool bShowInformation = false;
+    bool bRestoreCautionAfterMessages = false;
     friend class FHUDInformationPanelTest;
     float InformationScale = 1.f;
     int32 PanelPlayerId = INDEX_NONE;
@@ -149,9 +150,7 @@ private:
     FString HomeCarrierReadout;
     TArray<FString> NavReadouts, MissileReadouts, MissionReadouts;
     FString DefenseReadout;
-    bool bDamagePreviewHovered=false;
-    float DamagePreviewZoom=1.f;
-    struct FDamagePoint { FVector2D UV; double Health=100; FString Name; EShipSystemIcon Icon=EShipSystemIcon::Auxiliary; };
+    using FDamagePoint = SSWDamagePanel::FDiagramPoint;
     TArray<FDamagePoint> DamagePoints;
     double FlightSpeed = 0, HeadingDegrees = 0, ClosingSpeed = 0, JumpSeconds = 0;
     double PitchDegrees = 0, BankRadians = 0;

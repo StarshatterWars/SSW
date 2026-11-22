@@ -32,6 +32,7 @@ public:
     static bool Advance(FGalaxyTrafficJourney&,FEconomyState&,double Seconds,bool bRealized,bool bArrived,
         double HopSeconds,double TonnesPerSecond);
     static int32 RecoverBlocked(FGalaxyTrafficState&,FEconomyState&,const TMap<FName,FGalaxyTrafficSector>&,const TMap<FName,FGalaxyTrafficEndpoint>&);
+    static bool AdvanceScheduled(FGalaxyTrafficJourney&,FEconomyState&,double Now,bool bRealized,bool bArrived,bool bInventoryChanged,double HopSeconds,double TonnesPerSecond);
     static bool AbstractCargo(FGalaxyTrafficJourney&,FEconomyState&,FName System);
     static void Lose(FGalaxyTrafficJourney&,FEconomyState&);
     static bool Eligible(bool Authority,bool Playing,bool Cinematic,bool Exporting);

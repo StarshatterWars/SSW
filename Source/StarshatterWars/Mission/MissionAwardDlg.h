@@ -49,6 +49,11 @@ public:
 protected:
     virtual TSharedRef<SWidget> RebuildWidget() override;
     virtual void NativeConstruct() override;
+    virtual void NativeTick(const FGeometry& Geometry,float Seconds) override;
+    virtual FReply NativeOnMouseButtonDown(const FGeometry& Geometry,const FPointerEvent& Event) override;
+    virtual FReply NativeOnMouseMove(const FGeometry& Geometry,const FPointerEvent& Event) override;
+    virtual FReply NativeOnMouseButtonUp(const FGeometry& Geometry,const FPointerEvent& Event) override;
+
     virtual FReply NativeOnKeyDown(const FGeometry& InGeometry, const FKeyEvent& InKeyEvent) override;
 
     // ------------------------------------------------------------
@@ -80,6 +85,9 @@ protected:
 private:
     friend class FAwardPresentationTest;
     bool bModernUiBuilt=false;
+    UPROPERTY(Transient) TObjectPtr<UWidget> AwardFrame;
+    bool bDraggingAward=false;
+
     // ------------------------------------------------------------
     // Manager / dependencies
     // ------------------------------------------------------------

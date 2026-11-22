@@ -327,7 +327,8 @@ void UFirstTimeDlg::BuildModernDialog()
     for(auto* Edit:{NameEdit.Get(),CallsignEdit.Get()}){auto Style=Edit->GetWidgetStyle();Style.SetFont(MissionUIStyle::GetRowFont(16));
         Style.SetForegroundColor(FLinearColor::White);Style.SetBackgroundColor(FLinearColor(0.025f,0.045f,0.065f));Style.SetPadding(FMargin(10,5));Edit->SetWidgetStyle(Style);}
     EmpireCombo=WidgetTree->ConstructWidget<UComboBoxString>();PlayStyleCombo=nullptr;
-    for(auto* Combo:{EmpireCombo.Get()}){Combo->Font=MissionUIStyle::GetRowFont(15);Combo->ForegroundColor=FSlateColor(FLinearColor::White);
+    EmpireCombo->OnGenerateWidgetEvent.BindDynamic(this,&UFirstTimeDlg::GenerateEmpireOption);
+    for(auto* Combo:{EmpireCombo.Get()}){
         auto ComboStyle=Combo->GetWidgetStyle();
         ComboStyle.ComboButtonStyle.ButtonStyle.Normal.TintColor=FSlateColor(FLinearColor(0.025f,0.045f,0.065f));
         ComboStyle.ComboButtonStyle.ButtonStyle.Hovered.TintColor=FSlateColor(FLinearColor(0.08f,0.16f,0.22f));
@@ -355,3 +356,13 @@ void UFirstTimeDlg::BuildModernDialog()
 
 void UFirstTimeDlg::OnEmpireLogoChanged(FString SelectedItem,ESelectInfo::Type)
 { FactionInsignia::Set(FactionLogo,SelectedItem,42.f); }
+
+UWidget* UFirstTimeDlg::GenerateEmpireOption(FString Item)
+{
+    if(!WidgetTree) return nullptr;
+    if (const auto* Existing=EmpireOptionWidgets.Find(Item)) return Existing->Get();
+    auto* Label=WidgetTree->ConstructWidget<UTextBlock>();
+    EmpireOptionWidgets.Add(Item,Label);
+    Label->SetText(FText::FromString(Item)); Label->SetFont(MissionUIStyle::GetRowFont(15));
+    Label->SetColorAndOpacity(FSlateColor(FLinearColor::White)); return Label;
+}

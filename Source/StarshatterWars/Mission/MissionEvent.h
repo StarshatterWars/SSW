@@ -100,7 +100,7 @@ public:
     };
 
     MissionEvent();
-    ~MissionEvent();
+    virtual ~MissionEvent();
 
     // operations:
     void                 ExecFrame(double seconds);

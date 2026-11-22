@@ -23,28 +23,20 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FHUDInformationPanelTest,"Starshatter.Menu.HUDI
     EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FHUDInformationPanelTest::RunTest(const FString& Parameters)
 {
+    RadioView::ClearMessages();ON_SCOPE_EXIT {RadioView::ClearMessages();};
     auto HUD=SNew(SFighterHUDDetails).ShowHUD(true);
-    TestTrue(TEXT("Information starts active"),HUD->bShowInformation);TestFalse(TEXT("Caution starts hidden"),HUD->bShowCaution);
-    HUD->ToggleCautionPanel();TestTrue(TEXT("Caution shows"),HUD->bShowCaution);TestFalse(TEXT("Caution hides information"),HUD->bShowInformation);
-    HUD->ToggleCautionPanel();TestFalse(TEXT("Caution toggles off"),HUD->bShowCaution);TestFalse(TEXT("Both can remain off"),HUD->bShowInformation);
-    HUD->ToggleInformationPanel();TestTrue(TEXT("Information toggles on"),HUD->bShowInformation);
-    HUD->ToggleCautionPanel();HUD->ToggleInformationPanel();TestFalse(TEXT("Information hides caution"),HUD->bShowCaution);
-    HUD->ToggleInformationPanel();TestFalse(TEXT("Information toggles off"),HUD->bShowInformation);
+    TestFalse(TEXT("Messages start hidden until the game supplies text"),HUD->bShowInformation);
+    HUD->ToggleInformationPanel();TestFalse(TEXT("Pilot cannot open the game-controlled message panel"),HUD->bShowInformation);
+    HUD->ToggleCautionPanel();TestTrue(TEXT("Caution can be inspected when no messages are active"),HUD->bShowCaution);
     TestNotNull(TEXT("Instruction scroll box exists"),HUD->InformationScroll.Get());
     TestNotNull(TEXT("Supplied left artwork loads"),HUD->PanelTextures[7].Get());TestNotNull(TEXT("Supplied right artwork loads"),HUD->PanelTextures[8].Get());
-    auto* Action=LoadObject<UInputAction>(nullptr,TEXT("/Game/Input/IA_HUDInformation.IA_HUDInformation"));
-    auto* Context=LoadObject<UInputMappingContext>(nullptr,TEXT("/Game/Input/IMC_FighterHUD.IMC_FighterHUD"));
-    if(TestNotNull(TEXT("Information action exists"),Action) && TestNotNull(TEXT("HUD mapping context exists"),Context))
-    {
-        TestTrue(TEXT("Information toggle is Boolean"),Action->ValueType==EInputActionValueType::Boolean);
-        bool Mapped=false;for(const auto& Mapping:Context->GetMappings())if(Mapping.Action==Action)Mapped=true;
-        TestTrue(TEXT("Information toggle participates in remappable HUD bindings"),Mapped);
-    }
-    RadioView::ClearMessages();ON_SCOPE_EXIT {RadioView::ClearMessages();};
     RadioView::Message("Delta 2 is attacking target. This longer status message must wrap within the instruction frame.");
     TArray<FRadioHUDLine> Lines;RadioView::GetHUDMessages(Lines);
     TestTrue(TEXT("Legacy message lifetime retained"),Lines.Num()==1 && Lines[0].ExpiresAt-FPlatformTime::Seconds()>9.0);
-    HUD->ToggleInformationPanel();HUD->UpdateInformationMessages();
+    HUD->UpdateInformationMessages();
+    TestTrue(TEXT("Drone mission radio update opens the panel automatically"),HUD->bShowInformation);
+    TestFalse(TEXT("Messages temporarily replace caution"),HUD->bShowCaution);
+    HUD->ToggleInformationPanel();TestTrue(TEXT("Pilot cannot dismiss active messages"),HUD->bShowInformation);
     TestEqual(TEXT("Live updates populate the bounded scroll content"),HUD->InformationRows->GetChildren()->Num(),1);
     if (!GUsingNullRHI)
     {
@@ -57,6 +49,11 @@ bool FHUDInformationPanelTest::RunTest(const FString& Parameters)
         TArray64<uint8> PNG;FImageUtils::PNGCompressImageArray(1280,720,Pixels,PNG);const FString Folder=FPaths::ProjectSavedDir()/TEXT("Automation/FirstRunAndLogo");IFileManager::Get().MakeDirectory(*Folder,true);
         TestTrue(TEXT("Instruction HUD capture saved"),FFileHelper::SaveArrayToFile(PNG,*(Folder/TEXT("HUDInformation.png"))));
     }
+    RadioView::ClearMessages();HUD->UpdateInformationMessages();
+    TestFalse(TEXT("The game hides the panel when its message queue drains"),HUD->bShowInformation);
+    TestTrue(TEXT("Caution returns after the queue drains"),HUD->bShowCaution);
+    RadioView::Message("Training control: engage the next drone.");HUD->UpdateInformationMessages();
+    TestTrue(TEXT("Later drone instructions reopen the panel"),HUD->bShowInformation);
     HUD->bShowInformation=false;HUD->bShowCaution=true;
     RadioView::Message("NO MISSION ASSIGNED. CLEARANCE DECLINED.",2);HUD->UpdateInformationMessages();
     TestTrue(TEXT("Clearance refusal opens Information panel"),HUD->bShowInformation);

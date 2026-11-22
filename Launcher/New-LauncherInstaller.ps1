@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory)][string]$Wix,
-    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '1.0.15',
+    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '1.0.18',
     [string]$LauncherConfig,
     [string]$ApacheArchive
 )
@@ -30,7 +30,7 @@ function Write-Payload([string]$Folder) {
     }
 }
 $files = (Write-Payload $payload) -join [Environment]::NewLine
-$icon = Escape-Xml (Join-Path $root 'Application.ico')
+$icon = Escape-Xml (Join-Path $PSScriptRoot 'Assets/SSW_Modern.ico')
 $dialogArt = Join-Path (Split-Path $payload -Parent) "Orion-$([guid]::NewGuid()).bmp"
 Add-Type -AssemblyName System.Drawing
 $splash = [Drawing.Image]::FromFile((Join-Path $root 'ArtSource/Splash/SSW_OrionLaunch_UE_Splash_800x450.png'))

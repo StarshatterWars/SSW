@@ -1,4 +1,5 @@
 #include "TimerSubsystem.h"
+#include "FractalVerseSubsystem.h"
 #include "SSWGameInstance.h"
 #include "SSWRuntimeSubsystem.h"
 #include "CampaignSave.h"
@@ -13,7 +14,7 @@ void UTimerSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	ActiveTimer = this;
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[TimerSubsystem] Initialize This=%p"),
 		this);
 
@@ -51,7 +52,7 @@ void UTimerSubsystem::StartClock()
 		0.0f
 	);
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[TimerSubsystem] StartClock TickHandleValid=%d Step=%.3f UniverseScale=%.2f MissionScale=%.2f"),
 		TickHandle.IsValid() ? 1 : 0,
 		TimeStepSeconds,
@@ -67,7 +68,7 @@ void UTimerSubsystem::StopClock()
 		TickHandle.Reset();
 	}
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[TimerSubsystem] StopClock"));
 }
 
@@ -104,7 +105,7 @@ void UTimerSubsystem::AdvanceMissionClock(float DeltaSeconds)
 		LastMissionSecondBroadcast = CurMissionSec;
 		OnMissionSecond.Broadcast(CurMissionSec);
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[TimerSubsystem] MissionSecond=%d Time=%.3f MS=%d"),
 			CurMissionSec,
 			MissionTimelineSeconds,
@@ -121,7 +122,7 @@ void UTimerSubsystem::StartMissionRun(bool bResetToZero)
 
 	MissionClockState = EMissionClockState::Running;
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[TimerSubsystem] StartMissionRun Reset=%d State=%d Time=%.3f This=%p Active=%p"),
 		bResetToZero ? 1 : 0,
 		(int32)MissionClockState,
@@ -134,7 +135,7 @@ void UTimerSubsystem::StopMissionRun()
 {
 	MissionClockState = EMissionClockState::Stopped;
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[TimerSubsystem] StopMissionRun Time=%.3f"),
 		MissionTimelineSeconds);
 }
@@ -162,7 +163,7 @@ void UTimerSubsystem::ResetMissionClock()
 
 	OnMissionSecond.Broadcast(0);
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[TimerSubsystem] ResetMissionClock"));
 }
 
@@ -185,14 +186,35 @@ uint64 UTimerSubsystem::GetGmtUniverseSeconds(int64 BaseUnixSeconds)
     return static_cast<uint64>(FMath::Max<int64>(0, Shifted.ToUnixTimestamp() - BaseUnixSeconds));
 }
 
+uint64 UTimerSubsystem::GetUniverseTimeSeconds() const
+{
+    if (UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)
+    {
+        const auto* Service=GetGameInstance()?GetGameInstance()->GetSubsystem<UFractalVerseSubsystem>():nullptr;
+        return Service?static_cast<uint64>(FMath::Max<int64>(0,Service->Status().UniverseSeconds)):0;
+    }
+    return UniverseTimeSeconds;
+}
+
 void UTimerSubsystem::OnClockTick()
 {
+    if (UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)
+    {
+        const auto* Service=GetGameInstance()?GetGameInstance()->GetSubsystem<UFractalVerseSubsystem>():nullptr;
+        if (!Service || Service->Status().UniverseBaseUtc<=0) return;
+        const auto State=Service->Status();
+        UniverseBaseUnixSeconds=State.UniverseBaseUtc;
+        UniverseTimeSeconds=static_cast<uint64>(State.UniverseSeconds);
+    }
+    else
+    {
 	const double DeltaUniverse = TimeStepSeconds * TimeScale;
 	const uint64 AddSeconds = (uint64)FMath::Max(1.0, FMath::RoundToDouble(DeltaUniverse));
 
     UniverseTimeSeconds += AddSeconds;
     if (bTrackUniverseGmt)
         UniverseTimeSeconds = FMath::Max(UniverseTimeSeconds, GetGmtUniverseSeconds(UniverseBaseUnixSeconds));
+    }
 
 	OnUniverseSecond.Broadcast(UniverseTimeSeconds);
 
@@ -232,6 +254,13 @@ void UTimerSubsystem::OnClockTick()
 
 FDateTime UTimerSubsystem::GetUniverseDateTime() const
 {
+    if (UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)
+    {
+        const auto* Service=GetGameInstance()?GetGameInstance()->GetSubsystem<UFractalVerseSubsystem>():nullptr;
+        if (!Service || Service->Status().UniverseBaseUtc<=0) return FDateTime::MinValue();
+        const auto State=Service->Status();
+        return FDateTime::FromUnixTimestamp(State.UniverseBaseUtc+State.UniverseSeconds);
+    }
 	if (UniverseBaseUnixSeconds <= 0)
 	{
 		return FDateTime::FromUnixTimestamp((int64)UniverseTimeSeconds);
@@ -243,20 +272,22 @@ FDateTime UTimerSubsystem::GetUniverseDateTime() const
 
 FString UTimerSubsystem::GetUniverseDateTimeString() const
 {
-	return GetUniverseDateTime().ToString(TEXT("%Y-%m-%d %H:%M:%S"));
+	const auto Date=GetUniverseDateTime();
+    return Date==FDateTime::MinValue()?TEXT("Awaiting universe server"):Date.ToString(TEXT("%Y-%m-%d %H:%M:%S"));
 }
 
 void UTimerSubsystem::SetTimeScale(double NewTimeScale)
 {
 	TimeScale = FMath::Clamp(NewTimeScale, 0.0, 1.0e7);
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[TimerSubsystem] TimeScale set to %.2f"),
 		TimeScale);
 }
 
 void UTimerSubsystem::UpdateUniverseTime(float DeltaSeconds)
 {
+    if (UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled) return;
 	UniverseTimeSeconds += (int64)FMath::RoundToInt(DeltaSeconds * TimeScale);
 }
 
@@ -272,7 +303,7 @@ void UTimerSubsystem::SetCampaignSave(UCampaignSave* InCampaignSave)
 	LastBroadcastTPlus = MAX_uint64;
 	CachedCampaignTPlusSeconds = 0;
 
-	UE_LOG(LogTemp, Warning,
+	UE_LOG(LogTemp, Log,
 		TEXT("[TimerSubsystem] SetCampaignSave ObjName=%s Row=%s Index=%d Start=%llu Init=%d"),
 		*GetNameSafe(InCampaignSave),
 		InCampaignSave ? *InCampaignSave->CampaignRowName.ToString() : TEXT("None"),
@@ -325,7 +356,7 @@ void UTimerSubsystem::RestartCampaignClock(bool bSaveImmediately)
 
 			const bool bOK = UGameplayStatics::SaveGameToSlot(CS, Slot, UserIndex);
 
-			UE_LOG(LogTemp, Warning,
+			UE_LOG(LogTemp, Log,
 				TEXT("[TimerSubsystem] RestartCampaignClock Saved slot=%s ok=%d"),
 				*Slot,
 				bOK ? 1 : 0);

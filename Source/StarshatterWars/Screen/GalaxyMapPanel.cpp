@@ -289,9 +289,7 @@ int32 UGalaxyMapPanel::NativePaint(
         FSlateDrawElement::MakeText(
             OutDrawElements,
             ++PaintLayer,
-            AllottedGeometry.ToPaintGeometry(
-                FVector2D(ClipRect.Left + 8.0f, ClipRect.Top + 8.0f),
-                FVector2D(260.0f, 24.0f)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(260.0f, 24.0f)), FSlateLayoutTransform(FVector2f(FVector2D(ClipRect.Left + 8.0f, ClipRect.Top + 8.0f)))),
             HeaderText,
             HeaderFont,
             ESlateDrawEffect::None,
@@ -427,7 +425,7 @@ int32 UGalaxyMapPanel::NativePaint(
         FSlateDrawElement::MakeBox(
             OutDrawElements,
             PaintLayer + 2,
-            AllottedGeometry.ToPaintGeometry(DrawPos, DrawSize),
+            AllottedGeometry.ToPaintGeometry(FVector2f(DrawSize), FSlateLayoutTransform(FVector2f(DrawPos))),
             &Brush,
             ESlateDrawEffect::None,
             FLinearColor::White);
@@ -651,7 +649,7 @@ int32 UGalaxyMapPanel::NativePaint(
             FSlateDrawElement::MakeText(
                 OutDrawElements,
                 PaintLayer + 1,
-                AllottedGeometry.ToPaintGeometry(TextPos, FVector2D(LabelWidth, LabelHeight)),
+                AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(LabelWidth, LabelHeight)), FSlateLayoutTransform(FVector2f(TextPos))),
                 SystemName,
                 FontInfo,
                 ESlateDrawEffect::None,
@@ -916,7 +914,7 @@ void UGalaxyMapPanel::RebuildNormalizationBounds()
 
     bHasBounds = (Count > 0);
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[GalaxyMapPanel] Bounds: MaxAbsX=%.2f MaxAbsY=%.2f Count=%d"),
         MaxAbsX, MaxAbsY, Count);
 }
@@ -1122,7 +1120,7 @@ FReply UGalaxyMapPanel::NativeOnMouseButtonDown(
                 OwnerNavDlg->HandleGalaxySystemSelected(HitSystemName);
             }
 
-            UE_LOG(LogTemp, Warning,
+            UE_LOG(LogTemp, Log,
                 TEXT("[GalaxyMapPanel] Selected system: %s"),
                 *HitSystemName);
 
@@ -1213,7 +1211,7 @@ FReply UGalaxyMapPanel::NativeOnMouseButtonDoubleClick(
         OwnerNavDlg->HandleGalaxySystemActivated(HitSystemName);
     }
 
-    UE_LOG(LogTemp, Warning,
+    UE_LOG(LogTemp, Log,
         TEXT("[GalaxyMapPanel] Activated system via double-click: %s"),
         *HitSystemName);
 

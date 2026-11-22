@@ -1991,7 +1991,7 @@ int32 USystemMapPanel::NativePaint(
             FMath::Max(12.0, PanelSize.Y - Height - 16.0));
         FSlateDrawElement::MakeBox(
             OutDrawElements, ++PaintLayer,
-            AllottedGeometry.ToPaintGeometry(BoxOrigin, FVector2D(Width, Height)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(Width, Height)), FSlateLayoutTransform(FVector2f(BoxOrigin))),
             FCoreStyle::Get().GetBrush("WhiteBrush"),
             ESlateDrawEffect::None, FLinearColor(0.025f, 0.04f, 0.065f, 0.94f));
 
@@ -2000,8 +2000,7 @@ int32 USystemMapPanel::NativePaint(
         {
             FSlateDrawElement::MakeText(
                 OutDrawElements, ++PaintLayer,
-                AllottedGeometry.ToPaintGeometry(
-                    BoxOrigin + FVector2D(14.0f, Y), FVector2D(Width - 28.0f, 22.0f)),
+                AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(Width - 28.0f, 22.0f)), FSlateLayoutTransform(FVector2f(BoxOrigin + FVector2D(14.0f, Y)))),
                 Text, FCoreStyle::GetDefaultFontStyle("Regular", FontSize),
                 ESlateDrawEffect::None, Color);
         };
@@ -2022,7 +2021,7 @@ int32 USystemMapPanel::NativePaint(
             const FVector2D RegionOrigin(48.0f, BoxOrigin.Y);
             FSlateDrawElement::MakeBox(
                 OutDrawElements, ++PaintLayer,
-                AllottedGeometry.ToPaintGeometry(RegionOrigin, FVector2D(Width, Height)),
+                AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(Width, Height)), FSlateLayoutTransform(FVector2f(RegionOrigin))),
                 FCoreStyle::Get().GetBrush("WhiteBrush"), ESlateDrawEffect::None,
                 FLinearColor(0.025f, 0.04f, 0.065f, 0.94f));
             auto DrawRegionLine = [&](const FString& Text, float Y, int32 FontSize,
@@ -2030,8 +2029,7 @@ int32 USystemMapPanel::NativePaint(
             {
                 FSlateDrawElement::MakeText(
                     OutDrawElements, ++PaintLayer,
-                    AllottedGeometry.ToPaintGeometry(
-                        RegionOrigin + FVector2D(34.0f, Y), FVector2D(Width - 48.0f, 22.0f)),
+                    AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(Width - 48.0f, 22.0f)), FSlateLayoutTransform(FVector2f(RegionOrigin + FVector2D(34.0f, Y)))),
                     Text, FCoreStyle::GetDefaultFontStyle("Regular", FontSize),
                     ESlateDrawEffect::None, Color);
             };
@@ -2048,7 +2046,7 @@ int32 USystemMapPanel::NativePaint(
                         Brush.SetResourceObject(Texture);
                         Brush.DrawAs = ESlateBrushDrawType::Image;
                         FSlateDrawElement::MakeBox(OutDrawElements, ++PaintLayer,
-                            AllottedGeometry.ToPaintGeometry(RegionOrigin + FVector2D(12.0f, RowY), FVector2D(16.0f)),
+                            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(16.0f)), FSlateLayoutTransform(FVector2f(RegionOrigin + FVector2D(12.0f, RowY)))),
                             &Brush, ESlateDrawEffect::None);
                     }
                 }
@@ -2077,7 +2075,7 @@ int32 USystemMapPanel::NativePaint(
         // The capture has a small transparent border to keep the limb clear of its edges.
         const float Size = Brush == &Fallback ? Diameter : Diameter * 1.08f;
         FSlateDrawElement::MakeBox(OutDrawElements, ++Layer,
-            AllottedGeometry.ToPaintGeometry(Center - FVector2D(Size * 0.5f), FVector2D(Size)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(Size)), FSlateLayoutTransform(FVector2f(Center - FVector2D(Size * 0.5f)))),
             Brush, ESlateDrawEffect::None, FLinearColor::White);
     };
     if (MissionBodyPreview)
@@ -2114,7 +2112,7 @@ int32 USystemMapPanel::NativePaint(
                     Brush.DrawAs = ESlateBrushDrawType::Image;
                     Brush.SetResourceObject(Texture);
                     FSlateDrawElement::MakeBox(OutDrawElements, ++LayerId,
-                        AllottedGeometry.ToPaintGeometry(Item.Center - Extent, Extent * 2),
+                        AllottedGeometry.ToPaintGeometry(FVector2f(Extent * 2), FSlateLayoutTransform(FVector2f(Item.Center - Extent))),
                         &Brush, ESlateDrawEffect::None, ComputeStarTint(Item.Body));
                 }
             }
@@ -2126,14 +2124,13 @@ int32 USystemMapPanel::NativePaint(
 
             if (Item.Body->GetType() != Orbital::MOON || FocusedPlanet || FocusedMoon)
                 FSlateDrawElement::MakeText(OutDrawElements, ++LayerId,
-                    AllottedGeometry.ToPaintGeometry(Item.Center + FVector2D(-Extent.X, Extent.Y + 7),
-                        FVector2D(150, 20)), FString(UTF8_TO_TCHAR(Item.Body->GetName())),
+                    AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(150, 20)), FSlateLayoutTransform(FVector2f(Item.Center + FVector2D(-Extent.X, Extent.Y + 7)))), FString(UTF8_TO_TCHAR(Item.Body->GetName())),
                     FCoreStyle::GetDefaultFontStyle("Regular", 11), ESlateDrawEffect::None,
                     FLinearColor(0.65f, 0.88f, 0.96f));
         }
 
         FSlateDrawElement::MakeText(OutDrawElements, ++LayerId,
-            AllottedGeometry.ToPaintGeometry(FVector2D(16, 13), FVector2D(430, 20)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(430, 20)), FSlateLayoutTransform(FVector2f(FVector2D(16, 13)))),
             FString(TEXT("DRAG TO ORBIT   /   RMB PAN   /   WHEEL ZOOM   /   CLICK TO FOCUS")),
             FCoreStyle::GetDefaultFontStyle("Regular", 10), ESlateDrawEffect::None,
             FLinearColor(0.41f, 0.68f, 0.78f));
@@ -2147,9 +2144,7 @@ int32 USystemMapPanel::NativePaint(
         const FString Name = ANSI_TO_TCHAR(FocusedMoon->GetName());
         DrawBody(FocusedMoon, Center, Diameter, LayerId, true);
         FSlateDrawElement::MakeText(OutDrawElements, ++LayerId,
-            AllottedGeometry.ToPaintGeometry(
-                Center + FVector2D(-Diameter * 0.5f, Diameter * 0.5f + 10.0f),
-                FVector2D(240.0f, 24.0f)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(240.0f, 24.0f)), FSlateLayoutTransform(FVector2f(Center + FVector2D(-Diameter * 0.5f, Diameter * 0.5f + 10.0f)))),
             Name, FCoreStyle::GetDefaultFontStyle("Regular", 12),
             ESlateDrawEffect::None, EmpireColor);
         return DrawBodyInfo(LayerId);
@@ -2228,9 +2223,7 @@ int32 USystemMapPanel::NativePaint(
         FSlateDrawElement::MakeBox(
             OutDrawElements,
             ++PaintLayer,
-            AllottedGeometry.ToPaintGeometry(
-                FVector2D(SystemCenter.X - RingSize * 0.5f, SystemCenter.Y - RingSize * 0.5f),
-                FVector2D(RingSize, RingSize)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(RingSize, RingSize)), FSlateLayoutTransform(FVector2f(FVector2D(SystemCenter.X - RingSize * 0.5f, SystemCenter.Y - RingSize * 0.5f)))),
             &IFFRingBrush,
             ESlateDrawEffect::None,
             IFFRingTint);
@@ -2246,9 +2239,7 @@ int32 USystemMapPanel::NativePaint(
         FSlateDrawElement::MakeBox(
             OutDrawElements,
             ++PaintLayer,
-            AllottedGeometry.ToPaintGeometry(
-                FVector2D(SystemCenter.X - StarSize * 0.5f, SystemCenter.Y - StarSize * 0.5f),
-                FVector2D(StarSize, StarSize)),
+            AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(StarSize, StarSize)), FSlateLayoutTransform(FVector2f(FVector2D(SystemCenter.X - StarSize * 0.5f, SystemCenter.Y - StarSize * 0.5f)))),
             &StarBrush,
             ESlateDrawEffect::None,
             StarTint);
@@ -2285,10 +2276,8 @@ int32 USystemMapPanel::NativePaint(
             FSlateDrawElement::MakeText(
                 OutDrawElements,
                 ++PaintLayer,
-                AllottedGeometry.ToPaintGeometry(
-                    FVector2D(PlanetCenter.X - PlanetDrawSize * 0.5f,
-                        PlanetCenter.Y + PlanetDrawSize * 0.5f + 10.0f),
-                    FVector2D(240.0f, 24.0f)),
+                AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(240.0f, 24.0f)), FSlateLayoutTransform(FVector2f(FVector2D(PlanetCenter.X - PlanetDrawSize * 0.5f,
+                        PlanetCenter.Y + PlanetDrawSize * 0.5f + 10.0f)))),
                 ANSI_TO_TCHAR(PlanetBody->GetName()),
                 FCoreStyle::GetDefaultFontStyle("Regular", 12),
                 ESlateDrawEffect::None,
@@ -2418,9 +2407,7 @@ int32 USystemMapPanel::NativePaint(
             {
                 FSlateDrawElement::MakeText(
                     OutDrawElements, ++PaintLayer,
-                    AllottedGeometry.ToPaintGeometry(
-                        MoonCenter + FVector2D(MoonDrawSize * 0.5f + 5.0f, -6.0f),
-                        FVector2D(180.0f, 20.0f)),
+                    AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(180.0f, 20.0f)), FSlateLayoutTransform(FVector2f(MoonCenter + FVector2D(MoonDrawSize * 0.5f + 5.0f, -6.0f)))),
                     ANSI_TO_TCHAR(MoonBody->GetName()),
                     FCoreStyle::GetDefaultFontStyle("Regular", 11),
                     ESlateDrawEffect::None, EmpireColor);
@@ -2500,9 +2487,7 @@ int32 USystemMapPanel::NativePaint(
             FSlateDrawElement::MakeText(
                 OutDrawElements,
                 ++PaintLayer,
-                AllottedGeometry.ToPaintGeometry(
-                    FVector2D(16.0f, PanelSize.Y - 28.0f),
-                    FVector2D(420.0f, 20.0f)),
+                AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(420.0f, 20.0f)), FSlateLayoutTransform(FVector2f(FVector2D(16.0f, PanelSize.Y - 28.0f)))),
                 LabelText,
                 FCoreStyle::GetDefaultFontStyle("Regular", 12),
                 ESlateDrawEffect::None,
@@ -2514,9 +2499,7 @@ int32 USystemMapPanel::NativePaint(
     FSlateDrawElement::MakeText(
         OutDrawElements,
         ++PaintLayer,
-        AllottedGeometry.ToPaintGeometry(
-            FVector2D(SystemCenter.X - 100.0f, SystemCenter.Y + StarSize * 0.5f + 22.0f),
-            FVector2D(200.0f, 20.0f)),
+        AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(200.0f, 20.0f)), FSlateLayoutTransform(FVector2f(FVector2D(SystemCenter.X - 100.0f, SystemCenter.Y + StarSize * 0.5f + 22.0f)))),
         ANSI_TO_TCHAR(CachedPrimaryStarBody->GetName()),
         FCoreStyle::GetDefaultFontStyle("Regular", 11),
         ESlateDrawEffect::None,

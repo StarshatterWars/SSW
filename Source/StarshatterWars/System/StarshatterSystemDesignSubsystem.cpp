@@ -57,18 +57,17 @@ void PublishSystemComponents(const TMap<FName, FSystemDesign>& Rows)
 }
 }
 
-bool UStarshatterSystemDesignSubsystem::ImportDefinitions(UDataTable& Table)
+bool UStarshatterSystemDesignSubsystem::ReadJsonCatalog(const FString& Path,TMap<FName,FSystemDesign>& Out,FString& Error)
 {
-    const FString Path = FPaths::ProjectContentDir() / SystemSource;
     FString Json;
-    if (!FFileHelper::LoadFileToString(Json, *Path)) return false;
+    if (!FFileHelper::LoadFileToString(Json, *Path)){Error=TEXT("Cannot read system catalog: ")+Path;return false;}
 
     FSystemDesignDocument Document;
     if (!FJsonObjectConverter::JsonObjectStringToUStruct(Json, &Document) ||
         Document.Systems.IsEmpty() || !HasCompleteGrades(Document.ComponentGrades))
     {
         UE_LOG(LogTemp, Warning, TEXT("[SYSTEM] Invalid %s: expected systems and one definition for each grade I-V"), *Path);
-        return false;
+        Error=TEXT("Invalid system/component definitions: ")+Path;return false;
     }
     int32 ComponentCount = 0;
     TSet<FName> Systems;
@@ -79,7 +78,7 @@ bool UStarshatterSystemDesignSubsystem::ImportDefinitions(UDataTable& Table)
         if (Key.IsNone() || Systems.Contains(Key) || System.Components.IsEmpty())
         {
             UE_LOG(LogTemp, Warning, TEXT("[SYSTEM] Missing or duplicate system or empty component list in %s: %s"), *Path, *System.Name);
-            return false;
+            Error=TEXT("Invalid system/component definitions: ")+Path;return false;
         }
         Systems.Add(Key);
         TSet<FName> Components;
@@ -95,7 +94,7 @@ bool UStarshatterSystemDesignSubsystem::ImportDefinitions(UDataTable& Table)
             {
                 UE_LOG(LogTemp, Warning, TEXT("[SYSTEM] Invalid or duplicate component in %s: %s / %s"),
                     *Path, *System.Name, *Component.Name);
-                return false;
+                Error=TEXT("Invalid system/component definitions: ")+Path;return false;
             }
             Components.Add(Name);
             ++ComponentCount;
@@ -106,17 +105,32 @@ bool UStarshatterSystemDesignSubsystem::ImportDefinitions(UDataTable& Table)
         if (!HasCompleteGrades(System.ComponentGrades))
         {
             UE_LOG(LogTemp, Warning, TEXT("[SYSTEM] Invalid per-system grade profile: %s"), *System.Name);
-            return false;
+            Error=TEXT("Invalid system/component definitions: ")+Path;return false;
         }
         System.SourceFile = SystemSource;
     }
-    if (Table.GetRowStruct() && Table.GetRowStruct() != FSystemDesign::StaticStruct()) return false;
-    Table.EmptyTable();
-    Table.RowStruct = FSystemDesign::StaticStruct();
-    for (const auto& System : Document.Systems)
-        Table.AddRow(FName(*System.Name), System);
-    UE_LOG(LogTemp, Display, TEXT("[SYSTEM] Imported %d systems, %d components and %d grades from %s"),
-        Systems.Num(), ComponentCount, Document.ComponentGrades.Num(), *Path);
+    TMap<FName,FSystemDesign> Candidate;
+    for(const auto& System:Document.Systems)Candidate.Add(FName(*System.Name),System);
+    Out=MoveTemp(Candidate);Error.Reset();return true;
+}
+
+bool UStarshatterSystemDesignSubsystem::ImportDefinitions(UDataTable& Table)
+{
+    TMap<FName,FSystemDesign> Rows;FString Error;
+    if(!ReadJsonCatalog(FPaths::ProjectContentDir()/SystemSource,Rows,Error))return false;
+    if(Table.GetRowStruct() && Table.GetRowStruct()!=FSystemDesign::StaticStruct())return false;
+    Table.EmptyTable();Table.RowStruct=FSystemDesign::StaticStruct();
+    for(const auto& Pair:Rows)Table.AddRow(Pair.Key,Pair.Value);
+    return true;
+}
+
+bool UStarshatterSystemDesignSubsystem::ReloadJsonCatalog(const FString& Path,FString& Error)
+{
+    TMap<FName,FSystemDesign> Candidate;
+    if(!ReadJsonCatalog(Path,Candidate,Error))return false;
+    DesignsByName=MoveTemp(Candidate);SystemDesignDataTable=nullptr;
+    PublishSystemComponents(DesignsByName);
+    UE_LOG(LogTemp,Display,TEXT("[SYSTEM] Loaded %d native system designs from JSON; no runtime DataTable"),DesignsByName.Num());
     return true;
 }
 
@@ -129,19 +143,14 @@ void UStarshatterSystemDesignSubsystem::Deinitialize()
 
 void UStarshatterSystemDesignSubsystem::LoadSystemDesigns()
 {
-    if (auto* Imported = NewObject<UDataTable>(this); ImportDefinitions(*Imported))
-        SystemDesignDataTable = Imported;
-    else
-    {
-        auto* Assets = GetGameInstance()->GetSubsystem<UStarshatterAssetRegistrySubsystem>();
-        SystemDesignDataTable = Assets ? Assets->GetDataTable(TEXT("Data.SystemDesignTable")) : nullptr;
-    }
-    LoadAll(false);
+    FString Error;
+    if(!ReloadJsonCatalog(FPaths::ProjectContentDir()/SystemSource,Error))
+        UE_LOG(LogTemp,Error,TEXT("[SYSTEM] %s; existing native catalog retained"),*Error);
 }
 
 void UStarshatterSystemDesignSubsystem::LoadAll(bool bImportJson)
 {
-    if (bImportJson)
+    if (bImportJson || !SystemDesignDataTable)
     {
         LoadSystemDesigns();
         return;

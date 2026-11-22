@@ -39,32 +39,33 @@
 
 // +----------------------------------------------------------------------+
 CombatGroup::CombatGroup(ECOMBATGROUP_TYPE t, int n, const char* s, int iff_code, EIntel e, EEMPIRE_NAME InEmpire, CombatGroup* p)
-	: type(t)
-	, id(n)
-	, name(s)
-	, iff(iff_code)
-	, enemy_intel(e)
-	, empire_id(InEmpire)
-	, plan_value(0)
-	, units()
-	, components()
-	, live_comp()
-	, combatant(0)
-	, parent(p)
-	, region()
-	, location()
-	, value(0)
-	, unit_index(0)
-	, sorties(0)
-	, kills(0)
-	, points(0)
-	, expanded(false)
-	, assigned_system()
-	, current_zone(0)
-	, assigned_zone(0)
-	, zone_lock(false)
-	, assignments()
-	, strategic_direction()
+	: 
+    type(t),
+    id(n),
+    name(s),
+    iff(iff_code),
+    enemy_intel(e),
+    plan_value(0),
+    units(),
+    components(),
+    live_comp(),
+    combatant(0),
+    parent(p),
+    region(),
+    location(),
+    value(0),
+    unit_index(0),
+    sorties(0),
+    kills(0),
+    points(0),
+    expanded(false),
+    assigned_system(),
+    current_zone(0),
+    assigned_zone(0),
+    zone_lock(false),
+    assignments(),
+    strategic_direction(),
+    empire_id(InEmpire)
 {
 	if (parent)
 		parent->AddComponent(this);

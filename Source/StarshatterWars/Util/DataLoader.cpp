@@ -1,7 +1,7 @@
 
 /*  Project nGenEx
 	Destroyer Studios LLC
-	Copyright © 1997-2004. All Rights Reserved.
+	Copyright Â© 1997-2004. All Rights Reserved.
 
 	SUBSYSTEM:    nGenEx.lib
 	FILE:         DataLoader.cpp
@@ -18,6 +18,7 @@
 #include "HAL/FileManager.h"
 #include "Misc/Paths.h"
 #include "Bitmap.h"
+#include "Engine/Texture2D.h"
 #include "Sound.h"
 #include "Resource.h"
 #include "Misc/Paths.h"
@@ -224,6 +225,21 @@ DataLoader::ReleaseBuffer(BYTE*& buf)
 }
 
 // +--------------------------------------------------------------------+
+
+int DataLoader::LoadHUDTexture(const char* name, Bitmap& bitmap, int type)
+{
+    if(!enable_media || !name || !name[0] || IsRunningDedicatedServer()) return 0;
+    const FString Asset=FPaths::GetBaseFilename(UTF8_TO_TCHAR(name));
+    const FString Package=TEXT("/Game/UI/HUD/")+Asset;
+    if(!FPackageName::DoesPackageExist(Package))
+    {
+        UE_LOG(LogTemp,Warning,TEXT("[DataLoader] Missing imported HUD texture: %s"),*Package);
+        return 0;
+    }
+    UTexture2D* Image=LoadObject<UTexture2D>(nullptr,*(Package+TEXT(".")+Asset));
+    if(!Image) return 0;
+    bitmap.SetTexture(Image,type);bitmap.SetFilename(TCHAR_TO_UTF8(*Package));return 1;
+}
 
 int
 DataLoader::LoadGameBitmap(const char* name, Bitmap& bitmap, int type, bool optional)

@@ -2,12 +2,17 @@
 #include "GameStructs_economy.h"
 #include "GameStructs_products.h"
 class UCargoCatalogSubsystem;
+struct FS_CargoCatalogRow;
 // The sim owns this controller; widgets only inspect its persisted results.
 class EconomyAI
 {
 public:
     static bool AdvanceMine(FEconomyState&,FName Deposit,FName Inventory,FName System,FName Mineral,double InitialTonnes,double TonnesPerSecond,double Capacity,double Seconds);
     static void AdvanceFacilities(FEconomyState&,const TMap<FName,FSSWProductionFacility>&,const TMap<FName,FSSWProductionRecipe>&,double Seconds);
+    double ProductionDeadline()const{return NextProductionDeadline;}
+    void WakeProduction(){bProductionDirty=true;}
+    void AdvanceProduction(FEconomyState&,const TMap<FName,FSSWProductionFacility>&,const TMap<FName,FSSWProductionRecipe>&);
+    bool AdvancePlain(FEconomyState&,const TMap<FName,FS_CargoCatalogRow>&,double Seconds,int64 NowUtc);
     bool Advance(FEconomyState&,const UCargoCatalogSubsystem&,double Seconds,int64 NowUtc);
     static FName NPCAccount(FName Inventory);
     static double PriceTrend(const FEconomyState&,FName System,FName Item);
@@ -17,4 +22,8 @@ public:
     static double PriceFactor(double Stock,double Demand);
     static double FreightEstimate(double Tonnes,int32 Jumps);
     static const FRegionalMarketHistory* History(const FEconomyState&,FName System,FName Item);
+private:
+    bool bProductionDirty=true;
+    double NextProductionDeadline=0;
+    const FEconomyState* ProductionState=nullptr;
 };

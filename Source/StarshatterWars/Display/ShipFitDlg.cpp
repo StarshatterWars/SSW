@@ -1,4 +1,6 @@
 #include "ShipFitDlg.h"
+#include "ShipStoreSubsystem.h"
+#include "ShipStoreAI.h"
 #include "FittingMetrics.h"
 #include "Sim.h"
 #include "Ship.h"
@@ -106,9 +108,9 @@ TSharedRef<SWidget> UShipFitDlg::RebuildWidget()
                 const auto* Base = Design ? Design->Components.FindByPredicate([&](const auto& Item)
                     { return FName(*Item.Name) == Slot.Component; }) : nullptr;
                 if (!Variant || !Base) return INVTEXT("No compatible catalog component.");
-                return FText::Format(INVTEXT("Repair: {0} s   Replacement: {1} s   Refit: {2} CR   Balance: {3} CR\nPerformance: {4}%   Power demand: {5}%"),
+                return FText::Format(INVTEXT("Repair: {0} s   Replacement: {1} s   STORED AT DOCK: {2}   BALANCE: {3} CR\nPerformance: {4}%   Power demand: {5}%"),
                     FText::AsNumber(Variant->RepairTime), FText::AsNumber(Variant->ReplaceTime),
-                    FText::AsNumber(Variant->BaseCost),
+                    FText::AsNumber(Instance->GetSubsystem<UShipStoreSubsystem>()->Stored(ShipStoreAI::ComponentId(Slot.SystemDesign,Slot.Component,*Grade))),
                     FText::AsNumber(Weak->GetBalance()), FText::AsNumber(Variant->PerformanceMultiplier * 100), FText::AsNumber(Variant->PowerDemandMultiplier * 100));
             })
         ]
@@ -128,9 +130,10 @@ TSharedRef<SWidget> UShipFitDlg::RebuildWidget()
                         return INVTEXT("Select an installed component and a replacement grade.");
                     if (Entry->Components[*Selected].Level == *Grade)
                         return INVTEXT("This grade is already installed. Choose another component grade.");
+                    if(Weak->StoredComponentCount(Id,*Selected,*Grade)<1)return INVTEXT("Purchase the selected component grade through Ship Store first. It must be stored at this dock.");
                     if (!Weak->ValidateFitting(Id, *Selected, *Grade, Reason))
                         return Reason.IsEmpty() ? INVTEXT("This component cannot be fitted in the selected slot.") : Reason;
-                    return INVTEXT("Refit selected component. Shipyard service and reactor power budget verified; credits are charged only when applied.");
+                    return INVTEXT("Refit selected component. Shipyard service and reactor power budget verified; uses a component purchased in Ship Store; no second purchase charge.");
                 })
                 .IsEnabled_Lambda([Weak, Selected, Grade, Id = Hull]()
                 {
@@ -138,7 +141,7 @@ TSharedRef<SWidget> UShipFitDlg::RebuildWidget()
                     const auto* Entry = Weak->FindShip(Id);
                     if (!Entry || !Entry->Components.IsValidIndex(*Selected) || Entry->Components[*Selected].Level == *Grade) return false;
                     FText Reason;
-                    return Weak->ValidateFitting(Id, *Selected, *Grade, Reason);
+                    return Weak->StoredComponentCount(Id,*Selected,*Grade)>0 && Weak->ValidateFitting(Id, *Selected, *Grade, Reason);
                 })
                 .OnClicked_Lambda([Weak, Id = Hull, Selected, Grade, Feedback]()
                 {

@@ -1,5 +1,6 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
+#include "ScopedTestWorldContext.h"
 #include "Misc/ScopeExit.h"
 #include "Engine/DataTable.h"
 #include "Engine/World.h"
@@ -32,6 +33,7 @@ bool FFalconExternalStoresTest::RunTest(const FString& Parameters)
     ShipDesignRegistry::RegisterDesign(FName(TEXT("Falcon")),*Row);
     const auto Options = UWorld::InitializationValues().AllowAudioPlayback(false).CreatePhysicsScene(false).CreateNavigation(false).CreateAISystem(false).ShouldSimulatePhysics(false);
     auto* World = UWorld::CreateWorld(EWorldType::EditorPreview,false,NAME_None,nullptr,true,ERHIFeatureLevel::Num,&Options);
+    FScopedSSWTestWorldContext TestWorldContext1(World);
     ON_SCOPE_EXIT { World->DestroyWorld(false); };
     UClass* Class = LoadClass<AFighterActor>(nullptr,TEXT("/Game/Models/Falcon/BP_Falcon.BP_Falcon_C"));
     if (!TestNotNull(TEXT("Saved Falcon Blueprint"),Class)) return false;

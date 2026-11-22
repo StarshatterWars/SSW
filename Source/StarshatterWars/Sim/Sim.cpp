@@ -13,11 +13,18 @@
 */
 
 #include "Sim.h"
+#include "OwnedHullCondition.h"
+#include "OwnedHullLocation.h"
+#include "MissionHullAccessRules.h"
+#include "ShipInsuranceSubsystem.h"
+#include "FractalVerseSubsystem.h"
 #include "ProductionCatalog.h"
+#include "SimDataEvents.h"
 #include "LocalGameStateSubsystem.h"
 #include "SplashDamageRules.h"
 #include "RadioView.h"
 #include "PlayerFlightAccess.h"
+#include "FreeFlightAssignment.h"
 #include "AcceptanceAI.h"
 #include "AgentCatalogSubsystem.h"
 #include "ContractLedger.h"
@@ -242,8 +249,7 @@ class SimSplash
 {
 public:
 	SimSplash(SimRegion* r, const FVector& l, double d, double n)
-		: rgn(r), loc(l), damage(d), range(n),
-		owner_name("Collateral Damage"), missile(false) {
+		: owner_name("Collateral Damage"), loc(l), damage(d), range(n), rgn(r), missile(false) {
 	}
 
 	Text        owner_name;
@@ -352,16 +358,18 @@ static const FShipDesign* ResolveRowFromLegacyShipDesign(const ShipDesign* Legac
 Sim* Sim::sim = 0;
 
 Sim::Sim(MotionController* InCtrl)
-	: ctrl(InCtrl)
-	, test_mode(false)
-	, grid_shown(false)
-	, dust(nullptr)
-	, star_system(nullptr)
-	, active_region(nullptr)
-	, mission(nullptr)
-	, start_time(0)
-	, cam_dir(nullptr)
+	: 
+    active_region(nullptr),
+    star_system(nullptr),
+    dust(nullptr),
+    cam_dir(nullptr),
+    ctrl(InCtrl),
+    test_mode(false),
+    grid_shown(false),
+    mission(nullptr),
+    start_time(0)
 {
+    MarketChangeHandle=FSimDataEvents::Changed().AddLambda([this](const FEconomyState& State){if(&ReadEconomy()==&State){bMarketDirty=true;++EconomyRevision;}});
 	Drive::Initialize();
 	Explosion::Initialize();
 	FlightDeck::Initialize();
@@ -391,6 +399,7 @@ Sim::Sim(MotionController* InCtrl)
 
 Sim::~Sim()
 {
+    FSimDataEvents::Changed().Remove(MarketChangeHandle);
 	UnloadMission();
 
 	SimShot::Close();
@@ -2027,12 +2036,12 @@ Sim::CreateShip(
 		//-------------------------------------------------------------
 		USSWRuntimeSubsystem* RuntimeSS = GetSSWRuntimeSubsystem();
 
-		UE_LOG(LogTemp, Warning,
+		UE_LOG(LogTemp, Log,
 			TEXT("[Sim::CreateShip] VISUAL CHECK Ship='%s' RuntimeSS=%p"),
 			ANSI_TO_TCHAR(ship->GetName()),
 			RuntimeSS);
 
-		if (RuntimeSS)
+		if (RuntimeSS && UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Server)
 		{
 			AShipActor* Visual = RuntimeSS->SpawnVisualForRuntimeShip(ship);
 
@@ -2186,10 +2195,8 @@ Sim::CreateAsteroid(const FVector& pos, int t, double mass, SimRegion* rgn)
     {
         const auto* System = Env->FindGalaxyByName(UTF8_TO_TCHAR(rgn->GetSystem()->GetName()));
         FString Profile = System ? System->AsteroidType : FString();
-        if (const auto* Regions = Env->GetRegionsTable())
-            if (const auto* Region = Regions->FindRow<FRegion>(FName(UTF8_TO_TCHAR(rgn->GetName())), TEXT("Asteroid composition"), false);
-                Region && !Region->AsteroidType.IsEmpty())
-                Profile = Region->AsteroidType;
+        if (const auto* Region = Env->FindRegionByName(UTF8_TO_TCHAR(rgn->GetName())); Region && !Region->AsteroidType.IsEmpty())
+            Profile = Region->AsteroidType;
         const int64 Value = StaticEnum<ESSWAsteroidType>()->GetValueByNameString(Profile);
         if (Value != INDEX_NONE) DominantType = static_cast<ESSWAsteroidType>(Value);
     }
@@ -2612,6 +2619,11 @@ bool Sim::RequestPlayerCarrierLaunch()
     if (!CarrierHangar->Launch(Squadron, Slot))
         return false;
 
+    if (mission && mission->IsFreeFlight())
+        if(auto* Runtime=GetSSWRuntimeSubsystem())
+            if(auto* Game=Cast<USSWGameInstance>(Runtime->GetGameInstance()))
+                if(const auto* Character=PlayerCharacter::GetCurrentPlayer(); Character && FreeFlightAssignment::IsStarted(Game->GetTrainingAgent(),AgentAI::PilotKey(*Character)))
+                    Game->GetTrainingAgent().Resolve(AgentAI::PilotKey(*Character),FreeFlightAssignment::Id,true);
     DeferredLaunchPlayer = Player;
     if (PendingLaunchPlayer)
         start_time = Game::GetGameTime();
@@ -2637,6 +2649,7 @@ int32 Sim::CountPendingArenaRespawns(int32 Iff)
 
 bool Sim::HasSimulationAuthority() const
 {
+    if (UFractalVerseSubsystem::ProcessRole()==EFractalVerseRole::Client) return false;
     const UWorld* World = NetworkWorld.Get();
     return !World || World->GetNetMode() != NM_Client;
 }
@@ -2796,7 +2809,7 @@ const TMap<FName, FContractTransaction>& Sim::GetTrainingContracts()
         Changed |= SettlementAI::CloseExpired(Contract, TrainingContractAccounts, Now);
         if (Contract.State == EContractState::AwaitingClaims &&
             Contract.Issuer != TrainingContractPilot && !Contract.bSellerClaimed)
-            Changed |= SettlementAI::ClaimAuction(Contract, TrainingContractAccounts, Contract.Issuer);
+            Changed |= SettlementAI::ClaimAuction(Contract, TrainingContractAccounts, Contract.Issuer,true);
     }
     if (Changed && !ContractSaveTransaction::Commit(Economy, TrainingContracts, TrainingContractAccounts, Before,
         [&]() { if (ContractPlayer) ContractPlayer->ApplyCargoInventoryToManifest(); return !Players || Players->SaveActivePlayerProgress(); }, RestorePackage))
@@ -2851,7 +2864,7 @@ FText Sim::ExecuteTrainingContract(FName ContractId, ETrainingContractAction Act
         constexpr double PackageTonnes = 0.1;
         if (!Player->LoadCourierPackage(ContractId, PackageTonnes))
             return INVTEXT("The courier package needs 0.1 t of free cargo capacity.");
-        if (AcceptanceAI::Accept(*Contract, TrainingContractAccounts, TrainingContractPilot, Now))
+        if (AcceptanceAI::Accept(*Contract, TrainingContractAccounts, TrainingContractPilot, Now,true))
         { Changed = true; return INVTEXT("Package loaded. Fly to Janus Transfer Station to deliver it."); }
         Player->RemoveCourierPackage(ContractId);
         return INVTEXT("Could not accept. Check the contract status and your collateral balance.");
@@ -2888,7 +2901,7 @@ FText Sim::ExecuteTrainingContract(FName ContractId, ETrainingContractAction Act
         }
         return INVTEXT("Only your active courier contract can be abandoned.");
     case ETrainingContractAction::Claim:
-        if (SettlementAI::ClaimAuction(*Contract, TrainingContractAccounts, TrainingContractPilot))
+        if (SettlementAI::ClaimAuction(*Contract, TrainingContractAccounts, TrainingContractPilot,true))
         { Changed = true; return Contract->Issuer == TrainingContractPilot ? INVTEXT("Auction payout credited.")
                                                            : INVTEXT("Auction goods credited at Janus Transfer Station."); }
         return INVTEXT("No auction claim is available.");
@@ -2954,7 +2967,11 @@ TArray<Sim::FActiveHaul> Sim::GetActiveHauls()
 
 const FSSWProductionStock* Sim::GetProductionStock(const FSSWProductionFacility& Facility)
 {
-    return ProductionViews.Find(FEconomyRuntime::Warehouse(Facility.System, Facility.Facility, TEXT("View")));
+    const auto& Economy=ReadEconomy();
+    const FName Input=FEconomyRuntime::Warehouse(Facility.System,Facility.Facility,TEXT("Input")),Output=FEconomyRuntime::Warehouse(Facility.System,Facility.Facility,TEXT("Output"));
+    FName Identity(*Facility.Facility);
+    if(Facility.bSurface)for(const auto& Row:SSWProductionCatalog::Facilities())if(Row.Value.System==Facility.System && Row.Value.Facility==Facility.Facility){Identity=Row.Key;break;}
+    return &ProductionViews.Add(FEconomyRuntime::Warehouse(Facility.System,Facility.Facility,TEXT("View")),ManufacturingAI::Describe(Economy,Identity,Input,Output));
 }
 
 void Sim::TickIndustry(double Seconds)
@@ -3105,6 +3122,7 @@ void Sim::TickLegacyJanusActors(double DeltaSeconds)
                 const double Remaining = FMath::Max(0.0, Distance - StopDistance);
                 if (Remaining > 1)
                 {
+                    Run.TransferAt=0;
                     const FVector Direction = Offset.GetSafeNormal();
                     if (Run.AsteroidDetour && FVector::DistSquared(Position, *Run.AsteroidDetour) < FMath::Square(50.0))
                         Run.AsteroidDetour.Reset();
@@ -3188,12 +3206,22 @@ void Sim::TickLegacyJanusActors(double DeltaSeconds)
                     continue;
                 }
 
+                const auto TransferReady=[&](double Amount,double Rate)
+                {
+                    if(!FMath::IsFinite(Rate) || Rate<=0 || Amount<=0)return false;
+                    if(Run.bWaitingForInventory && Run.InventoryRevision==EconomyRevision)return false;
+                    Run.bWaitingForInventory=false;
+                    if(Run.TransferAt<=0){Run.TransferAt=Run.Time+Amount/Rate;return false;}
+                    if(Run.Time<Run.TransferAt)return false;
+                    Run.TransferAt=0;return true;
+                };
+                const auto WaitForInventory=[&](){Run.bWaitingForInventory=true;Run.InventoryRevision=EconomyRevision;Run.TransferAt=0;};
                 if (bShuttle)
                 {
                     const double Rate = FMath::Min(Hauler.Design()->CargoCapacity.UnloadTonnesPerSecond,
                         Depot->Design()->CargoCapacity.LoadTonnesPerSecond);
-                    if (CargoTonnes > 0) TransportAI::Unload(Economy, Hauler, DepotInventory, Rate * Seconds);
-                    if (Hauler.GetMinedOreTonnes() > UE_SMALL_NUMBER) continue;
+                    if(CargoTonnes>0){if(!TransferReady(CargoTonnes,Rate))continue;TransportAI::Unload(Economy,Hauler,DepotInventory,CargoTonnes);}
+                    if (Hauler.GetMinedOreTonnes() > UE_SMALL_NUMBER){WaitForInventory();continue;}
                     UE_LOG(LogTemp, Display, TEXT("[Production] %hs unloaded %.2f t at %hs."),
                         Hauler.GetName(), Run.LoadedTonnes, Depot->GetName());
                     Run = {};
@@ -3202,6 +3230,8 @@ void Sim::TickLegacyJanusActors(double DeltaSeconds)
                 {
                     if (Run.Contract.GetItem().IsEmpty())
                     {
+                        if(Run.bWaitingForInventory && Run.InventoryRevision==EconomyRevision)continue;
+                        Run.bWaitingForInventory=false;
                         if (!Pickup->GetRegion() || !Delivery->GetRegion()) continue;
                         const auto* Environment = UStarshatterEnvironmentSubsystem::Get();
                         const auto Route = TransportAI::FindJumpRoute(Pickup->GetRegion()->GetSystem(),
@@ -3221,12 +3251,12 @@ void Sim::TickLegacyJanusActors(double DeltaSeconds)
                                 for (const auto& Stack : Stock->Items)
                                     if (Run.Contract.Reserve(Economy, DepotInventory, Stack.Type.ToString(), FMath::Min(2.0, Capacity))) break;
                         }
-                        if (Run.Contract.GetItem().IsEmpty()) continue;
+                        if (Run.Contract.GetItem().IsEmpty()){WaitForInventory();continue;}
                     }
                     const double Rate = FMath::Min(Hauler.Design()->CargoCapacity.LoadTonnesPerSecond,
                         Pickup->Design()->CargoCapacity.UnloadTonnesPerSecond);
-                    TransportAI::Load(Economy, Hauler, Run.Contract, Rate * Seconds);
-                    if (Run.Contract.GetReservedTonnes() > UE_SMALL_NUMBER) continue;
+                    const double Reserved=Run.Contract.GetReservedTonnes();if(Reserved>0){if(!TransferReady(Reserved,Rate))continue;TransportAI::Load(Economy,Hauler,Run.Contract,Reserved);}
+                    if (Run.Contract.GetReservedTonnes() > UE_SMALL_NUMBER){WaitForInventory();continue;}
 
                     Run.LoadedTonnes = Hauler.GetMinedOreTonnes();
                     if (Run.LoadedTonnes <= UE_SMALL_NUMBER) { Run = {}; continue; }
@@ -3240,9 +3270,8 @@ void Sim::TickLegacyJanusActors(double DeltaSeconds)
                     const double Rate = FMath::Min(Hauler.Design()->CargoCapacity.UnloadTonnesPerSecond,
                         Delivery->Design()->CargoCapacity.LoadTonnesPerSecond);
                     const FName DestinationInventory = bProductRun ? TransferInventory : InputInventory;
-                    const double Space = bProductRun ? Rate * Seconds : FMath::Min(Rate * Seconds, JanekRefinery.FreeSpace(RefineryCapacity));
-                    TransportAI::Unload(Economy, Hauler, DestinationInventory, Space);
-                    if (Hauler.GetMinedOreTonnes() > UE_SMALL_NUMBER) continue;
+                    if(CargoTonnes>0){if(!TransferReady(CargoTonnes,Rate))continue;TransportAI::Unload(Economy,Hauler,DestinationInventory,CargoTonnes);}
+                    if (Hauler.GetMinedOreTonnes() > UE_SMALL_NUMBER){WaitForInventory();continue;}
                     UE_LOG(LogTemp, Display, TEXT("[Production] %hs delivered %.2f t of %s to %hs."),
                         Hauler.GetName(), Run.LoadedTonnes, *Run.Contract.GetItem(), Delivery->GetName());
                     Run = {};
@@ -3255,11 +3284,12 @@ void Sim::TickLegacyJanusActors(double DeltaSeconds)
 void Sim::TickIndustrialActors(double Seconds)
 {
     if (!FMath::IsFinite(Seconds) || Seconds <= 0) return;
-    MarketSeconds += Seconds;
-    if (MarketSeconds>=1.0)
+    const int64 MarketNow=FDateTime::UtcNow().ToUnixTimestamp();
+    if (bMarketDirty || (NextMarketExpiryUtc>0 && MarketNow>=NextMarketExpiryUtc))
     {
-        MarketSeconds=0;
+        bMarketDirty=false;NextMarketExpiryUtc=0;
         auto& State=GetEconomy();
+        for(const auto& Pair:State.MarketOrders)if(Pair.Value.State==EMarketOrderState::Open && (NextMarketExpiryUtc<=0 || Pair.Value.ExpiresUtc<NextMarketExpiryUtc))NextMarketExpiryUtc=Pair.Value.ExpiresUtc;
         if (!State.MarketOrders.IsEmpty())
         {
             const auto Before=State;
@@ -3277,19 +3307,8 @@ void Sim::TickIndustrialActors(double Seconds)
             }
         }
     }
-    IndustrySeconds+=Seconds;if(IndustrySeconds<.25)return;IndustrySeconds=0;
-    // Native galaxy economy advances jobs independently of scene visibility.
-    // This adapter only provides loaded-facility status and panel views.
-    ProductionViews.Reset();
-    auto& Economy=GetEconomy();
-    for(const auto& Row:SSWProductionCatalog::Facilities())
-    {
-        const auto& Site=Row.Value;
-        if(auto* Station=FindShip(TCHAR_TO_UTF8(*Site.Facility),TCHAR_TO_UTF8(*Site.Region)))
-        {if(Station->IsDead() || Station->IsDying())Economy.OfflineFacilities.Add(Row.Key);}
-        const FName Input=FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("Input")),Output=FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("Output"));
-        ProductionViews.Add(FEconomyRuntime::Warehouse(Site.System,Site.Facility,TEXT("View")),ManufacturingAI::Describe(Economy,FName(*Site.Facility),Input,Output));
-    }
+    // Production views are read on demand after native economy notifications.
+
 }
 
 void
@@ -3607,6 +3626,10 @@ Sim::ResolveHyperList()
 					// jump->loc is map-authored destination.
 					// Convert once here.
 					jumpship->MoveTo(OtherHand(jump->loc));
+
+                    // Reposition parked aircraft in the destination frame before
+                    // activating the player's new sector and copying its camera.
+                    for(ListIter<FlightDeck> Deck=jumpship->GetFlightDecks();++Deck;)Deck->ExecFrame(0);
 
 					jumpship->ClearTrack();
 
@@ -4424,8 +4447,11 @@ bool Sim::NeedsTrainingLaunchClearance() const
 {
     if (!mission || !mission->IsFreeFlight()) return false;
     const auto* Pilot=PlayerCharacter::GetCurrentPlayer();
-    if(HasSurfaceTrainingClearance()) return false;
-    return !Pilot || !PlayerFlightAccess::CanLaunch(false,Pilot->GetRank());
+    auto* Runtime=GetSSWRuntimeSubsystem();
+    auto* Game=Runtime?Cast<USSWGameInstance>(Runtime->GetGameInstance()):nullptr;
+    const auto* Progress=Game?Game->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+    if(!Progress || !FreeFlightAssignment::Unlocked(Pilot?Pilot->GetRank():-1,Progress->GetPlayerInfo().Campaign==Campaign::TRAINING_CAMPAIGN))return true;
+    return !Game || !Pilot || !PlayerFlightAccess::CanLaunch(FreeFlightAssignment::IsStarted(Game->GetTrainingAgent(),AgentAI::PilotKey(*Pilot)),Pilot->GetRank());
 }
 void Sim::PrepareCutscenePlayback(const Mission* PreparedMission)
 {
@@ -4465,7 +4491,7 @@ void Sim::EnsureTrainingSurfaceBase()
 {
     if(!mission || !mission->IsFreeFlight() || IsNetworked() || !star_system ||
        FCStringAnsi::Stricmp(star_system->GetName(),"Janus")!=0 || FindShip("Janek Station")) return;
-    const auto* Surface=JanekSurface(*this);auto* Design=ShipDesignRegistry::FindLegacy(FName(TEXT("Airbase1")));
+    const auto* Surface=JanekSurface(*this);auto* Design=ShipDesignRegistry::FindLegacy(FName(TEXT("JanekStation")));
     if(!Surface || !Design) return;
     auto* Base=CreateShip("Janek Station","",Design,"Janek Station",OtherHand(TerrainRegion::JanekStationLocalPosition()),1);
     if(!Base) return;
@@ -4492,6 +4518,113 @@ bool Sim::HasSurfaceTrainingClearance() const
         Carrier->GetQuantumDrive()->ActiveState()==QuantumDrive::ACTIVE_READY &&
         FVector::DistSquared(OtherHand(Carrier->GetLocation()),JanekCorridor(*Surface,*Carrier->GetRegion()))<FMath::Square(10000.0);
 }
+bool Sim::BoardOwnedTrainingFighter(FS_PlayerGameInfo& Profile, FGuid Hull,
+    TFunctionRef<bool()> Persist, FText& Reason)
+{
+    auto* Old = GetPlayerShip();
+    auto* Carrier = Old ? Old->GetCarrier() : nullptr;
+    auto* Inventory = Carrier ? Carrier->GetHangar() : nullptr;
+    auto* Element = Old ? Old->GetElement() : nullptr;
+    const auto* Owned = Profile.HangarShips.FindByPredicate([Hull](const auto& Row) { return Row.HullId == Hull; });
+    const auto* Row = Owned ? ShipDesignRegistry::Find(Owned->Design) : nullptr;
+    auto* Design = Owned ? ShipDesignRegistry::FindLegacy(Owned->Design) : nullptr;
+    if (!HasSimulationAuthority() || IsNetworked() || !mission || !mission->IsFreeFlight() ||
+        !Old || !Carrier || Carrier->IsDead() || !Inventory || !Element || !Owned ||
+        !Hull.IsValid() || Owned->bAssigned || Owned->bLost || !Row || !Design || Row->Category != EShipCategory::Fighter)
+    { Reason = INVTEXT("An available owned fighter and a live carrier hangar are required."); return false; }
+    if (Old->GetFlightPhase() != EOPSMode::ALERT && Old->GetFlightPhase() != EOPSMode::DOCKED)
+    { Reason = INVTEXT("Land aboard Orion before boarding your fighter."); return false; }
+    if (!OwnedHullLocation::IsAt(*Owned, OwnedHullLocation::Dock(*Old)))
+    { Reason = FText::Format(INVTEXT("This fighter is stored at {0}. Travel there to board it."), FText::FromString(Owned->Location)); return false; }
+    if (Profile.Rank < PlayerCharacter::HullRankRequired(Row->ShipType, Row->ShipName))
+    { Reason = INVTEXT("Your rank does not permit this fighter."); return false; }
+    const FName CargoKey(*(TEXT("Ship/") + Hull.ToString(EGuidFormats::Digits)));
+    if (Old->Design() == Design && Old->GetCargoInventoryKey() == CargoKey)
+        return true; // Repeated mission clicks never spawn another owned fighter.
+
+    int OldSquadron = -1, OldSlot = -1;
+    if (!Inventory->FindSquadronAndSlot(Old, OldSquadron, OldSlot))
+    { Reason = INVTEXT("Your current fighter is not registered in this carrier hangar."); return false; }
+    if (Old->GetFlightPhase() == EOPSMode::DOCKED && !Inventory->RestagePlayer(Old))
+    { Reason = INVTEXT("Orion has no clear launch bay. Wait for flight operations and retry."); return false; }
+    auto* OldEntry = Inventory->GetSlot(OldSquadron, OldSlot);
+    if (Inventory->GetState(OldEntry) != Hangar::ALERT)
+    { Reason = INVTEXT("Wait for your current fighter to finish docking before changing aircraft."); return false; }
+
+    FlightDeck* Deck = nullptr;
+    for (int Index = 0; Index < Carrier->NumFlightDecks(); ++Index)
+    {
+        auto* Candidate = Carrier->GetFlightDeck(Index);
+        if (Candidate && Candidate->IsLaunchDeck() && Candidate->SpaceLeft(Design->type) > 0)
+        { Deck = Candidate; break; }
+    }
+    int Squadron = -1, Slot = -1;
+    bool Transferred = false;
+    for (int Group = 0; Group < Inventory->NumSquadrons() && Squadron < 0; ++Group)
+        if (Inventory->SquadronDesign(Group) == Design)
+            for (int Index = 0; Index < Inventory->SquadronSize(Group); ++Index)
+            {
+                const auto State = Inventory->GetState(Inventory->GetSlot(Group, Index));
+                if (State == Hangar::TRANSFERRED || State == Hangar::STORAGE)
+                { Squadron = Group; Slot = Index; Transferred = State == Hangar::TRANSFERRED; break; }
+            }
+    if (!Deck || Squadron < 0)
+    { Reason = INVTEXT("Orion has no clear bay or compatible fighter staging slot. Wait for flight operations and retry."); return false; }
+
+    const auto Before = Profile;
+    const auto EconomyBefore = GetEconomy();
+    FOwnedHullCondition::CaptureActive(Profile);
+    const auto Aircraft = *Profile.HangarShips.FindByPredicate([Hull](const auto& Entry) { return Entry.HullId == Hull; });
+    if (Transferred && !Inventory->TransferStoredReserve(Squadron, Slot, true))
+    { Profile = Before; Reason = INVTEXT("The purchased fighter could not be released for boarding."); return false; }
+    int Loadout[16] = {};
+    for (int Index = 0; Index < FMath::Min(16, Aircraft.LoadoutStations.Num()); ++Index)
+        Loadout[Index] = Aircraft.LoadoutStations[Index];
+    const auto Rollback = [&]()
+    {
+        Inventory->StandDown(Squadron, Slot);
+        if (Transferred) Inventory->TransferStoredReserve(Squadron, Slot);
+        Old->GetRegion()->SetPlayerShip(Old);
+        Profile = Before;
+        GetEconomy() = EconomyBefore;
+    };
+    const bool Prepared = Inventory->GotoAlert(Squadron, Slot, Deck, Element,
+        Aircraft.LoadoutStations.IsEmpty() ? nullptr : Loadout, false, true);
+    auto* Ready = Inventory->GetShip(Inventory->GetSlot(Squadron, Slot));
+    if (!Prepared || !Ready || Inventory->GetState(Inventory->GetSlot(Squadron, Slot)) != Hangar::ALERT)
+    { Rollback(); Reason = INVTEXT("The required fighter could not be prepared. Your current fighter is unchanged."); return false; }
+    Ready->GetRegion()->SetPlayerShip(Ready);
+    Ready->BindCargoInventory(Hull);
+    if (!Aircraft.LoadoutStations.IsEmpty()) Ready->ApplyDockedLoadout(Aircraft.LoadoutStations);
+    if (Aircraft.bHasCondition) FOwnedHullCondition::Apply(*Ready, Aircraft);
+    else FOwnedHullCondition::ApplyPristine(*Ready);
+    Profile.SelectedHangarHull = Profile.AssignedHangarHull = Hull;
+    if (!Persist())
+    { Rollback(); Reason = INVTEXT("Could not save fighter boarding. Your previous fighter is retained."); return false; }
+
+    const Text Name(Old->GetName());
+    if (!Inventory->StandDown(OldSquadron, OldSlot))
+    {
+        Rollback();
+        const bool Restored = Persist();
+        Reason = Restored ? INVTEXT("The previous fighter could not stand down. Boarding was cancelled.")
+            : INVTEXT("Boarding was cancelled, but the previous selection could not be saved. Retry before exiting.");
+        return false;
+    }
+    Ready->SetName(Name);
+    Element->SetPlayer(Ready->GetElementIndex());
+    Ready->GetRegion()->SetPlayerShip(Ready);
+    PendingLaunchPlayer = Ready;
+    DeferredLaunchPlayer = nullptr;
+    bPlayerLaunchRequested = false;
+    if (auto* Authored = mission->GetPlayer()) Authored->SetShipDesign(Row);
+    if (cam_dir && GetScene() && GetStarSystem())
+    { cam_dir->SetShip(Ready); cam_dir->SetMode(CameraManager::MODE_CHASE, 0.0); }
+    Reason = INVTEXT("FIGHTER BOARDED. Remain aboard until Orion reaches the Janek Airbase corridor, then launch and fly down to Janek Station.");
+    UE_LOG(LogTemp, Display, TEXT("[TrainingTransit] Owned fighter boarded: %s"), *Hull.ToString());
+    return true;
+}
+
 bool Sim::BeginSurfaceTrainingTransit(int32 MissionId,FText& Reason)
 {
     if(!mission || !mission->IsFreeFlight() || IsNetworked() || (MissionId!=103 && MissionId!=104))
@@ -4501,6 +4634,49 @@ bool Sim::BeginSurfaceTrainingTransit(int32 MissionId,FText& Reason)
     const auto* Order=GI && Character?GI->GetTrainingAgent().Find(AgentAI::PilotKey(*Character)):nullptr;
     if(!Order || Order->State!=AgentAI::EState::Accepted || Order->MissionId!=MissionId)
     {Reason=INVTEXT("Accept the surface lesson from your training agent first.");return false;}
+    auto* Players = GI ? GI->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
+    auto* Catalog = GI ? GI->GetSubsystem<UAgentCatalogSubsystem>() : nullptr;
+    auto* Assignment = Catalog ? Catalog->GetMission(MissionId) : nullptr;
+    const auto* Flight = Assignment ? Assignment->GetPlayer() : nullptr;
+    const auto* Required = Flight ? Flight->GetShipDesign() : nullptr;
+    const FName RequiredHull = Required ? FName(*Required->ShipName) : NAME_None;
+    const auto* Available = Players ? MissionHullAccessRules::FindAvailable(Players->GetPlayerInfo(), RequiredHull) : nullptr;
+    if (!Required || !Available)
+    { Reason = FText::Format(INVTEXT("This mission requires an available {0} in your hangar. Check the Ship Store."), FText::FromName(RequiredHull)); return false; }
+    auto* Current = GetPlayerShip();
+    if (Current && Current->GetFlightPhase() <= EOPSMode::ALERT)
+    {
+        if (!Available->bAssigned)
+        {
+            const FGuid Hull = Available->HullId;
+            if (!BoardOwnedTrainingFighter(Players->GetMutablePlayerInfo(), Hull,
+                [Players]() { return Players->SaveActivePlayerProgress(); }, Reason)) return false;
+            if (auto* Insurance = GI->GetSubsystem<UShipInsuranceSubsystem>()) Insurance->BeginMission();
+        }
+        else if (!Current->Design() || FName(UTF8_TO_TCHAR(Current->Design()->name)) != RequiredHull)
+        { Reason = INVTEXT("Board the mission's required fighter before requesting transit."); return false; }
+    }
+    Current = GetPlayerShip();
+    if (!Current || !Current->Design() || FName(UTF8_TO_TCHAR(Current->Design()->name)) != RequiredHull)
+    { Reason = INVTEXT("Land aboard Orion to board the fighter required by this mission."); return false; }
+    if (Current->GetFlightPhase() <= EOPSMode::ALERT)
+    {
+        auto* Carrier = Current->GetCarrier();
+        if (Current->GetFlightPhase() == EOPSMode::DOCKED &&
+            (!Carrier || !Carrier->GetHangar() || !Carrier->GetHangar()->RestagePlayer(Current)))
+        { Reason = INVTEXT("Orion has no clear launch bay. Wait for flight operations and retry."); return false; }
+        bPlayerDocked = false;
+        PendingLaunchPlayer = Current;
+        bPlayerLaunchRequested = false;
+    }
+    const Text Callsign = Flight->GetShipName(FMath::Max(0, Flight->GetPlayerIndex() - 1));
+    Current->SetName(Callsign);
+    if (auto* Element = Current->GetElement(); Element && (!FindElement(Flight->GetName()) || FindElement(Flight->GetName()) == Element))
+    {
+        Element->SetName(Flight->GetName());
+        if (auto* Authored = mission->GetPlayer()) Authored->SetName(Flight->GetName());
+    }
+    Players->MarkDirty();
     EnsureTrainingSurfaceBase();
     const auto* Surface=JanekSurface(*this);auto* Pilot=GetPlayerShip();
     if(Pilot && Pilot->GetFlightPhase()==EOPSMode::ACTIVE)
@@ -4509,7 +4685,7 @@ bool Sim::BeginSurfaceTrainingTransit(int32 MissionId,FText& Reason)
     if(!Surface || !Pilot || !Carrier || Carrier->IsDead() || !FindShip("Janek Station"))
     {Reason=INVTEXT("Janek Airbase flight corridor is unavailable.");return false;}
     if(HasSurfaceTrainingClearance())
-    {Reason=INVTEXT("TRANSIT CLEARANCE GRANTED. Launch, descend to Janek Station and land. Start the surface lesson after arrival.");return true;}
+    {Reason=INVTEXT("FIGHTER READY. TRANSIT CLEARANCE GRANTED. Launch, descend to Janek Station and land. Start the surface lesson after arrival.");return true;}
     if(Pilot->GetFlightPhase()!=EOPSMode::ALERT && Pilot->GetFlightPhase()!=EOPSMode::DOCKED)
     {Reason=INVTEXT("Land aboard Orion before requesting the Janek Airbase transfer.");return false;}
     auto* Drive=Carrier->GetQuantumDrive();auto* Space=Carrier->GetRegion();

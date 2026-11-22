@@ -586,41 +586,7 @@ void UCmpnScreen::ExecFrame(double DeltaTime)
         ? GI->GetSubsystem<USSWRuntimeSubsystem>()
         : nullptr;
 
-    if (RuntimeSS && RuntimeSS->GetGameMode() == EGameMode::CMPN)
-    {
-        if (TimeTilChange <= 0.0)
-        {
-            if (Keyboard::KeyDown(KEY_PAUSE))
-            {
-                TimeTilChange = 1.0;
-                bCampaignPaused = !bCampaignPaused;
-                RuntimeSS->SetPaused(bCampaignPaused);
-            }
-            else if (Keyboard::KeyDown(KEY_TIME_COMPRESS))
-            {
-                TimeTilChange = 1.0;
-
-                switch ((int)RuntimeSS->GetTimeCompression())
-                {
-                case 1:  RuntimeSS->SetTimeCompression(2); break;
-                case 2:  RuntimeSS->SetTimeCompression(4); break;
-                case 4:  RuntimeSS->SetTimeCompression(8); break;
-                default: break;
-                }
-            }
-            else if (Keyboard::KeyDown(KEY_TIME_EXPAND))
-            {
-                TimeTilChange = 1.0;
-
-                switch ((int)RuntimeSS->GetTimeCompression())
-                {
-                case 8:  RuntimeSS->SetTimeCompression(4); break;
-                case 4:  RuntimeSS->SetTimeCompression(2); break;
-                default: RuntimeSS->SetTimeCompression(1); break;
-                }
-            }
-        }
-    }
+    // Universe time is live: campaign views do not expose pause or acceleration.
 
     if (bShowMissionsRequested && !bInCutscene)
     {

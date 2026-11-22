@@ -462,12 +462,24 @@ Poly::Contains(const FVector& pt) const
 // +--------------------------------------------------------------------+
 
 Material::Material()
-	: power(1.0f), brilliance(1.0f), bump(0.0f), blend(MTL_SOLID),
-	shadow(true), luminous(false),
-	tex_diffuse(0), tex_specular(0), tex_bumpmap(0), tex_emissive(0),
-	tex_alternate(0), tex_detail(0),
-	thumbnail(0),
-	ambient_value(0.2f), diffuse_value(1.0f), specular_value(0.0f), emissive_value(0.0f)
+	: 
+    power(1.0f),
+    brilliance(1.0f),
+    bump(0.0f),
+    blend(MTL_SOLID),
+    shadow(true),
+    luminous(false),
+    tex_diffuse(0),
+    tex_specular(0),
+    tex_bumpmap(0),
+    tex_emissive(0),
+    tex_alternate(0),
+    tex_detail(0),
+    ambient_value(0.2f),
+    diffuse_value(1.0f),
+    specular_value(0.0f),
+    emissive_value(0.0f),
+    thumbnail(0)
 {
 	FMemory::Memzero(name, sizeof(name));
 	FMemory::Memzero(shader, sizeof(shader));
