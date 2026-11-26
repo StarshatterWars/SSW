@@ -87,6 +87,7 @@ struct FStoreView : TSharedFromThis<FStoreView>
         const auto* Skin=Selected && Tab==EShipStoreCategory::Skins?Skins.FindByPredicate([this](const auto& Entry){return Entry.Id==Selected->Offer.Id;}):nullptr;
         const auto* Hull=Selected && (Tab==EShipStoreCategory::Hulls || Skin)?ShipDesignRegistry::Find(Selected->Offer.Design):nullptr;
         Preview->SetShipDesign(Hull,{},Skin?ShipSkinCatalog::Resolve(*Skin):nullptr);
+        Preview->ResetView();
     }
     bool CanBuy(FText& Reason) const
     {
@@ -113,7 +114,7 @@ public:
     {
         FText Label;
         if(Column=="Item")Label=FText::FromString(Entry->Offer.Name);
-        else if(Column=="HullId")Label=Entry->HullId.IsValid()?FText::FromString(Entry->HullId.ToString(EGuidFormats::DigitsWithHyphens)):INVTEXT("—");
+        else if(Column=="HullId")Label=Entry->HullId.IsValid()?FText::FromString(Entry->HullId.ToString(EGuidFormats::DigitsWithHyphens)):INVTEXT("-");
         else if(Column=="Group")Label=FText::FromString(Entry->Offer.Group);
         else if(Column=="Grade")Label=Entry->Offer.Grade>0?FText::FromString(FString::FromInt(Entry->Offer.Grade)):INVTEXT("â€”");
         else if(Column=="Price")Label=FText::AsNumber(CommerceCharges::Quote(Entry->Offer.Price,ECommercePurpose::Purchase).Base);
@@ -168,7 +169,7 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
         }
     }
     FString SkinError;ShipSkinCatalog::Load(FPaths::ProjectContentDir()/TEXT("GameData/Ships/skins.json"),View->Skins,SkinError);
-    Preview=NewObject<UShipBriefingPreview>(this);Preview->SetReferencePreview();View->Preview=Preview;
+    Preview=NewObject<UShipBriefingPreview>(this);Preview->SetPurchasePreview();View->Preview=Preview;
     const auto Weak=TWeakPtr<FStoreView>(View);
     auto Header=SNew(SHeaderRow);
     const auto Column=[&](FName Id,FText Label,float Width)
@@ -210,7 +211,7 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
                         (Row.Empire.IsEmpty()?FString():TEXT("EMPIRE: ")+Row.Empire+TEXT("  |  "))+
                         TEXT("DELIVERY: ")+(View->Store.IsValid()?View->Store->Dock():TEXT("DOCK REQUIRED")));
                 })])]
-                +SHorizontalBox::Slot().FillWidth(1).Padding(8,0,0,0)[MissionUIStyle::MakeDataPane(Preview->TakeWidget())]]]
+                +SHorizontalBox::Slot().FillWidth(1.4f).Padding(8,0,0,0)[MissionUIStyle::MakeDataPane(Preview->TakeWidget())]]]
         +SVerticalBox::Slot().AutoHeight().Padding(8,4)[SNew(SHorizontalBox)
             +SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)[SNew(STextBlock).Text(INVTEXT("QUANTITY")).Font(MissionUIStyle::GetRowFont(11))]
             +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SBox).WidthOverride(100)[SNew(SSpinBox<int32>).MinValue(1).MaxValue(1000)

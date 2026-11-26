@@ -11,6 +11,7 @@
 */
 
 #include "MissionUIStyle.h"
+#include "Widgets/SToolTip.h"
 #include "Brushes/SlateRoundedBoxBrush.h"
 #include "Brushes/SlateNoResource.h"
 #include "Brushes/SlateColorBrush.h"
@@ -20,6 +21,7 @@
 #include "Widgets/Layout/SBorder.h"
 #include "Widgets/SOverlay.h"
 #include "UObject/UObjectGlobals.h"
+#include "UObject/StrongObjectPtr.h"
 #include "Engine/GameInstance.h"
 #include "StarshatterUIStyleSubsystem.h"
 #include "Components/Button.h"
@@ -31,6 +33,9 @@
 
 namespace MissionUIStyle
 {
+    TSharedRef<IToolTip> MakeToolTip(TAttribute<FText> Text)
+    {return SNew(SToolTip).Font(GetRowFont(13)).Text(Text).TextMargin(FMargin(10,7));}
+
     const FTableRowStyle& FlightTableRowStyle()
     {
         static const FTableRowStyle Style = []()
@@ -211,20 +216,20 @@ namespace MissionUIStyle
 
     static UObject* GetCachedFontObject(const TCHAR* Path)
     {
-        static TMap<FString, UObject*> Cache;
+        static TMap<FString, TStrongObjectPtr<UObject>> Cache;
 
         const FString Key(Path);
 
-        if (UObject** Found = Cache.Find(Key))
+        if (const auto* Found = Cache.Find(Key))
         {
-            return *Found;
+            return Found->Get();
         }
 
         UObject* FontObj = LoadObject<UObject>(nullptr, Path);
 
         if (FontObj)
         {
-            Cache.Add(Key, FontObj);
+            Cache.Add(Key, TStrongObjectPtr<UObject>(FontObj));
         }
 
         return FontObj;

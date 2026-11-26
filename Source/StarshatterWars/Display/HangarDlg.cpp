@@ -30,7 +30,7 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
     for (const TCHAR* Label : {TEXT("SHIP / FIGHTER"), TEXT("DESIGN"), TEXT("HULL ID"), TEXT("LOCATION"), TEXT("COVERAGE"), TEXT("HULL"), TEXT("STATUS")})
         Header->AddSlot().FillWidth(1).Padding(8, 5)
             [SNew(STextBlock).Text(FText::FromString(Label)).Font(MissionUIStyle::GetRowFont(12))];
-    Header->AddSlot().AutoWidth()[SNew(SBox).WidthOverride(176)];
+    Header->AddSlot().AutoWidth()[SNew(SBox).WidthOverride(220)];
     Rows->AddSlot().AutoHeight()[Header];
     for (const auto& Hull : Insurance->GetShips())
     {
@@ -96,7 +96,9 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
             const auto* Entry = Service ? Service->FindShip(Id) : nullptr;
             return Entry && !Entry->bLost && Service->CanModifyHull(Id);
         };
-        Line->AddSlot().AutoWidth().Padding(4)
+        const auto Actions=SNew(SHorizontalBox);
+        Line->AddSlot().AutoWidth()[SNew(SBox).WidthOverride(220)[Actions]];
+        Actions->AddSlot().AutoWidth().Padding(4)
             [
                 SNew(SButton).ToolTipText(INVTEXT("Select hull for your next Free Verse entry — docked service. Training missions board their required fighter automatically.")).IsEnabled_Lambda(Docked)
                 .OnClicked_Lambda([Weak, Id = Hull.HullId, Feedback, Selected]()
@@ -107,16 +109,23 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
                 })
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Accept)]
             ];
-        const FOpenShipInsurance Edit = bFighter ? OnLoadout : OnFit;
-        Line->AddSlot().AutoWidth().Padding(4)
-            [
-                SNew(SButton).ToolTipText(bFighter ? INVTEXT("Loadout — docked service") : INVTEXT("Fit — docked service"))
+        if(bFighter)
+        {
+            const FOpenShipInsurance Loadout=OnLoadout;
+            Actions->AddSlot().AutoWidth().Padding(4)
+                [SNew(SButton).ToolTip(MissionUIStyle::MakeToolTip(INVTEXT("Loadout - weapons and missiles; docked service")))
+                    .IsEnabled_Lambda(Docked)
+                    .OnClicked_Lambda([Loadout,Id=Hull.HullId](){Loadout.ExecuteIfBound(Id);return FReply::Handled();})
+                    [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Loadout)]];
+        }
+        const FOpenShipInsurance Fit=OnFit;
+        Actions->AddSlot().AutoWidth().Padding(4)
+            [SNew(SButton).ToolTip(MissionUIStyle::MakeToolTip(INVTEXT("Fit - install owned components purchased in Ship Store; requires a docked fitting service")))
                 .IsEnabled_Lambda(Docked)
-                .OnClicked_Lambda([Edit, Id = Hull.HullId]() { Edit.ExecuteIfBound(Id); return FReply::Handled(); })
-                [SNew(SShipSystemIcon).Icon(bFighter ? EShipSystemIcon::Loadout : EShipSystemIcon::SettingsGear)]
-            ];
+                .OnClicked_Lambda([Fit,Id=Hull.HullId](){Fit.ExecuteIfBound(Id);return FReply::Handled();})
+                [SNew(SShipSystemIcon).Icon(EShipSystemIcon::SettingsGear)]];
         const FOpenShipInsurance Open = OnInsurance;
-        Line->AddSlot().AutoWidth().Padding(4)
+        Actions->AddSlot().AutoWidth().Padding(4)
             [
                 SNew(SButton).ToolTipText(INVTEXT("Insurance")).IsEnabled_Lambda(Docked)
                 .OnClicked_Lambda([Open, Id = Hull.HullId, Selected]()
@@ -132,7 +141,7 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
             const auto* Players = Instance.IsValid() ? Instance->GetSubsystem<UStarshatterPlayerSubsystem>() : nullptr;
             return Players && Players->GetPlayerInfo().AssignedHangarHull == Id && FStationServices::IsDocked();
         };
-        Line->AddSlot().AutoWidth().Padding(4)
+        Actions->AddSlot().AutoWidth().Padding(4)
             [SNew(SButton).ToolTipText_Lambda([Repairable]()
                 { return Repairable() ? FText::Format(INVTEXT("Full repair — {0} credits"), FText::AsNumber(FStationServices::FullRepairCost())) : INVTEXT("Repair — dock the assigned fighter or ship first"); })
                 .IsEnabled_Lambda([Repairable]() { return Repairable() && FStationServices::FullRepairCost() > 0; })

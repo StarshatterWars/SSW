@@ -66,11 +66,11 @@ void ApplyProgress(FCampaignFleetState& Fleet,FFleetRepairOrder& Job)
   {
    auto NewHull=*Hull;NewHull.HullId=Job.ReplacementId;NewHull.Replaces=Hull->HullId;
    NewHull.bDestroyed=false;NewHull.bRepairing=false;
-   NewHull.Condition=Job.Baseline;NewHull.Condition.bLost=false;
+   NewHull.Condition=Job.Baseline;NewHull.Condition.bLost=false;NewHull.Condition.StandardEquipmentLevel=3;
    Restore(NewHull.Condition,1,Job.Baseline);
    NewHull.Condition.HullId=NewHull.HullId;
    NewHull.Condition.SavedWeaponAmmo.Reset();NewHull.Condition.SavedWeaponTypes.Reset();
-   for(auto& Part:NewHull.Condition.Components){Part.Level=3;Part.ItemId=FGuid::NewGuid();Part.SpareCount=0;Part.JerryCount=0;}
+   for(auto& Part:NewHull.Condition.Components){Part.Level=3;Part.InstalledValue=-1;Part.ItemId=FGuid::NewGuid();Part.SpareCount=0;Part.JerryCount=0;}
    Unit->HullIds[NewHull.Slot]=NewHull.HullId;
    // Keep the previous applied loss until Prepare reconciles the native unit.
    Fleet.Hulls.Add(NewHull.HullId,MoveTemp(NewHull));

@@ -20,7 +20,7 @@ namespace StarterCraftOwnership
         bool Changed=false;
         if(Keep==INDEX_NONE)
         {
-            FPlayerHangarShip Hull;Hull.HullId=FGuid::NewGuid();Hull.Design=Falcon;
+            FPlayerHangarShip Hull;Hull.HullId=FGuid::NewGuid();Hull.Design=Falcon;Hull.StandardEquipmentLevel=1;
             Hull.Name=TEXT("Falcon");Hull.Location=TEXT("Carrier / Archon");
             Pilot.HangarShips.Add(Hull);Keep=Pilot.HangarShips.Num()-1;Changed=true;
         }

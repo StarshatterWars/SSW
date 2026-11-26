@@ -47,12 +47,17 @@ SimComponent::SimComponent(const ComponentDesign& d, SimSystem* s)
 	system(s)
 {
 	Status = SYSTEM_STATUS::NOMINAL;
+    BaseName=FName(UTF8_TO_TCHAR(d.name.data()));
 }
 
 // +----------------------------------------------------------------------+
 
 SimComponent::SimComponent(const SimComponent& c)
-	: design(c.design),
+	: ItemId(c.ItemId),
+    OwnerHullId(c.OwnerHullId),
+    BaseName(c.BaseName),
+    InstalledLevel(c.InstalledLevel),
+    design(c.design),
 	Status(c.Status),
 	availability(c.availability),
 	time_remaining(c.time_remaining),

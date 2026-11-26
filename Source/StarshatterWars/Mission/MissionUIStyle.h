@@ -16,6 +16,7 @@
 #include "Styling/SlateTypes.h"
 
 class SWidget;
+class IToolTip;
 class UButton;
 class UImage;
 class UGameInstance;
@@ -35,6 +36,8 @@ namespace MissionUIStyle
     TSharedRef<SWidget> MakeOptionsSliderTrack(TSharedRef<SWidget> Slider, TAttribute<float> Value);
 
     TSharedRef<SWidget> MakeDataPane(TSharedRef<SWidget> Content, FMargin Padding = FMargin(12));
+
+    TSharedRef<IToolTip> MakeToolTip(TAttribute<FText> Text);
 
     // Colors
     // -----------------------------------------------------------------

@@ -1,4 +1,5 @@
 #include "ShipyardAI.h"
+#include "ShipEquipment.h"
 #include "SerializedHullStockAI.h"
 #include "PlayerCharacter.h"
 #include "SkillsSubsystem.h"
@@ -48,6 +49,7 @@ bool ShipyardAI::Purchase(FS_PlayerGameInfo& Pilot,const FShipDesign& Hull,FName
     {Pilot=Before;Reason=INVTEXT("The selected hull could not be delivered. Stock and credits retained.");return false;}
     auto& Entry=Pilot.HangarShips.AddDefaulted_GetRef();Entry.HullId=OfferedHullId;Entry.Design=FName(*Hull.ShipName);Entry.Name=Hull.DisplayName.IsEmpty()?Hull.ShipName:Hull.DisplayName;Entry.HullValue=Hull.BaseCost;Entry.Location=Location;
     if(!Hull.Loadout.IsEmpty()){Entry.LoadoutName=Hull.Loadout[0].Name;Entry.LoadoutStations=Hull.Loadout[0].Stations;}
+    FShipEquipment::InitializePurchase(Entry,Hull);
     auto& Payment=Pilot.Economy.Journal.Last();Payment.Item=Entry.Design;Payment.Quantity=1;Payment.UnitPrice=Hull.BaseCost;Payment.Reference=Entry.HullId;Payment.Source=Inventory;Payment.Destination=FName(*Location);Payment.Category=EWalletTransactionCategory::Shipyard;
     EconomyAI::RecordTrade(Pilot.Economy,Pilot.Economy.Inventories.FindChecked(Inventory).System,Item,1,Hull.BaseCost);
     Reason=INVTEXT("Hull purchased and delivered to your hangar at this station.");return true;

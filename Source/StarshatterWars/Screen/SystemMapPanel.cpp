@@ -2001,7 +2001,7 @@ int32 USystemMapPanel::NativePaint(
             FSlateDrawElement::MakeText(
                 OutDrawElements, ++PaintLayer,
                 AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(Width - 28.0f, 22.0f)), FSlateLayoutTransform(FVector2f(BoxOrigin + FVector2D(14.0f, Y)))),
-                Text, FCoreStyle::GetDefaultFontStyle("Regular", FontSize),
+                Text, MissionUIStyle::GetRowFont(FontSize),
                 ESlateDrawEffect::None, Color);
         };
         DrawInfoLine(BoxTitle, 12.0f, 16,
@@ -2030,7 +2030,7 @@ int32 USystemMapPanel::NativePaint(
                 FSlateDrawElement::MakeText(
                     OutDrawElements, ++PaintLayer,
                     AllottedGeometry.ToPaintGeometry(FVector2f(FVector2D(Width - 48.0f, 22.0f)), FSlateLayoutTransform(FVector2f(RegionOrigin + FVector2D(34.0f, Y)))),
-                    Text, FCoreStyle::GetDefaultFontStyle("Regular", FontSize),
+                    Text, MissionUIStyle::GetRowFont(FontSize),
                     ESlateDrawEffect::None, Color);
             };
             DrawRegionLine(DisplayBody ? TEXT("LOCAL STRUCTURES AND SECTORS") : TEXT("SECTORS"), 12.0f, 11, EmpireColor);

@@ -15,6 +15,7 @@
 	Starship class
 */
 #include "Ship.h"
+#include "ShipEquipment.h"
 #include "CampaignFleet.h"
 #include "Campaign.h"
 #include "EconomyRuntime.h"
@@ -334,6 +335,7 @@ Ship::Ship(
 	InitializeRuntimeFlightDecksFromDesign();
 	InitializeRuntimeHangarFromDesign();
 	InitializeRuntimeDeathSpiralFromDesign();
+    Equipment=MakeUnique<FShipEquipment>(*this);
 
 	radio_orders = new Instruction("", FVector::ZeroVector);
 

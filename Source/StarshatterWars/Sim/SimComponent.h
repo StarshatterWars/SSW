@@ -58,6 +58,7 @@ public:
 
 class SimComponent
 {
+    friend class FShipEquipment;
     friend class FOwnedHullCondition;
 public:
 	static const char* TYPENAME() { return "SimComponent"; }
@@ -72,6 +73,10 @@ public:
 	SimComponent(const SimComponent& c);
 	virtual ~SimComponent();
 
+    FGuid GetItemId() const {return ItemId;}
+    FGuid GetOwnerHullId() const {return OwnerHullId;}
+    FName GetBaseName() const {return BaseName;}
+    int32 GetLevel() const {return InstalledLevel;}
 	const char* Name()         const { return design.name; }
 	const char* Abbreviation() const { return design.abrv; }
 	float       RepairTime()   const { return design.repair_time; }
@@ -104,6 +109,10 @@ public:
     void ApplyGradeDesign(const ComponentDesign& NewDesign);
 
 protected:
+    FGuid ItemId;
+    FGuid OwnerHullId;
+    FName BaseName;
+    int32 InstalledLevel=3;
 	ComponentDesign design;
 
 	// Component health status:

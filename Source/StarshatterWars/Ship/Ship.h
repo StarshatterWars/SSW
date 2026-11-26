@@ -46,6 +46,7 @@ class SimContact;
 class Drive;
 class SimElement;
 class SimSystem;
+class FShipEquipment;
 class SimObject;
 class SimDirector;
 class Farcaster;
@@ -125,6 +126,7 @@ public:
 
     virtual ~Ship();
     const FGuid& GetHullId() const { return PermanentHullId; }
+    FShipEquipment* GetEquipment() const {return Equipment.Get();}
 
     int operator==(const Ship& s) const { return id == s.id; }
 
@@ -755,4 +757,5 @@ private:
     void RebuildRuntimeLoadout(const TArray<int32>& Stations);
     FVector formation_offset = FVector::ZeroVector;
     const FGuid PermanentHullId;
+    TUniquePtr<FShipEquipment> Equipment;
 };

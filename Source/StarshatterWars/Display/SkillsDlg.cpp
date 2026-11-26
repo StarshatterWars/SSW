@@ -19,7 +19,7 @@
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Views/SHeaderRow.h"
 #include "Widgets/Views/SListView.h"
-#include "Widgets/Views/STreeView.h"
+#include "Widgets/Layout/SWrapBox.h"
 #include "Widgets/Views/STableRow.h"
 
 namespace
@@ -128,15 +128,8 @@ public:
     }
 private: FSkillItem Item; TWeakObjectPtr<USkillsSubsystem> Service;FRequestSkillTraining RequestTraining;
 };
-struct FSkillTreeNode
-{
-    FName Category;
-    FSkillItem Skill;
-    TArray<TSharedPtr<FSkillTreeNode>> Children;
-};
 struct FSkillsTable
 {
-    TArray<TSharedPtr<FSkillTreeNode>> Roots;
     TArray<FSkillItem> All, Visible;
     TWeakPtr<SListView<FSkillItem>> List;
     FSkillItem Selected;
@@ -151,7 +144,7 @@ struct FSkillsTable
     {
         Visible.Reset();
         for (const auto& Item : All)
-            if ((SelectedGroup.IsNone() || Search==TEXT("*") || Item->Group==SelectedGroup) && (Search.IsEmpty() || Search==TEXT("*") || Item->DisplayName.Contains(Search) || Item->Description.Contains(Search) || Item->Group.ToString().Contains(Search))) Visible.Add(Item);
+            if ((SelectedGroup.IsNone() || Item->Group==SelectedGroup) && (Search.IsEmpty() || Search==TEXT("*") || Item->DisplayName.Contains(Search) || Item->Description.Contains(Search) || Item->Group.ToString().Contains(Search))) Visible.Add(Item);
         Visible.StableSort([this](const auto& A, const auto& B)
         {
             int32 Order = 0;
@@ -183,36 +176,21 @@ TSharedRef<SWidget> USkillsDlg::RebuildWidget()
         Header->AddColumn(SHeaderRow::Column(Column.Key).DefaultLabel(FText::FromString(Column.Value)).FillWidth(Column.Key == TEXT("Name") ? 2.f : 1.f)
             .SortMode_Lambda([Table, Id = Column.Key]() { return Table->SortColumn == Id ? Table->SortMode : EColumnSortMode::None; })
             .OnSort_Lambda([Table](EColumnSortPriority::Type, const FName& Id, EColumnSortMode::Type Mode) { Table->SortColumn = Id; Table->SortMode = Mode; Table->Refresh(); }));
-    TMap<FName,TSharedPtr<FSkillTreeNode>> Categories,Nodes;
-    for (const auto& Skill : Table->All)
+    TSet<FName> UniqueGroups;for(const auto& Skill:Table->All)UniqueGroups.Add(Skill->Group);
+    TArray<FName> Groups=UniqueGroups.Array();Groups.Sort(FNameLexicalLess());Groups.Insert(NAME_None,0);
+    auto GroupButtons=SNew(SWrapBox).UseAllottedSize(true).InnerSlotPadding(FVector2D(5,5));
+    for(FName Group:Groups)
     {
-        auto Node=MakeShared<FSkillTreeNode>(); Node->Skill=Skill; Nodes.Add(Skill->Name,Node);
-        if (!Categories.Contains(Skill->Group)) { auto Group=MakeShared<FSkillTreeNode>(); Group->Category=Skill->Group; Categories.Add(Skill->Group,Group); Table->Roots.Add(Group); }
+        const FText Caption=Group.IsNone()?INVTEXT("ALL SKILLS"):FText::FromName(Group).ToUpper();
+        GroupButtons->AddSlot()[SNew(SButton).ContentPadding(FMargin(8,5))
+            .ToolTip(MissionUIStyle::MakeToolTip(Caption))
+            .ButtonColorAndOpacity_Lambda([Table,Group](){return Table->SelectedGroup==Group?MissionUIStyle::RowSelectedBG:MissionUIStyle::RowBG;})
+            .OnClicked_Lambda([Table,Group](){Table->SelectedGroup=Group;Table->Selected.Reset();Table->PendingLevel=0;Table->Feedback=FText::GetEmpty();Table->Refresh();return FReply::Handled();})
+            [SNew(SHorizontalBox)+SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
+                [SNew(SShipSystemIcon).Icon(Group.IsNone()?EShipSystemIcon::Skills:CategoryIcon(Group))]
+                +SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(6,0)
+                [SNew(STextBlock).Text(Caption).Font(MissionUIStyle::GetRowFont(11))]]];
     }
-    for (const auto& Skill : Table->All)
-    {
-        // Categories expand once. Prerequisites remain in the details and native
-        // training rules instead of creating a deeply nested arrow for every skill.
-        Categories.FindChecked(Skill->Group)->Children.Add(Nodes.FindChecked(Skill->Name));
-    }
-    Table->Roots.Sort([](const auto& A,const auto& B) { return A->Category.LexicalLess(B->Category); });
-    for(const auto& Root:Table->Roots)
-        Root->Children.Sort([](const auto& A,const auto& B){return A->Skill->DisplayName.Compare(B->Skill->DisplayName,ESearchCase::IgnoreCase)<0;});
-    auto Tree=SNew(STreeView<TSharedPtr<FSkillTreeNode>>).TreeItemsSource(&Table->Roots).SelectionMode(ESelectionMode::Single)
-        .OnGetChildren_Lambda([](TSharedPtr<FSkillTreeNode> Node,TArray<TSharedPtr<FSkillTreeNode>>& Children) { Children=Node->Children; })
-        .OnGenerateRow_Lambda([Weak](TSharedPtr<FSkillTreeNode> Node,const TSharedRef<STableViewBase>& Owner)
-        {
-            auto Row=SNew(STableRow<TSharedPtr<FSkillTreeNode>>,Owner).Style(&MissionUIStyle::FlightTableRowStyle());
-            Row->SetRowContent(SNew(SHorizontalBox)
-                + SHorizontalBox::Slot().AutoWidth().Padding(3)[SNew(SShipSystemIcon).Icon(Node->Skill ? EShipSystemIcon::Skills : CategoryIcon(Node->Category))]
-                + SHorizontalBox::Slot().FillWidth(1)
-                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(Node->Skill?11:12)).Margin(FMargin(4,6))
-                    .Text(FText::FromString(Node->Skill ? Node->Skill->DisplayName : Node->Category.ToString()).ToUpper())]);
-            return Row;
-        })
-        .OnSelectionChanged_Lambda([Table](TSharedPtr<FSkillTreeNode> Node,ESelectInfo::Type)
-        { if (Node) { Table->SelectedGroup=Node->Skill ? Node->Skill->Group : Node->Category; Table->Selected=Node->Skill; Table->Refresh(); } });
-    for (const auto& Root : Table->Roots) Tree->SetItemExpansion(Root,true);
     auto List=SNew(SListView<FSkillItem>).ListItemsSource(&Table->Visible).HeaderRow(Header).SelectionMode(ESelectionMode::Single)
         .OnGenerateRow_Lambda([Weak,Table](FSkillItem Item,const TSharedRef<STableViewBase>& Owner)
         {
@@ -242,10 +220,9 @@ TSharedRef<SWidget> USkillsDlg::RebuildWidget()
         + SVerticalBox::Slot().AutoHeight().Padding(8)
         [SNew(SSearchBox).HintText(INVTEXT("Search skills"))
             .OnTextChanged_Lambda([Table](const FText& Text) { Table->Search = Text.ToString().TrimStartAndEnd(); Table->Refresh(); })]
+        + SVerticalBox::Slot().AutoHeight().Padding(8,2)[GroupButtons]
         + SVerticalBox::Slot().FillHeight(0.65f).Padding(8)
-        [SNew(SHorizontalBox)
-            + SHorizontalBox::Slot().FillWidth(1).Padding(0,0,8,0)[MissionUIStyle::MakeDataPane(Tree)]
-            + SHorizontalBox::Slot().FillWidth(2)[MissionUIStyle::MakeDataPane(List)]]
+        [MissionUIStyle::MakeDataPane(List)]
         + SVerticalBox::Slot().FillHeight(0.35f).Padding(8)
         [MissionUIStyle::MakeDataPane(SNew(SScrollBox)+SScrollBox::Slot()[SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([Table](){return PointerHash(Table->Selected.Get());}).Record_Lambda([Table,Weak]()
             {

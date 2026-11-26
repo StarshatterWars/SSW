@@ -30,6 +30,7 @@ struct FHangarComponent
     UPROPERTY(BlueprintReadOnly, SaveGame) FString SystemName;
     UPROPERTY(BlueprintReadOnly, SaveGame) FName Component;
     UPROPERTY(BlueprintReadOnly, SaveGame) int32 Level = 3;
+    UPROPERTY(BlueprintReadOnly, SaveGame) int64 InstalledValue = -1;
     UPROPERTY(BlueprintReadOnly, SaveGame) bool bHasCondition = false;
     UPROPERTY(BlueprintReadOnly, SaveGame) float ConditionPercent = 100;
     UPROPERTY(BlueprintReadOnly, SaveGame) int32 ConditionStatus = 0;
@@ -76,6 +77,9 @@ struct FPlayerHangarShip
     UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame) FString Location;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame) int64 HullValue = 0;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, SaveGame) int64 InstalledComponentValue = 0;
+    // III is the fixed simulation reference; new purchases are issued Level I.
+    UPROPERTY(SaveGame) int32 StandardEquipmentLevel = 3;
+    UPROPERTY(SaveGame) bool bEquipmentValueSeparated = false;
     UPROPERTY(BlueprintReadOnly, SaveGame) bool bCashPurchased = false;
     UPROPERTY(BlueprintReadOnly, SaveGame) bool bAssigned = false;
     UPROPERTY(BlueprintReadOnly, SaveGame) bool bLost = false;

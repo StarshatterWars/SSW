@@ -65,6 +65,7 @@ public:
 	void              SetName(const char* n) { name = n; }
 	void              SetAbbreviation(const char* a) { abrv = a; }
 	void              SetDesign(const SystemDesign* d);
+    FName GetDesignKey() const {return DesignKey;}
 
 	virtual int       GetValue()        const { return (int)(max_value * availability * 100); }
 	int               GetMaxValue()     const { return (int)(max_value * 100); }
@@ -145,6 +146,7 @@ public:
 	void              SetID(int n) { id = n; }
 
 protected:
+    FName DesignKey;
     double quality_multiplier = 1.0;
     double demand_multiplier = 1.0;
 	// AI information:

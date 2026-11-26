@@ -68,7 +68,7 @@ bool ShipStoreAI::TakeComponent(FS_PlayerGameInfo& Pilot,FName System,FName Comp
     auto* Row=Pilot.StoredShipEquipment.FindByPredicate([&](const auto& Item)
     {return Item.Category==EShipStoreCategory::Components && Item.CatalogId==Id && Item.Quantity>0 && Item.Location.Equals(Dock,ESearchCase::IgnoreCase);});
     if(!Row || Dock.IsEmpty())return false;
-    Out=Row->ComponentState;Out.ItemId=FGuid::NewGuid();--Row->Quantity;return true;
+    Out=Row->ComponentState;if(!Out.ItemId.IsValid() || !Out.bHasCondition)Out.ItemId=FGuid::NewGuid();--Row->Quantity;return true;
 }
 
 void ShipStoreAI::StoreComponent(FS_PlayerGameInfo& Pilot,const FHangarComponent& Part,const FString& Dock)

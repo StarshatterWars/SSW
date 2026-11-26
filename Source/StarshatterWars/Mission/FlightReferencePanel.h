@@ -93,7 +93,7 @@ public:
         {
             Filters->AddSlot().FillWidth(1).Padding(0, 0, 6, 0)
             [
-                SNew(SButton).ContentPadding(FMargin(8, 5)).HAlign(HAlign_Center).ToolTipText(Label)
+                SNew(SButton).ContentPadding(FMargin(8, 5)).HAlign(HAlign_Center).ToolTip(MissionUIStyle::MakeToolTip(Label))
                 .ButtonColorAndOpacity_Lambda([this, Icon]()
                 {
                     return ActiveCategory == Icon ? MissionUIStyle::RowSelectedBG : MissionUIStyle::RowBG;
@@ -119,7 +119,7 @@ public:
         const auto AddSubtype=[&](const TCHAR* Label,int32 Type,EShipSystemIcon Category)
         {
             Subfilters->AddSlot().AutoWidth().Padding(0,0,6,0)
-            [SNew(SButton).ContentPadding(FMargin(10,5)).ToolTipText(FText::FromString(Label))
+            [SNew(SButton).ContentPadding(FMargin(10,5)).ToolTip(MissionUIStyle::MakeToolTip(FText::FromString(Label)))
                 .Visibility_Lambda([this,Category](){return ActiveCategory==Category?EVisibility::Visible:EVisibility::Collapsed;})
                 .ButtonColorAndOpacity_Lambda([this,Type](){return Subcategory==Type?MissionUIStyle::RowSelectedBG:MissionUIStyle::RowBG;})
                 .OnClicked_Lambda([this,Type](){SelectSubcategory(Type);return FReply::Handled();})
@@ -136,7 +136,7 @@ public:
         {
             Sections->AddSlot().FillWidth(1).Padding(0, 0, 6, 0)
             [
-                SNew(SButton).ContentPadding(FMargin(8, 5)).HAlign(HAlign_Center).ToolTipText(Label)
+                SNew(SButton).ContentPadding(FMargin(8, 5)).HAlign(HAlign_Center).ToolTip(MissionUIStyle::MakeToolTip(Label))
                 .ButtonColorAndOpacity_Lambda([this, Section]()
                 {
                     return GazetteerSection == Section ? MissionUIStyle::RowSelectedBG : MissionUIStyle::RowBG;

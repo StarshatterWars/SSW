@@ -2,6 +2,9 @@
 #include "Misc/AutomationTest.h"
 #include "ScopedTestWorldContext.h"
 #include "ShipBriefingPreview.h"
+#include "Camera/CameraTypes.h"
+#include "Engine/LocalPlayer.h"
+#include "SceneView.h"
 #include "GameStructs_System.h"
 #include "ShipActor.h"
 #include "Components/StaticMeshComponent.h"
@@ -23,6 +26,33 @@ bool FBriefingPreviewFramingTest::RunTest(const FString& Parameters)
     }
     TestTrue(TEXT("Unmeasured layout has a finite camera distance"),
         FMath::IsFinite(BriefingShipPreview::FitDistance(100.f, FVector2D::ZeroVector)));
+    return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FPurchasePreviewFramingTest,
+    "Starshatter.Phase4.PurchasePreviewFraming",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FPurchasePreviewFramingTest::RunTest(const FString&)
+{
+    for(const FVector2D Size:{FVector2D(280,440),FVector2D(600,300),FVector2D(400,400)})
+    for(const FVector Extent:{FVector(100,20,5),FVector(30,100,15),FVector(50,50,50)})
+    {
+        const FBox Bounds(-Extent,Extent);const FRotator Rotation(20,50,0);
+        const float Distance=BriefingShipPreview::FitBoundsDistance(Bounds,Rotation,Size);
+        FMinimalViewInfo View;FSceneViewProjectionData Projection;const FIntRect Rect(0,0,int32(Size.X),int32(Size.Y));Projection.SetViewRectangle(Rect);
+        FMinimalViewInfo::CalculateProjectionMatrixGivenViewRectangle(View,GetDefault<ULocalPlayer>()->AspectRatioAxisConstraint,Rect,Projection);
+        double Occupancy=0;
+        for(int32 Corner=0;Corner<8;++Corner)
+        {
+            const FVector Point((Corner&1)?Extent.X:-Extent.X,(Corner&2)?Extent.Y:-Extent.Y,(Corner&4)?Extent.Z:-Extent.Z);
+            const FVector Camera=Rotation.UnrotateVector(Point)+FVector(Distance,0,0);
+            TestTrue(TEXT("Every hull corner stays beyond the near plane"),Camera.X>View.GetFinalPerspectiveNearClipPlane());
+            const double X=FMath::Abs(Camera.Y/Camera.X*Projection.ProjectionMatrix.M[0][0]);
+            const double Y=FMath::Abs(Camera.Z/Camera.X*Projection.ProjectionMatrix.M[1][1]);
+            TestTrue(TEXT("Every hull corner stays inside the padded purchase view"),FMath::Max(X,Y)<=.841);
+            Occupancy=FMath::Max3(Occupancy,X,Y);
+        }
+        TestTrue(TEXT("Purchase view fills useful screen space"),Occupancy>=.8);
+    }
     return true;
 }
 

@@ -1,5 +1,8 @@
 
 #include "ShipBriefingPreview.h"
+#include "Camera/CameraTypes.h"
+#include "Engine/LocalPlayer.h"
+#include "SceneView.h"
 #include "ShipVisualCatalog.h"
 #include "Mission.h"
 #include "MissionElement.h"
@@ -239,6 +242,30 @@ float BriefingShipPreview::FitDistance(float Radius, const FVector2D& ViewSize)
     // UViewport uses the default 90-degree FOV. Conservatively fit either FOV-axis mode.
     const double LimitingAspect = FMath::Clamp(FMath::Min(Aspect, 1. / Aspect), 0.05, 1.);
     return static_cast<float>(Radius / FMath::Sin(FMath::Atan(LimitingAspect)) * 1.18);
+}
+
+float BriefingShipPreview::FitBoundsDistance(const FBox& Bounds,const FRotator& ViewRotation,const FVector2D& ViewSize)
+{
+    if(!Bounds.IsValid || Bounds.GetExtent().ContainsNaN())return FitDistance(100,ViewSize);
+    const int32 Width=FMath::Max(1,FMath::RoundToInt(ViewSize.X));
+    const int32 Height=FMath::Max(1,FMath::RoundToInt(ViewSize.Y));
+    FMinimalViewInfo View;FSceneViewProjectionData Projection;
+    Projection.SetViewRectangle(FIntRect(0,0,Width,Height));
+    // Use the same projection policy as UE's FUMGViewportClient. A sphere fitted
+    // against both hypothetical FOV policies wastes most of a narrow store pane.
+    FMinimalViewInfo::CalculateProjectionMatrixGivenViewRectangle(View,GetDefault<ULocalPlayer>()->AspectRatioAxisConstraint,FIntRect(0,0,Width,Height),Projection);
+    const double XScale=FMath::Abs(Projection.ProjectionMatrix.M[0][0]);
+    const double YScale=FMath::Abs(Projection.ProjectionMatrix.M[1][1]);
+    const FVector Forward=ViewRotation.Vector(),Right=ViewRotation.RotateVector(FVector::RightVector),Up=ViewRotation.RotateVector(FVector::UpVector);
+    double Distance=0;
+    for(int32 Corner=0;Corner<8;++Corner)
+    {
+        const FVector Point((Corner&1)?Bounds.Max.X:Bounds.Min.X,(Corner&2)?Bounds.Max.Y:Bounds.Min.Y,(Corner&4)?Bounds.Max.Z:Bounds.Min.Z);
+        const FVector Offset=Point-Bounds.GetCenter();const double Depth=FVector::DotProduct(Offset,Forward);
+        Distance=FMath::Max3(Distance,FMath::Abs(FVector::DotProduct(Offset,Right))*XScale/.84-Depth,FMath::Abs(FVector::DotProduct(Offset,Up))*YScale/.84-Depth);
+        Distance=FMath::Max(Distance,View.GetFinalPerspectiveNearClipPlane()+2.-Depth);
+    }
+    return FMath::IsFinite(Distance)?float(FMath::Max(1.,Distance)):FitDistance(float(Bounds.GetExtent().Size()),ViewSize);
 }
 
 AActor* BriefingShipPreview::CreateVisual(UWorld* PreviewWorld, const TArray<FBriefingShipPreviewPart>& Parts, bool bAddLighting)
@@ -903,7 +930,8 @@ void UShipBriefingPreview::UpdateCamera()
     const FVector Center = Bounds.IsValid ? Bounds.GetCenter() : FVector::ZeroVector;
     const float Radius = Bounds.IsValid ? static_cast<float>(Bounds.GetExtent().Size()) : 100.f;
     const FVector Direction = FRotator(OrbitPitch, OrbitYaw, 0.f).Vector();
-    PreviewViewport->SetViewLocation(Center + Direction * BriefingShipPreview::FitDistance(Radius, Size) * Zoom);
+    const float Distance=bPurchasePreview && !bMissionScene?BriefingShipPreview::FitBoundsDistance(Bounds,(-Direction).Rotation(),Size):BriefingShipPreview::FitDistance(Radius,Size);
+    PreviewViewport->SetViewLocation(Center + Direction * Distance * Zoom);
     PreviewViewport->SetViewRotation((-Direction).Rotation());
 }
 

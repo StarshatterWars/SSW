@@ -1,4 +1,5 @@
 #include "ShipInsuranceSubsystem.h"
+#include "ShipEquipment.h"
 #include "CampaignFleet.h"
 #include "Campaign.h"
 #include "SerializedHullStockAI.h"
@@ -175,64 +176,12 @@ void UShipInsuranceSubsystem::RefreshAssignment()
                 Current->LoadoutStations.Add(Loadout[Index]);
         }
     }
-    const auto* SystemCatalog = GetGameInstance()->GetSubsystem<UStarshatterSystemDesignSubsystem>();
-    const auto OldComponents = Current->Components;
-    Current->Components.Reset();
-    Current->InstalledComponentValue = 0;
-    auto& Systems = Craft->GetSystems();
-    for (int32 Index = 0; Index < Systems.size(); ++Index)
+    if(auto* Equipment=Craft->GetEquipment())
     {
-        auto* System = Systems[Index];
-        if (!System) continue;
-        auto& Parts = System->GetComponents();
-        for (int32 PartIndex = 0; PartIndex < Parts.size(); ++PartIndex)
-        {
-            auto* Part = Parts[PartIndex];
-            if (!Part) continue;
-            FHangarComponent Slot;
-            Slot.SystemIndex = Index;
-            Slot.ComponentIndex = PartIndex;
-            Slot.SystemName = UTF8_TO_TCHAR(System->GetName());
-            Slot.Component = FName(UTF8_TO_TCHAR(Part->Name()));
-            if (const auto* Old = OldComponents.FindByPredicate([&](const auto& Item)
-                { return Item.SystemIndex == Index && Item.ComponentIndex == PartIndex; }))
-            {
-                Slot = *Old;
-                if (SystemCatalog && Slot.Level != 3)
-                    if (const auto Variant = SystemCatalog->FindComponentGrade(Slot.SystemDesign, Slot.Component, Slot.Level))
-                    {
-                        ComponentDesign Native;
-                        Native.name = TCHAR_TO_UTF8(*Variant->Name);
-                        Native.abrv = TCHAR_TO_UTF8(*Variant->Abbrev);
-                        Native.base_cost = Variant->BaseCost;
-                        Native.performance_multiplier = Variant->PerformanceMultiplier;
-                        Native.power_demand_multiplier = Variant->PowerDemandMultiplier;
-                        Native.repair_time = Variant->RepairTime;
-                        Native.replace_time = Variant->ReplaceTime;
-                        Native.spares = Variant->Spares;
-                        Native.affects = Variant->Affects;
-                        Part->ApplyGradeDesign(Native);
-                    }
-            }
-            else if (SystemCatalog)
-            {
-                int32 Matches = 0;
-                for (const auto& Pair : SystemCatalog->GetDesignsByName())
-                    if (Pair.Value.Components.ContainsByPredicate([&](const auto& Item)
-                        { return FName(*Item.Name) == Slot.Component; }))
-                    {
-                        ++Matches;
-                        Slot.SystemDesign = Pair.Key;
-                        if (Pair.Key == FName(*Slot.SystemName)) { Matches = 1; break; }
-                    }
-                if (Matches != 1) Slot.SystemDesign = NAME_None;
-            }
-            if (!Slot.ItemId.IsValid()) Slot.ItemId = FGuid::NewGuid();
-            Current->Components.Add(Slot);
-            const auto Variant = SystemCatalog ? SystemCatalog->FindComponentGrade(Slot.SystemDesign, Slot.Component, Slot.Level)
-                : TOptional<FComponentDesign>();
-            Current->InstalledComponentValue += Variant ? Variant->BaseCost : Part->Cost();
-        }
+        Equipment->Apply(*Current);
+        Equipment->Capture(*Current);
+        FShipEquipment::SeparateValue(*Current);
+        FShipEquipment::Revalue(*Current);
     }
     if (FreeFlight && !Current->bAssigned)
     {
@@ -420,8 +369,10 @@ bool UShipInsuranceSubsystem::ValidateFitting(FGuid Hull, int32 Slot, int32 Leve
     auto* Target = Systems[Fitted.SystemIndex]; auto& Parts = Target->GetComponents();
     if (Fitted.ComponentIndex < 0 || Fitted.ComponentIndex >= Parts.size() || !Parts[Fitted.ComponentIndex]) return false;
     const auto* Current = Parts[Fitted.ComponentIndex];
-    const double NewPerformance = FMath::Pow(Variant->PerformanceMultiplier / Current->PerformanceMultiplier(), 1.0 / Parts.size());
-    const double NewDemand = FMath::Pow(Variant->PowerDemandMultiplier / Current->PowerDemandMultiplier(), 1.0 / Parts.size());
+    const auto Calibrated=FShipEquipment::GradeDesign(Fitted.SystemDesign,Fitted.Component,Level);
+    if(!Calibrated){Result=INVTEXT("Component calibration is unavailable.");return false;}
+    const double NewPerformance = FMath::Pow(Calibrated->performance_multiplier / Current->PerformanceMultiplier(), 1.0 / Parts.size());
+    const double NewDemand = FMath::Pow(Calibrated->power_demand_multiplier / Current->PowerDemandMultiplier(), 1.0 / Parts.size());
     auto& Reactors = Craft->GetReactors();
     for (int32 Index = 0; Index < Reactors.size(); ++Index)
     {
@@ -495,16 +446,10 @@ bool UShipInsuranceSubsystem::FitComponent(FGuid Hull, int32 Slot, int32 Level, 
         Incoming.MaintenanceSeconds=0;Incoming.JerryCount=0;Incoming.SpareCount=Variant->Spares;
     }
     Entry->Components[Slot]=Incoming;
-    ComponentDesign Native;
-    Native.name = TCHAR_TO_UTF8(*Variant->Name);
-    Native.abrv = TCHAR_TO_UTF8(*Variant->Abbrev);
-    Native.base_cost = Variant->BaseCost;
-                        Native.performance_multiplier = Variant->PerformanceMultiplier;
-                        Native.power_demand_multiplier = Variant->PowerDemandMultiplier;
-                        Native.repair_time = Variant->RepairTime;
-    Native.replace_time = Variant->ReplaceTime;
-    Native.spares = Variant->Spares;
-    Native.affects = Variant->Affects;
+    const auto Calibrated=FShipEquipment::GradeDesign(Incoming.SystemDesign,Incoming.Component,Level);
+    if(!Calibrated){Pilot=Previous;Result=INVTEXT("Component calibration is unavailable.");return false;}
+    const ComponentDesign Native=*Calibrated;
+    Incoming.InstalledValue=Variant->BaseCost;Entry->Components[Slot]=Incoming;
     NativePart->InstallDesign(Native);
     FOwnedHullCondition::ApplyComponent(*NativePart,Incoming);
     Systems[Incoming.SystemIndex]->CalcStatus();

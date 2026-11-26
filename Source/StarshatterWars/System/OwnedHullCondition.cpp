@@ -1,4 +1,5 @@
 #include "OwnedHullCondition.h"
+#include "ShipEquipment.h"
 #include "Weapon.h"
 #include "WeaponGroup.h"
 #include "WeaponDesign.h"
@@ -65,7 +66,7 @@ void FOwnedHullCondition::Capture(Ship& Craft,FPlayerHangarShip& Row)
         for(int32 PartIndex=0;PartIndex<Parts.size();++PartIndex)
         {
             auto* Part=Parts[PartIndex]; if(!Part)continue;
-            auto* Slot=Row.Components.FindByPredicate([&](const auto& Item){return Item.SystemIndex==Index && Item.ComponentIndex==PartIndex && Item.SystemName==UTF8_TO_TCHAR(System->GetName());});
+            auto* Slot=Row.Components.FindByPredicate([&](const auto& Item){return Item.SystemIndex==Index && Item.ComponentIndex==PartIndex;});
             if(!Slot)
             {
                 Slot=&Row.Components.AddDefaulted_GetRef(); Slot->SystemIndex=Index; Slot->ComponentIndex=PartIndex;
@@ -75,6 +76,7 @@ void FOwnedHullCondition::Capture(Ship& Craft,FPlayerHangarShip& Row)
             Slot->MaintenanceSeconds=Part->time_remaining; Slot->SpareCount=Part->spares; Slot->JerryCount=Part->jerried;
         }
     }
+    if(auto* Equipment=Craft.GetEquipment())Equipment->Capture(Row);
     auto& Queue=Craft.RepairQueue();
     for(int32 Index=0;Index<Queue.size();++Index)
         for(int32 SystemIndex=0;SystemIndex<Systems.size();++SystemIndex)
@@ -82,6 +84,7 @@ void FOwnedHullCondition::Capture(Ship& Craft,FPlayerHangarShip& Row)
 }
 void FOwnedHullCondition::ApplyComponent(SimComponent& Part,const FHangarComponent& Stored)
 {
+    if(Stored.ItemId.IsValid())Part.ItemId=Stored.ItemId;Part.InstalledLevel=FMath::Clamp(Stored.Level,1,5);
     if(!Stored.bHasCondition)return;
     Part.availability=FMath::Clamp(FMath::IsFinite(Stored.ConditionPercent)?Stored.ConditionPercent:100.f,0.f,100.f);
     Part.Status=static_cast<SYSTEM_STATUS>(FMath::Clamp(Stored.ConditionStatus,static_cast<int32>(SYSTEM_STATUS::DESTROYED),static_cast<int32>(SYSTEM_STATUS::UNKNOWN)));
@@ -92,6 +95,7 @@ void FOwnedHullCondition::ApplyComponent(SimComponent& Part,const FHangarCompone
 void FOwnedHullCondition::Apply(Ship& Craft,const FPlayerHangarShip& Row)
 {
     ApplyAmmo(Craft,Row);
+    if(auto* Equipment=Craft.GetEquipment())Equipment->Apply(Row);
     if(!Row.bHasCondition || !Craft.Design())return;
     Craft.SetIntegrity(FMath::Clamp(FMath::IsFinite(Row.HullCondition)?Row.HullCondition:1.f,0.f,1.f)*Craft.Design()->integrity);
     auto& Systems=Craft.GetSystems();

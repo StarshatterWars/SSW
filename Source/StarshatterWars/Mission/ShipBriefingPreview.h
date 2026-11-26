@@ -34,6 +34,7 @@ namespace BriefingShipPreview
         const TArray<const FWeaponDesign*>& Stores = {}, FTransform* ModelToPreview = nullptr);
     STARSHATTERWARS_API FBox CalculateBounds(const TArray<FBriefingShipPreviewPart>& Parts);
     STARSHATTERWARS_API float FitDistance(float Radius, const FVector2D& ViewSize);
+    STARSHATTERWARS_API float FitBoundsDistance(const FBox& Bounds,const FRotator& ViewRotation,const FVector2D& ViewSize);
     // Rejects main Game/PIE worlds. Only isolated preview worlds are accepted.
     STARSHATTERWARS_API AActor* CreateVisual(UWorld* PreviewWorld, const TArray<FBriefingShipPreviewPart>& Parts, bool bAddLighting = true);
 }
@@ -47,6 +48,7 @@ public:
     bool SetMissionScene(Mission* MissionDef);
     void SetPreviewActive(bool bActive);
     void SetReferencePreview() { bReferencePreview = true; }
+    void SetPurchasePreview() {bReferencePreview=true;bPurchasePreview=true;}
     void ResetView();
     void UseExternalPlaybackControls() { bExternalPlaybackControls=true; }
 protected:
@@ -101,6 +103,7 @@ private:
     float Zoom = 1.f;
     bool bPreviewActive = true;
     bool bReferencePreview = false;
+    bool bPurchasePreview = false;
     bool bShowReferenceGrid = false;
     bool bDragging = false;
 };

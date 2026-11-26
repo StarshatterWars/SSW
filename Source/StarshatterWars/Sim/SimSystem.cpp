@@ -103,6 +103,7 @@ SimSystem::SimSystem(const SimSystem& s)
 	explosion_type(s.explosion_type),
 	components()
 {
+    DesignKey=s.DesignKey;
 	name = s.name;
 	abrv = s.abrv;
 
@@ -131,6 +132,7 @@ void
 SimSystem::SetDesign(const SystemDesign* d)
 {
 	components.destroy();
+    DesignKey=d?FName(UTF8_TO_TCHAR(d->name.data())):NAME_None;
 	if (!d) return;
 
 	for (int i = 0; i < d->components.size(); ++i)

@@ -748,7 +748,8 @@ void UTacRefDlg::BuildModernShell()
         auto* Host = WidgetTree->ConstructWidget<UNativeWidgetHost>();
         Host->SetContent(SNew(SShipSystemIcon).Icon(Icon));
         Button->SetContent(Host);
-        Button->SetToolTipText(FText::FromString(Caption));
+        auto* Tip=WidgetTree->ConstructWidget<UTextBlock>();Tip->SetText(FText::FromString(Caption));Tip->SetFont(MissionUIStyle::GetRowFont(13));Tip->SetColorAndOpacity(FLinearColor::White);
+        auto* TipFrame=WidgetTree->ConstructWidget<UBorder>();TipFrame->SetBrushColor(MissionUIStyle::PanelBG);TipFrame->SetPadding(FMargin(10,7));TipFrame->SetContent(Tip);Button->SetToolTip(TipFrame);
         return Button;
     };
     StationButton = AddCategoryButton(StationButton, TEXT("Stations"), EShipSystemIcon::Station);
@@ -868,7 +869,8 @@ void UTacRefDlg::BuildGazetteer(UVerticalBox& Body)
         auto* Host = WidgetTree->ConstructWidget<UNativeWidgetHost>();
         Host->SetContent(SNew(SShipSystemIcon).Icon(Icon));
         Button->SetContent(Host);
-        Button->SetToolTipText(FText::FromString(Label));
+        auto* Tip=WidgetTree->ConstructWidget<UTextBlock>();Tip->SetText(FText::FromString(Label));Tip->SetFont(MissionUIStyle::GetRowFont(13));Tip->SetColorAndOpacity(FLinearColor::White);
+        auto* TipFrame=WidgetTree->ConstructWidget<UBorder>();TipFrame->SetBrushColor(MissionUIStyle::PanelBG);TipFrame->SetPadding(FMargin(10,7));TipFrame->SetContent(Tip);Button->SetToolTip(TipFrame);
         GazetteerSectionButtons.Add(Button);
         return Button;
     };

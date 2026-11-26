@@ -7,6 +7,7 @@
 #include "SimComponent.h"
 #include "StarshatterAssetRegistrySubsystem.h"
 #include "SystemDesign.h"
+#include "ShipEquipment.h"
 
 namespace
 {
@@ -32,6 +33,7 @@ bool HasCompleteGrades(const TArray<FSystemComponentGrade>& Grades)
 void PublishSystemComponents(const TMap<FName, FSystemDesign>& Rows)
 {
     // Runtime components own a copy of their design and survive a catalog reload.
+    FShipEquipment::PublishCatalog(Rows);
     SystemDesign::Close();
     for (const auto& Row : Rows)
     {
