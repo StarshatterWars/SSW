@@ -1403,6 +1403,7 @@ struct FS_PlayerGameInfo : public FTableRowBase
 {
     GENERATED_BODY()
     UPROPERTY(BlueprintReadWrite, SaveGame) TArray<FPlayerHangarShip> HangarShips;
+    UPROPERTY(SaveGame) TArray<FShipRentalContract> ShipRentals;
     UPROPERTY(BlueprintReadWrite, SaveGame) FGuid AssignedHangarHull;
     UPROPERTY(BlueprintReadWrite, SaveGame) FGuid SelectedHangarHull;
     UPROPERTY(BlueprintReadWrite, SaveGame) TSet<FName> OwnedShipSkins;

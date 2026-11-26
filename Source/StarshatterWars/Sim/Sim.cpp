@@ -17,6 +17,7 @@
 #include "OwnedHullLocation.h"
 #include "MissionHullAccessRules.h"
 #include "ShipInsuranceSubsystem.h"
+#include "ShipCommerceAI.h"
 #include "FractalVerseSubsystem.h"
 #include "ProductionCatalog.h"
 #include "SimDataEvents.h"
@@ -1998,6 +1999,7 @@ Sim::CreateShip(
         if(const auto* Hull=Story->GetPersistentFleet().Hulls.Find(PersistentHullId);Hull && Hull->bDestroyed)return nullptr;
     FGuid HullId=PersistentHullId;
     FName Owner(*FString::Printf(TEXT("Faction/%d"),IFF));
+    bool bPlayerCustody=false;
     if(auto* Runtime=GetSSWRuntimeSubsystem())if(auto* Instance=Runtime->GetGameInstance())
     {
         auto* State=Instance->GetSubsystem<ULocalGameStateSubsystem>();
@@ -2008,8 +2010,8 @@ Sim::CreateShip(
         {
             const auto& Profile=Players->GetPlayerInfo();
             const auto* Owned=Profile.HangarShips.FindByPredicate([&](const auto& Row)
-                {return Row.HullId==Profile.AssignedHangarHull && !Row.bLost && Row.Design==FName(UTF8_TO_TCHAR(design->name));});
-            if(Owned){HullId=Owned->HullId;Owner=FEconomyLedger::Pilot();}
+                {return Row.HullId==Profile.AssignedHangarHull && !Row.bLost && !Row.bSold && Row.Design==FName(UTF8_TO_TCHAR(design->name));});
+            if(Owned){bPlayerCustody=true;HullId=Owned->HullId;Owner=FEconomyLedger::Pilot();if(Owned->RentalId.IsValid())if(const auto* Rental=Profile.ShipRentals.FindByPredicate([&](const auto& R){return R.Id==Owned->RentalId;}))Owner=Rental->Lessor;}
         }
         if(!HullId.IsValid() && State)HullId=State->ResolveHullIdentity(UTF8_TO_TCHAR(name),FName(UTF8_TO_TCHAR(design->name)));
     }
@@ -2020,6 +2022,7 @@ Sim::CreateShip(
     }
     if(!HullId.IsValid())do{HullId=FHullRegistry::Allocate();}while(HullRegistry.Find(HullId));
     if(!HullRegistry.Register(HullId,FName(UTF8_TO_TCHAR(design->name)),UTF8_TO_TCHAR(name),Owner,IFF))return nullptr;
+    if(bPlayerCustody)HullRegistry.Transfer(HullId,Owner,FEconomyLedger::Pilot(),FDateTime::UtcNow().ToUnixTimestamp(),TEXT("Restore saved hull custody"));
 	Ship* ship = new Ship(
 		name,
 		reg_num,
@@ -4512,6 +4515,8 @@ bool Sim::NeedsTrainingLaunchClearance() const
     auto* Runtime=GetSSWRuntimeSubsystem();
     auto* Game=Runtime?Cast<USSWGameInstance>(Runtime->GetGameInstance()):nullptr;
     const auto* Progress=Game?Game->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+    if(Progress)if(const auto* Hull=Progress->GetPlayerInfo().HangarShips.FindByPredicate([&](const auto& H){return H.HullId==Progress->GetPlayerInfo().AssignedHangarHull;}))
+        if(!ShipCommerceAI::RentalMayLaunch(Progress->GetPlayerInfo(),*Hull,FDateTime::UtcNow().ToUnixTimestamp()))return true;
     if(!Progress || !FreeFlightAssignment::Unlocked(Pilot?Pilot->GetRank():-1,Progress->GetPlayerInfo().Campaign==Campaign::TRAINING_CAMPAIGN))return true;
     return !Game || !Pilot || !PlayerFlightAccess::CanLaunch(FreeFlightAssignment::IsStarted(Game->GetTrainingAgent(),AgentAI::PilotKey(*Pilot)),Pilot->GetRank());
 }
@@ -4592,7 +4597,7 @@ bool Sim::BoardOwnedTrainingFighter(FS_PlayerGameInfo& Profile, FGuid Hull,
     auto* Design = Owned ? ShipDesignRegistry::FindLegacy(Owned->Design) : nullptr;
     if (!HasSimulationAuthority() || IsNetworked() || !mission || !mission->IsFreeFlight() ||
         !Old || !Carrier || Carrier->IsDead() || !Inventory || !Element || !Owned ||
-        !Hull.IsValid() || Owned->bAssigned || Owned->bLost || !Row || !Design || Row->Category != EShipCategory::Fighter)
+        !Hull.IsValid() || Owned->bAssigned || Owned->bLost || Owned->bSold || !Row || !Design || Row->Category != EShipCategory::Fighter)
     { Reason = INVTEXT("An available owned fighter and a live carrier hangar are required."); return false; }
     if (Old->GetFlightPhase() != EOPSMode::ALERT && Old->GetFlightPhase() != EOPSMode::DOCKED)
     { Reason = INVTEXT("Land aboard Orion before boarding your fighter."); return false; }

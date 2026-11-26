@@ -2,6 +2,8 @@
 #include "Misc/AutomationTest.h"
 #include "Misc/ScopeExit.h"
 #include "CarrierFighterSalesAI.h"
+#include "ShipCommerceAI.h"
+#include "EconomyAI.h"
 #include "ShipyardAI.h"
 #include "SerializedHullStockAI.h"
 #include "ShipDesignRegistry.h"
@@ -94,6 +96,22 @@ bool FCarrierFighterSalesTest::RunTest(const FString&)
     TestTrue(TEXT("Carrier retains OOB stock after graduation"),Normal.IsSet());
     if(Normal.IsSet())TestEqual(TEXT("Graduated pilots pay the normal catalog price"),Normal.GetValue().Price,574000LL);
     TestEqual(TEXT("Only authored OOB squadrons plus the original assignment"),Base.GetHangar()->NumSquadrons(),8);
+    auto& RentalPilot=Reload->PlayerInfo;RentalPilot.Economy.Wallets[FEconomyLedger::Pilot()]=1000000;
+    FShipCommerceDock Dock;Dock.bAuthorized=true;Dock.Location=TEXT("Carrier / Archon");Dock.Inventory=Key;Dock.System=TEXT("Meridian");Dock.Dealer=EconomyAI::NPCAccount(Key);FShipCommerceRules Rules;
+    const auto RentalOffers=CarrierFighterSalesAI::HullOffers(RentalPilot.Economy,Key,*Reopened.GetHangar(),*Offer);
+    if(!TestFalse(TEXT("A reserve remains for rental"),RentalOffers.IsEmpty()))return false;
+    const FGuid RentedId=RentalOffers[0];const auto RentalSlot=RentalPilot.Economy.SerializedHulls.FindChecked(RentedId);const int64 BeforeRental=RentalPilot.Economy.Wallets.FindRef(FEconomyLedger::Pilot());
+    TestFalse(TEXT("Failed rental save restores physical carrier reserve"),CarrierFighterSalesAI::Rent(RentalPilot,Hull,*Reopened.GetHangar(),*Offer,Dock,Rules,RentedId,1,1000,[]{return false;},Why));
+    TestEqual(TEXT("Failed rental cannot charge the pilot"),RentalPilot.Economy.Wallets.FindRef(FEconomyLedger::Pilot()),BeforeRental);
+    TestTrue(TEXT("Carrier rents the selected physical reserve hull"),CarrierFighterSalesAI::Rent(RentalPilot,Hull,*Reopened.GetHangar(),*Offer,Dock,Rules,RentedId,1,1000,[]{return true;},Why));
+    TestEqual(TEXT("Rental removes a reserve as well as the purchased fighter"),CarrierFighterSalesAI::Available(RentalPilot.Economy,Key,*Reopened.GetHangar(),*Offer),Offer->Quantity-2);
+    auto DealerDock=Dock;DealerDock.Inventory=TEXT("Dealer/Archon/Stormhawk");
+    TestTrue(TEXT("Rental returned into separate dealer storage"),ShipCommerceAI::Return(RentalPilot,RentedId,DealerDock,FGuid::NewGuid(),1001,[]{return true;},Why));
+    Ship AfterReturn("Archon","",ShipDesignRegistry::FindLegacy(FName(TEXT("Orion"))),1,0,nullptr,false);AfterReturn.InitializeRuntimeHangarFromDesign();
+    TestTrue(TEXT("Carrier reload after rental return"),CarrierFighterSalesAI::Prepare(RentalPilot,AfterReturn,TEXT("Meridian"),[]{return true;},Why));
+    TestEqual(TEXT("Returned civilian hull cannot refill combat squadron"),CarrierFighterSalesAI::Available(RentalPilot.Economy,Key,*AfterReturn.GetHangar(),*Offer),Offer->Quantity-2);
+    TestEqual(TEXT("Returned dealer hull preserves exact identity"),SerializedHullStockAI::Available(RentalPilot.Economy,DealerDock.Inventory,TEXT("Stormhawk"),1)[0],RentedId);
+    TestFalse(TEXT("Squadron metadata is no longer attached to returned dealer hull"),RentalPilot.Economy.SerializedHulls.FindChecked(RentedId).Squadron.Len()>0);
     return true;
 }
 #endif

@@ -24,7 +24,7 @@ FString Current(const Ship& Craft)
     return System ? FString::Printf(TEXT("In flight / %s / %s"), UTF8_TO_TCHAR(System->GetName()), UTF8_TO_TCHAR(Region->GetName())) : FString();
 }
 bool IsAt(const FPlayerHangarShip& Hull, const FString& Place)
-{ return !Hull.bLost && !Place.IsEmpty() && Hull.Location.Equals(Place, ESearchCase::IgnoreCase); }
+{ return !Hull.bLost && !Hull.bSold && !Place.IsEmpty() && Hull.Location.Equals(Place, ESearchCase::IgnoreCase); }
 bool RecoverPurchase(const FS_PlayerGameInfo& Profile, FPlayerHangarShip& Hull)
 {
     if (Hull.Location.StartsWith(TEXT("Carrier / ")) || Hull.Location.StartsWith(TEXT("Station / ")) || Hull.Location.StartsWith(TEXT("In flight / "))) return false;
@@ -53,7 +53,7 @@ TArray<FGuid> StoredAt(const FS_PlayerGameInfo& Profile, const FString& Place)
 }
 bool CanProvision(const FPlayerHangarShip& Hull, Mission& Entry, bool Active)
 {
-    auto* Flight = Entry.GetPlayer(); if (!Flight || Hull.bLost) return false;
+    auto* Flight = Entry.GetPlayer(); if (!Flight || Hull.bLost || Hull.bSold) return false;
     FString Base(UTF8_TO_TCHAR(Flight->GetCarrier().data()));
     if (Base.IsEmpty() && Flight->GetSquadron().length())
         if (const auto* Squadron = Entry.FindElement(Flight->GetSquadron()))

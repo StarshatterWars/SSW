@@ -15,7 +15,7 @@
 
 bool FOwnedHullCondition::IsOwnedLive(const FPlayerHangarShip& Row,FGuid Assigned,FName Design,FName Cargo,bool FreeFlight)
 {
-    return FreeFlight && !Row.bAssigned && !Row.bLost && Row.HullId.IsValid() && Row.HullId==Assigned && Row.Design==Design &&
+    return FreeFlight && !Row.bAssigned && !Row.bLost && !Row.bSold && Row.HullId.IsValid() && Row.HullId==Assigned && Row.Design==Design &&
         Cargo==FName(*(TEXT("Ship/")+Row.HullId.ToString(EGuidFormats::Digits)));
 }
 bool FOwnedHullCondition::CaptureActive(FS_PlayerGameInfo& Player)

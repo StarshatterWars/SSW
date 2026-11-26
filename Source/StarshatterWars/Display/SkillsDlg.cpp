@@ -117,7 +117,7 @@ public:
                 + SWidgetSwitcher::Slot()[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Accept)]
                 + SWidgetSwitcher::Slot()[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Reference)]
                 + SWidgetSwitcher::Slot()[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Abort)]];
-        return SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Margin(FMargin(6,4))
+        return SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).Margin(FMargin(6,4)).OverflowPolicy(ETextOverflowPolicy::Ellipsis).ToolTipText(FText::FromString(Item->DisplayName))
             .Text_Lambda([Item = Item, Weak = Service, Column]()
             {
                 if (Column == TEXT("Group")) return FText::FromName(Item->Group).ToUpper();
@@ -173,23 +173,28 @@ TSharedRef<SWidget> USkillsDlg::RebuildWidget()
     Table->Refresh();
     auto Header = SNew(SHeaderRow);
     for (const auto& Column : {TPair<FName,FString>(TEXT("Group"),TEXT("GROUP")), {TEXT("Name"),TEXT("SKILL")}, {TEXT("Levels"),TEXT("LEVELS")}, {TEXT("Status"),TEXT("STATUS")}, {TEXT("Cost"),TEXT("BOOK PRICE")}})
-        Header->AddColumn(SHeaderRow::Column(Column.Key).DefaultLabel(FText::FromString(Column.Value)).FillWidth(Column.Key == TEXT("Name") ? 2.f : 1.f)
+        {
+        auto Definition=SHeaderRow::Column(Column.Key).DefaultLabel(FText::FromString(Column.Value));
+        if(Column.Key==TEXT("Name"))Definition.FillWidth(1.f);
+        else Definition.FixedWidth(Column.Key==TEXT("Group")?56.f:Column.Key==TEXT("Levels")?230.f:Column.Key==TEXT("Status")?66.f:110.f);
+        Header->AddColumn(Definition
             .SortMode_Lambda([Table, Id = Column.Key]() { return Table->SortColumn == Id ? Table->SortMode : EColumnSortMode::None; })
             .OnSort_Lambda([Table](EColumnSortPriority::Type, const FName& Id, EColumnSortMode::Type Mode) { Table->SortColumn = Id; Table->SortMode = Mode; Table->Refresh(); }));
+    }
     TSet<FName> UniqueGroups;for(const auto& Skill:Table->All)UniqueGroups.Add(Skill->Group);
     TArray<FName> Groups=UniqueGroups.Array();Groups.Sort(FNameLexicalLess());Groups.Insert(NAME_None,0);
     auto GroupButtons=SNew(SWrapBox).UseAllottedSize(true).InnerSlotPadding(FVector2D(5,5));
     for(FName Group:Groups)
     {
         const FText Caption=Group.IsNone()?INVTEXT("ALL SKILLS"):FText::FromName(Group).ToUpper();
-        GroupButtons->AddSlot()[SNew(SButton).ContentPadding(FMargin(8,5))
+        GroupButtons->AddSlot()[SNew(SBox).WidthOverride(184).HeightOverride(36)[SNew(SButton).ContentPadding(FMargin(8,5))
             .ToolTip(MissionUIStyle::MakeToolTip(Caption))
             .ButtonColorAndOpacity_Lambda([Table,Group](){return Table->SelectedGroup==Group?MissionUIStyle::RowSelectedBG:MissionUIStyle::RowBG;})
             .OnClicked_Lambda([Table,Group](){Table->SelectedGroup=Group;Table->Selected.Reset();Table->PendingLevel=0;Table->Feedback=FText::GetEmpty();Table->Refresh();return FReply::Handled();})
             [SNew(SHorizontalBox)+SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)
                 [SNew(SShipSystemIcon).Icon(Group.IsNone()?EShipSystemIcon::Skills:CategoryIcon(Group))]
-                +SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(6,0)
-                [SNew(STextBlock).Text(Caption).Font(MissionUIStyle::GetRowFont(11))]]];
+                +SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center).Padding(6,0)
+                [SNew(STextBlock).Text(Caption).Font(MissionUIStyle::GetRowFont(11)).OverflowPolicy(ETextOverflowPolicy::Ellipsis)]]]];
     }
     auto List=SNew(SListView<FSkillItem>).ListItemsSource(&Table->Visible).HeaderRow(Header).SelectionMode(ESelectionMode::Single)
         .OnGenerateRow_Lambda([Weak,Table](FSkillItem Item,const TSharedRef<STableViewBase>& Owner)

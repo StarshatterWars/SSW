@@ -47,9 +47,18 @@ bool ShipyardAI::Purchase(FS_PlayerGameInfo& Pilot,const FShipDesign& Hull,FName
     {Pilot=Before;Reason=INVTEXT("The purchase could not be committed. Stock and credits retained.");return false;}
     if(!SerializedHullStockAI::Deliver(Pilot.Economy,OfferedHullId,Receipt,Location))
     {Pilot=Before;Reason=INVTEXT("The selected hull could not be delivered. Stock and credits retained.");return false;}
-    auto& Entry=Pilot.HangarShips.AddDefaulted_GetRef();Entry.HullId=OfferedHullId;Entry.Design=FName(*Hull.ShipName);Entry.Name=Hull.DisplayName.IsEmpty()?Hull.ShipName:Hull.DisplayName;Entry.HullValue=Hull.BaseCost;Entry.Location=Location;
-    if(!Hull.Loadout.IsEmpty()){Entry.LoadoutName=Hull.Loadout[0].Name;Entry.LoadoutStations=Hull.Loadout[0].Stations;}
-    FShipEquipment::InitializePurchase(Entry,Hull);
+    FPlayerHangarShip Acquired;
+    if(const auto* Used=Pilot.Economy.UsedHullStock.Find(OfferedHullId))Acquired=*Used;
+    else
+    {
+        Acquired.HullId=OfferedHullId;Acquired.Design=FName(*Hull.ShipName);Acquired.Name=Hull.DisplayName.IsEmpty()?Hull.ShipName:Hull.DisplayName;Acquired.HullValue=Hull.BaseCost;
+        if(!Hull.Loadout.IsEmpty()){Acquired.LoadoutName=Hull.Loadout[0].Name;Acquired.LoadoutStations=Hull.Loadout[0].Stations;}
+        FShipEquipment::InitializePurchase(Acquired,Hull);
+    }
+    Acquired.Location=Location;Acquired.bSold=false;Acquired.bLost=false;Acquired.bAssigned=false;Acquired.bCashPurchased=false;Acquired.RentalId.Invalidate();Acquired.Insurance={};Acquired.SelectedSkin=NAME_None;
+    auto* Existing=Pilot.HangarShips.FindByPredicate([OfferedHullId](const auto& H){return H.HullId==OfferedHullId;});
+    if(!Existing)Existing=&Pilot.HangarShips.AddDefaulted_GetRef();*Existing=MoveTemp(Acquired);auto& Entry=*Existing;
+    Pilot.Economy.UsedHullStock.Remove(OfferedHullId);
     auto& Payment=Pilot.Economy.Journal.Last();Payment.Item=Entry.Design;Payment.Quantity=1;Payment.UnitPrice=Hull.BaseCost;Payment.Reference=Entry.HullId;Payment.Source=Inventory;Payment.Destination=FName(*Location);Payment.Category=EWalletTransactionCategory::Shipyard;
     EconomyAI::RecordTrade(Pilot.Economy,Pilot.Economy.Inventories.FindChecked(Inventory).System,Item,1,Hull.BaseCost);
     Reason=INVTEXT("Hull purchased and delivered to your hangar at this station.");return true;

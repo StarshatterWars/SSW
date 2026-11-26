@@ -1,0 +1,5 @@
+{
+  "buyback_percent": 70,
+  "daily_rental_percent": 2,
+  "notes": "Buybacks use current hull and fitted-component condition. Rental fees use listed design value; mandatory Basic insurance uses the existing hull-only insurance formula. Terms are 1, 3 or 7 real days. No component-loss liability. NPC budgets and stock remain finite."
+}

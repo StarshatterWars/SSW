@@ -83,6 +83,8 @@ struct FPlayerHangarShip
     UPROPERTY(BlueprintReadOnly, SaveGame) bool bCashPurchased = false;
     UPROPERTY(BlueprintReadOnly, SaveGame) bool bAssigned = false;
     UPROPERTY(BlueprintReadOnly, SaveGame) bool bLost = false;
+    UPROPERTY(BlueprintReadOnly, SaveGame) bool bSold = false;
+    UPROPERTY(BlueprintReadOnly, SaveGame) FGuid RentalId;
     UPROPERTY(BlueprintReadOnly, SaveGame) FShipInsurancePolicy Insurance;
     UPROPERTY(BlueprintReadOnly, SaveGame) bool bHasCondition = false;
     UPROPERTY(BlueprintReadOnly, SaveGame) float HullCondition = 1;
@@ -95,6 +97,29 @@ struct FPlayerHangarShip
     UPROPERTY(SaveGame) TMap<int32,int32> SavedWeaponAmmo;
     UPROPERTY(SaveGame) TMap<int32,FName> SavedWeaponTypes;
     UPROPERTY(SaveGame) FName OrdnanceIssueKey;
+};
+
+UENUM()
+enum class EShipRentalState : uint8 { Active, Returned, Lost };
+
+// Custody is temporary; title remains with the NPC lessor. UTC deadlines survive logout.
+USTRUCT()
+struct FShipRentalContract
+{
+    GENERATED_BODY()
+    UPROPERTY(SaveGame) FGuid Id;
+    UPROPERTY(SaveGame) FGuid HullId;
+    UPROPERTY(SaveGame) FName Lessor;
+    UPROPERTY(SaveGame) FName Inventory;
+    UPROPERTY(SaveGame) FString ReturnDock;
+    UPROPERTY(SaveGame) int64 StartsUtc = 0;
+    UPROPERTY(SaveGame) int64 DueUtc = 0;
+    UPROPERTY(SaveGame) int64 HullValue = 0;
+    UPROPERTY(SaveGame) int64 Fee = 0;
+    UPROPERTY(SaveGame) int64 Premium = 0;
+    UPROPERTY(SaveGame) int64 Payout = 0;
+    UPROPERTY(SaveGame) int64 UnpaidLiability = 0;
+    UPROPERTY(SaveGame) EShipRentalState State = EShipRentalState::Active;
 };
 
 USTRUCT(BlueprintType)

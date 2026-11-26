@@ -36,6 +36,11 @@ bool FFreeFlightOwnedHullTest::RunTest(const FString&)
     Hull.Location=TEXT("Carrier / Archon");
     Hull.bLost=true;FreeFlightHullRules::Apply(Free,Pilot);
     TestTrue(TEXT("Lost selected hull falls back to Falcon"),Free.GetPlayer()->GetShipDesign()==ShipDesignRegistry::Find(FName(TEXT("Falcon"))));
+    Hull.bLost=false;Hull.RentalId=FGuid::NewGuid();FShipRentalContract Rental;Rental.Id=Hull.RentalId;Rental.HullId=Hull.HullId;Rental.DueUtc=1;Pilot.ShipRentals.Add(Rental);
+    TestFalse(TEXT("Expired newly selected rental cannot provision another launch"),FreeFlightHullRules::Apply(Free,Pilot));
+    Pilot.AssignedHangarHull=Hull.HullId;
+    TestTrue(TEXT("Expired active rental can resume so pilot can return it"),FreeFlightHullRules::Apply(Free,Pilot));
+    TestFalse(TEXT("Resuming expiry does not renew clearance"),ShipCommerceAI::RentalMayLaunch(Pilot,Hull,FDateTime::UtcNow().ToUnixTimestamp()));
     Mission Assigned(101);
     TestFalse(TEXT("Training assignments are untouched"),FreeFlightHullRules::Apply(Assigned,Pilot));
     return true;

@@ -38,7 +38,14 @@ public:
     int64 GetBalance() const;
     double HullStock(FName Design) const;
     bool PrepareCarrierFighterSales(FText& Reason);
-    int64 HullPurchasePrice(FName Design) const;
+    int64 HullPurchasePrice(FName Design,FGuid Hull=FGuid()) const;
+    bool CanSellHull(FGuid Hull,FText& Reason) const;
+    bool SellHull(FGuid Hull,FText& Reason);
+    bool CanReturnRental(FGuid Hull,FText& Reason) const;
+    bool ReturnRental(FGuid Hull,FText& Reason);
+    bool CanRentHull(FName Design,FGuid Hull,int32 Days,FText& Reason) const;
+    bool RentHull(FName Design,FGuid Hull,int32 Days,FText& Reason);
+    bool PayRentalDebt(FGuid Rental,FText& Reason);
     bool PrepareHullOffers(const TArray<FName>& Designs,FText& Reason);
     TArray<FGuid> HullOffers(FName Design) const;
     bool CanPurchaseHull(FName Design,FText& Reason,FGuid OfferedHullId=FGuid()) const;

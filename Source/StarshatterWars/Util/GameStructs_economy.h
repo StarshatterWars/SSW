@@ -215,6 +215,8 @@ struct FEconomyState
     UPROPERTY(SaveGame) TMap<FGuid, FGuid> BlueprintReceipts;
     UPROPERTY(SaveGame) TMap<FGuid,FSerializedHullStock> SerializedHulls;
     UPROPERTY(SaveGame) TMap<FGuid,FGuid> HullPurchaseReceipts;
+    // Physical second-hand stock retains equipment IDs, condition and ammunition.
+    UPROPERTY(SaveGame) TMap<FGuid,FPlayerHangarShip> UsedHullStock;
     UPROPERTY(SaveGame) TMap<FName, FMiningLease> MiningLeases;
     UPROPERTY(SaveGame) TArray<FEconomyTransaction> Journal;
     // Retained separately from bounded display history: retries cannot pay twice.

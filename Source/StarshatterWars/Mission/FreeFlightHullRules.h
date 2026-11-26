@@ -1,5 +1,6 @@
 #pragma once
 #include "GameStructs.h"
+#include "ShipCommerceAI.h"
 #include "OwnedHullLocation.h"
 #include "PlayerCharacter.h"
 #include "Mission.h"
@@ -17,10 +18,11 @@ namespace FreeFlightHullRules
     {
         if(!Model.IsFreeFlight() || !Model.GetPlayer())return false;
         const auto* Hull=Pilot.HangarShips.FindByPredicate([&](const FPlayerHangarShip& Row)
-        {return Row.HullId==Pilot.SelectedHangarHull && Row.HullId.IsValid() && !Row.bAssigned && !Row.bLost;});
-        if (Hull && !OwnedHullLocation::CanProvision(*Hull, Model, Hull->HullId == Pilot.AssignedHangarHull))
+        {return Row.HullId==Pilot.SelectedHangarHull && Row.HullId.IsValid() && !Row.bAssigned && (!Row.bSold && !Row.bLost && (Row.HullId==Pilot.AssignedHangarHull || ShipCommerceAI::RentalMayLaunch(Pilot,Row,FDateTime::UtcNow().ToUnixTimestamp())));});
+        if (!Hull || !OwnedHullLocation::CanProvision(*Hull, Model, Hull->HullId == Pilot.AssignedHangarHull))
             Hull = Pilot.HangarShips.FindByPredicate([&](const auto& Row)
-                { return Row.HullId == Pilot.AssignedHangarHull && !Row.bAssigned && !Row.bLost && OwnedHullLocation::CanProvision(Row, Model, true); });
+                { return Row.HullId == Pilot.AssignedHangarHull && !Row.bAssigned && (!Row.bSold && !Row.bLost && (Row.HullId==Pilot.AssignedHangarHull || ShipCommerceAI::RentalMayLaunch(Pilot,Row,FDateTime::UtcNow().ToUnixTimestamp()))) && OwnedHullLocation::CanProvision(Row, Model, true); });
+        if(!Hull && Pilot.HangarShips.ContainsByPredicate([&](const auto& Row){return Row.HullId==Pilot.SelectedHangarHull && (Row.bSold || Row.RentalId.IsValid());}))return false;
         const FShipDesign* Design=Hull?ShipDesignRegistry::Find(Hull->Design):nullptr;
         if(Design && Pilot.Rank<PlayerCharacter::HullRankRequired(Design->ShipType,Design->ShipName))Design=nullptr;
         if(!Design)Design=ShipDesignRegistry::Find(FName(TEXT("Falcon")));

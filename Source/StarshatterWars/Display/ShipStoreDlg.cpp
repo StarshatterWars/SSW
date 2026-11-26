@@ -1,4 +1,5 @@
 #include "ShipStoreDlg.h"
+#include "SimDataEvents.h"
 #include "ShipStoreSubsystem.h"
 #include "ShipSkinCatalog.h"
 #include "ShipBriefingPreview.h"
@@ -40,7 +41,9 @@ struct FStoreView : TSharedFromThis<FStoreView>
     TWeakObjectPtr<UStarshatterPlayerSubsystem> Players;
     TWeakObjectPtr<UShipBriefingPreview> Preview;
     TArray<FShipSkinCatalogEntry> Skins;
-    TArray<FStoreRow> All,Visible;
+    TArray<FStoreRow> All,Visible,HullTemplates;
+    FDelegateHandle DataChanged;
+    ~FStoreView(){if(DataChanged.IsValid())FSimDataEvents::Changed().Remove(DataChanged);}
     TWeakPtr<SListView<FStoreRow>> List;
     FStoreRow Selected;
     EShipStoreCategory Tab=EShipStoreCategory::Hulls;
@@ -49,10 +52,21 @@ struct FStoreView : TSharedFromThis<FStoreView>
     FName SortColumn="Item";
     EColumnSortMode::Type SortMode=EColumnSortMode::Ascending;
     int32 Quantity=1;
+    int32 RentalDays=1;
+    FGuid PendingRental;
+    bool CanRent(FText& Why) const {return Selected && Tab==EShipStoreCategory::Hulls && Sales.IsValid() && Sales->CanRentHull(Selected->Offer.Design,Selected->HullId,RentalDays,Why);}
+    void Rent(){FText Why;if(!CanRent(Why)){Feedback=Why;return;}if(PendingRental!=Selected->HullId){PendingRental=Selected->HullId;Feedback=FText::Format(INVTEXT("Click RENT again to confirm. {0}"),Why);return;}Sales->RentHull(Selected->Offer.Design,Selected->HullId,RentalDays,Feedback);PendingRental.Invalidate();Refresh();}
     int32 BuyQuantity() const {return Tab==EShipStoreCategory::Hulls || Tab==EShipStoreCategory::Skins?1:Quantity;}
     void Refresh()
     {
         Visible.Reset();
+        const FGuid PreviouslySelected=Selected && Selected->Offer.Category==EShipStoreCategory::Hulls?Selected->HullId:FGuid();
+        if(Sales.IsValid())
+        {
+            All.RemoveAll([](const auto& Row){return Row->Offer.Category==EShipStoreCategory::Hulls;});
+            for(const auto& Template:HullTemplates)for(const FGuid Id:Sales->HullOffers(Template->Offer.Design))
+            {auto Row=MakeShared<FStoreEntry>(*Template);Row->HullId=Id;Row->Offer.Price=Sales->HullPurchasePrice(Row->Offer.Design,Id);All.Add(Row);if(Id==PreviouslySelected)Selected=Row;}
+        }
         TMap<FName,TArray<FGuid>> AvailableHulls;
         for(const auto& Row:All)
         {
@@ -163,13 +177,14 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
             if(!Skill.IsNone())Row->Offer.Access+=Skills && Skills->HasSkill(Skill)?TEXT(" / SKILL MET"):TEXT(" / SKILL REQUIRED");
             Row->Empire=Empire->GetDisplayNameTextByValue(int64(Hull.ShipEmpire)).ToString();
             Row->Offer.Price=View->Sales.IsValid()?View->Sales->HullPurchasePrice(Row->Offer.Design):Hull.BaseCost;
+            View->HullTemplates.Add(Row);
             if(OffersReady)
                 for(const FGuid Id:View->Sales->HullOffers(Row->Offer.Design))
-                {auto Specific=MakeShared<FStoreEntry>(*Row);Specific->HullId=Id;View->All.Add(Specific);}
+                {auto Specific=MakeShared<FStoreEntry>(*Row);Specific->HullId=Id;Specific->Offer.Price=View->Sales->HullPurchasePrice(Row->Offer.Design,Id);View->All.Add(Specific);}
         }
     }
     FString SkinError;ShipSkinCatalog::Load(FPaths::ProjectContentDir()/TEXT("GameData/Ships/skins.json"),View->Skins,SkinError);
-    Preview=NewObject<UShipBriefingPreview>(this);Preview->SetPurchasePreview();View->Preview=Preview;
+    Preview=NewObject<UShipBriefingPreview>(this);Preview->SetPurchasePreview();Preview->SetVisibility(ESlateVisibility::Visible);Preview->SetToolTipText(INVTEXT("Drag to orbit / mouse wheel to zoom / double-click to reset"));View->Preview=Preview;
     const auto Weak=TWeakPtr<FStoreView>(View);
     auto Header=SNew(SHeaderRow);
     const auto Column=[&](FName Id,FText Label,float Width)
@@ -182,8 +197,15 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
     Column("Price",INVTEXT("BASE CR"),.8f);Column("Charges",INVTEXT("TAX / FEES"),.7f);Column("Total",INVTEXT("TOTAL CR"),.8f);Column("Owned",INVTEXT("AT DOCK"),.65f);Column("Access",INVTEXT("ACCESS / CATEGORY"),1.3f);
     auto List=SNew(SListView<FStoreRow>).ListItemsSource(&View->Visible).HeaderRow(Header).SelectionMode(ESelectionMode::Single)
         .OnGenerateRow_Lambda([](FStoreRow Row,const TSharedRef<STableViewBase>& Owner)->TSharedRef<ITableRow>{return SNew(SStoreRow,Owner).Entry(Row);})
-        .OnSelectionChanged_Lambda([Weak](FStoreRow Row,ESelectInfo::Type){if(auto State=Weak.Pin()){State->Selected=Row;State->UpdatePreview();}});
+        .OnSelectionChanged_Lambda([Weak](FStoreRow Row,ESelectInfo::Type){if(auto State=Weak.Pin()){State->Selected=Row;State->PendingRental.Invalidate();State->UpdatePreview();}});
     View->List=List;View->Refresh();
+    View->DataChanged=FSimDataEvents::Changed().AddLambda([Weak](const FEconomyState& State)
+    {if(const auto V=Weak.Pin();V && V->Players.IsValid() && &V->Players->GetPlayerInfo().Economy==&State)V->Refresh();});
+    auto RentalTerms=SNew(SHorizontalBox);
+    for(const int32 Days:{1,3,7})RentalTerms->AddSlot().FillWidth(1).Padding(2,0)[SNew(SButton)
+        .ButtonColorAndOpacity_Lambda([View,Days](){return View->RentalDays==Days?MissionUIStyle::RowSelectedBG:MissionUIStyle::RowBG;})
+        .OnClicked_Lambda([View,Days](){View->RentalDays=Days;View->PendingRental.Invalidate();return FReply::Handled();})
+        [SNew(STextBlock).Text(FText::Format(INVTEXT("{0}D"),FText::AsNumber(Days))).Font(MissionUIStyle::GetRowFont(11))]];
     auto Tabs=SNew(SHorizontalBox);
     const TCHAR* Names[]={TEXT("HULLS"),TEXT("SKINS"),TEXT("COMPONENTS"),TEXT("MISSILES"),TEXT("DRONES")};
     const EShipSystemIcon Icons[]={EShipSystemIcon::Ship,EShipSystemIcon::Appearance,EShipSystemIcon::Reactor,EShipSystemIcon::MediumRangeMissile,EShipSystemIcon::MiningDrone};
@@ -232,5 +254,12 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
                 .OnClicked_Lambda([View](){View->Buy();return FReply::Handled();})
                 [SNew(SHorizontalBox)+SHorizontalBox::Slot().AutoWidth()[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Marketplace)]
                     +SHorizontalBox::Slot().AutoWidth().Padding(6,0)[SNew(STextBlock).Text(INVTEXT("PURCHASE")).Font(MissionUIStyle::GetRowFont(12))]]]]
+        +SVerticalBox::Slot().AutoHeight().Padding(8,4)[SNew(SHorizontalBox).Visibility_Lambda([View](){return View->Tab==EShipStoreCategory::Hulls?EVisibility::Visible:EVisibility::Collapsed;})
+            +SHorizontalBox::Slot().AutoWidth()[SNew(STextBlock).Text(INVTEXT("RENTAL TERM")).Font(MissionUIStyle::GetRowFont(11))]
+            +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SBox).WidthOverride(180)[RentalTerms]]
+            +SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).AutoWrapText(true).Font(MissionUIStyle::GetRowFont(11)).Text_Lambda([View](){FText Why;View->CanRent(Why);return Why;})]
+            +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton).ToolTipText(INVTEXT("Rent this specific hull; confirm the term, mandatory insurance and liability before charging"))
+                .IsEnabled_Lambda([View](){FText Why;return View->CanRent(Why);}).OnClicked_Lambda([View](){View->Rent();return FReply::Handled();})
+                [SNew(STextBlock).Text_Lambda([View](){return View->PendingRental.IsValid()?INVTEXT("CONFIRM RENTAL"):INVTEXT("RENT");}).Font(MissionUIStyle::GetRowFont(12))]]]
         +SVerticalBox::Slot().AutoHeight().Padding(8,4)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).AutoWrapText(true).Text_Lambda([View](){return View->Feedback;})];
 }

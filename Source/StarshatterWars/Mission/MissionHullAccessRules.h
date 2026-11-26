@@ -7,11 +7,11 @@ namespace MissionHullAccessRules
     {
         if (Required.IsNone()) return nullptr;
         if (const auto* Owned = PilotState.HangarShips.FindByPredicate([Required](const auto& Hull)
-            { return Hull.HullId.IsValid() && Hull.Design == Required && !Hull.bAssigned && !Hull.bLost; })) return Owned;
+            { return Hull.HullId.IsValid() && Hull.Design == Required && !Hull.bAssigned && !Hull.bLost && !Hull.bSold && !Hull.RentalId.IsValid(); })) return Owned;
         // Preserve the issued basic trainer; advanced aircraft still require an owned hull.
         if (Required == FName(TEXT("Falcon")))
             return PilotState.HangarShips.FindByPredicate([&](const auto& Hull)
-                { return Hull.HullId.IsValid() && Hull.HullId == PilotState.AssignedHangarHull && Hull.Design == Required && !Hull.bLost; });
+                { return Hull.HullId.IsValid() && Hull.HullId == PilotState.AssignedHangarHull && Hull.Design == Required && !Hull.bLost && !Hull.bSold && !Hull.RentalId.IsValid(); });
         return nullptr;
     }
 }

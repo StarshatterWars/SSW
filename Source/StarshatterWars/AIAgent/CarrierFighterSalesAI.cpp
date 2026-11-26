@@ -1,4 +1,5 @@
 #include "CarrierFighterSalesAI.h"
+#include "ShipCommerceAI.h"
 #include "CampaignFleet.h"
 #include "Campaign.h"
 #include "Sim.h"
@@ -317,4 +318,18 @@ bool CarrierFighterSalesAI::Purchase(FS_PlayerGameInfo& P,const FShipDesign& Hul
     if(!Save()){P=Before;H.TransferStoredReserve(Squadron,Slot,true);Why=INVTEXT("Could not save the purchase. Credits and squadron stock restored.");return false;}
     if(auto* Story=Campaign::GetCampaign())Story->GetPersistentFleet().bDirty=true;
     Why=FText::Format(INVTEXT("{0} purchased from {1} and delivered to your hangar."),FText::FromString(Hull.DisplayName.IsEmpty()?Hull.ShipName:Hull.DisplayName),FText::FromString(UTF8_TO_TCHAR(H.SquadronName(Squadron).data())));return true;
+}
+
+bool CarrierFighterSalesAI::Rent(FS_PlayerGameInfo& P,const FShipDesign& Hull,Hangar& H,const FCarrierFighterOffer& O,const FShipCommerceDock& Dock,
+    const FShipCommerceRules& Rules,FGuid Id,int32 Days,int64 Now,TFunctionRef<bool()> Save,FText& Why)
+{
+    if(!HullOffers(P.Economy,Dock.Inventory,H,O).Contains(Id)){Why=INVTEXT("This reserve hull is no longer available.");return false;}
+    int32 Squadron=INDEX_NONE;const auto Record=P.Economy.SerializedHulls.FindChecked(Id);
+    if(!SerializedReserve(H,O,Record,Squadron))return false;
+    const auto Before=P;
+    if(!ShipCommerceAI::Rent(P,Hull,Id,Dock,Rules,Days,Now,FGuid::NewGuid(),Why))return false;
+    if(!H.TransferStoredReserve(Squadron,Record.Slot)){P=Before;return false;}
+    if(!Save()){P=Before;H.TransferStoredReserve(Squadron,Record.Slot,true);Why=INVTEXT("Could not save rental. Credits and squadron reserve restored.");return false;}
+    if(auto* Story=Campaign::GetCampaign())Story->GetPersistentFleet().bDirty=true;
+    return true;
 }

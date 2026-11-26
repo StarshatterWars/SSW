@@ -3,6 +3,8 @@
 #include "GameStructs_System.h"
 class Hangar;
 class Ship;
+struct FShipCommerceDock;
+struct FShipCommerceRules;
 struct FCarrierFighterOffer
 {
     FName Carrier,Fighter;
@@ -25,4 +27,6 @@ public:
     static int32 Available(const FEconomyState&,FName Inventory,Hangar&,const FCarrierFighterOffer&);
     static bool Purchase(FS_PlayerGameInfo&,const FShipDesign&,Hangar&,const FCarrierFighterOffer&,FName Inventory,
         const FString& Location,FGuid Receipt,TFunctionRef<bool()> Save,FText&,FGuid OfferedHullId=FGuid());
+    static bool Rent(FS_PlayerGameInfo&,const FShipDesign&,Hangar&,const FCarrierFighterOffer&,const FShipCommerceDock&,
+        const FShipCommerceRules&,FGuid Hull,int32 Days,int64 Now,TFunctionRef<bool()> Save,FText&);
 };

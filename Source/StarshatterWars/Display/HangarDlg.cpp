@@ -26,6 +26,7 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
     const auto Rows = SNew(SVerticalBox);
     const auto Selected = MakeShared<FGuid>();
     const auto Feedback = MakeShared<FText>();
+    const auto Confirm = MakeShared<FGuid>();
     const auto Header = SNew(SHorizontalBox);
     for (const TCHAR* Label : {TEXT("SHIP / FIGHTER"), TEXT("DESIGN"), TEXT("HULL ID"), TEXT("LOCATION"), TEXT("COVERAGE"), TEXT("HULL"), TEXT("STATUS")})
         Header->AddSlot().FillWidth(1).Padding(8, 5)
@@ -63,6 +64,7 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
                     const auto* Entry = Service ? Service->FindShip(Id) : nullptr;
                     if (!Entry) return FText::GetEmpty();
                     if (Entry->bLost) return INVTEXT("LOST");
+                    if (Entry->RentalId.IsValid()) return INVTEXT("RENTED / BASIC");
                     return FText::FromString(UShipInsuranceSubsystem::TierName(
                         UShipInsuranceSubsystem::EffectiveTier(*Entry, FDateTime::UtcNow().ToUnixTimestamp()))).ToUpper();
                 })];
@@ -151,17 +153,47 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
         Rows->AddSlot().AutoHeight().Padding(0, 2)
             [
                 SNew(SButton).ContentPadding(0).HAlign(HAlign_Fill)
+                .Visibility_Lambda([Weak,Id=Hull.HullId](){const auto* H=Weak.IsValid()?Weak->FindShip(Id):nullptr;return H && !H->bSold && !H->bLost?EVisibility::Visible:EVisibility::Collapsed;})
                 .ButtonColorAndOpacity_Lambda([Selected, Id = Hull.HullId]()
                 { return *Selected == Id ? MissionUIStyle::RowSelectedBG : MissionUIStyle::RowBG; })
-                .OnClicked_Lambda([Selected, Id = Hull.HullId]() { *Selected = Id; return FReply::Handled(); })
+                .OnClicked_Lambda([Selected,Confirm, Id = Hull.HullId]() { *Selected = Id;Confirm->Invalidate();return FReply::Handled(); })
                 [Line]
             ];
     }
     if (Insurance->GetShips().IsEmpty())
         Rows->AddSlot().AutoHeight()[SNew(STextBlock).Text(INVTEXT("No ships in your hangar."))];
+    const auto RentalRows=SNew(SVerticalBox);
+    const auto Weak=TWeakObjectPtr<UShipInsuranceSubsystem>(Insurance);
+    if(const auto* Players=Instance->GetSubsystem<UStarshatterPlayerSubsystem>())for(const auto& C:Players->GetPlayerInfo().ShipRentals)
+    {
+        if(C.State!=EShipRentalState::Active && C.UnpaidLiability<=0)continue;
+        RentalRows->AddSlot().AutoHeight().Padding(8,3)[SNew(SHorizontalBox)
+            +SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).AutoWrapText(true)
+                .Text_Lambda([Game=TWeakObjectPtr<UGameInstance>(Instance),Id=C.Id]()
+                {
+                    const auto* P=Game.IsValid()?Game->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+                    const auto* R=P?P->GetPlayerInfo().ShipRentals.FindByPredicate([Id](const auto& E){return E.Id==Id;}):nullptr;if(!R)return FText::GetEmpty();
+                    return FText::FromString(FString::Printf(TEXT("RENTAL %s | %s | DUE %s GMT\nRETURN: %s | OWNER: %s | FEE %lld CR / PREMIUM %lld CR | UNPAID LIABILITY %lld CR"),
+                        *R->HullId.ToString(EGuidFormats::Short),R->State==EShipRentalState::Active?(FDateTime::UtcNow().ToUnixTimestamp()>=R->DueUtc?TEXT("OVERDUE - RETURN REQUIRED"):TEXT("ACTIVE")):TEXT("CLOSED"),
+                        *FDateTime::FromUnixTimestamp(R->DueUtc).ToString(TEXT("%Y-%m-%d %H:%M")),*R->ReturnDock.ToUpper(),*R->Lessor.ToString().ToUpper(),R->Fee,R->Premium,R->UnpaidLiability));
+                })]
+            +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ToolTipText(INVTEXT("Pay outstanding rental loss liability from your wallet; docked service"))
+                .IsEnabled_Lambda([Game=TWeakObjectPtr<UGameInstance>(Instance),Id=C.Id,Weak](){const auto* P=Game.IsValid()?Game->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;return P && Weak.IsValid() && Weak->CanInsure() && P->GetPlayerInfo().ShipRentals.ContainsByPredicate([Id](const auto& R){return R.Id==Id && R.UnpaidLiability>0;});})
+                .OnClicked_Lambda([Weak,Id=C.Id,Feedback](){if(Weak.IsValid())Weak->PayRentalDebt(Id,*Feedback);return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Marketplace)]]];
+    }
     return SNew(SVerticalBox)
         + SVerticalBox::Slot().FillHeight(1)
         [MissionUIStyle::MakeDataPane(SNew(SScrollBox) + SScrollBox::Slot()[Rows])]
+        +SVerticalBox::Slot().AutoHeight().Padding(8,4)[SNew(SHorizontalBox)
+            +SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).AutoWrapText(true).Font(MissionUIStyle::GetRowFont(11))
+                .Text_Lambda([Weak,Selected](){FText Why;if(Weak.IsValid()){const auto* H=Weak->FindShip(*Selected);if(H && H->RentalId.IsValid())Weak->CanReturnRental(*Selected,Why);else Weak->CanSellHull(*Selected,Why);}return Why;})]
+            +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton)
+                .ToolTipText(INVTEXT("Sell an owned hull or return a rental. Select a row, review the quote and click twice to confirm. Active, last owned fighter, loaned and cargo-bearing hulls are protected."))
+                .IsEnabled_Lambda([Weak,Selected](){FText Why;if(!Weak.IsValid())return false;const auto* H=Weak->FindShip(*Selected);return H && (H->RentalId.IsValid()?Weak->CanReturnRental(*Selected,Why):Weak->CanSellHull(*Selected,Why));})
+                .OnClicked_Lambda([Weak,Selected,Confirm,Feedback](){if(!Weak.IsValid())return FReply::Handled();if(*Confirm!=*Selected){*Confirm=*Selected;*Feedback=INVTEXT("Review the quote above. Click CONFIRM again to hand over this hull.");return FReply::Handled();}const auto* H=Weak->FindShip(*Selected);if(H && H->RentalId.IsValid())Weak->ReturnRental(*Selected,*Feedback);else Weak->SellHull(*Selected,*Feedback);Confirm->Invalidate();return FReply::Handled();})
+                [SNew(SHorizontalBox)+SHorizontalBox::Slot().AutoWidth()[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Marketplace)]
+                    +SHorizontalBox::Slot().AutoWidth().Padding(6,0)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text_Lambda([Weak,Selected,Confirm](){const auto* H=Weak.IsValid()?Weak->FindShip(*Selected):nullptr;return *Confirm==*Selected && Selected->IsValid()?INVTEXT("CONFIRM"):H && H->RentalId.IsValid()?INVTEXT("RETURN RENTAL"):INVTEXT("SELL HULL");})]]]]
+        +SVerticalBox::Slot().AutoHeight()[SNew(SBox).MaxDesiredHeight(120)[SNew(SScrollBox)+SScrollBox::Slot()[RentalRows]]]
         + SVerticalBox::Slot().AutoHeight().Padding(8)
         [SNew(STextBlock).Text_Lambda([Feedback]() { return *Feedback; })];
 }

@@ -10,9 +10,9 @@ namespace StarterCraftOwnership
         if(Pilot.Name.IsEmpty() && Pilot.Callsign.IsEmpty())return false;
         const FName Falcon(TEXT("Falcon"));
         int32 Keep=Pilot.HangarShips.IndexOfByPredicate([&](const auto& Hull)
-            {return Hull.Design==Falcon && !Hull.bAssigned && Hull.HullId.IsValid() && !Hull.bLost;});
+            {return Hull.Design==Falcon && !Hull.bAssigned && !Hull.RentalId.IsValid() && Hull.HullId.IsValid() && !Hull.bLost && !Hull.bSold;});
         if(Keep==INDEX_NONE)Keep=Pilot.HangarShips.IndexOfByPredicate([&](const auto& Hull)
-            {return Hull.Design==Falcon && !Hull.bAssigned && Hull.HullId.IsValid();});
+            {return Hull.Design==Falcon && !Hull.bAssigned && !Hull.RentalId.IsValid() && Hull.HullId.IsValid();});
         if(Keep==INDEX_NONE)Keep=Pilot.HangarShips.IndexOfByPredicate([&](const auto& Hull)
             {return Hull.Design==Falcon && Hull.bAssigned && !Hull.bLost && Hull.HullId==Pilot.AssignedHangarHull;});
         if(Keep==INDEX_NONE)Keep=Pilot.HangarShips.IndexOfByPredicate([&](const auto& Hull)
@@ -29,7 +29,7 @@ namespace StarterCraftOwnership
         if(Starter.bAssigned){Starter.bAssigned=false;Starter.Name=TEXT("Falcon");Changed=true;}
         if(Starter.Name==TEXT("Starter Falcon")){Starter.Name=TEXT("Falcon");Changed=true;}
         const FGuid OwnedId=Starter.HullId;
-        const bool Alive=!Starter.bLost;
+        const bool Alive=!Starter.bLost && !Starter.bSold;
         TSet<FGuid> Removed;
         Pilot.HangarShips.RemoveAll([&](const auto& Hull)
         {
@@ -45,5 +45,5 @@ namespace StarterCraftOwnership
         return Changed;
     }
     inline bool VisibleInHangar(const FPlayerHangarShip& Hull,FGuid Active)
-    {return !Hull.bLost && (!Hull.bAssigned || Hull.HullId==Active);}
+    {return !Hull.bLost && !Hull.bSold && (!Hull.bAssigned || Hull.HullId==Active);}
 }

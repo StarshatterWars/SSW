@@ -16,7 +16,7 @@ bool FFractalVerseShipProvisioning::Plan(const FFractalVersePilot& Pilot,int32 S
     {Reason=TEXT("Server career has no readable hangar.");return false;}
     const FGuid Selected=Career.AssignedHangarHull.IsValid()?Career.AssignedHangarHull:Career.SelectedHangarHull;
     const auto* Hull=Career.HangarShips.FindByPredicate([&](const auto& Row){return Row.HullId==Selected;});
-    if(!Hull || Hull->bLost || !Hull->HullId.IsValid() || Hull->Design.IsNone())
+    if(!Hull || Hull->bLost || Hull->bSold || !Hull->HullId.IsValid() || Hull->Design.IsNone())
     {Reason=TEXT("No available assigned or selected hull in this server career.");return false;}
     FFractalVersePlayerShip Candidate; Candidate.Hull=*Hull; Candidate.System=Pilot.HomeSystem; Candidate.Region=Pilot.HomeRegion;
     Candidate.IFF=Career.Empire+1;
