@@ -342,7 +342,7 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
             [SNew(SButton).ToolTipText_Lambda([](){return FText::Format(INVTEXT("Full repair: {0} credits. Restores hull and installed components while docked."), FText::AsNumber(FStationServices::FullRepairCost()));})
                 .IsEnabled_Lambda([](){return FStationServices::FullRepairCost() > 0;})
                 .OnClicked_Lambda([Table, WeakInstance = TWeakObjectPtr<UGameInstance>(GetGameInstance())]()
-                { FStationServices::RepairAll(WeakInstance.Get(), Table->ServiceMessage); return FReply::Handled(); })
+                { FStationServices::RequestRepair(WeakInstance.Get(),[WeakTable=TWeakPtr<FCargoTable>(Table)](bool,const FText& Why,FGuid){if(auto T=WeakTable.Pin()){T->ServiceMessage=Why;T->Refresh();}},Table->ServiceMessage); return FReply::Handled(); })
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Repair)]]
         ]];
 }

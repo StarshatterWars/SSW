@@ -22,7 +22,7 @@ public:
     static bool FactionAllows(const class Ship* Craft,const class Ship* Base);
     static FStationDockContext Context(FName Viewed=NAME_None);
     static bool CanRepair(class UGameInstance*,FText& Reason,FName Viewed=NAME_None);
-    static bool ExecuteRepair(class UGameInstance*,FText& Reason,FName Viewed=NAME_None);
+    static bool ExecuteRepair(class UGameInstance*,FText& Reason,FName Viewed=NAME_None,TFunction<void(bool,const FText&,FGuid)> Completed={});
     static TConstArrayView<FStationServiceDescriptor> Descriptors();
     static bool CanUse(const FStationDockContext&,ESSWStationService,FText& Reason);
 };

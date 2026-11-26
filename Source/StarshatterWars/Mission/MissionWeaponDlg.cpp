@@ -19,6 +19,9 @@
 */
 
 #include "MissionWeaponDlg.h"
+#include "OwnedCommandAI.h"
+#include "GalaxyTrafficSubsystem.h"
+#include "StarshatterPlayerSubsystem.h"
 #include "SimDataEvents.h"
 
 #include "MissionBriefingDlg.h"
@@ -889,6 +892,8 @@ bool UMissionWeaponDlg::CanEditLoadout() const
 {
     auto* Simulation = Sim::GetSim();
     if (!Simulation || Simulation->GetMission() != ResolveMission()) return true;
+    const auto* Domain=GetGameInstance()?GetGameInstance()->GetSubsystem<UGalaxyTrafficSubsystem>():nullptr;
+    if(Domain && Domain->IsTransactionPending())return false;
     auto* Craft = Simulation->GetPlayerShip();
     return Simulation->HasSimulationAuthority() && Craft && !Craft->IsDead() &&
         Craft->GetFlightPhase() <= EOPSMode::ALERT;
@@ -907,7 +912,18 @@ bool UMissionWeaponDlg::ApplyLiveLoadout(MissionLoad* Load)
     auto* Insurance=GetGameInstance()?GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>():nullptr;
     if(!Insurance)return false;
     FText Reason;
-    const bool Applied=Insurance->ApplyStoredLoadout(Stations,UTF8_TO_TCHAR(Load->GetName().data()),Reason);
+    TArray<int32> Before;for(int32 I=0;I<Design->Hardpoint.Num();++I)Before.Add(Craft->GetLoadout()?Craft->GetLoadout()[I]:-1);
+    const auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* Owned=P?Insurance->FindShip(P->GetPlayerInfo().AssignedHangarHull):nullptr;
+    const FString BeforeName=Owned?Owned->LoadoutName:FString();const auto Expected=Simulation;const uint64 Epoch=Simulation->GetSimulationEpoch();auto* MissionPtr=Simulation->GetMission();auto* Element=ResolvePlayerElement();
+    FOwnedActionSelection W;W.Action=EOwnedCommand::Loadout;W.Stations=Stations;W.Loadout=UTF8_TO_TCHAR(Load->GetName().data());
+    const TWeakObjectPtr<UMissionWeaponDlg> Weak(this);
+    const bool Applied=Insurance->RequestOwnedAction(W,[Weak,Expected,Epoch,MissionPtr,Element,Load,Before,BeforeName](bool Saved,const FText&,FGuid)
+    {
+        if(Sim::GetSim()!=Expected || Expected->GetSimulationEpoch()!=Epoch || Expected->GetMission()!=MissionPtr)return;
+        if(!Saved && MissionPtr && MissionPtr->GetElements().contains(Element) && FindPlayerMissionLoad(Element)==Load)
+        {for(int32 I=0;I<Before.Num();++I)Load->SetStation(I,Before[I]);Load->SetName(TCHAR_TO_UTF8(*BeforeName));}
+        if(auto* Panel=Weak.Get()){Panel->RefreshFromMission();if(Panel->StoresValueText)if(auto* Service=Panel->GetGameInstance()->GetSubsystem<UShipInsuranceSubsystem>())Panel->StoresValueText->SetText(Service->LoadoutStoresText());}
+    },Reason);
     if(StoresValueText)StoresValueText->SetText(Insurance->LoadoutStoresText());
     return Applied;
 }

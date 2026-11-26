@@ -44,7 +44,7 @@ TSharedRef<SWidget> UStationServicesDlg::RebuildWidget()
                 .ToolTipText_Lambda([Weak,Service,Explanation=FString(Descriptor.Explanation)]()
                 {FText Reason;if(Service==ESSWStationService::Repair && Weak.IsValid()){StationServicesAI::CanRepair(Weak->GetGameInstance(),Reason,Weak->GetStation());return Reason;}return StationServicesAI::CanUse(StationServicesAI::Context(Weak.IsValid()?Weak->GetStation():NAME_None),Service,Reason)?FText::FromString(Explanation):Reason;})
                 .OnClicked_Lambda([Weak,Service,Feedback]()
-                {FText Reason;if(Weak.IsValid()){if(Service==ESSWStationService::Repair)StationServicesAI::ExecuteRepair(Weak->GetGameInstance(),*Feedback,Weak->GetStation());else if(StationServicesAI::CanUse(StationServicesAI::Context(Weak.IsValid()?Weak->GetStation():NAME_None),Service,Reason))Weak->OnOpenService.ExecuteIfBound(Service);}return FReply::Handled();})
+                {FText Reason;if(Weak.IsValid()){if(Service==ESSWStationService::Repair)StationServicesAI::ExecuteRepair(Weak->GetGameInstance(),*Feedback,Weak->GetStation(),[Feedback](bool,const FText& Why,FGuid){*Feedback=Why;});else if(StationServicesAI::CanUse(StationServicesAI::Context(Weak.IsValid()?Weak->GetStation():NAME_None),Service,Reason))Weak->OnOpenService.ExecuteIfBound(Service);}return FReply::Handled();})
                 [SNew(SHorizontalBox)
                     + SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(0,0,12,0)[SNew(SShipSystemIcon).Icon(ServiceIcon(Service))]
                     + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center)

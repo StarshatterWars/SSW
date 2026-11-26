@@ -1,4 +1,5 @@
 #include "ShipFitDlg.h"
+#include "OwnedCommandAI.h"
 #include "ShipStoreSubsystem.h"
 #include "ShipStoreAI.h"
 #include "FittingMetrics.h"
@@ -145,7 +146,7 @@ TSharedRef<SWidget> UShipFitDlg::RebuildWidget()
                 })
                 .OnClicked_Lambda([Weak, Id = Hull, Selected, Grade, Feedback]()
                 {
-                    if (Weak.IsValid()) Weak->FitComponent(Id, *Selected, *Grade, *Feedback);
+                    if (Weak.IsValid()){FOwnedActionSelection W;W.Action=EOwnedCommand::Fit;W.Hull=Id;W.Slot=*Selected;W.Grade=*Grade;Weak->RequestOwnedAction(W,[Feedback](bool,const FText& Why,FGuid){*Feedback=Why;},*Feedback);}
                     return FReply::Handled();
                 })
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Repair)]

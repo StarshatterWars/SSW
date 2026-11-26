@@ -1,4 +1,5 @@
 #include "HangarDlg.h"
+#include "OwnedCommandAI.h"
 #include "StarterCraftOwnership.h"
 #include "StationServices.h"
 #include "StarshatterPlayerSubsystem.h"
@@ -148,7 +149,7 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
                 { return Repairable() ? FText::Format(INVTEXT("Full repair — {0} credits"), FText::AsNumber(FStationServices::FullRepairCost())) : INVTEXT("Repair — dock the assigned fighter or ship first"); })
                 .IsEnabled_Lambda([Repairable]() { return Repairable() && FStationServices::FullRepairCost() > 0; })
                 .OnClicked_Lambda([Instance = TWeakObjectPtr<UGameInstance>(GetGameInstance()), Feedback, Repairable]()
-                { if (Repairable()) FStationServices::RepairAll(Instance.Get(), *Feedback); return FReply::Handled(); })
+                { if (Repairable()) FStationServices::RequestRepair(Instance.Get(),[Feedback](bool,const FText& Why,FGuid){*Feedback=Why;},*Feedback); return FReply::Handled(); })
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Repair)]];
         Rows->AddSlot().AutoHeight().Padding(0, 2)
             [
@@ -179,7 +180,7 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
                 })]
             +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ToolTipText(INVTEXT("Pay outstanding rental loss liability from your wallet; docked service"))
                 .IsEnabled_Lambda([Game=TWeakObjectPtr<UGameInstance>(Instance),Id=C.Id,Weak](){const auto* P=Game.IsValid()?Game->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;return P && Weak.IsValid() && Weak->CanInsure() && P->GetPlayerInfo().ShipRentals.ContainsByPredicate([Id](const auto& R){return R.Id==Id && R.UnpaidLiability>0;});})
-                .OnClicked_Lambda([Weak,Id=C.Id,Feedback](){if(Weak.IsValid())Weak->PayRentalDebt(Id,*Feedback);return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Marketplace)]]];
+                .OnClicked_Lambda([Weak,Id=C.Id,Feedback](){if(Weak.IsValid()){FOwnedActionSelection W;W.Action=EOwnedCommand::Debt;W.Hull=Id;Weak->RequestOwnedAction(W,[Feedback](bool,const FText& Why,FGuid){*Feedback=Why;},*Feedback);}return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Marketplace)]]];
     }
     return SNew(SVerticalBox)
         + SVerticalBox::Slot().FillHeight(1)
@@ -190,7 +191,7 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
             +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton)
                 .ToolTipText(INVTEXT("Sell an owned hull or return a rental. Select a row, review the quote and click twice to confirm. Active, last owned fighter, loaned and cargo-bearing hulls are protected."))
                 .IsEnabled_Lambda([Weak,Selected](){FText Why;if(!Weak.IsValid())return false;const auto* H=Weak->FindShip(*Selected);return H && (H->RentalId.IsValid()?Weak->CanReturnRental(*Selected,Why):Weak->CanSellHull(*Selected,Why));})
-                .OnClicked_Lambda([Weak,Selected,Confirm,Feedback](){if(!Weak.IsValid())return FReply::Handled();if(*Confirm!=*Selected){*Confirm=*Selected;*Feedback=INVTEXT("Review the quote above. Click CONFIRM again to hand over this hull.");return FReply::Handled();}const auto* H=Weak->FindShip(*Selected);if(H && H->RentalId.IsValid())Weak->ReturnRental(*Selected,*Feedback);else Weak->SellHull(*Selected,*Feedback);Confirm->Invalidate();return FReply::Handled();})
+                .OnClicked_Lambda([Weak,Selected,Confirm,Feedback](){if(!Weak.IsValid())return FReply::Handled();if(*Confirm!=*Selected){*Confirm=*Selected;*Feedback=INVTEXT("Review the quote above. Click CONFIRM again to hand over this hull.");return FReply::Handled();}const auto* H=Weak->FindShip(*Selected);FOwnedActionSelection W;W.Action=H && H->RentalId.IsValid()?EOwnedCommand::Return:EOwnedCommand::Sell;W.Hull=*Selected;Weak->RequestOwnedAction(W,[Feedback](bool,const FText& Why,FGuid){*Feedback=Why;},*Feedback);Confirm->Invalidate();return FReply::Handled();})
                 [SNew(SHorizontalBox)+SHorizontalBox::Slot().AutoWidth()[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Marketplace)]
                     +SHorizontalBox::Slot().AutoWidth().Padding(6,0)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text_Lambda([Weak,Selected,Confirm](){const auto* H=Weak.IsValid()?Weak->FindShip(*Selected):nullptr;return *Confirm==*Selected && Selected->IsValid()?INVTEXT("CONFIRM"):H && H->RentalId.IsValid()?INVTEXT("RETURN RENTAL"):INVTEXT("SELL HULL");})]]]]
         +SVerticalBox::Slot().AutoHeight()[SNew(SBox).MaxDesiredHeight(120)[SNew(SScrollBox)+SScrollBox::Slot()[RentalRows]]]

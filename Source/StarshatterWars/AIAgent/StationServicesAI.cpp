@@ -71,7 +71,7 @@ bool StationServicesAI::CanRepair(UGameInstance* Instance,FText& Reason,FName Vi
     if(Wallet->GetBalance()<Cost){Reason=FText::Format(INVTEXT("INSUFFICIENT CREDITS - {0}"),Reason);return false;}
     return true;
 }
-bool StationServicesAI::ExecuteRepair(UGameInstance* Instance,FText& Reason,FName Viewed)
+bool StationServicesAI::ExecuteRepair(UGameInstance* Instance,FText& Reason,FName Viewed,TFunction<void(bool,const FText&,FGuid)> Completed)
 {
-    return CanRepair(Instance,Reason,Viewed) && FStationServices::RepairAll(Instance,Reason);
+    return CanRepair(Instance,Reason,Viewed) && FStationServices::RequestRepair(Instance,MoveTemp(Completed),Reason);
 }

@@ -6,6 +6,7 @@
 #include "ShipStoreAI.h"
 #include "MarketCommandAI.h"
 #include "LedgerCommandAI.h"
+#include "OwnedCommandAI.h"
 #include "CampaignFleet.h"
 #include "RepairAI.h"
 #include "HAL/CriticalSection.h"
@@ -57,6 +58,7 @@ struct FNativeEconomyInput
     TUniquePtr<FNativeMarketCommand> Market;
     TUniquePtr<FNativeFleetRepairCommand> Repair;
     TUniquePtr<FNativeLedgerCommand> Ledger;
+    TUniquePtr<FNativeOwnedCommand> Owned;
 };
 struct FNativeEconomyResult
 {
@@ -71,6 +73,7 @@ struct FNativeEconomyResult
     TUniquePtr<FNativeMarketReply> Market;
     TUniquePtr<FNativeFleetRepairReply> Repair;
     TUniquePtr<FNativeLedgerReply> Ledger;
+    TUniquePtr<FNativeOwnedReply> Owned;
 };
 // Dedicated one-thread queue. Requests and results own all their data; no actors or UObjects.
 class STARSHATTERWARS_API FNativeEconomyWorker
@@ -85,6 +88,7 @@ public:
     static FNativeEconomyResult Calculate(FNativeEconomyInput&&);
     static bool Commit(FNativeEconomyResult&&,FEconomyState&,uint64 CurrentRevision,const FString& Profile);
     static bool CommitPurchase(FNativeEconomyResult&&,FS_PlayerGameInfo&,uint64 CurrentRevision,const FString& Profile,TFunctionRef<bool()> Save,FText& Reason);
+    static bool CommitOwned(FNativeEconomyResult&&,FS_PlayerGameInfo&,uint64,const FString&,TFunctionRef<bool()>,FText&);
     static bool CommitLedger(FNativeEconomyResult&&,FEconomyState&,uint64,const FString&,TFunctionRef<bool()>,FText&);
     static bool CommitRepair(FNativeEconomyResult&&,FEconomyState&,FCampaignFleetState&,uint64,const FString&,TFunctionRef<bool()>,FText&);
     static bool CommitMarket(FNativeEconomyResult&&,FEconomyState&,uint64 CurrentRevision,const FString& Profile,TFunctionRef<bool()> Save,FText& Reason);

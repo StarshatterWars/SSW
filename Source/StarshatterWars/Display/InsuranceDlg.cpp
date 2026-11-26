@@ -1,4 +1,5 @@
 #include "InsuranceDlg.h"
+#include "OwnedCommandAI.h"
 #include "ShipInsuranceSubsystem.h"
 #include "Engine/GameInstance.h"
 #include "MissionUIStyle.h"
@@ -121,7 +122,7 @@ TSharedRef<SWidget> UInsuranceDlg::RebuildWidget()
                 })
                 .OnClicked_Lambda([Weak, Selected, Feedback, Id = Hull]()
                 {
-                    if (auto* Insurance = Weak.Get()) Insurance->PurchasePolicy(Id, *Selected, *Feedback);
+                    if (auto* Insurance = Weak.Get()){FOwnedActionSelection W;W.Action=EOwnedCommand::Policy;W.Hull=Id;W.Tier=*Selected;Insurance->RequestOwnedAction(W,[Feedback](bool,const FText& Why,FGuid){*Feedback=Why;},*Feedback);}
                     return FReply::Handled();
                 })
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Insurance)]

@@ -98,3 +98,9 @@ Remaining Phase F adapter work: hull commerce/insurance, inventory/manufacturing
 Build 20261126-203246Z passed Editor and Windows Development compilation with zero C++ warning/error diagnostics. All 411 automated regressions passed with zero test warnings, failures or skips (Saved/Automation/PhaseF-Ledger-Verified); all five focused ledger tests passed. Logs: PhaseF-Ledger-Editor-Verified.log and PhaseF-Ledger-Client.log.
 
 See Phase-F-Ledger-Adapters.md. The live cargo, blueprint and industry panels now submit immutable requests. Training contract publication/lifecycle, acceptance, bidding, delivery, abandonment and claims calculate on the worker; saved ledger state drives sealed cargo projection. Contract and market deadlines are serviced while their panels are closed. Unchanged maintenance results do not save or replace live state. A native headless fallback without player/UI adapters remains available. Hull commerce and insurance are next; Phase F remains open.
+
+## Ownership and live-scene adapters
+
+Build 20261126-205131Z passed Editor and Windows Development builds with zero C++ warning/error diagnostics and correct own-header/generated-header order. All 417 regressions passed with zero test warnings/failures/skips (Saved/Automation/PhaseF-Owned-Verified); all six focused ownership tests passed. Logs: PhaseF-Owned-Editor-Verified.log and PhaseF-Owned-Client.log.
+
+See Phase-F-Owned-Adapters.md. Live hull commerce, policies/claims, local component fitting, missile-loadout exchange, mining-drone transfers and full station repairs calculate through native ownership commands. Game-thread adapters retain physical reserve transfer, live projection and saved confirmation/rollback. A critical-loss transition barrier runs before mission retirement and shutdown. Compatibility native APIs remain for callers/tests; live UI uses the worker. Skill financial actions are the final identified UI adapter migration.

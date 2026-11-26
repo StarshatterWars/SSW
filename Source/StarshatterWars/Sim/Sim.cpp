@@ -535,6 +535,7 @@ void Sim::UnloadMission()
     PreparedSceneGate.Reset();
     if (bUnloadingMission) return;
     TGuardValue<bool> UnloadGuard(bUnloadingMission, true);
+    if(auto* World=NetworkWorld.Get())if(auto* Instance=World->GetGameInstance())if(auto* Insurance=Instance->GetSubsystem<UShipInsuranceSubsystem>())Insurance->FlushLossBeforeTransition();
     const int RegionCount = regions.size();
     const int JumpCount = jumplist.size();
     const int SplashCount = splashlist.size();
@@ -2631,6 +2632,7 @@ bool Sim::IsTrainingLaunchLeaderPending()
 bool Sim::FindReadyPlayerLaunchSlot(Ship* Player, Hangar*& CarrierHangar, int& Squadron, int& Slot)
 {
     if (NeedsTrainingLaunchClearance()) return false;
+    if(auto* World=NetworkWorld.Get())if(auto* Instance=World->GetGameInstance())if(const auto* Domain=Instance->GetSubsystem<UGalaxyTrafficSubsystem>();Domain && Domain->IsTransactionPending())return false;
 
     if (!Player || Player->IsDead() || bPlayerLaunchRequested || IsTrainingLaunchLeaderPending() ||
         (PendingLaunchPlayer && PendingLaunchPlayer != Player))

@@ -1,4 +1,5 @@
 #include "GalaxyTrafficSubsystem.h"
+#include "HAL/PlatformProcess.h"
 #include "GeneratedShipNames.h"
 #include "FractalVerseSubsystem.h"
 #include "Galaxy.h"
@@ -140,7 +141,7 @@ void UGalaxyTrafficSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 }
 void UGalaxyTrafficSubsystem::Deinitialize()
 {
-    bShuttingDown=true;
+    FlushCriticalOwned();bShuttingDown=true;
     if(auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>())Players->OnPlayerSaveLoaded.RemoveDynamic(this,&UGalaxyTrafficSubsystem::ProfileLoaded);
     const auto Cancel=[](TOptional<FQueuedEconomyRequest>& Request){if(Request.IsSet()){auto Cancelled=MoveTemp(Request.GetValue());Request.Reset();Cancelled.Complete(false,INVTEXT("Economy request cancelled during shutdown. Nothing exchanged."));}};
     while(!PendingCommands.IsEmpty()){const FGuid Id=PendingCommands.CreateConstIterator().Key();CancelQueuedTransaction(Id);}
@@ -606,7 +607,7 @@ void UGalaxyTrafficSubsystem::EconomyWorkerCompleted()
 {
     check(IsInGameThread());if(!EconomyWorker)return;auto Result=EconomyWorker->TakeResult();if(!Result)return;
     auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
-    if((Result->Purchase || Result->Market || Result->Repair || Result->Ledger) && (!Players || !Players->HasLoaded() || bShuttingDown || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled ||
+    if((Result->Purchase || Result->Market || Result->Repair || Result->Ledger || Result->Owned) && (!Players || !Players->HasLoaded() || bShuttingDown || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled ||
         (Sim::GetSim() && (!Sim::GetSim()->HasSimulationAuthority() || Sim::GetSim()->IsNetworked()))))
     {
         if(ActiveCommand.IsSet()){auto Cancelled=MoveTemp(ActiveCommand.GetValue());ActiveCommand.Reset();RequestQueue.Finish(Cancelled.Receipt,false,INVTEXT("Authority or profile changed."));OnTransactionQueueChanged.Broadcast();Cancelled.Complete(false,INVTEXT("Economy request cancelled after an authority or profile change. Nothing exchanged."));}
@@ -614,6 +615,18 @@ void UGalaxyTrafficSubsystem::EconomyWorkerCompleted()
     }
     if(!Players || !Players->HasLoaded() || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)return;
     if(const auto* Simulation=Sim::GetSim();Simulation && (!Simulation->HasSimulationAuthority() || Simulation->IsNetworked()))return;
+    if(Result->Owned)
+    {
+        if(!ActiveCommand.IsSet())return;
+        auto Request=MoveTemp(ActiveCommand.GetValue());ActiveCommand.Reset();FText Reason;bool Accepted=false;
+        const FGuid Object=Request.Owned?Request.Owned->Hull:FGuid();
+        if(!bShuttingDown && Request.Validate && Request.Validate(Reason) && Request.Persist)
+        {
+            TGuardValue<bool> Applying(bApplyingWorkerResult,true);
+            Accepted=FNativeEconomyWorker::CommitOwned(MoveTemp(*Result),Players->GetMutablePlayerInfo(),EconomyMutationRevision,EconomyProfileToken(),[&Request](){return Request.Persist();},Reason);
+        }
+        bEconomyChanged=true;EconomyController.WakeProduction();RequestQueue.Finish(Request.Receipt,Accepted,Reason);OnTransactionQueueChanged.Broadcast();Request.Complete(Accepted,Reason,Object);PumpEconomyRequests();ScheduleManagement();return;
+    }
     if(Result->Ledger)
     {
         if(!ActiveCommand.IsSet())return;
@@ -681,6 +694,11 @@ bool UGalaxyTrafficSubsystem::QueueStorePurchase(FNativeStorePurchase&& Command,
     FQueuedEconomyRequest Request;Request.Receipt=Command.Receipt;Request.Label=FText::Format(INVTEXT("PURCHASE {0} x {1}"),FText::FromName(Command.Offer.Id),FText::AsNumber(Command.Quantity));Request.Command=MoveTemp(Command);Request.Validate=MoveTemp(Validate);Request.Completed=MoveTemp(Completed);
     return EnqueueEconomyRequest(MoveTemp(Request),Reason);
 }
+bool UGalaxyTrafficSubsystem::QueueOwnedCommand(FNativeOwnedCommand&& Command,const FText& Label,TFunction<bool(FText&)>&& Validate,TFunction<bool()>&& Persist,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Reason)
+{
+    FQueuedEconomyRequest Request;Request.Receipt=Command.Receipt;Request.bCritical=Command.Action==EOwnedCommand::Loss;Request.Label=Label;Request.Owned=MakeUnique<FNativeOwnedCommand>(MoveTemp(Command));
+    Request.Validate=MoveTemp(Validate);Request.Persist=MoveTemp(Persist);Request.MarketCompleted=MoveTemp(Completed);return EnqueueEconomyRequest(MoveTemp(Request),Reason);
+}
 bool UGalaxyTrafficSubsystem::QueueLedgerCommand(FNativeLedgerCommand&& Command,const FText& Label,TFunction<bool(FText&)>&& Validate,TFunction<bool()>&& Persist,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Reason)
 {
     FQueuedEconomyRequest Request;Request.Receipt=Command.Receipt;Request.Label=Label;Request.Ledger=MakeUnique<FNativeLedgerCommand>(MoveTemp(Command));
@@ -702,6 +720,11 @@ bool UGalaxyTrafficSubsystem::QueueMarketCommand(FNativeMarketCommand&& Command,
 bool UGalaxyTrafficSubsystem::EnqueueEconomyRequest(FQueuedEconomyRequest&& Request,FText& Reason)
 {
     check(IsInGameThread());
+    if(Request.bCritical && !CanQueueTransaction() && !bShuttingDown)
+    {
+        FGuid Cancel;for(const auto& Pair:PendingCommands)if(!Pair.Value.bCritical){Cancel=Pair.Key;break;}
+        if(Cancel.IsValid())CancelQueuedTransaction(Cancel);
+    }
     if(!CanQueueTransaction() || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)
     {Reason=INVTEXT("The transaction queue is full or unavailable. Nothing exchanged.");return false;}
     if(!Request.Validate || !Request.Validate(Reason))return false;
@@ -731,7 +754,8 @@ void UGalaxyTrafficSubsystem::PumpEconomyRequests()
             auto Rejected=MoveTemp(*Pending);PendingCommands.Remove(Id);RequestQueue.Start(Id);RequestQueue.Finish(Id,false,Reason);OnTransactionQueueChanged.Broadcast();Rejected.Complete(false,Reason);continue;
         }
         FNativeEconomyInput Input;Input.State=Players->GetEconomy();Input.Revision=EconomyMutationRevision;Input.Profile=EconomyProfileToken();
-        if(Pending->Ledger)Input.Ledger=MakeUnique<FNativeLedgerCommand>(*Pending->Ledger);
+        if(Pending->Owned){Input.Owned=MakeUnique<FNativeOwnedCommand>(*Pending->Owned);Input.Owned->Source=FNativeOwnedState::Capture(Players->GetPlayerInfo());}
+        else if(Pending->Ledger)Input.Ledger=MakeUnique<FNativeLedgerCommand>(*Pending->Ledger);
         else if(Pending->Repair)Input.Repair=MakeUnique<FNativeFleetRepairCommand>(*Pending->Repair);
         else if(Pending->Market)Input.Market=MakeUnique<FNativeMarketCommand>(*Pending->Market);
         else
@@ -746,5 +770,24 @@ void UGalaxyTrafficSubsystem::PumpEconomyRequests()
             ActiveCommand=MoveTemp(*Pending);PendingCommands.Remove(Id);RequestQueue.Start(Id);OnTransactionQueueChanged.Broadcast();
         }
         return;
+    }
+}
+
+void UGalaxyTrafficSubsystem::FlushCriticalOwned()
+{
+    check(IsInGameThread());
+    bool Critical=ActiveCommand.IsSet() && ActiveCommand->bCritical;
+    for(const auto& Pair:PendingCommands)Critical|=Pair.Value.bCritical;
+    if(!Critical)return;
+    // A transition/save barrier, never a flight tick. Native tasks contain no I/O
+    // or UI waits. Drain the confirmed loss before retiring its scene/profile.
+    TArray<FGuid> Cancel;for(const auto& Pair:PendingCommands)if(!Pair.Value.bCritical)Cancel.Add(Pair.Key);
+    for(const auto Id:Cancel)CancelQueuedTransaction(Id);
+    if(ActiveCommand.IsSet() && !ActiveCommand->bCritical)
+        ActiveCommand->Validate=[](FText& Why){Why=INVTEXT("Cancelled for a scene transition. Nothing exchanged.");return false;};
+    while(ActiveCommand.IsSet() || !PendingCommands.IsEmpty())
+    {
+        if(EconomyWorker && EconomyWorker->IsBusy()){FPlatformProcess::SleepNoStats(.001f);continue;}
+        EconomyWorkerCompleted();PumpEconomyRequests();
     }
 }

@@ -1,4 +1,6 @@
 #include "StationServices.h"
+#include "OwnedCommandAI.h"
+#include "ShipInsuranceSubsystem.h"
 #include "MarketCommandAI.h"
 #include "GalaxyTrafficSubsystem.h"
 #include "ProductionCatalog.h"
@@ -386,4 +388,10 @@ bool FStationServices::RepairAll(UGameInstance* Instance, FText& Reason)
     const int64 Cost = FullRepairCost();
     if (!Instance || !IsDocked() || Cost <= 0) { Reason = INVTEXT("Dock with a damaged fighter or ship to use the repair service."); return false; }
     return FOwnedHullCondition::RepairAndSave(Instance,*Sim::GetSim()->GetPlayerShip(),Cost,Reason);
+}
+
+bool FStationServices::RequestRepair(UGameInstance* Instance,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Reason)
+{
+    auto* Insurance=Instance?Instance->GetSubsystem<UShipInsuranceSubsystem>():nullptr;if(!Insurance)return false;
+    FOwnedActionSelection W;W.Action=EOwnedCommand::Repair;return Insurance->RequestOwnedAction(W,MoveTemp(Completed),Reason);
 }

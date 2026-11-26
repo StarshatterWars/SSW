@@ -30,9 +30,11 @@ public:
     int32 GetRealizedShipCount()const{return LiveShips.Num();}
     // Admission and persistence execute on the game thread. Only value commands reach the worker.
     bool QueueStorePurchase(FNativeStorePurchase&&,TFunction<bool(FText&)>&&,TFunction<void(bool,const FText&)>&&,FText&);
+    bool QueueOwnedCommand(FNativeOwnedCommand&&,const FText&,TFunction<bool(FText&)>&&,TFunction<bool()>&&,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
     bool QueueLedgerCommand(FNativeLedgerCommand&&,const FText& Label,TFunction<bool(FText&)>&&,TFunction<bool()>&&,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
     bool QueueFleetRepair(FNativeFleetRepairCommand&&,TFunction<FCampaignFleetState*()>&&,TFunction<bool(FText&)>&&,TFunction<void(bool,const FFleetRepairStep&,const FText&)>&&,FText&);
     bool QueueMarketCommand(FNativeMarketCommand&&,TFunction<bool(FText&)>&&,TFunction<bool()>&&,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
+    void FlushCriticalOwned();
     bool IsTransactionPending()const{return ActiveCommand.IsSet() || RequestQueue.Count()>0;}
     bool CanQueueTransaction()const{return !bShuttingDown && RequestQueue.Count()<FEconomyCommandQueue::Capacity;}
     const TArray<FEconomyRequestRow>& GetTransactionQueue()const{return RequestQueue.Snapshot();}
@@ -45,10 +47,12 @@ private:
         TUniquePtr<FNativeMarketCommand> Market;
         TUniquePtr<FNativeFleetRepairCommand> Repair;
         TUniquePtr<FNativeLedgerCommand> Ledger;
+        TUniquePtr<FNativeOwnedCommand> Owned;
         TFunction<FCampaignFleetState*()> LiveFleet;
         TFunction<void(bool,const FFleetRepairStep&,const FText&)> RepairCompleted;
         FString Profile;
         FGuid Receipt;
+        bool bCritical=false;
         FText Label;
         TFunction<bool(FText&)> Validate;
         TFunction<void(bool,const FText&)> Completed;

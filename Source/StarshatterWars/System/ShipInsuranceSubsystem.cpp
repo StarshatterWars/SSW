@@ -1,4 +1,6 @@
 #include "ShipInsuranceSubsystem.h"
+#include "OwnedCommandAI.h"
+#include "GalaxyTrafficSubsystem.h"
 #include "ShipCommerceAI.h"
 #include "EconomyAI.h"
 #include "SimDataEvents.h"
@@ -8,6 +10,7 @@
 #include "SerializedHullStockAI.h"
 #include "StarterCraftOwnership.h"
 #include "ShipStoreAI.h"
+#include "ShipStoreSubsystem.h"
 #include "OrdnanceMagazine.h"
 #include "Weapon.h"
 #include "WeaponGroup.h"
@@ -132,7 +135,7 @@ void UShipInsuranceSubsystem::RefreshAssignment()
         // Do not attribute a newly provisioned/loaner death to a merely selected owned hull.
         if (Current && (Current->bAssigned || FOwnedHullCondition::IsOwnedLive(*Current,Pilot.AssignedHangarHull,
             Design,Craft->GetCargoInventoryKey(),FreeFlight)))
-        { FText Ignored; SettleLoss(Current->HullId,Ignored); }
+        { FText Ignored;FOwnedActionSelection W;W.Action=EOwnedCommand::Loss;W.Hull=Current->HullId;RequestOwnedAction(W,{},Ignored); }
         return;
     }
     // Mission-assigned craft never inherit an owned hull solely because their designs match.
@@ -862,4 +865,177 @@ bool UShipInsuranceSubsystem::PayRentalDebt(FGuid Rental,FText& Why)
 {
     auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
     return P && CanInsure() && ShipCommerceAI::PayRentalDebt(P->GetMutablePlayerInfo(),Rental,FGuid::NewGuid(),[P](){return P->SaveActivePlayerProgress();},Why);
+}
+
+bool UShipInsuranceSubsystem::RequestOwnedAction(const FOwnedActionSelection& Selection,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Why)
+{
+    check(IsInGameThread());auto W=Selection;auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();auto* S=Sim::GetSim();auto* Craft=S?S->GetPlayerShip():nullptr;
+    auto* Domain=GetGameInstance()->GetSubsystem<UGalaxyTrafficSubsystem>();
+    if(!P || !P->HasLoaded() || !S || !S->HasSimulationAuthority() || S->IsNetworked() || !Craft || !Craft->Design() || !Domain)
+    {Why=INVTEXT("The authoritative pilot service is unavailable.");return false;}
+    if(W.Action==EOwnedCommand::Repair || W.Action==EOwnedCommand::Loadout || W.Action==EOwnedCommand::TransferDrone)W.Hull=P->GetPlayerInfo().AssignedHangarHull;
+    const bool Loss=W.Action==EOwnedCommand::Loss;
+    if(Loss && bLossPending){Why=INVTEXT("Insurance settlement is processing.");return false;}
+    if(!Loss && (!FStationServices::IsDocked() || Craft->IsDead() || Craft->IsDying())){Why=INVTEXT("Dock with a live craft to use this service.");return false;}
+    P->GetEconomy();FOwnedHullCondition::CaptureActive(P->GetMutablePlayerInfo());
+    const auto& Pilot=P->GetPlayerInfo();const auto* Owned=Pilot.HangarShips.FindByPredicate([&](const auto& H){return H.HullId==W.Hull;});
+    FNativeOwnedCommand C;C.Action=W.Action;C.Hull=W.Hull;C.Receipt=FGuid::NewGuid();C.NowUtc=FDateTime::UtcNow().ToUnixTimestamp();C.Days=W.Days;C.Quantity=W.Quantity;C.Slot=W.Slot;C.Grade=W.Grade;C.Tier=W.Tier;C.Stations=W.Stations;C.Loadout=W.Loadout;
+    C.Dock.Location=OwnedHullLocation::Dock(*Craft);C.Hold=Craft->GetCargoInventoryKey();
+    TOptional<FPlayerHangarShip> OriginalHull,OriginalStock;TOptional<FSerializedHullStock> OriginalSerial;
+    if(Owned)OriginalHull=*Owned;if(const auto* Stock=Pilot.Economy.UsedHullStock.Find(W.Hull))OriginalStock=*Stock;
+    if(const auto* Serial=Pilot.Economy.SerializedHulls.Find(W.Hull))OriginalSerial=*Serial;
+    FString Error;int32 ReserveSquadron=INDEX_NONE,ReserveSlot=INDEX_NONE;TOptional<ComponentDesign> Calibration;
+    FPlayerHangarShip BeforeLive;FOwnedHullCondition::Capture(*Craft,BeforeLive);const auto BeforeStations=CurrentStations(*Craft);
+    if(W.Action==EOwnedCommand::Purchase || W.Action==EOwnedCommand::Rent)
+    {
+        if(!W.Hull.IsValid() || !(W.Action==EOwnedCommand::Rent?CanRentHull(W.Design,W.Hull,W.Days,Why):CanPurchaseHull(W.Design,Why,W.Hull)))return false;
+        const auto* Def=ShipDesignRegistry::Find(W.Design);if(!Def || !FShipCommerceRules::Load(C.Rules,Error))return false;
+        C.Dock=CommerceDock(Pilot,W.Design,W.Hull);C.BaseCost=Def->BaseCost;
+        if(OriginalStock.IsSet())C.PreparedHull=OriginalStock.GetValue();
+        else
+        {
+            C.PreparedHull.HullId=W.Hull;C.PreparedHull.Design=W.Design;C.PreparedHull.Name=Def->DisplayName.IsEmpty()?Def->ShipName:Def->DisplayName;
+            C.PreparedHull.HullValue=W.Action==EOwnedCommand::Purchase?HullPurchasePrice(W.Design,W.Hull):Def->BaseCost;
+            if(!Def->Loadout.IsEmpty()){C.PreparedHull.LoadoutName=Def->Loadout[0].Name;C.PreparedHull.LoadoutStations=Def->Loadout[0].Stations;}
+            FShipEquipment::InitializePurchase(C.PreparedHull,*Def);
+        }
+        C.Cost=HullPurchasePrice(W.Design,W.Hull);
+        if(W.Action==EOwnedCommand::Rent)
+        {auto Valued=C.PreparedHull;Valued.bCashPurchased=false;Valued.InstalledComponentValue=0;C.Cost=ShipCommerceAI::RentalFee(Def->BaseCost,W.Days,C.Rules)+Quote(Valued,EShipInsuranceTier::Basic).Premium;}
+        if(!OriginalStock.IsSet() && DockedCarrierOffer(Pilot,W.Design).IsSet())
+        {
+            auto* H=Craft->GetCarrier()?Craft->GetCarrier()->GetHangar():nullptr;if(!H || !OriginalSerial.IsSet())return false;
+            for(int32 I=0;I<H->NumSquadrons();++I)if(OriginalSerial->Squadron.Equals(UTF8_TO_TCHAR(H->SquadronName(I).data()),ESearchCase::IgnoreCase))ReserveSquadron=I;
+            ReserveSlot=OriginalSerial->Slot;if(ReserveSquadron==INDEX_NONE || ReserveSlot==INDEX_NONE)return false;
+        }
+    }
+    else if(W.Action==EOwnedCommand::Sell || W.Action==EOwnedCommand::Return)
+    {
+        if(!Owned || !(W.Action==EOwnedCommand::Sell?CanSellHull(W.Hull,Why):CanReturnRental(W.Hull,Why)) || !FShipCommerceRules::Load(C.Rules,Error))return false;
+        C.Dock=CommerceDock(Pilot,Owned->Design);C.PreparedHull=*Owned;FShipEquipment::SeparateValue(C.PreparedHull);
+        C.Cost=ShipCommerceAI::SalePrice(C.PreparedHull,C.Rules);for(const auto& Pair:ShipDesignRegistry::GetAll())C.Categories.Add(Pair.Key,Pair.Value.Category);
+    }
+    else if(W.Action==EOwnedCommand::Policy)
+    {
+        if(!Owned || !CanModifyHull(W.Hull) || Owned->bAssigned || Owned->bCashPurchased || Owned->bLost || Owned->bSold || Owned->RentalId.IsValid() || W.Tier<EShipInsuranceTier::Basic || W.Tier>EShipInsuranceTier::Platinum || EffectiveTier(*Owned,C.NowUtc)!=EShipInsuranceTier::Uninsured)
+        {Why=INVTEXT("This hull cannot buy that insurance policy.");return false;}
+        C.Cost=Quote(*Owned,W.Tier).Premium;if(Quote(*Owned,W.Tier).Payout<=0 || GetBalance()<C.Cost)return false;
+    }
+    else if(W.Action==EOwnedCommand::Debt)
+    {if(!CanInsure() || !Pilot.ShipRentals.ContainsByPredicate([&](const auto& R){return R.Id==W.Hull && R.UnpaidLiability>0;}))return false;}
+    else if(W.Action==EOwnedCommand::TransferDrone)
+    {auto* Store=GetGameInstance()->GetSubsystem<UShipStoreSubsystem>();if(!Store || !Store->CanTransferMiningDrone(W.Quantity,Why))return false;}
+    else if(W.Action==EOwnedCommand::Fit)
+    {
+        if(!Owned || !ValidateFitting(W.Hull,W.Slot,W.Grade,Why) || !CanRefitHull(W.Hull,&Why))return false;
+        const auto& Fitted=Owned->Components[W.Slot];Calibration=FShipEquipment::GradeDesign(Fitted.SystemDesign,Fitted.Component,W.Grade);
+        const auto* Catalog=GetGameInstance()->GetSubsystem<UStarshatterSystemDesignSubsystem>();const auto Variant=Catalog?Catalog->FindComponentGrade(Fitted.SystemDesign,Fitted.Component,W.Grade):TOptional<FComponentDesign>();
+        if(!Calibration.IsSet() || !Variant || Fitted.Level==W.Grade)return false;C.Cost=Variant->BaseCost;C.Quantity=Variant->Spares;
+    }
+    else if(W.Action==EOwnedCommand::Loadout)
+    {
+        if(!Owned || !CanModifyHull(W.Hull) || W.Hull!=Pilot.AssignedHangarHull || !OrdnanceMagazine::Required(*Craft,W.Stations,C.Wanted,Why))return false;
+        if(S->GetMission() && !S->GetMission()->IsFreeFlight())
+        {if(!Craft->GetCarrier())return false;C.Magazine=OrdnanceMagazine::Ensure(P->GetEconomy(),*Craft->GetCarrier(),Why);if(C.Magazine.IsNone())return false;}
+        C.Loaded=OrdnanceMagazine::Loaded(*Craft);
+    }
+    else if(W.Action==EOwnedCommand::Repair)
+    {C.Cost=FStationServices::FullRepairCost();if(C.Cost<=0 || GetBalance()<C.Cost || !FStationServices::Offers(ESSWStationService::Repair))return false;}
+    else if(Loss)
+    {
+        if(!Owned || Owned->bLost || Pilot.AssignedHangarHull!=W.Hull || (!Craft->IsDead() && !Craft->IsDying()))return false;
+        const bool Free=S->GetMission() && S->GetMission()->IsFreeFlight();
+        if(!Owned->bAssigned && !FOwnedHullCondition::IsOwnedLive(*Owned,W.Hull,FName(UTF8_TO_TCHAR(Craft->Design()->name)),Craft->GetCargoInventoryKey(),Free))return false;
+        C.bValidatedDeath=true;
+    }
+    else return false;
+    const FGuid Physical=Craft->GetHullId();const FGuid Base=Craft->GetCarrier()?Craft->GetCarrier()->GetHullId():FGuid();const FString Dock=OwnedHullLocation::Dock(*Craft);
+    const TWeakObjectPtr<UShipInsuranceSubsystem> Weak(this);const uint64 Epoch=S->GetSimulationEpoch();
+    const auto CurrentCraft=[Weak,Physical,Epoch]()->Ship*
+    {auto* Live=Sim::GetSim();auto* V=Live?Live->GetPlayerShip():nullptr;return Weak.IsValid() && Live && Live->GetSimulationEpoch()==Epoch && V && V->GetHullId()==Physical?V:nullptr;};
+    const bool RuntimeChange=W.Action==EOwnedCommand::Fit || W.Action==EOwnedCommand::Loadout || W.Action==EOwnedCommand::Repair;
+    const auto Validate=[Weak,W,C,OriginalHull,OriginalStock,OriginalSerial,CurrentCraft,Base,Dock,BeforeLive,RuntimeChange,Loss](FText& Reason)
+    {
+        auto* Service=Weak.Get();auto* Players=Service?Service->GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;if(!Players || !Players->HasLoaded())return false;
+        const auto& Live=Players->GetPlayerInfo();const auto* H=Service->FindShip(W.Hull);
+        if(OriginalHull.IsSet()!=bool(H) || (H && !FPlayerHangarShip::StaticStruct()->CompareScriptStruct(&OriginalHull.GetValue(),H,0))){Reason=INVTEXT("The selected hull changed. Review the updated details.");return false;}
+        if(Loss)return C.bValidatedDeath && H && !H->bLost && Live.AssignedHangarHull==W.Hull;
+        auto* V=CurrentCraft();if(!V || !FStationServices::IsDocked() || !V->GetCarrier() || V->GetCarrier()->GetHullId()!=Base || OwnedHullLocation::Dock(*V)!=Dock)return false;
+        if(RuntimeChange){FPlayerHangarShip Health;FOwnedHullCondition::Capture(*V,Health);if(!FPlayerHangarShip::StaticStruct()->CompareScriptStruct(&BeforeLive,&Health,0)){Reason=INVTEXT("The live fitting or condition changed.");return false;}}
+        if(W.Action==EOwnedCommand::Purchase || W.Action==EOwnedCommand::Rent)
+        {
+            const auto* Stock=Live.Economy.UsedHullStock.Find(W.Hull);const auto* Serial=Live.Economy.SerializedHulls.Find(W.Hull);
+            if(OriginalStock.IsSet()!=bool(Stock) || (Stock && !FPlayerHangarShip::StaticStruct()->CompareScriptStruct(&OriginalStock.GetValue(),Stock,0)) || OriginalSerial.IsSet()!=bool(Serial) || (Serial && !FSerializedHullStock::StaticStruct()->CompareScriptStruct(&OriginalSerial.GetValue(),Serial,0)))return false;
+            if(W.Action==EOwnedCommand::Purchase)return Service->HullPurchasePrice(W.Design,W.Hull)==C.Cost && Service->CanPurchaseHull(W.Design,Reason,W.Hull);
+            return Service->CanRentHull(W.Design,W.Hull,W.Days,Reason);
+        }
+        if(W.Action==EOwnedCommand::Sell)return Service->CanSellHull(W.Hull,Reason);
+        if(W.Action==EOwnedCommand::Return)return Service->CanReturnRental(W.Hull,Reason);
+        if(W.Action==EOwnedCommand::Policy)return H && Service->CanModifyHull(W.Hull) && EffectiveTier(*H,FDateTime::UtcNow().ToUnixTimestamp())==EShipInsuranceTier::Uninsured && Quote(*H,W.Tier).Premium==C.Cost && Service->GetBalance()>=C.Cost;
+        if(W.Action==EOwnedCommand::Debt)return Service->CanInsure();
+        if(W.Action==EOwnedCommand::TransferDrone){const auto* Store=Service->GetGameInstance()->GetSubsystem<UShipStoreSubsystem>();return Store && Store->CanTransferMiningDrone(W.Quantity,Reason);}
+        if(W.Action==EOwnedCommand::Fit)return Service->CanRefitHull(W.Hull,&Reason) && Service->ValidateFitting(W.Hull,W.Slot,W.Grade,Reason);
+        if(W.Action==EOwnedCommand::Loadout){TMap<FName,int32> Loaded=OrdnanceMagazine::Loaded(*V),Wanted;return Loaded.OrderIndependentCompareEqual(C.Loaded) && OrdnanceMagazine::Required(*V,W.Stations,Wanted,Reason) && Wanted.OrderIndependentCompareEqual(C.Wanted);}
+        return W.Action==EOwnedCommand::Repair && FStationServices::FullRepairCost()==C.Cost && C.Cost>0 && Service->GetBalance()>=C.Cost;
+    };
+    if(Loss)bLossPending=true;
+    const bool Queued=Domain->QueueOwnedCommand(MoveTemp(C),Loss?INVTEXT("INSURANCE LOSS SETTLEMENT"):INVTEXT("HANGAR / EQUIPMENT TRANSACTION"),TFunction<bool(FText&)>(Validate),
+        [Weak,W,CurrentCraft,BeforeLive,BeforeStations,Calibration,ReserveSquadron,ReserveSlot,RuntimeChange,Loss]()
+        {
+            auto* Service=Weak.Get();auto* Players=Service?Service->GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;if(!Players)return false;
+            auto* V=CurrentCraft();auto* BaseShip=V?V->GetCarrier():nullptr;auto* Bay=BaseShip?BaseShip->GetHangar():nullptr;
+            bool Transferred=false;TOptional<SimComponent> OldPart;SimComponent* Part=nullptr;
+            if(ReserveSquadron!=INDEX_NONE){if(!Bay || !Bay->TransferStoredReserve(ReserveSquadron,ReserveSlot))return false;Transferred=true;}
+            bool Applied=true;auto& Info=Players->GetMutablePlayerInfo();auto* H=Info.HangarShips.FindByPredicate([&](const auto& Row){return Row.HullId==W.Hull;});
+            if(W.Action==EOwnedCommand::Fit)
+            {
+                if(!V || !H || !H->Components.IsValidIndex(W.Slot) || !Calibration.IsSet())Applied=false;
+                else
+                {
+                    const auto Incoming=H->Components[W.Slot];auto& Systems=V->GetSystems();
+                    if(Incoming.SystemIndex<0 || Incoming.SystemIndex>=Systems.size() || !Systems[Incoming.SystemIndex] || Incoming.ComponentIndex<0 || Incoming.ComponentIndex>=Systems[Incoming.SystemIndex]->GetComponents().size())Applied=false;
+                    else
+                    {
+                        Part=Systems[Incoming.SystemIndex]->GetComponents()[Incoming.ComponentIndex];if(!Part)Applied=false;
+                        else{OldPart=*Part;Part->InstallDesign(Calibration.GetValue());FOwnedHullCondition::ApplyComponent(*Part,Incoming);Systems[Incoming.SystemIndex]->CalcStatus();FOwnedHullCondition::Capture(*V,*H);}
+                    }
+                }
+            }
+            else if(W.Action==EOwnedCommand::Loadout)
+            {
+                Applied=V && H && V->ApplyDockedLoadout(W.Stations);
+                if(Applied){auto Health=BeforeLive;for(ListIter<WeaponGroup> Groups=V->GetWeapons();++Groups;)for(ListIter<Weapon> Weapons=Groups->GetWeapons();++Weapons;)if(!Weapons->IsPrimary()){Health.SavedWeaponAmmo.Remove(Weapons->GetIndex());Health.SavedWeaponTypes.Remove(Weapons->GetIndex());}FOwnedHullCondition::Apply(*V,Health);FOwnedHullCondition::CaptureAmmo(*V,*H);}
+            }
+            else if(W.Action==EOwnedCommand::Repair){Applied=V && V->RepairAtStation();if(Applied && H)FOwnedHullCondition::Capture(*V,*H);}
+            if(V)V->ApplyCargoInventoryToManifest();
+            if(Applied && Players->SaveActivePlayerProgress())return true;
+            if(Transferred && Bay)Bay->TransferStoredReserve(ReserveSquadron,ReserveSlot,true);
+            if(RuntimeChange && V){if(Part && OldPart.IsSet())*Part=OldPart.GetValue();if(W.Action==EOwnedCommand::Loadout)V->ApplyDockedLoadout(BeforeStations);FOwnedHullCondition::Apply(*V,BeforeLive);}
+            return false;
+        },[Weak,W,CurrentCraft,Done=MoveTemp(Completed),Loss](bool Saved,const FText& Reason,FGuid Object)
+        {
+            auto* Service=Weak.Get();if(Service && Loss)Service->bLossPending=false;if(Service && W.Action==EOwnedCommand::Loadout)Service->LastLoadoutReason=Reason;
+            if(auto* V=CurrentCraft())V->ApplyCargoInventoryToManifest();
+            if(Service && Saved)
+            {
+                const auto* Players=Service->GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+                if(Players)
+                {
+                    const auto& Info=Players->GetPlayerInfo();FName Owner=FEconomyLedger::Pilot(),Custody=Owner;
+                    if(W.Action==EOwnedCommand::Sell || W.Action==EOwnedCommand::Return || W.Action==EOwnedCommand::Rent)
+                    {for(const auto& Pair:Info.Economy.SerializedHulls)if(Pair.Key==W.Hull){const auto* Store=Info.Economy.Inventories.Find(Pair.Value.Inventory);if(Store)Owner=Store->TradingOwner.IsNone()?EconomyAI::NPCAccount(Pair.Value.Inventory):Store->TradingOwner;break;}if(W.Action!=EOwnedCommand::Rent)Custody=Owner;}
+                    if(W.Action==EOwnedCommand::Purchase || W.Action==EOwnedCommand::Rent || W.Action==EOwnedCommand::Sell || W.Action==EOwnedCommand::Return)SyncCommerceTitle(Info,W.Hull,Owner,Custody,TEXT("Saved hull commerce"));
+                }
+                if(auto* Story=Campaign::GetCampaign())Story->GetPersistentFleet().bDirty=true;
+            }
+            if(Done)Done(Saved,Reason,Object);
+        },Why);
+    if(!Queued && Loss)bLossPending=false;return Queued;
+}
+void UShipInsuranceSubsystem::FlushLossBeforeTransition()
+{
+    auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();auto* V=Sim::GetSim()?Sim::GetSim()->GetPlayerShip():nullptr;
+    if(P && V && (V->IsDead() || V->IsDying()) && P->GetPlayerInfo().AssignedHangarHull.IsValid() && !bLossPending)
+    {FOwnedActionSelection W;W.Action=EOwnedCommand::Loss;W.Hull=P->GetPlayerInfo().AssignedHangarHull;FText Why;RequestOwnedAction(W,{},Why);}
+    if(auto* Domain=GetGameInstance()->GetSubsystem<UGalaxyTrafficSubsystem>())Domain->FlushCriticalOwned();
 }

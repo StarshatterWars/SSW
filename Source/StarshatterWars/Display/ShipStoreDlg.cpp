@@ -1,4 +1,5 @@
 #include "ShipStoreDlg.h"
+#include "OwnedCommandAI.h"
 #include "SimDataEvents.h"
 #include "ShipStoreSubsystem.h"
 #include "ShipSkinCatalog.h"
@@ -55,7 +56,7 @@ struct FStoreView : TSharedFromThis<FStoreView>
     int32 RentalDays=1;
     FGuid PendingRental;
     bool CanRent(FText& Why) const {return Selected && Tab==EShipStoreCategory::Hulls && Sales.IsValid() && Sales->CanRentHull(Selected->Offer.Design,Selected->HullId,RentalDays,Why);}
-    void Rent(){FText Why;if(!CanRent(Why)){Feedback=Why;return;}if(PendingRental!=Selected->HullId){PendingRental=Selected->HullId;Feedback=FText::Format(INVTEXT("Click RENT again to confirm. {0}"),Why);return;}Sales->RentHull(Selected->Offer.Design,Selected->HullId,RentalDays,Feedback);PendingRental.Invalidate();Refresh();}
+    void Rent(){FText Why;if(!CanRent(Why)){Feedback=Why;return;}if(PendingRental!=Selected->HullId){PendingRental=Selected->HullId;Feedback=FText::Format(INVTEXT("Click RENT again to confirm. {0}"),Why);return;}FOwnedActionSelection W;W.Action=EOwnedCommand::Rent;W.Design=Selected->Offer.Design;W.Hull=Selected->HullId;W.Days=RentalDays;Sales->RequestOwnedAction(W,[Weak=TWeakPtr<FStoreView>(AsShared())](bool,const FText& Why,FGuid){if(auto V=Weak.Pin()){V->Feedback=Why;V->Refresh();}},Feedback);PendingRental.Invalidate();Refresh();}
     int32 BuyQuantity() const {return Tab==EShipStoreCategory::Hulls || Tab==EShipStoreCategory::Skins?1:Quantity;}
     void Refresh()
     {
@@ -114,7 +115,8 @@ struct FStoreView : TSharedFromThis<FStoreView>
     void Buy()
     {
         FText Reason;if(!CanBuy(Reason)){Feedback=Reason;return;}
-        if(Tab==EShipStoreCategory::Hulls)Sales->PurchaseHull(Selected->Offer.Design,Feedback,Selected->HullId);
+        if(Tab==EShipStoreCategory::Hulls)
+        {FOwnedActionSelection W;W.Action=EOwnedCommand::Purchase;W.Design=Selected->Offer.Design;W.Hull=Selected->HullId;Sales->RequestOwnedAction(W,[Weak=TWeakPtr<FStoreView>(AsShared())](bool,const FText& Why,FGuid){if(auto V=Weak.Pin()){V->Feedback=Why;V->Refresh();}},Feedback);}
         else
         {
             const auto Weak=TWeakPtr<FStoreView>(AsShared());
@@ -252,7 +254,7 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
                 .Visibility_Lambda([View](){return View->Selected && View->Selected->Offer.Id==FName(TEXT("Drone/MiningDrone"))?EVisibility::Visible:EVisibility::Collapsed;})
                 .ToolTipText(INVTEXT("Transfer purchased mining drones from this dock to cargo; then use Mining Drone Controls to load a bay"))
                 .IsEnabled_Lambda([View](){FText Reason;return View->Store.IsValid() && View->Store->CanTransferMiningDrone(View->BuyQuantity(),Reason);})
-                .OnClicked_Lambda([View](){if(View->Store.IsValid())View->Store->TransferMiningDrone(View->BuyQuantity(),View->Feedback);View->Refresh();return FReply::Handled();})
+                .OnClicked_Lambda([View](){if(View->Sales.IsValid()){FOwnedActionSelection W;W.Action=EOwnedCommand::TransferDrone;W.Quantity=View->BuyQuantity();View->Sales->RequestOwnedAction(W,[Weak=TWeakPtr<FStoreView>(View)](bool,const FText& Why,FGuid){if(auto V=Weak.Pin()){V->Feedback=Why;V->Refresh();}},View->Feedback);}View->Refresh();return FReply::Handled();})
                 [SNew(STextBlock).Text(INVTEXT("TO CARGO")).Font(MissionUIStyle::GetRowFont(11))]]
             +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton)
                 .IsEnabled_Lambda([View](){FText Reason;return View->CanBuy(Reason);})

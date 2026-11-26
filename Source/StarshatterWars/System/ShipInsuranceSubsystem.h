@@ -5,11 +5,14 @@
 #include "GameStructs_insurance.h"
 #include "ShipInsuranceSubsystem.generated.h"
 
+struct FOwnedActionSelection;
 UCLASS()
 class STARSHATTERWARS_API UShipInsuranceSubsystem : public UGameInstanceSubsystem, public FTickableGameObject
 {
     GENERATED_BODY()
 public:
+    bool RequestOwnedAction(const FOwnedActionSelection&,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
+    void FlushLossBeforeTransition();
     static FShipInsuranceQuote Quote(const FPlayerHangarShip& Ship, EShipInsuranceTier Tier);
     static EShipInsuranceTier EffectiveTier(const FPlayerHangarShip& Ship, int64 Now);
     static FString TierName(EShipInsuranceTier Tier);
@@ -53,6 +56,7 @@ public:
     bool CanInsure() const;
 private:
     void ProvisionMissionMagazine();
+    bool bLossPending=false;
     bool bNeedsMagazineIssue = true;
     FText LastLoadoutReason;
     bool bRestoreLoadout = false;

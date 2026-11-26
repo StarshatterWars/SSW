@@ -35,6 +35,8 @@ FNativeEconomyResult FNativeEconomyWorker::Calculate(FNativeEconomyInput&& Input
 {
     FNativeEconomyResult Out;Out.Revision=Input.Revision;Out.Profile=MoveTemp(Input.Profile);Out.State=MoveTemp(Input.State);Out.bOffGameThread=!IsInGameThread();
     FSimDataEvents::Suppress(true);auto* Previous=ProductionEvents::Capture(&Out.Events);ON_SCOPE_EXIT{ProductionEvents::Capture(Previous);FSimDataEvents::Suppress(false);};
+    if(Input.Owned)
+    {Out.Owned=MakeUnique<FNativeOwnedReply>(OwnedCommandAI::Execute(Out.State,MoveTemp(*Input.Owned)));return Out;}
     if(Input.Ledger)
     {Out.Ledger=MakeUnique<FNativeLedgerReply>(LedgerCommandAI::Execute(Out.State,*Input.Ledger));return Out;}
     if(Input.Repair)
@@ -103,7 +105,7 @@ bool FNativeEconomyWorker::CommitPurchase(FNativeEconomyResult&& Result,FS_Playe
 bool FNativeEconomyWorker::Commit(FNativeEconomyResult&& Result,FEconomyState& Live,uint64 Revision,const FString& Profile)
 {
     check(IsInGameThread());
-    if(Result.Purchase || Result.Market || Result.Repair || Result.Ledger || Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)return false;
+    if(Result.Purchase || Result.Market || Result.Repair || Result.Ledger || Result.Owned || Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)return false;
     Result.bCommitted=true;
     // Clock pumping is not a commercial mutation; never rewind it to a worker snapshot.
     Result.State.EconomyClockSeconds=FMath::Max(Live.EconomyClockSeconds,Result.State.EconomyClockSeconds);
@@ -179,5 +181,19 @@ bool FNativeEconomyWorker::CommitLedger(FNativeEconomyResult&& Result,FEconomySt
     if(Reply->bContracts)Live.Contracts=MoveTemp(Contracts);
     if(Reply->bOrders)Live.MarketOrders=MoveTemp(Orders);
     if(!Save()){Live=Before;Reason=INVTEXT("Could not save. Credits, cargo, contracts, jobs and reservations restored.");return false;}
+    Reason=Reply->Reason;return true;
+}
+
+bool FNativeEconomyWorker::CommitOwned(FNativeEconomyResult&& Result,FS_PlayerGameInfo& Live,uint64 Revision,const FString& Profile,TFunctionRef<bool()> Save,FText& Reason)
+{
+    check(IsInGameThread());
+    if(!Result.Owned || !Result.Owned->bSucceeded){Reason=Result.Owned?Result.Owned->Reason:INVTEXT("No ownership result.");return false;}
+    if(Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile || !Result.Owned->Source.Matches(Live))
+    {Reason=INVTEXT("Pilot, hangar or equipment changed. Ownership request rejected without exchange.");return false;}
+    const auto Before=Live;auto Reply=MoveTemp(Result.Owned);FScopedSimDataChangeBatch Batch(Live.Economy);
+    auto Leases=MoveTemp(Result.State.MiningLeases);auto Drones=MoveTemp(Result.State.MiningDrones);auto Optics=MoveTemp(Result.State.MiningOptics);
+    if(!Commit(MoveTemp(Result),Live.Economy,Revision,Profile))return false;Reply->Owned.Apply(Live);
+    if(Reply->bLoss){Live.Economy.MiningLeases=MoveTemp(Leases);Live.Economy.MiningDrones=MoveTemp(Drones);Live.Economy.MiningOptics=MoveTemp(Optics);}
+    if(!Save()){Live=Before;Reason=INVTEXT("Could not save. Hulls, credits, insurance and stored equipment restored.");return false;}
     Reason=Reply->Reason;return true;
 }

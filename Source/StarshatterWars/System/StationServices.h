@@ -39,4 +39,5 @@ public:
     static int64 FullRepairCost();
     static int64 RepairQuote(class Ship&);
     static bool RepairAll(UGameInstance*, FText& Reason);
+    static bool RequestRepair(UGameInstance*,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
 };
