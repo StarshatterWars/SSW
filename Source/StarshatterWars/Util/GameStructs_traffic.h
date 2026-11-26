@@ -9,6 +9,8 @@ struct FGalaxyTrafficJourney
 {
     GENERATED_BODY()
     UPROPERTY(SaveGame) FGuid Id;
+    UPROPERTY(SaveGame) FGuid HullId;
+    UPROPERTY(SaveGame) FString ShipName;
     UPROPERTY(SaveGame) FName Origin;
     UPROPERTY(SaveGame) FName Destination;
     UPROPERTY(SaveGame) FName CurrentSector;

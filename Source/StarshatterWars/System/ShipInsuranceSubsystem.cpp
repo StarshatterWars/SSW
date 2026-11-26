@@ -145,7 +145,7 @@ void UShipInsuranceSubsystem::RefreshAssignment()
     if (!Current || Current->Design != Design || Current->bLost)
     {
         FPlayerHangarShip NewShip;
-        NewShip.HullId = FGuid::NewGuid();
+        NewShip.HullId = Craft->GetHullId();
         NewShip.Design = Design;
         NewShip.bAssigned = true;
         if (const auto* Row = ShipDesignRegistry::Find(Design)) NewShip.HullValue = Row->BaseCost;
@@ -256,7 +256,7 @@ FGuid UShipInsuranceSubsystem::RegisterOwnedShip(FName Design, const FString& Na
         Design.IsNone() || !ShipDesignRegistry::Find(Design) || HullValue < 0 || ComponentValue < 0) return {};
     const auto Previous = Players->GetPlayerInfo();
     auto& Entry = Players->GetMutablePlayerInfo().HangarShips.AddDefaulted_GetRef();
-    Entry.HullId = FGuid::NewGuid();
+    Entry.HullId = FHullRegistry::Allocate();
     Entry.Design = Design;
     Entry.Name = Name;
     if (auto* Craft = Simulation ? Simulation->GetPlayerShip() : nullptr) Entry.Location = OwnedHullLocation::Dock(*Craft);
@@ -280,6 +280,8 @@ FGuid UShipInsuranceSubsystem::RegisterOwnedShip(FName Design, const FString& Na
         Players->GetMutablePlayerInfo() = Previous;
         return {};
     }
+    if(Simulation)Simulation->HullRegistry.Register(Id,Design,Name,FEconomyLedger::Pilot(),
+        Simulation->GetPlayerShip()?Simulation->GetPlayerShip()->GetIFF():0);
     return Id;
 }
 

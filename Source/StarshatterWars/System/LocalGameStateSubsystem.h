@@ -19,6 +19,8 @@ public:
     bool RestoreAccount(FS_PlayerGameInfo&,const FString& ProfileSlot);
     bool RestoreWorld(class Sim&);
     int32 ResumeMissionId() const;
+    FGuid ResolveHullIdentity(const FString& Name,FName Design) const;
+    bool PrepareHullRegistry(FHullRegistry& Registry) const;
     static bool ReadCheckpoint(FS_PlayerGameInfo&,const FString& ProfileSlot,int32 UserIndex,ULocalUniverseState*& World);
     static bool ValidateGeneration(const ULocalStateManifest&,const TArray<ULocalStateArea*>&);
 private:

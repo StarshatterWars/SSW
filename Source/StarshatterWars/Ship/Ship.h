@@ -121,9 +121,10 @@ public:
         int IFF,
         int cmd_ai,
         const int* loadout,
-        bool bCreateAI);
+        bool bCreateAI, FGuid InHullId = FGuid());
 
     virtual ~Ship();
+    const FGuid& GetHullId() const { return PermanentHullId; }
 
     int operator==(const Ship& s) const { return id == s.id; }
 
@@ -589,7 +590,7 @@ protected:
     int               CheckShotIntersection(SimShot* shot, FVector& ipt, FVector& hpt, Weapon** wep = 0);
     WeaponGroup* FindWeaponGroup(const char* name);
 
-    char              regnum[16];
+    char              regnum[64];
     ShipDesign*       design;
     FGuid CargoInventoryId = FGuid::NewGuid();
     TOptional<SSWFreightManifest::FLoad> CargoManifest;
@@ -753,4 +754,5 @@ private:
     friend class FWeaponLoadingParityTest;
     void RebuildRuntimeLoadout(const TArray<int32>& Stations);
     FVector formation_offset = FVector::ZeroVector;
+    const FGuid PermanentHullId;
 };

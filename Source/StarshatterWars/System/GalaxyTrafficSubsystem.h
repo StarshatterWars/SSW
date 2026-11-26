@@ -5,6 +5,7 @@
 #include "TrafficAI.h"
 #include "EconomyAI.h"
 #include "NativeEconomyWorker.h"
+#include "GeneratedShipNames.h"
 #include "GalaxyTrafficSubsystem.generated.h"
 
 class Ship;class Sim;class SimRegion;class Mission;
@@ -72,5 +73,6 @@ private:
     double CheckpointElapsed=0,PersistenceRetry=0;
     bool bPersistenceBlocked=false;
     int32 ActiveBudget=4,MaxJourneys=96;
+    TUniquePtr<class FGeneratedShipNames> GeneratedNames;
     double ScheduleSeconds=8,HopSeconds=90,TransferTonnesPerSecond=1;
 };

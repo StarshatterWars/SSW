@@ -19,6 +19,7 @@
 
 #pragma once
 #include "PreparedSceneGate.h"
+#include "HullRegistry.h"
 
 #include "GameStructs_products.h"
 #include "GameStructs_economy.h"
@@ -140,10 +141,12 @@ public:
         const FVector& loc,
         int IFF = 0,
         int cmd_ai = 0,
-        const int* loadout = nullptr
+        const int* loadout = nullptr,
+        FGuid PersistentHullId = FGuid()
     );
 
     Ship* FindShip(const char* name, const char* rgn_name = nullptr);
+    Ship* FindShipByHullId(FGuid HullId);
 
     SimShot* CreateShot(
         const FVector& pos,
@@ -180,6 +183,7 @@ public:
 
     // Native subscribers release UI, input, actors and timers before deletion.
     FSimpleMulticastDelegate OnMissionUnloading;
+    FHullRegistry HullRegistry;
 
     // Server-side hooks for an Unreal replication consumer. References are
     // borrowed for the duration of the broadcast.

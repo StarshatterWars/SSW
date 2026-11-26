@@ -35,6 +35,12 @@ void FLocalWorldStateCodec::Capture(Sim& Simulation,ULocalUniverseState& Out)
         for(ListIter<Ship> S=Region->GetShips();++S;)
         {
             auto* Vessel=S.value();if(!Vessel || !Vessel->Design())continue;FLocalShipState Row;
+            Row.HullId=Vessel->GetHullId();
+            Simulation.HullRegistry.Register(Row.HullId,FName(UTF8_TO_TCHAR(Vessel->DesignName())),UTF8_TO_TCHAR(Vessel->GetName()),FName(*FString::Printf(TEXT("Faction/%d"),Vessel->GetIFF())),Vessel->GetIFF());
+            Simulation.HullRegistry.Rename(Row.HullId,UTF8_TO_TCHAR(Vessel->GetName()));
+            if(Vessel->IsDead() || Vessel->IsDying())Simulation.HullRegistry.SetStatus(Row.HullId,EHullOperationalState::Destroyed);
+            else if(const auto* Record=Simulation.HullRegistry.Find(Row.HullId);Record && Record->Status!=EHullOperationalState::Repairing)
+                Simulation.HullRegistry.SetStatus(Row.HullId,Vessel->GetIntegrity()<Vessel->Design()->integrity?EHullOperationalState::Damaged:EHullOperationalState::Operational);
             Row.bMagazineIssue=Vessel->HasMagazineIssue();
             Row.Name=UTF8_TO_TCHAR(Vessel->GetName());Row.Design=UTF8_TO_TCHAR(Vessel->DesignName());Row.Region=UTF8_TO_TCHAR(Region->GetName());Row.System=Region->GetSystem()?UTF8_TO_TCHAR(Region->GetSystem()->GetName()):TEXT("");
             Row.Element=Vessel->GetElement()?UTF8_TO_TCHAR(Vessel->GetElement()->GetName()):TEXT("");Row.IFF=Vessel->GetIFF();Row.bDestroyed=Vessel->IsDead() || Vessel->IsDying();
@@ -58,8 +64,11 @@ void FLocalWorldStateCodec::Capture(Sim& Simulation,ULocalUniverseState& Out)
         }
         int32 Index=0;for(ListIter<Asteroid> A=Region->GetRoids();++A;){if(!A.value())continue;FLocalAsteroidState Row;Row.Region=UTF8_TO_TCHAR(Region->GetName());Row.Index=Index++;Row.Position=A->GetLocation();Row.ContactId=A->ContactId;Row.Resource=A->Resource;Row.InitialTonnes=A->InitialResourceTonnes;Row.Integrity=A->GetIntegrity();Out.Asteroids.Add(Row);}
     }
-    if(Same)for(auto Old:OldShips)if(!Out.Ships.ContainsByPredicate([&](const auto& S){return S.Name==Old.Name && S.Design==Old.Design;})){Old.bDestroyed=true;Out.Ships.Add(Old);}
+    if(Same)for(auto Old:OldShips)if(!Out.Ships.ContainsByPredicate([&](const auto& S)
+        {return Old.HullId.IsValid()?S.HullId==Old.HullId:(S.Name==Old.Name && S.Design==Old.Design);}))
+        {Old.bDestroyed=true;Out.Ships.Add(Old);}
     for(ListIter<MissionEvent> E=Simulation.events;++E;){Out.EventIds.Add(E->EventID());Out.EventStatuses.Add(static_cast<int32>(E->status));}
+    Out.HullRegistry=Simulation.HullRegistry.Snapshot();
 }
 bool FLocalWorldStateCodec::Restore(Sim& Simulation,const ULocalUniverseState& In)
 {
@@ -68,12 +77,25 @@ bool FLocalWorldStateCodec::Restore(Sim& Simulation,const ULocalUniverseState& I
     // Region transfers clear the previous region's player pointer. Retain the
     // actual provisioned pilot until all saved transforms/decks have been applied.
     Ship* ResumePilot=Simulation.GetPlayerShip();
+    TSet<FGuid> Ids;
+    for(const auto& Row:In.Ships)
+    {
+        if(Row.HullId.IsValid() && Ids.Contains(Row.HullId))return false;
+        if(Row.HullId.IsValid())Ids.Add(Row.HullId);
+        if(ResumePilot && Row.HullId.IsValid() && Row.Name==UTF8_TO_TCHAR(ResumePilot->GetName()) &&
+            Row.Design==UTF8_TO_TCHAR(ResumePilot->DesignName()) && Row.HullId!=ResumePilot->GetHullId())return false;
+    }
+    auto ResolveSavedVessel=[&](const FLocalShipState& Row)
+        {return Row.HullId.IsValid()?Simulation.FindShipByHullId(Row.HullId):Simulation.FindShip(TCHAR_TO_UTF8(*Row.Name));};
+    FString RegistryError;
+    if(!Simulation.HullRegistry.Import(In.HullRegistry,RegistryError))
+    {UE_LOG(LogTemp,Error,TEXT("[HullRegistry] Checkpoint rejected: %s"),*RegistryError);return false;}
     for(const auto& Row:In.Ships)
     {
         if(Row.Position.ContainsNaN() || Row.Velocity.ContainsNaN())continue;
         auto* Region=CampaignFleetTransit::EnsureRegion(Simulation,Row.System,Row.Region);if(!Region)continue;
-        Ship* Vessel=Simulation.FindShip(TCHAR_TO_UTF8(*Row.Name));
-        if(!Vessel && !Row.bDestroyed){auto* Design=ShipDesignRegistry::FindLegacy(FName(*Row.Design));if(Design)Vessel=Simulation.CreateShip(TCHAR_TO_UTF8(*Row.Name),"",Design,TCHAR_TO_UTF8(*Row.Region),OtherHand(Row.Position),Row.IFF);}
+        Ship* Vessel=ResolveSavedVessel(Row);
+        if(!Vessel && !Row.bDestroyed){auto* Design=ShipDesignRegistry::FindLegacy(FName(*Row.Design));if(Design)Vessel=Simulation.CreateShip(TCHAR_TO_UTF8(*Row.Name),"",Design,TCHAR_TO_UTF8(*Row.Region),OtherHand(Row.Position),Row.IFF,0,nullptr,Row.HullId);}
         if(!Vessel || Row.Design!=UTF8_TO_TCHAR(Vessel->DesignName()))continue;
         if(Vessel->GetRegion()!=Region)Region->TransferObject(Vessel);
         Vessel->MoveTo(Row.Position);Vessel->SetVelocity(Row.Velocity);
@@ -119,11 +141,11 @@ bool FLocalWorldStateCodec::Restore(Sim& Simulation,const ULocalUniverseState& I
     }
     // Remove provisioned slot ownership before applying saved flight phases.
     // Otherwise READY slots teleport an already-airborne saved fighter into the bay.
-    for(const auto& Row:In.Ships)if(auto* Vessel=Simulation.FindShip(TCHAR_TO_UTF8(*Row.Name)))
+    for(const auto& Row:In.Ships)if(auto* Vessel=ResolveSavedVessel(Row))
         if(auto* Carrier=Vessel->GetCarrier())
             for(int32 I=0;I<Carrier->NumFlightDecks();++I)
                 DeckResumeState::Release(*Carrier->GetFlightDeck(I),*Vessel);
-    for(const auto& Row:In.Ships)if(auto* Vessel=Simulation.FindShip(TCHAR_TO_UTF8(*Row.Name));Vessel && !Row.bDestroyed)
+    for(const auto& Row:In.Ships)if(auto* Vessel=ResolveSavedVessel(Row);Vessel && !Row.bDestroyed)
     {
         auto* PreviousCarrier=Vessel->GetCarrier();
         auto* SavedCarrier=Simulation.FindShip(TCHAR_TO_UTF8(*Row.Carrier));

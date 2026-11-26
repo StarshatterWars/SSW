@@ -1,4 +1,5 @@
 #include "GalaxyTrafficSubsystem.h"
+#include "GeneratedShipNames.h"
 #include "FractalVerseSubsystem.h"
 #include "Galaxy.h"
 #include "ProductionCatalog.h"
@@ -279,10 +280,27 @@ void UGalaxyTrafficSubsystem::Realize(Sim& Simulation,FGalaxyTrafficJourney& Job
     for(ListIter<Ship> Ships=Region->GetShips();++Ships;)Visible|=Ships->HasNetworkPilot();
     if(!Visible)return;
     ShipDesign* Design=ShipDesignRegistry::FindLegacy(Job.bPatrol?Job.ShipDesign:FName(Job.IsCargo()?TEXT("IM3500"):TEXT("Courier")));if(!Design)return;
-    const FString Name=(Job.bPatrol?TEXT("Patrol ")+Job.PilotName+TEXT(" "):FString(TEXT("Traffic ")))+Job.Id.ToString(EGuidFormats::Digits).Left(12);
-    if(auto* Restored=Simulation.FindShip(TCHAR_TO_UTF8(*Name)))
+    const FString LegacyName=(Job.bPatrol?TEXT("Patrol ")+Job.PilotName+TEXT(" "):FString(TEXT("Traffic ")))+Job.Id.ToString(EGuidFormats::Digits).Left(12);
+    if(!Job.HullId.IsValid())Job.HullId=FHullRegistry::Allocate();
+    if(!GeneratedNames)
     {
-        if(Restored!=Simulation.GetPlayerShip() && !Restored->HasNetworkPilot() && Restored->Design()==Design && Restored->GetRegion()==Region && !Restored->IsDead() && !Restored->IsDying())LiveShips.Add(Job.Id,Name);
+        GeneratedNames=MakeUnique<FGeneratedShipNames>();FString Error;
+        if(!GeneratedNames->Load(FPaths::ProjectContentDir()/TEXT("GameData/Ships/generated_ship_names.json"),Error))
+        {GeneratedNames.Reset();UE_LOG(LogTemp,Error,TEXT("[Traffic] %s"),*Error);return;}
+    }
+    if(Job.ShipName.IsEmpty())
+    {
+        Job.ShipName=GeneratedNames->ForHull(Job.HullId);
+        if(Simulation.FindShip(TCHAR_TO_UTF8(*Job.ShipName)))Job.ShipName+=TEXT("-")+Job.HullId.ToString(EGuidFormats::Digits).Left(8);
+    }
+    const FString Name=Job.ShipName;
+    auto* ExistingHull=Simulation.FindShipByHullId(Job.HullId);
+    if(!ExistingHull)ExistingHull=Simulation.FindShip(TCHAR_TO_UTF8(*LegacyName));
+    if(!ExistingHull)ExistingHull=Simulation.FindShip(TCHAR_TO_UTF8(*Name));
+    if(auto* Restored=ExistingHull)
+    {
+        if(Restored!=Simulation.GetPlayerShip() && !Restored->HasNetworkPilot() && Restored->Design()==Design && Restored->GetRegion()==Region && !Restored->IsDead() && !Restored->IsDying())
+        {Job.HullId=Restored->GetHullId();Restored->SetName(TCHAR_TO_UTF8(*Name));LiveShips.Add(Job.Id,Name);}
         return; // A checkpoint-owned ship is never duplicated or reset to spawn condition.
     }
     const auto* From=Endpoints.Find(Job.Origin);if(!From)return;
@@ -302,7 +320,7 @@ void UGalaxyTrafficSubsystem::Realize(Sim& Simulation,FGalaxyTrafficJourney& Job
             (!Simulation.GetPlayerShip() || FVector::DistSquared(Point,Simulation.GetPlayerShip()->GetLocation())>FMath::Square(12000.0))) {Safe=true;break;}
     }
     if(!Safe)return;
-    auto* Craft=Simulation.CreateShip(TCHAR_TO_UTF8(*Name),"",Design,TCHAR_TO_UTF8(*Node->Region.ToString()),OtherHand(Point),Job.bPatrol?Job.PatrolIFF:0,0);
+    auto* Craft=Simulation.CreateShip(TCHAR_TO_UTF8(*Name),TCHAR_TO_UTF8(*FHullRegistry::Number(Job.HullId)),Design,TCHAR_TO_UTF8(*Node->Region.ToString()),OtherHand(Point),Job.bPatrol?Job.PatrolIFF:0,0,nullptr,Job.HullId);
     if(!Craft)return;
     if(Job.bPatrol)
     {

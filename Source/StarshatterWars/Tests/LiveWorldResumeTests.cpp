@@ -31,10 +31,16 @@ bool FLiveWorldResumeTest::RunTest(const FString&)
  const FVector Destination(0,-40000,5000);auto* Nav=new Instruction(Region,Destination);Nav->SetSpeed(250);Nav->SetWeaponsFree(0);Pilot->AddNavPoint(Nav);
  auto* Save=NewObject<ULocalUniverseState>();FLocalWorldStateCodec::Capture(S,*Save);if(!TestEqual(TEXT("Live pilot captured"),Save->Ships.Num(),1))return false;
  const FGuid Cargo=Save->Ships[0].CargoId;const FVector Original=Pilot->GetLocation();
+ const FGuid Hull=Pilot->GetHullId();
+ TestEqual(TEXT("Saved hull identity is the live permanent identity"),Save->Ships[0].HullId,Hull);
+ Pilot->SetName("Renamed pilot hull");
+ TestEqual(TEXT("Renaming cannot change permanent hull identity"),Pilot->GetHullId(),Hull);
+ Pilot->SetName("Resume pilot");
  const FString Slot=TEXT("AutomationLiveResume-")+FGuid::NewGuid().ToString(EGuidFormats::Digits);ON_SCOPE_EXIT{UGameplayStatics::DeleteGameInSlot(Slot,0);};
  TestTrue(TEXT("World saved to disk"),UGameplayStatics::SaveGameToSlot(Save,Slot,0));auto* Reload=Cast<ULocalUniverseState>(UGameplayStatics::LoadGameFromSlot(Slot,0));if(!TestNotNull(TEXT("World reloaded"),Reload))return false;
  Pilot->MoveTo(FVector(999,999,999));Pilot->SetIntegrity(1000);Pilot->SetVelocity(FVector::ZeroVector);Pilot->ClearFlightPlan();
  TestTrue(TEXT("Live mission restores through the production codec"),FLocalWorldStateCodec::Restore(S,*Reload));
+ TestEqual(TEXT("World resume preserves permanent hull identity"),Pilot->GetHullId(),Hull);
  TestTrue(TEXT("Position resumes"),Pilot->GetLocation().Equals(Original));TestTrue(TEXT("Velocity resumes"),Pilot->GetVelocity().Equals(FVector(20,30,40)));TestEqual(TEXT("Damage resumes"),Pilot->GetIntegrity(),640.0);
  TestEqual(TEXT("Rebuilt navigation survives restart"),Pilot->GetFlightPlan().size(),1);if(Pilot->GetFlightPlan().size())TestTrue(TEXT("Edited waypoint retains exact coordinates"),Pilot->GetFlightPlan()[0]->GetLocation().Equals(Destination));
  auto* Verify=NewObject<ULocalUniverseState>();FLocalWorldStateCodec::Capture(S,*Verify);TestEqual(TEXT("Cargo identity is not regenerated on restore"),Verify->Ships[0].CargoId,Cargo);

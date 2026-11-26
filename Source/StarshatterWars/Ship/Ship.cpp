@@ -190,7 +190,7 @@ Ship::Ship(
 	int IFF,
 	int cmd_ai,
 	const int* load,
-	bool bCreateAI)
+	bool bCreateAI, FGuid InHullId)
 	: 
     killer(0),
     throttle(0),
@@ -258,7 +258,8 @@ Ship::Ship(
     last_eval_time(0),
     last_beam_time(0),
     last_bolt_time(0),
-    loadout(0)
+    loadout(0),
+    PermanentHullId(InHullId.IsValid()?InHullId:FGuid::NewGuid())
 {
 	sim = Sim::GetSim();
 
@@ -270,7 +271,8 @@ Ship::Ship(
 	}
 	else
 	{
-		regnum[0] = 0;
+		const FString Registration=FHullRegistry::Number(PermanentHullId);
+        strcpy_s(regnum,sizeof(regnum),TCHAR_TO_UTF8(*Registration));
 	}
 
 	design = ship_dsn;
@@ -1605,6 +1607,8 @@ void Ship::InitializeRuntimeDeathSpiralFromDesign()
 
 Ship::~Ship()
 {
+    if(sim && sim==Sim::GetSim() && (IsDead() || IsDying()))
+        sim->HullRegistry.SetStatus(PermanentHullId,EHullOperationalState::Destroyed);
     if(auto* Actor=GetNativePresentation()) Actor->BindRuntimeShip(nullptr);
 
 	// the loadout can notxbe cleared during Destroy, because it

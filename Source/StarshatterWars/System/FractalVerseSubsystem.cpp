@@ -447,7 +447,7 @@ bool UFractalVerseSubsystem::ProvisionShip(FName Principal,FFractalVerseShipView
     const FFractalVerseWorld Before=Authority.Read();
     auto* NativeRegion=FindFractalRegion(Simulation,Plan.Region); if(!NativeRegion) return false;
     Ship* Vessel=Simulation->CreateShip(TCHAR_TO_UTF8(*Plan.Hull.Name),"",Design,NativeRegion->GetName(),
-        Plan.Position,Plan.IFF,0,Plan.Hull.LoadoutStations.IsEmpty()?nullptr:Plan.Hull.LoadoutStations.GetData());
+        Plan.Position,Plan.IFF,0,Plan.Hull.LoadoutStations.IsEmpty()?nullptr:Plan.Hull.LoadoutStations.GetData(),Plan.Hull.HullId);
     if(!Vessel) return false;
     Vessel->SetFlightPhase(EOPSMode::ACTIVE); Vessel->SetNetworkPilot(true); Vessel->SetVelocity(Plan.Velocity);
     Camera Pose; Pose.MoveTo(Plan.Position); Pose.SetOrientation(FVector::CrossProduct(Plan.Up,Plan.Heading),Plan.Up,Plan.Heading); Vessel->CloneCam(Pose);

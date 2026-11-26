@@ -159,3 +159,16 @@ bool ULocalGameStateSubsystem::RestoreWorld(Sim& Simulation)
     const bool Result=FLocalWorldStateCodec::Restore(Simulation,*CachedWorld);if(Result)bWorldRestored=true;return Result;
 }
 int32 ULocalGameStateSubsystem::ResumeMissionId() const{return CachedWorld && !CachedWorld->bMissionComplete?(CachedWorld->AgentAssignmentId!=INDEX_NONE?CachedWorld->AgentAssignmentId:CachedWorld->MissionId):INDEX_NONE;}
+FGuid ULocalGameStateSubsystem::ResolveHullIdentity(const FString& Name,FName Design) const
+{
+ if(!CachedWorld)return {};
+ const FLocalShipState* Match=nullptr;
+ for(const auto& Row:CachedWorld->Ships)if(Row.Name==Name && FName(*Row.Design)==Design && !Row.bDestroyed)
+ {if(Match)return {};Match=&Row;}
+ return Match?(Match->HullId.IsValid()?Match->HullId:Match->CargoId):FGuid();
+}
+bool ULocalGameStateSubsystem::PrepareHullRegistry(FHullRegistry& Registry) const
+{
+ if(!CachedWorld)return true;
+ FString Error;return Registry.Import(CachedWorld->HullRegistry,Error);
+}

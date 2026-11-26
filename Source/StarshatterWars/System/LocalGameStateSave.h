@@ -1,6 +1,7 @@
 #pragma once
 #include "GameFramework/SaveGame.h"
 #include "GameStructs.h"
+#include "HullRegistry.h"
 #include "LocalGameStateSave.generated.h"
 USTRUCT()
 struct FLocalNavState
@@ -23,6 +24,7 @@ USTRUCT()
 struct FLocalShipState
 {
     GENERATED_BODY()
+    UPROPERTY(SaveGame) FGuid HullId;
     UPROPERTY(SaveGame) FString Name;
     UPROPERTY(SaveGame) FString Design;
     UPROPERTY(SaveGame) FString Region;
@@ -110,6 +112,7 @@ class ULocalUniverseState : public ULocalStateArea
 {
     GENERATED_BODY()
 public:
+    UPROPERTY(SaveGame) FHullRegistryState HullRegistry;
     // Flight-plan positions are authored X/Y horizontal, Z altitude.
     // Zero identifies checkpoints written before the coordinate-restore fix.
     UPROPERTY(SaveGame) int32 NavigationCoordinatesVersion=0;

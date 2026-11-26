@@ -694,6 +694,9 @@ Sim::LoadMission(Mission* m, bool preload_textures)
 void
 Sim::ExecMission()
 {
+    if(auto* Runtime=GetSSWRuntimeSubsystem())if(auto* Instance=Runtime->GetGameInstance())
+        if(auto* State=Instance->GetSubsystem<ULocalGameStateSubsystem>();State && !State->PrepareHullRegistry(HullRegistry))
+        {UE_LOG(LogTemp,Error,TEXT("[HullRegistry] Invalid checkpoint registry; mission provisioning stopped."));return;}
 	cam_dir =
 		CameraManager::GetInstance();
 
@@ -1949,7 +1952,7 @@ Sim::CreateShip(
 	const FVector& loc,
 	int IFF,
 	int cmd_ai,
-	const int* loadout)
+	const int* loadout, FGuid PersistentHullId)
 {
 	if (!design)
 	{
@@ -1967,13 +1970,37 @@ Sim::CreateShip(
 		return nullptr;
 	}
 
+    FGuid HullId=PersistentHullId;
+    FName Owner(*FString::Printf(TEXT("Faction/%d"),IFF));
+    if(auto* Runtime=GetSSWRuntimeSubsystem())if(auto* Instance=Runtime->GetGameInstance())
+    {
+        auto* State=Instance->GetSubsystem<ULocalGameStateSubsystem>();
+        const auto* Players=Instance->GetSubsystem<UStarshatterPlayerSubsystem>();
+        const auto* Flight=mission?mission->GetPlayer():nullptr;
+        if(!HullId.IsValid() && Players && mission && (mission->IsFreeFlight() || FName(UTF8_TO_TCHAR(design->name))==FName(TEXT("Falcon"))) && Flight &&
+            FCStringAnsi::Strcmp(Flight->GetShipName(0),name)==0)
+        {
+            const auto& Profile=Players->GetPlayerInfo();
+            const auto* Owned=Profile.HangarShips.FindByPredicate([&](const auto& Row)
+                {return Row.HullId==Profile.AssignedHangarHull && !Row.bLost && Row.Design==FName(UTF8_TO_TCHAR(design->name));});
+            if(Owned){HullId=Owned->HullId;Owner=FEconomyLedger::Pilot();}
+        }
+        if(!HullId.IsValid() && State)HullId=State->ResolveHullIdentity(UTF8_TO_TCHAR(name),FName(UTF8_TO_TCHAR(design->name)));
+    }
+    if(HullId.IsValid() && FindShipByHullId(HullId))
+    {
+        if(PersistentHullId.IsValid())return nullptr;
+        HullId.Invalidate(); // Ambiguous legacy name; never duplicate a live VIN.
+    }
+    if(!HullId.IsValid())do{HullId=FHullRegistry::Allocate();}while(HullRegistry.Find(HullId));
+    if(!HullRegistry.Register(HullId,FName(UTF8_TO_TCHAR(design->name)),UTF8_TO_TCHAR(name),Owner,IFF))return nullptr;
 	Ship* ship = new Ship(
 		name,
 		reg_num,
 		design,
 		IFF,
 		cmd_ai,
-		loadout);
+		loadout,true,HullId);
 
     // The staged Airbase1 row is shared with Telmera. Janek's Base1 mesh
     // has a different recovery strip, authored in JanekStation.def.
@@ -2053,6 +2080,15 @@ Sim::CreateShip(
 	}
 
 	return ship;
+}
+
+Ship* Sim::FindShipByHullId(FGuid HullId)
+{
+    if(!HullId.IsValid())return nullptr;
+    for(ListIter<SimRegion> Region=regions;++Region;)
+        for(ListIter<Ship> Vessel=Region->GetShips();++Vessel;)
+            if(Vessel->GetHullId()==HullId)return Vessel.value();
+    return nullptr;
 }
 
 Ship*
