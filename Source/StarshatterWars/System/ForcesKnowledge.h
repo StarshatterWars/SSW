@@ -4,6 +4,9 @@ enum class EForcesScope : uint8 { Sector, System, Neighbors };
 struct FForcesReport
 {
     uint32 Id=0;
+    FGuid HullId;
+    FString Status;
+    bool bAlliedOperationalAccess=false;
     FString Name,Design,Group,System,Sector;
     double Integrity=0,Speed=0;
     int32 IFF=0;

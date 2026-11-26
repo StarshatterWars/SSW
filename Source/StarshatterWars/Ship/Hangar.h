@@ -100,6 +100,7 @@ public:
 	int               NumSlotsEmpty()                        const;
     bool RestagePlayer(Ship* Craft);
     bool TransferStoredReserve(int squadron,int index,bool restore=false);
+    void RefreshCampaignFleet();
 
 	int               GetActiveElements(List<SimElement>& active_list);
 

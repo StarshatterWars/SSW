@@ -17,6 +17,7 @@
 */
 
 #include "CampaignPlanMovement.h"
+#include "CampaignFleet.h"
 #include "GameStructs.h"
 
 #include "Campaign.h"
@@ -68,10 +69,15 @@ CampaignPlanMovement::MoveUnit(CombatUnit* u)
     if (!u)
         return;
 
+    if(campaign)
+    {
+        const auto& Fleet=campaign->GetPersistentFleet();
+        if(Fleet.Units.Contains(FCampaignFleet::UnitKey(*u)) && !FCampaignFleet::Ready(Fleet,FCampaignFleet::UnitKey(*u)))return;
+    }
     // starship repair:
     double damage = u->GetSustainedDamage();
 
-    if (damage > 0 && u->GetDesign()) {
+    if (damage > 0 && u->GetDesign() && (!campaign || !campaign->GetPersistentFleet().Units.Contains(FCampaignFleet::UnitKey(*u)))) {
         int percent = (int)(100 * damage / u->GetDesign()->integrity);
 
         if (percent > 50) {

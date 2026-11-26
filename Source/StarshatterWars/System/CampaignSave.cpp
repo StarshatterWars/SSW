@@ -101,6 +101,8 @@ bool UCampaignSave::RecordCompletedMission(int32 MissionId)
 void UCampaignSave::RestoreProgress(Campaign* CampaignPtr) const
 {
     if (!CampaignPtr || CampaignPtr->GetCampaignId() != CampaignIndex) return;
+    CampaignPtr->RestorePersistentFleet(Fleet);
+    FCampaignFleet::Prepare(*CampaignPtr);
     ListIter<CombatEvent> Events = CampaignPtr->GetEvents();
     while (++Events)
     {

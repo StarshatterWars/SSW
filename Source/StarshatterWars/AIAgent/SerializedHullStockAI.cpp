@@ -1,7 +1,7 @@
 #include "SerializedHullStockAI.h"
 #include "HullRegistry.h"
 
-bool SerializedHullStockAI::Ensure(FEconomyState& State,FName Inventory,FName Design,int32 Count)
+bool SerializedHullStockAI::Ensure(FEconomyState& State,FName Inventory,FName Design,int32 Count,const TArray<FGuid>* Preferred)
 {
  if(Inventory.IsNone() || Design.IsNone() || Count<0 || Count>10000)return false;
  TArray<FGuid> Active;
@@ -17,7 +17,9 @@ bool SerializedHullStockAI::Ensure(FEconomyState& State,FName Inventory,FName De
  }
  while(Active.Num()<Count)
  {
-  FSerializedHullStock Record;do{Record.HullId=FHullRegistry::Allocate();}while(State.SerializedHulls.Contains(Record.HullId));
+  FSerializedHullStock Record;
+  if(Preferred)for(const auto Id:*Preferred)if(Id.IsValid() && !State.SerializedHulls.Contains(Id)){Record.HullId=Id;break;}
+  if(!Record.HullId.IsValid())do{Record.HullId=FHullRegistry::Allocate();}while(State.SerializedHulls.Contains(Record.HullId));
   Record.Inventory=Inventory;Record.Design=Design;Active.Add(Record.HullId);State.SerializedHulls.Add(Record.HullId,Record);Changed=true;
  }
  return Changed;

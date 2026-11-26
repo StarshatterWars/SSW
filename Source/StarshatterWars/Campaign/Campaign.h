@@ -147,6 +147,9 @@ public:
     List<MissionInfo>& GetMissionList() { return missions; }
     List<MissionInfo>& GetStoryMissionList() { return story_missions; }
     const FS_CampaignMission* FindStoryMissionData(int32 Id) const;
+    struct FCampaignFleetState& GetPersistentFleet();
+    void RestorePersistentFleet(const struct FCampaignFleetState&);
+    void BindFleetSaveSlot(const FString&,bool NewCampaign=false);
     List<Combatant>& GetCombatants() { return combatants; }
     List<CombatZone>& GetZones() { return zones; }
     
@@ -314,5 +317,8 @@ private:
     Mission* ActiveMission = nullptr;
 private:
     TSet<int32> CutsceneMissionIds;
+    TUniquePtr<struct FCampaignFleetState> PersistentFleet;
+    bool bPersistentFleetRestored=false;
+    FString PersistentFleetSaveSlot;
 
 };

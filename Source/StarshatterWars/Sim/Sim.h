@@ -91,6 +91,7 @@ class Sim : public SimUniverse
 {
     friend class FLocalWorldStateCodec;
     friend class FLiveWorldResumeTest;
+    friend class FCampaignFleetLiveTest;
     friend class FAutolandTargetSelectionTest;
     friend class FIndependentSurveyFlowTest;
     friend class FIndependentObjectiveFlowTest;

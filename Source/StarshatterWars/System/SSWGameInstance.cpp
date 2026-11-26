@@ -1494,6 +1494,13 @@ bool USSWGameInstance::SaveCampaign()
 		return false;
 	}
 
+    if(auto* Story=Campaign::GetCampaign();Story && Story->GetCampaignId()==CampaignSave->CampaignIndex)
+    {
+        if(auto* Simulation=Sim::GetSim();Simulation && Simulation->GetMission() && Story->OwnsMission(Simulation->GetMission()))FCampaignFleet::Capture(*Story,*Simulation);
+        else FCampaignFleet::Prepare(*Story);
+        CampaignSave->Fleet=Story->GetPersistentFleet();
+        Story->RestorePersistentFleet(CampaignSave->Fleet);
+    }
     if (const auto* Timer = GetSubsystem<UTimerSubsystem>())
         CampaignSave->AdvanceCampaignClock(Timer->GetUniverseTimeSeconds(), 0);
 
@@ -1559,6 +1566,8 @@ UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, F
 				LoadedSave->CampaignDisplayName = DisplayName;
 
 			CampaignSave = LoadedSave;
+            if(auto* Story=Campaign::GetCampaign();Story && Story->GetCampaignId()==CampaignIndex)Story->BindFleetSaveSlot(Slot);
+            CampaignSave->RestoreProgress(Campaign::GetCampaign());
 
 			// Load campaign UI bundle for this campaign
 			LoadCampaignUIBundle(CampaignFolder);
@@ -1617,6 +1626,7 @@ UCampaignSave* USSWGameInstance::LoadOrCreateCampaignSave(int32 CampaignIndex, F
 
 	// Assign + inject
 	CampaignSave = NewSave;
+    if(auto* Story=Campaign::GetCampaign();Story && Story->GetCampaignId()==CampaignIndex)Story->BindFleetSaveSlot(Slot,true);
 
 	// Load campaign UI bundle for this campaign
 	LoadCampaignUIBundle(CampaignFolder);

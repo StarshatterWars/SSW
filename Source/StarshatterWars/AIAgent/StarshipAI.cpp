@@ -11,6 +11,8 @@
 */
 
 #include "StarshipAI.h"
+#include "CampaignFleet.h"
+#include "Campaign.h"
 #include "StarshipTacticalAI.h"
 
 #include "Ship.h"
@@ -226,7 +228,14 @@ StarshipAI::FindObjective()
     //-------------------------------------------------------------
     // Threat processing
     //-------------------------------------------------------------
-    if (bHold ||
+    bool HeroWithdraw=false;
+    if(auto* Story=Campaign::GetCampaign())if(const auto* Hull=Story->GetPersistentFleet().Hulls.Find(ship->GetHullId());Hull)
+    {
+        if(!FCampaignFleet::CanMove(*ship))
+        {ship->SetThrottle(0);ship->SetThrottleRequest(0);obj_w=ship->GetLocation();objective=Transform(obj_w);return;}
+        HeroWithdraw=Hull->bHero && ship->Design() && ship->GetIntegrity()<.5*ship->Design()->integrity && threat;
+    }
+    if (bHold || HeroWithdraw ||
         (!bDirected &&
             ThreatLevel >= 2.0 * SupportLevel))
     {
@@ -256,7 +265,7 @@ StarshipAI::FindObjective()
         // Run away
         //---------------------------------------------------------
         else if (threat &&
-            threat != target)
+            (HeroWithdraw || threat != target))
         {
             ship->SetDirectorInfo("Retreat");
 
@@ -588,6 +597,9 @@ StarshipAI::HelmControl()
 void
 StarshipAI::ThrottleControl()
 {
+    if(ship)if(auto* Story=Campaign::GetCampaign();Story && Story->GetPersistentFleet().Hulls.Contains(ship->GetHullId()) && !FCampaignFleet::CanMove(*ship))
+    {ship->SetThrottle(0);ship->SetThrottleRequest(0);return;}
+
     if (!ship)
     {
         return;

@@ -101,7 +101,7 @@ public:
 	FWorldScapeMeshSceneProxy(UWorldScapeMeshComponent* Component)
 		: FPrimitiveSceneProxy(Component)
 		, BodySetup(Component->GetBodySetup())
-		, MaterialRelevance(Component->GetMaterialRelevance(GetScene().GetFeatureLevel()))
+		, MaterialRelevance(Component->GetMaterialRelevance(GetScene().GetShaderPlatform()))
 	{
 		// Copy each section
 		const int32 NumSections = Component->ProcMeshSections.Num();
@@ -431,6 +431,9 @@ public:
 			return;
 		}
 
+        const auto Views=Collector.GetViews();
+        const uint32 VisibilityMap=Collector.GetVisibilityMap();
+        if(Views.IsEmpty())return;
 		for (int32 SegmentIndex = 0; SegmentIndex < Sections.Num(); ++SegmentIndex)
 		{
 			const FWorldScapeMeshProxySection* Section = Sections[SegmentIndex];
@@ -456,7 +459,7 @@ public:
 					MeshBatch.Type = PT_TriangleList;
 					MeshBatch.DepthPriorityGroup = SDPG_World;
 					MeshBatch.bCanApplyViewModeOverrides = false;
-					MeshBatch.CastRayTracedShadow = IsShadowCast(Collector.GetReferenceView());
+					MeshBatch.CastRayTracedShadow = false; // Assigned for each visible view below.
 
 					FMeshBatchElement& BatchElement = MeshBatch.Elements[0];
 					BatchElement.IndexBuffer = &Section->IndexBuffer;
@@ -475,7 +478,13 @@ public:
 
 					RayTracingInstance.Materials.Add(MeshBatch);
 					
-					Collector.AddRayTracingInstance(MoveTemp(RayTracingInstance));
+					for(int32 ViewIndex=0;ViewIndex<Views.Num() && ViewIndex<32;++ViewIndex)
+                    {
+                        if(!Views[ViewIndex] || (VisibilityMap & (uint32(1)<<ViewIndex))==0)continue;
+                        FRayTracingInstance ViewInstance=RayTracingInstance;
+                        ViewInstance.Materials[0].CastRayTracedShadow=IsShadowCast(Views[ViewIndex]);
+                        Collector.AddRayTracingInstance(ViewIndex,MoveTemp(ViewInstance));
+                    }
 				}
 			}
 		}

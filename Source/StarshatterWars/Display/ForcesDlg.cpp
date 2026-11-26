@@ -1,4 +1,5 @@
 #include "ForcesDlg.h"
+#include "CampaignFleet.h"
 #include "ForcesKnowledge.h"
 #include "SkillsSubsystem.h"
 #include "MissionUIStyle.h"
@@ -33,8 +34,8 @@ public:
     { Item=Args._Item; SMultiColumnTableRow<FReport>::Construct(FSuperRowType::FArguments().Style(&MissionUIStyle::FlightTableRowStyle()),Owner); }
     TSharedRef<SWidget> GenerateWidgetForColumn(const FName& Column) override
     {
-        FString Value=Column==TEXT("Design") ? Item->Design : Column==TEXT("System") ? Item->System : Column==TEXT("Sector") ? Item->Sector :
-            Column==TEXT("Group") ? Item->Group : Column==TEXT("IFF") ? (Item->IFF==Item->ObserverIFF ? TEXT("FRIENDLY") : Item->IFF==0 ? TEXT("NEUTRAL") : TEXT("IFF: KNOWN")) : Column==TEXT("Hull") ? FString::Printf(TEXT("%.0f%%"),Item->Integrity*100) : Item->Name;
+        FString Value=Column==TEXT("Status") ? (Item->bAlliedOperationalAccess && Item->IFF==Item->ObserverIFF && Item->IFF>0?Item->Status:TEXT("—")) : Column==TEXT("HullId") ? (Item->bAlliedOperationalAccess && Item->IFF==Item->ObserverIFF && Item->IFF>0 && Item->HullId.IsValid()?Item->HullId.ToString(EGuidFormats::DigitsWithHyphens):TEXT("—")) : Column==TEXT("Design") ? Item->Design : Column==TEXT("System") ? Item->System : Column==TEXT("Sector") ? Item->Sector :
+            Column==TEXT("Group") ? Item->Group : Column==TEXT("IFF") ? (Item->IFF==Item->ObserverIFF ? TEXT("FRIENDLY") : Item->IFF==0 ? TEXT("NEUTRAL") : TEXT("IFF: KNOWN")) : Column==TEXT("Hull") ? (Item->bAlliedOperationalAccess && Item->IFF==Item->ObserverIFF && Item->IFF>0?FString::Printf(TEXT("%.0f%%"),Item->Integrity*100):TEXT("—")) : Item->Name;
         return SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Margin(FMargin(6,4)).Text(FText::FromString(Value).ToUpper()).ColorAndOpacity(SFighterHUDDetails::IdentificationColor(Item->IFF,Item->ObserverIFF)).ToolTipText(FText::FromString(Value));
     }
 private:FReport Item;
@@ -60,7 +61,7 @@ struct FForceTable
         if (SkillLevel<1)
         { Location=TEXT("SENSOR NETWORKING I REQUIRED"); Selected.Reset(); if(auto View=List.Pin())View->RequestListRefresh(); return; }
         const auto Scope=static_cast<EForcesScope>(FMath::Min(static_cast<uint8>(Requested),static_cast<uint8>(FForcesKnowledge::ScopeForLevel(SkillLevel))));
-        TSet<FName> Neighbors; TArray<FForcesReport> Reports; TMap<const Ship*,int32> KnownIFF;
+        TSet<FName> Neighbors; TSet<FGuid> LiveHulls;TArray<FForcesReport> Reports; TMap<const Ship*,int32> KnownIFF;
         for (ListIter<SimRegion> Regions=Simulation->GetRegions();++Regions;)
             if (Regions.value() && Regions->GetSystem() && System->HasLinkTo(Regions->GetSystem()))
                 Neighbors.Add(FName(UTF8_TO_TCHAR(Regions->GetSystem()->GetName())));
@@ -102,7 +103,10 @@ struct FForceTable
                 const bool Reported=Unit->GetIFF()==Player->GetIFF() || KnownIFF.Contains(Unit) || (CampaignGate && Authorized);
                 if (!Reported) continue;
                 if (!KnownIFF.Contains(Unit) && Unit->GetIFF()!=Player->GetIFF()) IFF=Unit->GetIFF(); // Known campaign intelligence is an authorized report.
-                FForcesReport Report; Report.Id=Unit->GetIdentity(); Report.Name=UTF8_TO_TCHAR(Unit->GetObserverName());
+                FForcesReport Report; Report.Id=Unit->GetIdentity();Report.HullId=Unit->GetHullId();LiveHulls.Add(Report.HullId);
+                Report.bAlliedOperationalAccess=Unit->GetIFF()==Player->GetIFF();
+                Report.Status=Unit->GetIFF()==Player->GetIFF()?(FCampaignFleet::CanMove(*const_cast<Ship*>(Unit))?(Unit->Design() && Unit->GetIntegrity()<Unit->Design()->integrity?TEXT("DAMAGED"):TEXT("READY")):TEXT("IMMOBILIZED")):TEXT("REPORTED");
+                if(ActiveCampaign)if(const auto* Saved=ActiveCampaign->GetPersistentFleet().Hulls.Find(Report.HullId);Saved && Saved->bRepairing && Unit->GetIFF()==Player->GetIFF())Report.Status=FCampaignFleet::Status(*Saved); Report.Name=UTF8_TO_TCHAR(Unit->GetObserverName());
                 Report.Design=Unit->Design() ? UTF8_TO_TCHAR(Unit->Design()->name) : TEXT("");
                 Report.System=UTF8_TO_TCHAR(Candidate->GetSystem()->GetName()); Report.Sector=UTF8_TO_TCHAR(Candidate->GetName());
                 Report.Group=Group ? UTF8_TO_TCHAR(Group->GetDescription()) : Element ? UTF8_TO_TCHAR(Element->GetName()) : TEXT("INDEPENDENT UNIT");
@@ -110,17 +114,26 @@ struct FForceTable
                 Report.bReported=true; Report.bCampaignAllowed=Authorized; Reports.Add(Report);
             }
         }
+        if(ActiveCampaign)
+            for(const auto& Pair:ActiveCampaign->GetPersistentFleet().Hulls)
+            {
+                const auto& Hull=Pair.Value;
+                if(Hull.Faction!=Player->GetIFF() || Hull.bTransferred || LiveHulls.Contains(Hull.HullId))continue;
+                FForcesReport Report;Report.HullId=Hull.HullId;Report.Name=Hull.Name;Report.Design=Hull.Design.ToString();Report.Group=Hull.Assignment;
+                Report.System=Hull.System;Report.Sector=Hull.Region;Report.Integrity=Hull.bDestroyed?0:Hull.Condition.bHasCondition?Hull.Condition.HullCondition:1;
+                Report.bAlliedOperationalAccess=true;Report.Status=FCampaignFleet::Status(Hull);Report.IFF=Report.ObserverIFF=Player->GetIFF();Report.bReported=true;Report.bCampaignAllowed=true;Reports.Add(MoveTemp(Report));
+            }
         const auto Visible=FForcesKnowledge::Filter(Reports,Player->GetIFF(),FName(UTF8_TO_TCHAR(System->GetName())),FName(UTF8_TO_TCHAR(Region->GetName())),NAME_None,Requested,SkillLevel,Neighbors);
         for (const auto& Report:Visible) Rows.Add(MakeShared<FForcesReport>(Report));
         Rows.StableSort([this](const FReport& A,const FReport& B)
         {
-            int32 Order=SortColumn==TEXT("System") ? A->System.Compare(B->System) : SortColumn==TEXT("Sector") ? A->Sector.Compare(B->Sector) :
+            int32 Order=SortColumn==TEXT("Status") ? A->Status.Compare(B->Status) : SortColumn==TEXT("HullId") ? A->HullId.ToString().Compare(B->HullId.ToString()) : SortColumn==TEXT("System") ? A->System.Compare(B->System) : SortColumn==TEXT("Sector") ? A->Sector.Compare(B->Sector) :
                 SortColumn==TEXT("Design") ? A->Design.Compare(B->Design) : SortColumn==TEXT("Group") ? A->Group.Compare(B->Group) :
                 SortColumn==TEXT("Hull") ? (A->Integrity<B->Integrity ? -1 : A->Integrity>B->Integrity ? 1 : 0) : 0;
             if (!Order) Order=A->Name.Compare(B->Name); return Descending ? Order>0 : Order<0;
         });
         Location=FString::Printf(TEXT("%hs / %hs  |  %d REPORTED UNITS"),System->GetName(),Region->GetName(),Rows.Num());
-        if (Selected) { const uint32 Id=Selected->Id; auto* Found=Rows.FindByPredicate([Id](const FReport& Item){return Item->Id==Id;}); Selected=Found ? *Found : nullptr; }
+        if (Selected) { const uint32 Id=Selected->Id;const FGuid HullId=Selected->HullId; auto* Found=Rows.FindByPredicate([Id,HullId](const FReport& Item){return HullId.IsValid()?Item->HullId==HullId:Item->Id==Id;}); Selected=Found ? *Found : nullptr; }
         if (auto View=List.Pin()) View->RequestListRefresh();
     }
 };
@@ -139,7 +152,7 @@ TSharedRef<SWidget> UForcesDlg::RebuildWidget()
             .OnClicked_Lambda([Model,Index](){Model->Requested=static_cast<EForcesScope>(Index);Model->Refresh();return FReply::Handled();})
             [SNew(SShipSystemIcon).Icon(Icons[Index])]];
     auto Header=SNew(SHeaderRow);
-    for (const auto& Entry:{TPair<FName,FString>(TEXT("Name"),TEXT("UNIT")),{TEXT("Design"),TEXT("HULL")},{TEXT("Group"),TEXT("ELEMENT")},{TEXT("System"),TEXT("SYSTEM")},{TEXT("Sector"),TEXT("SECTOR")},{TEXT("IFF"),TEXT("IFF")},{TEXT("Hull"),TEXT("INTEGRITY")}})
+    for (const auto& Entry:{TPair<FName,FString>(TEXT("Name"),TEXT("UNIT")),{TEXT("Design"),TEXT("HULL")},{TEXT("Group"),TEXT("ELEMENT")},{TEXT("System"),TEXT("SYSTEM")},{TEXT("Sector"),TEXT("SECTOR")},{TEXT("IFF"),TEXT("IFF")},{TEXT("Hull"),TEXT("INTEGRITY")},{TEXT("Status"),TEXT("STATUS")},{TEXT("HullId"),TEXT("HULL ID")}})
         Header->AddColumn(SHeaderRow::Column(Entry.Key).DefaultLabel(FText::FromString(Entry.Value)).FillWidth(Entry.Key==TEXT("Name")?2.f:1.f)
             .OnSort_Lambda([Model](EColumnSortPriority::Type,const FName& Column,EColumnSortMode::Type Mode){Model->SortColumn=Column;Model->Descending=Mode==EColumnSortMode::Descending;Model->Refresh();}));
     auto List=SNew(SListView<FReport>).ListItemsSource(&Model->Rows).HeaderRow(Header).SelectionMode(ESelectionMode::Single)
@@ -152,7 +165,7 @@ TSharedRef<SWidget> UForcesDlg::RebuildWidget()
         + SVerticalBox::Slot().AutoHeight().Padding(8)[SNew(STextBlock).Text_Lambda([Model](){return FText::FromString(Model->Location);})]
         + SVerticalBox::Slot().FillHeight(1).Padding(8)[MissionUIStyle::MakeDataPane(List)]
         + SVerticalBox::Slot().AutoHeight().Padding(8)[MissionUIStyle::MakeDataPane(SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Margin(10).AutoWrapText(true)
-            .Text_Lambda([Model](){const auto& Item=Model->Selected; return Item ? FText::Format(INVTEXT("{0}  |  {1}\n{2} / {3}  |  {4}\nINTEGRITY {5}%  |  SPEED {6} M/S"),
+            .Text_Lambda([Model](){const auto& Item=Model->Selected; return Item ? FText::Format(INVTEXT("{0}  |  {1}\n{2} / {3}  |  {4}\nINTEGRITY {5}%  |  SPEED {6} M/S\nSTATUS {7}  |  HULL ID {8}"),
                 FText::FromString(Item->Name).ToUpper(),FText::FromString(Item->Design).ToUpper(),FText::FromString(Item->System).ToUpper(),FText::FromString(Item->Sector).ToUpper(),
-                FText::FromString(Item->Group).ToUpper(),FText::AsNumber(Item->Integrity*100),FText::AsNumber(Item->Speed)) : INVTEXT("SELECT A REPORTED UNIT. SYSTEM AND NEIGHBOR COVERAGE REQUIRE SENSOR NETWORKING III AND V.");}))];
+                FText::FromString(Item->Group).ToUpper(),Item->bAlliedOperationalAccess?FText::AsNumber(Item->Integrity*100):INVTEXT("—"),FText::AsNumber(Item->Speed),Item->bAlliedOperationalAccess?FText::FromString(Item->Status):INVTEXT("—"),Item->bAlliedOperationalAccess?FText::FromString(Item->HullId.ToString(EGuidFormats::DigitsWithHyphens)):INVTEXT("—")) : INVTEXT("SELECT A REPORTED UNIT. SYSTEM AND NEIGHBOR COVERAGE REQUIRE SENSOR NETWORKING III AND V.");}))];
 }

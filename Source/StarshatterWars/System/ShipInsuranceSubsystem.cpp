@@ -1,4 +1,6 @@
 #include "ShipInsuranceSubsystem.h"
+#include "CampaignFleet.h"
+#include "Campaign.h"
 #include "SerializedHullStockAI.h"
 #include "StarterCraftOwnership.h"
 #include "ShipStoreAI.h"
@@ -736,7 +738,15 @@ bool UShipInsuranceSubsystem::PrepareHullOffers(const TArray<FName>& Designs,FTe
         if(HullStock(Design)<1)continue;
         const FName Inventory=DockedHullStock(Design,DockedCarrierOffer(Pilot,Design).IsSet());
         const FName Item=DataTableUtils::MakeValidName(Design.ToString().ToLower()+TEXT(" assembled hull"));
-        Changed|=SerializedHullStockAI::Ensure(Pilot.Economy,Inventory,Design,FMath::FloorToInt(FEconomyLedger::Quantity(Pilot.Economy,Inventory,Item)));
+        TArray<FGuid> Preferred;
+        const auto CarrierOffer=DockedCarrierOffer(Pilot,Design);
+        if(CarrierOffer.IsSet())if(auto* Story=Campaign::GetCampaign())
+        {
+            FCampaignFleet::Prepare(*Story);
+            for(const auto& Pair:Story->GetPersistentFleet().Hulls)
+                if(Pair.Value.Design==Design && !Pair.Value.bDestroyed && !Pair.Value.bTransferred && CarrierOffer.GetValue().Squadrons.ContainsByPredicate([&](const auto& Squad){return Squad.Key.Equals(Pair.Value.Assignment,ESearchCase::IgnoreCase);}))Preferred.Add(Pair.Key);
+        }
+        Changed|=SerializedHullStockAI::Ensure(Pilot.Economy,Inventory,Design,FMath::FloorToInt(FEconomyLedger::Quantity(Pilot.Economy,Inventory,Item)),&Preferred);
         const auto Offer=DockedCarrierOffer(Pilot,Design);
         auto* S=Sim::GetSim();auto* Craft=S?S->GetPlayerShip():nullptr;auto* Base=Craft?Craft->GetCarrier():nullptr;
         if(Offer.IsSet() && Base && Base->GetHangar())Changed|=CarrierFighterSalesAI::BindHullOffers(Pilot.Economy,Inventory,*Base->GetHangar(),Offer.GetValue());

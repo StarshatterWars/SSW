@@ -16,6 +16,7 @@
 */
 
 #include "Campaign.h"
+#include "CampaignFleet.h"
 #include "CampaignStoryRules.h"
 #include "CampaignPresentationRules.h"
 
@@ -654,6 +655,7 @@ Campaign::GetMission()
 
 Mission* Campaign::GetMission(int32 Id)
 {
+    FCampaignFleet::Prepare(*this);
     if (Id < 0)
     {
         UE_LOG(LogCampaign, Error, TEXT("Campaign::GetMission(%d) invalid mission id"), Id);
@@ -663,7 +665,7 @@ Mission* Campaign::GetMission(int32 Id)
     // Preserve the existing fast-path for dynamic campaigns.
     if (IsDynamic() && mission && mission->GetIdentity() == Id)
     {
-        return mission;
+        return mission && FCampaignFleet::MissionReady(*this,*mission)?mission:nullptr;
     }
 
     MissionInfo* Info = nullptr;
@@ -733,7 +735,7 @@ Mission* Campaign::GetMission(int32 Id)
                 Info->mission->IsOK() ? 1 : 0);
 
             mission = Info->mission;
-            return mission;
+            return mission && FCampaignFleet::MissionReady(*this,*mission)?mission:nullptr;
         }
 
         UE_LOG(LogCampaign, Warning,
@@ -743,7 +745,7 @@ Mission* Campaign::GetMission(int32 Id)
     // Existing dynamic/template/metadata fallback behavior.
     if (mission && mission->GetIdentity() == Id)
     {
-        return mission;
+        return mission && FCampaignFleet::MissionReady(*this,*mission)?mission:nullptr;
     }
 
     if (!Info->mission)
@@ -785,7 +787,7 @@ Mission* Campaign::GetMission(int32 Id)
     }
 
     mission = Info->mission;
-    return Info->mission;
+    return Info->mission && FCampaignFleet::MissionReady(*this,*Info->mission)?Info->mission:nullptr;
 }
 
 Mission* Campaign::GetMissionByFile(const char* InFilename)
@@ -1651,6 +1653,7 @@ Campaign::GetAllCombatUnits(int iff, List<CombatUnit>& units)
 
 void Campaign::LoadFromData(const FS_Campaign& Data)
 {
+    PersistentFleet.Reset();bPersistentFleetRestored=false;
     // Reset runtime-owned state:
     Clear();
     systems.clear();
@@ -2516,4 +2519,22 @@ FString Campaign::MissionRankRequirement(int32 Id) const
         if (missions[I] && missions[I]->id==Id && missions[I]->min_rank>0)
             return FString::Printf(TEXT("Requires %s"), UTF8_TO_TCHAR(PlayerCharacter::RankName(missions[I]->min_rank)));
     return FString();
+}
+
+FCampaignFleetState& Campaign::GetPersistentFleet()
+{
+    if(!PersistentFleet)PersistentFleet=MakeUnique<FCampaignFleetState>();
+    return *PersistentFleet;
+}
+
+void Campaign::RestorePersistentFleet(const FCampaignFleetState& Saved)
+{
+ if(!bPersistentFleetRestored && Saved.bInitialized && Saved.CampaignId==GetCampaignId())
+ {GetPersistentFleet()=Saved;GetPersistentFleet().bDirty=true;FCampaignFleet::RestoreLocations(*this);bPersistentFleetRestored=true;}
+}
+
+void Campaign::BindFleetSaveSlot(const FString& Slot,bool NewCampaign)
+{
+ if(NewCampaign || PersistentFleetSaveSlot!=Slot)
+ {PersistentFleet.Reset();bPersistentFleetRestored=false;PersistentFleetSaveSlot=Slot;}
 }

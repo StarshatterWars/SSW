@@ -39,6 +39,7 @@
 #include "SSWSessionLobbyGameMode.h"
 #include "SSWGameInstance.h"
 #include "CampaignSave.h"
+#include "CampaignFleet.h"
 #include "Campaign.h"
 #include "MissionInfo.h"
 #include "Templates/UnrealTemplate.h"
@@ -426,6 +427,9 @@ Sim::CommitMission()
     const auto* GameContext = RuntimeContext ? Cast<USSWGameInstance>(RuntimeContext->GetGameInstance()) : nullptr;
     const bool bTrainingTest = GameContext && GameContext->IsTrainingTestSession();
     Campaign* ActiveCampaign = Campaign::GetCampaign();
+    if(!bTrainingTest && mission && ActiveCampaign && ActiveCampaign->OwnsMission(mission))
+        if(auto* Runtime=GetSSWRuntimeSubsystem())if(auto* GI=Cast<USSWGameInstance>(Runtime->GetGameInstance()))
+        {FCampaignFleet::CommitObjectives(*ActiveCampaign,*mission);FCampaignFleet::Capture(*ActiveCampaign,*this);GI->SaveCampaign();}
     if (!bTrainingTest && mission && mission->IsComplete() && ActiveCampaign &&
         ActiveCampaign->OwnsMission(mission) &&
         !ActiveCampaign->IsCutsceneMission(mission->GetIdentity()))
@@ -849,6 +853,7 @@ Sim::ExecMission()
 	//-------------------------------------------------------------
 	// Create runtime entities
 	//-------------------------------------------------------------
+    if(auto* Story=Campaign::GetCampaign();Story && Story->OwnsMission(mission))FCampaignFleet::Prepare(*Story);
 	CreateElements();
 
     // Campaign missions may already include the roster station. Scripted
@@ -1164,9 +1169,11 @@ Sim::CreateElements(const char* SpawnName)
         }
     }
     for (MissionElement* MissionElem : OrderedElements) {
-
 		if (!MissionElem)
 			continue;
+
+        if(auto* Story=Campaign::GetCampaign();Story && Story->OwnsMission(mission) &&
+           Story->GetPersistentFleet().ClearedMinefields.Contains(FCampaignFleet::MinefieldKey(*MissionElem)))continue;
 
         if (SeenEntries.Contains(MissionElem))
         {
@@ -1453,14 +1460,19 @@ Sim::CreateElements(const char* SpawnName)
 
                 FlightDeck* Deck = AssignedDecks.IsEmpty() ? nullptr : AssignedDecks[0];
                 // Reserve before mutation: a shortage must not duplicate a partly prepared group.
-                TArray<FIntPoint> LaunchInventory;
+                TArray<FIntPoint> LaunchInventory;HangarPtr->RefreshCampaignFleet();
                 if (ShipDesignPtr) {
                     for (int Sq=0; Sq<HangarPtr->NumSquadrons(); ++Sq) {
                         if (SquadronIndex>=0 && Sq!=SquadronIndex) continue;
                         if (HangarPtr->SquadronDesign(Sq)!=ShipDesignPtr) continue;
                         for (int Slot=0; Slot<HangarPtr->SquadronSize(Sq); ++Slot)
                             if (HangarPtr->GetState(HangarPtr->GetSlot(Sq, Slot))==Hangar::STORAGE)
+                            {
+                                auto* Story=Campaign::GetCampaign();auto* Unit=MissionElem->GetCombatUnit();
+                                if(Story && Story->OwnsMission(mission) && Unit)
+                                {const FGuid Id=FCampaignFleet::ResolveSlot(*Story,Unit,Slot);if(!Id.IsValid() || FindShipByHullId(Id))continue;}
                                 LaunchInventory.Add(FIntPoint(Sq, Slot));
+                            }
                     }
                 }
                 UE_LOG(LogTemp, Warning, TEXT("[CarrierLaunch] Flight='%hs' Deck='%hs' Inventory=%d Required=%d"),
@@ -1695,6 +1707,17 @@ Sim::CreateElements(const char* SpawnName)
 						continue;
 					}
 
+                    FGuid FleetHull;
+                    auto* FleetCampaign=Campaign::GetCampaign();
+                    auto* FleetUnit=MissionElem->GetCombatUnit();
+                    const bool FleetBound=HasSimulationAuthority() && FleetCampaign && FleetCampaign->OwnsMission(mission) && FleetUnit && FleetUnit->GetShipClass()!=int32(CLASSIFICATION::MINE);
+                    if(FleetBound)
+                    {
+                        FleetHull=FCampaignFleet::Resolve(*FleetCampaign,FleetUnit,i,false);
+                        if(!FleetHull.IsValid())continue;
+                        if(const auto* Saved=FleetCampaign->GetPersistentFleet().Hulls.Find(FleetHull);Saved && !FCampaignFleet::CanMove(*Saved))
+                        {if(!Saved->Region.IsEmpty())RegionName=TCHAR_TO_UTF8(*Saved->Region);SpawnLocation=Saved->Position;}
+                    }
 					Ship* NewShip = CreateShip(
 						ShipName,
 						RegistryNum,
@@ -1703,7 +1726,7 @@ Sim::CreateElements(const char* SpawnName)
 						SpawnLocation,
 						MissionElem->GetIFF(),
 						MissionElem->GetCommandAI(),
-						Loadout);
+						Loadout,FleetHull);
 
 					if (NewShip) {
 						const bool CanCarrySupplies = !LegacyDesign->CargoManifest.IsEmpty() ||
@@ -1805,6 +1828,7 @@ Sim::CreateElements(const char* SpawnName)
 							}
 						}
 
+                        if(FleetBound)FCampaignFleet::Apply(*FleetCampaign,*NewShip);
 						Shield* ShieldPtr = NewShip->GetShield();
 
 						if (ShieldPtr)
@@ -1970,6 +1994,8 @@ Sim::CreateShip(
 		return nullptr;
 	}
 
+    if(HasSimulationAuthority() && PersistentHullId.IsValid())if(auto* Story=Campaign::GetCampaign())
+        if(const auto* Hull=Story->GetPersistentFleet().Hulls.Find(PersistentHullId);Hull && Hull->bDestroyed)return nullptr;
     FGuid HullId=PersistentHullId;
     FName Owner(*FString::Printf(TEXT("Faction/%d"),IFF));
     if(auto* Runtime=GetSSWRuntimeSubsystem())if(auto* Instance=Runtime->GetGameInstance())

@@ -1,4 +1,7 @@
 #include "CarrierFighterSalesAI.h"
+#include "CampaignFleet.h"
+#include "Campaign.h"
+#include "Sim.h"
 #include "SerializedHullStockAI.h"
 #include "Hangar.h"
 #include "Ship.h"
@@ -131,7 +134,12 @@ TOptional<FCarrierFighterOffer> CarrierFighterSalesAI::Offer(const FS_PlayerGame
     return {};
 }
 FName CarrierFighterSalesAI::Inventory(FName System,const FString& CarrierName,FName Fighter)
-{const FString Compartment=TEXT("Squadron Sales/")+Fighter.ToString();return FEconomyRuntime::Warehouse(System.ToString(),CarrierName,*Compartment);}
+{
+    (void)System; // A carrier's inventory travels with the physical hull.
+    FString Identity=CarrierName;
+    if(auto* Simulation=Sim::GetSim())if(const auto* Carrier=Simulation->FindShip(TCHAR_TO_UTF8(*CarrierName)))Identity=Carrier->GetHullId().ToString(EGuidFormats::Digits);
+    return FName(*(TEXT("Fleet/")+Identity+TEXT("/Squadron Sales/")+Fighter.ToString()));
+}
 bool CarrierFighterSalesAI::FindReserve(Hangar& H,const FCarrierFighterOffer& O,int32& Squadron,int32& Slot)
 {
     for(int32 S=0;S<H.NumSquadrons();++S)
@@ -151,7 +159,7 @@ int32 CarrierFighterSalesAI::Available(const FEconomyState& State,FName Key,Hang
     int32 Blocked=ExternalAssigned(H,O),Stored=0;
     for(int32 S=0;S<H.NumSquadrons();++S)if(RosterSquadron(O,UTF8_TO_TCHAR(H.SquadronName(S).data())))
         for(int32 I=0;I<H.SquadronSize(S);++I)
-        {const auto* R=H.GetSlot(S,I);const int32 Status=H.GetState(R);if(Status==Hangar::STORAGE && !H.GetShip(R) && !H.GetPackageElement(R) && !H.GetFlightDeck(R))++Stored;else if(Status!=Hangar::TRANSFERRED)++Blocked;}
+        {const auto* R=H.GetSlot(S,I);const int32 Status=H.GetState(R);if(Status==Hangar::STORAGE && !H.GetShip(R) && !H.GetPackageElement(R) && !H.GetFlightDeck(R))++Stored;else if(Status!=Hangar::TRANSFERRED && Status!=Hangar::UNAVAIL)++Blocked;}
     return FMath::Min(Stored,FMath::Max(0,FMath::FloorToInt(ShipyardAI::Stock(State,Key,O.Fighter))-Blocked));
 }
 namespace
@@ -163,6 +171,7 @@ bool SerializedReserve(Hangar& H,const FCarrierFighterOffer& Offer,const FSerial
         const FString Name=UTF8_TO_TCHAR(H.SquadronName(S).data());
         if(!Name.Equals(Record.Squadron,ESearchCase::IgnoreCase) || !RosterSquadron(Offer,Name) || Record.Slot<0 || Record.Slot>=H.SquadronSize(S))continue;
         const auto* Row=H.GetSlot(S,Record.Slot);
+        if(auto* Simulation=Sim::GetSim();Simulation && Simulation->FindShipByHullId(Record.HullId))return false;
         if(H.GetState(Row)==Hangar::STORAGE && !H.GetShip(Row) && !H.GetPackageElement(Row) && !H.GetFlightDeck(Row)){Squadron=S;return true;}
     }
     return false;
@@ -178,6 +187,10 @@ bool CarrierFighterSalesAI::BindHullOffers(FEconomyState& State,FName Key,Hangar
     {
         auto& Record=State.SerializedHulls.FindChecked(Id);if(!Record.Squadron.IsEmpty())continue;
         bool Found=false;
+        if(auto* Story=Campaign::GetCampaign())if(const auto* Hull=Story->GetPersistentFleet().Hulls.Find(Id))
+            for(int32 S=0;S<H.NumSquadrons();++S)
+                if(Hull->Assignment.Equals(UTF8_TO_TCHAR(H.SquadronName(S).data()),ESearchCase::IgnoreCase) && Hull->Slot>=0 && Hull->Slot<H.SquadronSize(S))
+                {Record.Squadron=Hull->Assignment;Record.Slot=Hull->Slot;Bound.Add(Record.Squadron.ToUpper()+TEXT("/")+FString::FromInt(Record.Slot));Found=Changed=true;break;}
         for(int32 S=0;S<H.NumSquadrons() && !Found;++S)
         {
             const FString Name=UTF8_TO_TCHAR(H.SquadronName(S).data());if(!RosterSquadron(Offer,Name))continue;
@@ -202,17 +215,49 @@ bool CarrierFighterSalesAI::Prepare(FS_PlayerGameInfo& P,Ship& Base,FName System
 {
     auto* H=Base.GetHangar();const auto All=Offers(P,Base);if(!H || System.IsNone() || All.IsEmpty())return false;
     const auto Before=P;bool Changed=false;
+    auto* Story=Campaign::GetCampaign();
+    const bool UseFleet=Story && Story->GetCampaignId()==P.Campaign;
+    if(UseFleet){FCampaignFleet::Prepare(*Story);H->RefreshCampaignFleet();}
     int32 Needed=0;for(const auto& O:All)for(const auto& Squad:O.Squadrons)
     {bool Exists=false;for(int32 S=0;S<H->NumSquadrons();++S)if(Squad.Key.Equals(UTF8_TO_TCHAR(H->SquadronName(S).data()),ESearchCase::IgnoreCase))Exists=true;if(!Exists)++Needed;}
     if(Needed+H->NumSquadrons()>Hangar::MAX_SQUADRONS){Why=INVTEXT("Carrier hangar cannot accommodate the authored OOB squadrons.");return false;}
     for(const auto& O:All)
     {
         const FName Key=Inventory(System,UTF8_TO_TCHAR(Base.GetName()),O.Fighter);
-        if(P.Economy.Inventories.Contains(Key))continue;
+        TArray<FGuid> Physical;bool FleetDesign=false;
+        if(UseFleet)for(const auto& Pair:Story->GetPersistentFleet().Hulls)
+            if(Pair.Value.Design==O.Fighter && Pair.Value.Faction==Base.GetIFF() && RosterSquadron(O,Pair.Value.Assignment))
+            {FleetDesign=true;if(!Pair.Value.bDestroyed && !Pair.Value.bTransferred)Physical.Add(Pair.Key);}
+        if(auto* Existing=P.Economy.Inventories.Find(Key))
+        {
+            if(Existing->System!=System){Existing->System=System;Changed=true;}
+            if(FleetDesign)
+            {
+                const FName Item=DataTableUtils::MakeValidName(O.Fighter.ToString().ToLower()+TEXT(" assembled hull"));
+                const double Delta=Physical.Num()-FEconomyLedger::Quantity(P.Economy,Key,Item);
+                if((Delta<0 && !FEconomyLedger::Withdraw(P.Economy,Existing->Owner,Key,Item,-Delta)) ||
+                   (Delta>0 && !FEconomyLedger::Deposit(P.Economy,Key,Item,Delta,1))){P=Before;Why=INVTEXT("Fleet inventory has a conflicting reservation.");return false;}
+                for(auto& Pair:P.Economy.SerializedHulls)if(Pair.Value.Inventory==Key && !Pair.Value.SoldReceipt.IsValid() && !Pair.Value.bWithdrawn && !Physical.Contains(Pair.Key)){Pair.Value.bWithdrawn=true;Changed=true;}
+                Changed|=Delta!=0;
+            }
+            continue;
+        }
+        const FName Item=DataTableUtils::MakeValidName(O.Fighter.ToString().ToLower()+TEXT(" assembled hull"));
+        TArray<FName> LegacyKeys;int32 Consumed=0;
+        const FString Compartment=TEXT("Squadron Sales/")+O.Fighter.ToString();
+        for(const auto& Pair:P.Economy.Inventories)
+            if(Pair.Key==FEconomyRuntime::Warehouse(Pair.Value.System.ToString(),UTF8_TO_TCHAR(Base.GetName()),*Compartment))
+            {LegacyKeys.Add(Pair.Key);Consumed+=O.Quantity-FMath::Clamp(FMath::FloorToInt(FEconomyLedger::Quantity(P.Economy,Pair.Key,Item)),0,O.Quantity);}
+        for(const FName Legacy:LegacyKeys)
+        {
+            for(auto& Pair:P.Economy.SerializedHulls)if(Pair.Value.Inventory==Legacy)Pair.Value.Inventory=Key;
+            for(auto& Pair:P.Economy.Reservations)if(Pair.Value.Inventory==Legacy)Pair.Value.Inventory=Key;
+            P.Economy.Inventories.Remove(Legacy);
+        }
         auto* Store=FEconomyLedger::CreateInventory(P.Economy,Key,FEconomyRuntime::IndustryOwner(),System,double(O.Quantity));
         if(!Store){P=Before;return false;}Store->bHullStorage=true;Store->bOperational=true;
-        const FName Item=DataTableUtils::MakeValidName(O.Fighter.ToString().ToLower()+TEXT(" assembled hull"));
-        if(!FEconomyLedger::Deposit(P.Economy,Key,Item,O.Quantity,1)){P=Before;return false;}Changed=true;
+        const int32 Remaining=FleetDesign?Physical.Num():FMath::Max(0,O.Quantity-Consumed);
+        if(Remaining>0 && !FEconomyLedger::Deposit(P.Economy,Key,Item,Remaining,1)){P=Before;return false;}Changed=true;
     }
     if(Changed && !Save()){P=Before;Why=INVTEXT("Could not save carrier squadron stock.");return false;}
     for(const auto& O:All)
@@ -230,7 +275,10 @@ bool CarrierFighterSalesAI::Prepare(FS_PlayerGameInfo& P,Ship& Base,FName System
             SoldSlots.Add(Record.Squadron.ToUpper()+TEXT("/")+FString::FromInt(Record.Slot));
             for(int32 S=0;S<H->NumSquadrons();++S)if(Record.Squadron.Equals(UTF8_TO_TCHAR(H->SquadronName(S).data()),ESearchCase::IgnoreCase) && Record.Slot>=0 && Record.Slot<H->SquadronSize(S))H->TransferStoredReserve(S,Record.Slot);
         }
-        const int32 Target=O.Quantity-FMath::Clamp(FMath::FloorToInt(ShipyardAI::Stock(P.Economy,Inventory(System,UTF8_TO_TCHAR(Base.GetName()),O.Fighter),O.Fighter)),0,O.Quantity)+ExternalAssigned(*H,O);
+        int32 DestroyedSlots=0;
+        for(int32 S=0;S<H->NumSquadrons();++S)if(RosterSquadron(O,UTF8_TO_TCHAR(H->SquadronName(S).data())))
+            for(int32 I=0;I<H->SquadronSize(S);++I)if(H->GetState(H->GetSlot(S,I))==Hangar::UNAVAIL)++DestroyedSlots;
+        const int32 Target=FMath::Max(0,O.Quantity-DestroyedSlots-FMath::Clamp(FMath::FloorToInt(ShipyardAI::Stock(P.Economy,Inventory(System,UTF8_TO_TCHAR(Base.GetName()),O.Fighter),O.Fighter)),0,O.Quantity))+ExternalAssigned(*H,O);
         int32 Removed=0;for(int32 S=0;S<H->NumSquadrons();++S)if(RosterSquadron(O,UTF8_TO_TCHAR(H->SquadronName(S).data())))
             for(int32 I=0;I<H->SquadronSize(S);++I)if(H->GetState(H->GetSlot(S,I))==Hangar::TRANSFERRED)++Removed;
         for(int32 S=0;S<H->NumSquadrons();++S)if(RosterSquadron(O,UTF8_TO_TCHAR(H->SquadronName(S).data())))
@@ -267,5 +315,6 @@ bool CarrierFighterSalesAI::Purchase(FS_PlayerGameInfo& P,const FShipDesign& Hul
     if(!ShipyardAI::Purchase(P,Sale,Key,Location,Receipt,Why,OfferedHullId)){P=Before;return false;}
     if(!H.TransferStoredReserve(Squadron,Slot)){P=Before;Why=INVTEXT("The fighter was assigned before purchase.");return false;}
     if(!Save()){P=Before;H.TransferStoredReserve(Squadron,Slot,true);Why=INVTEXT("Could not save the purchase. Credits and squadron stock restored.");return false;}
+    if(auto* Story=Campaign::GetCampaign())Story->GetPersistentFleet().bDirty=true;
     Why=FText::Format(INVTEXT("{0} purchased from {1} and delivered to your hangar."),FText::FromString(Hull.DisplayName.IsEmpty()?Hull.ShipName:Hull.DisplayName),FText::FromString(UTF8_TO_TCHAR(H.SquadronName(Squadron).data())));return true;
 }

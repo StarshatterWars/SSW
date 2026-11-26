@@ -2,9 +2,9 @@
   "entries": [
     {
       "category": "Latest install build",
-      "title": "Alpha 5 - Build 20261120-073846Z ready to install",
-      "date": "2026-11-20",
-      "body": "Alpha 5 preparation: direct JSON weapons and components, cleaner logbook and reference filters, automatic mission messages, unread panel alerts, damage schematic and event-driven data panels. Capital weapons now share the full Weapons panel. Player avatars support Steam; Epic uses a fallback icon. Includes existing StarServer; server conversion and multiplayer tests remain deferred."
+      "title": "Alpha 5 - Build 20261121-174954Z ready to install",
+      "date": "2026-11-21",
+      "body": "This release fixes Start Game reaching the retired NO MISSION briefing screen. Career entry creates the live pilot scene, and failed startup returns safely to the menu. Surface entry, T3 and T4 use the distinct Janek Station design and runway deck instead of Telmera. Janek terrain grading and foliage clearance keep the airport clear; water masking and terrain-aware flight waypoint clearance were updated. A complete packaged T3 flight remains to be checked. The airport uses a dedicated Nanite-compatible PBR material with crisp center/edge paint and runway numbers 27/09 and 31/13. Collision settings are retained. Unsupported translucent fighter glass stays on the regular renderer; freight Nanite flags are saved correctly. Unreal diagnostic overlays are disabled in gameplay; logs and game HUD messages remain. All 363 automated tests passed without test warnings, and Editor/client builds passed. Existing pilot saves are preserved. The existing packaged StarServer is included unchanged. Build-LauncherZip.cmd now publishes the ZIP, signed patch manifest, patch files and release news together, after verification, so the launcher cannot remain pointed at an older local release."
     },
     {
       "category": "Release notes",

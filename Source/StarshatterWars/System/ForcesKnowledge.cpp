@@ -14,7 +14,9 @@ TArray<FForcesReport> FForcesKnowledge::Filter(const TArray<FForcesReport>& Repo
         const FName ReportSystem(*Report.System),ReportSector(*Report.Sector);
         if (ReportSystem!=System && (Scope!=EForcesScope::Neighbors || !Neighbors.Contains(ReportSystem))) continue;
         if (Scope==EForcesScope::Sector && ReportSector!=AllowedSector) continue;
-        Visible.Add(Report);
+        auto Safe=Report;
+        if(!Report.bAlliedOperationalAccess || Report.IFF!=IFF){Safe.Status.Reset();Safe.HullId.Invalidate();Safe.Integrity=0;}
+        Visible.Add(MoveTemp(Safe));
     }
     return Visible;
 }

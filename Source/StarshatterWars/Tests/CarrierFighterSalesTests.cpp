@@ -85,6 +85,10 @@ bool FCarrierFighterSalesTest::RunTest(const FString&)
             TestEqual(TEXT("Sold squadron slot stays transferred on reload"),Reopened.GetHangar()->GetState(Reopened.GetHangar()->GetSlot(S,OfferedSlot.Slot)),int32(Hangar::TRANSFERRED));
     TestTrue(TEXT("Remaining reserve found"),CarrierFighterSalesAI::FindReserve(*Reopened.GetHangar(),*Offer,Squad,Slot));
     TestEqual(TEXT("Reload cannot refill sold stock"),CarrierFighterSalesAI::Available(Reload->PlayerInfo.Economy,Key,*Reopened.GetHangar(),*Offer),Offer->Quantity-1);
+    TestEqual(TEXT("Carrier store ID is independent of current system"),CarrierFighterSalesAI::Inventory(TEXT("Meridian"),TEXT("Archon"),TEXT("Stormhawk")),Key);
+    TestTrue(TEXT("Carrier inventory follows inter-system deployment"),CarrierFighterSalesAI::Prepare(Reload->PlayerInfo,Reopened,TEXT("Meridian"),[](){return true;},Why));
+    TestEqual(TEXT("Jumping systems cannot refill sold reserve stock"),CarrierFighterSalesAI::Available(Reload->PlayerInfo.Economy,Key,*Reopened.GetHangar(),*Offer),Offer->Quantity-1);
+
     Pilot.bTrainingGraduate=true;
     auto Normal=CarrierFighterSalesAI::Offer(Pilot,Base,TEXT("Stormhawk"));
     TestTrue(TEXT("Carrier retains OOB stock after graduation"),Normal.IsSet());

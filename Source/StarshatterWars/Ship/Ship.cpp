@@ -15,6 +15,8 @@
 	Starship class
 */
 #include "Ship.h"
+#include "CampaignFleet.h"
+#include "Campaign.h"
 #include "EconomyRuntime.h"
 #include "CargoCatalogSubsystem.h"
 #include "ShipInsuranceSubsystem.h"
@@ -1608,7 +1610,8 @@ void Ship::InitializeRuntimeDeathSpiralFromDesign()
 Ship::~Ship()
 {
     if(sim && sim==Sim::GetSim() && (IsDead() || IsDying()))
-        sim->HullRegistry.SetStatus(PermanentHullId,EHullOperationalState::Destroyed);
+        {sim->HullRegistry.SetStatus(PermanentHullId,EHullOperationalState::Destroyed);
+        if(sim->HasSimulationAuthority())if(auto* Story=Campaign::GetCampaign())FCampaignFleet::Destroy(*Story,PermanentHullId);}
     if(auto* Actor=GetNativePresentation()) Actor->BindRuntimeShip(nullptr);
 
 	// the loadout can notxbe cleared during Destroy, because it
@@ -1625,13 +1628,21 @@ Ship::~Ship()
 void
 Ship::Destroy()
 {
+    bool bFleetRetirement=false;
+    if(sim && sim==Sim::GetSim() && sim->HasSimulationAuthority())if(auto* Story=Campaign::GetCampaign())
+    {
+        FCampaignFleet::CaptureHull(*Story,*this);
+        bFleetRetirement=Story->GetPersistentFleet().Hulls.Contains(PermanentHullId) && !IsDead() && !IsDying() && GetIntegrity()>0;
+    }
+	// Combat destruction kills embarked craft; retiring a live campaign scene does not.
 	// destroy fighters on deck:
 	ListIter<FlightDeck> deck = flight_decks;
 	while (++deck) {
 		for (int i = 0; i < deck->NumSlots(); i++) {
 			Ship* s = deck->GetShip(i);
 
-			if (s && !s->IsDying() && !s->IsDead()) {
+			if (s && s!=this && !s->IsDying() && !s->IsDead()) {
+                if(bFleetRetirement){s->Destroy();continue;}
 				if (sim && sim->IsActive()) {
 					s->DeathSpiral();
 				}

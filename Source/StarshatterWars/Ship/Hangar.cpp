@@ -17,6 +17,8 @@
 */
 
 #include "Hangar.h"
+#include "CampaignFleet.h"
+#include "CombatUnit.h"
 #include "OrdnanceMagazine.h"
 
 #include "CoreMinimal.h"
@@ -53,6 +55,8 @@ public:
 
 private:
 	Text              squadron;
+    int32 fleet_index=INDEX_NONE;
+    FGuid fleet_hull;
 	CombatGroup*	  group;
 	Ship*			  ship;
 	int               iff;
@@ -219,6 +223,18 @@ Hangar::ExecFrame(double seconds)
 
 // +--------------------------------------------------------------------+
 
+namespace
+{
+CombatUnit* FleetSquadronUnit(CombatGroup* Group,const ShipDesign* Design)
+{
+ if(!Group || !Design)return nullptr;
+ CombatUnit* Found=nullptr;
+ for(int32 I=0;I<Group->GetUnits().size();++I)
+     if(auto* Unit=Group->GetUnits()[I];Unit && Unit->GetDesignName()==Design->name)
+     {if(Found)return nullptr;Found=Unit;}
+ return Found;
+}
+}
 bool
 Hangar::FinishPrep(HangarSlot* slot)
 {
@@ -252,13 +268,18 @@ Hangar::FinishPrep(HangarSlot* slot)
             ship->GetName(), slot->deck->GetName(),
             *DeckMountSim.ToString(), *InitialSpawnMap.ToString());
 
+        FGuid FleetHull;
+        auto* Story=Campaign::GetCampaign();auto* Unit=FleetSquadronUnit(slot->group,slot->design);
+        if(!Unit && slot->package)Unit=slot->package->GetCombatUnit();
+        const bool FleetBound=Story && sim->GetMission() && Story->OwnsMission(sim->GetMission()) && Unit;
+        if(FleetBound){FleetHull=FCampaignFleet::ResolveSlot(*Story,Unit,slot->fleet_index);if(!FleetHull.IsValid()){slot->state=STORAGE;return false;}}
 		slot->ship = sim->CreateShip(ship_name, "",
 			(ShipDesign*)slot->design,
 			ship->GetRegion()->GetName(),
 			InitialSpawnMap,
 			slot->package ? slot->package->GetIFF() : slot->iff,
 			ship->GetCommandAILevel(),
-			slot->loadout);
+			slot->loadout,FleetHull);
 
 		if (!slot->ship) return false;
 		Observe(slot->ship);
@@ -277,6 +298,7 @@ Hangar::FinishPrep(HangarSlot* slot)
 				(const char*)slot->package->GetName(),
 				slot->ship->GetElementIndex());
 			slot->ship->SetName(name);
+            if(FleetBound)FCampaignFleet::Apply(*Story,*slot->ship);
 		}
 
         }
@@ -368,6 +390,7 @@ Hangar::CreateSquadron(Text squadron, CombatGroup* group,
 
 		for (int i = 0; i < count; i++) {
 			s[i].squadron = squadron;
+            s[i].fleet_index=i;
 			s[i].group = group;
 			s[i].design = design;
 			s[i].iff = iff;
@@ -390,7 +413,16 @@ Hangar::CreateSquadron(Text squadron, CombatGroup* group,
 			s[i--].time = 600.0 + (double)FMath::RandRange(0, 2184); // approx range of rand()/15
 		}
 
+        if(auto* Story=Campaign::GetCampaign())if(auto* Unit=FleetSquadronUnit(group,design))
+        {
+            FCampaignFleet::Prepare(*Story);
+            const auto& Fleet=Story->GetPersistentFleet();const auto* Slots=Fleet.Units.Find(FCampaignFleet::UnitKey(*Unit));
+            if(Slots)for(int32 Index=0;Index<count && Index<Slots->HullIds.Num();++Index)
+                if(const auto* Row=Fleet.Hulls.Find(Slots->HullIds[Index]))
+                {s[Index].state=Row->bDestroyed?UNAVAIL:(FCampaignFleet::CanMove(*Row)?STORAGE:MAINT);s[Index].time=0;}
+        }
 		nsquadrons++;
+        RefreshCampaignFleet();
 		return true;
 	}
 
@@ -425,13 +457,18 @@ Hangar::GotoActiveFlight(int squadron, int slot_index, SimElement* elem, int* lo
 			const double RandZ = (double)FMath::RandRange(-1000, 1000);
 			FVector spawn = ship->GetLocation() + FVector(RandX, RandY, RandZ);
 
-			slot->ship = sim->CreateShip(ship_name, "",
+	        FGuid FleetHull;
+        auto* Story=Campaign::GetCampaign();auto* Unit=FleetSquadronUnit(slot->group,slot->design);
+        if(!Unit && slot->package)Unit=slot->package->GetCombatUnit();
+        const bool FleetBound=Story && sim->GetMission() && Story->OwnsMission(sim->GetMission()) && Unit;
+        if(FleetBound){FleetHull=FCampaignFleet::ResolveSlot(*Story,Unit,slot->fleet_index);if(!FleetHull.IsValid()){slot->state=STORAGE;return false;}}
+		slot->ship = sim->CreateShip(ship_name, "",
 				(ShipDesign*)slot->design,
 				ship->GetRegion()->GetName(),
 				spawn,
 				elem->GetIFF(),
 				ship->GetCommandAILevel(),
-				slot->loadout);
+				slot->loadout,FleetHull);
 
 			if (slot->ship) {
 				Observe(slot->ship);
@@ -450,6 +487,7 @@ Hangar::GotoActiveFlight(int squadron, int slot_index, SimElement* elem, int* lo
 					slot->ship->GetElementIndex());
 
 				slot->ship->SetName(name);
+            if(FleetBound)FCampaignFleet::Apply(*Story,*slot->ship);
                 if(elem->GetPlayer()!=slot->ship->GetElementIndex())OrdnanceMagazine::ReplenishAI(*ship,*slot->ship);
 			}
 
@@ -1052,4 +1090,29 @@ bool Hangar::RestagePlayer(Ship* Craft)
         Craft->SetFlightPhase(EOPSMode::ALERT);return true;
     }
     return false;
+}
+
+void Hangar::RefreshCampaignFleet()
+{
+ auto* Story=Campaign::GetCampaign();auto* Simulation=Sim::GetSim();
+ if(!ship || !Story || !Simulation || !Simulation->HasSimulationAuthority())return;
+ const auto& Fleet=Story->GetPersistentFleet();if(!Fleet.Hulls.Contains(ship->GetHullId()))return;
+ TMap<FString,const FCampaignFleetHull*> Slots;TSet<FString> Ambiguous;
+ for(const auto& Pair:Fleet.Units)for(const auto Id:Pair.Value.HullIds)
+  if(const auto* Hull=Fleet.Hulls.Find(Id))
+  {
+   const FString Key=Hull->Assignment.ToUpper()+TEXT("/")+Hull->Design.ToString().ToUpper()+TEXT("/")+FString::FromInt(Hull->Slot);
+   if(Slots.Contains(Key))Ambiguous.Add(Key);else Slots.Add(Key,Hull);
+  }
+ for(int32 SquadronIndex=0;SquadronIndex<nsquadrons;++SquadronIndex)for(int32 Index=0;Index<nslots[SquadronIndex];++Index)
+ {
+  auto& Slot=squadrons[SquadronIndex][Index];if(!Slot.design)continue;
+  const FString Key=FString(UTF8_TO_TCHAR(Slot.squadron.data())).ToUpper()+TEXT("/")+FString(UTF8_TO_TCHAR(Slot.design->name)).ToUpper()+TEXT("/")+FString::FromInt(Index);
+  if(Ambiguous.Contains(Key))continue;const auto* Found=Slots.Find(Key);if(!Found)continue;const auto& Hull=**Found;
+  Slot.fleet_hull=Hull.HullId;if(Slot.ship)continue;
+  if(Hull.bTransferred)Slot.state=TRANSFERRED;
+  else if(Hull.bDestroyed)Slot.state=UNAVAIL;
+  else if(!FCampaignFleet::CanMove(Hull)){Slot.state=MAINT;Slot.time=0;}
+  else if(Slot.state==UNAVAIL || Slot.state==TRANSFERRED)Slot.state=STORAGE;
+ }
 }

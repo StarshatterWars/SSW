@@ -67,12 +67,15 @@ public:
 
     int  GetType() const { return type; }
     int  GetCount() const { return count; }
-    int  LiveCount() const { return count - dead_count; }
+    int  LiveCount() const { return FMath::Max(0,count-dead_count-persistent_away); }
     int  DeadCount() const { return dead_count; }
     void SetDeadCount(int n) { dead_count = n; }
     int  GetKill(int n);
 
-    int  Available() const { return available; }
+    int  Available() const { return FMath::Max(0,ReadyCount()-FMath::Max(0,count-available)); }
+    int ReadyCount() const { return persistent_ready<0?LiveCount():FMath::Min(LiveCount(),persistent_ready); }
+    void SetAssignedAway(int n) { persistent_away=FMath::Max(0,n); }
+    void SetReadyCount(int n) { persistent_ready=FMath::Max(0,n); }
     int  GetIFF() const { return iff; }
 
     bool IsLeader() const { return leader; }
@@ -82,7 +85,8 @@ public:
     void MoveTo(const FVector& loc);
 
     Text GetRegion() const { return region; }
-    void SetRegion(Text rgn) { region = rgn; }
+    void SetRegion(Text rgn) { if(persistent_ready!=0 || carrier)region = rgn; }
+    void RestoreFleetLocation(Text rgn,const FVector& loc) { region=rgn;location=loc; }
 
     CombatGroup* GetCombatGroup() const { return group; }
     void SetCombatGroup(CombatGroup* g) { group = g; }
@@ -159,6 +163,8 @@ private:
     int count;
     int dead_count;
     int available;
+    int persistent_ready=-1;
+    int persistent_away=0;
 
     int  iff;
     bool leader;

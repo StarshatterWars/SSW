@@ -817,7 +817,7 @@ CombatGroup::GetRandomUnit()
 
 	ListIter<CombatUnit> unit = units;
 	while (++unit) {
-		if (unit->GetCount() - unit->DeadCount() > 0)
+		if (unit->ReadyCount() > 0)
 			live.append(unit.value());
 	}
 
@@ -865,7 +865,7 @@ CombatGroup::GetNextUnit()
 
 		ListIter<CombatUnit> unit = units;
 		while (++unit) {
-			if (unit->GetCount() - unit->DeadCount() > 0)
+			if (unit->ReadyCount() > 0)
 				live.append(unit.value());
 		}
 
@@ -889,7 +889,7 @@ CombatGroup::FindUnit(const char* iname)
 		while (++iter) {
 			CombatUnit* unit = iter.value();
 			if (unit->GetName() == iname) {
-				if (unit->GetCount() - unit->DeadCount() > 0)
+				if (unit->ReadyCount() > 0)
 					return unit;
 				else
 					return 0;

@@ -13,6 +13,7 @@
 */
 
 #include "CombatUnit.h"
+#include "CampaignFleet.h"
 #include "CombatGroup.h"
 #include "Campaign.h"
 #include "ShipDesign.h"
@@ -76,6 +77,8 @@ CombatUnit::CombatUnit(const CombatUnit& u)
     , count(u.count)
     , dead_count(u.dead_count)
     , available(u.available)
+    , persistent_ready(u.persistent_ready)
+    , persistent_away(u.persistent_away)
     , iff(u.iff)
     , leader(u.leader)
     , region(u.region)
@@ -124,6 +127,8 @@ CombatUnit& CombatUnit::operator=(const CombatUnit& u)
     count = u.count;
     dead_count = u.dead_count;
     available = u.available;
+    persistent_ready=u.persistent_ready;
+    persistent_away=u.persistent_away;
 
     iff = u.iff;
     leader = u.leader;
@@ -271,6 +276,7 @@ const char* CombatUnit::GetDescription() const
 
 bool CombatUnit::CanLaunch() const
 {
+    if(ReadyCount()==0)return false;
     bool result = false;
 
     switch (type) {
@@ -363,7 +369,7 @@ bool CombatUnit::CanDefend(CombatUnit* unit) const
 
 double CombatUnit::PowerVersus(CombatUnit* tgt) const
 {
-    if (tgt == 0 || tgt == this || available < 1)
+    if (tgt == 0 || tgt == this || Available() < 1)
         return 0;
 
     if (type > (int)CLASSIFICATION::STATION)
@@ -380,13 +386,13 @@ double CombatUnit::PowerVersus(CombatUnit* tgt) const
 
     if (type == (int)CLASSIFICATION::FIGHTER) {
         if (tgt->type == (int)CLASSIFICATION::FIGHTER || tgt->type == (int)CLASSIFICATION::ATTACK)
-            return (int)CLASSIFICATION::FIGHTER * 2 * available * effectiveness;
+            return (int)CLASSIFICATION::FIGHTER * 2 * Available() * effectiveness;
         else
             return 0;
     }
     else if (type == (int)CLASSIFICATION::ATTACK) {
         if (tgt->type > (int)CLASSIFICATION::ATTACK)
-            return (int)CLASSIFICATION::ATTACK * 3 * available * effectiveness;
+            return (int)CLASSIFICATION::ATTACK * 3 * Available() * effectiveness;
         else
             return 0;
     }
@@ -414,10 +420,10 @@ double CombatUnit::PowerVersus(CombatUnit* tgt) const
 
 int CombatUnit::AssignMission()
 {
-    int assign = count;
+    int assign = Available();
 
     if (count > 4)
-        assign = 4;
+        assign = FMath::Min(assign,4);
 
     if (assign > 0) {
         available -= assign;
@@ -438,12 +444,14 @@ void CombatUnit::CompleteMission()
         available += 4;
     else
         available += count;
+    available=FMath::Min(count,available);
 }
 
 // +----------------------------------------------------------------------+
 
 void CombatUnit::MoveTo(const FVector& loc)
 {
+    if(persistent_ready==0 && !carrier)return;
     if (!carrier)
         location = loc;
     else
@@ -501,6 +509,7 @@ int CombatUnit::GetKill(int n)
         killed = LiveCount();
 
     dead_count += killed;
+    if(killed)if(auto* Story=Campaign::GetCampaign())Story->GetPersistentFleet().bDirty=true;
 
     int value_killed = killed * GetSingleValue();
 

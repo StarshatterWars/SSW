@@ -13,6 +13,7 @@
   "universeServer": {
     "autoStartLocal": true,
     "permanentStatusUrl": null,
-    "port": 17880
+    "port": 17880,
+    "compatibleChangelist": 47537391
   }
 }

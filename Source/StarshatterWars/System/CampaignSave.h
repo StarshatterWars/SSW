@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/SaveGame.h"
+#include "CampaignFleet.h"
 #include "CampaignSave.generated.h"
 
 /** One flown mission result; separate from its score and legacy teardown flag. */
@@ -44,6 +45,7 @@ public:
 /** 1-based campaign index (Campaign 1, Campaign 2...). */
 	UPROPERTY(SaveGame)
 	int32 CampaignIndex = 1;
+    UPROPERTY(SaveGame) FCampaignFleetState Fleet;
 
 	// NEW – preferred, stable slot naming
 	static FString MakeSlotNameFromRowName(FName RowName);
