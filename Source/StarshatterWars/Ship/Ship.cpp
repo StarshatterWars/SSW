@@ -2526,6 +2526,7 @@ Ship::GetFlightDeck(int i) const
 void
 Ship::SetFlightPhase(EOPSMode phase)
 {
+    const bool FleetPhaseChanged=flight_phase!=phase;
     const bool bLaunchFinished = phase == EOPSMode::ACTIVE &&
         (flight_phase == EOPSMode::LAUNCH || flight_phase == EOPSMode::TAKEOFF);
     CameraManager* LaunchCamera = CameraManager::GetInstance();
@@ -2541,6 +2542,7 @@ Ship::SetFlightPhase(EOPSMode phase)
 	}
 
 	flight_phase = phase;
+    if(FleetPhaseChanged)if(auto* Story=Campaign::GetCampaign();Story && Story->GetPersistentFleet().Hulls.Contains(PermanentHullId))FCampaignFleet::Notify();
     if (bLaunchFinished && IsDropship() && !bWaitForLaunchCamera) RaiseGear();
 
 	if (flight_phase == EOPSMode::ACTIVE)

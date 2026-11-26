@@ -1,5 +1,8 @@
 #include "ForcesDlg.h"
 #include "CampaignFleet.h"
+#include "RepairAI.h"
+#include "StarshatterPlayerSubsystem.h"
+#include "TimerSubsystem.h"
 #include "ForcesKnowledge.h"
 #include "SkillsSubsystem.h"
 #include "MissionUIStyle.h"
@@ -34,9 +37,9 @@ public:
     { Item=Args._Item; SMultiColumnTableRow<FReport>::Construct(FSuperRowType::FArguments().Style(&MissionUIStyle::FlightTableRowStyle()),Owner); }
     TSharedRef<SWidget> GenerateWidgetForColumn(const FName& Column) override
     {
-        FString Value=Column==TEXT("Status") ? (Item->bAlliedOperationalAccess && Item->IFF==Item->ObserverIFF && Item->IFF>0?Item->Status:TEXT("�")) : Column==TEXT("HullId") ? (Item->bAlliedOperationalAccess && Item->IFF==Item->ObserverIFF && Item->IFF>0 && Item->HullId.IsValid()?Item->HullId.ToString(EGuidFormats::DigitsWithHyphens):TEXT("�")) : Column==TEXT("Design") ? Item->Design : Column==TEXT("System") ? Item->System : Column==TEXT("Sector") ? Item->Sector :
-            Column==TEXT("Group") ? Item->Group : Column==TEXT("IFF") ? (Item->IFF==Item->ObserverIFF ? TEXT("FRIENDLY") : Item->IFF==0 ? TEXT("NEUTRAL") : TEXT("IFF: KNOWN")) : Column==TEXT("Hull") ? (Item->bAlliedOperationalAccess && Item->IFF==Item->ObserverIFF && Item->IFF>0?FString::Printf(TEXT("%.0f%%"),Item->Integrity*100):TEXT("�")) : Item->Name;
-        return SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Margin(FMargin(6,4)).Text(FText::FromString(Value).ToUpper()).ColorAndOpacity(SFighterHUDDetails::IdentificationColor(Item->IFF,Item->ObserverIFF)).ToolTipText(FText::FromString(Value));
+        FString Value=Column==TEXT("Status") ? (Item->bAlliedOperationalAccess && Item->IFF==Item->ObserverIFF && Item->IFF>0?Item->Status:TEXT("—")) : Column==TEXT("HullId") ? (Item->bAlliedOperationalAccess && Item->IFF==Item->ObserverIFF && Item->IFF>0 && Item->HullId.IsValid()?Item->HullId.ToString(EGuidFormats::DigitsWithHyphens):TEXT("—")) : Column==TEXT("Design") ? Item->Design : Column==TEXT("System") ? Item->System : Column==TEXT("Sector") ? Item->Sector :
+            Column==TEXT("Group") ? Item->Group : Column==TEXT("IFF") ? (Item->IFF==Item->ObserverIFF ? TEXT("FRIENDLY") : Item->IFF==0 ? TEXT("NEUTRAL") : TEXT("IFF: KNOWN")) : Column==TEXT("Hull") ? (Item->bAlliedOperationalAccess && Item->IFF==Item->ObserverIFF && Item->IFF>0?FString::Printf(TEXT("%.0f%%"),Item->Integrity*100):TEXT("—")) : Item->Name;
+        return SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).OverflowPolicy(ETextOverflowPolicy::Ellipsis).Margin(FMargin(6,4)).Text(FText::FromString(Value).ToUpper()).ColorAndOpacity(SFighterHUDDetails::IdentificationColor(Item->IFF,Item->ObserverIFF)).ToolTipText(FText::FromString(Value));
     }
 private:FReport Item;
 };
@@ -143,7 +146,7 @@ TSharedRef<SWidget> UForcesDlg::RebuildWidget()
     auto Model=MakeShared<FForceTable>(); Model->Instance=GetGameInstance(); Model->Refresh();
     auto Buttons=SNew(SHorizontalBox);
     const EShipSystemIcon Icons[]={EShipSystemIcon::Sensor,EShipSystemIcon::PlanetMoon,EShipSystemIcon::Jump};
-    const TCHAR* Labels[]={TEXT("Sector forces — sensor level I"),TEXT("Current system forces — Sensor Networking III"),TEXT("Neighboring systems — Sensor Networking V")};
+    const TCHAR* Labels[]={TEXT("Sector forces â€” sensor level I"),TEXT("Current system forces â€” Sensor Networking III"),TEXT("Neighboring systems â€” Sensor Networking V")};
     for (int32 Index=0;Index<3;++Index)
         Buttons->AddSlot().AutoWidth().Padding(0,0,6,0)
         [SNew(SButton).ToolTipText(FText::FromString(Labels[Index]))
@@ -165,7 +168,8 @@ TSharedRef<SWidget> UForcesDlg::RebuildWidget()
         + SVerticalBox::Slot().AutoHeight().Padding(8)[SNew(STextBlock).Text_Lambda([Model](){return FText::FromString(Model->Location);})]
         + SVerticalBox::Slot().FillHeight(1).Padding(8)[MissionUIStyle::MakeDataPane(List)]
         + SVerticalBox::Slot().AutoHeight().Padding(8)[MissionUIStyle::MakeDataPane(SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Margin(10).AutoWrapText(true)
-            .Text_Lambda([Model](){const auto& Item=Model->Selected; return Item ? FText::Format(INVTEXT("{0}  |  {1}\n{2} / {3}  |  {4}\nINTEGRITY {5}%  |  SPEED {6} M/S\nSTATUS {7}  |  HULL ID {8}"),
+            .Text_Lambda([Model](){const auto& Item=Model->Selected; return Item ? FText::Format(INVTEXT("{0}  |  {1}\n{2} / {3}  |  {4}\nINTEGRITY {5}%  |  SPEED {6} M/S\nSTATUS {7}  |  HULL ID {8}\n{9}"),
                 FText::FromString(Item->Name).ToUpper(),FText::FromString(Item->Design).ToUpper(),FText::FromString(Item->System).ToUpper(),FText::FromString(Item->Sector).ToUpper(),
-                FText::FromString(Item->Group).ToUpper(),Item->bAlliedOperationalAccess?FText::AsNumber(Item->Integrity*100):INVTEXT("�"),FText::AsNumber(Item->Speed),Item->bAlliedOperationalAccess?FText::FromString(Item->Status):INVTEXT("�"),Item->bAlliedOperationalAccess?FText::FromString(Item->HullId.ToString(EGuidFormats::DigitsWithHyphens)):INVTEXT("�")) : INVTEXT("SELECT A REPORTED UNIT. SYSTEM AND NEIGHBOR COVERAGE REQUIRE SENSOR NETWORKING III AND V.");}))];
+                FText::FromString(Item->Group).ToUpper(),Item->bAlliedOperationalAccess?FText::AsNumber(Item->Integrity*100):INVTEXT("—"),FText::AsNumber(Item->Speed),Item->bAlliedOperationalAccess?FText::FromString(Item->Status):INVTEXT("—"),Item->bAlliedOperationalAccess?FText::FromString(Item->HullId.ToString(EGuidFormats::DigitsWithHyphens)):INVTEXT("—"),
+                FText::FromString([&](){auto* Game=Model->Instance.Get();auto* Story=Campaign::GetCampaign();auto* Players=Game?Game->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;auto* Clock=Game?Game->GetSubsystem<UTimerSubsystem>():nullptr;return Item->bAlliedOperationalAccess && Story && Players?RepairAI::Describe(Story->GetPersistentFleet(),Players->GetPlayerInfo().Economy,Item->HullId,Clock?double(Clock->GetUniverseTimeSeconds()):0):FString();}())) : INVTEXT("SELECT A REPORTED UNIT. SYSTEM AND NEIGHBOR COVERAGE REQUIRE SENSOR NETWORKING III AND V.");}))];
 }

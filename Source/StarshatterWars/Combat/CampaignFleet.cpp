@@ -18,6 +18,9 @@
 #include "Drive.h"
 #include "Power.h"
 
+FSSWCampaignFleetChanged& FCampaignFleet::Changed(){static FSSWCampaignFleetChanged Event;return Event;}
+void FCampaignFleet::Notify(){if(IsInGameThread())Changed().Broadcast();}
+
 FString FCampaignFleet::UnitKey(const CombatUnit& Unit)
 {
  const auto* Group=Unit.GetCombatGroup();if(!Group)return {};
@@ -49,6 +52,7 @@ void FCampaignFleet::Prepare(Campaign& Story)
  if(!Fleet.bInitialized)
  {
   if(Story.GetCombatants().size()==0)return;
+  Fleet.FleetId=FGuid::NewGuid();
   Fleet.CampaignId=Story.GetCampaignId();
   VisitUnits(Story,[&](CombatUnit& Unit)
   {
@@ -117,6 +121,7 @@ void FCampaignFleet::Prepare(Campaign& Story)
   Unit.SetDeadCount(Dead);Unit.SetAssignedAway(Away);Unit.SetReadyCount(ReadyHulls);Fleet.LastAppliedUnavailable.Add(UnitKey(Unit),Dead);Unit.SetSustainedDamage(Damage);
  });
  Fleet.bDirty=false;
+ Notify();
  if(Fleet.bHeroLost)Story.SetCampaignStatus(ECampaignStatus::FAILED);
 }
 FGuid FCampaignFleet::Resolve(Campaign& Story,const CombatUnit* Unit,int32 Index,bool MobileOnly)
@@ -142,6 +147,7 @@ void FCampaignFleet::Destroy(Campaign& Story,FGuid Id)
  auto& Fleet=Story.GetPersistentFleet();auto* Row=Fleet.Hulls.Find(Id);if(!Row || Row->bDestroyed)return;
  Fleet.bDirty=true;Row->bDestroyed=true;Row->bRepairing=false;Row->Condition.HullCondition=0;
  if(Row->bHero){Fleet.bHeroLost=true;Story.SetCampaignStatus(ECampaignStatus::FAILED);}
+ Notify();
 }
 void FCampaignFleet::Capture(Campaign& Story,Sim& Simulation)
 {
@@ -210,7 +216,7 @@ bool FCampaignFleet::CanMove(const FCampaignFleetHull& Hull)
 }
 bool FCampaignFleet::MissionReady(Campaign& Story,Mission& Assignment)
 {
- const auto& Fleet=Story.GetPersistentFleet();if(Fleet.bHeroLost)return false;
+ auto& Fleet=Story.GetPersistentFleet();if(Fleet.bHeroLost)return false;
  auto* Player=Assignment.GetPlayer();
  for(int32 I=0;I<Assignment.GetElements().size();++I)
  {
@@ -225,6 +231,8 @@ bool FCampaignFleet::MissionReady(Campaign& Story,Mission& Assignment)
     if(Objective->GetAction()==EInstruction::Escort || Objective->GetAction()==EInstruction::Defend)Required=true;
     if(Objective->GetAction()==EInstruction::Assault || Objective->GetAction()==EInstruction::Strike)TargetRequired=true;
    }
+  if(Required || TargetRequired)
+   for(const auto Id:Slots->HullIds)if(auto* Hull=Fleet.Hulls.Find(Id))Hull->bStoryRequired=true;
   if(Required)
   {
    int32 ReadyHulls=0;for(const auto Id:Slots->HullIds)if(const auto* Hull=Fleet.Hulls.Find(Id);Hull && CanMove(*Hull))++ReadyHulls;
@@ -271,7 +279,7 @@ bool FCampaignFleet::CanMove(Ship& Vessel)
 FString FCampaignFleet::Status(const FCampaignFleetHull& Hull)
 {
  if(Hull.bTransferred)return TEXT("TRANSFERRED");
- if(Hull.bDestroyed)return TEXT("DESTROYED");
+ if(Hull.bDestroyed)return Hull.bRepairing?TEXT("REBUILDING"):TEXT("DESTROYED");
  if(Hull.bRepairing)return CanMove(Hull)?TEXT("REPAIRING"):TEXT("REPAIRING / IMMOBILIZED");
  if(!CanMove(Hull))return TEXT("IMMOBILIZED");
  if(Hull.Condition.bHasCondition && (Hull.Condition.HullCondition<.999f || Hull.Condition.SystemConditions.ContainsByPredicate([](const auto& System){return System.Availability<.999f;})))return TEXT("DAMAGED");
@@ -283,6 +291,7 @@ void FCampaignFleet::CaptureHull(Campaign& Story,Ship& Vessel)
  auto* Hull=Story.GetPersistentFleet().Hulls.Find(Vessel.GetHullId());if(!Hull || Hull->bDestroyed)return;
  if(Vessel.IsDead() || Vessel.IsDying()){Destroy(Story,Vessel.GetHullId());return;}
  Story.GetPersistentFleet().bDirty=true;FOwnedHullCondition::Capture(Vessel,Hull->Condition);
+ Notify();
  Hull->Position=OtherHand(Vessel.GetLocation());
  if(auto* Region=Vessel.GetRegion()){Hull->Region=UTF8_TO_TCHAR(Region->GetName());if(auto* System=Region->GetSystem())Hull->System=UTF8_TO_TCHAR(System->GetName());}
 }

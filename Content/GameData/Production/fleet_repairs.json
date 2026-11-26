@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "teams": 2,
+  "repairSecondsPerMassRoot": 180,
+  "rebuildSecondsPerMassRoot": 1800,
+  "partsPerMassRoot": 1,
+  "alloyPerMassRoot": 4,
+  "initialParts": 1000,
+  "initialAlloy": 5000,
+  "initialKits": 100
+}

@@ -2530,7 +2530,7 @@ FCampaignFleetState& Campaign::GetPersistentFleet()
 void Campaign::RestorePersistentFleet(const FCampaignFleetState& Saved)
 {
  if(!bPersistentFleetRestored && Saved.bInitialized && Saved.CampaignId==GetCampaignId())
- {GetPersistentFleet()=Saved;GetPersistentFleet().bDirty=true;FCampaignFleet::RestoreLocations(*this);bPersistentFleetRestored=true;}
+ {GetPersistentFleet()=Saved;GetPersistentFleet().bDirty=true;FCampaignFleet::RestoreLocations(*this);bPersistentFleetRestored=true;FCampaignFleet::Notify();}
 }
 
 void Campaign::BindFleetSaveSlot(const FString& Slot,bool NewCampaign)

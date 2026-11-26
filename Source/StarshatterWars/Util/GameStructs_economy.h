@@ -5,6 +5,7 @@
 #include "MiningDroneTypes.h"
 #include "CommerceCharges.h"
 #include "SerializedHullTypes.h"
+#include "RepairTypes.h"
 #include "GameStructs_economy.generated.h"
 
 UENUM()
@@ -203,6 +204,7 @@ USTRUCT()
 struct FEconomyState
 {
     GENERATED_BODY()
+    UPROPERTY(SaveGame) TMap<FGuid, FFleetRepairOrder> FleetRepairOrders;
     UPROPERTY(SaveGame) TMap<FName, FEconomyInventory> Inventories;
     UPROPERTY(SaveGame) TMap<FName, int64> Wallets;
     UPROPERTY(SaveGame) TSet<FName> PlayerAccounts;

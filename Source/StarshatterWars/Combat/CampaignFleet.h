@@ -21,6 +21,7 @@ struct FCampaignFleetHull
  UPROPERTY(SaveGame) bool bDestroyed=false;
  UPROPERTY(SaveGame) bool bRepairing=false;
  UPROPERTY(SaveGame) bool bHero=false;
+ UPROPERTY(SaveGame) bool bStoryRequired=false;
  UPROPERTY(SaveGame) bool bStatic=false;
  UPROPERTY(SaveGame) bool bTransferred=false;
  UPROPERTY(SaveGame) FPlayerHangarShip Condition;
@@ -36,6 +37,8 @@ struct FCampaignFleetState
 {
  GENERATED_BODY()
  bool bDirty=true;
+ UPROPERTY(SaveGame) FGuid FleetId;
+ UPROPERTY(SaveGame) TMap<FGuid,double> AppliedRepairProgress;
  UPROPERTY(SaveGame) bool bInitialized=false;
  UPROPERTY(SaveGame) int32 CampaignId=0;
  UPROPERTY(SaveGame) bool bHeroLost=false;
@@ -48,9 +51,12 @@ class Campaign;
 class CombatUnit;
 class Ship;
 class Sim;
+DECLARE_MULTICAST_DELEGATE(FSSWCampaignFleetChanged);
 class FCampaignFleet
 {
 public:
+ static FSSWCampaignFleetChanged& Changed();
+ static void Notify();
  static FString UnitKey(const CombatUnit&);
  static void Prepare(Campaign&);
  static void RestoreLocations(Campaign&);

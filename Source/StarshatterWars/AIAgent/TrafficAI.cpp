@@ -205,7 +205,7 @@ const FGalaxyTrafficEndpoint* TrafficAI::EndpointForInventory(const TMap<FName,F
             if(Text.StartsWith(Pair.Value.System.ToString()+TEXT("/")+Pair.Value.Station.ToString()+TEXT("/")))return &Pair.Value;
             if(Ship::IsTransferStationName(Pair.Value.Station.ToString()) && (!Transfer || Pair.Key.LexicalLess(Transfer->Id)))Transfer=&Pair.Value;
         }
-    return Text.Contains(TEXT("/NPC Market/"))?Transfer:nullptr;
+    return (Text.Contains(TEXT("/NPC Market/")) || Text.StartsWith(TEXT("Fleet Repair/")))?Transfer:nullptr;
 }
 void TrafficAI::ScheduleSector(FGalaxyTrafficState& Traffic,FEconomyState& Economy,const TMap<FName,FGalaxyTrafficSector>& Sectors,const TMap<FName,FGalaxyTrafficEndpoint>& Endpoints,FName Sector)
 {
