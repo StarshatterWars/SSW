@@ -1,4 +1,5 @@
 #include "HangarDlg.h"
+#include "StarterCraftOwnership.h"
 #include "StationServices.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "ShipInsuranceSubsystem.h"
@@ -33,6 +34,8 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
     Rows->AddSlot().AutoHeight()[Header];
     for (const auto& Hull : Insurance->GetShips())
     {
+        const auto* Players=Instance->GetSubsystem<UStarshatterPlayerSubsystem>();
+        if(!Players || !StarterCraftOwnership::VisibleInHangar(Hull,Players->GetPlayerInfo().AssignedHangarHull))continue;
         const auto Line = SNew(SHorizontalBox);
         for (const FString& Label : {Hull.Name, Hull.Design.ToString()})
             Line->AddSlot().FillWidth(1).Padding(8, 6)

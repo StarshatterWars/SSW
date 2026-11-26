@@ -1,4 +1,5 @@
 #include "StarshatterPlayerSubsystem.h"
+#include "StarterCraftOwnership.h"
 #include "LocalGameStateSubsystem.h"
 #include "PlayerCharacter.h"
 #include "PlayerProgressSaveTransaction.h"
@@ -197,6 +198,7 @@ bool UStarshatterPlayerSubsystem::LoadPlayer()
         }
 
         if(auto* State=GetGameInstance()->GetSubsystem<ULocalGameStateSubsystem>())State->RestoreAccount(PlayerInfo,GetActiveSavedPlayerSlot().IsEmpty()?GetSlotName():GetActiveSavedPlayerSlot());
+        if(StarterCraftOwnership::Normalize(PlayerInfo))bDirty=true;
         if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->GetPersistentTrainingAgent().RestoreJournal(PlayerInfo.AgentJournalJson);
         PlayerCharacter::Initialize();
         PlayerCharacter::SetWorldContext(GetGameInstance());
@@ -224,6 +226,7 @@ bool UStarshatterPlayerSubsystem::LoadPlayer()
 bool UStarshatterPlayerSubsystem::SavePlayer(bool bForce)
 {
     if (!RecoverPlayerProgress()) return false;
+    if(StarterCraftOwnership::Normalize(PlayerInfo))bDirty=true;
     if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) PlayerInfo.AgentJournalJson = Game->GetPersistentTrainingAgent().SaveJournal();
     if (!bForce && !bDirty)
         return true;
@@ -254,6 +257,7 @@ bool UStarshatterPlayerSubsystem::SavePlayer(bool bForce)
 bool UStarshatterPlayerSubsystem::SaveActivePlayerProgress()
 {
     if (!RecoverPlayerProgress()) return false;
+    if(StarterCraftOwnership::Normalize(PlayerInfo))bDirty=true;
     FOwnedHullCondition::CaptureActive(PlayerInfo);
     // Preserve ownership: autosave only the active mutable profile, never SV_ snapshots.
     auto* Index = ReadPlayerIndex(false);
@@ -490,6 +494,7 @@ bool UStarshatterPlayerSubsystem::LoadSavedPlayer(const FString& SavedSlot)
     if(!SaveGameInternal(SlotName,UserIndex,Loaded,CURRENT_SAVE_VERSION)) return false;
     PlayerInfo=MoveTemp(Loaded);bLoaded=true;bDirty=false;bHadExistingSave=true;
     if(PlayerProgressSaveTransaction::IsMutableProfile(SlotName,SavedSlot))if(auto* State=GetGameInstance()->GetSubsystem<ULocalGameStateSubsystem>())State->RestoreAccount(PlayerInfo,SavedSlot);
+    if(StarterCraftOwnership::Normalize(PlayerInfo))bDirty=true;
     if (auto* Game = Cast<USSWGameInstance>(GetGameInstance())) Game->GetPersistentTrainingAgent().RestoreJournal(PlayerInfo.AgentJournalJson);
     Index->ActiveSlot=SavedSlot;
     if(!WritePlayerIndex(Index)) UE_LOG(LogStarshatterPlayerSubsystem,Warning,TEXT("Player loaded, but active-save selection could not be recorded."));

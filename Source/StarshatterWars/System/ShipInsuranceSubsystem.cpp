@@ -1,4 +1,5 @@
 #include "ShipInsuranceSubsystem.h"
+#include "StarterCraftOwnership.h"
 #include "ShipStoreAI.h"
 #include "OrdnanceMagazine.h"
 #include "Weapon.h"
@@ -105,6 +106,7 @@ void UShipInsuranceSubsystem::RefreshAssignment()
     auto* Craft = Simulation ? Simulation->GetPlayerShip() : nullptr;
     if (!Players || !Craft || !Craft->Design() || !Simulation->HasSimulationAuthority() || Simulation->IsNetworked()) return;
     auto& Pilot = Players->GetMutablePlayerInfo();
+    StarterCraftOwnership::Normalize(Pilot);
     for (auto& Hull : Pilot.HangarShips)
     {
         const auto* Base = Craft->GetCarrier();
@@ -127,7 +129,7 @@ void UShipInsuranceSubsystem::RefreshAssignment()
         return;
     }
     // Mission-assigned craft never inherit an owned hull solely because their designs match.
-    if (!FreeFlight && Current && !Current->bAssigned) Current=nullptr;
+    if (!FreeFlight && Current && !Current->bAssigned && Design!=FName(TEXT("Falcon"))) Current=nullptr;
     if (FreeFlight && Current && !Current->bAssigned &&
         !FOwnedHullCondition::IsOwnedLive(*Current, Pilot.AssignedHangarHull, Design, Craft->GetCargoInventoryKey(), true) &&
         !OwnedHullLocation::CanProvision(*Current, *Simulation->GetMission(), true)) Current = nullptr;
@@ -135,6 +137,11 @@ void UShipInsuranceSubsystem::RefreshAssignment()
         if (auto* Selected=Pilot.HangarShips.FindByPredicate([&](const auto& Row)
             {return Row.HullId==Pilot.SelectedHangarHull && !Row.bAssigned && !Row.bLost && Row.Design==Design && OwnedHullLocation::IsAt(Row,OwnedHullLocation::Dock(*Craft));}))
         { Current=Selected; Pilot.AssignedHangarHull=Selected->HullId; }
+    // The basic trainer is the pilot's starter purchase, not another persistent
+    // mission loaner each time a training assignment provisions a Falcon.
+    if(Design==FName(TEXT("Falcon")))
+        if(auto* Owned=Pilot.HangarShips.FindByPredicate([&](const auto& Hull)
+            {return Hull.Design==Design && !Hull.bAssigned && !Hull.bLost && Hull.HullId==Pilot.AssignedHangarHull;}))Current=Owned;
     if (!Current || Current->Design != Design || Current->bLost)
     {
         FPlayerHangarShip NewShip;
@@ -233,7 +240,7 @@ void UShipInsuranceSubsystem::RefreshAssignment()
         }
         FOwnedHullCondition::Capture(*Craft,*Current);
     }
-    Current->Name = UTF8_TO_TCHAR(Craft->GetObserverName());
+    if(Current->bAssigned || Current->Name.IsEmpty())Current->Name = UTF8_TO_TCHAR(Craft->GetObserverName());
     const FString Place = OwnedHullLocation::Current(*Craft);
     if (!Place.IsEmpty()) Current->Location = Place;
     Players->MarkDirty();
