@@ -19,8 +19,10 @@ public:
     static TOptional<FCarrierFighterOffer> Offer(const FS_PlayerGameInfo&,const Ship& Carrier,FName Fighter);
     static FName Inventory(FName System,const FString& CarrierName,FName Fighter);
     static bool Prepare(FS_PlayerGameInfo&,Ship& Carrier,FName System,TFunctionRef<bool()> Save,FText&);
+    static bool BindHullOffers(FEconomyState&,FName Inventory,Hangar&,const FCarrierFighterOffer&);
+    static TArray<FGuid> HullOffers(const FEconomyState&,FName Inventory,Hangar&,const FCarrierFighterOffer&);
     static bool FindReserve(Hangar&,const FCarrierFighterOffer&,int32& Squadron,int32& Slot);
     static int32 Available(const FEconomyState&,FName Inventory,Hangar&,const FCarrierFighterOffer&);
     static bool Purchase(FS_PlayerGameInfo&,const FShipDesign&,Hangar&,const FCarrierFighterOffer&,FName Inventory,
-        const FString& Location,FGuid Receipt,TFunctionRef<bool()> Save,FText&);
+        const FString& Location,FGuid Receipt,TFunctionRef<bool()> Save,FText&,FGuid OfferedHullId=FGuid());
 };

@@ -27,7 +27,7 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
     const auto Selected = MakeShared<FGuid>();
     const auto Feedback = MakeShared<FText>();
     const auto Header = SNew(SHorizontalBox);
-    for (const TCHAR* Label : {TEXT("SHIP / FIGHTER"), TEXT("DESIGN"), TEXT("LOCATION"), TEXT("COVERAGE"), TEXT("HULL"), TEXT("STATUS")})
+    for (const TCHAR* Label : {TEXT("SHIP / FIGHTER"), TEXT("DESIGN"), TEXT("HULL ID"), TEXT("LOCATION"), TEXT("COVERAGE"), TEXT("HULL"), TEXT("STATUS")})
         Header->AddSlot().FillWidth(1).Padding(8, 5)
             [SNew(STextBlock).Text(FText::FromString(Label)).Font(MissionUIStyle::GetRowFont(12))];
     Header->AddSlot().AutoWidth()[SNew(SBox).WidthOverride(176)];
@@ -42,6 +42,11 @@ TSharedRef<SWidget> UHangarDlg::RebuildWidget()
                 [SNew(STextBlock).Text(FText::FromString(Label).ToUpper())
                     .Font(MissionUIStyle::GetRowFont(12)).OverflowPolicy(ETextOverflowPolicy::Ellipsis)
                     .ToolTipText(FText::FromString(Label))];
+        Line->AddSlot().FillWidth(1).Padding(8,6)
+            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11))
+                .Text(FText::FromString(Hull.HullId.ToString(EGuidFormats::DigitsWithHyphens).ToUpper()))
+                .OverflowPolicy(ETextOverflowPolicy::Ellipsis)
+                .ToolTipText(FText::FromString(TEXT("HULL ID: ")+Hull.HullId.ToString(EGuidFormats::DigitsWithHyphens).ToUpper()))];
         const auto LocationText = [Weak = TWeakObjectPtr<UShipInsuranceSubsystem>(Insurance), Id = Hull.HullId]()
         {
             const auto* Entry = Weak.IsValid() ? Weak->FindShip(Id) : nullptr;

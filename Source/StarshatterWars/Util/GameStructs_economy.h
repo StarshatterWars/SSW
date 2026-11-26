@@ -4,6 +4,7 @@
 #include "MiningCrystalTypes.h"
 #include "MiningDroneTypes.h"
 #include "CommerceCharges.h"
+#include "SerializedHullTypes.h"
 #include "GameStructs_economy.generated.h"
 
 UENUM()
@@ -210,6 +211,8 @@ struct FEconomyState
     UPROPERTY(SaveGame) TArray<FIndustryJob> Jobs;
     UPROPERTY(SaveGame) TMap<FGuid, FBlueprintInstance> Blueprints;
     UPROPERTY(SaveGame) TMap<FGuid, FGuid> BlueprintReceipts;
+    UPROPERTY(SaveGame) TMap<FGuid,FSerializedHullStock> SerializedHulls;
+    UPROPERTY(SaveGame) TMap<FGuid,FGuid> HullPurchaseReceipts;
     UPROPERTY(SaveGame) TMap<FName, FMiningLease> MiningLeases;
     UPROPERTY(SaveGame) TArray<FEconomyTransaction> Journal;
     // Retained separately from bounded display history: retries cannot pay twice.

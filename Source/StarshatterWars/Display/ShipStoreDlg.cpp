@@ -28,6 +28,7 @@ namespace
 struct FStoreEntry
 {
     FShipStoreOffer Offer;
+    FGuid HullId;
     FString Empire;
     int32 RequiredRank=0,Owned=0;
 };
@@ -52,18 +53,26 @@ struct FStoreView : TSharedFromThis<FStoreView>
     void Refresh()
     {
         Visible.Reset();
+        TMap<FName,TArray<FGuid>> AvailableHulls;
         for(const auto& Row:All)
         {
             if(Store.IsValid())Row->Owned=Store->Stored(Row->Offer.Id);
             if(Row->Offer.Category==EShipStoreCategory::Skins && Players.IsValid())
                 Row->Owned=Players->GetPlayerInfo().OwnedShipSkins.Contains(Row->Offer.Id)?1:0;
-            if(Row->Offer.Category==Tab && (Search.IsEmpty() || Row->Offer.Name.Contains(Search) || Row->Offer.Group.Contains(Search)))Visible.Add(Row);
+            if(Row->HullId.IsValid() && Sales.IsValid())
+            {
+                auto* Offers=AvailableHulls.Find(Row->Offer.Design);
+                if(!Offers)Offers=&AvailableHulls.Add(Row->Offer.Design,Sales->HullOffers(Row->Offer.Design));
+                if(!Offers->Contains(Row->HullId))continue;
+            }
+            if(Row->Offer.Category==Tab && (Search.IsEmpty() || Row->Offer.Name.Contains(Search) || Row->Offer.Group.Contains(Search) || Row->HullId.ToString().Contains(Search) || Row->HullId.ToString(EGuidFormats::DigitsWithHyphens).Contains(Search)))Visible.Add(Row);
         }
         Visible.StableSort([this](const auto& Left,const auto& Right)
         {
             const auto& A=*(SortMode==EColumnSortMode::Descending?Right:Left);
             const auto& B=*(SortMode==EColumnSortMode::Descending?Left:Right);
             if((SortColumn=="Price" || SortColumn=="Total" || SortColumn=="Charges") && A.Offer.Price!=B.Offer.Price)return A.Offer.Price<B.Offer.Price;
+            if(SortColumn=="HullId")return A.HullId.ToString()<B.HullId.ToString();
             if(SortColumn=="Owned" && A.Owned!=B.Owned)return A.Owned<B.Owned;
             if(SortColumn=="Grade" && A.Offer.Grade!=B.Offer.Grade)return A.Offer.Grade<B.Offer.Grade;
             if(SortColumn=="Group" && A.Offer.Group!=B.Offer.Group)return A.Offer.Group.Compare(B.Offer.Group,ESearchCase::IgnoreCase)<0;
@@ -83,13 +92,13 @@ struct FStoreView : TSharedFromThis<FStoreView>
     {
         if(!Selected){Reason=INVTEXT("Select an item to review its quote.");return false;}
         if(Tab==EShipStoreCategory::Hulls)
-        {if(Sales.IsValid())return Sales->CanPurchaseHull(Selected->Offer.Design,Reason);return false;}
+        {if(Sales.IsValid())return Selected->HullId.IsValid() && Sales->CanPurchaseHull(Selected->Offer.Design,Reason,Selected->HullId);return false;}
         return Store.IsValid() && Store->CanPurchase(Selected->Offer.Id,BuyQuantity(),Reason);
     }
     void Buy()
     {
         FText Reason;if(!CanBuy(Reason)){Feedback=Reason;return;}
-        if(Tab==EShipStoreCategory::Hulls)Sales->PurchaseHull(Selected->Offer.Design,Feedback);
+        if(Tab==EShipStoreCategory::Hulls)Sales->PurchaseHull(Selected->Offer.Design,Feedback,Selected->HullId);
         else Store->Purchase(Selected->Offer.Id,BuyQuantity(),Selected->Offer.Price*BuyQuantity(),Feedback);
         Refresh();
     }
@@ -104,6 +113,7 @@ public:
     {
         FText Label;
         if(Column=="Item")Label=FText::FromString(Entry->Offer.Name);
+        else if(Column=="HullId")Label=Entry->HullId.IsValid()?FText::FromString(Entry->HullId.ToString(EGuidFormats::DigitsWithHyphens)):INVTEXT("—");
         else if(Column=="Group")Label=FText::FromString(Entry->Offer.Group);
         else if(Column=="Grade")Label=Entry->Offer.Grade>0?FText::FromString(FString::FromInt(Entry->Offer.Grade)):INVTEXT("â€”");
         else if(Column=="Price")Label=FText::AsNumber(CommerceCharges::Quote(Entry->Offer.Price,ECommercePurpose::Purchase).Base);
@@ -134,6 +144,9 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
         const auto* Pilot=PlayerCharacter::GetCurrentPlayer();const int32 Rank=Pilot?Pilot->GetRank():0;
         const auto* Empire=StaticEnum<EShipEmpire>();
         const int64 PilotEmpire=Pilot?Empire->GetValueByNameString(StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(int64(Pilot->GetEmpire()))):INDEX_NONE;
+        TArray<FName> StockDesigns;
+        if(Catalog)for(const auto& Pair:Catalog->GetDesignsByName())StockDesigns.Add(FName(*Pair.Value.ShipName));
+        const bool OffersReady=View->Sales.IsValid() && View->Sales->PrepareHullOffers(StockDesigns,View->Feedback);
         if(Catalog)for(const auto& Pair:Catalog->GetDesignsByName())
         {
             const auto& Hull=Pair.Value;
@@ -148,7 +161,10 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
             const auto* Skills=Game->GetSubsystem<USkillsSubsystem>();const auto Skill=USkillsSubsystem::RequiredHullSkill(Hull.ShipType);
             if(!Skill.IsNone())Row->Offer.Access+=Skills && Skills->HasSkill(Skill)?TEXT(" / SKILL MET"):TEXT(" / SKILL REQUIRED");
             Row->Empire=Empire->GetDisplayNameTextByValue(int64(Hull.ShipEmpire)).ToString();
-            Row->Offer.Price=View->Sales.IsValid()?View->Sales->HullPurchasePrice(Row->Offer.Design):Hull.BaseCost;View->All.Add(Row);
+            Row->Offer.Price=View->Sales.IsValid()?View->Sales->HullPurchasePrice(Row->Offer.Design):Hull.BaseCost;
+            if(OffersReady)
+                for(const FGuid Id:View->Sales->HullOffers(Row->Offer.Design))
+                {auto Specific=MakeShared<FStoreEntry>(*Row);Specific->HullId=Id;View->All.Add(Specific);}
         }
     }
     FString SkinError;ShipSkinCatalog::Load(FPaths::ProjectContentDir()/TEXT("GameData/Ships/skins.json"),View->Skins,SkinError);
@@ -161,7 +177,7 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
             .SortMode_Lambda([Weak,Id](){const auto State=Weak.Pin();return State && State->SortColumn==Id?State->SortMode:EColumnSortMode::None;})
             .OnSort_Lambda([Weak](EColumnSortPriority::Type,const FName& Id,EColumnSortMode::Type Mode){if(auto State=Weak.Pin()){State->SortColumn=Id;State->SortMode=Mode;State->Refresh();}}));
     };
-    Column("Item",INVTEXT("ITEM"),2);Column("Group",INVTEXT("TYPE / HULL"),1.2f);Column("Grade",INVTEXT("GRADE"),.55f);
+    Column("Item",INVTEXT("ITEM"),2);Column("HullId",INVTEXT("HULL ID"),1.4f);Column("Group",INVTEXT("TYPE / HULL"),1.2f);Column("Grade",INVTEXT("GRADE"),.55f);
     Column("Price",INVTEXT("BASE CR"),.8f);Column("Charges",INVTEXT("TAX / FEES"),.7f);Column("Total",INVTEXT("TOTAL CR"),.8f);Column("Owned",INVTEXT("AT DOCK"),.65f);Column("Access",INVTEXT("ACCESS / CATEGORY"),1.3f);
     auto List=SNew(SListView<FStoreRow>).ListItemsSource(&View->Visible).HeaderRow(Header).SelectionMode(ESelectionMode::Single)
         .OnGenerateRow_Lambda([](FStoreRow Row,const TSharedRef<STableViewBase>& Owner)->TSharedRef<ITableRow>{return SNew(SStoreRow,Owner).Entry(Row);})
@@ -190,7 +206,7 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
                 {
                     if(!View->Selected)return INVTEXT("SELECT AN ITEM\nHulls retain rank, skill, empire and local-stock restrictions. Equipment is delivered to this dock, not automatically equipped.");
                     const auto& Row=*View->Selected;
-                    return FText::FromString(Row.Offer.Name.ToUpper()+TEXT("\n")+Row.Offer.Description+TEXT("\n")+
+                    return FText::FromString(Row.Offer.Name.ToUpper()+(Row.HullId.IsValid()?TEXT("\nHULL ID: ")+Row.HullId.ToString(EGuidFormats::DigitsWithHyphens).ToUpper():FString())+TEXT("\n")+Row.Offer.Description+TEXT("\n")+
                         (Row.Empire.IsEmpty()?FString():TEXT("EMPIRE: ")+Row.Empire+TEXT("  |  "))+
                         TEXT("DELIVERY: ")+(View->Store.IsValid()?View->Store->Dock():TEXT("DOCK REQUIRED")));
                 })])]

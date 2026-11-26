@@ -3,6 +3,7 @@
 #include "Misc/ScopeExit.h"
 #include "CarrierFighterSalesAI.h"
 #include "ShipyardAI.h"
+#include "SerializedHullStockAI.h"
 #include "ShipDesignRegistry.h"
 #include "Hangar.h"
 #include "FlightDeck.h"
@@ -50,23 +51,38 @@ bool FCarrierFighterSalesTest::RunTest(const FString&)
     TestTrue(TEXT("OOB squadron aircraft remain operational in Flight Ops"),Base.GetHangar()->GotoAlert(Squad,Slot,&Deck));
     TestEqual(TEXT("Assigned aircraft excluded from sale"),CarrierFighterSalesAI::Available(Pilot.Economy,Key,*Base.GetHangar(),*Offer),Offer->Quantity-1);
     TestTrue(TEXT("Stood-down fighter returns to squadron stock"),Base.GetHangar()->StandDown(Squad,Slot));
+    SerializedHullStockAI::Ensure(Pilot.Economy,Key,TEXT("Stormhawk"),Offer->Quantity);
+    const auto HullOffers=SerializedHullStockAI::Available(Pilot.Economy,Key,TEXT("Stormhawk"),Offer->Quantity);
+    if(!TestEqual(TEXT("Reserve has serialized hull offers"),HullOffers.Num(),Offer->Quantity))return false;
+    CarrierFighterSalesAI::BindHullOffers(Pilot.Economy,Key,*Base.GetHangar(),*Offer);
+    const FGuid OfferedHullId=HullOffers.Last();
+    const auto OfferedSlot=Pilot.Economy.SerializedHulls.FindChecked(OfferedHullId);
+    TestFalse(TEXT("Specific carrier hull names its squadron slot"),OfferedSlot.Squadron.IsEmpty());
     const FGuid Receipt=FGuid::NewGuid();
-    TestFalse(TEXT("Failed purchase save rolls back"),CarrierFighterSalesAI::Purchase(Pilot,Hull,*Base.GetHangar(),*Offer,Key,TEXT("Janek"),Receipt,[](){return false;},Why));
+    TestFalse(TEXT("Failed purchase save rolls back"),CarrierFighterSalesAI::Purchase(Pilot,Hull,*Base.GetHangar(),*Offer,Key,TEXT("Janek"),Receipt,[](){return false;},Why,OfferedHullId));
     TestEqual(TEXT("Failed sale preserves wallet"),Pilot.Economy.Wallets.FindRef(FEconomyLedger::Pilot()),425000LL);
     TestEqual(TEXT("Failed sale preserves reserve hulls"),CarrierFighterSalesAI::Available(Pilot.Economy,Key,*Base.GetHangar(),*Offer),Offer->Quantity);
-    TestTrue(TEXT("425000-credit cadet buys Stormhawk"),CarrierFighterSalesAI::Purchase(Pilot,Hull,*Base.GetHangar(),*Offer,Key,TEXT("Janek"),Receipt,[](){return true;},Why));
+    TestTrue(TEXT("425000-credit cadet buys Stormhawk"),CarrierFighterSalesAI::Purchase(Pilot,Hull,*Base.GetHangar(),*Offer,Key,TEXT("Janek"),Receipt,[](){return true;},Why,OfferedHullId));
     TestEqual(TEXT("400000 charged exactly once"),Pilot.Economy.Wallets.FindRef(FEconomyLedger::Pilot()),25000LL);
     TestEqual(TEXT("One owned fighter delivered"),Pilot.HangarShips.Num(),1);
+    TestEqual(TEXT("Exact offered carrier hull delivered"),Pilot.HangarShips[0].HullId,OfferedHullId);
+    for(int32 S=0;S<Base.GetHangar()->NumSquadrons();++S)
+        if(OfferedSlot.Squadron==UTF8_TO_TCHAR(Base.GetHangar()->SquadronName(S).data()))
+            TestEqual(TEXT("Exact offered squadron slot transferred"),Base.GetHangar()->GetState(Base.GetHangar()->GetSlot(S,OfferedSlot.Slot)),int32(Hangar::TRANSFERRED));
     TestEqual(TEXT("Transferred reserve no longer ready"),CarrierFighterSalesAI::Available(Pilot.Economy,Key,*Base.GetHangar(),*Offer),Offer->Quantity-1);
     TestEqual(TEXT("Reserve transfer is not a combat loss"),Base.GetHangar()->NumShipsDead(Squad),0);
     TestEqual(TEXT("Normal Stormhawk price remains unchanged"),ShipDesignRegistry::Find(FName(TEXT("Stormhawk")))->BaseCost,574000LL);
-    TestTrue(TEXT("Duplicate receipt is idempotent"),CarrierFighterSalesAI::Purchase(Pilot,Hull,*Base.GetHangar(),*Offer,Key,TEXT("Janek"),Receipt,[](){return false;},Why));
+    TestTrue(TEXT("Duplicate receipt is idempotent"),CarrierFighterSalesAI::Purchase(Pilot,Hull,*Base.GetHangar(),*Offer,Key,TEXT("Janek"),Receipt,[](){return false;},Why,OfferedHullId));
     TestEqual(TEXT("Duplicate receipt never charges again"),Pilot.Economy.Wallets.FindRef(FEconomyLedger::Pilot()),25000LL);
     TStrongObjectPtr<UPlayerSaveGame> Save(NewObject<UPlayerSaveGame>());Save->PlayerInfo=Pilot;TArray<uint8> Bytes;
     TestTrue(TEXT("Stock and purchase serialize"),UGameplayStatics::SaveGameToMemory(Save.Get(),Bytes));
     TStrongObjectPtr<UPlayerSaveGame> Reload(Cast<UPlayerSaveGame>(UGameplayStatics::LoadGameFromMemory(Bytes)));if(!TestNotNull(TEXT("Purchase reloads"),Reload.Get()))return false;
+    TestEqual(TEXT("Purchased carrier identity survives save"),Reload->PlayerInfo.HangarShips[0].HullId,OfferedHullId);
     Ship Reopened("Archon","",ShipDesignRegistry::FindLegacy(FName(TEXT("Orion"))),1,0,nullptr,false);Reopened.InitializeRuntimeHangarFromDesign();
     TestTrue(TEXT("Reserve restored after level reload"),CarrierFighterSalesAI::Prepare(Reload->PlayerInfo,Reopened,System,[](){return true;},Why));
+    for(int32 S=0;S<Reopened.GetHangar()->NumSquadrons();++S)
+        if(OfferedSlot.Squadron==UTF8_TO_TCHAR(Reopened.GetHangar()->SquadronName(S).data()))
+            TestEqual(TEXT("Sold squadron slot stays transferred on reload"),Reopened.GetHangar()->GetState(Reopened.GetHangar()->GetSlot(S,OfferedSlot.Slot)),int32(Hangar::TRANSFERRED));
     TestTrue(TEXT("Remaining reserve found"),CarrierFighterSalesAI::FindReserve(*Reopened.GetHangar(),*Offer,Squad,Slot));
     TestEqual(TEXT("Reload cannot refill sold stock"),CarrierFighterSalesAI::Available(Reload->PlayerInfo.Economy,Key,*Reopened.GetHangar(),*Offer),Offer->Quantity-1);
     Pilot.bTrainingGraduate=true;

@@ -1,4 +1,5 @@
 #include "ShipInsuranceSubsystem.h"
+#include "SerializedHullStockAI.h"
 #include "StarterCraftOwnership.h"
 #include "ShipStoreAI.h"
 #include "OrdnanceMagazine.h"
@@ -725,26 +726,56 @@ double UShipInsuranceSubsystem::HullStock(FName Design)const
     }
     return ShipyardAI::Stock(P->GetPlayerInfo().Economy,DockedHullStock(Design,false),Design);
 }
-bool UShipInsuranceSubsystem::CanPurchaseHull(FName Design,FText& Reason)const
+bool UShipInsuranceSubsystem::PrepareHullOffers(const TArray<FName>& Designs,FText& Reason)
+{
+    auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if(!P)return false;
+    auto& Pilot=P->GetMutablePlayerInfo();const auto Before=Pilot;bool Changed=false;
+    for(const FName Design:Designs)
+    {
+        if(HullStock(Design)<1)continue;
+        const FName Inventory=DockedHullStock(Design,DockedCarrierOffer(Pilot,Design).IsSet());
+        const FName Item=DataTableUtils::MakeValidName(Design.ToString().ToLower()+TEXT(" assembled hull"));
+        Changed|=SerializedHullStockAI::Ensure(Pilot.Economy,Inventory,Design,FMath::FloorToInt(FEconomyLedger::Quantity(Pilot.Economy,Inventory,Item)));
+        const auto Offer=DockedCarrierOffer(Pilot,Design);
+        auto* S=Sim::GetSim();auto* Craft=S?S->GetPlayerShip():nullptr;auto* Base=Craft?Craft->GetCarrier():nullptr;
+        if(Offer.IsSet() && Base && Base->GetHangar())Changed|=CarrierFighterSalesAI::BindHullOffers(Pilot.Economy,Inventory,*Base->GetHangar(),Offer.GetValue());
+    }
+    if(!Changed || P->SaveActivePlayerProgress())return true;
+    Pilot=Before;Reason=INVTEXT("Could not save serialized hull offers.");return false;
+}
+TArray<FGuid> UShipInsuranceSubsystem::HullOffers(FName Design)const
+{
+    const auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();if(!P)return {};
+    const auto Offer=DockedCarrierOffer(P->GetPlayerInfo(),Design);
+    if(Offer.IsSet())
+    {
+        auto* S=Sim::GetSim();auto* Craft=S?S->GetPlayerShip():nullptr;auto* Base=Craft?Craft->GetCarrier():nullptr;
+        return Base && Base->GetHangar()?CarrierFighterSalesAI::HullOffers(P->GetPlayerInfo().Economy,DockedHullStock(Design,true),*Base->GetHangar(),Offer.GetValue()):TArray<FGuid>();
+    }
+    return SerializedHullStockAI::Available(P->GetPlayerInfo().Economy,DockedHullStock(Design,false),Design,FMath::FloorToInt(HullStock(Design)));
+}
+bool UShipInsuranceSubsystem::CanPurchaseHull(FName Design,FText& Reason,FGuid OfferedHullId)const
 {
     const auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* Hull=ShipDesignRegistry::Find(Design);
     const auto Offer=P?DockedCarrierOffer(P->GetPlayerInfo(),Design):TOptional<FCarrierFighterOffer>();
     if(!P || !Hull || (!FStationServices::Offers(ESSWStationService::Refit) && !Offer.IsSet()))
     {Reason=INVTEXT("Dock at a friendly carrier with this design in its OOB, or a shipyard with completed hulls.");return false;}
+    if(OfferedHullId.IsValid() && !HullOffers(Design).Contains(OfferedHullId)){Reason=INVTEXT("This specific hull is no longer available.");return false;}
     if(!ShipyardAI::Eligible(P->GetPlayerInfo(),*Hull,Reason))return false;
     if(HullStock(Design)<1){Reason=INVTEXT("No unassigned squadron stock or completed hull of this design is available.");return false;}
     const int64 Price=HullPurchasePrice(Design);
     if(GetBalance()<Price){Reason=FText::Format(INVTEXT("Required: {0} CR. Balance: {1} CR."),FText::AsNumber(Price),FText::AsNumber(GetBalance()));return false;}
     Reason=FText::Format(INVTEXT("Purchase for {0} CR. Available: {1}."),FText::AsNumber(Price),FText::AsNumber(HullStock(Design)));return true;
 }
-bool UShipInsuranceSubsystem::PurchaseHull(FName Design,FText& Reason)
+bool UShipInsuranceSubsystem::PurchaseHull(FName Design,FText& Reason,FGuid OfferedHullId)
 {
-    if(!CanPurchaseHull(Design,Reason))return false;
+    if(!CanPurchaseHull(Design,Reason,OfferedHullId))return false;
     auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* Hull=ShipDesignRegistry::Find(Design);const auto Before=P->GetPlayerInfo();
     auto& Pilot=P->GetMutablePlayerInfo();auto* Craft=Sim::GetSim()->GetPlayerShip();auto* Base=Craft->GetCarrier();
     const auto Offer=DockedCarrierOffer(Pilot,Design);
-    if(Offer.IsSet())return Base->GetHangar() && CarrierFighterSalesAI::Purchase(Pilot,*Hull,*Base->GetHangar(),Offer.GetValue(),DockedHullStock(Design,true),OwnedHullLocation::Dock(*Craft),FGuid::NewGuid(),[P](){return P->SaveActivePlayerProgress();},Reason);
-    if(!ShipyardAI::Purchase(Pilot,*Hull,DockedHullStock(Design,false),OwnedHullLocation::Dock(*Craft),FGuid::NewGuid(),Reason))return false;
+    if(Offer.IsSet())return Base->GetHangar() && CarrierFighterSalesAI::Purchase(Pilot,*Hull,*Base->GetHangar(),Offer.GetValue(),DockedHullStock(Design,true),OwnedHullLocation::Dock(*Craft),FGuid::NewGuid(),[P](){return P->SaveActivePlayerProgress();},Reason,OfferedHullId);
+    if(!ShipyardAI::Purchase(Pilot,*Hull,DockedHullStock(Design,false),OwnedHullLocation::Dock(*Craft),FGuid::NewGuid(),Reason,OfferedHullId))return false;
     if(!P->SaveActivePlayerProgress()){Pilot=Before;Reason=INVTEXT("Could not save the purchase. Hull stock and credits restored.");return false;}return true;
 }
 bool UShipInsuranceSubsystem::PrepareCarrierFighterSales(FText& Why)

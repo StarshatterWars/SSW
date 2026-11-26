@@ -39,8 +39,10 @@ public:
     double HullStock(FName Design) const;
     bool PrepareCarrierFighterSales(FText& Reason);
     int64 HullPurchasePrice(FName Design) const;
-    bool CanPurchaseHull(FName Design,FText& Reason) const;
-    bool PurchaseHull(FName Design,FText& Reason);
+    bool PrepareHullOffers(const TArray<FName>& Designs,FText& Reason);
+    TArray<FGuid> HullOffers(FName Design) const;
+    bool CanPurchaseHull(FName Design,FText& Reason,FGuid OfferedHullId=FGuid()) const;
+    bool PurchaseHull(FName Design,FText& Reason,FGuid OfferedHullId=FGuid());
     bool CanInsure() const;
 private:
     void ProvisionMissionMagazine();

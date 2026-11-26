@@ -3,6 +3,7 @@
 #include "Misc/AutomationTest.h"
 #include "EconomyAI.h"
 #include "ShipyardAI.h"
+#include "SerializedHullStockAI.h"
 #include "TransactionAI.h"
 #include "ProductionCatalog.h"
 #include "CargoCatalogSubsystem.h"
@@ -192,10 +193,20 @@ bool FShipyardFulfillmentTest::RunTest(const FString&)
     FShipDesign Hull;Hull.ShipName=TEXT("Falcon");Hull.DisplayName=TEXT("Falcon");Hull.BaseCost=574000;Hull.ShipType=2;Hull.Category=EShipCategory::Fighter;Hull.ShipEmpire=EShipEmpire::Terellian;
     const FName Warehouse(TEXT("Janus/Yard/Output"));auto* Inv=FEconomyLedger::CreateInventory(Pilot.Economy,Warehouse,FEconomyRuntime::IndustryOwner(),TEXT("Janus"),100);
     Inv->bHullStorage=true;FEconomyLedger::Deposit(Pilot.Economy,Warehouse,DataTableUtils::MakeValidName(TEXT("falcon assembled hull")),1,14.5);
-    FText Why;const FGuid Receipt=FGuid::NewGuid();if(!TestTrue(TEXT("Eligible pilot buys actual stocked hull"),ShipyardAI::Purchase(Pilot,Hull,Warehouse,TEXT("Janek"),Receipt,Why))){AddError(Why.ToString());return false;}
+    SerializedHullStockAI::Ensure(Pilot.Economy,Warehouse,TEXT("Falcon"),1);
+    const auto Offered=SerializedHullStockAI::Available(Pilot.Economy,Warehouse,TEXT("Falcon"),1);
+    if(!TestEqual(TEXT("One physical hull offered before payment"),Offered.Num(),1))return false;
+    const FGuid SelectedHull=Offered[0];
+    TestFalse(TEXT("Reopening stock does not replace IDs"),SerializedHullStockAI::Ensure(Pilot.Economy,Warehouse,TEXT("Falcon"),1));
+    FText Why;const FGuid Receipt=FGuid::NewGuid();if(!TestTrue(TEXT("Eligible pilot buys actual stocked hull"),ShipyardAI::Purchase(Pilot,Hull,Warehouse,TEXT("Janek"),Receipt,Why,SelectedHull))){AddError(Why.ToString());return false;}
     TestEqual(TEXT("Stock consumed"),ShipyardAI::Stock(Pilot.Economy,Warehouse,TEXT("Falcon")),0.0);
     TestEqual(TEXT("Exact hull price debited"),Pilot.Economy.Wallets.FindRef(FEconomyLedger::Pilot()),426000LL);
     if(!TestEqual(TEXT("Owned hull delivered to hangar"),Pilot.HangarShips.Num(),1))return false;
+    TestEqual(TEXT("Delivered hull matches selected store hull"),Pilot.HangarShips[0].HullId,SelectedHull);
+    TestTrue(TEXT("Hull identity is independent of payment receipt"),SelectedHull!=Receipt);
+    TestEqual(TEXT("Receipt resolves to selected hull"),SerializedHullStockAI::Purchased(Pilot.Economy,Receipt),SelectedHull);
+    TestEqual(TEXT("Wallet reference identifies physical hull"),Pilot.Economy.Journal.Last().Reference,SelectedHull);
+    TestFalse(TEXT("Retry cannot substitute a different hull"),ShipyardAI::Purchase(Pilot,Hull,Warehouse,TEXT("Janek"),Receipt,Why,FGuid::NewGuid()));
     TestEqual(TEXT("Hangar location retained"),Pilot.HangarShips[0].Location,FString(TEXT("Janek")));
     TestFalse(TEXT("Credit purchase does not receive cash lifetime policy"),Pilot.HangarShips[0].bCashPurchased);
     TestTrue(TEXT("Retry uses original receipt"),ShipyardAI::Purchase(Pilot,Hull,Warehouse,TEXT("Janek"),Receipt,Why));TestEqual(TEXT("Retry cannot grant a second hull"),Pilot.HangarShips.Num(),1);
