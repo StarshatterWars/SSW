@@ -82,7 +82,7 @@ public:
                 +SHorizontalBox::Slot().AutoWidth()[SNew(SButton)
                     .ToolTipText(INVTEXT("Cancel your selected job while docked at its facility. Consumed inputs and licensed runs are not refunded."))
                     .IsEnabled_Lambda([this](){const auto* Job=FindSelected();const auto* Site=FStationServices::Facility();return Catalog.IsValid() && Job && Site && Job->Facility==FName(*Site->Facility) && Job->State!=EIndustryJobState::Completed && Job->State!=EIndustryJobState::Cancelled;})
-                    .OnClicked_Lambda([this](){if(Catalog.IsValid())Catalog->CancelPlayerJob(Selected,Feedback);Refresh(0,0);return FReply::Handled();})
+                    .OnClicked_Lambda([this](){if(Catalog.IsValid())Catalog->RequestCancelPlayerJob(Selected,[Weak=TWeakPtr<SPlayerIndustryJobs>(StaticCastSharedRef<SPlayerIndustryJobs>(AsShared()))](bool,const FText& Why,FGuid){if(auto W=Weak.Pin()){W->Feedback=Why;W->Refresh(0,0);}},Feedback);Refresh(0,0);return FReply::Handled();})
                     [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Abort)]]]];
         Refresh(0,0);
         ChangeHandle=FSimDataEvents::Changed().AddSP(this,&SPlayerIndustryJobs::OnDataChanged);

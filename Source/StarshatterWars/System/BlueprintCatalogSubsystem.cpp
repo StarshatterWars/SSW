@@ -1,4 +1,5 @@
 #include "BlueprintCatalogSubsystem.h"
+#include "LedgerCommandAI.h"
 #include "ProductionCatalog.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "TransactionAI.h"
@@ -236,4 +237,42 @@ bool UBlueprintCatalogSubsystem::CancelPlayerJob(FGuid Id, FText& Reason)
     if (!FEconomyLedger::CancelJob(State, FEconomyLedger::Pilot(), Id) || !Players->SaveActivePlayerProgress())
     { Players->GetMutablePlayerInfo() = Before; Reason = INVTEXT("The job could not be cancelled and saved."); return false; }
     Reason = INVTEXT("Job cancelled. Materials and licensed runs already consumed by a running job are not refunded."); return true;
+}
+
+bool UBlueprintCatalogSubsystem::RequestPurchase(FName Recipe,bool Original,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Reason)
+{
+    if(!CanPurchase(Recipe,Original,Reason))return false;const auto Offer=Offers.FindChecked(Recipe);
+    FNativeLedgerCommand C;C.Action=ELedgerCommand::BlueprintPurchase;C.Receipt=FGuid::NewGuid();C.Recipe=Recipe;C.bOriginal=Original;C.Credits=Original?Offer.OriginalPrice:Offer.CopyPrice;C.Runs=Offer.CopyRuns;
+    const TWeakObjectPtr<UBlueprintCatalogSubsystem> Weak(this);
+    return FStationServices::RequestLedgerAction(GetGameInstance(),C,INVTEXT("BLUEPRINT PURCHASE"),[Weak,Recipe,Original,C](FText& Why)
+    {
+        const auto* Catalog=Weak.Get();const auto* Current=Catalog?Catalog->Offers.Find(Recipe):nullptr;
+        return Current && (Original?Current->OriginalPrice:Current->CopyPrice)==C.Credits && Current->CopyRuns==C.Runs && Catalog->CanPurchase(Recipe,Original,Why);
+    },MoveTemp(Completed),Reason);
+}
+bool UBlueprintCatalogSubsystem::RequestBeginPlayerJob(const FSSWProductionFacility& Site,FGuid Blueprint,int32 Runs,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Reason)
+{
+    FPlayerIndustryQuote Quote;if(!CanBeginPlayerJob(Site,Blueprint,Runs,Quote,Reason))return false;
+    FNativeLedgerCommand C;C.Action=ELedgerCommand::IndustryInstall;C.Receipt=FGuid::NewGuid();C.Object=Blueprint;C.Runs=Runs;C.Source=Quote.Input;C.Destination=Quote.Output;
+    C.Facility=FName(*Site.Facility);C.System=FName(*Site.System);C.Capacity=Site.CapacityTonnes;C.Materials=Quote.NominalMaterials;C.Products=Quote.NominalProducts;C.Duration=Quote.NominalDuration;C.Credits=Quote.InstallationFee;
+    const TWeakObjectPtr<UBlueprintCatalogSubsystem> Weak(this);
+    return FStationServices::RequestLedgerAction(GetGameInstance(),C,INVTEXT("INSTALL MANUFACTURING JOB"),[Weak,Site,Blueprint,Runs,C](FText& Why)
+    {
+        FPlayerIndustryQuote Fresh;if(!Weak.IsValid() || !Weak->CanBeginPlayerJob(Site,Blueprint,Runs,Fresh,Why))return false;
+        if(Fresh.Input!=C.Source || Fresh.Output!=C.Destination || Fresh.InstallationFee!=C.Credits || Fresh.NominalDuration!=C.Duration || Fresh.NominalMaterials.Num()!=C.Materials.Num() || Fresh.NominalProducts.Num()!=C.Products.Num())return false;
+        for(int32 I=0;I<C.Materials.Num();++I)if(!FCommodityAmount::StaticStruct()->CompareScriptStruct(&Fresh.NominalMaterials[I],&C.Materials[I],0))return false;
+        for(int32 I=0;I<C.Products.Num();++I)if(!FCommodityAmount::StaticStruct()->CompareScriptStruct(&Fresh.NominalProducts[I],&C.Products[I],0))return false;
+        return true;
+    },MoveTemp(Completed),Reason);
+}
+bool UBlueprintCatalogSubsystem::RequestCancelPlayerJob(FGuid Id,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Reason)
+{
+    FNativeLedgerCommand C;C.Action=ELedgerCommand::IndustryCancel;C.Receipt=FGuid::NewGuid();C.Object=Id;const TWeakObjectPtr<UBlueprintCatalogSubsystem> Weak(this);
+    return FStationServices::RequestLedgerAction(GetGameInstance(),C,INVTEXT("CANCEL MANUFACTURING JOB"),[Weak,Id](FText& Why)
+    {
+        const auto* Players=Weak.IsValid()?Weak->GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;const auto* Site=FStationServices::Facility();
+        const auto* Job=Players?Players->GetPlayerInfo().Economy.Jobs.FindByPredicate([Id](const auto& J){return J.Id==Id;}):nullptr;
+        if(!DockedNPC() || !Site || !Job || Job->Owner!=FEconomyLedger::Pilot() || Job->Facility!=FName(*Site->Facility) || Job->State==EIndustryJobState::Completed || Job->State==EIndustryJobState::Cancelled)
+        {Why=INVTEXT("Select your own cancellable job at this docked facility.");return false;}return true;
+    },MoveTemp(Completed),Reason);
 }

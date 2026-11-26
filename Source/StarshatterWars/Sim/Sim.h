@@ -216,6 +216,7 @@ public:
     const TMap<FName, FContractTransaction>& GetTrainingContracts();
     int64 GetTrainingContractBalance() const;
     FText ExecuteTrainingContract(FName ContractId, ETrainingContractAction Action, int64 Bid);
+    bool RequestTrainingContract(FName,ETrainingContractAction,int64,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
     static const FName TrainingContractPilot;
     static constexpr double TrainingDeliveryRange = 2000.0;
 
@@ -369,6 +370,8 @@ protected:
     FName AssignedAgentPilot;
     int32 AssignedAgentMissionId = INDEX_NONE;
     FContractAccounts TrainingContractAccounts;
+    bool bContractWorkerPending=false,bMarketWorkerPending=false,bContractDirty=true;
+    int64 NextContractMaintenanceUtc=0;
     TMap<FName, FContractTransaction> TrainingContracts;
     TMap<FName, FSSWProductionStock> ProductionViews;
     TUniquePtr<class EconomyAI> EconomyController;

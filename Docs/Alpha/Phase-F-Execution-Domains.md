@@ -92,3 +92,9 @@ Fleet repair assessment, supply debit, work milestones and replacement calculati
 The adapter wakes on fleet/supply changes and milestones, coalesces changes while a command is pending, and shuts down before the economy coordinator. No live campaign, ship, hangar or UObject reaches the worker. Two new tests cover actual worker isolation, stale fleet/profile/revision rejection, atomic rollback, single-use results, completion, ammunition/grade retention and deployed hull protection.
 
 Remaining Phase F adapter work: hull commerce/insurance, inventory/manufacturing services and contracts, plus scheduled order maintenance. Nexus REA fleet-management research is deferred until after existing phases; supplied installation: C:/Program Files (x86)/Steam/steamapps/common/Nexus The Jupiter Incident.
+
+## Inventory, manufacturing, contract and order-maintenance adapters
+
+Build 20261126-203246Z passed Editor and Windows Development compilation with zero C++ warning/error diagnostics. All 411 automated regressions passed with zero test warnings, failures or skips (Saved/Automation/PhaseF-Ledger-Verified); all five focused ledger tests passed. Logs: PhaseF-Ledger-Editor-Verified.log and PhaseF-Ledger-Client.log.
+
+See Phase-F-Ledger-Adapters.md. The live cargo, blueprint and industry panels now submit immutable requests. Training contract publication/lifecycle, acceptance, bidding, delivery, abandonment and claims calculate on the worker; saved ledger state drives sealed cargo projection. Contract and market deadlines are serviced while their panels are closed. Unchanged maintenance results do not save or replace live state. A native headless fallback without player/UI adapters remains available. Hull commerce and insurance are next; Phase F remains open.

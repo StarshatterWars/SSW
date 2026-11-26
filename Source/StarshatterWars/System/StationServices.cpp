@@ -169,6 +169,45 @@ bool FStationServices::MoveCargo(UGameInstance* Instance,FName Item,bool ToStati
     {State=Before;Craft->ApplyCargoInventoryToManifest();Reason=INVTEXT("Could not save the transfer. Cargo was restored.");return false;}
     Craft->ApplyCargoInventoryToManifest();Reason=FText::Format(INVTEXT("Transferred {0} to the selected inventory."),FText::AsNumber(Quantity));return true;
 }
+bool FStationServices::RequestLedgerAction(UGameInstance* Instance,const FNativeLedgerCommand& Command,const FText& Label,TFunction<bool(FText&)>&& Validate,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Reason,bool RequireDock)
+{
+    check(IsInGameThread());auto* Domain=Instance?Instance->GetSubsystem<UGalaxyTrafficSubsystem>():nullptr;
+    auto* Simulation=Sim::GetSim();auto* Craft=Simulation?Simulation->GetPlayerShip():nullptr;
+    auto* Players=Instance?Instance->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+    if(!Domain || !Craft || Craft->IsDead() || Craft->IsDying() || !Players || !Players->HasLoaded() || (RequireDock && !IsDocked()) || &Simulation->ReadEconomy()!=&Players->GetEconomy())
+    {Reason=INVTEXT("The active pilot service is unavailable.");return false;}
+    const FGuid Hull=Craft->GetHullId();const FName Hold=Craft->GetCargoInventoryKey();
+    const FGuid Base=Craft->GetCarrier()?Craft->GetCarrier()->GetHullId():FGuid();
+    const FName BaseName(Craft->GetCarrier()?UTF8_TO_TCHAR(Craft->GetCarrier()->GetName()):TEXT(""));
+    Craft->SyncCargoInventory();const TWeakObjectPtr<UGameInstance> Weak(Instance);
+    const auto Project=[Weak,Hull,Hold]()
+    {auto* Current=Sim::GetSim()?Sim::GetSim()->GetPlayerShip():nullptr;if(Weak.IsValid() && Current && Current->GetHullId()==Hull && Current->GetCargoInventoryKey()==Hold)Current->ApplyCargoInventoryToManifest();};
+    return Domain->QueueLedgerCommand(FNativeLedgerCommand(Command),Label,
+        [Weak,Hull,Hold,Base,BaseName,RequireDock,Check=MoveTemp(Validate)](FText& Why)
+        {
+            auto* S=Sim::GetSim();auto* Current=S?S->GetPlayerShip():nullptr;
+            if(!Weak.IsValid() || !Current || Current->IsDead() || Current->IsDying() || Current->GetHullId()!=Hull || Current->GetCargoInventoryKey()!=Hold ||
+                (RequireDock && (!IsDocked() || !Current->GetCarrier() || Current->GetCarrier()->GetHullId()!=Base || FName(UTF8_TO_TCHAR(Current->GetCarrier()->GetName()))!=BaseName)))
+            {Why=INVTEXT("Craft or docking changed. Nothing exchanged.");return false;}
+            return Check && Check(Why);
+        },[Weak,Project]()
+        {if(!Weak.IsValid())return false;auto* P=Weak->GetSubsystem<UStarshatterPlayerSubsystem>();if(!P)return false;Project();return P->SaveActivePlayerProgress();},
+        [Project,Done=MoveTemp(Completed)](bool Saved,const FText& Why,FGuid Object){Project();if(Done)Done(Saved,Why,Object);},Reason);
+}
+bool FStationServices::RequestCargoTransfer(UGameInstance* Instance,FName Item,bool ToStation,const FString& Compartment,double Quantity,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Reason)
+{
+    const double Limit=CargoTransferLimit(Instance,Item,ToStation,*Compartment,Reason);
+    if(!FMath::IsFinite(Quantity) || Quantity<=UE_SMALL_NUMBER || Quantity>Limit+1.e-9 ||
+        (WholeCargoUnits(CatalogItem(Instance,Item)) && !FMath::IsNearlyEqual(Quantity,FMath::RoundToDouble(Quantity),1.e-9)))return false;
+    auto* Craft=Sim::GetSim()->GetPlayerShip();const auto& State=Sim::GetSim()->ReadEconomy();const FName Hold=Craft->GetCargoInventoryKey(),Store=Inventory(*Compartment);
+    const auto* ShipInventory=State.Inventories.Find(Hold);if(!ShipInventory)return false;const auto* Site=DockedFacility();
+    FNativeLedgerCommand C;C.Action=ELedgerCommand::Transfer;C.Receipt=FGuid::NewGuid();C.Item=Item;C.Quantity=Quantity;C.System=ShipInventory->System;
+    C.Source=ToStation?Hold:Store;C.Destination=ToStation?Store:Hold;C.Capacity=Site && Compartment!=TEXT("Player Storage")?Site->CapacityTonnes:1000000;
+    const TWeakObjectPtr<UGameInstance> Weak(Instance);
+    return RequestLedgerAction(Instance,C,FText::Format(INVTEXT("TRANSFER {0} x {1}"),FText::FromName(Item),FText::AsNumber(Quantity)),
+        [Weak,Item,ToStation,Compartment,Quantity,Store](FText& Why)
+        {return Weak.IsValid() && Inventory(*Compartment)==Store && CargoTransferLimit(Weak.Get(),Item,ToStation,*Compartment,Why)+1.e-9>=Quantity;},MoveTemp(Completed),Reason);
+}
 bool FStationServices::QuoteMarket(UGameInstance* Instance,FName Item,double Quantity,bool Buy,FStationMarketQuote& Quote)
 {
     Quote=FStationMarketQuote{};Quote.Item=Item;Quote.Quantity=Quantity;Quote.bBuy=Buy;

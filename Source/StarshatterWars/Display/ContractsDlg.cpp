@@ -5,6 +5,7 @@
 
 #include "MissionUIStyle.h"
 #include "Sim.h"
+#include "Mission.h"
 #include "Ship.h"
 #include "Widgets/Input/SButton.h"
 #include "Widgets/Layout/SBorder.h"
@@ -72,7 +73,8 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
     using Action = Sim::ETrainingContractAction;
     enum class ETab { Offers, Personal, Hauls };
     Sim* InitialSim = Sim::GetSim();
-    const bool bTraining = InitialSim && !InitialSim->GetTrainingContracts().IsEmpty();
+    const bool bTraining = InitialSim && InitialSim->GetMission() && InitialSim->GetMission()->GetIdentity()==101 && !InitialSim->IsNetworked();
+    if(bTraining)InitialSim->GetTrainingContracts();
     const auto Tab = MakeShared<ETab>(bTraining ? ETab::Offers : ETab::Hauls);
     const auto Query = MakeShared<FString>();
     const auto Selected = MakeShared<TOptional<Sim::FActiveHaul>>();
@@ -150,11 +152,8 @@ TSharedRef<SWidget> UContractsDlg::RebuildWidget()
         *AbandonArmed = false;
         if (Sim* Simulation = Sim::GetSim())
         {
-            *Feedback = Simulation->ExecuteTrainingContract(*SelectedId, Task, Credits);
-            if (Task == Action::Accept)
-                if (const auto* Offer = Simulation->GetTrainingContracts().Find(*SelectedId);
-                    Offer && Offer->Acceptor == Sim::TrainingContractPilot)
-                    *Tab = ETab::Personal;
+            Simulation->RequestTrainingContract(*SelectedId,Task,Credits,[Feedback,Tab,Task,Refresh](bool Saved,const FText& Why,FGuid)
+            {*Feedback=Why;if(Saved && Task==Action::Accept)*Tab=ETab::Personal;Refresh();},*Feedback);
             Refresh();
         }
         return FReply::Handled();

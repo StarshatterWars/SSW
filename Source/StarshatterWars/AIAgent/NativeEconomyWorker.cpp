@@ -35,6 +35,8 @@ FNativeEconomyResult FNativeEconomyWorker::Calculate(FNativeEconomyInput&& Input
 {
     FNativeEconomyResult Out;Out.Revision=Input.Revision;Out.Profile=MoveTemp(Input.Profile);Out.State=MoveTemp(Input.State);Out.bOffGameThread=!IsInGameThread();
     FSimDataEvents::Suppress(true);auto* Previous=ProductionEvents::Capture(&Out.Events);ON_SCOPE_EXIT{ProductionEvents::Capture(Previous);FSimDataEvents::Suppress(false);};
+    if(Input.Ledger)
+    {Out.Ledger=MakeUnique<FNativeLedgerReply>(LedgerCommandAI::Execute(Out.State,*Input.Ledger));return Out;}
     if(Input.Repair)
     {
         Out.Repair=MakeUnique<FNativeFleetRepairReply>();auto& Reply=*Out.Repair;
@@ -101,7 +103,7 @@ bool FNativeEconomyWorker::CommitPurchase(FNativeEconomyResult&& Result,FS_Playe
 bool FNativeEconomyWorker::Commit(FNativeEconomyResult&& Result,FEconomyState& Live,uint64 Revision,const FString& Profile)
 {
     check(IsInGameThread());
-    if(Result.Purchase || Result.Market || Result.Repair || Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)return false;
+    if(Result.Purchase || Result.Market || Result.Repair || Result.Ledger || Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)return false;
     Result.bCommitted=true;
     // Clock pumping is not a commercial mutation; never rewind it to a worker snapshot.
     Result.State.EconomyClockSeconds=FMath::Max(Live.EconomyClockSeconds,Result.State.EconomyClockSeconds);
@@ -150,4 +152,32 @@ bool FNativeEconomyWorker::CommitRepair(FNativeEconomyResult&& Result,FEconomySt
     if(!Commit(MoveTemp(Result),Live,Revision,Profile))return false;
     if(!Save()){Live=Before;Reason=INVTEXT("Could not save fleet repair supplies and work. Nothing consumed.");return false;}
     Fleet=MoveTemp(Reply->Fleet);Reason=INVTEXT("Fleet repair work saved.");return true;
+}
+
+bool FNativeEconomyWorker::CommitLedger(FNativeEconomyResult&& Result,FEconomyState& Live,uint64 Revision,const FString& Profile,TFunctionRef<bool()> Save,FText& Reason)
+{
+    check(IsInGameThread());
+    if(!Result.Ledger || !Result.Ledger->bSucceeded){Reason=Result.Ledger?Result.Ledger->Reason:INVTEXT("No service result.");return false;}
+    if(Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)
+    {Reason=INVTEXT("Profile or inventory changed. Request rejected without exchange.");return false;}
+    if(Result.Ledger->bContracts)
+    {
+        bool Same=Live.Contracts.Num()==Result.Ledger->SourceContracts.Num();
+        if(Same)for(const auto& Pair:Live.Contracts){const auto* Old=Result.Ledger->SourceContracts.Find(Pair.Key);if(!Old || !FContractTransaction::StaticStruct()->CompareScriptStruct(&Pair.Value,Old,0)){Same=false;break;}}
+        if(!Same){Reason=INVTEXT("Contract changed while processing. Nothing exchanged.");return false;}
+    }
+    if(Result.Ledger->bOrders)
+    {
+        bool Same=Live.MarketOrders.Num()==Result.Ledger->SourceOrders.Num();
+        if(Same)for(const auto& Pair:Live.MarketOrders){const auto* Old=Result.Ledger->SourceOrders.Find(Pair.Key);if(!Old || !FMarketOrder::StaticStruct()->CompareScriptStruct(&Pair.Value,Old,0)){Same=false;break;}}
+        if(!Same){Reason=INVTEXT("Orders changed while processing. Nothing exchanged.");return false;}
+    }
+    auto Reply=MoveTemp(Result.Ledger);
+    if(!Reply->bChanged){Result.bCommitted=true;return true;}
+    const auto Before=Live;auto Contracts=MoveTemp(Result.State.Contracts);auto Orders=MoveTemp(Result.State.MarketOrders);FScopedSimDataChangeBatch Batch(Live);
+    if(!Commit(MoveTemp(Result),Live,Revision,Profile))return false;
+    if(Reply->bContracts)Live.Contracts=MoveTemp(Contracts);
+    if(Reply->bOrders)Live.MarketOrders=MoveTemp(Orders);
+    if(!Save()){Live=Before;Reason=INVTEXT("Could not save. Credits, cargo, contracts, jobs and reservations restored.");return false;}
+    Reason=Reply->Reason;return true;
 }

@@ -36,6 +36,9 @@ public:
     const TMap<FName, FBlueprintOffer>& GetOffers() const { return Offers; }
     bool CanPurchase(FName Recipe, bool bOriginal, FText& Reason) const;
     bool Purchase(FName Recipe, bool bOriginal, FText& Reason);
+    bool RequestPurchase(FName Recipe,bool Original,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
+    bool RequestBeginPlayerJob(const FSSWProductionFacility&,FGuid Blueprint,int32 Runs,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
+    bool RequestCancelPlayerJob(FGuid Job,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
     bool CanBeginPlayerJob(const FSSWProductionFacility&, FGuid Blueprint, int32 Runs, FPlayerIndustryQuote&, FText& Reason) const;
     static bool MeetsRecipeSkills(const FSSWProductionRecipe&, const TMap<FName, FSkillProgress>* PilotSkills, FText& Reason,
         const TMap<FName, FSkillDefinition>* SkillCatalog = nullptr);

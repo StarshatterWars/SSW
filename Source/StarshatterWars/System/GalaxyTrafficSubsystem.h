@@ -30,6 +30,7 @@ public:
     int32 GetRealizedShipCount()const{return LiveShips.Num();}
     // Admission and persistence execute on the game thread. Only value commands reach the worker.
     bool QueueStorePurchase(FNativeStorePurchase&&,TFunction<bool(FText&)>&&,TFunction<void(bool,const FText&)>&&,FText&);
+    bool QueueLedgerCommand(FNativeLedgerCommand&&,const FText& Label,TFunction<bool(FText&)>&&,TFunction<bool()>&&,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
     bool QueueFleetRepair(FNativeFleetRepairCommand&&,TFunction<FCampaignFleetState*()>&&,TFunction<bool(FText&)>&&,TFunction<void(bool,const FFleetRepairStep&,const FText&)>&&,FText&);
     bool QueueMarketCommand(FNativeMarketCommand&&,TFunction<bool(FText&)>&&,TFunction<bool()>&&,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
     bool IsTransactionPending()const{return ActiveCommand.IsSet() || RequestQueue.Count()>0;}
@@ -43,6 +44,7 @@ private:
         FNativeStorePurchase Command;
         TUniquePtr<FNativeMarketCommand> Market;
         TUniquePtr<FNativeFleetRepairCommand> Repair;
+        TUniquePtr<FNativeLedgerCommand> Ledger;
         TFunction<FCampaignFleetState*()> LiveFleet;
         TFunction<void(bool,const FFleetRepairStep&,const FText&)> RepairCompleted;
         FString Profile;

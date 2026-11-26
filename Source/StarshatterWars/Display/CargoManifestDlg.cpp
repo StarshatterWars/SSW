@@ -323,8 +323,9 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
                 .OnClicked_Lambda([Table, WeakInstance = TWeakObjectPtr<UGameInstance>(GetGameInstance())]()
                 {
                     if (auto View = Table->List.Pin(); View && !View->GetSelectedItems().IsEmpty())
-                        FStationServices::MoveCargo(WeakInstance.Get(), FName(*View->GetSelectedItems()[0]->Name), Table->Compartment.IsEmpty(),
-                            Table->Compartment.IsEmpty() ? TEXT("Player Storage") : *Table->Compartment, Table->Quantity, Table->ServiceMessage);
+                        FStationServices::RequestCargoTransfer(WeakInstance.Get(), FName(*View->GetSelectedItems()[0]->Name), Table->Compartment.IsEmpty(),
+                            Table->Compartment.IsEmpty() ? TEXT("Player Storage") : Table->Compartment, Table->Quantity,
+                            [WeakTable=TWeakPtr<FCargoTable>(Table)](bool,const FText& Why,FGuid){if(auto T=WeakTable.Pin()){T->ServiceMessage=Why;T->Refresh();}},Table->ServiceMessage);
                     Table->Refresh(); return FReply::Handled();
                 })[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Replace)]]
             + SHorizontalBox::Slot().AutoWidth().Padding(2)
@@ -333,7 +334,8 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
                 .OnClicked_Lambda([Table, WeakInstance = TWeakObjectPtr<UGameInstance>(GetGameInstance())]()
                 {
                     if (auto View = Table->List.Pin(); View && !View->GetSelectedItems().IsEmpty())
-                        FStationServices::MoveCargo(WeakInstance.Get(), FName(*View->GetSelectedItems()[0]->Name), true, TEXT("Player Input"), Table->Quantity, Table->ServiceMessage);
+                        FStationServices::RequestCargoTransfer(WeakInstance.Get(), FName(*View->GetSelectedItems()[0]->Name), true, TEXT("Player Input"), Table->Quantity,
+                            [WeakTable=TWeakPtr<FCargoTable>(Table)](bool,const FText& Why,FGuid){if(auto T=WeakTable.Pin()){T->ServiceMessage=Why;T->Refresh();}},Table->ServiceMessage);
                     Table->Refresh(); return FReply::Handled();
                 })[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Production)]]
             + SHorizontalBox::Slot().AutoWidth().Padding(2)

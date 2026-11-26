@@ -141,7 +141,7 @@ TSharedRef<SWidget> UBlueprintsDlg::RebuildWidget()
         Buttons->AddSlot().AutoWidth().Padding(6,0)
         [SNew(SButton).ToolTipText(Original ? INVTEXT("Buy blueprint original from NPC publisher — unlimited runs") : INVTEXT("Buy limited-run blueprint copy from NPC publisher"))
             .IsEnabled_Lambda([Weak,Model,Original]() { FText Reason; return Weak.IsValid() && Model->Selected && Weak->CanPurchase(Model->Selected->Recipe,Original,Reason); })
-            .OnClicked_Lambda([Weak,Model,Original]() { if (Weak.IsValid() && Model->Selected) Weak->Purchase(Model->Selected->Recipe,Original,Model->Feedback); Model->Refresh(); return FReply::Handled(); })
+            .OnClicked_Lambda([Weak,Model,Original]() { if (Weak.IsValid() && Model->Selected) Weak->RequestPurchase(Model->Selected->Recipe,Original,[WeakModel=TWeakPtr<FBlueprintTable>(Model)](bool,const FText& Why,FGuid){if(auto M=WeakModel.Pin()){M->Feedback=Why;M->Refresh();}},Model->Feedback); Model->Refresh(); return FReply::Handled(); })
             [SNew(SShipSystemIcon).Icon(Original ? EShipSystemIcon::Reference : EShipSystemIcon::Replace)]];
     Buttons->AddSlot().AutoWidth().VAlign(VAlign_Center).Padding(8,0)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text(INVTEXT("RUNS"))];
     Buttons->AddSlot().AutoWidth().Padding(4,0)
@@ -155,7 +155,7 @@ TSharedRef<SWidget> UBlueprintsDlg::RebuildWidget()
         {
             Model->LastPreflight=0; RefreshPreflight(Weak,Model);
             const auto* Site=FStationServices::Facility();
-            if (Weak.IsValid() && Site && Model->CanInstall) Weak->BeginPlayerJob(*Site,Model->License,Model->Runs,Model->Feedback);
+            if (Weak.IsValid() && Site && Model->CanInstall) Weak->RequestBeginPlayerJob(*Site,Model->License,Model->Runs,[WeakModel=TWeakPtr<FBlueprintTable>(Model)](bool,const FText& Why,FGuid){if(auto M=WeakModel.Pin()){M->Feedback=Why;M->LastPreflight=0;M->Refresh();}},Model->Feedback);
             Model->LastPreflight=0; Model->Refresh(); return FReply::Handled();
         })[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Production)]];
     return SNew(SVerticalBox)

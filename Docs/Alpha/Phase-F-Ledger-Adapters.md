@@ -1,0 +1,13 @@
+# Phase F: ledger service adapters
+
+Inventory transfers, NPC blueprint purchases, player manufacturing installation/cancellation, training contract publication and lifecycle, acceptance, bidding, delivery, abandonment, auction claims and scheduled market maintenance use immutable commands on the existing dedicated economy worker.
+
+The station adapter freezes the active physical hull and dock, validates service/faction rules and the approved input quantities, fees and blueprint/job terms, then validates again before saved acceptance. UI callbacks remain on the game thread, including cargo projection and rollback. Production and cargo panels submit requests instead of mutating the live ledger. Existing synchronous native APIs remain for compatibility/tests; the live UI paths use the worker.
+
+Contract commands modify account escrow, sealed package stock and persistent contract state together. Delivery requires the existing physical destination/range check and deadline validation at dispatch and acceptance. Courier projection clears a removed package without importing the stale live adapter back into the ledger. Save failure restores the package and collateral/payout. Publication keeps the existing T1 offers and grants; it does not rebalance rewards. Contract deadlines and market order maintenance wake on data changes or the next deadline, not from full per-frame economic scans. A native headless/test fallback without a game instance retains direct pure ledger maintenance.
+
+Typed ledger results cannot bypass the saved commit. Original contract/order read sets are compared in addition to the economic revision and profile/session token, so unversioned edits cannot be overwritten. Results are single-use; receipts prevent replay. A failed save rolls back credits, quantities, licensed runs, job state and reservations. Worker calculations touch no live Ship, Actor, UObject or persistence callback.
+
+Five focused tests exercise actual off-game-thread transfer, capacity/reservation and sealed cargo guards, license purchase, installation fees and cancellation, failed save rollback, courier acceptance/delivery, auction claims, contract save/reload, zero-fill order expiry and concurrent contract edits. Final validation is recorded in Phase-F-Execution-Domains.md after completion.
+
+Remaining Phase F adapter work includes hull commerce and insurance, plus fitting/loadout/live-scene bridges. This document does not claim that the entire flight/combat/AI loop has moved off the game thread. Original Phase F calls for a safe incremental simulation migration; the broad phase is already implemented.

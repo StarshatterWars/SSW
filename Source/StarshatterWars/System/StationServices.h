@@ -4,6 +4,7 @@
 class UGameInstance;
 struct FSSWProductionFacility;
 struct FNativeMarketCommand;
+struct FNativeLedgerCommand;
 struct FStationMarketQuote
 {
     FName Item, Buyer, Seller, Source, Destination;
@@ -22,6 +23,8 @@ public:
     static const FSSWProductionFacility* Facility();
     static FName Inventory(const TCHAR* Compartment);
     static bool MoveCargo(UGameInstance*, FName Item, bool ToStation, const TCHAR* Compartment, FText& Reason);
+    static bool RequestCargoTransfer(UGameInstance*,FName Item,bool ToStation,const FString& Compartment,double Quantity,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
+    static bool RequestLedgerAction(UGameInstance*,const FNativeLedgerCommand&,const FText& Label,TFunction<bool(FText&)>&&,TFunction<void(bool,const FText&,FGuid)>&&,FText&,bool RequireDock=true);
     static bool MoveCargo(UGameInstance*, FName Item, bool ToStation, const TCHAR* Compartment, double Quantity, FText& Reason);
     static double CargoTransferLimit(UGameInstance*, FName Item, bool ToStation, const TCHAR* Compartment, FText& Reason);
     // Read-only capacity/reservation calculation, also used by service regression checks.

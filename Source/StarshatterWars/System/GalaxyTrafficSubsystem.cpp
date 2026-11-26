@@ -606,7 +606,7 @@ void UGalaxyTrafficSubsystem::EconomyWorkerCompleted()
 {
     check(IsInGameThread());if(!EconomyWorker)return;auto Result=EconomyWorker->TakeResult();if(!Result)return;
     auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
-    if((Result->Purchase || Result->Market || Result->Repair) && (!Players || !Players->HasLoaded() || bShuttingDown || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled ||
+    if((Result->Purchase || Result->Market || Result->Repair || Result->Ledger) && (!Players || !Players->HasLoaded() || bShuttingDown || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled ||
         (Sim::GetSim() && (!Sim::GetSim()->HasSimulationAuthority() || Sim::GetSim()->IsNetworked()))))
     {
         if(ActiveCommand.IsSet()){auto Cancelled=MoveTemp(ActiveCommand.GetValue());ActiveCommand.Reset();RequestQueue.Finish(Cancelled.Receipt,false,INVTEXT("Authority or profile changed."));OnTransactionQueueChanged.Broadcast();Cancelled.Complete(false,INVTEXT("Economy request cancelled after an authority or profile change. Nothing exchanged."));}
@@ -614,6 +614,17 @@ void UGalaxyTrafficSubsystem::EconomyWorkerCompleted()
     }
     if(!Players || !Players->HasLoaded() || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)return;
     if(const auto* Simulation=Sim::GetSim();Simulation && (!Simulation->HasSimulationAuthority() || Simulation->IsNetworked()))return;
+    if(Result->Ledger)
+    {
+        if(!ActiveCommand.IsSet())return;
+        auto Request=MoveTemp(ActiveCommand.GetValue());ActiveCommand.Reset();FText Reason;bool Accepted=false;const FGuid Object=Result->Ledger->Object;
+        if(!bShuttingDown && Request.Validate && Request.Validate(Reason) && Request.Persist)
+        {
+            TGuardValue<bool> Applying(bApplyingWorkerResult,true);
+            Accepted=FNativeEconomyWorker::CommitLedger(MoveTemp(*Result),Players->GetEconomy(),EconomyMutationRevision,EconomyProfileToken(),[&Request](){return Request.Persist();},Reason);
+        }
+        bEconomyChanged=true;EconomyController.WakeProduction();RequestQueue.Finish(Request.Receipt,Accepted,Reason);OnTransactionQueueChanged.Broadcast();Request.Complete(Accepted,Reason,Object);PumpEconomyRequests();ScheduleManagement();return;
+    }
     if(Result->Repair)
     {
         if(!ActiveCommand.IsSet())return;
@@ -670,6 +681,11 @@ bool UGalaxyTrafficSubsystem::QueueStorePurchase(FNativeStorePurchase&& Command,
     FQueuedEconomyRequest Request;Request.Receipt=Command.Receipt;Request.Label=FText::Format(INVTEXT("PURCHASE {0} x {1}"),FText::FromName(Command.Offer.Id),FText::AsNumber(Command.Quantity));Request.Command=MoveTemp(Command);Request.Validate=MoveTemp(Validate);Request.Completed=MoveTemp(Completed);
     return EnqueueEconomyRequest(MoveTemp(Request),Reason);
 }
+bool UGalaxyTrafficSubsystem::QueueLedgerCommand(FNativeLedgerCommand&& Command,const FText& Label,TFunction<bool(FText&)>&& Validate,TFunction<bool()>&& Persist,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Reason)
+{
+    FQueuedEconomyRequest Request;Request.Receipt=Command.Receipt;Request.Label=Label;Request.Ledger=MakeUnique<FNativeLedgerCommand>(MoveTemp(Command));
+    Request.Validate=MoveTemp(Validate);Request.Persist=MoveTemp(Persist);Request.MarketCompleted=MoveTemp(Completed);return EnqueueEconomyRequest(MoveTemp(Request),Reason);
+}
 bool UGalaxyTrafficSubsystem::QueueFleetRepair(FNativeFleetRepairCommand&& Command,TFunction<FCampaignFleetState*()>&& Fleet,TFunction<bool(FText&)>&& Validate,TFunction<void(bool,const FFleetRepairStep&,const FText&)>&& Completed,FText& Reason)
 {
     FQueuedEconomyRequest Request;Request.Receipt=FGuid::NewGuid();Request.Label=INVTEXT("FLEET MAINTENANCE");
@@ -715,7 +731,8 @@ void UGalaxyTrafficSubsystem::PumpEconomyRequests()
             auto Rejected=MoveTemp(*Pending);PendingCommands.Remove(Id);RequestQueue.Start(Id);RequestQueue.Finish(Id,false,Reason);OnTransactionQueueChanged.Broadcast();Rejected.Complete(false,Reason);continue;
         }
         FNativeEconomyInput Input;Input.State=Players->GetEconomy();Input.Revision=EconomyMutationRevision;Input.Profile=EconomyProfileToken();
-        if(Pending->Repair)Input.Repair=MakeUnique<FNativeFleetRepairCommand>(*Pending->Repair);
+        if(Pending->Ledger)Input.Ledger=MakeUnique<FNativeLedgerCommand>(*Pending->Ledger);
+        else if(Pending->Repair)Input.Repair=MakeUnique<FNativeFleetRepairCommand>(*Pending->Repair);
         else if(Pending->Market)Input.Market=MakeUnique<FNativeMarketCommand>(*Pending->Market);
         else
         {

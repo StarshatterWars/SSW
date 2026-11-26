@@ -545,7 +545,13 @@ void Ship::ApplyCargoInventoryToManifest(const FEconomyState& State)
     auto* Simulation = Sim::GetSim();
     if (!Simulation) return;
     // Owned-hull binding calls this before synchronization. Restore the sealed adapter even on empty fighters.
-    if (Simulation->GetPlayerShip() == this && !Simulation->IsNetworked()) RestoreCourierPackageFromInventory(State);
+    if (Simulation->GetPlayerShip() == this && !Simulation->IsNetworked())
+    {
+        // A saved native contract result may remove a sealed package. Reconcile the
+        // view without syncing the old adapter back into the authoritative ledger.
+        if(CourierPackage && FEconomyLedger::Quantity(State,GetCargoInventoryKey(),FName(*(TEXT("Courier/")+CourierPackage->ContractId.ToString())))<=0)CourierPackage.Reset();
+        RestoreCourierPackageFromInventory(State);
+    }
     if (!CargoManifest || CargoManifest->bPassengers) return;
     const double Amount = FEconomyLedger::Quantity(State, GetCargoInventoryKey(), DataTableUtils::MakeValidName(CargoManifest->Item));
     CargoManifest->Quantity = FMath::FloorToInt(Amount);
