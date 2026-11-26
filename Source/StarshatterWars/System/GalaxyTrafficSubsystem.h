@@ -5,6 +5,7 @@
 #include "TrafficAI.h"
 #include "EconomyAI.h"
 #include "NativeEconomyWorker.h"
+#include "EconomyCommandQueue.h"
 #include "GeneratedShipNames.h"
 #include "GalaxyTrafficSubsystem.generated.h"
 
@@ -29,19 +30,35 @@ public:
     int32 GetRealizedShipCount()const{return LiveShips.Num();}
     // Admission and persistence execute on the game thread. Only value commands reach the worker.
     bool QueueStorePurchase(FNativeStorePurchase&&,TFunction<bool(FText&)>&&,TFunction<void(bool,const FText&)>&&,FText&);
+    bool QueueMarketCommand(FNativeMarketCommand&&,TFunction<bool(FText&)>&&,TFunction<bool()>&&,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
+    bool IsTransactionPending()const{return ActiveCommand.IsSet() || RequestQueue.Count()>0;}
+    bool CanQueueTransaction()const{return !bShuttingDown && RequestQueue.Count()<FEconomyCommandQueue::Capacity;}
+    const TArray<FEconomyRequestRow>& GetTransactionQueue()const{return RequestQueue.Snapshot();}
+    bool CancelQueuedTransaction(FGuid Receipt);
+    FSimpleMulticastDelegate OnTransactionQueueChanged;
 private:
-    struct FQueuedStorePurchase
+    struct FQueuedEconomyRequest
     {
         FNativeStorePurchase Command;
+        TUniquePtr<FNativeMarketCommand> Market;
         FString Profile;
+        FGuid Receipt;
+        FText Label;
         TFunction<bool(FText&)> Validate;
         TFunction<void(bool,const FText&)> Completed;
+        TFunction<bool()> Persist;
+        TFunction<void(bool,const FText&,FGuid)> MarketCompleted;
+        void Complete(bool Success,const FText& Reason,FGuid Order=FGuid())
+        {check(IsInGameThread());if(Completed)Completed(Success,Reason);if(MarketCompleted)MarketCompleted(Success,Reason,Order);}
     };
-    TOptional<FQueuedStorePurchase> PendingPurchase,ActivePurchase;
+    TMap<FGuid,FQueuedEconomyRequest> PendingCommands;
+    TOptional<FQueuedEconomyRequest> ActiveCommand;
+    FEconomyCommandQueue RequestQueue;
     bool bShuttingDown=false;
     uint64 EconomySessionEpoch=1;
     UFUNCTION() void ProfileLoaded(bool bSuccess);
-    void PumpStorePurchase();
+    void PumpEconomyRequests();
+    bool EnqueueEconomyRequest(FQueuedEconomyRequest&&,FText&);
     struct FBackgroundMine { FName Id,System,Region,Item;double Reserve=0,Rate=0,Capacity=0; };
     void TickEconomy(FEconomyState&,double Seconds,int64 Now);
     void DetachLive();
@@ -61,7 +78,7 @@ private:
     double WorkerProductionAt=0;
     bool bApplyingWorkerResult=false,bWorkerInitialized=false;
     void EconomyWorkerCompleted();
-    FString EconomyProfileToken()const;
+    FString EconomyProfileToken(bool IncludeSaveRevision=true)const;
     void BuildGraph(Sim&);
     void UpdateLive(Sim&,FGalaxyTrafficState&,FEconomyState&,double Seconds);
     void Realize(Sim&,FGalaxyTrafficJourney&,FEconomyState&);

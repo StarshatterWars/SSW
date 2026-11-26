@@ -126,6 +126,11 @@ bool UShipStoreSubsystem::RequestPurchase(FName Id,int32 Quantity,int64 Expected
     {if(auto* Service=Weak.Get())Service->bPurchasePending=false;if(Done)Done(Success,Message);},Reason);
     if(!Accepted)bPurchasePending=false;return Accepted;
 }
+bool UShipStoreSubsystem::IsPurchasePending()const
+{
+    const auto* Domain=GetGameInstance()?GetGameInstance()->GetSubsystem<UGalaxyTrafficSubsystem>():nullptr;
+    return bPurchasePending || (Domain && Domain->IsTransactionPending());
+}
 
 bool UShipStoreSubsystem::CanTransferMiningDrone(int32 Quantity,FText& Reason) const
 {

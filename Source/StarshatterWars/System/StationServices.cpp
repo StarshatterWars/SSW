@@ -1,4 +1,6 @@
 #include "StationServices.h"
+#include "MarketCommandAI.h"
+#include "GalaxyTrafficSubsystem.h"
 #include "ProductionCatalog.h"
 #include "EconomyAI.h"
 #include "StationServicesAI.h"
@@ -230,6 +232,90 @@ bool FStationServices::TradeMarket(UGameInstance* Instance,FName Item,double Qua
     const bool Saved=CommitMarketTrade(Sim::GetSim()->GetEconomy(),Quote,Receipt,[Players](){Sim::GetSim()->GetPlayerShip()->ApplyCargoInventoryToManifest();return Players->SaveActivePlayerProgress();},Reason);
     if(!Saved){Sim::GetSim()->GetPlayerShip()->ApplyCargoInventoryToManifest();return false;}
     Sim::GetSim()->GetPlayerShip()->ApplyCargoInventoryToManifest();return true;
+}
+namespace
+{
+bool PrepareMarketCommand(UGameInstance* Instance,const FNativeMarketCommand& Requested,FNativeMarketCommand& Out,FText& Why)
+{
+    if(!Instance || !FStationServices::Offers(ESSWStationService::Market) || !Requested.Receipt.IsValid())
+    {Why=INVTEXT("Dock at a friendly marketplace to submit this transaction.");return false;}
+    auto* Simulation=Sim::GetSim();auto* Craft=Simulation?Simulation->GetPlayerShip():nullptr;
+    auto* Players=Instance->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if(!Craft || !Players || !Players->HasLoaded() || &Simulation->ReadEconomy()!=&Players->GetEconomy())
+    {Why=INVTEXT("The active pilot economy is unavailable.");return false;}
+    Craft->SyncCargoInventory();auto* Region=Craft->GetRegion();const auto* System=Region?Region->GetSystem():nullptr;
+    if(!System)return false;
+    const FString SystemName(UTF8_TO_TCHAR(System->GetName()));
+    Out=Requested;Out.NowUtc=FDateTime::UtcNow().ToUnixTimestamp();
+    Out.Market=FEconomyRuntime::Warehouse(SystemName,TEXT("NPC Market"),TEXT("Stock"));Out.Inventory=Craft->GetCargoInventoryKey();
+    if(Requested.Action==EMarketCommand::Trade)
+    {
+        if(!FStationServices::QuoteMarket(Instance,Requested.Quote.Item,Requested.Quote.Quantity,Requested.Quote.bBuy,Out.Quote))
+        {Why=Out.Quote.Reason;return false;}
+        if(Out.Quote.TotalCredits!=Requested.Quote.TotalCredits)
+        {Why=INVTEXT("Market price changed. Review the new quote; nothing exchanged.");return false;}
+        Out.Item=Out.Quote.Item;Out.Quantity=Out.Quote.Quantity;return true;
+    }
+    if(Requested.Action==EMarketCommand::Modify || Requested.Action==EMarketCommand::Cancel)
+    {
+        const auto* Existing=Simulation->ReadEconomy().MarketOrders.Find(Requested.Order);
+        if(!Existing || Existing->Owner!=FEconomyLedger::Pilot() || Existing->Market!=Out.Market || Existing->State!=EMarketOrderState::Open)
+        {Why=INVTEXT("Select your own open order in this system.");return false;}
+        if(Requested.Action==EMarketCommand::Modify && Existing->ExpiresUtc<=Out.NowUtc)
+        {Why=INVTEXT("This order has expired; it cannot be repriced.");return false;}
+        Out.Item=Existing->Item;Out.Quantity=Existing->Remaining;Out.Inventory=Existing->Inventory;Out.UnitTonnes=Existing->UnitTonnes;
+        if(Requested.Action==EMarketCommand::Cancel){Out.Ask=Out.Bid=0;return true;}
+    }
+    else if(Requested.Action!=EMarketCommand::PlaceBuy && Requested.Action!=EMarketCommand::PlaceSell)
+    {Why=INVTEXT("Unknown market operation.");return false;}
+    const auto* Goods=CatalogItem(Instance,Out.Item);const auto Rule=MarketRule(SystemName,Out.Item,Goods?Goods->bIllicit:false);
+    if(!Goods || !Rule.Found || Rule.Restricted || Out.Item.ToString().StartsWith(TEXT("Courier/")) || Goods->Type==ECargoType::Passengers || !FMath::IsFinite(Goods->Size) || Goods->Size<=0)
+    {Why=INVTEXT("This cargo cannot be traded in the local market.");return false;}
+    Out.UnitTonnes=Goods->Size;
+    FStationMarketQuote Ask,Bid;
+    FStationServices::QuoteMarket(Instance,Out.Item,Out.Quantity,true,Ask);FStationServices::QuoteMarket(Instance,Out.Item,Out.Quantity,false,Bid);
+    Out.Ask=FMath::IsFinite(Ask.UnitPrice) && Ask.UnitPrice>0?FMath::CeilToInt64(Ask.UnitPrice):0;
+    Out.Bid=FMath::IsFinite(Bid.UnitPrice) && Bid.UnitPrice>0?FMath::FloorToInt64(Bid.UnitPrice):0;
+    return true;
+}
+bool SameApprovedMarketCommand(const FNativeMarketCommand& A,const FNativeMarketCommand& B)
+{
+    if(A.Action!=B.Action || A.Receipt!=B.Receipt || A.Order!=B.Order || A.Market!=B.Market || A.Inventory!=B.Inventory || A.Item!=B.Item || A.Quantity!=B.Quantity || A.UnitTonnes!=B.UnitTonnes || A.LimitPrice!=B.LimitPrice || A.Ask!=B.Ask || A.Bid!=B.Bid)return false;
+    if(A.Action!=EMarketCommand::Trade)return true;
+    return A.Quote.Source==B.Quote.Source && A.Quote.Destination==B.Quote.Destination && A.Quote.Buyer==B.Quote.Buyer && A.Quote.Seller==B.Quote.Seller && A.Quote.TotalCredits==B.Quote.TotalCredits && A.Quote.bBuy==B.Quote.bBuy;
+}
+}
+bool FStationServices::IsMarketActionPending(UGameInstance* Instance)
+{
+    const auto* Domain=Instance?Instance->GetSubsystem<UGalaxyTrafficSubsystem>():nullptr;return Domain && Domain->IsTransactionPending();
+}
+bool FStationServices::CanQueueMarketAction(UGameInstance* Instance)
+{
+    const auto* Domain=Instance?Instance->GetSubsystem<UGalaxyTrafficSubsystem>():nullptr;return Domain && Domain->CanQueueTransaction();
+}
+bool FStationServices::RequestMarketCommand(UGameInstance* Instance,const FNativeMarketCommand& Requested,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Why)
+{
+    check(IsInGameThread());FNativeMarketCommand Approved;
+    if(!PrepareMarketCommand(Instance,Requested,Approved,Why))return false;
+    auto* Domain=Instance->GetSubsystem<UGalaxyTrafficSubsystem>();if(!Domain)return false;
+    auto* Craft=Sim::GetSim()->GetPlayerShip();const FGuid Hull=Craft->GetHullId();const FGuid BaseHull=Craft->GetCarrier()->GetHullId();const FName BaseName(UTF8_TO_TCHAR(Craft->GetCarrier()->GetName()));const FName Hold=Craft->GetCargoInventoryKey();
+    const TWeakObjectPtr<UGameInstance> Weak(Instance);
+    const auto ProjectCargo=[Weak,Hull,Hold]()
+    {
+        auto* Current=Sim::GetSim()?Sim::GetSim()->GetPlayerShip():nullptr;
+        if(Weak.IsValid() && Current && Current->GetHullId()==Hull && Current->GetCargoInventoryKey()==Hold)Current->ApplyCargoInventoryToManifest();
+    };
+    return Domain->QueueMarketCommand(FNativeMarketCommand(Approved),[Weak,Approved,Hull,Hold,BaseHull,BaseName](FText& Reason)
+    {
+        auto* Current=Sim::GetSim()?Sim::GetSim()->GetPlayerShip():nullptr;FNativeMarketCommand Fresh;
+        if(!Weak.IsValid() || !Current || Current->GetHullId()!=Hull || Current->GetCargoInventoryKey()!=Hold || !Current->GetCarrier() || Current->GetCarrier()->GetHullId()!=BaseHull || FName(UTF8_TO_TCHAR(Current->GetCarrier()->GetName()))!=BaseName || !PrepareMarketCommand(Weak.Get(),Approved,Fresh,Reason))return false;
+        if(!SameApprovedMarketCommand(Approved,Fresh)){Reason=INVTEXT("The market quote or order changed during processing. Nothing exchanged; please retry.");return false;}return true;
+    },[Weak,ProjectCargo]()
+    {
+        if(!Weak.IsValid())return false;auto* Players=Weak->GetSubsystem<UStarshatterPlayerSubsystem>();if(!Players)return false;
+        ProjectCargo();return Players->SaveActivePlayerProgress();
+    },[ProjectCargo,Done=MoveTemp(Completed)](bool Success,const FText& Reason,FGuid Order)
+    {ProjectCargo();if(Done)Done(Success,Reason,Order);},Why);
 }
 int64 FStationServices::RepairQuote(Ship& Craft)
 {

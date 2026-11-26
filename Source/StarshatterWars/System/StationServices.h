@@ -3,6 +3,7 @@
 #include "StationServiceCatalog.h"
 class UGameInstance;
 struct FSSWProductionFacility;
+struct FNativeMarketCommand;
 struct FStationMarketQuote
 {
     FName Item, Buyer, Seller, Source, Destination;
@@ -27,6 +28,9 @@ public:
     static double CargoTransferLimit(const FEconomyState&, FName Source, FName Destination, FName Item, double MissingDestinationCapacity, bool WholeUnits);
     static bool QuoteMarket(UGameInstance*, FName Item, double Quantity, bool Buy, FStationMarketQuote& Quote);
     static bool TradeMarket(UGameInstance*, FName Item, double Quantity, bool Buy, int64 ExpectedTotal, FGuid Receipt, FText& Reason);
+    static bool RequestMarketCommand(UGameInstance*,const FNativeMarketCommand&,TFunction<void(bool,const FText&,FGuid)>&&,FText& Reason);
+    static bool IsMarketActionPending(UGameInstance*);
+    static bool CanQueueMarketAction(UGameInstance*);
     // Executes an already-authorized quote atomically in memory; failed persistence restores it.
     static bool CommitMarketTrade(FEconomyState&, const FStationMarketQuote&, FGuid Receipt, TFunctionRef<bool()> Persist, FText& Reason);
     static int64 FullRepairCost();

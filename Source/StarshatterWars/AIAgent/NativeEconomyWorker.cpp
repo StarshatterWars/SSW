@@ -35,6 +35,10 @@ FNativeEconomyResult FNativeEconomyWorker::Calculate(FNativeEconomyInput&& Input
 {
     FNativeEconomyResult Out;Out.Revision=Input.Revision;Out.Profile=MoveTemp(Input.Profile);Out.State=MoveTemp(Input.State);Out.bOffGameThread=!IsInGameThread();
     FSimDataEvents::Suppress(true);auto* Previous=ProductionEvents::Capture(&Out.Events);ON_SCOPE_EXIT{ProductionEvents::Capture(Previous);FSimDataEvents::Suppress(false);};
+    if(Input.Market)
+    {
+        Out.Market=MakeUnique<FNativeMarketReply>(MarketCommandAI::Execute(Out.State,*Input.Market));return Out;
+    }
     if(Input.Purchase)
     {
         auto& Command=*Input.Purchase;Out.Purchase=MakeUnique<FNativeStorePurchaseResult>();auto& Reply=*Out.Purchase;Reply.Receipt=Command.Receipt;
@@ -91,7 +95,7 @@ bool FNativeEconomyWorker::CommitPurchase(FNativeEconomyResult&& Result,FS_Playe
 bool FNativeEconomyWorker::Commit(FNativeEconomyResult&& Result,FEconomyState& Live,uint64 Revision,const FString& Profile)
 {
     check(IsInGameThread());
-    if(Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)return false;
+    if(Result.Purchase || Result.Market || Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)return false;
     Result.bCommitted=true;
     // Clock pumping is not a commercial mutation; never rewind it to a worker snapshot.
     Result.State.EconomyClockSeconds=FMath::Max(Live.EconomyClockSeconds,Result.State.EconomyClockSeconds);
@@ -107,4 +111,23 @@ bool FNativeEconomyWorker::Commit(FNativeEconomyResult&& Result,FEconomyState& L
     Live=MoveTemp(Result.State);
     for(const auto& Event:Result.Events)ProductionEvents::Emit(Event.Facility,Event.Job,Event.Phase,Event.Reason);
     FSimDataEvents::Publish(Live);return true;
+}
+bool FNativeEconomyWorker::CommitMarket(FNativeEconomyResult&& Result,FEconomyState& Live,uint64 Revision,const FString& Profile,TFunctionRef<bool()> Save,FText& Reason)
+{
+    check(IsInGameThread());
+    if(!Result.Market || !Result.Market->bSucceeded){Reason=Result.Market?Result.Market->Reason:INVTEXT("No market result.");return false;}
+    if(Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)
+    {Reason=INVTEXT("Market, profile or inventory changed during processing. Nothing exchanged; please retry.");return false;}
+    bool Same=Live.MarketOrders.Num()==Result.Market->SourceOrders.Num();
+    if(Same)for(const auto& Pair:Live.MarketOrders)
+    {
+        const auto* Source=Result.Market->SourceOrders.Find(Pair.Key);
+        if(!Source || !FMarketOrder::StaticStruct()->CompareScriptStruct(&Pair.Value,Source,0)){Same=false;break;}
+    }
+    if(!Same){Reason=INVTEXT("The order book changed while processing. Nothing exchanged; please retry.");return false;}
+    const auto Before=Live;FScopedSimDataChangeBatch Batch(Live);auto Reply=MoveTemp(Result.Market);auto Orders=MoveTemp(Result.State.MarketOrders);
+    if(!Commit(MoveTemp(Result),Live,Revision,Profile))return false;
+    Live.MarketOrders=MoveTemp(Orders);
+    if(!Save()){Live=Before;Reason=INVTEXT("Could not save the market change. Cargo, credits, escrow and reservations restored.");return false;}
+    Reason=Reply->Reason;return true;
 }

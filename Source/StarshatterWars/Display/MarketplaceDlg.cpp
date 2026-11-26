@@ -1,4 +1,6 @@
 #include "MarketplaceDlg.h"
+#include "MarketCommandAI.h"
+#include "GalaxyTrafficSubsystem.h"
 #include "ChangeDrivenPanel.h"
 #include "EconomyAI.h"
 #include "RecordDetails.h"
@@ -214,7 +216,7 @@ namespace
         }
     private:FMarketRecordPtr Record;
     };
-    struct FMarketTable
+    struct FMarketTable : TSharedFromThis<FMarketTable>
     {
         TArray<FOfferPtr> Offers;
         TArray<FOfferPtr> Rows;
@@ -233,7 +235,26 @@ namespace
         int32 View=0;
         int64 LimitPrice=1;
         FGuid SelectedOrder;
-        TArray<FMarketRecordPtr> Orders,History;
+        TArray<FMarketRecordPtr> Orders,History,QueueRows;
+        TWeakPtr<SListView<FMarketRecordPtr>> QueueList;
+        FGuid SelectedRequest;
+        FDelegateHandle QueueHandle;
+        ~FMarketTable(){if(auto* G=Instance.IsValid()?Instance->GetSubsystem<UGalaxyTrafficSubsystem>():nullptr)G->OnTransactionQueueChanged.Remove(QueueHandle);}
+        void RefreshQueue()
+        {
+            QueueRows.Reset();auto* G=Instance.IsValid()?Instance->GetSubsystem<UGalaxyTrafficSubsystem>():nullptr;
+            if(G)for(const auto& Request:G->GetTransactionQueue())
+            {
+                auto R=MakeShared<FMarketRecord>();R->Id=Request.Receipt;R->Item=Request.Label.ToString();R->Kind=Request.Reason.ToString();
+                R->Status=Request.Status==EEconomyRequestStatus::Queued?TEXT("QUEUED"):Request.Status==EEconomyRequestStatus::Processing?TEXT("PROCESSING"):Request.Status==EEconomyRequestStatus::Saved?TEXT("SAVED"):Request.Status==EEconomyRequestStatus::Failed?TEXT("FAILED"):TEXT("CANCELLED");QueueRows.Add(R);
+            }
+            if(auto L=QueueList.Pin())L->RequestListRefresh();
+        }
+        bool CanCancelRequest()const
+        {
+            const auto* G=Instance.IsValid()?Instance->GetSubsystem<UGalaxyTrafficSubsystem>():nullptr;
+            return G && G->GetTransactionQueue().ContainsByPredicate([this](const auto& R){return R.Receipt==SelectedRequest && R.Status==EEconomyRequestStatus::Queued;});
+        }
         TWeakPtr<SListView<FMarketRecordPtr>> OrderList,HistoryList;
         FName RecordSort="Time";
         EColumnSortMode::Type RecordSortMode=EColumnSortMode::Descending;
@@ -279,59 +300,18 @@ namespace
         bool CanManageOrder() const
         {
             const auto* Simulation=Sim::GetSim();const auto* Order=Simulation?Simulation->ReadEconomy().MarketOrders.Find(SelectedOrder):nullptr;
-            return FStationServices::IsDocked() && Order && Order->Owner==FEconomyLedger::Pilot() && Order->State==EMarketOrderState::Open;
-        }
-        void CrossNPC(FEconomyState& State,FGuid Id,int64 Ask,int64 Bid,int64 Now)
-        {
-            const auto* Found=State.MarketOrders.Find(Id);if(!Found || Found->State!=EMarketOrderState::Open)return;
-            const auto Order=*Found;const auto* NPC=State.Inventories.Find(Order.Market);if(!NPC)return;
-            const FName Owner=NPC->Owner;
-            double Count=0;int64 Price=0;const auto Side=Order.Side==EMarketOrderSide::Buy?EMarketOrderSide::Sell:EMarketOrderSide::Buy;
-            if(Order.Side==EMarketOrderSide::Buy && Ask>0 && Order.UnitPrice>=Ask)
-            {Price=Ask;Count=FMath::Min(Order.Remaining,FMath::FloorToDouble(FEconomyLedger::Available(State,Order.Market,Order.Item)));}
-            else if(Order.Side==EMarketOrderSide::Sell && Bid>0 && Order.UnitPrice<=Bid)
-            {
-                Price=Bid;Count=FMath::Min3(Order.Remaining,FMath::FloorToDouble(double(State.Wallets.FindRef(Owner))/Price),
-                    FMath::FloorToDouble(FMath::Max(0.0,NPC->CapacityTonnes-FEconomyLedger::Used(*NPC))/Order.UnitTonnes));
-            }
-            if(Count<=0)return;
-            FText Reason;const FGuid Counter=FEconomyLedger::PlaceMarketOrder(State,Owner,Order.Market,Order.Market,Order.Item,Side,Count,Order.UnitTonnes,Price,Now,Now+60,FGuid::NewGuid(),Reason);
-            FEconomyLedger::AdvanceMarketOrders(State,Now);
-            if(Counter.IsValid())
-                if(const auto* Remaining=State.MarketOrders.Find(Counter);Remaining && Remaining->State==EMarketOrderState::Open)
-                    FEconomyLedger::CancelMarketOrder(State,Owner,Counter,FGuid::NewGuid(),Reason);
+            return FStationServices::CanQueueMarketAction(Instance.Get()) && FStationServices::IsDocked() && Order && Order->Owner==FEconomyLedger::Pilot() && Order->State==EMarketOrderState::Open;
         }
         void OrderAction(int32 Action)
         {
-            if(!FStationServices::IsDocked() || (Action>=2 && !CanManageOrder()) || (Action<2 && (!Selected || Selected->bRestricted || Selected->Goods.Type==ECargoType::Passengers)))return;
-            auto* Simulation=Sim::GetSim();auto* Craft=Simulation?Simulation->GetPlayerShip():nullptr;
-            auto* Players=Instance.IsValid()?Instance->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;if(!Craft || !Players)return;
-            Craft->SyncCargoInventory();
-            const auto* Existing=Simulation->ReadEconomy().MarketOrders.Find(SelectedOrder);
-            const FName Item=Action<2?FName(*Selected->Name):Existing->Item;
-            const double Count=Action<2?Quantity:Existing->Remaining;
-            FStationMarketQuote AskQuote,BidQuote;
-            FStationServices::QuoteMarket(Instance.Get(),Item,Count,true,AskQuote);FStationServices::QuoteMarket(Instance.Get(),Item,Count,false,BidQuote);
-            const int64 Ask=FMath::IsFinite(AskQuote.UnitPrice) && AskQuote.UnitPrice>0?FMath::CeilToInt64(AskQuote.UnitPrice):0;
-            const int64 Bid=FMath::IsFinite(BidQuote.UnitPrice) && BidQuote.UnitPrice>0?FMath::FloorToInt64(BidQuote.UnitPrice):0;
-            auto& State=Simulation->GetEconomy();const auto Before=State;const int64 Now=FDateTime::UtcNow().ToUnixTimestamp();bool Changed=false;FGuid Id=SelectedOrder;
-            if(Action<2)
-            {
-                Id=FEconomyLedger::PlaceMarketOrder(State,FEconomyLedger::Pilot(),FEconomyRuntime::Warehouse(System,TEXT("NPC Market"),TEXT("Stock")),Craft->GetCargoInventoryKey(),Item,
-                    Action==0?EMarketOrderSide::Buy:EMarketOrderSide::Sell,Quantity,Selected->Goods.Size,LimitPrice,Now,Now+24*3600,FGuid::NewGuid(),ServiceMessage,ECommercePurpose::Brokerage);
-                Changed=Id.IsValid();
-            }
-            else if(Action==2)Changed=FEconomyLedger::ModifyMarketOrder(State,FEconomyLedger::Pilot(),Id,LimitPrice,FGuid::NewGuid(),ServiceMessage,ECommercePurpose::Brokerage);
-            else Changed=FEconomyLedger::CancelMarketOrder(State,FEconomyLedger::Pilot(),Id,FGuid::NewGuid(),ServiceMessage);
-            if(!Changed)return;
-            NextTradeAt=FPlatformTime::Seconds()+.35;
-            if(Action<3)CrossNPC(State,Id,Ask,Bid,Now);
-            FEconomyLedger::AdvanceMarketOrders(State,Now);
-            Craft->ApplyCargoInventoryToManifest();
-            if(!Players->SaveActivePlayerProgress())
-            {State=Before;Craft->ApplyCargoInventoryToManifest();ServiceMessage=INVTEXT("COULD NOT SAVE THE ORDER CHANGE. CARGO, CREDITS AND RESERVATIONS WERE RESTORED.");}
-            else {Craft->ApplyCargoInventoryToManifest();SelectedOrder=Id;ServiceMessage=INVTEXT("ORDER CHANGE SAVED. MARKETABLE ORDERS MATCH REAL STOCK AND FUNDED COUNTERPARTS; OPEN REMAINDERS STAY RESERVED.");}
-            RefreshLive();
+            if(!FStationServices::CanQueueMarketAction(Instance.Get()) || !FStationServices::IsDocked() ||
+               (Action>=2 && !CanManageOrder()) || (Action<2 && (!Selected || Selected->bRestricted || Selected->Goods.Type==ECargoType::Passengers)))return;
+            FNativeMarketCommand Command;Command.Action=Action==0?EMarketCommand::PlaceBuy:Action==1?EMarketCommand::PlaceSell:Action==2?EMarketCommand::Modify:EMarketCommand::Cancel;
+            Command.Order=SelectedOrder;Command.Receipt=FGuid::NewGuid();Command.LimitPrice=LimitPrice;
+            if(Action<2){Command.Item=FName(*Selected->Name);Command.Quantity=Quantity;}
+            const auto Weak=TWeakPtr<FMarketTable>(AsShared());
+            FStationServices::RequestMarketCommand(Instance.Get(),Command,[Weak](bool Saved,const FText& Message,FGuid Order)
+            {if(const auto Table=Weak.Pin()){Table->ServiceMessage=Message;if(Saved){Table->SelectedOrder=Order;Table->NextTradeAt=FPlatformTime::Seconds()+.35;}Table->RefreshLive();}},ServiceMessage);
         }
 
         void UpdateQuotes()
@@ -371,18 +351,22 @@ namespace
         bool CanTrade(bool Buy) const
         {
             const auto* Simulation=Sim::GetSim();const FGuid Receipt=Buy?BuyReceipt:SellReceipt;
-            return FPlatformTime::Seconds()>=NextTradeAt && Selected && (Buy?BuyQuote.bAllowed:SellQuote.bAllowed) && Simulation && !Simulation->ReadEconomy().CommittedTransactions.Contains(Receipt);
+            return FStationServices::CanQueueMarketAction(Instance.Get()) && FPlatformTime::Seconds()>=NextTradeAt && Selected && (Buy?BuyQuote.bAllowed:SellQuote.bAllowed) && Simulation && !Simulation->ReadEconomy().CommittedTransactions.Contains(Receipt);
         }
         void Trade(bool Buy)
         {
             if(!CanTrade(Buy))return;
-            const auto Quote=Buy?BuyQuote:SellQuote;
-            if(FStationServices::TradeMarket(Instance.Get(),FName(*Selected->Name),Quantity,Buy,Quote.TotalCredits,Buy?BuyReceipt:SellReceipt,ServiceMessage))
+            FNativeMarketCommand Command;Command.Action=EMarketCommand::Trade;Command.Quote=Buy?BuyQuote:SellQuote;Command.Receipt=FGuid::NewGuid();
+            const auto Weak=TWeakPtr<FMarketTable>(AsShared());
+            FStationServices::RequestMarketCommand(Instance.Get(),Command,[Weak](bool Saved,const FText& Message,FGuid)
             {
-                BuyReceipt=FGuid::NewGuid();SellReceipt=FGuid::NewGuid();
-                NextTradeAt=FPlatformTime::Seconds()+.35;
-            }
-            RefreshLive();
+                if(const auto Table=Weak.Pin())
+                {
+                    Table->ServiceMessage=Message;
+                    if(Saved){Table->BuyReceipt=FGuid::NewGuid();Table->SellReceipt=FGuid::NewGuid();Table->NextTradeAt=FPlatformTime::Seconds()+.35;}
+                    Table->RefreshLive();
+                }
+            },ServiceMessage);
         }
 
         void Filter(const FText& Search)
@@ -571,6 +555,16 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
             {return SNew(SMarketRecordRow,Owner).Record(Row);});
     };
     auto Orders=Records(false),History=Records(true);Table->OrderList=Orders;Table->HistoryList=History;
+    auto Queue=SNew(SListView<FMarketRecordPtr>).ListItemsSource(&Table->QueueRows).SelectionMode(ESelectionMode::Single)
+        .HeaderRow(SNew(SHeaderRow)
+            + SHeaderRow::Column("Item").DefaultLabel(INVTEXT("REQUEST")).FillWidth(2)
+            + SHeaderRow::Column("Status").DefaultLabel(INVTEXT("STATUS")).FillWidth(1)
+            + SHeaderRow::Column("Kind").DefaultLabel(INVTEXT("RESULT")).FillWidth(3))
+        .OnSelectionChanged_Lambda([Table](FMarketRecordPtr R,ESelectInfo::Type){Table->SelectedRequest=R?R->Id:FGuid();})
+        .OnGenerateRow_Lambda([](FMarketRecordPtr R,const TSharedRef<STableViewBase>& Owner)->TSharedRef<ITableRow>{return SNew(SMarketRecordRow,Owner).Record(R);});
+    Table->QueueList=Queue;
+    if(auto* G=GetGameInstance()?GetGameInstance()->GetSubsystem<UGalaxyTrafficSubsystem>():nullptr)Table->QueueHandle=G->OnTransactionQueueChanged.AddSP(Table,&FMarketTable::RefreshQueue);
+    Table->RefreshQueue();
     Table->RefreshLive();
     return SNew(SChangeDrivenPanel).OnChanged_Lambda([Table](){Table->RefreshLive();})[SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(20, 18, 20, 10)
@@ -598,13 +592,19 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                 .OnClicked_Lambda([Table](){Table->View=1;Table->RefreshRecords();return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Contracts)]]
             + SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ToolTipText(INVTEXT("Recent saved transactions"))
                 .OnClicked_Lambda([Table](){Table->View=2;Table->RefreshRecords();return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Intel)]]
+            + SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton).ToolTipText(INVTEXT("Transaction queue: up to 16 requests, saved in order. Unstarted requests can be cancelled. Pending requests are not resumed after exit."))
+                .OnClicked_Lambda([Table](){Table->View=3;Table->RefreshQueue();return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Production)]]
+            + SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ToolTipText(INVTEXT("Cancel selected queued request; processing and saved transactions cannot be cancelled here."))
+                .IsEnabled_Lambda([Table](){return Table->View==3 && Table->CanCancelRequest();})
+                .OnClicked_Lambda([Table](){if(auto* G=Table->Instance.IsValid()?Table->Instance->GetSubsystem<UGalaxyTrafficSubsystem>():nullptr)G->CancelQueuedTransaction(Table->SelectedRequest);return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Abort)]]
             + SHorizontalBox::Slot().FillWidth(1).VAlign(VAlign_Center).Padding(10,0)
-            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text_Lambda([Table](){return Table->View==0?INVTEXT("NPC MARKET"):Table->View==1?INVTEXT("MY LIMIT ORDERS � SELECT AN OPEN ROW TO REPRICE OR CANCEL"):INVTEXT("TRANSACTION HISTORY � MOST RECENT 512 EVENTS");})]]
+            [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).Text_Lambda([Table](){return Table->View==0?INVTEXT("NPC MARKET"):Table->View==1?INVTEXT("MY LIMIT ORDERS � SELECT AN OPEN ROW TO REPRICE OR CANCEL"):Table->View==2?INVTEXT("TRANSACTION HISTORY - MOST RECENT 512 EVENTS"):INVTEXT("TRANSACTION QUEUE - SAVED IN ORDER; SELECT A QUEUED ROW TO CANCEL");})]]
         + SVerticalBox::Slot().FillHeight(0.65f).Padding(20, 0, 20, 8)
         [MissionUIStyle::MakeDataPane(SNew(SOverlay)
             + SOverlay::Slot()[SNew(SBox).Visibility_Lambda([Table](){return Table->View==0?EVisibility::Visible:EVisibility::Collapsed;})[List]]
             + SOverlay::Slot()[SNew(SBox).Visibility_Lambda([Table](){return Table->View==1?EVisibility::Visible:EVisibility::Collapsed;})[Orders]]
-            + SOverlay::Slot()[SNew(SBox).Visibility_Lambda([Table](){return Table->View==2?EVisibility::Visible:EVisibility::Collapsed;})[History]],FMargin(0))]
+            + SOverlay::Slot()[SNew(SBox).Visibility_Lambda([Table](){return Table->View==2?EVisibility::Visible:EVisibility::Collapsed;})[History]]
+            + SOverlay::Slot()[SNew(SBox).Visibility_Lambda([Table](){return Table->View==3?EVisibility::Visible:EVisibility::Collapsed;})[Queue]],FMargin(0))]
         + SVerticalBox::Slot().FillHeight(0.35f).Padding(20, 0, 20, 18)
         [
             MissionUIStyle::MakeDataPane(
@@ -668,11 +668,11 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                         .ToolTipText(INVTEXT("Queued orders use whole units/tonnes and whole-credit unit prices. Orders expire after 24 hours; immediate NPC trades still accept fractional tonnes."))]]
                     + SHorizontalBox::Slot().AutoWidth().Padding(6,0)
                     [SNew(SButton).ToolTipText(INVTEXT("Place a 24-hour buy limit order; reserves real credits and cargo space"))
-                        .IsEnabled_Lambda([Table](){return Table->Selected && !Table->Selected->bRestricted && FStationServices::IsDocked() && FPlatformTime::Seconds()>=Table->NextTradeAt;})
+                        .IsEnabled_Lambda([Table](){return FStationServices::CanQueueMarketAction(Table->Instance.Get()) && Table->Selected && !Table->Selected->bRestricted && FStationServices::IsDocked() && FPlatformTime::Seconds()>=Table->NextTradeAt;})
                         .OnClicked_Lambda([Table](){Table->OrderAction(0);return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Down)]]
                     + SHorizontalBox::Slot().AutoWidth().Padding(6,0)
                     [SNew(SButton).ToolTipText(INVTEXT("Place a 24-hour sell limit order; reserves actual ship cargo"))
-                        .IsEnabled_Lambda([Table](){return Table->Selected && !Table->Selected->bRestricted && FStationServices::IsDocked() && FPlatformTime::Seconds()>=Table->NextTradeAt;})
+                        .IsEnabled_Lambda([Table](){return FStationServices::CanQueueMarketAction(Table->Instance.Get()) && Table->Selected && !Table->Selected->bRestricted && FStationServices::IsDocked() && FPlatformTime::Seconds()>=Table->NextTradeAt;})
                         .OnClicked_Lambda([Table](){Table->OrderAction(1);return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Up)]]
                     + SHorizontalBox::Slot().AutoWidth().Padding(6,0)
                     [SNew(SButton).ToolTipText(INVTEXT("Reprice the selected open order; changes escrow and resets time priority"))
@@ -690,7 +690,7 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                 [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([Table]()
                 {return Table->Selected?FText::Format(INVTEXT("{0}  |  MAX {1}\n{2}  |  MAX {3}"),Table->BuyQuote.Reason,FText::AsNumber(Table->BuyQuote.Maximum),Table->SellQuote.Reason,FText::AsNumber(Table->SellQuote.Maximum)):FText::GetEmpty();})]
                 + SVerticalBox::Slot().AutoHeight().Padding(0,4)
-                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([Table](){return Table->ServiceMessage;})]
+                [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([Table](){return FStationServices::IsMarketActionPending(Table->Instance.Get())?INVTEXT("TRANSACTIONS QUEUED - OPEN THE QUEUE TAB FOR STATUS AND CANCELLATION"):Table->ServiceMessage;})]
             )
         ]];
 }

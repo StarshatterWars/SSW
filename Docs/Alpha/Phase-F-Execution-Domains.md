@@ -76,3 +76,9 @@ The purchase commit additionally compares the original equipment and license
 read set against live values, so a loadout/fitting change cannot be overwritten
 even if it did not raise a financial revision. Worker unavailability fails the
 purchase admission without a charge.
+
+## Marketplace command migration and queue
+
+Build 20261126-201018Z passed Editor and Windows Development compilation with zero C++ warning/error diagnostics. All 404 regressions passed with zero test warnings, failures or skips (Saved/Automation/PhaseF-Market-Verified); all seven focused market/queue tests passed. Logs: PhaseF-Market-Queue-Editor.log and PhaseF-Market-Client.log.
+
+Immediate market trades and limit-order changes now calculate off the game thread. A bounded FIFO provides saved/rejected/cancelled results and pending cancellation. See Phase-F-Market-REA.md for evidence, rules, tests and remaining domain boundaries. Phase F remains open. The user performs the packaged visual/gameplay check.

@@ -4,6 +4,7 @@
 #include "GameStructs_products.h"
 #include "ProductionEvents.h"
 #include "ShipStoreAI.h"
+#include "MarketCommandAI.h"
 #include "HAL/CriticalSection.h"
 class FQueuedThreadPool;
 struct FNativeBackgroundMine {FName Id,System,Region,Item;double Reserve=0,Rate=0,Capacity=0;};
@@ -39,6 +40,7 @@ struct FNativeEconomyInput
     int64 NowUtc=0;
     bool bInventoryChanged=false;
     TUniquePtr<FNativeStorePurchase> Purchase;
+    TUniquePtr<FNativeMarketCommand> Market;
 };
 struct FNativeEconomyResult
 {
@@ -50,6 +52,7 @@ struct FNativeEconomyResult
     bool bOffGameThread=false;
     bool bCommitted=false;
     TUniquePtr<FNativeStorePurchaseResult> Purchase;
+    TUniquePtr<FNativeMarketReply> Market;
 };
 // Dedicated one-thread queue. Requests and results own all their data; no actors or UObjects.
 class STARSHATTERWARS_API FNativeEconomyWorker
@@ -64,6 +67,7 @@ public:
     static FNativeEconomyResult Calculate(FNativeEconomyInput&&);
     static bool Commit(FNativeEconomyResult&&,FEconomyState&,uint64 CurrentRevision,const FString& Profile);
     static bool CommitPurchase(FNativeEconomyResult&&,FS_PlayerGameInfo&,uint64 CurrentRevision,const FString& Profile,TFunctionRef<bool()> Save,FText& Reason);
+    static bool CommitMarket(FNativeEconomyResult&&,FEconomyState&,uint64 CurrentRevision,const FString& Profile,TFunctionRef<bool()> Save,FText& Reason);
 private:
     class FWork;
     FQueuedThreadPool* Pool=nullptr;
