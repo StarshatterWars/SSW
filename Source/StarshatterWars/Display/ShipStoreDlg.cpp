@@ -105,6 +105,7 @@ struct FStoreView : TSharedFromThis<FStoreView>
     }
     bool CanBuy(FText& Reason) const
     {
+        if(Store.IsValid() && Store->IsPurchasePending()){Reason=INVTEXT("PURCHASE PROCESSING - PLEASE WAIT");return false;}
         if(!Selected){Reason=INVTEXT("Select an item to review its quote.");return false;}
         if(Tab==EShipStoreCategory::Hulls)
         {if(Sales.IsValid())return Selected->HullId.IsValid() && Sales->CanPurchaseHull(Selected->Offer.Design,Reason,Selected->HullId);return false;}
@@ -114,7 +115,12 @@ struct FStoreView : TSharedFromThis<FStoreView>
     {
         FText Reason;if(!CanBuy(Reason)){Feedback=Reason;return;}
         if(Tab==EShipStoreCategory::Hulls)Sales->PurchaseHull(Selected->Offer.Design,Feedback,Selected->HullId);
-        else Store->Purchase(Selected->Offer.Id,BuyQuantity(),Selected->Offer.Price*BuyQuantity(),Feedback);
+        else
+        {
+            const auto Weak=TWeakPtr<FStoreView>(AsShared());
+            Store->RequestPurchase(Selected->Offer.Id,BuyQuantity(),Selected->Offer.Price*BuyQuantity(),[Weak](bool,const FText& Message)
+            {if(const auto View=Weak.Pin()){View->Feedback=Message;View->Refresh();}},Feedback);
+        }
         Refresh();
     }
 };

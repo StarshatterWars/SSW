@@ -301,6 +301,9 @@ public:
     bool HasSurfaceTrainingClearance() const;
     void EnsureTrainingSurfaceBase();
     uint32 StartTime() const { return start_time; }
+    class FNativeSimulationWorker& GetSimulationWorker();
+    uint64 GetSimulationEpoch()const{return SimulationEpoch;}
+    uint64 NextSimulationRequest(){return ++SimulationRequest;}
 
 protected:
     bool FindReadyPlayerLaunchSlot(Ship* Player, Hangar*& CarrierHangar, int& Squadron, int& Slot);
@@ -376,6 +379,8 @@ protected:
     int64 NextMarketExpiryUtc=0;
     FDelegateHandle MarketChangeHandle;
     FEconomyState LocalEconomy;
+    TUniquePtr<class FNativeSimulationWorker> SimulationWorker;
+    uint64 SimulationEpoch=1,SimulationRequest=0;
     FSSWProductionStock JanekRefinery;
     Ship* DeferredLaunchPlayer = nullptr;
     Ship* PendingLaunchPlayer = nullptr; // staged player, awaiting click / timeout

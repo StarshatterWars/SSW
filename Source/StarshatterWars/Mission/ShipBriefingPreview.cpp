@@ -39,6 +39,8 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Misc/PackageName.h"
 #include "Framework/Application/SlateApplication.h"
+#include "Framework/Application/SlateUser.h"
+#include "Layout/WidgetPath.h"
 #include "Input/Reply.h"
 #include "InputCoreTypes.h"
 #include "MissionUIStyle.h"
@@ -434,7 +436,12 @@ void UShipBriefingPreview::NativeConstruct()
 void UShipBriefingPreview::ClearVisual()
 {
     bDragging = false;
-    if (HasMouseCapture() && FSlateApplication::IsInitialized()) FSlateApplication::Get().ReleaseAllPointerCapture();
+    if (HasMouseCapture() && FSlateApplication::IsInitialized())
+    {
+        auto& Slate=FSlateApplication::Get();
+        if(auto User=Slate.GetCursorUser())
+            Slate.ProcessReply(FWidgetPath(),FReply::Handled().ReleaseMouseCapture().ReleaseMouseLock(),nullptr,nullptr,User->GetUserIndex());
+    }
     if (AActor* Visual = PreviewVisual.Get()) Visual->Destroy();
     PreviewVisual.Reset();
     if (AActor* Visual = RouteShip.Get()) Visual->Destroy();
@@ -1044,7 +1051,8 @@ FReply UShipBriefingPreview::NativeOnMouseButtonDown(const FGeometry& Geometry, 
     if (bPreviewActive && PreviewVisual.IsValid() && Event.GetEffectingButton() == EKeys::LeftMouseButton)
     {
         bDragging = true;
-        return FReply::Handled().CaptureMouse(TakeWidget());
+        const auto Surface=TakeWidget();
+        return FReply::Handled().CaptureMouse(Surface).UseHighPrecisionMouseMovement(Surface).LockMouseToWidget(Surface);
     }
     return Super::NativeOnMouseButtonDown(Geometry, Event);
 }
@@ -1054,7 +1062,7 @@ FReply UShipBriefingPreview::NativeOnMouseButtonUp(const FGeometry& Geometry, co
     if (bDragging && Event.GetEffectingButton() == EKeys::LeftMouseButton)
     {
         bDragging = false;
-        return FReply::Handled().ReleaseMouseCapture();
+        return FReply::Handled().ReleaseMouseCapture().ReleaseMouseLock();
     }
     return Super::NativeOnMouseButtonUp(Geometry, Event);
 }
@@ -1063,6 +1071,8 @@ FReply UShipBriefingPreview::NativeOnMouseMove(const FGeometry& Geometry, const 
 {
     if (bDragging && HasMouseCapture())
     {
+        if(!Event.IsMouseButtonDown(EKeys::LeftMouseButton))
+        {bDragging=false;return FReply::Handled().ReleaseMouseCapture().ReleaseMouseLock();}
         const FVector2D Delta = Event.GetCursorDelta();
         OrbitYaw = FMath::UnwindDegrees(OrbitYaw + Delta.X * 0.35f);
         OrbitPitch = FMath::Clamp(OrbitPitch + Delta.Y * 0.35f, -80.f, 80.f);
@@ -1089,7 +1099,7 @@ FReply UShipBriefingPreview::NativeOnMouseButtonDoubleClick(const FGeometry& Geo
     {
         bDragging = false;
         ResetView();
-        return FReply::Handled().ReleaseMouseCapture();
+        return FReply::Handled().ReleaseMouseCapture().ReleaseMouseLock();
     }
     return Super::NativeOnMouseButtonDoubleClick(Geometry, Event);
 }

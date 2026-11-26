@@ -7,6 +7,7 @@
 #include "Misc/IQueuedWork.h"
 #include "Misc/ScopeLock.h"
 #include "Misc/ScopeExit.h"
+#include "UObject/Class.h"
 class FNativeEconomyWorker::FWork : public IQueuedWork
 {
 public:
@@ -34,6 +35,16 @@ FNativeEconomyResult FNativeEconomyWorker::Calculate(FNativeEconomyInput&& Input
 {
     FNativeEconomyResult Out;Out.Revision=Input.Revision;Out.Profile=MoveTemp(Input.Profile);Out.State=MoveTemp(Input.State);Out.bOffGameThread=!IsInGameThread();
     FSimDataEvents::Suppress(true);auto* Previous=ProductionEvents::Capture(&Out.Events);ON_SCOPE_EXIT{ProductionEvents::Capture(Previous);FSimDataEvents::Suppress(false);};
+    if(Input.Purchase)
+    {
+        auto& Command=*Input.Purchase;Out.Purchase=MakeUnique<FNativeStorePurchaseResult>();auto& Reply=*Out.Purchase;Reply.Receipt=Command.Receipt;
+        Reply.SourceStored=Command.Stored;Reply.SourceSkins=Command.Skins;
+        FS_PlayerGameInfo Candidate;Candidate.Economy=MoveTemp(Out.State);Candidate.StoredShipEquipment=MoveTemp(Command.Stored);Candidate.OwnedShipSkins=MoveTemp(Command.Skins);
+        if(Command.Quantity>0 && Command.Offer.Price>0 && Command.Offer.Price<=MAX_int64/Command.Quantity && Command.ExpectedTotal==Command.Offer.Price*Command.Quantity)
+            Reply.bSucceeded=ShipStoreAI::Purchase(Candidate,Command.Offer,Command.Quantity,Command.Dock,true,Command.Receipt,[]{return true;},Reply.Reason);
+        else Reply.Reason=INVTEXT("The purchase quote is invalid or changed. No credits were charged.");
+        Out.State=MoveTemp(Candidate.Economy);Reply.Stored=MoveTemp(Candidate.StoredShipEquipment);Reply.Skins=MoveTemp(Candidate.OwnedShipSkins);return Out;
+    }
     auto& State=Out.State;const double Now=State.EconomyClockSeconds;
     if(!FMath::IsFinite(Now) || Now<0)return Out;
     if(State.BackgroundMineDeadlines.IsEmpty())for(const auto& Mine:Input.Mines)
@@ -58,6 +69,24 @@ FNativeEconomyResult FNativeEconomyWorker::Calculate(FNativeEconomyInput&& Input
     if(Now>=State.NextRegionalPriceAt && !Input.Goods.IsEmpty())
     {Controller.AdvancePlain(State,Input.Goods,FMath::Max(UE_SMALL_NUMBER,Now-State.LastRegionalPriceAt),Input.NowUtc);State.LastRegionalPriceAt=Now;State.NextRegionalPriceAt=Now+60;}
     return Out;
+}
+bool FNativeEconomyWorker::CommitPurchase(FNativeEconomyResult&& Result,FS_PlayerGameInfo& Live,uint64 Revision,const FString& Profile,TFunctionRef<bool()> Save,FText& Reason)
+{
+    check(IsInGameThread());
+    if(!Result.Purchase || !Result.Purchase->bSucceeded){Reason=Result.Purchase?Result.Purchase->Reason:INVTEXT("No purchase result.");return false;}
+    if(Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)
+    {Reason=INVTEXT("Your profile or inventory changed while processing the purchase. No credits were charged; please retry.");return false;}
+    bool SameStores=Live.StoredShipEquipment.Num()==Result.Purchase->SourceStored.Num();
+    if(SameStores)for(int32 I=0;I<Live.StoredShipEquipment.Num();++I)
+        if(!FStoredShipEquipment::StaticStruct()->CompareScriptStruct(&Live.StoredShipEquipment[I],&Result.Purchase->SourceStored[I],0)){SameStores=false;break;}
+    bool SameSkins=Live.OwnedShipSkins.Num()==Result.Purchase->SourceSkins.Num();
+    if(SameSkins)for(const auto Id:Live.OwnedShipSkins)if(!Result.Purchase->SourceSkins.Contains(Id)){SameSkins=false;break;}
+    if(!SameStores || !SameSkins){Reason=INVTEXT("Local equipment or licenses changed during processing. Nothing was charged; please retry.");return false;}
+    const auto Before=Live;FScopedSimDataChangeBatch Batch(Live.Economy);auto Reply=MoveTemp(Result.Purchase);
+    if(!Commit(MoveTemp(Result),Live.Economy,Revision,Profile))return false;
+    Live.StoredShipEquipment=MoveTemp(Reply->Stored);Live.OwnedShipSkins=MoveTemp(Reply->Skins);
+    if(!Save()){Live=Before;Reason=INVTEXT("Could not save the purchase. Credits and inventory restored.");return false;}
+    Reason=Reply->Reason;return true;
 }
 bool FNativeEconomyWorker::Commit(FNativeEconomyResult&& Result,FEconomyState& Live,uint64 Revision,const FString& Profile)
 {

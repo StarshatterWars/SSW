@@ -32,6 +32,7 @@ class Sim;
 class SimObject;
 class SimShot;
 class SimContact;
+struct FRegionCollisionBatch;
 
 class StarSystem;
 class OrbitalRegion;
@@ -189,4 +190,5 @@ protected:
 
     DWORD           sim_time = 0;
     int             ai_index = 0;
+    FRegionCollisionBatch* CollisionFrame=nullptr; // game-thread stack view; never sent to worker
 };

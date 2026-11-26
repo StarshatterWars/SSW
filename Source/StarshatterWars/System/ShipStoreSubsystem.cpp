@@ -1,4 +1,5 @@
 #include "ShipStoreSubsystem.h"
+#include "GalaxyTrafficSubsystem.h"
 #include "ShipSkinCatalog.h"
 #include "StarshatterPlayerSubsystem.h"
 #include "StarshatterSystemDesignSubsystem.h"
@@ -100,6 +101,30 @@ bool UShipStoreSubsystem::Purchase(FName Id,int32 Quantity,int64 ExpectedTotal,F
     P->GetEconomy(); // Reconcile the legacy account before taking a transactional snapshot.
     return ShipStoreAI::Purchase(P->GetMutablePlayerInfo(),*Offer,Quantity,Dock(),true,FGuid::NewGuid(),
         [P](){P->MarkDirty();return P->SaveActivePlayerProgress();},Reason);
+}
+bool UShipStoreSubsystem::RequestPurchase(FName Id,int32 Quantity,int64 ExpectedTotal,TFunction<void(bool,const FText&)>&& Completed,FText& Reason)
+{
+    check(IsInGameThread());
+    if(bPurchasePending){Reason=INVTEXT("A purchase is already pending. Please wait.");return false;}
+    if(!CanPurchase(Id,Quantity,Reason))return false;
+    const auto* Offer=Offers.FindByPredicate([Id](const auto& Row){return Row.Id==Id;});
+    if(!Offer || Offer->Price>MAX_int64/Quantity || ExpectedTotal!=Offer->Price*Quantity){Reason=INVTEXT("Review the updated quote.");return false;}
+    auto* Economy=GetGameInstance()->GetSubsystem<UGalaxyTrafficSubsystem>();auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if(!Economy || !Players){Reason=INVTEXT("Economy service is unavailable. No credits charged.");return false;}
+    Players->GetEconomy();
+    const FString RequestedDock=Dock();const FGuid RequestedHull=Players->GetPlayerInfo().AssignedHangarHull;
+    FNativeStorePurchase Command;Command.Offer=*Offer;Command.Dock=RequestedDock;Command.Quantity=Quantity;Command.ExpectedTotal=ExpectedTotal;Command.Receipt=FGuid::NewGuid();
+    const TWeakObjectPtr<UShipStoreSubsystem> Weak(this);bPurchasePending=true;
+    const bool Accepted=Economy->QueueStorePurchase(MoveTemp(Command),[Weak,Id,Quantity,ExpectedTotal,RequestedDock,RequestedHull](FText& Why)
+    {
+        const auto* Service=Weak.Get();const auto* P=Service?Service->GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
+        const auto* Current=Service?Service->Offers.FindByPredicate([Id](const auto& Row){return Row.Id==Id;}):nullptr;
+        if(!Service || !P || !Current || Service->Dock()!=RequestedDock || P->GetPlayerInfo().AssignedHangarHull!=RequestedHull || Current->Price>MAX_int64/Quantity || Current->Price*Quantity!=ExpectedTotal)
+        {Why=INVTEXT("Dock, craft or quote changed. No purchase was charged.");return false;}
+        return Service->CanPurchase(Id,Quantity,Why);
+    },[Weak,Done=MoveTemp(Completed)](bool Success,const FText& Message)
+    {if(auto* Service=Weak.Get())Service->bPurchasePending=false;if(Done)Done(Success,Message);},Reason);
+    if(!Accepted)bPurchasePending=false;return Accepted;
 }
 
 bool UShipStoreSubsystem::CanTransferMiningDrone(int32 Quantity,FText& Reason) const

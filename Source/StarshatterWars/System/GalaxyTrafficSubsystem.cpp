@@ -79,6 +79,7 @@ void UGalaxyTrafficSubsystem::TickEconomy(FEconomyState& State,double Seconds,in
     if(Catalog)FEconomyRuntime::InitializeMarkets(State,*Catalog);
     if(!bCatalogsLoaded || !FMath::IsFinite(Seconds) || Seconds<=0)return;
     State.EconomyClockSeconds+=Seconds;const double NowClock=State.EconomyClockSeconds;
+    if(PendingPurchase.IsSet() || ActivePurchase.IsSet()){PumpStorePurchase();return;}
     bool GroundChanged=BoundEconomy!=&State || GroundFactoryCount!=State.GroundFactories.Num();
     if(!GroundChanged && bEconomyChanged)for(const auto& Pair:State.GroundFactories)if(!Facilities.Contains(Pair.Key)){GroundChanged=true;break;}
     if(GroundChanged)
@@ -115,6 +116,8 @@ void UGalaxyTrafficSubsystem::TickEconomy(FEconomyState& State,double Seconds,in
 }
 void UGalaxyTrafficSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
+    Collection.InitializeDependency<UStarshatterPlayerSubsystem>();
+    GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>()->OnPlayerSaveLoaded.AddDynamic(this,&UGalaxyTrafficSubsystem::ProfileLoaded);
     ProductionChangeHandle=FSimDataEvents::Changed().AddWeakLambda(this,[this](const FEconomyState& Changed){
         if(BoundEconomy && BoundEconomy!=&Changed)return;
         ++EconomyMutationRevision;if(bApplyingWorkerResult)return;
@@ -137,6 +140,10 @@ void UGalaxyTrafficSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 }
 void UGalaxyTrafficSubsystem::Deinitialize()
 {
+    bShuttingDown=true;
+    if(auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>())Players->OnPlayerSaveLoaded.RemoveDynamic(this,&UGalaxyTrafficSubsystem::ProfileLoaded);
+    const auto Cancel=[](TOptional<FQueuedStorePurchase>& Request){if(Request.IsSet()){auto Done=MoveTemp(Request->Completed);Request.Reset();if(Done)Done(false,INVTEXT("Purchase cancelled during shutdown. No credits were charged."));}};
+    Cancel(PendingPurchase);Cancel(ActivePurchase);
     if(auto* Simulation=Sim::GetSim()){TArray<FGuid> Ids;LiveShips.GetKeys(Ids);for(FGuid Id:Ids)Despawn(*Simulation,Id);}
     if(auto* Simulation=Sim::GetSim()){Simulation->OnMissionUnloading.RemoveAll(this);Simulation->OnShipRetired.RemoveAll(this);}
     EconomyWorker.Reset();
@@ -148,6 +155,7 @@ FName UGalaxyTrafficSubsystem::SectorKey(SimRegion* Region)const
 {return Region && Region->GetSystem()?NodeKey(FName(UTF8_TO_TCHAR(Region->GetSystem()->GetName())),FName(UTF8_TO_TCHAR(Region->GetName()))):NAME_None;}
 void UGalaxyTrafficSubsystem::DetachLive()
 {
+    ++EconomySessionEpoch;bWorkerInitialized=false;bEconomyChanged=true;
     if(auto* Simulation=Sim::GetSim()){TArray<FGuid> Ids;LiveShips.GetKeys(Ids);for(FGuid Id:Ids)Despawn(*Simulation,Id);}
     LiveGoals.Reset();LastMission=nullptr;
 }
@@ -583,14 +591,38 @@ void UGalaxyTrafficSubsystem::Tick(float DeltaSeconds)
 FString UGalaxyTrafficSubsystem::EconomyProfileToken()const
 {
     const auto* Players=GetGameInstance()?GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
-    return Players?Players->GetSlotName()+TEXT("/")+Players->GetActiveSavedPlayerSlot()+FString::Printf(TEXT("/%d/%lld"),Players->GetUserIndex(),Players->GetPlayerInfo().LocalStateRevision):FString();
+    return Players?Players->GetSlotName()+TEXT("/")+Players->GetActiveSavedPlayerSlot()+FString::Printf(TEXT("/%d/%lld/%llu/%lld"),Players->GetUserIndex(),Players->GetPlayerInfo().LocalStateRevision,EconomySessionEpoch,Players->GetPlayerInfo().CreateTime):FString();
+}
+void UGalaxyTrafficSubsystem::ProfileLoaded(bool)
+{
+    ++EconomySessionEpoch;BoundEconomy=nullptr;GroundFactoryCount=-1;bWorkerInitialized=false;bEconomyChanged=true;
+    ScheduleManagement();
 }
 void UGalaxyTrafficSubsystem::EconomyWorkerCompleted()
 {
     check(IsInGameThread());if(!EconomyWorker)return;auto Result=EconomyWorker->TakeResult();if(!Result)return;
     auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
+    if(Result->Purchase && (!Players || !Players->HasLoaded() || bShuttingDown || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled ||
+        (Sim::GetSim() && (!Sim::GetSim()->HasSimulationAuthority() || Sim::GetSim()->IsNetworked()))))
+    {
+        if(ActivePurchase.IsSet()){auto Done=MoveTemp(ActivePurchase->Completed);ActivePurchase.Reset();if(Done)Done(false,INVTEXT("Purchase cancelled after an authority or profile change. No credits charged."));}
+        return;
+    }
     if(!Players || !Players->HasLoaded() || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)return;
     if(const auto* Simulation=Sim::GetSim();Simulation && (!Simulation->HasSimulationAuthority() || Simulation->IsNetworked()))return;
+    if(Result->Purchase)
+    {
+        if(!ActivePurchase.IsSet())return;
+        auto Request=MoveTemp(ActivePurchase.GetValue());ActivePurchase.Reset();FText Reason;
+        bool Accepted=false;
+        if(!bShuttingDown && Request.Validate && Request.Validate(Reason))
+        {
+            TGuardValue<bool> Applying(bApplyingWorkerResult,true);
+            Accepted=FNativeEconomyWorker::CommitPurchase(MoveTemp(*Result),Players->GetMutablePlayerInfo(),EconomyMutationRevision,EconomyProfileToken(),[Players](){return Players->SaveActivePlayerProgress();},Reason);
+        }
+        if(Reason.IsEmpty())Reason=INVTEXT("Purchase cancelled because its dock or authority changed. No credits were charged.");
+        bEconomyChanged=true;EconomyController.WakeProduction();if(Request.Completed)Request.Completed(Accepted,Reason);PumpStorePurchase();ScheduleManagement();return;
+    }
     bApplyingWorkerResult=true;
     const double Next=Result->NextProductionAt;
     const bool Accepted=FNativeEconomyWorker::Commit(MoveTemp(*Result),Players->GetEconomy(),EconomyMutationRevision,EconomyProfileToken());
@@ -598,4 +630,34 @@ void UGalaxyTrafficSubsystem::EconomyWorkerCompleted()
     if(Accepted){WorkerProductionAt=Next;bWorkerInitialized=true;Players->MarkDirty();}
     else{bEconomyChanged=true;EconomyController.WakeProduction();}
     ScheduleManagement();
+    PumpStorePurchase();
+}
+
+bool UGalaxyTrafficSubsystem::QueueStorePurchase(FNativeStorePurchase&& Command,TFunction<bool(FText&)>&& Validate,TFunction<void(bool,const FText&)>&& Completed,FText& Reason)
+{
+    check(IsInGameThread());
+    if(bShuttingDown || PendingPurchase.IsSet() || ActivePurchase.IsSet() || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)
+    {Reason=INVTEXT("The economy is processing another purchase. Please wait.");return false;}
+    if(!Validate || !Validate(Reason))return false;
+    if(!EconomyWorker)EconomyWorker=MakeUnique<FNativeEconomyWorker>();
+    if(!EconomyWorker->IsAvailable()){Reason=INVTEXT("The economy worker is unavailable. No credits were charged.");return false;}
+    FQueuedStorePurchase Request;Request.Command=MoveTemp(Command);Request.Validate=MoveTemp(Validate);Request.Completed=MoveTemp(Completed);Request.Profile=EconomyProfileToken();PendingPurchase=MoveTemp(Request);
+    PumpStorePurchase();Reason=INVTEXT("Purchase submitted to the economy. Please wait for confirmation.");return true;
+}
+void UGalaxyTrafficSubsystem::PumpStorePurchase()
+{
+    check(IsInGameThread());if(bShuttingDown || !PendingPurchase.IsSet() || ActivePurchase.IsSet() || (EconomyWorker && EconomyWorker->IsBusy()))return;
+    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();FText Reason;
+    if(!Players || !Players->HasLoaded() || PendingPurchase->Profile!=EconomyProfileToken() || !PendingPurchase->Validate || !PendingPurchase->Validate(Reason))
+    {
+        auto Done=MoveTemp(PendingPurchase->Completed);PendingPurchase.Reset();if(Done)Done(false,Reason.IsEmpty()?INVTEXT("Purchase cancelled after a profile or dock change. No credits charged."):Reason);return;
+    }
+    FNativeEconomyInput Input;Input.State=Players->GetEconomy();Input.Revision=EconomyMutationRevision;Input.Profile=EconomyProfileToken();
+    Input.Purchase=MakeUnique<FNativeStorePurchase>();Input.Purchase->Offer=PendingPurchase->Command.Offer;Input.Purchase->Dock=PendingPurchase->Command.Dock;
+    Input.Purchase->Quantity=PendingPurchase->Command.Quantity;Input.Purchase->ExpectedTotal=PendingPurchase->Command.ExpectedTotal;Input.Purchase->Receipt=PendingPurchase->Command.Receipt;
+    Input.Purchase->Stored=Players->GetPlayerInfo().StoredShipEquipment;Input.Purchase->Skins=Players->GetPlayerInfo().OwnedShipSkins;
+    if(!EconomyWorker)EconomyWorker=MakeUnique<FNativeEconomyWorker>();const TWeakObjectPtr<UGalaxyTrafficSubsystem> Weak(this);
+    if(EconomyWorker->Submit(MoveTemp(Input),[Weak](){AsyncTask(ENamedThreads::GameThread,[Weak](){if(auto* Owner=Weak.Get())Owner->EconomyWorkerCompleted();});}))
+    {ActivePurchase=MoveTemp(PendingPurchase.GetValue());PendingPurchase.Reset();}
+    // If a background result is already in the mailbox, its completion callback pumps this request.
 }

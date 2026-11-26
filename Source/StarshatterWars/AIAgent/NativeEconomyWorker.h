@@ -3,9 +3,30 @@
 #include "GameStructs.h"
 #include "GameStructs_products.h"
 #include "ProductionEvents.h"
+#include "ShipStoreAI.h"
 #include "HAL/CriticalSection.h"
 class FQueuedThreadPool;
 struct FNativeBackgroundMine {FName Id,System,Region,Item;double Reserve=0,Rate=0,Capacity=0;};
+struct FNativeStorePurchase
+{
+    FShipStoreOffer Offer;
+    FString Dock;
+    int32 Quantity=0;
+    int64 ExpectedTotal=0;
+    FGuid Receipt;
+    TArray<FStoredShipEquipment> Stored;
+    TSet<FName> Skins;
+};
+struct FNativeStorePurchaseResult
+{
+    bool bSucceeded=false;
+    FText Reason;
+    FGuid Receipt;
+    TArray<FStoredShipEquipment> Stored;
+    TSet<FName> Skins;
+    TArray<FStoredShipEquipment> SourceStored;
+    TSet<FName> SourceSkins;
+};
 struct FNativeEconomyInput
 {
     FEconomyState State;
@@ -17,6 +38,7 @@ struct FNativeEconomyInput
     FString Profile;
     int64 NowUtc=0;
     bool bInventoryChanged=false;
+    TUniquePtr<FNativeStorePurchase> Purchase;
 };
 struct FNativeEconomyResult
 {
@@ -27,6 +49,7 @@ struct FNativeEconomyResult
     double NextProductionAt=0;
     bool bOffGameThread=false;
     bool bCommitted=false;
+    TUniquePtr<FNativeStorePurchaseResult> Purchase;
 };
 // Dedicated one-thread queue. Requests and results own all their data; no actors or UObjects.
 class STARSHATTERWARS_API FNativeEconomyWorker
@@ -37,8 +60,10 @@ public:
     bool Submit(FNativeEconomyInput&&,TFunction<void()> Completed);
     TUniquePtr<FNativeEconomyResult> TakeResult();
     bool IsBusy()const;
+    bool IsAvailable()const{return Pool!=nullptr;}
     static FNativeEconomyResult Calculate(FNativeEconomyInput&&);
     static bool Commit(FNativeEconomyResult&&,FEconomyState&,uint64 CurrentRevision,const FString& Profile);
+    static bool CommitPurchase(FNativeEconomyResult&&,FS_PlayerGameInfo&,uint64 CurrentRevision,const FString& Profile,TFunctionRef<bool()> Save,FText& Reason);
 private:
     class FWork;
     FQueuedThreadPool* Pool=nullptr;

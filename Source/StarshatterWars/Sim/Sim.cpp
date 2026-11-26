@@ -13,6 +13,7 @@
 */
 
 #include "Sim.h"
+#include "NativeSimulationWorker.h"
 #include "OwnedHullCondition.h"
 #include "OwnedHullLocation.h"
 #include "MissionHullAccessRules.h"
@@ -557,6 +558,8 @@ void Sim::UnloadMission()
     DeferredLaunchPlayer = nullptr;
     PendingLaunchPlayer = nullptr;
     bPlayerLaunchRequested = false;
+    ++SimulationEpoch;
+    SimulationWorker.Reset(); // joins outstanding immutable work before mission objects retire
     OnMissionUnloading.Broadcast();
 
     // Jobs and audio must not retain pointers to the regions being destroyed.
@@ -4767,4 +4770,11 @@ bool Sim::BeginSurfaceTrainingTransit(int32 MissionId,FText& Reason)
     Reason=INVTEXT("The Orion will jump to the Janek Airbase flight corridor. Remain aboard until transit completes, then launch and fly down to Janek Station.");
     UE_LOG(LogTemp,Display,TEXT("[TrainingTransit] Accepted lesson %d: carrier jump requested; surface mission not started"),MissionId);
     return true;
+}
+
+FNativeSimulationWorker& Sim::GetSimulationWorker()
+{
+    check(IsInGameThread());
+    if(!SimulationWorker)SimulationWorker=MakeUnique<FNativeSimulationWorker>();
+    return *SimulationWorker;
 }

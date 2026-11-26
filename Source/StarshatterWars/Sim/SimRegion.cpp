@@ -17,6 +17,7 @@
 */
 
 #include "SimRegion.h"
+#include "NativeSimulationWorker.h"
 #include "OrdnanceMagazine.h"
 #include "BoltCollisionCandidates.h"
 #include "Mission.h"
@@ -158,6 +159,59 @@ int SimRegion::operator<=(const SimRegion& r) const
 }
 
 // +--------------------------------------------------------------------+
+
+
+// This adapter stays on the game thread. Its worker receives only the copied
+// geometry below, while explosions/debris continue updating before the barrier.
+struct FRegionCollisionBatch
+{
+    Sim* Simulation=nullptr;
+    FNativeSimulationWorker* Worker=nullptr;
+    uint64 Epoch=0,Sequence=0;
+    bool bSubmitted=false,bFinished=false;
+    TArray<SSWBoltCollision::FHull> Hulls;
+    TArray<uint32> HullIds;
+    TArray<FNativeBoltQuery> Queries;
+    TMap<uint32,int32> QueryIndex;
+    TUniquePtr<FNativeCollisionResult> Result;
+    FRegionCollisionBatch(Sim* InSim,SimRegion& Region):Simulation(InSim)
+    {
+        const int32 Count=Region.GetNumShips();if(!Simulation || Count<256)return;
+        const int32 Budget=FMath::Min(512,4194304/Count);
+        for(auto* Shot:Region.GetProjectiles())
+            if(Shot && !IsDeadShot(Shot) && Shot->GetDesign() && !Shot->IsMissile() && !Shot->IsBeam())
+            {Queries.Add({Shot->GetObjID(),Shot->GetOrigin(),Shot->GetLocation()});if(Queries.Num()>=Budget)break;}
+        if(!FNativeSimulationWorker::WorthDispatching(Count,Queries.Num()))return;
+        Hulls.SetNum(Count);HullIds.SetNumZeroed(Count);
+        for(int32 I=0;I<Count;++I)if(const auto* Hull=Region.GetShips()[I]){Hulls[I]={Hull->GetLocation(),Hull->GetRadius()};HullIds[I]=Hull->GetObjID();}
+        Epoch=Simulation->GetSimulationEpoch();Sequence=Simulation->NextSimulationRequest();
+        FNativeCollisionInput Input;Input.Epoch=Epoch;Input.Sequence=Sequence;Input.Hulls=Hulls;Input.Queries=Queries;
+        Worker=&Simulation->GetSimulationWorker();bSubmitted=Worker->Submit(MoveTemp(Input));
+        if(bSubmitted)for(int32 I=0;I<Queries.Num();++I)QueryIndex.Add(Queries[I].ObjectId,I);
+    }
+    ~FRegionCollisionBatch(){Finish();}
+    void Finish()
+    {
+        if(bFinished || !bSubmitted)return;bFinished=true;
+        if(Simulation->GetSimulationEpoch()!=Epoch)return; // unload already joined and retired the old worker
+        Result=Worker->Finish();
+    }
+    bool Find(const SimShot& Shot,SimRegion& Region,TArray<uint8>& Mask)
+    {
+        const auto* Index=QueryIndex.Find(Shot.GetObjID());if(!Index)return false;
+        Finish();
+        if(!Result || !FNativeSimulationWorker::Matches(*Result,Simulation->GetSimulationEpoch(),Sequence) || !Result->Candidates.IsValidIndex(*Index) || Region.GetNumShips()!=Hulls.Num())return false;
+        const auto& Query=Queries[*Index];
+        if(Query.Start!=Shot.GetOrigin() || Query.End!=Shot.GetLocation())return false;
+        Mask=Result->Candidates[*Index];
+        if(Mask.Num()!=Hulls.Num())return false;
+        // Earlier hits/explosions may change a live hull. Conservatively restore
+        // narrow-phase eligibility rather than discard a hit using stale geometry.
+        for(int32 I=0;I<Mask.Num();++I)if(!Mask[I])if(const auto* Hull=Region.GetShips()[I])
+            if(Hull->GetObjID()!=HullIds[I] || Hull->GetLocation()!=Hulls[I].Position || Hull->GetRadius()!=Hulls[I].Radius)Mask[I]=1;
+        return true;
+    }
+};
 
 SimRegion::SimRegion(Sim* s, const char* n, int t)
     : sim(s), name(n), type(t)
@@ -315,6 +369,8 @@ SimRegion::ExecFrame(double seconds)
     UpdateTracking(seconds);
     UpdateShips(seconds);
     UpdateShots(seconds);
+    FRegionCollisionBatch CollisionWork(sim,*this);
+    TGuardValue<FRegionCollisionBatch*> CollisionScope(CollisionFrame,&CollisionWork);
     UpdateExplosions(seconds);
 
     // Legacy advances and expires debris alongside explosions.
@@ -867,7 +923,8 @@ void SimRegion::DamageShips()
         }
         // Snapshot after the previous shot commits: damage/death ordering is unchanged.
         const bool FilterBolts=!Shot->IsMissile() && !Shot->IsBeam() && ships.size()>=256;
-        if(FilterBolts)
+        const bool WorkerCandidates=FilterBolts && CollisionFrame && CollisionFrame->Find(*Shot,*this,BoltCandidates);
+        if(FilterBolts && !WorkerCandidates)
         {
             HullSnapshot.SetNum(ships.size());
             for(int Index=0;Index<ships.size();++Index)

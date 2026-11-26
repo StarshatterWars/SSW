@@ -27,7 +27,21 @@ public:
     int32 GetBackgroundMineCount()const{return Mines.Num();}
     int32 GetCoveredSectorCount()const{return Sectors.Num();}
     int32 GetRealizedShipCount()const{return LiveShips.Num();}
+    // Admission and persistence execute on the game thread. Only value commands reach the worker.
+    bool QueueStorePurchase(FNativeStorePurchase&&,TFunction<bool(FText&)>&&,TFunction<void(bool,const FText&)>&&,FText&);
 private:
+    struct FQueuedStorePurchase
+    {
+        FNativeStorePurchase Command;
+        FString Profile;
+        TFunction<bool(FText&)> Validate;
+        TFunction<void(bool,const FText&)> Completed;
+    };
+    TOptional<FQueuedStorePurchase> PendingPurchase,ActivePurchase;
+    bool bShuttingDown=false;
+    uint64 EconomySessionEpoch=1;
+    UFUNCTION() void ProfileLoaded(bool bSuccess);
+    void PumpStorePurchase();
     struct FBackgroundMine { FName Id,System,Region,Item;double Reserve=0,Rate=0,Capacity=0; };
     void TickEconomy(FEconomyState&,double Seconds,int64 Now);
     void DetachLive();
