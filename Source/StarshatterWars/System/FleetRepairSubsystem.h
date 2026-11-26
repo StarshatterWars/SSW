@@ -17,11 +17,12 @@ public:
  void Request();
 private:
  bool Process(float);
+ void CompleteWork(int32 CampaignId,const FFleetRepairContext&,bool,const FFleetRepairStep&,const FText&);
  void OnEconomyChanged(const struct FEconomyState&);
  uint32 SupplyFingerprint(const struct FEconomyState&) const;
  FFleetRepairPolicy Policy;
  bool bPolicyValid=false;
- bool bProcessing=false;
+ bool bProcessing=false,bWakeAgain=false,bStopping=false;
  uint32 LastSupplyFingerprint=0;
  FDelegateHandle FleetHandle,EconomyHandle;
  FTSTicker::FDelegateHandle WakeHandle;

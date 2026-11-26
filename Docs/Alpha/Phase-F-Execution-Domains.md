@@ -82,3 +82,13 @@ purchase admission without a charge.
 Build 20261126-201018Z passed Editor and Windows Development compilation with zero C++ warning/error diagnostics. All 404 regressions passed with zero test warnings, failures or skips (Saved/Automation/PhaseF-Market-Verified); all seven focused market/queue tests passed. Logs: PhaseF-Market-Queue-Editor.log and PhaseF-Market-Client.log.
 
 Immediate market trades and limit-order changes now calculate off the game thread. A bounded FIFO provides saved/rejected/cancelled results and pending cancellation. See Phase-F-Market-REA.md for evidence, rules, tests and remaining domain boundaries. Phase F remains open. The user performs the packaged visual/gameplay check.
+
+## Fleet maintenance worker migration
+
+Build 20261126-201707Z passed Editor and Windows Development compilation with zero C++ warning/error diagnostics. All 406 regressions passed with zero test warnings/failures/skips (Saved/Automation/PhaseF-Repair-Verified); both focused repair domain tests passed. Logs: PhaseF-Repair-Editor.log and PhaseF-Repair-Client.log.
+
+Fleet repair assessment, supply debit, work milestones and replacement calculations now run on the economy worker from copied fleet/context/policy data. The shared request queue serializes this work with transactions. Campaign state and deployed hull eligibility are revalidated; stale results do not heal ships. A failed economy save restores supplies and work. Campaign projection remains on the game thread, using the existing durable-work reconciliation if its second save fails.
+
+The adapter wakes on fleet/supply changes and milestones, coalesces changes while a command is pending, and shuts down before the economy coordinator. No live campaign, ship, hangar or UObject reaches the worker. Two new tests cover actual worker isolation, stale fleet/profile/revision rejection, atomic rollback, single-use results, completion, ammunition/grade retention and deployed hull protection.
+
+Remaining Phase F adapter work: hull commerce/insurance, inventory/manufacturing services and contracts, plus scheduled order maintenance. Nexus REA fleet-management research is deferred until after existing phases; supplied installation: C:/Program Files (x86)/Steam/steamapps/common/Nexus The Jupiter Incident.

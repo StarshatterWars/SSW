@@ -30,6 +30,7 @@ public:
     int32 GetRealizedShipCount()const{return LiveShips.Num();}
     // Admission and persistence execute on the game thread. Only value commands reach the worker.
     bool QueueStorePurchase(FNativeStorePurchase&&,TFunction<bool(FText&)>&&,TFunction<void(bool,const FText&)>&&,FText&);
+    bool QueueFleetRepair(FNativeFleetRepairCommand&&,TFunction<FCampaignFleetState*()>&&,TFunction<bool(FText&)>&&,TFunction<void(bool,const FFleetRepairStep&,const FText&)>&&,FText&);
     bool QueueMarketCommand(FNativeMarketCommand&&,TFunction<bool(FText&)>&&,TFunction<bool()>&&,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
     bool IsTransactionPending()const{return ActiveCommand.IsSet() || RequestQueue.Count()>0;}
     bool CanQueueTransaction()const{return !bShuttingDown && RequestQueue.Count()<FEconomyCommandQueue::Capacity;}
@@ -41,6 +42,9 @@ private:
     {
         FNativeStorePurchase Command;
         TUniquePtr<FNativeMarketCommand> Market;
+        TUniquePtr<FNativeFleetRepairCommand> Repair;
+        TFunction<FCampaignFleetState*()> LiveFleet;
+        TFunction<void(bool,const FFleetRepairStep&,const FText&)> RepairCompleted;
         FString Profile;
         FGuid Receipt;
         FText Label;
@@ -49,7 +53,7 @@ private:
         TFunction<bool()> Persist;
         TFunction<void(bool,const FText&,FGuid)> MarketCompleted;
         void Complete(bool Success,const FText& Reason,FGuid Order=FGuid())
-        {check(IsInGameThread());if(Completed)Completed(Success,Reason);if(MarketCompleted)MarketCompleted(Success,Reason,Order);}
+        {check(IsInGameThread());if(RepairCompleted)RepairCompleted(Success,{},Reason);if(Completed)Completed(Success,Reason);if(MarketCompleted)MarketCompleted(Success,Reason,Order);}
     };
     TMap<FGuid,FQueuedEconomyRequest> PendingCommands;
     TOptional<FQueuedEconomyRequest> ActiveCommand;

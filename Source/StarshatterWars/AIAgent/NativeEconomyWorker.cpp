@@ -35,6 +35,12 @@ FNativeEconomyResult FNativeEconomyWorker::Calculate(FNativeEconomyInput&& Input
 {
     FNativeEconomyResult Out;Out.Revision=Input.Revision;Out.Profile=MoveTemp(Input.Profile);Out.State=MoveTemp(Input.State);Out.bOffGameThread=!IsInGameThread();
     FSimDataEvents::Suppress(true);auto* Previous=ProductionEvents::Capture(&Out.Events);ON_SCOPE_EXIT{ProductionEvents::Capture(Previous);FSimDataEvents::Suppress(false);};
+    if(Input.Repair)
+    {
+        Out.Repair=MakeUnique<FNativeFleetRepairReply>();auto& Reply=*Out.Repair;
+        Reply.Source=Input.Repair->Fleet;Reply.Fleet=MoveTemp(Input.Repair->Fleet);
+        Reply.Step=RepairAI::Advance(Reply.Fleet,Out.State,Input.Repair->Context,Input.Repair->Policy);return Out;
+    }
     if(Input.Market)
     {
         Out.Market=MakeUnique<FNativeMarketReply>(MarketCommandAI::Execute(Out.State,*Input.Market));return Out;
@@ -95,7 +101,7 @@ bool FNativeEconomyWorker::CommitPurchase(FNativeEconomyResult&& Result,FS_Playe
 bool FNativeEconomyWorker::Commit(FNativeEconomyResult&& Result,FEconomyState& Live,uint64 Revision,const FString& Profile)
 {
     check(IsInGameThread());
-    if(Result.Purchase || Result.Market || Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)return false;
+    if(Result.Purchase || Result.Market || Result.Repair || Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)return false;
     Result.bCommitted=true;
     // Clock pumping is not a commercial mutation; never rewind it to a worker snapshot.
     Result.State.EconomyClockSeconds=FMath::Max(Live.EconomyClockSeconds,Result.State.EconomyClockSeconds);
@@ -130,4 +136,18 @@ bool FNativeEconomyWorker::CommitMarket(FNativeEconomyResult&& Result,FEconomySt
     Live.MarketOrders=MoveTemp(Orders);
     if(!Save()){Live=Before;Reason=INVTEXT("Could not save the market change. Cargo, credits, escrow and reservations restored.");return false;}
     Reason=Reply->Reason;return true;
+}
+
+bool FNativeEconomyWorker::CommitRepair(FNativeEconomyResult&& Result,FEconomyState& Live,FCampaignFleetState& Fleet,uint64 Revision,const FString& Profile,TFunctionRef<bool()> Save,FText& Reason)
+{
+    check(IsInGameThread());
+    if(!Result.Repair || Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile ||
+        !FCampaignFleetState::StaticStruct()->CompareScriptStruct(&Fleet,&Result.Repair->Source,0))
+    {Reason=INVTEXT("Fleet, profile or supplies changed; repair work will be reassessed.");return false;}
+    auto Reply=MoveTemp(Result.Repair);
+    if(!Reply->Step.bChanged){Result.bCommitted=true;return true;}
+    const auto Before=Live;FScopedSimDataChangeBatch Batch(Live);
+    if(!Commit(MoveTemp(Result),Live,Revision,Profile))return false;
+    if(!Save()){Live=Before;Reason=INVTEXT("Could not save fleet repair supplies and work. Nothing consumed.");return false;}
+    Fleet=MoveTemp(Reply->Fleet);Reason=INVTEXT("Fleet repair work saved.");return true;
 }

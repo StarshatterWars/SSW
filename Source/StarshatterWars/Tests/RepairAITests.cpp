@@ -1,6 +1,9 @@
 #if WITH_DEV_AUTOMATION_TESTS && WITH_EDITOR
 #include "Misc/AutomationTest.h"
 #include "RepairAI.h"
+#include "NativeEconomyWorker.h"
+#include "HAL/PlatformProcess.h"
+#include "HAL/Event.h"
 #include "Campaign.h"
 #include "CombatUnit.h"
 #include "CombatGroup.h"
@@ -193,6 +196,51 @@ bool FRepairSupplyRouteTest::RunTest(const FString&)
  TestEqual(TEXT("Booking freight does not credit repair stores"),FEconomyLedger::Quantity(F.Economy,Home,Parts),Remaining);
  for(int32 I=0;I<8 && !Journey->IsFinished();++I)TrafficAI::Advance(*Journey,F.Economy,1000,false,true,10,10);
  TestEqual(TEXT("Actual unloading replenishes finite fleet supplies"),FEconomyLedger::Quantity(F.Economy,Home,Parts),Remaining+10);
+ return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFleetRepairWorkerTest,"Starshatter.Domains.Repair.WorkerIsolationRollbackAndStaleFleet",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FFleetRepairWorkerTest::RunTest(const FString&)
+{
+ FRepairFixture F;auto Worker=MakeUnique<FNativeEconomyWorker>();FEvent* Done=FPlatformProcess::GetSynchEventFromPool(false);
+ ON_SCOPE_EXIT{Worker.Reset();FPlatformProcess::ReturnSynchEventToPool(Done);};
+ const auto Calculate=[&]()->TUniquePtr<FNativeEconomyResult>
+ {
+  FNativeEconomyInput Input;Input.State=F.Economy;Input.Profile=TEXT("Repair/session1");Input.Revision=1;
+  Input.Repair=MakeUnique<FNativeFleetRepairCommand>();Input.Repair->Fleet=F.Fleet;Input.Repair->Context=F.Context;Input.Repair->Policy=F.Policy;
+  if(!Worker->Submit(MoveTemp(Input),[Done](){Done->Trigger();}) || !Done->Wait(10000))return nullptr;return Worker->TakeResult();
+ };
+ auto Result=Calculate();if(!TestNotNull(TEXT("Native repair result"),Result.Get()))return false;
+ TestTrue(TEXT("Repair executes off game thread"),Result->bOffGameThread);TestTrue(TEXT("Repair work proposed"),Result->Repair && Result->Repair->Step.bChanged);
+ TestTrue(TEXT("Live supplies unchanged before acceptance"),F.Economy.FleetRepairOrders.IsEmpty());TestFalse(TEXT("Live hull not yet repairing"),F.Fleet.Hulls.FindChecked(F.Id).bRepairing);
+ FText Why;
+ TestFalse(TEXT("Generic commit cannot apply half a repair"),FNativeEconomyWorker::Commit(MoveTemp(*Result),F.Economy,1,TEXT("Repair/session1")));
+ TestFalse(TEXT("Wrong profile rejected"),FNativeEconomyWorker::CommitRepair(MoveTemp(*Result),F.Economy,F.Fleet,1,TEXT("Repair/session2"),[]{return true;},Why));
+ TestFalse(TEXT("Changed supplies rejected"),FNativeEconomyWorker::CommitRepair(MoveTemp(*Result),F.Economy,F.Fleet,2,TEXT("Repair/session1"),[]{return true;},Why));
+ F.Fleet.Hulls.FindChecked(F.Id).bDestroyed=true;
+ TestFalse(TEXT("Hull destruction rejects old result"),FNativeEconomyWorker::CommitRepair(MoveTemp(*Result),F.Economy,F.Fleet,1,TEXT("Repair/session1"),[]{return true;},Why));F.Fleet.Hulls.FindChecked(F.Id).bDestroyed=false;
+ TestFalse(TEXT("Failed save rejects repair"),FNativeEconomyWorker::CommitRepair(MoveTemp(*Result),F.Economy,F.Fleet,1,TEXT("Repair/session1"),[]{return false;},Why));
+ TestTrue(TEXT("Failed save rolls back work and supply seed"),F.Economy.FleetRepairOrders.IsEmpty() && F.Economy.Inventories.IsEmpty());TestFalse(TEXT("Failed save never heals fleet"),F.Fleet.Hulls.FindChecked(F.Id).bRepairing);
+ Result=Calculate();if(!Result)return false;
+ TestTrue(TEXT("Saved work updates fleet and economy together"),FNativeEconomyWorker::CommitRepair(MoveTemp(*Result),F.Economy,F.Fleet,1,TEXT("Repair/session1"),[]{return true;},Why));
+ TestTrue(TEXT("Repairing state projected after saved debit"),F.Fleet.Hulls.FindChecked(F.Id).bRepairing);TestEqual(TEXT("Only one work order"),F.Economy.FleetRepairOrders.Num(),1);
+ TestFalse(TEXT("Result consumed once"),FNativeEconomyWorker::CommitRepair(MoveTemp(*Result),F.Economy,F.Fleet,1,TEXT("Repair/session1"),[]{return true;},Why));
+ TestEqual(TEXT("Pilot not charged for fleet repairs"),F.Economy.Wallets.FindRef(FEconomyLedger::Pilot()),5000LL);
+ return true;
+}
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFleetRepairWorkerCompletionTest,"Starshatter.Domains.Repair.CompletionAndDeployedHull",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FFleetRepairWorkerCompletionTest::RunTest(const FString&)
+{
+ FRepairFixture F;FNativeEconomyInput In;In.State=F.Economy;In.Profile=TEXT("repair");In.Revision=1;In.Repair=MakeUnique<FNativeFleetRepairCommand>();
+ In.Repair->Fleet=F.Fleet;In.Repair->Context=F.Context;In.Repair->Policy=F.Policy;
+ auto Started=FNativeEconomyWorker::Calculate(MoveTemp(In));FText Why;TestTrue(TEXT("Start saved"),FNativeEconomyWorker::CommitRepair(MoveTemp(Started),F.Economy,F.Fleet,1,TEXT("repair"),[]{return true;},Why));
+ F.Context.Now+=100000;FNativeEconomyInput Finish;Finish.State=F.Economy;Finish.Profile=TEXT("repair");Finish.Revision=1;Finish.Repair=MakeUnique<FNativeFleetRepairCommand>();
+ Finish.Repair->Fleet=F.Fleet;Finish.Repair->Context=F.Context;Finish.Repair->Policy=F.Policy;
+ auto Finished=FNativeEconomyWorker::Calculate(MoveTemp(Finish));TestTrue(TEXT("Completion saved"),FNativeEconomyWorker::CommitRepair(MoveTemp(Finished),F.Economy,F.Fleet,1,TEXT("repair"),[]{return true;},Why));
+ const auto& Hull=F.Fleet.Hulls.FindChecked(F.Id);TestEqual(TEXT("Hull restored"),Hull.Condition.HullCondition,1.f);
+ TestEqual(TEXT("Missiles not granted"),Hull.Condition.SavedWeaponAmmo.FindRef(1),5);TestEqual(TEXT("Component quality preserved"),Hull.Condition.Components[0].Level,5);
+ FRepairFixture Deployed;Deployed.Context.Deployed.Add(Deployed.Id);FNativeEconomyInput Blocked;Blocked.State=Deployed.Economy;Blocked.Repair=MakeUnique<FNativeFleetRepairCommand>();
+ Blocked.Repair->Fleet=Deployed.Fleet;Blocked.Repair->Context=Deployed.Context;Blocked.Repair->Policy=Deployed.Policy;
+ auto Skipped=FNativeEconomyWorker::Calculate(MoveTemp(Blocked));TestFalse(TEXT("Deployed hull not healed"),Skipped.Repair->Fleet.Hulls.FindChecked(Deployed.Id).bRepairing);
  return true;
 }
 #endif
