@@ -1,0 +1,30 @@
+[
+  {
+    "file": "json.hpp",
+    "url": "https://raw.githubusercontent.com/nlohmann/json/v3.12.0/single_include/nlohmann/json.hpp",
+    "version": "3.12.0",
+    "sha256": "aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63",
+    "size": 953436
+  },
+  {
+    "file": "JSON-LICENSE.MIT",
+    "url": "https://raw.githubusercontent.com/nlohmann/json/v3.12.0/LICENSE.MIT",
+    "version": "3.12.0",
+    "sha256": "46a65cffd1ea955132d95a8dd921640714a8d6b537d2e4e482d31145ae95b603",
+    "size": 1076
+  },
+  {
+    "file": "httplib.h",
+    "url": "https://raw.githubusercontent.com/yhirose/cpp-httplib/v0.67.0/httplib.h",
+    "version": "0.67.0",
+    "sha256": "3ec770608b295d12bf7bb6cca47f4b8249f6e15261e2587ba0b288f4bfc397ce",
+    "size": 869434
+  },
+  {
+    "file": "HTTPLIB-LICENSE",
+    "url": "https://raw.githubusercontent.com/yhirose/cpp-httplib/v0.67.0/LICENSE",
+    "version": "0.67.0",
+    "sha256": "4b45cbe16d7b71b89ae6127e26e0d90a029198ca5e958ad8e3d0b8bbed364d8b",
+    "size": 1075
+  }
+]
