@@ -31,6 +31,8 @@ if($LASTEXITCODE -ne 0 -or ![IO.Path]::GetFullPath($repo).TrimEnd('\','/').Equal
 $sourceCommit=(& git -C $projectPath rev-parse HEAD).Trim()
 $buildRoot=[IO.Path]::GetFullPath((Join-Path $projectPath 'Build'))
 $package=Join-Path $buildRoot 'Windows'
+$sourceIcon=Join-Path $projectPath 'Application.ico'
+if(!(Test-Path -LiteralPath $sourceIcon -PathType Leaf)){throw 'The project Application.ico is missing.'}
 Write-Host 'STARSHATTER WARS - BUILD / TEST / COOK / PACKAGE / DEPLOY'
 Write-Host "Project: $projectPath"
 Write-Host "Output:  $package"
@@ -96,9 +98,13 @@ try {
             $file=[IO.Path]::GetFullPath((Join-Path $base $entry.path))
             if(!$file.StartsWith($base,[StringComparison]::OrdinalIgnoreCase) -or !(Test-Path -LiteralPath $file -PathType Leaf) -or (Get-Item -LiteralPath $file).Length -ne $entry.length -or (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ine $entry.sha256){throw 'Economy package integrity check failed.'}
         }
+        # Unreal reads this path for both the compiled client and the Windows bootstrap.
+        [void][IO.Directory]::CreateDirectory($package)
+        Copy-Item -LiteralPath $sourceIcon -Destination (Join-Path $package 'Application.ico') -Force
         $cookArgs=@('BuildCookRun',('-project='+$projectFile),'-target=StarshatterWars','-platform=Win64','-clientconfig=Development','-build','-nocompileeditor','-cook','-stage','-pak','-iostore','-prereqs','-nodebuginfo','-archive',('-archivedirectory='+$archive),('-stagingdirectory='+$stage),('-unrealexe='+$EditorCommand),'-AdditionalCookerOptions=-ddc=InstalledNoZenLocalFallback','-unattended','-utf8output','-nop4')
         Run-NativeStep '3 Build cook and package' $uatTool $cookArgs
         $fresh=Assert-BuildChild (Join-Path $archive 'Windows')
+        Copy-Item -LiteralPath $sourceIcon -Destination (Join-Path $fresh 'Application.ico')
         Copy-Item -LiteralPath $EconomyServerPackage -Destination (Join-Path $fresh 'EconomyServer') -Recurse
         $validation=@{Package=$fresh;StarServerPackage=$StarServerPackage;ProjectRoot=$projectPath;FeedRoot=$FeedRoot;PrivateKey=$PrivateKey;LauncherConfig=$LauncherConfig}
         $validated=& (Join-Path $PSScriptRoot 'Test-LauncherPackage.ps1') @validation

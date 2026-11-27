@@ -13,6 +13,7 @@ Put "$source/StarshatterWars.uproject" '{}'
 Put "$source/Content/Build/build-version.json" (@{version=$old;channel='Alpha 5'}|ConvertTo-Json)
 Put "$source/Binaries/Win64/StarshatterWars.exe" 'compiled client'
 Put "$source/notes.txt" 'baseline'
+Copy-Item -LiteralPath (Join-Path $root 'Application.ico') -Destination $source
 Put "$source/Build/Windows/previous.txt" 'old package'
 Put "$prepared/StarshatterWars.exe" 'bootstrap'
 Put "$prepared/StarshatterWars/Binaries/Win64/StarshatterWars.exe" 'compiled client'
@@ -47,6 +48,7 @@ if($mode -eq 'tests'){
  @{succeeded=370;succeededWithWarnings=$(if($env:SSW_FIXTURE_FAIL -eq 'warnings'){1}else{0});failed=$(if($env:SSW_FIXTURE_FAIL -eq 'tests'){1}else{0});notRun=0}|ConvertTo-Json|Set-Content "$report/index.json"
 }
 if($mode -eq 'cook'){
+ if((Get-FileHash "$env:SSW_FIXTURE_SOURCE/Build/Windows/Application.ico").Hash -ne (Get-FileHash "$env:SSW_FIXTURE_SOURCE/Application.ico").Hash){throw 'UAT icon input is missing or incorrect.'}
  $archive=($toolArgs|Where-Object {$_ -like '-archivedirectory=*'}) -replace '^-archivedirectory=',''
  [void][IO.Directory]::CreateDirectory($archive)
  Copy-Item -LiteralPath $env:SSW_FIXTURE_PREPARED -Destination "$archive/Windows" -Recurse
@@ -85,6 +87,7 @@ try{
  Check (((Get-Content $env:SSW_FIXTURE_TRACE)-join ',') -eq 'build,tests,cook') 'Steps execute in order with spaced paths'
  Check ((Get-Content "$feed/current/manifest.json" -Raw|ConvertFrom-Json).version -eq $new) 'Latest version published'
  Check (Test-Path "$source/Build/Windows.zip") 'ZIP created'
+ Check ((Get-FileHash "$source/Build/Windows/Application.ico").Hash -eq (Get-FileHash "$source/Application.ico").Hash) 'Fresh package retains the project icon for the next build'
  Check (Test-Path "$source/Build/Windows/EconomyServer/server-manifest.json") 'Verified native economy accompanies the client'
  $zip=[IO.Compression.ZipFile]::OpenRead("$source/Build/Windows.zip")
  try{Check (@($zip.Entries|Where-Object {$_.FullName -match '(^|/)EconomyServer/FractalEconomy.exe$'}).Count -eq 1) 'Launcher ZIP contains exactly one native economy executable'}finally{$zip.Dispose()}
