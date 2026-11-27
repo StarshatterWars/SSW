@@ -5,3 +5,6 @@
 *.umap filter=lfs diff=lfs merge=lfs -text
 *.mp4 filter=lfs diff=lfs merge=lfs -text
 *.pak filter=lfs diff=lfs merge=lfs -text
+
+# Preserve pinned upstream dependency bytes and licenses (including upstream whitespace).
+EconomyServer/third_party/* -text -whitespace

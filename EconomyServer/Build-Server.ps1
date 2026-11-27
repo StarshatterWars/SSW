@@ -2,6 +2,12 @@
 param([string]$ProjectRoot=(Join-Path $PSScriptRoot '..'),[string]$CMake)
 $ErrorActionPreference='Stop'
 $root=(Resolve-Path -LiteralPath $ProjectRoot).Path
+$vendors=Join-Path $root 'EconomyServer/third_party'
+foreach($entry in (Get-Content -LiteralPath (Join-Path $vendors 'manifest.json') -Raw|ConvertFrom-Json)){
+ $file=Join-Path $vendors $entry.file
+ if($entry.file -notmatch '^[A-Za-z0-9_.-]+$' -or !(Test-Path -LiteralPath $file -PathType Leaf)){throw 'Invalid or missing pinned dependency.'}
+ if((Get-Item -LiteralPath $file).Length -ne $entry.size -or (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ine $entry.sha256){throw "Pinned dependency integrity check failed: $($entry.file)"}
+}
 if(!$CMake){
  $found=Get-Command cmake.exe -ErrorAction SilentlyContinue
  if($found){$CMake=$found.Source}else{
