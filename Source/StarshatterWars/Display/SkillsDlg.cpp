@@ -54,6 +54,11 @@ public:
         Refresh();RegisterActiveTimer(.5f,FWidgetActiveTimerDelegate::CreateLambda([this](double,float){Refresh();return EActiveTimerReturnType::Continue;}));
     }
 private:
+    TFunction<void(bool,const FText&)> Completion()
+    {
+        const TWeakPtr<SSkillQueue> Weak=StaticCastSharedRef<SSkillQueue>(AsShared());
+        return [Weak](bool,const FText& Why){if(auto Widget=Weak.Pin()){Widget->Feedback=Why;Widget->Refresh();}};
+    }
     void Refresh()
     {
         const auto Queue=Service.IsValid()?Service->GetQueue():TConstArrayView<FSkillTrainingEntry>();FString Signature;
@@ -68,12 +73,12 @@ private:
                 +SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center).Padding(8,0)
                 [SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).Text_Lambda([E](){return FText::Format(INVTEXT("{0} CR"),FText::AsNumber(FSkillTrainingRules::InstantCost(E,FDateTime::UtcNow().ToUnixTimestamp())));})]
                 +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ToolTipText(INVTEXT("Instant-train this level for credits. Click once to request, then confirm."))
-                    .OnClicked_Lambda([this,Id=E.Id](){if(PendingInstant==Id){if(Service.IsValid())Service->InstantTrain(Id,Feedback);PendingInstant.Invalidate();}else{PendingInstant=Id;Feedback=INVTEXT("Click the check mark beside this entry to confirm instant training for the displayed credits.");}Refresh();return FReply::Handled();})
+                    .OnClicked_Lambda([this,Id=E.Id](){if(PendingInstant==Id){if(Service.IsValid())Service->InstantTrain(Id,Feedback,Completion());PendingInstant.Invalidate();}else{PendingInstant=Id;Feedback=INVTEXT("Click the check mark beside this entry to confirm instant training for the displayed credits.");}Refresh();return FReply::Handled();})
                     [SNew(SWidgetSwitcher).WidgetIndex_Lambda([this,Id=E.Id](){return PendingInstant==Id?1:0;})
                         +SWidgetSwitcher::Slot()[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Play)]
                         +SWidgetSwitcher::Slot()[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Accept)]]]
                 +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SButton).ToolTipText(INVTEXT("Cancel this queued level. Active progress is retained."))
-                    .OnClicked_Lambda([this,Id=E.Id](){if(Service.IsValid())Service->CancelTraining(Id,Feedback);Refresh();return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Abort)]]];
+                    .OnClicked_Lambda([this,Id=E.Id](){if(Service.IsValid())Service->CancelTraining(Id,Feedback,Completion());Refresh();return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Abort)]]];
         }
     }
     TWeakObjectPtr<USkillsSubsystem> Service;TSharedPtr<SVerticalBox> Rows;FGuid PendingInstant;FString Previous;FText Feedback;bool bBuilt=false;
@@ -220,7 +225,7 @@ TSharedRef<SWidget> USkillsDlg::RebuildWidget()
             [SNew(SHorizontalBox)
                 +SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(12)).AutoWrapText(true).Text_Lambda([Table](){return FText::Format(INVTEXT("TRAIN {0} TO LEVEL {1}? Each missing level will be queued separately."),Table->Selected?FText::FromString(Table->Selected->DisplayName):FText::GetEmpty(),FText::AsNumber(Table->PendingLevel));})]
                 +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ToolTipText(INVTEXT("Confirm training"))
-                    .OnClicked_Lambda([Table,Weak](){if(Table->Selected && Weak.IsValid() && Weak->QueueToLevel(Table->Selected->Name,Table->PendingLevel,Table->Feedback))Table->PendingLevel=0;Table->Refresh();return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Accept)]]
+                    .OnClicked_Lambda([Table,Weak](){if(Table->Selected && Weak.IsValid() && Weak->QueueToLevel(Table->Selected->Name,Table->PendingLevel,Table->Feedback,[Table](bool,const FText& Why){Table->Feedback=Why;Table->Refresh();}))Table->PendingLevel=0;Table->Refresh();return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Accept)]]
                 +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ToolTipText(INVTEXT("Cancel request")).OnClicked_Lambda([Table](){Table->PendingLevel=0;return FReply::Handled();})[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Abort)]]]]
         + SVerticalBox::Slot().AutoHeight().Padding(8)
         [SNew(SSearchBox).HintText(INVTEXT("Search skills"))
@@ -248,11 +253,11 @@ TSharedRef<SWidget> USkillsDlg::RebuildWidget()
             + SHorizontalBox::Slot().AutoWidth()
             [SNew(SButton).ToolTipText(INVTEXT("Purchase the standard skill book to unlock training for Levels I-V"))
                 .IsEnabled_Lambda([Table,Weak]() { FText Reason; return Table->Selected && Weak.IsValid() && Weak->CanPurchaseBook(Table->Selected->Name,Reason); })
-                .OnClicked_Lambda([Table,Weak]() { if (Table->Selected && Weak.IsValid()) Weak->PurchaseBook(Table->Selected->Name,Table->Feedback); Table->Refresh(); return FReply::Handled(); })
+                .OnClicked_Lambda([Table,Weak]() { if (Table->Selected && Weak.IsValid()) Weak->PurchaseBook(Table->Selected->Name,Table->Feedback,[Table](bool,const FText& Why){Table->Feedback=Why;Table->Refresh();}); Table->Refresh(); return FReply::Handled(); })
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Skills)]]
             +SHorizontalBox::Slot().AutoWidth().Padding(8,0)
             [SNew(SButton).ToolTipText_Lambda([Table,Weak](){FText R;if(Table->Selected && Weak.IsValid())Weak->CanPurchaseAdvancedBook(Table->Selected->Name,R);return R;})
                 .IsEnabled_Lambda([Table,Weak](){FText R;return Table->Selected && Weak.IsValid() && Weak->CanPurchaseAdvancedBook(Table->Selected->Name,R);})
-                .OnClicked_Lambda([Table,Weak](){if(Table->Selected && Weak.IsValid())Weak->PurchaseAdvancedBook(Table->Selected->Name,Table->Feedback);Table->Refresh();return FReply::Handled();})
+                .OnClicked_Lambda([Table,Weak](){if(Table->Selected && Weak.IsValid())Weak->PurchaseAdvancedBook(Table->Selected->Name,Table->Feedback,[Table](bool,const FText& Why){Table->Feedback=Why;Table->Refresh();});Table->Refresh();return FReply::Handled();})
                 [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Reference)]]];
 }

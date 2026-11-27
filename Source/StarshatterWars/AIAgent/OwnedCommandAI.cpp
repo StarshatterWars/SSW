@@ -29,7 +29,7 @@ FPlayerHangarShip* Hull(FS_PlayerGameInfo& P,FGuid Id){return P.HangarShips.Find
 FName HullItem(FName Design){return DataTableUtils::MakeValidName(Design.ToString().ToLower()+TEXT(" assembled hull"));}
 void Annotate(FEconomyState& E,FGuid Id,const FPlayerHangarShip& H,FName Source,const FString& Destination,int64 Now)
 {if(auto* J=E.Journal.FindByPredicate([Id](const auto& R){return R.Id==Id;})){J->Reference=H.HullId;J->Item=H.Design;J->Quantity=1;J->Source=Source;J->Destination=FName(*Destination);J->TimestampUtc=Now;J->Category=EWalletTransactionCategory::Shipyard;}}
-bool EmptyHold(const FS_PlayerGameInfo& P,FGuid Id)
+bool OwnedHullHasEmptyHold(const FS_PlayerGameInfo& P,FGuid Id)
 {
     const FName Hold(*(TEXT("Ship/")+Id.ToString(EGuidFormats::Digits)));const auto* Inv=P.Economy.Inventories.Find(Hold);
     for(const auto& Pair:P.Economy.Reservations)if(Pair.Value.Inventory==Hold)return false;
@@ -76,7 +76,7 @@ bool Acquire(FS_PlayerGameInfo& P,const FNativeOwnedCommand& C,bool Rental,FText
 }
 bool Sell(FS_PlayerGameInfo& P,const FNativeOwnedCommand& C,FText& Why)
 {
-    auto* H=Hull(P,C.Hull);if(!H || !C.Dock.bAuthorized || H->bAssigned || H->RentalId.IsValid() || H->bSold || H->bLost || P.AssignedHangarHull==C.Hull || !H->Location.Equals(C.Dock.Location,ESearchCase::IgnoreCase) || !EmptyHold(P,C.Hull) || !C.Categories.Contains(H->Design))return false;
+    auto* H=Hull(P,C.Hull);if(!H || !C.Dock.bAuthorized || H->bAssigned || H->RentalId.IsValid() || H->bSold || H->bLost || P.AssignedHangarHull==C.Hull || !H->Location.Equals(C.Dock.Location,ESearchCase::IgnoreCase) || !OwnedHullHasEmptyHold(P,C.Hull) || !C.Categories.Contains(H->Design))return false;
     if(C.Categories.FindChecked(H->Design)==EShipCategory::Fighter)
     {
         const bool Spare=P.HangarShips.ContainsByPredicate([&](const auto& Other)

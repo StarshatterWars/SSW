@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-20",
+  "updated": "2026-11-27",
   "notice": "Development roadmap — scope and order may change. Planned features are not available until implemented and verified.",
   "phases": [
     {
@@ -10,7 +10,7 @@
     {
       "title": "Alpha 5 · FractalVerse local server",
       "status": "CURRENT · IN DEVELOPMENT",
-      "description": "Finish direct JSON ingestion and regression tests, then separate SSW into a client and local authoritative universe server. Server-owned economy, ships, inventory, progression and persistence; simulation continues in unloaded systems. Planned custom 256x256 pilot avatar uploads with server-side image validation and a choice of custom or platform avatar."
+      "description": "Finish direct JSON ingestion and regression tests, then separate SSW into a client and local authoritative universe server. Server-owned economy, ships, inventory, progression and persistence; simulation continues in unloaded systems. Planned custom 256x256 pilot avatar uploads with server-side image validation and a choice of custom or platform avatar. Verified Phase F increment: native economy transaction adapters and an initial simulation collision worker. Full flight/AI threading and server migration remain in development."
     },
     {
       "title": "Alpha 6 · Arena multiplayer",

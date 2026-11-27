@@ -1,0 +1,302 @@
+{
+  "date": "2026-11-27",
+  "source": "https://developers.eveonline.com/static-data/tranquility/eve-online-static-data-3714173-jsonl.zip",
+  "build": 3714173,
+  "archiveSha256": "4eabd0c60c4c92e1b82b0302b981c7010191cac3aa68ae2c374f471c16109c20",
+  "tables": [
+    {
+      "table": "blueprints",
+      "rows": 5136,
+      "sha256": "23ca13831fa3f674f1878c463db2f8847d00e70775dfaa06172f417c19d492ca",
+      "fields": [
+        "_key",
+        "activities",
+        "maxProductionLimit"
+      ]
+    },
+    {
+      "table": "types",
+      "rows": 53927,
+      "sha256": "31632ed2803e36073f3f8f68c8f40d930061c995b52a4eefd9187f488926d2a0",
+      "fields": [
+        "_key",
+        "basePrice",
+        "capacity",
+        "description",
+        "factionID",
+        "graphicID",
+        "groupID",
+        "iconID",
+        "isDynamicType",
+        "isRepackable",
+        "marketGroupID",
+        "mass",
+        "metaGroupID",
+        "metaLevel",
+        "name",
+        "packagedVolume",
+        "portionSize",
+        "published",
+        "raceID",
+        "radius",
+        "shipTreeGroupID",
+        "soundID",
+        "techLevel",
+        "variationParentTypeID",
+        "volume"
+      ]
+    },
+    {
+      "table": "typeMaterials",
+      "rows": 9636,
+      "sha256": "948027b82fe0a16aa3b49f5e2180959ca48cd42c106972ab0d21b3b330ac72d9",
+      "fields": [
+        "_key",
+        "materials",
+        "randomizedMaterials"
+      ]
+    },
+    {
+      "table": "typeDogma",
+      "rows": 27295,
+      "sha256": "88f466580183e2fe38a6760c4df1bd35de5682857b2e7ee55f5456420fe4bfa5",
+      "fields": [
+        "_key",
+        "dogmaAttributes",
+        "dogmaEffects"
+      ]
+    },
+    {
+      "table": "dogmaAttributes",
+      "rows": 2929,
+      "sha256": "c970fbf5a59631ed9703717f2785878b5e639d8041488c3f258ed26346cb947e",
+      "fields": [
+        "_key",
+        "attributeCategoryID",
+        "chargeRechargeTimeID",
+        "dataType",
+        "defaultValue",
+        "description",
+        "displayName",
+        "displayWhenZero",
+        "highIsGood",
+        "iconID",
+        "maxAttributeID",
+        "minAttributeID",
+        "name",
+        "published",
+        "stackable",
+        "tooltipDescription",
+        "tooltipTitle",
+        "unitID"
+      ]
+    },
+    {
+      "table": "stationOperations",
+      "rows": 70,
+      "sha256": "c069bfd433e0327d43aba619848e28a006a9a1eb4e39598b66de31a9b6af9dbe",
+      "fields": [
+        "_key",
+        "activityID",
+        "border",
+        "corridor",
+        "description",
+        "fringe",
+        "hub",
+        "manufacturingFactor",
+        "operationName",
+        "ratio",
+        "researchFactor",
+        "services",
+        "stationTypes"
+      ]
+    },
+    {
+      "table": "stationServices",
+      "rows": 27,
+      "sha256": "b1f67240d0dcb766c01f385fde3222d35be2f07a7ef431704855cc782ad4041c",
+      "fields": [
+        "_key",
+        "description",
+        "serviceName"
+      ]
+    },
+    {
+      "table": "npcCorporations",
+      "rows": 283,
+      "sha256": "850053e092f10aca9697f4cbc9a033e291b36dea8cf7fe78333fbe667f5729b1",
+      "fields": [
+        "_key",
+        "allowedMemberRaces",
+        "ceoID",
+        "corporationTrades",
+        "deleted",
+        "description",
+        "divisions",
+        "enemyID",
+        "exchangeRates",
+        "extent",
+        "factionID",
+        "friendID",
+        "hasPlayerPersonnelManager",
+        "iconID",
+        "initialPrice",
+        "investors",
+        "lpOfferTables",
+        "mainActivityID",
+        "memberLimit",
+        "minSecurity",
+        "minimumJoinStanding",
+        "name",
+        "raceID",
+        "secondaryActivityID",
+        "sendCharTerminationMessage",
+        "shares",
+        "size",
+        "sizeFactor",
+        "solarSystemID",
+        "stationID",
+        "taxRate",
+        "tickerName",
+        "uniqueName"
+      ]
+    },
+    {
+      "table": "planetSchematics",
+      "rows": 68,
+      "sha256": "938dcc38471e1fb6f2bcc22d66da214ecf66fd32392256376d161627152fcf4f",
+      "fields": [
+        "_key",
+        "cycleTime",
+        "name",
+        "pins",
+        "types"
+      ]
+    },
+    {
+      "table": "marketGroups",
+      "rows": 2125,
+      "sha256": "d895bc28227356535f578a6ebf88e9226d815d4f84d9dc10696127d64f78d7ba",
+      "fields": [
+        "_key",
+        "description",
+        "hasTypes",
+        "iconID",
+        "name",
+        "parentGroupID"
+      ]
+    },
+    {
+      "table": "typeBonus",
+      "rows": 699,
+      "sha256": "0b13956b6f8782bdb8b5bfad8d9962083f9e3f2afc2865c436c03b056681cb8c",
+      "fields": [
+        "_key",
+        "iconID",
+        "miscBonuses",
+        "roleBonuses",
+        "types"
+      ]
+    },
+    {
+      "table": "compressibleTypes",
+      "rows": 220,
+      "sha256": "b8335e6bbe8f57d8efe05ef547352b7ea8805f9c634ee0d9bcaa62de469738ea",
+      "fields": [
+        "_key",
+        "compressedTypeID"
+      ]
+    },
+    {
+      "table": "industryInstallationTypes",
+      "rows": 102,
+      "sha256": "2f84815b5bc163c24a27fa28071e37a74c8d77e68006936ab884e216c99127f6",
+      "fields": [
+        "_key",
+        "assemblyLines"
+      ]
+    },
+    {
+      "table": "industryAssemblyLines",
+      "rows": 146,
+      "sha256": "6034b5132b1918481a6dc84676d30ca7452ed1bc6a5266b47557785eba4472a6",
+      "fields": [
+        "_key",
+        "activityID",
+        "baseCostMultiplier",
+        "baseMaterialMultiplier",
+        "baseTimeMultiplier",
+        "description",
+        "detailsPerCategory",
+        "detailsPerGroup",
+        "detailsPerTypeList",
+        "name"
+      ]
+    },
+    {
+      "table": "industryModifierSources",
+      "rows": 220,
+      "sha256": "73bcc42e08404fe6c8b6eece355094bbc5932841af0ab5aadee6a68b50e28a9b",
+      "fields": [
+        "_key",
+        "copying",
+        "invention",
+        "manufacturing",
+        "reaction",
+        "researchMaterial",
+        "researchTime"
+      ]
+    }
+  ],
+  "publicRelationships": {
+    "blueprintActivities": {
+      "copying": 4380,
+      "manufacturing": 4926,
+      "research_material": 4380,
+      "research_time": 4380,
+      "invention": 1117,
+      "reaction": 120
+    },
+    "activitiesWithSkills": 10049,
+    "activitiesWithMultipleOutputs": 74,
+    "missingTypeReferences": [
+      3924,
+      37236,
+      37237,
+      37238,
+      37239,
+      37240,
+      37241,
+      37242,
+      37243,
+      37244,
+      37245,
+      37247,
+      37262,
+      37263,
+      37264,
+      37265,
+      37266,
+      37267,
+      37278,
+      37279,
+      37286
+    ],
+    "joins": [
+      "blueprints.activities.*.(materials/products/skills).typeID -> types._key",
+      "types.groupID/marketGroupID -> groups/marketGroups",
+      "typeDogma._key -> types._key; typeDogma.dogmaAttributes[].attributeID -> dogmaAttributes._key",
+      "industryInstallationTypes.assemblyLines.assemblyLineID -> industryAssemblyLines._key",
+      "stationOperations.services -> stationServices._key",
+      "compressibleTypes._key/compressedTypeID -> types._key",
+      "industryModifierSources.<activity>.<modifier>.dogmaAttributeID -> dogmaAttributes._key"
+    ]
+  },
+  "sswCatalog": {
+    "cargoRows": 266,
+    "recipeRows": 221,
+    "finishedGoods": 219,
+    "finishedGoodsWithoutExactOutputKey": [],
+    "note": "Exact key coverage only. This does not establish reachability, active facility assignment, demand or executable production. Hull and equipment domains require separate checks."
+  }
+}

@@ -607,7 +607,7 @@ void UGalaxyTrafficSubsystem::EconomyWorkerCompleted()
 {
     check(IsInGameThread());if(!EconomyWorker)return;auto Result=EconomyWorker->TakeResult();if(!Result)return;
     auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
-    if((Result->Purchase || Result->Market || Result->Repair || Result->Ledger || Result->Owned) && (!Players || !Players->HasLoaded() || bShuttingDown || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled ||
+    if((Result->Purchase || Result->Market || Result->Repair || Result->Ledger || Result->Owned || Result->Skill) && (!Players || !Players->HasLoaded() || bShuttingDown || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled ||
         (Sim::GetSim() && (!Sim::GetSim()->HasSimulationAuthority() || Sim::GetSim()->IsNetworked()))))
     {
         if(ActiveCommand.IsSet()){auto Cancelled=MoveTemp(ActiveCommand.GetValue());ActiveCommand.Reset();RequestQueue.Finish(Cancelled.Receipt,false,INVTEXT("Authority or profile changed."));OnTransactionQueueChanged.Broadcast();Cancelled.Complete(false,INVTEXT("Economy request cancelled after an authority or profile change. Nothing exchanged."));}
@@ -615,6 +615,17 @@ void UGalaxyTrafficSubsystem::EconomyWorkerCompleted()
     }
     if(!Players || !Players->HasLoaded() || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)return;
     if(const auto* Simulation=Sim::GetSim();Simulation && (!Simulation->HasSimulationAuthority() || Simulation->IsNetworked()))return;
+    if(Result->Skill)
+    {
+        if(!ActiveCommand.IsSet())return;
+        auto Request=MoveTemp(ActiveCommand.GetValue());ActiveCommand.Reset();FText Reason;bool Accepted=false;
+        if(!bShuttingDown && Request.Validate && Request.Validate(Reason) && Request.Persist)
+        {
+            TGuardValue<bool> Applying(bApplyingWorkerResult,true);
+            Accepted=FNativeEconomyWorker::CommitSkill(MoveTemp(*Result),Players->GetMutablePlayerInfo(),EconomyMutationRevision,EconomyProfileToken(),[&Request](){return Request.Persist();},Reason);
+        }
+        bEconomyChanged=true;EconomyController.WakeProduction();RequestQueue.Finish(Request.Receipt,Accepted,Reason);OnTransactionQueueChanged.Broadcast();Request.Complete(Accepted,Reason);PumpEconomyRequests();ScheduleManagement();return;
+    }
     if(Result->Owned)
     {
         if(!ActiveCommand.IsSet())return;
@@ -694,6 +705,11 @@ bool UGalaxyTrafficSubsystem::QueueStorePurchase(FNativeStorePurchase&& Command,
     FQueuedEconomyRequest Request;Request.Receipt=Command.Receipt;Request.Label=FText::Format(INVTEXT("PURCHASE {0} x {1}"),FText::FromName(Command.Offer.Id),FText::AsNumber(Command.Quantity));Request.Command=MoveTemp(Command);Request.Validate=MoveTemp(Validate);Request.Completed=MoveTemp(Completed);
     return EnqueueEconomyRequest(MoveTemp(Request),Reason);
 }
+bool UGalaxyTrafficSubsystem::QueueSkillCommand(FNativeSkillCommand&& Command,TFunction<bool(FText&)>&& Validate,TFunction<bool()>&& Persist,TFunction<void(bool,const FText&)>&& Completed,FText& Reason)
+{
+    FQueuedEconomyRequest Request;Request.Receipt=Command.Receipt;Request.Label=INVTEXT("SKILL TRAINING / BOOKS");Request.Skill=MakeUnique<FNativeSkillCommand>(MoveTemp(Command));
+    Request.Validate=MoveTemp(Validate);Request.Persist=MoveTemp(Persist);Request.Completed=MoveTemp(Completed);return EnqueueEconomyRequest(MoveTemp(Request),Reason);
+}
 bool UGalaxyTrafficSubsystem::QueueOwnedCommand(FNativeOwnedCommand&& Command,const FText& Label,TFunction<bool(FText&)>&& Validate,TFunction<bool()>&& Persist,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Reason)
 {
     FQueuedEconomyRequest Request;Request.Receipt=Command.Receipt;Request.bCritical=Command.Action==EOwnedCommand::Loss;Request.Label=Label;Request.Owned=MakeUnique<FNativeOwnedCommand>(MoveTemp(Command));
@@ -754,7 +770,12 @@ void UGalaxyTrafficSubsystem::PumpEconomyRequests()
             auto Rejected=MoveTemp(*Pending);PendingCommands.Remove(Id);RequestQueue.Start(Id);RequestQueue.Finish(Id,false,Reason);OnTransactionQueueChanged.Broadcast();Rejected.Complete(false,Reason);continue;
         }
         FNativeEconomyInput Input;Input.State=Players->GetEconomy();Input.Revision=EconomyMutationRevision;Input.Profile=EconomyProfileToken();
-        if(Pending->Owned){Input.Owned=MakeUnique<FNativeOwnedCommand>(*Pending->Owned);Input.Owned->Source=FNativeOwnedState::Capture(Players->GetPlayerInfo());}
+        if(Pending->Skill)
+        {
+            Input.Skill=MakeUnique<FNativeSkillCommand>(*Pending->Skill);Input.Skill->Source=Players->GetPlayerInfo().Skills;Input.Skill->SourceQueue=Players->GetPlayerInfo().SkillQueue;
+            Input.Skill->NowUtc=FDateTime::UtcNow().ToUnixTimestamp();
+        }
+        else if(Pending->Owned){Input.Owned=MakeUnique<FNativeOwnedCommand>(*Pending->Owned);Input.Owned->Source=FNativeOwnedState::Capture(Players->GetPlayerInfo());}
         else if(Pending->Ledger)Input.Ledger=MakeUnique<FNativeLedgerCommand>(*Pending->Ledger);
         else if(Pending->Repair)Input.Repair=MakeUnique<FNativeFleetRepairCommand>(*Pending->Repair);
         else if(Pending->Market)Input.Market=MakeUnique<FNativeMarketCommand>(*Pending->Market);

@@ -35,6 +35,8 @@ FNativeEconomyResult FNativeEconomyWorker::Calculate(FNativeEconomyInput&& Input
 {
     FNativeEconomyResult Out;Out.Revision=Input.Revision;Out.Profile=MoveTemp(Input.Profile);Out.State=MoveTemp(Input.State);Out.bOffGameThread=!IsInGameThread();
     FSimDataEvents::Suppress(true);auto* Previous=ProductionEvents::Capture(&Out.Events);ON_SCOPE_EXIT{ProductionEvents::Capture(Previous);FSimDataEvents::Suppress(false);};
+    if(Input.Skill)
+    {Out.Skill=MakeUnique<FNativeSkillReply>(SkillCommandAI::Execute(Out.State,*Input.Skill));return Out;}
     if(Input.Owned)
     {Out.Owned=MakeUnique<FNativeOwnedReply>(OwnedCommandAI::Execute(Out.State,MoveTemp(*Input.Owned)));return Out;}
     if(Input.Ledger)
@@ -105,7 +107,7 @@ bool FNativeEconomyWorker::CommitPurchase(FNativeEconomyResult&& Result,FS_Playe
 bool FNativeEconomyWorker::Commit(FNativeEconomyResult&& Result,FEconomyState& Live,uint64 Revision,const FString& Profile)
 {
     check(IsInGameThread());
-    if(Result.Purchase || Result.Market || Result.Repair || Result.Ledger || Result.Owned || Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)return false;
+    if(Result.Purchase || Result.Market || Result.Repair || Result.Ledger || Result.Owned || Result.Skill || Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)return false;
     Result.bCommitted=true;
     // Clock pumping is not a commercial mutation; never rewind it to a worker snapshot.
     Result.State.EconomyClockSeconds=FMath::Max(Live.EconomyClockSeconds,Result.State.EconomyClockSeconds);
@@ -196,4 +198,22 @@ bool FNativeEconomyWorker::CommitOwned(FNativeEconomyResult&& Result,FS_PlayerGa
     if(Reply->bLoss){Live.Economy.MiningLeases=MoveTemp(Leases);Live.Economy.MiningDrones=MoveTemp(Drones);Live.Economy.MiningOptics=MoveTemp(Optics);}
     if(!Save()){Live=Before;Reason=INVTEXT("Could not save. Hulls, credits, insurance and stored equipment restored.");return false;}
     Reason=Reply->Reason;return true;
+}
+
+bool FNativeEconomyWorker::CommitSkill(FNativeEconomyResult&& Result,FS_PlayerGameInfo& Live,uint64 Revision,const FString& Profile,TFunctionRef<bool()> Save,FText& Reason)
+{
+    check(IsInGameThread());
+    if(!Result.Skill || !Result.Skill->bSucceeded){Reason=Result.Skill?Result.Skill->Reason:INVTEXT("No skill result.");return false;}
+    bool Same=Live.Skills.Num()==Result.Skill->Source.Num() && Live.SkillQueue.Num()==Result.Skill->SourceQueue.Num();
+    if(Same)for(const auto& Pair:Live.Skills){const auto* Old=Result.Skill->Source.Find(Pair.Key);if(!Old || !FSkillProgress::StaticStruct()->CompareScriptStruct(&Pair.Value,Old,0)){Same=false;break;}}
+    if(Same)for(int32 I=0;I<Live.SkillQueue.Num();++I)if(!FSkillTrainingEntry::StaticStruct()->CompareScriptStruct(&Live.SkillQueue[I],&Result.Skill->SourceQueue[I],0)){Same=false;break;}
+    if(!Same || Result.bCommitted || Result.Revision!=Revision || Result.Profile!=Profile)
+    {Reason=INVTEXT("Pilot, skills or queue changed. Nothing charged; please retry.");return false;}
+    auto Reply=MoveTemp(Result.Skill);Reason=Reply->Reason;
+    if(!Reply->bChanged){Result.bCommitted=true;return true;}
+    const auto Before=Live;FScopedSimDataChangeBatch Batch(Live.Economy);
+    if(!Commit(MoveTemp(Result),Live.Economy,Revision,Profile))return false;
+    Live.Skills=MoveTemp(Reply->Skills);Live.SkillQueue=MoveTemp(Reply->Queue);
+    if(!Save()){Live=Before;Reason=INVTEXT("Could not save. Skill books, training queue and credits restored.");return false;}
+    return true;
 }

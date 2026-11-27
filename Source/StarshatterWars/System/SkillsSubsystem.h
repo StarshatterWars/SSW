@@ -3,6 +3,7 @@
 #include "Tickable.h"
 #include "GameStructs_skills.h"
 #include "GameStructs_economy.h"
+#include "SkillCommandAI.h"
 #include "SkillsSubsystem.generated.h"
 
 class FSkillRules
@@ -39,19 +40,22 @@ public:
     bool CanQueueTraining(FName Id,FText& Reason) const;
     bool QueueTraining(FName Id,FText& Reason);
     int32 TrainingCap(FName Id) const;
-    bool QueueToLevel(FName Id,int32 Target,FText& Reason);
-    bool CancelTraining(FGuid Entry,FText& Reason);
-    bool InstantTrain(FGuid Entry,FText& Reason);
+    bool QueueToLevel(FName Id,int32 Target,FText& Reason,TFunction<void(bool,const FText&)> Completed={});
+    bool CancelTraining(FGuid Entry,FText& Reason,TFunction<void(bool,const FText&)> Completed={});
+    bool InstantTrain(FGuid Entry,FText& Reason,TFunction<void(bool,const FText&)> Completed={});
     TConstArrayView<FSkillTrainingEntry> GetQueue() const;
     FText TrainingStatus(FName Id) const;
     bool HasSkill(FName Id, int32 RequiredLevel = 1) const;
     bool CanLearn(FName Id, FText& Reason) const;
     static FName RequiredHullSkill(uint32 Classification);
     bool CanPurchaseBook(FName Id, FText& Reason) const;
-    bool PurchaseBook(FName Id, FText& Reason);
+    bool PurchaseBook(FName Id, FText& Reason,TFunction<void(bool,const FText&)> Completed={});
     bool CanPurchaseAdvancedBook(FName Id,FText& Reason) const;
-    bool PurchaseAdvancedBook(FName Id,FText& Reason);
+    bool PurchaseAdvancedBook(FName Id,FText& Reason,TFunction<void(bool,const FText&)> Completed={});
 private:
+    bool RequestAction(ESkillCommand,FName,FGuid,int32,TFunction<void(bool,const FText&)>&&,FText&);
+    bool bActionPending=false;
+    uint64 CatalogRevision=0;
     double LastTrainingCheck=0;
     TMap<FName, FSkillDefinition> Definitions;
 };

@@ -30,6 +30,7 @@ public:
     int32 GetRealizedShipCount()const{return LiveShips.Num();}
     // Admission and persistence execute on the game thread. Only value commands reach the worker.
     bool QueueStorePurchase(FNativeStorePurchase&&,TFunction<bool(FText&)>&&,TFunction<void(bool,const FText&)>&&,FText&);
+    bool QueueSkillCommand(FNativeSkillCommand&&,TFunction<bool(FText&)>&&,TFunction<bool()>&&,TFunction<void(bool,const FText&)>&&,FText&);
     bool QueueOwnedCommand(FNativeOwnedCommand&&,const FText&,TFunction<bool(FText&)>&&,TFunction<bool()>&&,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
     bool QueueLedgerCommand(FNativeLedgerCommand&&,const FText& Label,TFunction<bool(FText&)>&&,TFunction<bool()>&&,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
     bool QueueFleetRepair(FNativeFleetRepairCommand&&,TFunction<FCampaignFleetState*()>&&,TFunction<bool(FText&)>&&,TFunction<void(bool,const FFleetRepairStep&,const FText&)>&&,FText&);
@@ -48,6 +49,7 @@ private:
         TUniquePtr<FNativeFleetRepairCommand> Repair;
         TUniquePtr<FNativeLedgerCommand> Ledger;
         TUniquePtr<FNativeOwnedCommand> Owned;
+        TUniquePtr<FNativeSkillCommand> Skill;
         TFunction<FCampaignFleetState*()> LiveFleet;
         TFunction<void(bool,const FFleetRepairStep&,const FText&)> RepairCompleted;
         FString Profile;

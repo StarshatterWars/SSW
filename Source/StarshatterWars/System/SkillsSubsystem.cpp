@@ -1,5 +1,6 @@
 #include "SkillsSubsystem.h"
 #include "SimDataEvents.h"
+#include "GalaxyTrafficSubsystem.h"
 
 #include "StationServices.h"
 #include "StarshatterPlayerSubsystem.h"
@@ -22,7 +23,7 @@ bool FSkillRules::CanPurchase(const FSkillDefinition& Skill, const TMap<FName, F
     if (const auto* Entry = Learned.Find(Skill.Name); Entry && (Entry->Id.IsValid() || Entry->bComplete || Entry->LearnedUtc>0))
     { Reason = INVTEXT("This skill book is already owned."); return false; }
     if (Rank < Skill.MinimumRank)
-    { Reason = FText::Format(INVTEXT("Requires rank: {0}."), FText::FromString(UTF8_TO_TCHAR(PlayerCharacter::RankName(Skill.MinimumRank)))); return false; }
+    { Reason = FText::Format(INVTEXT("Requires rank: {0}."), FText::AsNumber(Skill.MinimumRank)); return false; }
     if (!Skill.Empire.IsNone() && Skill.Empire != Empire)
     { Reason = INVTEXT("This skill book belongs to another empire."); return false; }
     for (FName Required : Skill.Prerequisites)
@@ -45,7 +46,7 @@ bool FSkillRules::Purchase(FEconomyState& State, TMap<FName, FSkillProgress>& Le
     Reason = INVTEXT("Skill book purchased. Add Level I to the training queue."); return true;
 }
 void USkillsSubsystem::Initialize(FSubsystemCollectionBase& Collection)
-{ Super::Initialize(Collection); LoadCatalog(); }
+{ Super::Initialize(Collection); FSkillTrainingRules::Duration(1); LoadCatalog(); }
 bool USkillsSubsystem::LoadCatalog()
 {
     FString Json; TArray<TSharedPtr<FJsonValue>> Rows;
@@ -101,7 +102,7 @@ bool USkillsSubsystem::LoadCatalog()
         Visiting.Remove(Name); Done.Add(Name); return true;
     };
     for (const auto& Pair : Imported) if (!Visit(Pair.Key)) return false;
-    Definitions = MoveTemp(Imported);
+    Definitions = MoveTemp(Imported);++CatalogRevision;
     UE_LOG(LogTemp, Display, TEXT("[Skills] Loaded %d skill books; timed Level I-X training enabled."), Definitions.Num());
     return !Definitions.IsEmpty();
 }
@@ -136,6 +137,7 @@ bool USkillsSubsystem::CanLearn(FName Id, FText& Reason) const
 }
 bool USkillsSubsystem::CanPurchaseBook(FName Id, FText& Reason) const
 {
+    if(bActionPending){Reason=INVTEXT("A skill request is awaiting saved confirmation.");return false;}
     const auto* Definition = Definitions.Find(Id);
     const auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
     const auto* Pilot = PlayerCharacter::GetCurrentPlayer();
@@ -151,17 +153,8 @@ bool USkillsSubsystem::CanPurchaseBook(FName Id, FText& Reason) const
     if (Balance < Definition->BookPrice) { Reason = INVTEXT("Insufficient credits for this skill book."); return false; }
     return true;
 }
-bool USkillsSubsystem::PurchaseBook(FName Id, FText& Reason)
-{
-    if (!CanPurchaseBook(Id, Reason)) return false;
-    auto* Players = GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
-    auto& Economy = Players->GetEconomy(); auto& Pilot = Players->GetMutablePlayerInfo(); const auto Before = Pilot;
-    const auto* Character = PlayerCharacter::GetCurrentPlayer();
-    const FName Empire(*StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(static_cast<int64>(Character->GetEmpire())));
-    if (!FSkillRules::Purchase(Economy, Pilot.Skills, Definitions.FindChecked(Id), Character->GetRank(), Empire, FDateTime::UtcNow().ToUnixTimestamp(), Reason)) return false;
-    if (!Players->SaveActivePlayerProgress()) { Pilot = Before; Reason = INVTEXT("Could not save this skill purchase. No credits were charged."); return false; }
-    return true;
-}
+bool USkillsSubsystem::PurchaseBook(FName Id,FText& Reason,TFunction<void(bool,const FText&)> Completed)
+{return RequestAction(ESkillCommand::Book,Id,{},0,MoveTemp(Completed),Reason);}
 
 int64 FSkillTrainingRules::Duration(int32 Level)
 {
@@ -253,27 +246,18 @@ bool USkillsSubsystem::CanQueueTraining(FName Id,FText& Reason) const
 }
 bool USkillsSubsystem::QueueTraining(FName Id,FText& Reason)
 {
-    if(!CanQueueTraining(Id,Reason))return false;auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto Before=Players->GetPlayerInfo();auto& P=Players->GetMutablePlayerInfo();
-    const auto* Pilot=PlayerCharacter::GetCurrentPlayer();const FName Empire(*StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(static_cast<int64>(Pilot->GetEmpire())));
-    FSkillTrainingRules::Advance(Definitions,P.Skills,P.SkillQueue,FDateTime::UtcNow().ToUnixTimestamp());
-    if(!FSkillTrainingRules::Queue(Definitions,P.Skills,P.SkillQueue,Id,Pilot->GetRank(),Empire,FDateTime::UtcNow().ToUnixTimestamp(),Reason)){P=Before;return false;}
-    if(!Players->SaveActivePlayerProgress()){P=Before;Reason=INVTEXT("Training queue could not be saved. No changes were made.");return false;}return true;
+    int32 Target=GetLevel(Id)+1;for(const auto& E:GetQueue())if(E.Skill==Id)Target=E.TargetLevel+1;
+    return QueueToLevel(Id,Target,Reason);
 }
-bool USkillsSubsystem::CancelTraining(FGuid Entry,FText& Reason)
-{
-    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();if(!Players)return false;const auto Before=Players->GetPlayerInfo();auto& P=Players->GetMutablePlayerInfo();
-    const int64 Now=FDateTime::UtcNow().ToUnixTimestamp();FSkillTrainingRules::Advance(Definitions,P.Skills,P.SkillQueue,Now);
-    if(!FSkillTrainingRules::Cancel(P.Skills,P.SkillQueue,Entry,Now)){P=Before;return false;}
-    if(!Players->SaveActivePlayerProgress()){P=Before;Reason=INVTEXT("Cancellation could not be saved.");return false;}Reason=INVTEXT("Training cancelled. Earned progress for this level was retained.");return true;
-}
+bool USkillsSubsystem::CancelTraining(FGuid Entry,FText& Reason,TFunction<void(bool,const FText&)> Completed)
+{return RequestAction(ESkillCommand::Cancel,NAME_None,Entry,0,MoveTemp(Completed),Reason);}
 void USkillsSubsystem::Tick(float)
 {
     const double Clock=FPlatformTime::Seconds();if(Clock-LastTrainingCheck<1)return;LastTrainingCheck=Clock;
     auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* Simulation=Sim::GetSim();
     if(!Players || !Players->HasLoaded() || (Simulation && Simulation->IsNetworked()))return;
     const auto& View=Players->GetPlayerInfo();if(View.SkillQueue.IsEmpty() || View.SkillQueue[0].FinishesUtc>FDateTime::UtcNow().ToUnixTimestamp())return;
-    const auto Before=View;auto& P=Players->GetMutablePlayerInfo();
-    if(FSkillTrainingRules::Advance(Definitions,P.Skills,P.SkillQueue,FDateTime::UtcNow().ToUnixTimestamp())) {if(!Players->SaveActivePlayerProgress())P=Before;else FSimDataEvents::Publish(P.Economy);}
+    if(!bActionPending){FText Reason;RequestAction(ESkillCommand::Advance,NAME_None,{},0,{},Reason);}
 }
 FText USkillsSubsystem::TrainingStatus(FName Id) const
 {
@@ -284,44 +268,30 @@ FText USkillsSubsystem::TrainingStatus(FName Id) const
 }
 bool USkillsSubsystem::CanPurchaseAdvancedBook(FName Id,FText& Reason) const
 {
+    if(bActionPending){Reason=INVTEXT("A skill request is awaiting saved confirmation.");return false;}
+    const auto* Character=PlayerCharacter::GetCurrentPlayer();auto* S=Sim::GetSim();auto* Craft=S?S->GetPlayerShip():nullptr;
+    if(!Character || !S || !S->HasSimulationAuthority() || S->IsNetworked() || !Craft || Craft->IsDead() || !FStationServices::IsDocked())
+    {Reason=INVTEXT("Dock in an offline career to purchase skill books.");return false;}
     const auto* Def=Definitions.Find(Id);const auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* P=Players?Players->GetPlayerInfo().Skills.Find(Id):nullptr;
     if(!Def || !P || GetLevel(Id)<5){Reason=INVTEXT("Train Level V before buying the advanced book.");return false;}
     if(P->bAdvancedBookOwned){Reason=INVTEXT("Advanced training is already unlocked.");return false;}
+    const FName Empire(*StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(static_cast<int64>(Character->GetEmpire())));
+    if(!Def->bIsPublished || !Def->bIsAvailableForPurchase || Character->GetRank()<Def->MinimumRank || (!Def->Empire.IsNone() && Empire!=Def->Empire))
+    {Reason=INVTEXT("Rank, empire or catalog restrictions prevent this purchase.");return false;}
     if(!FStationServices::Offers(ESSWStationService::SkillBooks)){Reason=INVTEXT("Dock at a station that sells skill books.");return false;}
     if(TransactionAI::BalanceIncludingLegacy(Players->GetPlayerInfo().Economy,Players->GetPlayerInfo().InsuranceCredits)<Def->AdvancedBookPrice){Reason=INVTEXT("Insufficient credits for the advanced book.");return false;}
     Reason=FText::Format(INVTEXT("Purchase advanced book: {0} CR. Unlocks VI-X; training is still required."),FText::AsNumber(Def->AdvancedBookPrice));return true;
 }
-bool USkillsSubsystem::PurchaseAdvancedBook(FName Id,FText& Reason)
-{
-    if(!CanPurchaseAdvancedBook(Id,Reason))return false;auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto Before=Players->GetPlayerInfo();auto& Economy=Players->GetEconomy();
-    const auto& Def=Definitions.FindChecked(Id);const FGuid Receipt=FGuid::NewGuid();
-    if(!FEconomyLedger::Pay(Economy,FEconomyLedger::Pilot(),TEXT("Advanced skill publisher"),Def.AdvancedBookPrice,Receipt,TEXT("Advanced skill book"),ECommercePurpose::Purchase))return false;
-    Economy.Journal.Last().Item=Id;Economy.Journal.Last().Reference=Receipt;
-    Players->GetMutablePlayerInfo().Skills.FindChecked(Id).bAdvancedBookOwned=true;
-    if(!Players->SaveActivePlayerProgress()){Players->GetMutablePlayerInfo()=Before;Reason=INVTEXT("Could not save advanced book purchase. Credits restored.");return false;}
-    Reason=INVTEXT("Advanced skill book purchased. Levels VI-X are unlocked for training.");return true;
-}
+bool USkillsSubsystem::PurchaseAdvancedBook(FName Id,FText& Reason,TFunction<void(bool,const FText&)> Completed)
+{return RequestAction(ESkillCommand::Advanced,Id,{},0,MoveTemp(Completed),Reason);}
 
 int32 USkillsSubsystem::TrainingCap(FName Id) const
 {
     const auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* P=Players?Players->GetPlayerInfo().Skills.Find(Id):nullptr;
     return P && P->bAdvancedBookOwned?10:5;
 }
-bool USkillsSubsystem::QueueToLevel(FName Id,int32 Target,FText& Reason)
-{
-    if(Target<1 || Target>TrainingCap(Id)){Reason=INVTEXT("Advanced levels require the advanced skill book.");return false;}
-    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* Character=PlayerCharacter::GetCurrentPlayer();
-    const auto* Simulation=Sim::GetSim();if(!Players || !Character || (Simulation && Simulation->IsNetworked()))return false;
-    const auto Before=Players->GetPlayerInfo();auto& P=Players->GetMutablePlayerInfo();const int64 Now=FDateTime::UtcNow().ToUnixTimestamp();
-    FSkillTrainingRules::Advance(Definitions,P.Skills,P.SkillQueue,Now);
-    int32 Projected=GetLevel(Id);for(const auto& E:P.SkillQueue)if(E.Skill==Id)Projected=E.TargetLevel;
-    if(Projected>=Target){P=Before;Reason=INVTEXT("This level is already trained or queued.");return false;}
-    const FName Empire(*StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(static_cast<int64>(Character->GetEmpire())));
-    for(int32 Level=Projected+1;Level<=Target;++Level)
-        if(!FSkillTrainingRules::Queue(Definitions,P.Skills,P.SkillQueue,Id,Character->GetRank(),Empire,Now,Reason)){P=Before;return false;}
-    if(!Players->SaveActivePlayerProgress()){P=Before;Reason=INVTEXT("Could not save the training queue. No changes were made.");return false;}
-    Reason=INVTEXT("Each requested level has been added to the queue. Training continues offline.");return true;
-}
+bool USkillsSubsystem::QueueToLevel(FName Id,int32 Target,FText& Reason,TFunction<void(bool,const FText&)> Completed)
+{return RequestAction(ESkillCommand::Queue,Id,{},Target,MoveTemp(Completed),Reason);}
 
 int64 FSkillTrainingRules::InstantCost(const FSkillTrainingEntry& Entry,int64 Now)
 {
@@ -348,12 +318,44 @@ bool FSkillTrainingRules::InstantTrain(FEconomyState& Economy,const TMap<FName,F
     for(int32 I=Index;I<Queue.Num();++I){auto& E=Queue[I];E.StartedUtc=Start;E.FinishesUtc=Start+Duration(E.TargetLevel);Start=E.FinishesUtc;}
     Reason=FText::Format(INVTEXT("Level trained for {0} CR."),FText::AsNumber(Cost));return true;
 }
-bool USkillsSubsystem::InstantTrain(FGuid Id,FText& Reason)
+bool USkillsSubsystem::InstantTrain(FGuid Entry,FText& Reason,TFunction<void(bool,const FText&)> Completed)
+{return RequestAction(ESkillCommand::Instant,NAME_None,Entry,0,MoveTemp(Completed),Reason);}
+
+bool USkillsSubsystem::RequestAction(ESkillCommand Action,FName Id,FGuid Entry,int32 Target,TFunction<void(bool,const FText&)>&& Completed,FText& Reason)
 {
-    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* Simulation=Sim::GetSim();
-    if(!Players || (Simulation && Simulation->IsNetworked()))return false;
-    const auto Before=Players->GetPlayerInfo();auto& P=Players->GetMutablePlayerInfo();auto& E=Players->GetEconomy();
-    const int64 Now=FDateTime::UtcNow().ToUnixTimestamp();FSkillTrainingRules::Advance(Definitions,P.Skills,P.SkillQueue,Now);
-    if(!FSkillTrainingRules::InstantTrain(E,Definitions,P.Skills,P.SkillQueue,Id,Now,Reason)){P=Before;return false;}
-    if(!Players->SaveActivePlayerProgress()){P=Before;Reason=INVTEXT("Could not save instant training. Credits and queue restored.");return false;}return true;
+    check(IsInGameThread());auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();auto* Domain=GetGameInstance()->GetSubsystem<UGalaxyTrafficSubsystem>();
+    const auto* Character=PlayerCharacter::GetCurrentPlayer();auto* S=Sim::GetSim();
+    if(bActionPending || !Players || !Players->HasLoaded() || !Domain || !Character || (S && (S->IsNetworked() || !S->HasSimulationAuthority())))
+    {Reason=INVTEXT("Skill service is busy or unavailable for this pilot.");return false;}
+    if(Action==ESkillCommand::Book && !CanPurchaseBook(Id,Reason))return false;
+    if(Action==ESkillCommand::Advanced && !CanPurchaseAdvancedBook(Id,Reason))return false;
+    FNativeSkillCommand C;C.Action=Action;C.Skill=Id;C.Entry=Entry;C.Target=Target;C.Receipt=FGuid::NewGuid();C.Definitions=Definitions;
+    C.Rank=Character->GetRank();C.Empire=FName(*StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(static_cast<int64>(Character->GetEmpire())));
+    if(Action==ESkillCommand::Book)C.MaximumCost=Definitions.FindChecked(Id).BookPrice;
+    if(Action==ESkillCommand::Advanced)C.MaximumCost=Definitions.FindChecked(Id).AdvancedBookPrice;
+    if(Action==ESkillCommand::Instant)
+    {
+        const auto* Q=Players->GetPlayerInfo().SkillQueue.FindByPredicate([Entry](const auto& E){return E.Id==Entry;});
+        if(!Q){Reason=INVTEXT("Training entry is no longer queued.");return false;}
+        C.MaximumCost=FSkillTrainingRules::InstantCost(*Q,FDateTime::UtcNow().ToUnixTimestamp());
+    }
+    const bool Purchase=Action==ESkillCommand::Book || Action==ESkillCommand::Advanced;
+    auto* Craft=S?S->GetPlayerShip():nullptr;const FGuid Hull=Craft?Craft->GetHullId():FGuid();
+    const FGuid Base=Craft && Craft->GetCarrier()?Craft->GetCarrier()->GetHullId():FGuid();
+    const FName BaseName(Craft && Craft->GetCarrier()?UTF8_TO_TCHAR(Craft->GetCarrier()->GetName()):TEXT(""));
+    const uint64 Catalog=CatalogRevision;const int32 Rank=C.Rank;const FName Empire=C.Empire;const TWeakObjectPtr<USkillsSubsystem> Weak(this);
+    bActionPending=true;
+    const bool Queued=Domain->QueueSkillCommand(MoveTemp(C),[Weak,Catalog,Rank,Empire,Purchase,Hull,Base,BaseName](FText& Why)
+    {
+        const auto* Self=Weak.Get();const auto* Pilot=PlayerCharacter::GetCurrentPlayer();auto* CurrentSim=Sim::GetSim();auto* Current=CurrentSim?CurrentSim->GetPlayerShip():nullptr;
+        if(!Self || Self->CatalogRevision!=Catalog || !Pilot || Pilot->GetRank()!=Rank ||
+            FName(*StaticEnum<EEMPIRE_NAME>()->GetNameStringByValue(static_cast<int64>(Pilot->GetEmpire())))!=Empire ||
+            (CurrentSim && (CurrentSim->IsNetworked() || !CurrentSim->HasSimulationAuthority())))
+        {Why=INVTEXT("Pilot, authority or skill catalog changed. Nothing charged.");return false;}
+        if(Purchase && (!Current || Current->IsDead() || Current->IsDying() || Current->GetHullId()!=Hull || !FStationServices::IsDocked() ||
+            !Current->GetCarrier() || Current->GetCarrier()->GetHullId()!=Base || FName(UTF8_TO_TCHAR(Current->GetCarrier()->GetName()))!=BaseName || !FStationServices::Offers(ESSWStationService::SkillBooks)))
+        {Why=INVTEXT("Skill-book docking service changed. Nothing charged.");return false;}return true;
+    },[Weak](){auto* Self=Weak.Get();auto* P=Self?Self->GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;return P && P->SaveActivePlayerProgress();},
+    [Weak,Done=MoveTemp(Completed)](bool Saved,const FText& Why){if(auto* Self=Weak.Get())Self->bActionPending=false;if(Done)Done(Saved,Why);},Reason);
+    if(!Queued)bActionPending=false;return Queued;
 }

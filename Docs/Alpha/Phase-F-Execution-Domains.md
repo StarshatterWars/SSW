@@ -1,7 +1,10 @@
 # Alpha 5 - sprint Phase F execution domains
 
-27 November 2026 (pilot local date). First incremental migration; not a claim
-that the entire legacy simulation or every economic transaction is threaded.
+27 November 2026 (pilot local date). Phase F's planned incremental execution-domain
+migration is complete at the automated verification boundary: build 20261127-014142Z,
+both targets and all 422 regressions passed. User cook/package/T1 verification
+follows. This does not claim that the entire legacy flight/combat/AI loop is threaded.
+The sections below retain each verified checkpoint and its boundary.
 
 ## Domains implemented in this pass
 
@@ -104,3 +107,21 @@ See Phase-F-Ledger-Adapters.md. The live cargo, blueprint and industry panels no
 Build 20261126-205131Z passed Editor and Windows Development builds with zero C++ warning/error diagnostics and correct own-header/generated-header order. All 417 regressions passed with zero test warnings/failures/skips (Saved/Automation/PhaseF-Owned-Verified); all six focused ownership tests passed. Logs: PhaseF-Owned-Editor-Verified.log and PhaseF-Owned-Client.log.
 
 See Phase-F-Owned-Adapters.md. Live hull commerce, policies/claims, local component fitting, missile-loadout exchange, mining-drone transfers and full station repairs calculate through native ownership commands. Game-thread adapters retain physical reserve transfer, live projection and saved confirmation/rollback. A critical-loss transition barrier runs before mission retirement and shutdown. Compatibility native APIs remain for callers/tests; live UI uses the worker. Skill financial actions are the final identified UI adapter migration.
+
+## Skill adapter and Phase F closeout
+
+See Phase-F-Skills-Adapters.md for the final build/test evidence and remaining
+live-scene boundaries. Skill books, advanced books, paid instant training, queue
+changes and offline completion now use the native economy queue. Typed commits
+merge only the owned skill/economic domain, compare original progress and queue,
+and confirm UI results after saving. The five new domain tests bring the full
+suite to 422 passing tests, with no test warnings/failures/skips. Both final builds
+passed with zero C++ warning/error diagnostics.
+
+The requested EVE review used six shipped Python 2.7 modules and fifteen public
+CCP SDE tables. See Phase-F-Economy-REA.md and its pinned hash/schema manifest.
+All 219 finished goods have recipe output keys. Follow-up recommendations are
+production-chain reachability, multi-output authored recipes, configurable facility
+lanes and targeted inventory notifications; they are research findings, not newly
+implemented gameplay or a claim of EVE server-code recovery. Nexus remains deferred
+until after the existing phases.
