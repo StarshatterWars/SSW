@@ -154,7 +154,9 @@ bool MeshCollision::HasGeometry(SimModel& Model)
 }
 bool MeshCollision::Ray(SimModel& Model,const FTransform& Pose,const FVector& Origin,const FVector& Direction,double Length,bool Translucent,FVector& Hit,Poly*& HitPoly)
 {
-    const FVector O=Pose.InverseTransformPosition(Origin),D=Pose.InverseTransformVectorNoScale(Direction);
+    // Preserve the caller's world-space ray parameter under uniform/non-uniform
+    // mesh scale. Dropping scale from D yields ghost hits at the wrong distance.
+    const FVector O=Pose.InverseTransformPosition(Origin),D=Pose.InverseTransformVector(Direction);
     double Closest=Length;bool Found=false;HitPoly=nullptr;
     ListIter<Surface> It=Model.GetSurfaces();
     while(++It)

@@ -1,0 +1,999 @@
+{
+  "schemaVersion": 1,
+  "facilities": [
+    {
+      "Name": "Adventure",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 2.5
+    },
+    {
+      "Name": "Colony",
+      "Mode": "DockingOnly",
+      "AzimuthUnit": "Radians",
+      "DeckOverrides": [],
+      "CoordinateScale": 1
+    },
+    {
+      "Name": "Dragon",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [
+        {
+          "Index": 0,
+          "Replacement": {
+            "Name": "Deck 1",
+            "Abbrev": "Deck 1",
+            "DesignName": "Flight Deck",
+            "bLaunchDeck": true,
+            "bRecoveryDeck": false,
+            "AzimuthRadians": 0.0,
+            "Location": {
+              "X": 240,
+              "Y": 0,
+              "Z": 1830
+            },
+            "Size": 84,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": 240,
+              "Y": -24,
+              "Z": 1728
+            },
+            "EndPoint": {
+              "X": 240,
+              "Y": -24,
+              "Z": 7500
+            },
+            "CamLocation": {
+              "X": 0,
+              "Y": 0,
+              "Z": 1830
+            },
+            "BoundingBox": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "ExplosionType": 0,
+            "Light": 0,
+            "CycleTime": 15,
+            "MaxShips": 0,
+            "ApproachPoints": [],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": 180,
+                  "Y": -24,
+                  "Z": 1650
+                },
+                "FilterMask": 7
+              },
+              {
+                "Location": {
+                  "X": 300,
+                  "Y": -24,
+                  "Z": 1650
+                },
+                "FilterMask": 7
+              },
+              {
+                "Location": {
+                  "X": 240,
+                  "Y": -24,
+                  "Z": 1650
+                },
+                "FilterMask": 8
+              }
+            ],
+            "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Dragon.def"
+          }
+        },
+        {
+          "Index": 1,
+          "Replacement": {
+            "Name": "Deck 2",
+            "Abbrev": "Deck 2",
+            "DesignName": "Flight Deck",
+            "bLaunchDeck": true,
+            "bRecoveryDeck": false,
+            "AzimuthRadians": 0.0,
+            "Location": {
+              "X": -240,
+              "Y": 0,
+              "Z": 1830
+            },
+            "Size": 84,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": -240,
+              "Y": -24,
+              "Z": 1728
+            },
+            "EndPoint": {
+              "X": -240,
+              "Y": -24,
+              "Z": 7500
+            },
+            "CamLocation": {
+              "X": 0,
+              "Y": 0,
+              "Z": 1830
+            },
+            "BoundingBox": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "ExplosionType": 0,
+            "Light": 0,
+            "CycleTime": 15,
+            "MaxShips": 0,
+            "ApproachPoints": [],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": -180,
+                  "Y": -24,
+                  "Z": 1650
+                },
+                "FilterMask": 7
+              },
+              {
+                "Location": {
+                  "X": -300,
+                  "Y": -24,
+                  "Z": 1650
+                },
+                "FilterMask": 7
+              },
+              {
+                "Location": {
+                  "X": -240,
+                  "Y": -24,
+                  "Z": 1650
+                },
+                "FilterMask": 8
+              }
+            ],
+            "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Dragon.def"
+          }
+        },
+        {
+          "Index": 2,
+          "Replacement": {
+            "Name": "Deck 3",
+            "Abbrev": "Deck 3",
+            "DesignName": "Flight Deck",
+            "bLaunchDeck": false,
+            "bRecoveryDeck": true,
+            "AzimuthRadians": 0.9250245035569946,
+            "Location": {
+              "X": -800,
+              "Y": -24,
+              "Z": -600
+            },
+            "Size": 120,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": -3994.5420401891715,
+              "Y": -24,
+              "Z": -3007.2600926081936
+            },
+            "EndPoint": {
+              "X": -800,
+              "Y": -24,
+              "Z": -600
+            },
+            "CamLocation": {
+              "X": -900,
+              "Y": 45,
+              "Z": -700
+            },
+            "BoundingBox": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "ExplosionType": 0,
+            "Light": 0,
+            "CycleTime": 15,
+            "MaxShips": 0,
+            "ApproachPoints": [
+              {
+                "X": -5000,
+                "Y": 300,
+                "Z": -4500
+              },
+              {
+                "X": -5500,
+                "Y": 300,
+                "Z": 0
+              },
+              {
+                "X": -3000,
+                "Y": 300,
+                "Z": 6000
+              },
+              {
+                "X": 2000,
+                "Y": 300,
+                "Z": 6000
+              }
+            ],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": -800,
+                  "Y": -24,
+                  "Z": -600
+                },
+                "FilterMask": 15
+              }
+            ],
+            "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Dragon.def"
+          }
+        }
+      ],
+      "CoordinateScale": 3
+    },
+    {
+      "Name": "Airbase2",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 4
+    },
+    {
+      "Name": "Station3",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [
+        {
+          "Index": 5,
+          "Replacement": {
+            "Name": "Docking Bay 3",
+            "Abbrev": "",
+            "DesignName": "",
+            "bLaunchDeck": false,
+            "bRecoveryDeck": true,
+            "AzimuthRadians": 5.759586531581287,
+            "Location": {
+              "X": -8085,
+              "Y": 220,
+              "Z": -5247
+            },
+            "Size": 352,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": -2585,
+              "Y": 275,
+              "Z": -14773.279441628822
+            },
+            "EndPoint": {
+              "X": -8085,
+              "Y": 176,
+              "Z": -5247
+            },
+            "CamLocation": {
+              "X": -8525,
+              "Y": 275,
+              "Z": -5500
+            },
+            "BoundingBox": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "ExplosionType": 0,
+            "Light": 250,
+            "CycleTime": 5,
+            "MaxShips": 0,
+            "ApproachPoints": [],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": -8085,
+                  "Y": 176,
+                  "Z": -5247
+                },
+                "FilterMask": 15
+              }
+            ],
+            "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Fortress.def"
+          }
+        }
+      ],
+      "CoordinateScale": 11
+    },
+    {
+      "Name": "Station1",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 5
+    },
+    {
+      "Name": "Goliath",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [
+        {
+          "Index": 0,
+          "Replacement": {
+            "Name": "Deck 1",
+            "Abbrev": "Deck 1",
+            "DesignName": "Flight Deck",
+            "bLaunchDeck": true,
+            "bRecoveryDeck": false,
+            "AzimuthRadians": 0.0,
+            "Location": {
+              "X": 0.0,
+              "Y": 315,
+              "Z": 633.5999908447266
+            },
+            "Size": 92.39999866485596,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": 0.0,
+              "Y": 315,
+              "Z": 560.9999918937683
+            },
+            "EndPoint": {
+              "X": 0,
+              "Y": 315,
+              "Z": 8500
+            },
+            "CamLocation": {
+              "X": -65.99999904632568,
+              "Y": 350,
+              "Z": 633.5999908447266
+            },
+            "BoundingBox": {
+              "X": 0.0,
+              "Y": 0.0,
+              "Z": 0.0
+            },
+            "ExplosionType": 0,
+            "Light": 0,
+            "CycleTime": 15,
+            "MaxShips": 0,
+            "ApproachPoints": [],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": 52.79999923706055,
+                  "Y": 315,
+                  "Z": 527.9999923706055
+                },
+                "FilterMask": 7
+              },
+              {
+                "Location": {
+                  "X": -52.79999923706055,
+                  "Y": 315,
+                  "Z": 527.9999923706055
+                },
+                "FilterMask": 7
+              },
+              {
+                "Location": {
+                  "X": 0.0,
+                  "Y": 315,
+                  "Z": 527.9999923706055
+                },
+                "FilterMask": 8
+              }
+            ],
+            "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Goliath.def"
+          }
+        },
+        {
+          "Index": 1,
+          "Replacement": {
+            "Name": "Deck 2",
+            "Abbrev": "Deck 2",
+            "DesignName": "Flight Deck",
+            "bLaunchDeck": false,
+            "bRecoveryDeck": true,
+            "AzimuthRadians": 1.5707963267948966,
+            "Location": {
+              "X": 0,
+              "Y": 225,
+              "Z": -304
+            },
+            "Size": 131.99999809265137,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": -3000,
+              "Y": 225,
+              "Z": -304
+            },
+            "EndPoint": {
+              "X": 0,
+              "Y": 225,
+              "Z": -304
+            },
+            "CamLocation": {
+              "X": -100,
+              "Y": 280,
+              "Z": -304
+            },
+            "BoundingBox": {
+              "X": 0.0,
+              "Y": 0.0,
+              "Z": 0.0
+            },
+            "ExplosionType": 0,
+            "Light": 0,
+            "CycleTime": 15,
+            "MaxShips": 0,
+            "ApproachPoints": [
+              {
+                "X": -5000,
+                "Y": 500,
+                "Z": -304
+              },
+              {
+                "X": -5000,
+                "Y": 500,
+                "Z": 4000
+              },
+              {
+                "X": 5000,
+                "Y": 500,
+                "Z": 4000
+              },
+              {
+                "X": 5000,
+                "Y": 500,
+                "Z": -4000
+              }
+            ],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": 0,
+                  "Y": 225,
+                  "Z": -304
+                },
+                "FilterMask": 15
+              }
+            ],
+            "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Goliath.def"
+          }
+        }
+      ],
+      "CoordinateScale": 3.299999952316284
+    },
+    {
+      "Name": "Station2",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [
+        {
+          "Index": 2,
+          "Replacement": {
+            "Name": "Docking Bay 1",
+            "Abbrev": "",
+            "DesignName": "",
+            "bLaunchDeck": false,
+            "bRecoveryDeck": true,
+            "AzimuthRadians": 0.0,
+            "Location": {
+              "X": 7000,
+              "Y": 160,
+              "Z": 0
+            },
+            "Size": 320,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": 7000,
+              "Y": 180,
+              "Z": -4000
+            },
+            "EndPoint": {
+              "X": 7000,
+              "Y": 160,
+              "Z": 0
+            },
+            "CamLocation": {
+              "X": 7200,
+              "Y": 240,
+              "Z": 50
+            },
+            "BoundingBox": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "ExplosionType": 0,
+            "Light": 250,
+            "CycleTime": 5,
+            "MaxShips": 0,
+            "ApproachPoints": [],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": 7000,
+                  "Y": 160,
+                  "Z": 0
+                },
+                "FilterMask": 15
+              }
+            ],
+            "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Harmony.def"
+          }
+        },
+        {
+          "Index": 3,
+          "Replacement": {
+            "Name": "Docking Bay 2",
+            "Abbrev": "",
+            "DesignName": "",
+            "bLaunchDeck": false,
+            "bRecoveryDeck": true,
+            "AzimuthRadians": 3.141592653589793,
+            "Location": {
+              "X": -7000,
+              "Y": 160,
+              "Z": 0
+            },
+            "Size": 320,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": -7000,
+              "Y": 180,
+              "Z": 4000
+            },
+            "EndPoint": {
+              "X": -7000,
+              "Y": 160,
+              "Z": 0
+            },
+            "CamLocation": {
+              "X": -7200,
+              "Y": 240,
+              "Z": 50
+            },
+            "BoundingBox": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "ExplosionType": 0,
+            "Light": 250,
+            "CycleTime": 5,
+            "MaxShips": 0,
+            "ApproachPoints": [],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": -7000,
+                  "Y": 160,
+                  "Z": 0
+                },
+                "FilterMask": 15
+              }
+            ],
+            "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Harmony.def"
+          }
+        }
+      ],
+      "CoordinateScale": 10
+    },
+    {
+      "Name": "Airbase1",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 4
+    },
+    {
+      "Name": "Observatory",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [
+        {
+          "Index": 0,
+          "Replacement": {
+            "Name": "Launch Bay",
+            "Abbrev": "",
+            "DesignName": "",
+            "bLaunchDeck": true,
+            "bRecoveryDeck": false,
+            "AzimuthRadians": 0,
+            "Location": {
+              "X": 1900,
+              "Y": 0,
+              "Z": 1800
+            },
+            "Size": 160,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": 1900,
+              "Y": -40,
+              "Z": 1800
+            },
+            "EndPoint": {
+              "X": 1900,
+              "Y": -40,
+              "Z": 10000
+            },
+            "CamLocation": {
+              "X": 1950,
+              "Y": 40,
+              "Z": 1660
+            },
+            "BoundingBox": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "ExplosionType": 0,
+            "Light": 250,
+            "CycleTime": 20,
+            "MaxShips": 0,
+            "ApproachPoints": [],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": 1900,
+                  "Y": -40,
+                  "Z": 1800
+                },
+                "FilterMask": 15
+              }
+            ],
+            "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Observatory.def"
+          }
+        },
+        {
+          "Index": 1,
+          "Replacement": {
+            "Name": "Docking Bay",
+            "Abbrev": "",
+            "DesignName": "",
+            "bLaunchDeck": false,
+            "bRecoveryDeck": true,
+            "AzimuthRadians": 1.5707963267948966,
+            "Location": {
+              "X": -1900,
+              "Y": 0,
+              "Z": 1800
+            },
+            "Size": 160,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": -10000,
+              "Y": -40,
+              "Z": 1800
+            },
+            "EndPoint": {
+              "X": -1900,
+              "Y": -40,
+              "Z": 1800
+            },
+            "CamLocation": {
+              "X": -1900,
+              "Y": 40,
+              "Z": 1660
+            },
+            "BoundingBox": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "ExplosionType": 0,
+            "Light": 250,
+            "CycleTime": 5,
+            "MaxShips": 0,
+            "ApproachPoints": [],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": -1900,
+                  "Y": -40,
+                  "Z": 1800
+                },
+                "FilterMask": 15
+              }
+            ],
+            "SourceFile": "../../../../../../SSW/Content/GameData/Ships/Observatory.def"
+          }
+        }
+      ],
+      "CoordinateScale": 5
+    },
+    {
+      "Name": "Orion",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 1
+    },
+    {
+      "Name": "Station5",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 8
+    },
+    {
+      "Name": "Station6",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [
+        {
+          "Index": 3,
+          "Replacement": {
+            "Name": "Docking Bay 2",
+            "Abbrev": "",
+            "DesignName": "",
+            "bLaunchDeck": false,
+            "bRecoveryDeck": true,
+            "AzimuthRadians": -1.5707963267948966,
+            "Location": {
+              "X": 135,
+              "Y": 180,
+              "Z": -8280
+            },
+            "Size": 288,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": 18000,
+              "Y": 180,
+              "Z": -8280
+            },
+            "EndPoint": {
+              "X": 135,
+              "Y": 144,
+              "Z": -8280
+            },
+            "CamLocation": {
+              "X": 180,
+              "Y": 225,
+              "Z": -8010
+            },
+            "BoundingBox": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "ExplosionType": 0,
+            "Light": 250,
+            "CycleTime": 5,
+            "MaxShips": 0,
+            "ApproachPoints": [],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": 135,
+                  "Y": 144,
+                  "Z": -8280
+                },
+                "FilterMask": 15
+              }
+            ],
+            "SourceFile": "../../../../../../SSW/Content/GameData/Ships/S6.def"
+          }
+        }
+      ],
+      "CoordinateScale": 9
+    },
+    {
+      "Name": "Station7",
+      "Mode": "DockingOnly",
+      "AzimuthUnit": "Radians",
+      "DeckOverrides": [],
+      "CoordinateScale": 1
+    },
+    {
+      "Name": "Airbase3",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 4
+    },
+    {
+      "Name": "Station4",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 1
+    },
+    {
+      "Name": "Asteroid Base",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Radians",
+      "DeckOverrides": [
+        {
+          "Index": 0,
+          "Replacement": {
+            "Name": "Launch Bay",
+            "Abbrev": "",
+            "DesignName": "",
+            "bLaunchDeck": true,
+            "bRecoveryDeck": false,
+            "AzimuthRadians": 1.5707963705062866,
+            "Location": {
+              "X": 130.00000193715096,
+              "Y": 0,
+              "Z": 0
+            },
+            "Size": 32,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": 283.0000042170286,
+              "Y": 0,
+              "Z": 0
+            },
+            "EndPoint": {
+              "X": 2300.0000342726707,
+              "Y": 0,
+              "Z": 0
+            },
+            "CamLocation": {
+              "X": 130.00000193715096,
+              "Y": 0,
+              "Z": 0
+            },
+            "BoundingBox": {
+              "X": 0,
+              "Y": 0,
+              "Z": 0
+            },
+            "ExplosionType": 0,
+            "Light": 250,
+            "CycleTime": 20,
+            "MaxShips": 0,
+            "ApproachPoints": [],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": 130.00000193715096,
+                  "Y": 0,
+                  "Z": 0
+                },
+                "FilterMask": 15
+              }
+            ],
+            "SourceFile": "D:/SSW/Content/GameData/Ships/AsteroidBase.def"
+          }
+        },
+        {
+          "Index": 1,
+          "Replacement": {
+            "Name": "Recovery Bay",
+            "Abbrev": "",
+            "DesignName": "",
+            "bLaunchDeck": false,
+            "bRecoveryDeck": true,
+            "AzimuthRadians": -1.5707963705062866,
+            "Location": {
+              "X": 130.00000193715096,
+              "Y": 0,
+              "Z": 0
+            },
+            "Size": 32,
+            "HullFactor": 0.5,
+            "StartPoint": {
+              "X": 742.0000110566616,
+              "Y": 0,
+              "Z": 0
+            },
+            "EndPoint": {
+              "X": 130.00000193715096,
+              "Y": 0,
+              "Z": 0
+            },
+            "CamLocation": {
+              "X": 130.00000193715096,
+              "Y": 0,
+              "Z": 0
+            },
+            "BoundingBox": {
+              "X": 320.0000047683716,
+              "Y": 100.00000149011612,
+              "Z": 380.00000566244125
+            },
+            "ExplosionType": 0,
+            "Light": 250,
+            "CycleTime": 5,
+            "MaxShips": 1,
+            "ApproachPoints": [
+              {
+                "X": 1400.0000208616257,
+                "Y": 0,
+                "Z": 0
+              },
+              {
+                "X": 1900.0000283122063,
+                "Y": 0,
+                "Z": 0
+              },
+              {
+                "X": 2400.000035762787,
+                "Y": 0,
+                "Z": 0
+              },
+              {
+                "X": 3000.0000447034836,
+                "Y": 0,
+                "Z": 0
+              }
+            ],
+            "RunwayPoints": [],
+            "Slots": [
+              {
+                "Location": {
+                  "X": 130.00000193715096,
+                  "Y": 0,
+                  "Z": 0
+                },
+                "FilterMask": 15
+              }
+            ],
+            "SourceFile": "D:/SSW/Content/GameData/Ships/AsteroidBase.def"
+          }
+        }
+      ],
+      "CoordinateScale": 1
+    },
+    {
+      "Name": "Mining Station",
+      "Mode": "DockingOnly",
+      "AzimuthUnit": "Radians",
+      "DeckOverrides": [],
+      "CoordinateScale": 1
+    },
+    {
+      "Name": "Processing Facility",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 1
+    },
+    {
+      "Name": "FoothillBase",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 1
+    },
+    {
+      "Name": "JanekStation",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 1
+    },
+    {
+      "Name": "RadixBase",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 1
+    },
+    {
+      "Name": "Shipyard",
+      "Mode": "FlightOperations",
+      "AzimuthUnit": "Degrees",
+      "DeckOverrides": [],
+      "CoordinateScale": 1
+    }
+  ]
+}

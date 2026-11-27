@@ -212,6 +212,7 @@ public:
     static bool       IsTransferStationName(const FString& Name);
     bool              IsTransferStation() const;
     bool              GetTransferBerth(int32 Index, double FreighterRadius, FVector& OutPosition) const;
+    bool              GetExternalBerthGuidance(int32 Index, double CraftRadius, struct FExternalBerthGuidance& Out) const;
     void              SetCarrier(Ship* c, FlightDeck* d);
     void              Stow();
     InboundSlot*      GetInbound() const { return inbound; }

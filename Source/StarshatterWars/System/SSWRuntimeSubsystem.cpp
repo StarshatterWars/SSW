@@ -1454,11 +1454,13 @@ USSWRuntimeSubsystem::SpawnVisualForRuntimeShip(Ship* RuntimeShip)
     // Register even when no presentation builder exists, so the next
     // Begin/EndMissionPresentation can remove pre-mission visual proxies.
     MissionPresentationShips.AddUnique(ShipActor);
-    ShipActor->BindRuntimeShip(
-        RuntimeShip);
     if (DesignName.Equals(TEXT("Asteroid Base"), ESearchCase::IgnoreCase) ||
-        DesignName.Equals(TEXT("Mining Station"), ESearchCase::IgnoreCase))
+        DesignName.Equals(TEXT("Mining Station"), ESearchCase::IgnoreCase) ||
+        DesignName.Equals(TEXT("Processing Facility"), ESearchCase::IgnoreCase) ||
+        DesignName.Equals(TEXT("Shipyard"), ESearchCase::IgnoreCase))
         ShipActor->SetActorScale3D(FVector(Row->Scale));
+    // Bind measures navigation/collision bounds; use the final scale first.
+    ShipActor->BindRuntimeShip(RuntimeShip);
     if (bJanekAirbase && ShipActor->HullMesh)
     {
         if (UStaticMesh* Runway = LoadObject<UStaticMesh>(nullptr,

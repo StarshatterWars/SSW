@@ -1,6 +1,6 @@
 # Alpha 5 - sprint Phase F execution domains
 
-Current status: industry extension verified, build 20261127-024521Z: Editor/client builds and all 432 regressions passed with zero C++ diagnostics or test warnings/failures/skips. Five graph-audit tests pass. See Phase-F-Industry-Expansion.md. Earlier entries below retain their historical checkpoint boundaries. Remaining simulation threading follows as a separate measured change.
+Current status: flight-physics worker and fleet flight-facility checkpoints verified. Latest build 20261127-050721Z: Editor/client builds and all 442 regressions passed with zero C++ diagnostics or test warnings/failures/skips in both default and worker-enabled configurations. See Flight-Physics-Worker.md and Flight-Facility-Audit.md. Flight threading remains opt-in because measured per-body dispatch is slower; controller/AI/combat isolation is not claimed complete. The earlier industry extension and historical checkpoints remain below.
 
 27 November 2026 (pilot local date). Phase F's planned incremental execution-domain
 migration is complete at the automated verification boundary: build 20261127-014142Z,

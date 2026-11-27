@@ -1,5 +1,6 @@
 #include "Ship.h"
 #include "ShipDesign.h"
+#include "ExternalBerthGuidance.h"
 #include "FlightDeck.h"
 #include "Drive.h"
 #include "NavSystem.h"
@@ -25,7 +26,7 @@ bool Ship::GetTransferBerth(int32 Index, double FreighterRadius, FVector& OutPos
     const bool bMiningFacility = IsStatic() && Design() &&
         (!Design()->ProductionRecipe.IsNone() || FCStringAnsi::Stricmp(Design()->name, "Asteroid Base") == 0 ||
          FCStringAnsi::Stricmp(Design()->name, "Mining Station") == 0);
-    if ((!IsTransferStation() && !bMiningFacility) || IsDead() || IsDying() || Index < 0 || Index >= 2 ||
+    if ((!IsTransferStation() && !bMiningFacility && !(IsStatic() && GetClassification()==CLASSIFICATION::STATION)) || IsDead() || IsDying() || Index < 0 || Index >= 2 ||
         !FMath::IsFinite(FreighterRadius) || FreighterRadius < 0.0)
         return false;
 
@@ -35,6 +36,13 @@ bool Ship::GetTransferBerth(int32 Index, double FreighterRadius, FVector& OutPos
     const double Clearance = FMath::Max(2000.0, GetNavigationHullRadius() + FreighterRadius + 500.0);
     OutPosition = GetLocation() + Up * (Index == 0 ? Clearance : -Clearance);
     return true;
+}
+
+bool Ship::GetExternalBerthGuidance(int32 Index,double CraftRadius,FExternalBerthGuidance& Out) const
+{
+    FVector Position;
+    if(!GetTransferBerth(Index,CraftRadius,Position))return false;
+    return Out.Initialize(Position,(Position-GetLocation()).GetSafeNormal(),GetCam().vrt(),CraftRadius);
 }
 
 bool Ship::CanBeginRecovery() const

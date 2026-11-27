@@ -5,6 +5,18 @@
 #include "FlightDeck.h"
 #include "Ship.h"
 
+void AAsteroidBaseActor::OnConstruction(const FTransform& Transform)
+{
+    Super::OnConstruction(Transform);
+    if(!HullMesh || !HullMesh->GetStaticMesh() || HullMesh->GetStaticMesh()->GetFName()!=TEXT("SM_Spaceport_Main"))return;
+    // The imported shell's opening must face the separate interior/door assembly
+    // on +actor Y (simulation right). Do not rotate the doors/contents with it.
+    TArray<TPair<USceneComponent*,FTransform>> AttachedPartTransforms;
+    for(USceneComponent* Child:HullMesh->GetAttachChildren())if(Child)AttachedPartTransforms.Emplace(Child,Child->GetComponentTransform());
+    HullMesh->SetRelativeRotation(FRotator(0,90,0)); // assign, never accumulate
+    for(const auto& Child:AttachedPartTransforms)Child.Key->SetWorldTransform(Child.Value);
+}
+
 void AAsteroidBaseActor::BeginPlay()
 {
     Super::BeginPlay();

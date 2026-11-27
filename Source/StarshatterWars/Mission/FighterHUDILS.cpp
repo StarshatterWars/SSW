@@ -1,5 +1,8 @@
 #include "FighterHUDDetails.h"
 #include "Ship.h"
+#include "ShipActor.h"
+#include "ExternalBerthGuidance.h"
+#include "StationServicesAI.h"
 #include "FlightDeck.h"
 #include "RecoveryGuidance.h"
 #include "Styling/CoreStyle.h"
@@ -154,6 +157,40 @@ void SFighterHUDDetails::DrawILS(const FGeometry& Geometry, FSlateWindowElementL
 
     InboundSlot* Arrival = Player->GetInbound();
     if (Arrival && DrawDeck(Arrival->GetDeck())) return;
+    // External berths use the exact same endpoint as cargo transfers. Display
+    // only the selected friendly/neutral station and its nearest berth; this
+    // does not grant landing clearance or create a launch/recovery deck.
+    const auto* SelectedVisual=Cast<AShipActor>(SelectedTarget.Get().Get());
+    Ship* SelectedStation=IsValid(SelectedVisual)?SelectedVisual->GetRuntimeShip():nullptr;
+    if(SelectedStation && SelectedStation!=Player && Region->GetShips().contains(SelectedStation) &&
+       (SelectedStation->NumFlightDecks()==0 || !Player->IsDropship()) &&
+       !SelectedStation->IsDead() && !SelectedStation->IsDying() && StationServicesAI::FactionAllows(Player,SelectedStation))
+    {
+        FExternalBerthGuidance Best;bool Found=false;double Distance=TNumericLimits<double>::Max();int32 BerthIndex=0;
+        for(int32 Index=0;Index<2;++Index)
+        {
+            FExternalBerthGuidance Candidate;
+            if(!SelectedStation->GetExternalBerthGuidance(Index,Player->GetNavigationHullRadius(),Candidate))continue;
+            const double CandidateDistance=FVector::DistSquared(Player->GetLocation(),Candidate.Berth);
+            if(CandidateDistance<Distance){Best=Candidate;Distance=CandidateDistance;BerthIndex=Index;Found=true;}
+        }
+        if(Found)
+        {
+            for(int32 Index=3;Index>=0;--Index)
+            {
+                FVector Corners[4];Best.Corners(Index,Corners);TArray<FVector2D> Points;bool Visible=true;
+                for(const FVector& Corner:Corners){FVector2D Point;if(!Project(SelectedStation,Corner,Point)){Visible=false;break;}Points.Add(Point);}
+                if(!Visible)continue;Points.Add(Points[0]);
+                FSlateDrawElement::MakeLines(Elements,Layer+1,Geometry.ToPaintGeometry(),Points,ESlateDrawEffect::None,ILSColor,true,1.5f);
+            }
+            FVector2D Point;
+            if(Project(SelectedStation,Best.Berth,Point))
+                FSlateDrawElement::MakeText(Elements,Layer+2,Geometry.ToPaintGeometry(FVector2D(360,20),FSlateLayoutTransform(Point+FVector2D(9,-8))),
+                    FString::Printf(TEXT("BERTH %d  %hs  %.1f km"),BerthIndex+1,SelectedStation->GetName(),FMath::Sqrt(Distance)/1000),
+                    FCoreStyle::GetDefaultFontStyle("Regular",10),ESlateDrawEffect::None,ILSColor);
+            return;
+        }
+    }
     // Legacy ILS preview: without an assigned deck, show friendly/neutral recovery decks.
     ListIter<Ship> Carriers = Region->GetCarriers();
     while (++Carriers)

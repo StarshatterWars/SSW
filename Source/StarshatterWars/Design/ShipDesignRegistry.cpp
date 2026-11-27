@@ -17,6 +17,7 @@
 */
 
 #include "ShipDesignRegistry.h"
+#include "FlightFacilityCatalog.h"
 #include "ShipVisualCatalog.h"
 #include "Skin.h"
 #include "NativeSkinDefinition.h"
@@ -1084,8 +1085,11 @@ ShipDesignRegistry::ConvertToLegacyDesign(const FName& RowName, const FShipDesig
     // Flight decks
     //-------------------------------------------------------------
 
-    for (const FShipFlightDeck& Src : Row.FlightDeck)
+    int32 AuthoredDeckIndex=0;
+    for (const FShipFlightDeck& Authored : Row.FlightDeck)
     {
+        FShipFlightDeck Src=Authored;
+        if(!FlightFacilityCatalog::ResolveDeck(RowName,AuthoredDeckIndex++,Src))continue;
         FlightDeck* NewDeck = new FlightDeck();
 
         if (!NewDeck)

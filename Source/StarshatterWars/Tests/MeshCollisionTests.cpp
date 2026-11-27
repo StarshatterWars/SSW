@@ -72,4 +72,22 @@ bool FMeshCollisionTest::RunTest(const FString& Parameters)
     TestTrue(TEXT("Sphere containing ray origin returns origin"),MeshCollision::RaySphere(FVector::ZeroVector,FVector::UpVector,2,FVector::ZeroVector,2,SphereHit)&&SphereHit.IsZero());
     return true;
 }
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FScaledHullRayParameterTest,"Starshatter.Audit.F03.ScaledHullRayWorldParameter",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
+bool FScaledHullRayParameterTest::RunTest(const FString&)
+{
+    SimModel Model;AddTriangle(Model,FVector(-2,-2,2),FVector(2,-2,2),FVector(0,2,2));
+    for(const FVector Scale:{FVector(4),FVector(2,3,4),FVector(.25,.5,.125)})
+    {
+        const FTransform Pose(FQuat(FVector::UpVector,.7),FVector(125,-30,42),Scale);
+        const FVector Origin=Pose.TransformPosition(FVector::ZeroVector);
+        const FVector Expected=Pose.TransformPosition(FVector(0,0,2));
+        const FVector Direction=(Expected-Origin).GetSafeNormal();const double Length=FVector::Distance(Origin,Expected);FVector Hit;Poly* Face=nullptr;
+        TestFalse(TEXT("A world ray shorter than the scaled hull cannot hit"),MeshCollision::Ray(Model,Pose,Origin,Direction,Length*.9,true,Hit,Face));
+        TestTrue(TEXT("Scaled hull hit available"),MeshCollision::Ray(Model,Pose,Origin,Direction,Length*1.1,true,Hit,Face));
+        TestTrue(TEXT("Hit lies at rendered scaled triangle, not unscaled distance"),Hit.Equals(Expected,1.e-6));
+        TestTrue(TEXT("Non-unit direction preserves the same parameter contract"),MeshCollision::Ray(Model,Pose,Origin,Direction*2,Length*.55,true,Hit,Face));
+        TestTrue(TEXT("Non-unit ray has the same actual surface hit"),Hit.Equals(Expected,1.e-6));
+    }
+    return true;
+}
 #endif

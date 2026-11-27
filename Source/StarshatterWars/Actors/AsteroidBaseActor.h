@@ -11,6 +11,7 @@ class STARSHATTERWARS_API AAsteroidBaseActor : public AFreightXferShipActor
     GENERATED_BODY()
 
 public:
+    virtual void OnConstruction(const FTransform& Transform) override;
     virtual void BeginPlay() override;
     virtual void Tick(float DeltaTime) override;
 
