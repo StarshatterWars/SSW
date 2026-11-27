@@ -1,5 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 #include "StarshatterWars.h"
+#include "PerformanceCapture.h"
 #include "Modules/ModuleManager.h"
 #if UE_SERVER && defined(SSW_FRACTALVERSE)
 #include "Misc/ConfigCacheIni.h"
@@ -19,6 +20,7 @@ public:
     virtual void StartupModule() override
     {
         FDefaultGameModuleImpl::StartupModule();
+        SSWPerformanceCapture::Initialize();
 #if UE_SERVER && defined(SSW_FRACTALVERSE)
         constexpr const TCHAR* NativeInstance=TEXT("/Script/StarshatterWars.SSWGameInstance");
         if(GConfig) GConfig->SetString(TEXT("/Script/EngineSettings.GameMapsSettings"),
@@ -44,6 +46,11 @@ public:
                     UE_LOG(LogTemp,Display,TEXT("[FractalVerseCook] Explicit native table roots: %d; UI assets excluded."),Count);
                 });
 #endif
+    }
+    virtual void ShutdownModule() override
+    {
+        SSWPerformanceCapture::Shutdown();
+        FDefaultGameModuleImpl::ShutdownModule();
     }
 };
 IMPLEMENT_PRIMARY_GAME_MODULE(FStarshatterWarsModule, StarshatterWars, "StarshatterWars");

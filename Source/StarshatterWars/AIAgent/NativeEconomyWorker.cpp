@@ -1,4 +1,5 @@
 #include "NativeEconomyWorker.h"
+#include "PerformanceCapture.h"
 #include "EconomyAI.h"
 #include "EconomyRuntime.h"
 #include "SimDataEvents.h"
@@ -33,6 +34,8 @@ bool FNativeEconomyWorker::Submit(FNativeEconomyInput&& Input,TFunction<void()> 
 TUniquePtr<FNativeEconomyResult> FNativeEconomyWorker::TakeResult(){FScopeLock Lock(&Mutex);return MoveTemp(Result);}
 FNativeEconomyResult FNativeEconomyWorker::Calculate(FNativeEconomyInput&& Input)
 {
+    const double MeasurementStarted=FPlatformTime::Seconds();
+    ON_SCOPE_EXIT { if(!IsInGameThread())SSWPerformanceCapture::RecordEconomy(FPlatformTime::Seconds()-MeasurementStarted); };
     FNativeEconomyResult Out;Out.Revision=Input.Revision;Out.Profile=MoveTemp(Input.Profile);Out.State=MoveTemp(Input.State);Out.bOffGameThread=!IsInGameThread();
     FSimDataEvents::Suppress(true);auto* PriorChanges=FSimDataEvents::Capture(&Out.Changes);auto* Previous=ProductionEvents::Capture(&Out.Events);ON_SCOPE_EXIT{ProductionEvents::Capture(Previous);FSimDataEvents::Capture(PriorChanges);FSimDataEvents::Suppress(false);};
     if(Input.Skill)

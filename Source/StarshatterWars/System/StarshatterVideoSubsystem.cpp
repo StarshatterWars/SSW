@@ -9,6 +9,9 @@
 */
 
 #include "StarshatterVideoSubsystem.h"
+#include "GraphicsProfiles.h"
+#include "Misc/CommandLine.h"
+#include "Misc/Parse.h"
 #include "Engine/Engine.h"
 #include "GameFramework/GameUserSettings.h"
 #include "HAL/IConsoleManager.h"
@@ -94,8 +97,8 @@ FString UStarshatterVideoSubsystem::ResolveConfigPath(const FString& InRelativeO
 
 void UStarshatterVideoSubsystem::SanitizeConfig(FStarshatterVideoConfig& C) const
 {
-    C.Width = FMath::Max(320, C.Width);
-    C.Height = FMath::Max(200, C.Height);
+    C.Width = FMath::Max(1920, C.Width);
+    C.Height = FMath::Max(1080, C.Height);
 
     C.MaxTextureSize = FMath::Clamp(C.MaxTextureSize, 64, 16384);
     C.GammaLevel = FMath::Clamp(C.GammaLevel, 32, 224);
@@ -192,8 +195,8 @@ bool UStarshatterVideoSubsystem::SaveVideoConfig(const FString& InRelativeOrAbso
     // Work on a sanitized copy:
     FStarshatterVideoConfig C = CurrentConfig;
     // const method: sanitize via local copy logic:
-    C.Width = FMath::Max(320, C.Width);
-    C.Height = FMath::Max(200, C.Height);
+    C.Width = FMath::Max(1920, C.Width);
+    C.Height = FMath::Max(1080, C.Height);
     C.MaxTextureSize = FMath::Clamp(C.MaxTextureSize, 64, 16384);
     C.GammaLevel = FMath::Clamp(C.GammaLevel, 32, 224);
     C.DustLevel = FMath::Clamp(C.DustLevel, 0, 3);
@@ -291,6 +294,13 @@ void UStarshatterVideoSubsystem::ApplySettingsToRuntime()
     int32 AAMethod=0;
     if(GConfig && GConfig->GetInt(TEXT("Starshatter.Video"),TEXT("AntiAliasingMethod"),AAMethod,GGameUserSettingsIni) &&
         (AAMethod==0 || AAMethod==1 || AAMethod==2 || AAMethod==4))SetCVar(TEXT("r.AntiAliasingMethod"),AAMethod);
+
+    int32 CommandProfile=INDEX_NONE;
+    if(FParse::Value(FCommandLine::Get(),TEXT("SSWGraphicsPreset="),CommandProfile) && CommandProfile>=0 && CommandProfile<SSWGraphicsProfiles::Count)
+        SSWGraphicsProfiles::ApplyToRuntime(CommandProfile);
+    int32 Profile=INDEX_NONE;
+    if(CommandProfile==INDEX_NONE && GConfig && GConfig->GetInt(TEXT("Starshatter.Video"),TEXT("GraphicsPreset"),Profile,GGameUserSettingsIni) && Profile>=0 && Profile<SSWGraphicsProfiles::Count)
+        SSWGraphicsProfiles::ApplyVisualBudget(Profile);
 
     if (UWorld* World = GetGameInstance()->GetWorld())
     {

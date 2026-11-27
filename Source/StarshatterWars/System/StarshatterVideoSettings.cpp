@@ -20,8 +20,8 @@ void UStarshatterVideoSettings::Save()
 
 void UStarshatterVideoSettings::Sanitize()
 {
-    Config.Width = FMath::Max(Config.Width, 320);
-    Config.Height = FMath::Max(Config.Height, 240);
+    Config.Width = FMath::Max(Config.Width, 1920);
+    Config.Height = FMath::Max(Config.Height, 1080);
 
     Config.MaxTextureSize = FMath::Clamp(Config.MaxTextureSize, 64, 16384);
     Config.GammaLevel = FMath::Clamp(Config.GammaLevel, 32, 224);

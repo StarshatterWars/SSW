@@ -1,4 +1,5 @@
 #include "NativeSimulationWorker.h"
+#include "PerformanceCapture.h"
 #include "HAL/PlatformProcess.h"
 #include "HAL/Event.h"
 #include "Misc/QueuedThreadPool.h"
@@ -74,6 +75,7 @@ FNativeCollisionResult FNativeSimulationWorker::Calculate(FNativeCollisionInput&
             Out.ShipPairs[A*N+B]=!(FVector::Dist(Input.Hulls[A].Position,Input.Hulls[B].Position)>Input.Hulls[A].Radius+Input.Hulls[B].Radius);
     }
     Out.CalculationSeconds=FPlatformTime::Seconds()-Started;
+    if(Out.bOffGameThread)SSWPerformanceCapture::RecordSimulation(Out.CalculationSeconds);
     return Out;
 }
 bool FNativeSimulationWorker::MatchesGeometry(const FNativeCollisionResult& Out,TConstArrayView<SSWBoltCollision::FHull> Snapshot,TConstArrayView<SSWBoltCollision::FHull> Live)

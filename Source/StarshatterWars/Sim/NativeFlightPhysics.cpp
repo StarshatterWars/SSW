@@ -1,4 +1,5 @@
 #include "NativeFlightPhysics.h"
+#include "PerformanceCapture.h"
 #include "ProfilingDebugging/CpuProfilerTrace.h"
 #include <cmath>
 namespace
@@ -313,5 +314,5 @@ FNativeFlightResult SSWFlightPhysics::Calculate(FNativeFlightRequest&& Request)
         }
         else if(Request.Model==ENativeFlightModel::Arcade)State.alpha=0;
     }
-    Out.bValid=true;Out.CalculationSeconds=FPlatformTime::Seconds()-Started;return Out;
+    Out.bValid=true;Out.CalculationSeconds=FPlatformTime::Seconds()-Started;if(Out.bOffGameThread)SSWPerformanceCapture::RecordSimulation(Out.CalculationSeconds);return Out;
 }

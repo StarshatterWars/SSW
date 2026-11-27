@@ -94,6 +94,10 @@ private:
     // Buttons
     friend class FIntegratedVideoPresetTest;
     UFUNCTION() void OnLightPresetClicked();
+    UFUNCTION() void OnGraphicsPresetChanged(FString Selected, ESelectInfo::Type Selection);
+    void ApplyProfileToControls(int32 Index);
+    TWeakObjectPtr<UComboBoxString> GraphicsPresetCombo;
+    int32 PendingGraphicsPreset=INDEX_NONE;
     UFUNCTION() void OnApplyClicked();
     UFUNCTION() void OnCancelClicked();
 

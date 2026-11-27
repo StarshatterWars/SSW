@@ -21,6 +21,7 @@
 =============================================================================*/
 
 #include "VideoDlg.h"
+#include "GraphicsProfiles.h"
 #include "Engine/Engine.h"
 #include "HAL/IConsoleManager.h"
 #include "Misc/ConfigCacheIni.h"
@@ -255,6 +256,9 @@ void UVideoDlg::RefreshFromModel()
 
     S->Load();
     const FStarshatterVideoConfig& C = S->GetConfig();
+    PendingGraphicsPreset=INDEX_NONE;
+    if(GConfig)GConfig->GetInt(TEXT("Starshatter.Video"),TEXT("GraphicsPreset"),PendingGraphicsPreset,GGameUserSettingsIni);
+    if(auto* Preset=GraphicsPresetCombo.Get())Preset->SetSelectedIndex(PendingGraphicsPreset>=0 && PendingGraphicsPreset<SSWGraphicsProfiles::Count?PendingGraphicsPreset:SSWGraphicsProfiles::Count);
 
     Width = C.Width;
     Height = C.Height;
@@ -363,6 +367,13 @@ void UVideoDlg::PushToModel(bool bApplyRuntimeToo)
                     Settings->SetFrameRateLimit(FrameLimits[Index]);
             }
             if (RenderScaleSlider) Settings->SetResolutionScaleNormalized(RenderScaleSlider->GetValue());
+            auto Budget=SSWGraphicsProfiles::Get(PendingGraphicsPreset>=0?PendingGraphicsPreset:2);
+            bool Matches=PendingGraphicsPreset>=0;
+            for(int32 I=0;I<QualityCombos.Num() && I<int32(Budget.Quality.size());++I)
+            { const int32 Level=QualityCombos[I]->GetSelectedIndex();Matches &= Level==Budget.Quality[I];Budget.Quality[I]=Level; }
+            Budget.ParticleScale=SSWGraphicsProfiles::Get(FMath::Clamp(Budget.Quality[4],0,4)).ParticleScale;
+            SSWGraphicsProfiles::ApplyVisualBudget(Budget);
+            if(GConfig)GConfig->SetInt(TEXT("Starshatter.Video"),TEXT("GraphicsPreset"),Matches?PendingGraphicsPreset:INDEX_NONE,GGameUserSettingsIni);
             if(AntiAliasingMethodCombo && AntiAliasingMethodCombo->GetSelectedIndex()>=0)
             {
                 const int32 Selected=AntiAliasingMethodCombo->GetSelectedIndex();
@@ -468,16 +479,12 @@ void UVideoDlg::BuildListsIfNeeded()
     if (ModeCombo)
     {
         // 16:9 – standard
-        ModeCombo->AddOption(TEXT("1280x720"));    // HD
-        ModeCombo->AddOption(TEXT("1600x900"));    // HD+
         ModeCombo->AddOption(TEXT("1920x1080"));   // Full HD
         ModeCombo->AddOption(TEXT("2560x1440"));   // QHD
         ModeCombo->AddOption(TEXT("3200x1800"));   // QHD+
         ModeCombo->AddOption(TEXT("3840x2160"));   // 4K UHD
 
         // 16:10
-        ModeCombo->AddOption(TEXT("1280x800"));
-        ModeCombo->AddOption(TEXT("1680x1050"));
         ModeCombo->AddOption(TEXT("1920x1200"));
         ModeCombo->AddOption(TEXT("2560x1600"));
 
@@ -571,9 +578,15 @@ void UVideoDlg::BuildVideoRows()
     LightLabel->SetText(NSLOCTEXT("VideoOptions", "LightPreset", "LIGHT"));
     LightButton->AddChild(LightLabel);
     LightButton->SetToolTipText(NSLOCTEXT("VideoOptions", "LightPresetTip",
-        "Integrated GPU preset. Keeps hull textures, native-resolution UI and visible effects; uses TAA at 90% with cheaper lighting. Select Apply to save."));
+        "Integrated GPU preset. Keeps hull textures, native-resolution UI and visible effects; uses TAA at 75% with cheaper lighting. Select Apply to save."));
     LightButton->OnClicked.AddUniqueDynamic(this, &UVideoDlg::OnLightPresetClicked);
-    AddLabeledRow(TEXT("INTEGRATED GPU PRESET"), LightButton, 520.f);
+    auto* Preset=WidgetTree->ConstructWidget<UComboBoxString>(); GraphicsPresetCombo=Preset;
+    for(int32 Index=0;Index<SSWGraphicsProfiles::Count;++Index)Preset->AddOption(SSWGraphicsProfiles::Get(Index).Label);
+    Preset->AddOption(TEXT("CUSTOM"));
+    Preset->OnSelectionChanged.AddUniqueDynamic(this,&UVideoDlg::OnGraphicsPresetChanged);
+    Preset->SetToolTipText(INVTEXT("Full HD or higher output; presets reduce only 3D rendering costs, never simulated ships or economy."));
+    AddLabeledRow(TEXT("GRAPHICS PRESET"),Preset,520.f);
+    AddLabeledRow(TEXT("QUICK INTEGRATED PRESET"), LightButton, 520.f);
 
     AddLabeledRow(TEXT("RESOLUTION"), ModeCombo, 520.f);
     AddLabeledRow(TEXT("GAMMA"), GammaSlider, 520.f);
@@ -613,28 +626,34 @@ void UVideoDlg::BuildVideoRows()
     AddLabeledRow(TEXT("SPACE DUST"), DustCombo, 520.f);
 }
 
-void UVideoDlg::OnLightPresetClicked()
+void UVideoDlg::OnLightPresetClicked() { ApplyProfileToControls(0); }
+void UVideoDlg::OnGraphicsPresetChanged(FString, ESelectInfo::Type Selection)
 {
-    for (int32 Index = 0; Index < QualityCombos.Num(); ++Index)
-        QualityCombos[Index]->SetSelectedIndex(QualityControls[Index].LightQuality);
-
-    if (const UGameUserSettings* Settings = GEngine ? GEngine->GetGameUserSettings() : nullptr;
-        Settings && RenderScaleSlider)
+    if(Selection==ESelectInfo::Direct)return;
+    if(auto* Preset=GraphicsPresetCombo.Get())
     {
-        float Normalized, Current, Minimum, Maximum;
-        Settings->GetResolutionScaleInformationEx(Normalized, Current, Minimum, Maximum);
-        if (Maximum > Minimum)
-            RenderScaleSlider->SetValue(FMath::Clamp((90.0f - Minimum) / (Maximum - Minimum), 0.0f, 1.0f));
+        if(Preset->GetSelectedIndex()>=0 && Preset->GetSelectedIndex()<SSWGraphicsProfiles::Count)ApplyProfileToControls(Preset->GetSelectedIndex());
+        else {PendingGraphicsPreset=INDEX_NONE;bDirty=true;bClosed=false;}
     }
-    if(AntiAliasingMethodCombo)AntiAliasingMethodCombo->SetSelectedIndex(2);
-    if (FrameLimitCombo)
-        FrameLimitCombo->SetSelectedOption(TEXT("30 FPS"));
-    if (LensFlareCombo)
-        LensFlareCombo->SetSelectedIndex(0);
-    if (DustCombo)
-        DustCombo->SetSelectedIndex(1);
-    bDirty = true;
-    bClosed = false;
+}
+void UVideoDlg::ApplyProfileToControls(int32 Index)
+{
+    PendingGraphicsPreset=FMath::Clamp(Index,0,SSWGraphicsProfiles::Count-1);
+    const auto& Profile=SSWGraphicsProfiles::Get(PendingGraphicsPreset);
+    for(int32 I=0;I<QualityCombos.Num() && I<int32(Profile.Quality.size());++I)QualityCombos[I]->SetSelectedIndex(Profile.Quality[I]);
+    if(auto* Preset=GraphicsPresetCombo.Get())Preset->SetSelectedIndex(PendingGraphicsPreset);
+    const auto Size=SSWGraphicsProfiles::OutputSize(FIntPoint(Width,Height));Width=Size.X;Height=Size.Y;
+    if(ModeCombo)ModeCombo->SetSelectedOption(FString::Printf(TEXT("%dx%d"),Width,Height));
+    if(const auto* Settings=GEngine?GEngine->GetGameUserSettings():nullptr;Settings && RenderScaleSlider)
+    {
+        float Normalized,Current,Minimum,Maximum;Settings->GetResolutionScaleInformationEx(Normalized,Current,Minimum,Maximum);
+        if(Maximum>Minimum)RenderScaleSlider->SetValue(FMath::Clamp((Profile.RenderPercent-Minimum)/(Maximum-Minimum),0.f,1.f));
+    }
+    if(AntiAliasingMethodCombo)AntiAliasingMethodCombo->SetSelectedIndex(Index<2?2:3);
+    if(FrameLimitCombo)FrameLimitCombo->SetSelectedOption(Profile.FrameLimit>0?FString::Printf(TEXT("%.0f FPS"),Profile.FrameLimit):TEXT("UNLIMITED"));
+    if(LensFlareCombo)LensFlareCombo->SetSelectedIndex(Index<2?0:1);
+    if(DustCombo)DustCombo->SetSelectedIndex(Index==0?1:2);
+    bDirty=true;bClosed=false;
 }
 
 // ---------------- Handlers ----------------

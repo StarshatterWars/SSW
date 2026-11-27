@@ -25,7 +25,7 @@ bool FVideoRuntimeApplyTest::RunTest(const FString& Parameters)
     Settings->SetShadowQuality(2);
     Settings->SetTextureQuality(1);
     FStarshatterVideoConfig C;C.Width=1600;C.Height=900;C.bFullscreen=false;C.bShadows=false;C.GammaLevel=160;Subsystem->SetConfig(C);Subsystem->ApplySettingsToRuntime();
-    TestTrue(TEXT("Applying config updates actual Unreal resolution"),Settings->GetScreenResolution()==FIntPoint(1600,900));
+    TestTrue(TEXT("Output below Full HD is normalized without shrinking the UI"),Settings->GetScreenResolution()==FIntPoint(1920,1080));
     TestTrue(TEXT("Applying config updates actual Unreal window mode"),Settings->GetFullscreenMode()==EWindowMode::Windowed);
     TestEqual(TEXT("Legacy config preserves Unreal shadow quality"),Settings->GetShadowQuality(),2);
     TestEqual(TEXT("Legacy config preserves Unreal texture quality"),Settings->GetTextureQuality(),1);
