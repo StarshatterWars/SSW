@@ -127,3 +127,7 @@ production-chain reachability, multi-output authored recipes, configurable facil
 lanes and targeted inventory notifications; they are research findings, not newly
 implemented gameplay or a claim of EVE server-code recovery. Nexus remains deferred
 until after the existing phases.
+
+## Measured ship-pair extension
+
+Build 20261127-035603Z: both targets and all 434 regressions pass. See Simulation-Thread-Timing.md. Copied ship-pair geometry can run on the simulation worker; it remains opt-in because the measured immediate-wait path is slower than serial. Existing projectile workers remain enabled. Flight physics is the next migration; no FPS improvement is claimed.

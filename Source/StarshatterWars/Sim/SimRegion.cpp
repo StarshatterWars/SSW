@@ -18,6 +18,8 @@
 
 #include "SimRegion.h"
 #include "NativeSimulationWorker.h"
+#include "HAL/IConsoleManager.h"
+#include "ProfilingDebugging/CpuProfilerTrace.h"
 #include "OrdnanceMagazine.h"
 #include "BoltCollisionCandidates.h"
 #include "Mission.h"
@@ -161,6 +163,14 @@ int SimRegion::operator<=(const SimRegion& r) const
 // +--------------------------------------------------------------------+
 
 
+static TAutoConsoleVariable<int32> CVarThreadedCollision(TEXT("ssw.Simulation.ThreadedCollision"),1,
+    TEXT("Use immutable collision worker batches (0 disables the dedicated collision worker for A/B profiling)."),ECVF_Default);
+
+// Opt in until a live-scene trace demonstrates useful overlap; immediate-wait
+// microbenchmarks show queue/mask consumption overhead exceeds the serial kernel.
+static TAutoConsoleVariable<int32> CVarThreadedShipPairs(TEXT("ssw.Simulation.ThreadedShipPairs"),0,
+    TEXT("Profile the bounded ship-pair worker extension (0 keeps established ship collision path)."),ECVF_Default);
+
 // This adapter stays on the game thread. Its worker receives only the copied
 // geometry below, while explosions/debris continue updating before the barrier.
 struct FRegionCollisionBatch
@@ -168,7 +178,7 @@ struct FRegionCollisionBatch
     Sim* Simulation=nullptr;
     FNativeSimulationWorker* Worker=nullptr;
     uint64 Epoch=0,Sequence=0;
-    bool bSubmitted=false,bFinished=false;
+    bool bSubmitted=false,bFinished=false,bShipPairsValid=false;
     TArray<SSWBoltCollision::FHull> Hulls;
     TArray<uint32> HullIds;
     TArray<FNativeBoltQuery> Queries;
@@ -176,16 +186,18 @@ struct FRegionCollisionBatch
     TUniquePtr<FNativeCollisionResult> Result;
     FRegionCollisionBatch(Sim* InSim,SimRegion& Region):Simulation(InSim)
     {
-        const int32 Count=Region.GetNumShips();if(!Simulation || Count<256)return;
+        TRACE_CPUPROFILER_EVENT_SCOPE(SSW_CollisionSnapshot);
+        const int32 Count=Region.GetNumShips();if(!Simulation || Count<256 || CVarThreadedCollision.GetValueOnGameThread()==0)return;
+        const bool ShipPairs=CVarThreadedShipPairs.GetValueOnGameThread()!=0 && Region.IsActive() && FNativeSimulationWorker::WorthShipPairs(Count);
         const int32 Budget=FMath::Min(512,4194304/Count);
         for(auto* Shot:Region.GetProjectiles())
             if(Shot && !IsDeadShot(Shot) && Shot->GetDesign() && !Shot->IsMissile() && !Shot->IsBeam())
             {Queries.Add({Shot->GetObjID(),Shot->GetOrigin(),Shot->GetLocation()});if(Queries.Num()>=Budget)break;}
-        if(!FNativeSimulationWorker::WorthDispatching(Count,Queries.Num()))return;
+        if(!ShipPairs && !FNativeSimulationWorker::WorthDispatching(Count,Queries.Num()))return;
         Hulls.SetNum(Count);HullIds.SetNumZeroed(Count);
         for(int32 I=0;I<Count;++I)if(const auto* Hull=Region.GetShips()[I]){Hulls[I]={Hull->GetLocation(),Hull->GetRadius()};HullIds[I]=Hull->GetObjID();}
         Epoch=Simulation->GetSimulationEpoch();Sequence=Simulation->NextSimulationRequest();
-        FNativeCollisionInput Input;Input.Epoch=Epoch;Input.Sequence=Sequence;Input.Hulls=Hulls;Input.Queries=Queries;
+        FNativeCollisionInput Input;Input.Epoch=Epoch;Input.Sequence=Sequence;Input.Hulls=Hulls;Input.Queries=Queries;Input.bShipPairs=ShipPairs;
         Worker=&Simulation->GetSimulationWorker();bSubmitted=Worker->Submit(MoveTemp(Input));
         if(bSubmitted)for(int32 I=0;I<Queries.Num();++I)QueryIndex.Add(Queries[I].ObjectId,I);
     }
@@ -196,6 +208,21 @@ struct FRegionCollisionBatch
         if(Simulation->GetSimulationEpoch()!=Epoch)return; // unload already joined and retired the old worker
         Result=Worker->Finish();
     }
+    void PrepareShipPairs(SimRegion& Region)
+    {
+        Finish();bShipPairsValid=false;
+        if(!Result || Result->ShipPairs.IsEmpty() || Region.GetNumShips()!=Hulls.Num() || !FNativeSimulationWorker::Matches(*Result,Simulation->GetSimulationEpoch(),Sequence))return;
+        TArray<SSWBoltCollision::FHull> Live;Live.Reserve(Hulls.Num());
+        for(int32 I=0;I<Hulls.Num();++I)
+        {
+            const auto* Hull=Region.GetShips()[I];if(!Hull || Hull->GetObjID()!=HullIds[I])return;
+            Live.Add({Hull->GetLocation(),Hull->GetRadius()});
+        }
+        bShipPairsValid=FNativeSimulationWorker::MatchesGeometry(*Result,Hulls,Live);
+    }
+    bool RejectShipPair(int32 A,int32 B)const
+    {return bShipPairsValid && !FNativeSimulationWorker::PreparedPair(*Result,Hulls.Num(),A,B);}
+    void InvalidateShipPairs(){bShipPairsValid=false;}
     bool Find(const SimShot& Shot,SimRegion& Region,TArray<uint8>& Mask)
     {
         const auto* Index=QueryIndex.Find(Shot.GetObjID());if(!Index)return false;
@@ -1543,12 +1570,14 @@ SimRegion::CollideShips()
 	return;
 
 	List<Ship> kill_list;
-
+    if(CollisionFrame)CollisionFrame->PrepareShipPairs(*this);
+    int32 PhysicalIndex=0;
 	int s_index = 0;
 
 	ListIter<Ship> ship_iter = ships;
 	while (++ship_iter) {
 		Ship* ship = ship_iter.value();
+        const int32 AIndex=PhysicalIndex++;
 
 		if (ship->InTransition()                  ||
 				ship->GetFlightPhase() < EOPSMode::ACTIVE ||
@@ -1587,8 +1616,11 @@ SimRegion::CollideShips()
             if (ship->IsClearingLaunchCarrier(targ) || targ->IsClearingLaunchCarrier(ship))
                 continue;
 
+			// Snapshot was validated once; any collision response disables further rejections.
+            if(CollisionFrame && CollisionFrame->RejectShipPair(AIndex,t_index-1))continue;
 			// impact:
 			if (ship->CollidesWith(*targ)) {
+                if(CollisionFrame)CollisionFrame->InvalidateShipPairs();
 				FVector3f tv1(targ->GetVelocity());
 				FVector3f sv1(ship->GetVelocity());
 
@@ -1663,7 +1695,8 @@ SimRegion::CollideShips()
 				FVector3f tv1(d->GetVelocity());
 				FVector3f sv1(ship->GetVelocity());
 
-				Physical::SemiElasticCollision(*ship, *d);
+				if(CollisionFrame)CollisionFrame->InvalidateShipPairs();
+                Physical::SemiElasticCollision(*ship, *d);
 
 				FVector3f tv2(d->GetVelocity());
 				FVector3f sv2(ship->GetVelocity());
@@ -1698,7 +1731,8 @@ SimRegion::CollideShips()
 
 			if (ship->CollidesWith(*a)) {
 				FVector3f sv1(ship->GetVelocity());
-				Physical::SemiElasticCollision(*ship, *a);
+				if(CollisionFrame)CollisionFrame->InvalidateShipPairs();
+                Physical::SemiElasticCollision(*ship, *a);
 				FVector3f sv2(ship->GetVelocity());
 
 				{ // Local simulation owns collision damage.
