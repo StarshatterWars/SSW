@@ -13,6 +13,7 @@
 */
 
 #include "Physical.h"
+#include "NativeFlightAdapter.h"
 #include "Graphic.h"
 #include "SimLight.h"
 #include "SimDirector.h"
@@ -183,6 +184,7 @@ void
 Physical::ExecFrame(double s)
 {
     if (s <= 0 || !FMath::IsFinite(s) || mass <= 0) return;
+    if(FNativeFlightAdapter::TryFrame(*this,ENativeFlightModel::Inertial,s))return;
 	FVector orig_velocity = GetVelocity();
 	arcade_velocity = FVector::ZeroVector;
 
@@ -252,6 +254,7 @@ void
 Physical::AeroFrame(double s)
 {
     if (s <= 0 || !FMath::IsFinite(s) || mass <= 0) return;
+    if(FNativeFlightAdapter::TryFrame(*this,ENativeFlightModel::Atmospheric,s))return;
 	arcade_velocity = FVector::ZeroVector;
 
 	// if this object is under direction,
@@ -383,6 +386,7 @@ void
 Physical::ArcadeFrame(double s)
 {
     if (s <= 0 || !FMath::IsFinite(s) || mass <= 0) return;
+    if(FNativeFlightAdapter::TryFrame(*this,ENativeFlightModel::Arcade,s))return;
 	// if this object is under direction,
 	// but doesn't need subframe accuracy,
 	// update the control parameters:

@@ -31,6 +31,7 @@ class SimLight;
 
 class Physical
 {
+    friend class FNativeFlightAdapter;
 public:
     static const char* TYPENAME() { return "Physical"; }
 

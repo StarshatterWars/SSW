@@ -131,3 +131,7 @@ until after the existing phases.
 ## Measured ship-pair extension
 
 Build 20261127-035603Z: both targets and all 434 regressions pass. See Simulation-Thread-Timing.md. Copied ship-pair geometry can run on the simulation worker; it remains opt-in because the measured immediate-wait path is slower than serial. Existing projectile workers remain enabled. Flight physics is the next migration; no FPS improvement is claimed.
+
+## Flight kernel parity checkpoint
+
+Build 20261127-041734Z: both targets and all 438 regressions pass in normal and worker-forced configurations, with zero C++ diagnostics or test warnings/failures/skips. See Flight-Physics-Worker.md. All three flight models and LCA damping have copied-state worker kernels; controllers/RNG/live commits remain serialized. The bridge remains opt-in because immediate per-object handoffs cost more than the original equations. No FPS gain or complete simulation-domain migration is claimed.

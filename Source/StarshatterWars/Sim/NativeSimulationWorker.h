@@ -1,6 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 #include "BoltCollisionCandidates.h"
+#include "NativeFlightPhysics.h"
 #include "HAL/CriticalSection.h"
 class FQueuedThreadPool;
 class FEvent;
@@ -35,6 +36,8 @@ public:
     ~FNativeSimulationWorker();
     bool Submit(FNativeCollisionInput&&);
     TUniquePtr<FNativeCollisionResult> Finish(); // same-frame barrier, also used before teardown
+    bool SubmitFlight(FNativeFlightRequest&&);
+    TUniquePtr<FNativeFlightResult> FinishFlight();
     static FNativeCollisionResult Calculate(FNativeCollisionInput&&);
     static bool Matches(const FNativeCollisionResult&,uint64 Epoch,uint64 Sequence);
     static bool WorthShipPairs(int32 Hulls){return Hulls>=256 && Hulls<=2048;}
@@ -47,9 +50,13 @@ public:
     static bool WorthDispatching(int32 Hulls,int32 Queries){return Hulls>=256 && Queries>=2 && int64(Hulls)*Queries>=32768;}
 private:
     class FWork;
+    class FFlightWork;
+    enum class EWorkKind:uint8 {None,Collision,Flight};
+    EWorkKind WorkKind=EWorkKind::None;
     FQueuedThreadPool* Pool=nullptr;
     FEvent* Done=nullptr;
     FCriticalSection Mutex;
     bool bPending=false;
     TUniquePtr<FNativeCollisionResult> Result;
+    TUniquePtr<FNativeFlightResult> FlightResult;
 };

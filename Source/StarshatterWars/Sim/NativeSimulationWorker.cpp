@@ -18,6 +18,18 @@ public:
     void Abandon()override{Owner.Done->Trigger();delete this;}
 private:FNativeSimulationWorker& Owner;FNativeCollisionInput Input;
 };
+class FNativeSimulationWorker::FFlightWork : public IQueuedWork
+{
+public:
+    FFlightWork(FNativeSimulationWorker& InOwner,FNativeFlightRequest&& In):Owner(InOwner),Input(MoveTemp(In)){}
+    void DoThreadedWork()override
+    {
+        auto Out=MakeUnique<FNativeFlightResult>(SSWFlightPhysics::Calculate(MoveTemp(Input)));
+        {FScopeLock Lock(&Owner.Mutex);Owner.FlightResult=MoveTemp(Out);}Owner.Done->Trigger();delete this;
+    }
+    void Abandon()override{Owner.Done->Trigger();delete this;}
+private:FNativeSimulationWorker& Owner;FNativeFlightRequest Input;
+};
 FNativeSimulationWorker::FNativeSimulationWorker()
 {
     Done=FPlatformProcess::GetSynchEventFromPool(true);Pool=FQueuedThreadPool::Allocate();
@@ -28,13 +40,24 @@ FNativeSimulationWorker::~FNativeSimulationWorker()
 bool FNativeSimulationWorker::Submit(FNativeCollisionInput&& Input)
 {
     FScopeLock Lock(&Mutex);if(!Pool || bPending || Input.Epoch==0 || Input.Sequence==0)return false;
-    bPending=true;Done->Reset();Pool->AddQueuedWork(new FWork(*this,MoveTemp(Input)));return true;
+    bPending=true;WorkKind=EWorkKind::Collision;Done->Reset();Pool->AddQueuedWork(new FWork(*this,MoveTemp(Input)));return true;
 }
 TUniquePtr<FNativeCollisionResult> FNativeSimulationWorker::Finish()
 {
-    {FScopeLock Lock(&Mutex);if(!bPending)return nullptr;}
+    {FScopeLock Lock(&Mutex);if(!bPending || WorkKind!=EWorkKind::Collision)return nullptr;}
     TRACE_CPUPROFILER_EVENT_SCOPE(SSW_SimulationWorkerBarrier);
-    Done->Wait();FScopeLock Lock(&Mutex);bPending=false;return MoveTemp(Result);
+    Done->Wait();FScopeLock Lock(&Mutex);bPending=false;WorkKind=EWorkKind::None;return MoveTemp(Result);
+}
+bool FNativeSimulationWorker::SubmitFlight(FNativeFlightRequest&& Input)
+{
+    FScopeLock Lock(&Mutex);if(!Pool || bPending || Input.Sequence==0)return false;
+    bPending=true;WorkKind=EWorkKind::Flight;Done->Reset();Pool->AddQueuedWork(new FFlightWork(*this,MoveTemp(Input)));return true;
+}
+TUniquePtr<FNativeFlightResult> FNativeSimulationWorker::FinishFlight()
+{
+    {FScopeLock Lock(&Mutex);if(!bPending || WorkKind!=EWorkKind::Flight)return nullptr;}
+    TRACE_CPUPROFILER_EVENT_SCOPE(SSW_FlightPhysicsBarrier);
+    Done->Wait();FScopeLock Lock(&Mutex);bPending=false;WorkKind=EWorkKind::None;return MoveTemp(FlightResult);
 }
 FNativeCollisionResult FNativeSimulationWorker::Calculate(FNativeCollisionInput&& Input)
 {
