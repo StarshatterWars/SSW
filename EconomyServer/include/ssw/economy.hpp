@@ -39,6 +39,7 @@ public:
     void advance(double seconds);
     json execute(const json& command);
     json status() const;
+    json bootstrap(const json& command);
     void validate() const;
     void checkpoint(const std::filesystem::path& file) const;
     bool load_checkpoint(const std::filesystem::path& file);

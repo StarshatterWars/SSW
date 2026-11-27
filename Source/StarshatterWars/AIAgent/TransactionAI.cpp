@@ -28,7 +28,7 @@ TArray<FTransactionEntry> TransactionAI::Query(const FEconomyState& State, const
         const bool InvolvesOwner = Explicit ? Receipt.WalletDeltas.Contains(Filter.Owner) || Receipt.From == Filter.Owner || Receipt.To == Filter.Owner
             : Receipt.From == Filter.Owner || Receipt.To == Filter.Owner;
         if (!InvolvesOwner) continue;
-        const bool Market = Receipt.Reason == TEXT("Limit order fill") || Receipt.Reason == TEXT("Market purchase");
+        const bool Market = Receipt.Category == EWalletTransactionCategory::Market || Receipt.Reason == TEXT("Limit order fill") || Receipt.Reason == TEXT("Market purchase");
         if (Filter.bMarketOnly && !Market) continue;
         // Old receipts predate exact wallet deltas. Escrow fills debit escrow, not the buyer wallet again.
         const bool LegacyEscrowFill = Receipt.Reason == TEXT("Limit order fill");

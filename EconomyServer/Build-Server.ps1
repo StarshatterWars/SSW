@@ -38,6 +38,6 @@ foreach($file in @('JSON-LICENSE.MIT','HTTPLIB-LICENSE','manifest.json')){Copy-I
 $files=@(Get-ChildItem -LiteralPath $destination -File -Recurse|ForEach-Object {
  [ordered]@{path=[IO.Path]::GetRelativePath($destination,$_.FullName).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant();length=$_.Length}
 })
-$manifest=[ordered]@{server='FractalEconomy';protocol=1;createdUtc=[DateTime]::UtcNow.ToString('o');sourceCommit=(& git -C $root rev-parse HEAD).Trim();liveClientCutoverReady=$false;files=$files}
+$manifest=[ordered]@{server='FractalEconomy';protocol=1;createdUtc=[DateTime]::UtcNow.ToString('o');sourceCommit=(& git -C $root rev-parse HEAD).Trim();liveClientCutoverReady=$false;standbyAutostartReady=$true;handoffProtocol=1;files=$files}
 [IO.File]::WriteAllText((Join-Path $destination 'server-manifest.json'),($manifest|ConvertTo-Json -Depth 5))
 Write-Output $destination

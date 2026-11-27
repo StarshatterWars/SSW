@@ -1,4 +1,5 @@
 #include "ssw/economy.hpp"
+#include "ssw/external_trade.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cctype>
@@ -82,7 +83,7 @@ void World::inventory(const std::string& key,const std::string& owner,const std:
     if(!state_["wallets"].contains(owner))state_["wallets"][owner]=10000000;
 }
 void World::initialize(){
-    state_={{"schema",1},{"revision",0},{"clock",0.0},{"sequence",0},{"dispatchCursor",0},{"nextPulse",60.0},{"nextMarket",60.0},{"nextDispatch",60.0},{"completedBatches",0},{"deliveredFreight",0},{"inventories",json::object()},{"wallets",json::object()},{"mines",json::object()},{"jobs",json::array()},{"journeys",json::array()},{"receipts",json::object()},{"history",json::object()},{"events",json::array()},{"hullStock",json::array()}};
+    state_={{"schema",1},{"npcAuthorityActive",false},{"worldId",""},{"revision",0},{"clock",0.0},{"sequence",0},{"dispatchCursor",0},{"nextPulse",60.0},{"nextMarket",60.0},{"nextDispatch",60.0},{"completedBatches",0},{"deliveredFreight",0},{"inventories",json::object()},{"wallets",json::object()},{"mines",json::object()},{"jobs",json::array()},{"journeys",json::array()},{"receipts",json::object()},{"history",json::object()},{"events",json::array()},{"hullStock",json::array()}};
     for(const auto& mine:catalog_.mines){const auto hold=mine.system+"/"+mine.region+"/Ore";inventory(hold,"NPC/"+hold,mine.system,mine.capacity);state_["mines"][mine.id]={{"remaining",mine.reserve},{"inventory",hold}};}
     for(const auto& [key,facility]:catalog_.facilities){(void)key;inventory(warehouse(facility,false),"NPC/"+facility.id,facility.system,facility.capacity);inventory(warehouse(facility,true),"NPC/"+facility.id,facility.system,facility.capacity);}
     std::map<std::string,std::string> exclusive;
@@ -110,7 +111,7 @@ void World::step(double now){
         for(const auto& mine:catalog_.mines){auto& data=state_["mines"][mine.id];const std::string hold=data["inventory"];auto& inv=state_["inventories"][hold];if(!inv["active"].get<bool>())continue;const double count=std::min({data["remaining"].get<double>()/catalog_.goods.at(mine.item).tonnes,mine.rate*60/catalog_.goods.at(mine.item).tonnes,std::max(0.0,(inv["capacity"].get<double>()-used(hold)-inv["reservedOutput"].get<double>())/catalog_.goods.at(mine.item).tonnes)});if(count>epsilon){deposit(hold,mine.item,count);data["remaining"]=std::max(0.0,data["remaining"].get<double>()-count*catalog_.goods.at(mine.item).tonnes);}}
         state_["nextPulse"]=now+60;
     }
-    freight(now);production(now);
+    expire_external_trades(state_,catalog_);freight(now);production(now);
     if(now+epsilon>=state_["nextMarket"].get<double>()){sample_market(now);state_["nextMarket"]=now+60;}
     for(const char* key:{"jobs","journeys"})if(state_[key].size()>2000){
         auto& records=state_[key];std::size_t excess=records.size()-2000;
@@ -190,11 +191,26 @@ void World::sample_market(double now){for(const auto& [hold,inventory]:state_["i
     const auto key=inventory["system"].get<std::string>()+"/"+item;auto& series=state_["history"][key];if(series.is_null())series=json::array();series.push_back({{"at",now},{"supply",count},{"price",double(catalog_.goods.at(item).credits)*factor(count,80)}});if(series.size()>288)series.erase(series.begin(),series.end()-288);
 }}
 json World::execute(const json& command){
-    const std::string receipt=command.at("id"),action=command.at("action");require(!receipt.empty()&&receipt.size()<=128,"Invalid command id");if(state_["receipts"].contains(receipt))return state_["receipts"][receipt];
+    const std::string action=command.at("action");
+    if(action=="bootstrap_npc")return bootstrap(command);
+    if(command.contains("worldId"))require(command.at("worldId")==state_.value("worldId",std::string()),"Economy world identity changed; refusing cross-world replay");
+    if(action=="quote_external_trade")return quote_external_trade(state_,catalog_,command);
+    if(action=="external_trade_status"){
+        const auto& trade=state_.at("externalTrades").at(command.at("tradeId").get<std::string>());
+        require(trade.at("actor")==command.at("actor"),"Trade belongs to another player");
+        auto current=trade;current["ok"]=true;return current;
+    }
+    const std::string receipt=command.at("id");require(!receipt.empty()&&receipt.size()<=128,"Invalid command id");
+    if(state_["receipts"].contains(receipt)){
+        require(state_.contains("commandRequests")&&state_["commandRequests"].contains(receipt)&&state_["commandRequests"][receipt]==command,"Request id belongs to an older or different command");
+        return state_["receipts"][receipt];
+    }
     if(command.contains("expectedRevision"))require(command.at("expectedRevision")==state_["revision"],"Stale economy revision");
     const auto before=state_;try{
-        json reply={{"ok",true},{"id",receipt},{"action",action}};
-        if(action=="create_account"){
+        json reply={{"ok",true},{"id",receipt},{"action",action},{"worldId",state_.value("worldId",std::string())}};
+        if(action=="prepare_external_trade"||action=="settle_external_trade"||action=="cancel_external_trade"||action=="external_trade_status"){
+            const auto result=external_trade(state_,catalog_,command);for(const auto& [key,value]:result.items())reply[key]=value;
+        }else if(action=="create_account"){
             const std::string actor=command.at("actor");require(!actor.empty()&&actor.size()<=128&&actor.starts_with("Pilot/"),"Invalid pilot account");require(!state_["wallets"].contains(actor),"Account already exists");state_["wallets"][actor]=5000;inventory(actor+"/Cargo",actor,command.at("system"),positive(command.value("capacityTonnes",48.0),"Cargo capacity"));
         }else if(action=="buy"){
             const std::string actor=command.at("actor"),source=command.at("market"),destination=actor+"/Cargo",item=catalog_.item(command.at("item"));const double count=positive(command.at("quantity"),"Purchase quantity");require(count<=1.e6,"Purchase quantity too large");require(source.ends_with("/NPC Market/Stock")&&state_["inventories"].contains(source)&&state_["inventories"].contains(destination),"Unknown trade endpoint");auto& src=state_["inventories"][source];auto& dst=state_["inventories"][destination];require(src["active"].get<bool>()&&dst["active"].get<bool>()&&src["system"]==dst["system"],"Trade requires an operational local market");require(dst["owner"]==actor,"Inventory owner mismatch");const auto& good=catalog_.goods.at(item);require(good.tonnes>0,"Passengers require a separate berth manifest");require(!good.whole||std::floor(count)==count,"Whole-unit item requires an integer amount");const auto unit=credits(double(good.credits)*factor(available(source,item),80));const auto total=credits(double(unit)*count);const std::int64_t denominator=10000+catalog_.gst_basis_points;const auto fees=(total/denominator)*catalog_.gst_basis_points+((total%denominator)*catalog_.gst_basis_points)/denominator;const auto base=total-fees;
@@ -202,24 +218,49 @@ json World::execute(const json& command){
         }else if(action=="set_facility_operational"){
             const auto& facility=catalog_.facilities.at(command.at("facility").get<std::string>());const bool active=command.at("operational");state_["inventories"][warehouse(facility,false)]["active"]=active;state_["inventories"][warehouse(facility,true)]["active"]=active;
         }else throw std::runtime_error("Unsupported economy command");
-        state_["revision"]=state_["revision"].get<std::uint64_t>()+1;reply["revision"]=state_["revision"];state_["receipts"][receipt]=reply;validate();return reply;
+        state_["revision"]=state_["revision"].get<std::uint64_t>()+1;reply["revision"]=state_["revision"];state_["receipts"][receipt]=reply;state_["commandRequests"][receipt]=command;validate();return reply;
     }catch(...){state_=before;throw;}
 }
 json World::status() const {
     std::size_t active=0;for(const auto& job:state_["jobs"])if(job["status"]=="Running")++active;
-    return {{"protocol",1},{"server","FractalEconomy"},{"online",true},{"revision",state_["revision"]},{"economySeconds",state_["clock"]},{"inventories",state_["inventories"].size()},{"activeJobs",active},{"completedJobs",state_["completedBatches"]},{"deliveredFreight",state_["deliveredFreight"]},{"mines",catalog_.mines.size()},{"facilities",catalog_.facilities.size()},{"recipes",catalog_.recipes.size()},{"goods",catalog_.goods.size()}};
+    return {{"npcAuthorityActive",state_.value("npcAuthorityActive",false)},{"worldId",state_.value("worldId",std::string())},{"protocol",1},{"server","FractalEconomy"},{"online",true},{"revision",state_["revision"]},{"economySeconds",state_["clock"]},{"inventories",state_["inventories"].size()},{"activeJobs",active},{"completedJobs",state_["completedBatches"]},{"deliveredFreight",state_["deliveredFreight"]},{"mines",catalog_.mines.size()},{"facilities",catalog_.facilities.size()},{"recipes",catalog_.recipes.size()},{"goods",catalog_.goods.size()}};
 }
 void World::validate() const {
     require(state_.at("schema")==1,"Unsupported economy snapshot schema");require(std::isfinite(state_.at("clock").get<double>())&&state_.at("clock").get<double>()>=0,"Invalid economy clock");
+    if(state_.value("npcAuthorityActive",false))require(!state_.value("worldId",std::string()).empty(),"Live economy needs a persistent world identity");
+    for(const char* deadline:{"nextPulse","nextMarket","nextDispatch"}){
+        const double value=state_.at(deadline);require(std::isfinite(value)&&value>=state_.at("clock").get<double>()-epsilon,"Invalid scheduler deadline");
+    }
+    require(state_.at("jobs").is_array()&&state_.at("journeys").is_array()&&state_.at("receipts").is_object(),"Incomplete economy collections");
+    for(const auto& [mine,record]:state_.at("mines").items()){
+        (void)mine;const double remaining=record.at("remaining");require(std::isfinite(remaining)&&remaining>=0,"Invalid finite ore reserve");
+        require(state_.at("inventories").contains(record.at("inventory").get<std::string>()),"Missing ore warehouse");
+    }
     for(const auto& [owner,balance]:state_.at("wallets").items()){(void)owner;require(balance.is_number_integer()&&balance.get<std::int64_t>()>=0,"Negative or invalid wallet");}
     for(const auto& [hold,inventory]:state_.at("inventories").items()){
         const double capacity=inventory.at("capacity"),reserved=inventory.at("reservedOutput");require(std::isfinite(capacity)&&capacity>0&&std::isfinite(reserved)&&reserved>=-epsilon,"Invalid storage capacity/reservation");require(used(hold)+reserved<=capacity+epsilon,"Inventory/output reservations exceed capacity");
+        for(const auto& [item,count]:inventory.at("reservedPickup").items()){
+            require(catalog_.goods.contains(item)&&count.is_number()&&std::isfinite(count.get<double>())&&count.get<double>()>=-epsilon,"Invalid pickup reservation");
+            require(count.get<double>()<=inventory.at("stock").value(item,0.0)+epsilon,"Pickup reservation exceeds inventory stock");
+        }
         for(const auto& [item,count]:inventory.at("stock").items()){require(catalog_.goods.contains(item),"Unknown item in checkpoint");require(std::isfinite(count.get<double>())&&count.get<double>()>=-epsilon,"Invalid stock quantity");require(inventory.at("reservedPickup").value(item,0.0)<=count.get<double>()+epsilon,"Pickup reservation exceeds source stock");}
     }
 }
 void World::restore(json snapshot){auto old=state_;state_=std::move(snapshot);try{validate();}catch(...){state_=std::move(old);throw;}}
 void World::checkpoint(const std::filesystem::path& path) const {
-    validate();const auto payload=state_.dump();json envelope={{"schema",1},{"checksum",digest(payload)},{"payload",state_}};
+    validate();if(!path.parent_path().empty())std::filesystem::create_directories(path.parent_path());
+    if(state_.value("npcAuthorityActive",false)){
+        // Once live exchanges are possible, restoring an older generation can
+        // resurrect spent stock while a player retains an applied receipt.
+        // Leave a persistent fence before publishing the first live checkpoint.
+        auto live=path;live+=".live";
+        if(!std::filesystem::exists(live)){std::ofstream marker(live,std::ios::binary);require(bool(marker),"Cannot persist live authority recovery fence");marker<<state_.at("worldId").get<std::string>();marker.flush();require(bool(marker),"Cannot flush live authority recovery fence");}
+        {std::ifstream marker(live,std::ios::binary);std::string identity;std::getline(marker,identity);require(identity==state_.at("worldId").get<std::string>(),"Live recovery fence belongs to another or incomplete world");}
+#ifdef _WIN32
+        HANDLE fence=CreateFileW(live.c_str(),GENERIC_WRITE,FILE_SHARE_READ,nullptr,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,nullptr);require(fence!=INVALID_HANDLE_VALUE,"Cannot open live recovery fence");const bool durable=FlushFileBuffers(fence)!=FALSE;CloseHandle(fence);require(durable,"Cannot flush live recovery fence");
+#endif
+    }
+    const auto payload=state_.dump();json envelope={{"schema",1},{"checksum",digest(payload)},{"payload",state_}};
     if(!path.parent_path().empty())std::filesystem::create_directories(path.parent_path());auto temporary=path;temporary+=".tmp";auto backup=path;backup+=".bak";
     {std::ofstream out(temporary,std::ios::binary|std::ios::trunc);require(bool(out),"Cannot create economy checkpoint");out<<envelope.dump();out.flush();require(bool(out),"Cannot write economy checkpoint");}
 #ifdef _WIN32
@@ -231,8 +272,9 @@ void World::checkpoint(const std::filesystem::path& path) const {
 #endif
 }
 bool World::load_checkpoint(const std::filesystem::path& path){
-    auto backup=path;backup+=".bak";if(!std::filesystem::exists(path)&&!std::filesystem::exists(backup))return false;
-    for(const auto& candidate:{path,backup})try{const auto envelope=read_json(candidate);const auto payload=envelope.at("payload");require(envelope.at("schema")==1&&envelope.at("checksum")==digest(payload.dump()),"Checkpoint checksum/schema mismatch");restore(payload);return true;}catch(const std::exception&){}
+    auto backup=path;backup+=".bak";auto live=path;live+=".live";
+    if(!std::filesystem::exists(path)&&!std::filesystem::exists(backup)){require(!std::filesystem::exists(live),"Live checkpoints are missing; refusing to reset persistent stock");return false;}
+    for(const auto& candidate:{path,backup})try{if(candidate==backup&&std::filesystem::exists(live))throw std::runtime_error("Live NPC checkpoint needs receipt-aware recovery; refusing older stock");const auto envelope=read_json(candidate);const auto payload=envelope.at("payload");require(candidate!=backup||!payload.value("npcAuthorityActive",false),"Live authority cannot roll back settled receipts");require(envelope.at("schema")==1&&envelope.at("checksum")==digest(payload.dump()),"Checkpoint checksum/schema mismatch");restore(payload);return true;}catch(const std::exception&){}
     throw std::runtime_error("No valid economy checkpoint; refusing to reset persistent stock");
 }
 }

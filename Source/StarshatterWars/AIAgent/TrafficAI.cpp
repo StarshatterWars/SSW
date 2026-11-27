@@ -1,4 +1,5 @@
 #include "TrafficAI.h"
+#include "EconomyAuthority.h"
 #include "SimDataEvents.h"
 #include "EconomyAI.h"
 #include "EconomyRuntime.h"
@@ -37,6 +38,7 @@ FGuid TrafficAI::SchedulePatrol(FGalaxyTrafficState& State,const FGalaxyTrafficS
 }
 void TrafficAI::TickLegacyIndustry(Sim& Simulation,double Seconds)
 {
+    if(!SSWEconomyAuthority::MayAdvanceLocally())return;
     const auto* Director=Starshatter::GetInstance();
     if(!Simulation.HasSimulationAuthority() || !FMath::IsFinite(Seconds) || Seconds<=0 ||
         (Director && Director->InCutscene()) || OfflineCutsceneExport::IsRequested())return;

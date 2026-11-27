@@ -24,6 +24,7 @@
 #include "PlayerDlg.h"
 #include "PlatformAvatarWidget.h"
 #include "FractalVerseStatusWidget.h"
+#include "EconomyServiceStatusWidget.h"
 #include "GuildCatalogSubsystem.h"
 #include "TransactionAI.h"
 #include "AgentAI.h"
@@ -1218,7 +1219,9 @@ TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
             +SHorizontalBox::Slot().FillWidth(1).Padding(8,0,0,0)
                 [SNew(SVerticalBox)+SVerticalBox::Slot().AutoHeight()[ServiceRecord]+SVerticalBox::Slot().AutoHeight()[History]]]];
     Pages->AddSlot()[SNew(SScrollBox)+SScrollBox::Slot()[Radio]];
-    Pages->AddSlot()[SNew(SFractalVerseStatusPanel).GameInstance(Instance)];
+    Pages->AddSlot()[SNew(SScrollBox)+SScrollBox::Slot()[SNew(SVerticalBox)
+        +SVerticalBox::Slot().AutoHeight().Padding(0,0,0,12)[SNew(SEconomyServiceStatusPanel).GameInstance(Instance)]
+        +SVerticalBox::Slot().AutoHeight()[SNew(SFractalVerseStatusPanel).GameInstance(Instance)]]];
     auto Tabs=SNew(SHorizontalBox);
     const auto AddTab=[&](int32 Index,EShipSystemIcon Icon,FText Caption)
     {

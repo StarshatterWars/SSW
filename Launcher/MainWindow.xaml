@@ -9,6 +9,22 @@
             <Setter Property="FontSize" Value="15"/>
             <Setter Property="Padding" Value="18,9"/>
             <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="Background" Value="#172B3B"/>
+            <Setter Property="Foreground" Value="#A9DCEE"/>
+            <Setter Property="BorderBrush" Value="#2B495D"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+                <Border x:Name="Surface" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="3" Padding="{TemplateBinding Padding}">
+                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="#24465A"/><Setter TargetName="Surface" Property="BorderBrush" Value="#80D9F6"/></Trigger>
+                    <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Background" Value="#315A70"/></Trigger>
+                    <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/><Setter Property="Cursor" Value="Arrow"/></Trigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="#80D9F6"/></Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate></Setter.Value></Setter>
         </Style>
     </Window.Resources>
     <Grid Margin="24">
@@ -33,27 +49,33 @@
                 </StackPanel>
             </Border>
         </Border>
-        <StackPanel Grid.Row="1" Margin="0,12,0,10">
-            <WrapPanel HorizontalAlignment="Right" Margin="0,0,0,10">
-            <Button x:Name="RepairButton" DockPanel.Dock="Right" Content="Repair ▾" Click="Repair_Click" Padding="10,9" ToolTip="Repair and recovery tools">
+        <Grid Grid.Row="1" Margin="0,12,0,10">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button x:Name="RepairButton" DockPanel.Dock="Right" Click="Repair_Click" ToolTip="Repair and recovery tools" Padding="11,9" AutomationProperties.Name="Repair and recovery tools"><StackPanel Orientation="Horizontal"><Path Data="M4,14 L12,6 M9,3 C10,0 15,0 16,3 L13,6 L16,9 C19,8 20,4 18,2 M3,13 L1,16 L4,19 L7,16" Stroke="#80D9F6" StrokeThickness="1.7" Width="18" Height="18" Stretch="Uniform" Margin="0"/></StackPanel>
                 <Button.ContextMenu>
                     <ContextMenu>
                         <MenuItem Header="Recover Pilot Save…" Click="RecoverPilot_Click"/>
                     </ContextMenu>
                 </Button.ContextMenu>
             </Button>
-            <Button x:Name="InstallButton" DockPanel.Dock="Right" Content="Install Game…" Click="Install_Click"/>
-            <Button DockPanel.Dock="Right" Content="Locate Game…" Click="LocateGame_Click"/>
-            <Button x:Name="UpdateButton" DockPanel.Dock="Right" Content="Check for Updates" Click="Update_Click"/>
-            <Button x:Name="MusicButton" DockPanel.Dock="Right" Content="Music On" Click="Music_Click"/>
-            </WrapPanel>
-            <WrapPanel>
+            <Button x:Name="InstallButton" DockPanel.Dock="Right" Click="Install_Click" ToolTip="Install Game" Padding="11,9" AutomationProperties.Name="Install Game"><StackPanel Orientation="Horizontal"><Path Data="M10,1 L10,13 M5,8 L10,13 L15,8 M2,14 L2,19 L18,19 L18,14" Stroke="#80D9F6" StrokeThickness="1.7" Width="18" Height="18" Stretch="Uniform" Margin="0"/></StackPanel></Button>
+            <Button x:Name="LocateGameButton" DockPanel.Dock="Right" Click="LocateGame_Click" ToolTip="Locate Game" Padding="11,9" AutomationProperties.Name="Locate Game"><StackPanel Orientation="Horizontal"><Path Data="M1,5 L8,5 L10,8 L19,8 L17,18 L1,18 Z M1,5 L1,2 L8,2 L10,5 L17,5 L17,8" Stroke="#80D9F6" StrokeThickness="1.7" Width="18" Height="18" Stretch="Uniform" Margin="0"/></StackPanel></Button>
+            <Button x:Name="UpdateButton" DockPanel.Dock="Right" Click="Update_Click" ToolTip="Check for Updates" Padding="11,9" AutomationProperties.Name="Check for Updates"><StackPanel Orientation="Horizontal"><Path Data="M17,8 C15,0 4,0 2,8 M13,8 L18,8 L18,3 M2,12 C4,20 15,20 18,12 M2,17 L2,12 L7,12" Stroke="#80D9F6" StrokeThickness="1.7" Width="18" Height="18" Stretch="Uniform" Margin="0"/></StackPanel></Button>
+            <Button x:Name="MusicButton" DockPanel.Dock="Right" ToolTip="Mute launcher music" AutomationProperties.Name="Mute launcher music" Click="Music_Click" Padding="13,9">
+                <Grid Width="20" Height="20"><Path Data="M1,7 L5,7 L10,2 L10,18 L5,13 L1,13 Z" Stroke="#80D9F6" StrokeThickness="1.6"/>
+                    <Path x:Name="MusicWaves" Data="M13,5 Q19,10 13,15 M16,2 Q24,10 16,18" Stroke="#80D9F6" StrokeThickness="1.6"/>
+                    <Path x:Name="MusicMuted" Visibility="Collapsed" Data="M13,7 L19,13 M19,7 L13,13" Stroke="#80D9F6" StrokeThickness="1.6"/>
+                </Grid>
+            </Button>
+            </StackPanel>
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
                 <Button x:Name="NewsTabButton" Content="NEWS" Click="NewsTab_Click" Background="#24465A" Foreground="#EAF4FF" Padding="12,8" Margin="0,0,6,0"/>
                 <Button x:Name="StoreTabButton" Content="STORE" Click="StoreTab_Click" Background="#172B3B" Foreground="#A9DCEE" Padding="12,8" Margin="0"/>
-                <Button x:Name="ServerTabButton" Content="SERVER" Click="ServerTab_Click" Background="#172B3B" Foreground="#A9DCEE" Padding="12,8" Margin="6,0,0,0"/>
+                <Button x:Name="ServerTabButton" Content="SERVERS" Click="ServerTab_Click" Background="#172B3B" Foreground="#A9DCEE" Padding="12,8" Margin="6,0,0,0"/>
                 <Button x:Name="RoadmapTabButton" Content="ROADMAP" Click="RoadmapTab_Click" Background="#172B3B" Foreground="#A9DCEE" Padding="12,8" Margin="6,0,0,0"/>
-            </WrapPanel>
-        </StackPanel>
+            </StackPanel>
+        </Grid>
         <Border x:Name="AboutPatch" Grid.Row="2" Background="#122131" Padding="12,8" Margin="0,0,0,10" Visibility="Collapsed">
             <StackPanel>
                 <TextBlock Text="About this update" FontWeight="SemiBold"/>
@@ -85,20 +107,26 @@
                 </StackPanel>
             </ScrollViewer>
         </Border>
-        <Border x:Name="ServerPanel" Grid.Row="3" Background="#122131" Padding="22" Visibility="Collapsed">
-            <Grid>
-                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
-                <TextBlock Text="UNIVERSE SERVER" FontSize="25" FontWeight="SemiBold"/>
-                <TextBlock x:Name="ServerSummary" Grid.Row="1" Foreground="#ACC4D5" TextWrapping="Wrap" Margin="0,10,0,14" Text="No server connection."/>
-                <Grid Grid.Row="2" Background="#203747" Margin="0,0,0,1">
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="140"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="PLAYER" Foreground="#80D9F6" Margin="10,8"/>
-                    <TextBlock Grid.Column="1" Text="PING" Foreground="#80D9F6" Margin="10,8"/>
-                </Grid>
-                <ListBox x:Name="ServerPlayers" Grid.Row="3" Background="#172B3B" Foreground="#EAF4FF" BorderBrush="#2B495D" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-                    <ListBox.ItemTemplate><DataTemplate><Grid Margin="8,6"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="124"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/><TextBlock Grid.Column="1" Text="{Binding Ping}"/></Grid></DataTemplate></ListBox.ItemTemplate>
-                </ListBox>
-            </Grid>
+        <Border x:Name="ServerPanel" Grid.Row="3" Background="#122131" Padding="20" Visibility="Collapsed">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
+                <TextBlock Text="SERVER CONNECTIONS" FontSize="25" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                <Border Background="#172B3B" BorderBrush="#2B495D" BorderThickness="1" Padding="14" Margin="0,0,0,12"><StackPanel>
+                    <TextBlock Text="ECONOMY · PRODUCTION &amp; TRADE" FontWeight="SemiBold" Foreground="#80D9F6"/>
+                    <TextBlock x:Name="EconomySummary" Text="Economy service is not connected." Foreground="#ACC4D5" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                    <TextBlock x:Name="EconomyAddress" Text="Address: checking shared settings…" Foreground="#ACC4D5" TextWrapping="Wrap" Margin="0,6,0,0" ToolTip="The shared economy endpoint can be changed by the future admin console. Active sessions do not silently change servers."/>
+                </StackPanel></Border>
+                <Border Background="#172B3B" BorderBrush="#2B495D" BorderThickness="1" Padding="14"><StackPanel>
+                    <TextBlock Text="GAMEPLAY · FRACTALVERSE" FontWeight="SemiBold" Foreground="#80D9F6"/>
+                    <TextBlock x:Name="ServerSummary" Foreground="#ACC4D5" TextWrapping="Wrap" Margin="0,8,0,12" Text="No gameplay server connection."/>
+                    <Grid Background="#203747" Margin="0,0,0,1">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="140"/></Grid.ColumnDefinitions>
+                        <TextBlock Text="PLAYER" Foreground="#80D9F6" Margin="10,8"/><TextBlock Grid.Column="1" Text="PING" Foreground="#80D9F6" Margin="10,8"/>
+                    </Grid>
+                    <ListBox x:Name="ServerPlayers" MaxHeight="160" MinHeight="45" Background="#172B3B" Foreground="#EAF4FF" BorderBrush="#2B495D" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate><DataTemplate><Grid Margin="8,6"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="124"/></Grid.ColumnDefinitions><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/><TextBlock Grid.Column="1" Text="{Binding Ping}"/></Grid></DataTemplate></ListBox.ItemTemplate>
+                    </ListBox>
+                </StackPanel></Border>
+            </StackPanel></ScrollViewer>
         </Border>
         <Border x:Name="RoadmapPanel" Grid.Row="3" Background="#122131" Padding="22" Visibility="Collapsed">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -118,7 +146,7 @@
                         <TextBlock Text="Play with Steam" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
-                <Button x:Name="PlayButton" Click="Play_Click" FontWeight="Bold" Background="#80D9F6" IsDefault="True" AutomationProperties.Name="Play with Epic" ToolTip="Sign in through Epic. Your saved Epic authorization is reused when available.">
+                <Button x:Name="PlayButton" Click="Play_Click" FontWeight="Bold" Background="#24465A" IsDefault="True" AutomationProperties.Name="Play with Epic" ToolTip="Sign in through Epic. Your saved Epic authorization is reused when available.">
                     <StackPanel Orientation="Horizontal">
                         <Image Source="Assets/EpicGames.png" Width="20" Height="20" Margin="0,0,8,0"/>
                         <TextBlock Text="Play with Epic" VerticalAlignment="Center"/>

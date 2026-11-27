@@ -26,6 +26,7 @@ public partial class MainWindow : Window
     private readonly CancellationTokenSource closing = new();
     private readonly LocalFeedServer localFeedServer = new();
     private readonly UniverseServerManager universeServer = new();
+    private readonly EconomyServerManager economyServer = new();
 
     public MainWindow()
     {
@@ -68,10 +69,11 @@ public partial class MainWindow : Window
         {
             StartMusic();
             _ = MonitorUniverseAsync();
+            _ = MonitorEconomyAsync();
             await PrepareLocalFeedServerAsync();
             if (!closing.IsCancellationRequested) await Task.WhenAll(LoadFeedAsync(), LoadPatchNotesAsync());
         };
-        Closed += (_, _) => { closing.Cancel(); localFeedServer.Dispose(); universeServer.Dispose(); music.Close(); NewsView.Dispose(); };
+        Closed += (_, _) => { closing.Cancel(); localFeedServer.Dispose(); universeServer.Dispose(); economyServer.Dispose(); music.Close(); NewsView.Dispose(); };
         Activated += async (_, _) =>
         {
             if (IsLoaded && !busy && !closing.IsCancellationRequested) await LoadPatchNotesAsync();
@@ -82,6 +84,23 @@ public partial class MainWindow : Window
             e.Cancel = true;
             LaunchStatus.Text = "Please wait for pilot recovery to finish before closing the launcher.";
         };
+    }
+
+    private async Task MonitorEconomyAsync()
+    {
+        while(!closing.IsCancellationRequested)
+        {
+            try{
+                var connection=await economyServer.RefreshAsync(game,closing.Token);closing.Token.ThrowIfCancellationRequested();
+                EconomyAddress.Text="Address: "+connection.Endpoint;
+                var state=connection.Status;
+                EconomySummary.Text=connection.Label+"\n"+connection.Detail+(state is null?"":$"\nPing {connection.PingMs:0} ms · uptime {TimeSpan.FromSeconds(state.UptimeSeconds):g} · revision {state.Revision:N0}\nInventories {state.Inventories:N0} · active jobs {state.ActiveJobs:N0} · freight deliveries {state.DeliveredFreight:N0}\nCheckpoint: {(state.CheckpointReady?"READY":"BLOCKED")}");
+            }catch(OperationCanceledException)when(closing.IsCancellationRequested){break;}
+            catch(ObjectDisposedException)when(closing.IsCancellationRequested){break;}
+            catch(Exception ex)when(ex is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException or KeyNotFoundException or System.ComponentModel.Win32Exception)
+            {EconomySummary.Text="ECONOMY · DISCONNECTED\n"+ex.Message;}
+            try{await Task.Delay(2000,closing.Token);}catch(OperationCanceledException){break;}
+        }
     }
 
     private async Task MonitorUniverseAsync()
@@ -202,7 +221,8 @@ public partial class MainWindow : Window
         if (!File.Exists(track)) { MusicButton.IsEnabled = false; return; }
         music.Open(new Uri(track));
         musicEnabled = true;
-        MusicButton.Content = "Music On";
+        MusicWaves.Visibility = Visibility.Visible; MusicMuted.Visibility = Visibility.Collapsed;
+        MusicButton.ToolTip = "Mute launcher music"; System.Windows.Automation.AutomationProperties.SetName(MusicButton, "Mute launcher music");
         music.Play();
     }
 
@@ -210,7 +230,8 @@ public partial class MainWindow : Window
     {
         musicEnabled = false;
         music.Close();
-        MusicButton.Content = "Music Off";
+        MusicWaves.Visibility = Visibility.Collapsed; MusicMuted.Visibility = Visibility.Visible;
+        MusicButton.ToolTip = "Enable launcher music"; System.Windows.Automation.AutomationProperties.SetName(MusicButton, "Enable launcher music");
     }
 
     private static string? FindGame()
@@ -322,7 +343,7 @@ public partial class MainWindow : Window
     private void SetBusy(bool value)
     {
         busy = value;
-        if(!value) universeServer.ResumeAutoStart();
+        if(!value){universeServer.ResumeAutoStart();economyServer.ResumeAutoStart();}
         RepairButton.IsEnabled = !value && game is not null;
         InstallButton.IsEnabled = !value;
         UpdateButton.IsEnabled = !value;
@@ -440,7 +461,7 @@ public partial class MainWindow : Window
                 "Overwrite Starshatter Wars", MessageBoxButton.YesNo, MessageBoxImage.Warning,
                 MessageBoxResult.No) != MessageBoxResult.Yes) return;
             if (overwrite && GameIsRunning()) throw new IOException("Close Starshatter Wars before overwriting.");
-            if(overwrite) await universeServer.StopForUpdateAsync(closing.Token);
+            if(overwrite){await economyServer.StopForUpdateAsync(game,closing.Token);await universeServer.StopForUpdateAsync(closing.Token);}
             using var installLock = new FileStream(Path.Combine(install, LocalInstaller.LockName),
                 FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, 1, FileOptions.DeleteOnClose);
             var progress = new Progress<string>(message => LaunchStatus.Text = message);
@@ -513,6 +534,7 @@ public partial class MainWindow : Window
                 return;
             }
             if (GameIsRunning()) { LaunchStatus.Text = "Close Starshatter Wars before updating."; return; }
+            await economyServer.StopForUpdateAsync(game,closing.Token);
             await universeServer.StopForUpdateAsync(closing.Token);
 
             using var http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })

@@ -1,4 +1,7 @@
 #include "GalaxyTrafficSubsystem.h"
+#include "EconomyAuthority.h"
+#include "EconomyOwnership.h"
+#include "EconomyServiceSubsystem.h"
 #include "HAL/PlatformProcess.h"
 #include "GeneratedShipNames.h"
 #include "FractalVerseSubsystem.h"
@@ -76,6 +79,7 @@ bool UGalaxyTrafficSubsystem::LoadEconomyCatalogs()
 }
 void UGalaxyTrafficSubsystem::TickEconomy(FEconomyState& State,double Seconds,int64 Now)
 {
+    if(!SSWEconomyAuthority::MayAdvanceLocally())return;
     auto* Catalog=GetGameInstance()->GetSubsystem<UCargoCatalogSubsystem>();
     if(Catalog)FEconomyRuntime::InitializeMarkets(State,*Catalog);
     if(!bCatalogsLoaded || !FMath::IsFinite(Seconds) || Seconds<=0)return;
@@ -365,10 +369,15 @@ void UGalaxyTrafficSubsystem::UpdateLive(Sim& Simulation,FGalaxyTrafficState& Tr
     {
         const auto* Name=LiveShips.Find(Job.Id);if(!Name)continue;
         auto* Craft=Simulation.FindShip(TCHAR_TO_UTF8(**Name));
-        if(!Craft || Craft->IsDead() || Craft->IsDying()) {TrafficAI::Lose(Job,Economy);LiveShips.Remove(Job.Id);LiveGoals.Remove(Job.Id);continue;}
+        if(!Craft || Craft->IsDead() || Craft->IsDying()) {if(SSWEconomyAuthority::MayAdvanceLocally())TrafficAI::Lose(Job,Economy);LiveShips.Remove(Job.Id);LiveGoals.Remove(Job.Id);continue;}
         Job.CurrentSector=SectorKey(Craft->GetRegion());const int32 Actual=Job.Route.IndexOfByKey(Job.CurrentSector);if(Actual!=INDEX_NONE)Job.RouteIndex=Actual;
 
-        if(!Observed(Simulation,*Craft)){Despawn(Simulation,Job.Id);continue;}
+        if(!Observed(Simulation,*Craft))
+        {
+            if(SSWEconomyAuthority::MayAdvanceLocally())Despawn(Simulation,Job.Id);
+            else{Craft->SetAutoNav(false);Craft->StopScriptedMotion();}
+            continue;
+        }
         const bool Pickup=Job.Phase==EGalaxyTrafficPhase::Waiting || Job.Phase==EGalaxyTrafficPhase::Loading;
         const auto* Endpoint=Endpoints.Find(Pickup?Job.Origin:Job.Destination);if(!Endpoint){Craft->SetAutoNav(false);Craft->StopScriptedMotion();continue;}
         if(Endpoint->bPhysical && !StationAt(Simulation,*Endpoint)){Craft->SetAutoNav(false);Craft->StopScriptedMotion();continue;}
@@ -390,6 +399,7 @@ void UGalaxyTrafficSubsystem::UpdateLive(Sim& Simulation,FGalaxyTrafficState& Tr
 }
 void UGalaxyTrafficSubsystem::AdvanceManagement(float DeltaSeconds)
 {
+    if(!SSWEconomyAuthority::MayAdvanceLocally())return;
     if (UFractalVerseSubsystem::ProcessRole() != EFractalVerseRole::Disabled) return;
     auto* Simulation=Sim::GetSim();auto* Runtime=GetGameInstance()->GetSubsystem<USSWRuntimeSubsystem>();auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
     const auto* Director=Starshatter::GetInstance();
@@ -471,6 +481,7 @@ void UGalaxyTrafficSubsystem::AdvanceManagement(float DeltaSeconds)
 // Dedicated economy: no Sim, player save, actor or loaded mission is required.
 void UGalaxyTrafficSubsystem::AdvanceServerWorld(FFractalVerseWorld& World, double Seconds)
 {
+    if(!SSWEconomyAuthority::MayAdvanceLocally())return;
     TickEconomy(World.Economy, Seconds, FDateTime::UtcNow().ToUnixTimestamp());
     if (!bAuthorityGraphReady)
     {
@@ -615,6 +626,18 @@ void UGalaxyTrafficSubsystem::EconomyWorkerCompleted()
     }
     if(!Players || !Players->HasLoaded() || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)return;
     if(const auto* Simulation=Sim::GetSim();Simulation && (!Simulation->HasSimulationAuthority() || Simulation->IsNetworked()))return;
+    if(!SSWEconomyAuthority::MayAdvanceLocally()&&!SSWEconomyOwnership::MatchesNpc(Result->State,Players->GetEconomy()))
+    {
+        // A typed player transaction must not smuggle a write to projected NPC stock.
+        // Until its remote adapter exists, reject it before any local commit or save.
+        if(ActiveCommand.IsSet())
+        {
+            auto Rejected=MoveTemp(ActiveCommand.GetValue());ActiveCommand.Reset();
+            const FText Why=INVTEXT("This action requires an NPC economy service adapter. No local NPC stock or budget was changed.");
+            RequestQueue.Finish(Rejected.Receipt,false,Why);OnTransactionQueueChanged.Broadcast();Rejected.Complete(false,Why);
+        }
+        PumpEconomyRequests();return;
+    }
     if(Result->Skill)
     {
         if(!ActiveCommand.IsSet())return;
@@ -690,6 +713,7 @@ void UGalaxyTrafficSubsystem::EconomyWorkerCompleted()
         if(Reason.IsEmpty())Reason=INVTEXT("Purchase cancelled because its dock or authority changed. No credits were charged.");
         bEconomyChanged=true;EconomyController.WakeProduction();RequestQueue.Finish(Request.Receipt,Accepted,Reason);OnTransactionQueueChanged.Broadcast();Request.Complete(Accepted,Reason);PumpEconomyRequests();ScheduleManagement();return;
     }
+    if(!SSWEconomyAuthority::MayAdvanceLocally())return; // Discard a result calculated before cutover.
     bApplyingWorkerResult=true;
     const double Next=Result->NextProductionAt;
     const bool Accepted=FNativeEconomyWorker::Commit(MoveTemp(*Result),Players->GetEconomy(),EconomyMutationRevision,EconomyProfileToken());
@@ -728,6 +752,12 @@ bool UGalaxyTrafficSubsystem::QueueFleetRepair(FNativeFleetRepairCommand&& Comma
 }
 bool UGalaxyTrafficSubsystem::QueueMarketCommand(FNativeMarketCommand&& Command,TFunction<bool(FText&)>&& Validate,TFunction<bool()>&& Persist,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Reason)
 {
+    if(SSWEconomyAuthority::RequiresService())
+    {
+        auto* Service=GetGameInstance()->GetSubsystem<UEconomyServiceSubsystem>();
+        if(!Service){Reason=INVTEXT("The economy connection is unavailable. Nothing exchanged.");return false;}
+        return Service->Trade(Command,MoveTemp(Validate),MoveTemp(Completed),Reason);
+    }
     FQueuedEconomyRequest Request;Request.Receipt=Command.Receipt;
     const FText Action=Command.Action==EMarketCommand::Trade?(Command.Quote.bBuy?INVTEXT("BUY"):INVTEXT("SELL")):Command.Action==EMarketCommand::PlaceBuy?INVTEXT("BUY ORDER"):Command.Action==EMarketCommand::PlaceSell?INVTEXT("SELL ORDER"):Command.Action==EMarketCommand::Modify?INVTEXT("REPRICE ORDER"):INVTEXT("CANCEL ORDER");
     Request.Label=FText::Format(INVTEXT("{0} {1} x {2}"),Action,FText::FromName(Command.Item),FText::AsNumber(Command.Quantity));Request.Market=MakeUnique<FNativeMarketCommand>(MoveTemp(Command));Request.Validate=MoveTemp(Validate);Request.Persist=MoveTemp(Persist);Request.MarketCompleted=MoveTemp(Completed);

@@ -215,10 +215,33 @@ struct FGroundFactorySite
     UPROPERTY(SaveGame) FString Region;
     UPROPERTY(SaveGame) FString Empire;
 };
+// Player-side half of an NPC trade. Stored atomically with the player's wallet/cargo.
+UENUM()
+enum class ENpcTradePhase:uint8 { Escrowed, Applied, Refunded };
+USTRUCT()
+struct FNpcTradeReceipt
+{
+    GENERATED_BODY()
+    UPROPERTY(SaveGame) FGuid Id;
+    UPROPERTY(SaveGame) FString Principal;
+    UPROPERTY(SaveGame) FString WorldId;
+    UPROPERTY(SaveGame) FName Owner=TEXT("Pilot");
+    UPROPERTY(SaveGame) FName Inventory;
+    UPROPERTY(SaveGame) FName Market;
+    UPROPERTY(SaveGame) FName Item;
+    UPROPERTY(SaveGame) double Quantity=0;
+    UPROPERTY(SaveGame) double UnitTonnes=1;
+    UPROPERTY(SaveGame) int64 TotalCredits=0;
+    UPROPERTY(SaveGame) int64 BaseCredits=0;
+    UPROPERTY(SaveGame) int64 TaxCredits=0;
+    UPROPERTY(SaveGame) bool bBuying=true;
+    UPROPERTY(SaveGame) ENpcTradePhase Phase=ENpcTradePhase::Escrowed;
+};
 USTRUCT()
 struct FEconomyState
 {
     GENERATED_BODY()
+    UPROPERTY(SaveGame) TMap<FGuid,FNpcTradeReceipt> NpcTradeOutbox;
     UPROPERTY(SaveGame) TMap<FGuid, FFleetRepairOrder> FleetRepairOrders;
     UPROPERTY(SaveGame) TMap<FName, FEconomyInventory> Inventories;
     UPROPERTY(SaveGame) TMap<FName, int64> Wallets;

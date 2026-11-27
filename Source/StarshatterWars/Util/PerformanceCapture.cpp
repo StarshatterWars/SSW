@@ -23,7 +23,7 @@ namespace
 std::atomic<bool> Enabled{false};
 std::atomic<uint64> EconomyNs{0},EconomyCount{0},SimulationNs{0},SimulationCount{0},TextureBytes{0};
 FDelegateHandle FrameHandle;
-double Started=0,LastMemory=0,Duration=60,Warmup=10;
+double Started=0,LastMemory=0,SSWCaptureDurationSeconds=60,Warmup=10;
 FString Scenario;
 bool bEditorWorld=false;
 TArray<TSharedPtr<FJsonValue>> Samples;
@@ -57,7 +57,7 @@ void SampleFrame()
     if(Started<=0)Started=Now;
     const double Elapsed=Now-Started;
     if(Elapsed<Warmup)return;
-    if(Elapsed>=Warmup+Duration){WriteCapture();return;}
+    if(Elapsed>=Warmup+SSWCaptureDurationSeconds){WriteCapture();return;}
     auto Row=MakeShared<FJsonObject>();Row->SetNumberField(TEXT("elapsedSeconds"),Elapsed-Warmup);
     Row->SetNumberField(TEXT("frameMs"),FApp::GetDeltaTime()*1000);
     Row->SetNumberField(TEXT("gameThreadMs"),FPlatformTime::ToMilliseconds(GGameThreadTime));
@@ -84,7 +84,7 @@ void Initialize()
 {
     if(!FCommandLine::IsInitialized() || !FParse::Param(FCommandLine::Get(),TEXT("SSWPerfCapture")))return;
     if(FrameHandle.IsValid())return;
-    FParse::Value(FCommandLine::Get(),TEXT("SSWPerfSeconds="),Duration);Duration=FMath::Clamp(Duration,5.0,600.0);
+    FParse::Value(FCommandLine::Get(),TEXT("SSWPerfSeconds="),SSWCaptureDurationSeconds);SSWCaptureDurationSeconds=FMath::Clamp(SSWCaptureDurationSeconds,5.0,600.0);
     FParse::Value(FCommandLine::Get(),TEXT("SSWPerfWarmup="),Warmup);Warmup=FMath::Clamp(Warmup,0.0,300.0);
     FParse::Value(FCommandLine::Get(),TEXT("SSWPerfScenario="),Scenario);
     bEditorWorld=FParse::Param(FCommandLine::Get(),TEXT("SSWPerfEditorWorld"));

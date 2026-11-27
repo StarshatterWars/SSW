@@ -42,6 +42,7 @@ public class StarshatterWars : ModuleRules
             "DeveloperSettings",
             "Json",
             "JsonUtilities",
+            "HTTP",
             "OnlineSubsystemEOS",
             "EOSShared",
             "EOSSDK",
