@@ -78,6 +78,7 @@ try {
         $fresh=Assert-BuildChild (Join-Path $archive 'Windows')
         $validation=@{Package=$fresh;StarServerPackage=$StarServerPackage;ProjectRoot=$projectPath;FeedRoot=$FeedRoot;PrivateKey=$PrivateKey;LauncherConfig=$LauncherConfig}
         $validated=& (Join-Path $PSScriptRoot 'Test-LauncherPackage.ps1') @validation
+        & (Join-Path $PSScriptRoot 'Test-PackagedStartup.ps1') -Package $fresh -ReportDirectory (Join-Path $logRoot 'PackagedStartup') | Out-Host
         Write-Host "`n=== 4 Install fresh package at Build/Windows ==="
         [void](Assert-BuildChild $package);[void](Assert-BuildChild $previous)
         $hadPackage=Test-Path -LiteralPath $package
@@ -86,7 +87,7 @@ try {
         catch {if($hadPackage -and !(Test-Path -LiteralPath $package)){Move-Item -LiteralPath $previous -Destination $package};throw}
         Write-Host "`n=== 5 Record verified build ==="
         $message=Join-Path $logRoot 'build-commit.txt'
-        [IO.File]::WriteAllText($message,"Record verified Windows build $($validated.Version)`n`nSource commit: $sourceCommit`nEditor build, $($tests.succeeded) automated tests, client build, cook and package passed. Includes the existing packaged StarServer. Only build metadata is recorded automatically; unrelated staged and unstaged changes are preserved.`n")
+        [IO.File]::WriteAllText($message,"Record verified Windows build $($validated.Version)`n`nSource commit: $sourceCommit`nEditor build, $($tests.succeeded) automated tests, client build, cook, package and isolated packaged-startup check passed. Includes the existing packaged StarServer. Only build metadata is recorded automatically; unrelated staged and unstaged changes are preserved.`n")
         & git -C $projectPath diff --quiet HEAD -- Content/Build/build-version.json
         if($LASTEXITCODE -eq 1){& git -C $projectPath commit --only -F $message -- Content/Build/build-version.json;if($LASTEXITCODE -ne 0){throw 'The build passed but its metadata commit failed. Publication was stopped.'}}
         elseif($LASTEXITCODE -ne 0){throw 'Could not check the build metadata for its commit.'}

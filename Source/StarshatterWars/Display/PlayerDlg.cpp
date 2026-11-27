@@ -71,6 +71,7 @@
 #include "SSWGameInstance.h"
 #include "Ship.h"
 #include "SimRegion.h"
+#include "StarSystem.h"
 #include "Mission.h"
 
 // Manager
@@ -1139,7 +1140,11 @@ TSharedRef<SWidget> UPlayerDlg::BuildFlightStatistics(UGameInstance* Instance)
         if (auto* Ship = Simulation->GetPlayerShip())
             AddStat(INVTEXT("Current ship"), Display(UTF8_TO_TCHAR(Ship->GetName())));
         if (auto* Region = Simulation->GetActiveRegion())
+        {
+            if (auto* System = Region->GetSystem())
+                AddStat(INVTEXT("Current system"), Display(UTF8_TO_TCHAR(System->GetName())));
             AddStat(INVTEXT("Current sector"), Display(UTF8_TO_TCHAR(Region->GetName())));
+        }
     }
 
     Rows = ServiceRecord;

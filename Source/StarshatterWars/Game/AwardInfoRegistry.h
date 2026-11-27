@@ -36,6 +36,7 @@ public:
 private:
     friend class FPlayerRankProgressionTest;
     friend class FMedalEligibilityTest;
+    friend class FTrainingCompletionAwardTest;
     friend class FCampaignRankLookupTest;
     static void BuildCaches();
 

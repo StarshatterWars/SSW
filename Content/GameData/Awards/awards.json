@@ -269,10 +269,10 @@
       "lost": 0,
       "collision": 0,
       "lottery": 0,
-      "bEligibilityConfigured": false,
-      "name": "KorianCrisisService",
-      "desc": "The Korian Crisis Service medal is awarded to any member of any branch of Force who participated in combat action during the Korian diplomatic crisis and related fleet operations.",
-      "awardText": "The Korian Crisis Service medal is awarded to any member of any branch of Force who participated in combat action during the Korian diplomatic crisis and related fleet operations.",
+      "bEligibilityConfigured": true,
+      "name": "Basic Flight Training",
+      "desc": "Awarded for completing all four Operation Live Fire flight-training missions.",
+      "awardText": "Awarded for completing all four Operation Live Fire flight-training missions.",
       "largeImageId": "Medal02",
       "smallImageId": "Ribbon02",
       "grantSoundId": "",
@@ -281,7 +281,7 @@
       "smallImage": "/Game/UI/Awards/Ribbon02.Ribbon02",
       "campaignId": 1,
       "bCampaignCompleteRequired": true,
-      "bDynamicCampaignOnly": true,
+      "bDynamicCampaignOnly": false,
       "bCeremony": true
     },
     {

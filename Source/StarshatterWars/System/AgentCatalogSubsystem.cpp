@@ -406,7 +406,7 @@ FText UAgentCatalogSubsystem::GetTrainingRequirement(int32 Id) const
     {
         auto* Context=Cast<USSWGameInstance>(GetGameInstance());
         const auto* Character=PlayerCharacter::GetCurrentPlayer();
-        if(!Character || Character->GetRank()<2)return INVTEXT("Requires Ensign rank or higher.");
+        if(!Character || !FreeFlightAssignment::Unlocked(Character->GetRank()))return INVTEXT("Requires Ensign rank or higher.");
         const auto* Progress=Context?Context->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
         if(!Progress || !FreeFlightAssignment::Unlocked(Character->GetRank(),Progress->GetPlayerInfo()))
             return INVTEXT("Complete T1–T4 before requesting independent flight.");

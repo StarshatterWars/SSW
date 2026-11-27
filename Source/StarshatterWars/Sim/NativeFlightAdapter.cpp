@@ -12,7 +12,7 @@
 #include <cstdlib>
 namespace
 {
-TAutoConsoleVariable<int32> CVarThreadedFlight(TEXT("ssw.Simulation.ThreadedFlight"),FParse::Param(FCommandLine::Get(),TEXT("SSWThreadedFlight"))?1:0,
+TAutoConsoleVariable<int32> CVarThreadedFlight(TEXT("ssw.Simulation.ThreadedFlight"),0,
     TEXT("Run copied inertial/atmospheric/arcade physics on the simulation worker. Preserves director substep barriers; profile before enabling."),ECVF_Default);
 }
 FNativeFlightState FNativeFlightAdapter::Capture(const Physical& P)
@@ -95,7 +95,17 @@ TArray<FVector> FNativeFlightAdapter::Samples(const FNativeFlightState& S,double
 }
 bool FNativeFlightAdapter::TryFrame(Physical& P,ENativeFlightModel Model,double Seconds)
 {
-    if(!IsInGameThread() || CVarThreadedFlight.GetValueOnGameThread()==0)return false;
+    if (!IsInGameThread() || !FCommandLine::IsInitialized()) return false;
+    // Monolithic clients initialize this translation unit before command-line setup.
+    // Read startup overrides only after startup; keep the console variable overridable.
+    static const bool bStartupOverrideApplied = []()
+    {
+        if (FParse::Param(FCommandLine::Get(), TEXT("SSWThreadedFlight")))
+            CVarThreadedFlight->Set(1, ECVF_SetByConstructor);
+        return true;
+    }();
+    (void)bStartupOverrideApplied;
+    if (CVarThreadedFlight.GetValueOnGameThread()==0) return false;
     auto* Simulation=Sim::GetSim();const double Subframe=P.sub_frame;
     if(!Simulation || Seconds<=0 || !FMath::IsFinite(Seconds) || Subframe<=0 || !FMath::IsFinite(Subframe) || Seconds/Subframe>4096 || P.mass<=0)return false;
     TRACE_CPUPROFILER_EVENT_SCOPE(SSW_FlightPhysicsAdapter);

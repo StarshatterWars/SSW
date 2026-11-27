@@ -304,11 +304,21 @@ void TrafficAI::Dispatch(FGalaxyTrafficState& Traffic,FEconomyState& Economy,con
 {
     if(Traffic.Journeys.Num()>=MaxJourneys)return;
     int32 Near=0;for(const auto& Job:Traffic.Journeys)if(!Job.IsFinished() && Job.CurrentSector==Active)++Near;
-    if(Near<2 && Sectors.Contains(Active))ScheduleSector(Traffic,Economy,Sectors,Endpoints,Active);
+    if(Near<2 && Sectors.Contains(Active))
+    {
+        ScheduleSector(Traffic,Economy,Sectors,Endpoints,Active);
+        Traffic.SectorLastServed.Add(Active,FMath::Max(UE_SMALL_NUMBER,Traffic.Clock));
+    }
     FName Least;double Oldest=TNumericLimits<double>::Max();
     for(const auto& Pair:Sectors)
     {const double Served=Traffic.SectorLastServed.FindRef(Pair.Key);if(Served<Oldest || (Served==Oldest && (Least.IsNone() || Pair.Key.LexicalLess(Least)))){Oldest=Served;Least=Pair.Key;}}
-    if(!Least.IsNone() && Traffic.Journeys.Num()<MaxJourneys)ScheduleSector(Traffic,Economy,Sectors,Endpoints,Least);
+    if(!Least.IsNone() && Traffic.Journeys.Num()<MaxJourneys)
+    {
+        ScheduleSector(Traffic,Economy,Sectors,Endpoints,Least);
+        // Service means examined, even when no trade can start. Otherwise an
+        // empty lexical-first sector starves every unloaded producer forever.
+        Traffic.SectorLastServed.Add(Least,FMath::Max(UE_SMALL_NUMBER,Traffic.Clock));
+    }
 }
 
 bool TrafficAI::AdvanceScheduled(FGalaxyTrafficJourney& Job,FEconomyState& Economy,double Now,bool Realized,bool Arrived,bool InventoryChanged,double HopSeconds,double Rate)

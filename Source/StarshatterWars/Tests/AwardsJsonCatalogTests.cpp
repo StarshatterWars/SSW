@@ -38,9 +38,22 @@ bool FAwardsJsonParityTest::RunTest(const FString&)
     }
     for (const auto& Pair : Data->MedalsDataTable->GetRowMap())
     {
-        const auto* Row = Medals->FindRow<FMedalInfo>(Pair.Key, TEXT("Awards parity"), false);
-        TestTrue(*FString::Printf(TEXT("Medal %s: flag, eligibility, ceremony and presentation unchanged"), *Pair.Key.ToString()),
-            Row && FMedalInfo::StaticStruct()->CompareScriptStruct(Pair.Value, Row, 0));
+        const FMedalInfo* Row = Medals->FindRow<FMedalInfo>(Pair.Key, TEXT("Awards parity"), false);
+        if (!Row && reinterpret_cast<const FMedalInfo*>(Pair.Value)->MedalId==8)
+            for (const auto& Candidate : Medals->GetRowMap())
+                if (reinterpret_cast<const FMedalInfo*>(Candidate.Value)->MedalId==8)
+                    Row=reinterpret_cast<const FMedalInfo*>(Candidate.Value);
+        FMedalInfo Expected=*reinterpret_cast<const FMedalInfo*>(Pair.Value);
+        if (Expected.MedalId==8)
+        {
+            // Authored correction: campaign one is Operation Live Fire, not Korian Crisis.
+            Expected.Name=TEXT("Basic Flight Training");
+            Expected.Desc=Expected.AwardText=TEXT("Awarded for completing all four Operation Live Fire flight-training missions.");
+            Expected.bDynamicCampaignOnly=false;
+            Expected.bEligibilityConfigured=true;
+        }
+        TestTrue(*FString::Printf(TEXT("Medal %s: identity and eligibility retained except documented training correction"), *Pair.Key.ToString()),
+            Row && FMedalInfo::StaticStruct()->CompareScriptStruct(&Expected, Row, 0));
     }
     // Default runtime path must consume the same JSON into isolated instances.
     auto* Runtime = NewObject<UStarshatterGameDataSubsystem>(Context);

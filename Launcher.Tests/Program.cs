@@ -13,6 +13,11 @@ internal static class Program
     {
         SynchronizationContext.SetSynchronizationContext(new System.Windows.Threading.DispatcherSynchronizationContext());
         int checks = 0;
+        if (!GameLaunchDiagnostics.Describe("EOS",777006,false).Contains("crashed before startup")) throw new Exception("Static-startup crash was reported as launch success");
+        if (GameLaunchDiagnostics.Describe("NULL",0,false).Contains("Started in offline")) throw new Exception("Exited bootstrap without a game was reported as success");
+        if (GameLaunchDiagnostics.Describe("NULL",0,true)!="Started in offline mode.") throw new Exception("Live child game was rejected after bootstrap exit");
+        checks += 3;
+
         using (var signingKey = System.Security.Cryptography.RSA.Create(2048))
         {
             var handler = new ReleaseMetadataHandler();

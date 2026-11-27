@@ -211,7 +211,7 @@ bool FAgentCatalogTest::RunTest(const FString&)
                 if (Id == FreeFlightAssignment::Id)
                 {
                     TestTrue(TEXT("Flight clearance belongs to a security dispatcher with the Ensign gate"),
-                        Agent.Class == EAgentClass::Security && Agent.MinimumRank >= 2);
+                        Agent.Class == EAgentClass::Security && Agent.MinimumRank >= UAwardInfoRegistry::RankFromName(TEXT("Ensign")));
                     TestFalse(TEXT("Free Flight is not permitted during training"), FreeFlightAssignment::Unlocked(Agent.MinimumRank, true));
                     continue;
                 }

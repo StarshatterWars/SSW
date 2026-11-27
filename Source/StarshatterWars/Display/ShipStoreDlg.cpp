@@ -20,6 +20,7 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SScrollBox.h"
 #include "Widgets/SBoxPanel.h"
+#include "Widgets/SOverlay.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Views/SHeaderRow.h"
 #include "Widgets/Views/SListView.h"
@@ -40,7 +41,8 @@ struct FStoreView : TSharedFromThis<FStoreView>
     TWeakObjectPtr<UShipStoreSubsystem> Store;
     TWeakObjectPtr<UShipInsuranceSubsystem> Sales;
     TWeakObjectPtr<UStarshatterPlayerSubsystem> Players;
-    TWeakObjectPtr<UShipBriefingPreview> Preview;
+    TWeakObjectPtr<UShipBriefingPreview> Preview, ExpandedPreview;
+    bool bExpanded = false;
     TArray<FShipSkinCatalogEntry> Skins;
     TArray<FStoreRow> All,Visible,HullTemplates;
     FDelegateHandle DataChanged;
@@ -103,6 +105,8 @@ struct FStoreView : TSharedFromThis<FStoreView>
         const auto* Hull=Selected && (Tab==EShipStoreCategory::Hulls || Skin)?ShipDesignRegistry::Find(Selected->Offer.Design):nullptr;
         Preview->SetShipDesign(Hull,{},Skin?ShipSkinCatalog::Resolve(*Skin):nullptr);
         Preview->ResetView();
+        if (auto* Large = ExpandedPreview.Get())
+        { Large->SetShipDesign(Hull, {}, Skin ? ShipSkinCatalog::Resolve(*Skin) : nullptr); Large->ResetView(); }
     }
     bool CanBuy(FText& Reason) const
     {
@@ -193,6 +197,9 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
     }
     FString SkinError;ShipSkinCatalog::Load(FPaths::ProjectContentDir()/TEXT("GameData/Ships/skins.json"),View->Skins,SkinError);
     Preview=NewObject<UShipBriefingPreview>(this);Preview->SetPurchasePreview();Preview->SetVisibility(ESlateVisibility::Visible);Preview->SetToolTipText(INVTEXT("Drag to orbit / mouse wheel to zoom / double-click to reset"));View->Preview=Preview;
+    ExpandedPreview.Reset(NewObject<UShipBriefingPreview>(this)); ExpandedPreview->SetPurchasePreview();
+    ExpandedPreview->SetToolTipText(INVTEXT("Drag to rotate / wheel to zoom / double-click to reset"));
+    View->ExpandedPreview=ExpandedPreview.Get();
     const auto Weak=TWeakPtr<FStoreView>(View);
     auto Header=SNew(SHeaderRow);
     const auto Column=[&](FName Id,FText Label,float Width)
@@ -223,7 +230,7 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
             .OnClicked_Lambda([View,Index](){View->Tab=EShipStoreCategory(Index);View->Selected.Reset();View->Refresh();View->UpdatePreview();return FReply::Handled();})
             [SNew(SHorizontalBox)+SHorizontalBox::Slot().AutoWidth()[SNew(SShipSystemIcon).Icon(Icons[Index])]
                 +SHorizontalBox::Slot().FillWidth(1).Padding(5,0)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).Text(FText::FromString(Names[Index]))]]];
-    return SNew(SVerticalBox)
+    auto StoreContent = SNew(SVerticalBox)
         +SVerticalBox::Slot().AutoHeight().Padding(8,5)[Tabs]
         +SVerticalBox::Slot().AutoHeight().Padding(8,5)[SNew(SHorizontalBox)
             +SHorizontalBox::Slot().FillWidth(1)[SNew(SEditableTextBox).HintText(INVTEXT("SEARCH ITEMS"))
@@ -241,7 +248,12 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
                         (Row.Empire.IsEmpty()?FString():TEXT("EMPIRE: ")+Row.Empire+TEXT("  |  "))+
                         TEXT("DELIVERY: ")+(View->Store.IsValid()?View->Store->Dock():TEXT("DOCK REQUIRED")));
                 })])]
-                +SHorizontalBox::Slot().FillWidth(1.4f).Padding(8,0,0,0)[MissionUIStyle::MakeDataPane(Preview->TakeWidget())]]]
+                +SHorizontalBox::Slot().FillWidth(1.4f).Padding(8,0,0,0)[MissionUIStyle::MakeDataPane(SNew(SVerticalBox)
+                    +SVerticalBox::Slot().FillHeight(1)[Preview->TakeWidget()]
+                    +SVerticalBox::Slot().AutoHeight()[SNew(SButton).ToolTipText(INVTEXT("Open large ship and skin viewer"))
+                        .IsEnabled_Lambda([View](){return View->Selected && (View->Tab==EShipStoreCategory::Hulls || View->Tab==EShipStoreCategory::Skins);})
+                        .OnClicked_Lambda([View](){View->bExpanded=true;View->UpdatePreview();return FReply::Handled();})
+                        [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Camera)]])]]]
         +SVerticalBox::Slot().AutoHeight().Padding(8,4)[SNew(SHorizontalBox)
             +SHorizontalBox::Slot().AutoWidth().VAlign(VAlign_Center)[SNew(STextBlock).Text(INVTEXT("QUANTITY")).Font(MissionUIStyle::GetRowFont(11))]
             +SHorizontalBox::Slot().AutoWidth().Padding(8,0)[SNew(SBox).WidthOverride(100)[SNew(SSpinBox<int32>).MinValue(1).MaxValue(1000)
@@ -270,4 +282,19 @@ TSharedRef<SWidget> UShipStoreDlg::RebuildWidget()
                 .IsEnabled_Lambda([View](){FText Why;return View->CanRent(Why);}).OnClicked_Lambda([View](){View->Rent();return FReply::Handled();})
                 [SNew(STextBlock).Text_Lambda([View](){return View->PendingRental.IsValid()?INVTEXT("CONFIRM RENTAL"):INVTEXT("RENT");}).Font(MissionUIStyle::GetRowFont(12))]]]
         +SVerticalBox::Slot().AutoHeight().Padding(8,4)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).AutoWrapText(true).Text_Lambda([View](){return View->Feedback;})];
+    return SNew(SOverlay)
+        +SOverlay::Slot()[StoreContent]
+        +SOverlay::Slot().Padding(12)
+        [SNew(SBox).Visibility_Lambda([View](){return View->bExpanded?EVisibility::Visible:EVisibility::Collapsed;})
+        [MissionUIStyle::MakeDataPane(SNew(SVerticalBox)
+            +SVerticalBox::Slot().AutoHeight()[SNew(SHorizontalBox)
+                +SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).Text(INVTEXT("SHIP VIEWER")).Font(MissionUIStyle::GetHeaderFont(16))]
+                +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ToolTipText(INVTEXT("Reset view"))
+                    .OnClicked_Lambda([View](){if(auto* P=View->ExpandedPreview.Get())P->ResetView();return FReply::Handled();})
+                    [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Refresh)]]
+                +SHorizontalBox::Slot().AutoWidth()[SNew(SButton).ToolTipText(INVTEXT("Close ship viewer"))
+                    .OnClicked_Lambda([View](){View->bExpanded=false;return FReply::Handled();})
+                    [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Abort)]]]
+            +SVerticalBox::Slot().FillHeight(1)[ExpandedPreview->TakeWidget()])
+        ]];
 }

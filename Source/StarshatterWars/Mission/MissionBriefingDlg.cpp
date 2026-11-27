@@ -1,4 +1,5 @@
 #include "MissionBriefingDlg.h"
+#include "CombatDebugDamage.h"
 #include "MissionSceneIsolation.h"
 #include "Widgets/SNullWidget.h"
 #include "Widgets/Layout/SSpacer.h"
@@ -536,8 +537,7 @@ void UMissionBriefingDlg::UpdateLiveMission()
             }
             if (IsHostileContact(Enemy))
             {
-                Enemy->Physical::InflictDamage(Enemy->Design()->integrity * 0.5);
-                if (Enemy->GetIntegrity() < 1.0) Enemy->DeathSpiral();
+                ApplyCombatDebugDamage(Pilot, Enemy, Enemy->Design()->integrity * 0.5);
                 RadioView::Message("Combat debug damage applied.");
             }
             else

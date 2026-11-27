@@ -12,6 +12,7 @@
 */
 
 #include "MissionDebriefDlg.h"
+#include "TrainingCompletion.h"
 #include "TrainingReplay.h"
 #include "MissionRewardRules.h"
 #include "DebriefProgressSnapshot.h"
@@ -783,6 +784,9 @@ void UMissionDebriefDlg::RefreshOutcomeAndRecord(int32 Points)
                 auto& Info=Players->GetMutablePlayerInfo();
                 const int32 CampaignId = bRegionalAssignment ? Campaign::SINGLE_MISSIONS : bTrainingAssignment ? Campaign::TRAINING_CAMPAIGN : bRecordCampaignMission ? CampaignPtr->GetCampaignId() : Campaign::SINGLE_MISSIONS;
                 const bool bFirstCompletion = Info.MarkMissionCompleted(CampaignId, MissionPtr->GetIdentity());
+                if (CampaignId == Campaign::TRAINING_CAMPAIGN && TrainingCompletion::Record(Info))
+                    if (auto* Pilot = PlayerCharacter::GetCurrentPlayer())
+                        Pilot->SetCampaigns(Info.CampaignCompleteMask);
                 if (bFirstCompletion && !SimPtr->IsNetworked())
                 {
                     const int32 Bonus = FMath::Max(MissionPtr->GetStoryPoints(),FMissionRewardCatalog::Get().Quote(CampaignId,MissionPtr->GetIdentity(),false,0,0).CompletionPoints);

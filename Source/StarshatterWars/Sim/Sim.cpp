@@ -4379,7 +4379,7 @@ bool Sim::NeedsTrainingLaunchClearance() const
     const auto* Progress=Game?Game->GetSubsystem<UStarshatterPlayerSubsystem>():nullptr;
     if(Progress)if(const auto* Hull=Progress->GetPlayerInfo().HangarShips.FindByPredicate([&](const auto& H){return H.HullId==Progress->GetPlayerInfo().AssignedHangarHull;}))
         if(!ShipCommerceAI::RentalMayLaunch(Progress->GetPlayerInfo(),*Hull,FDateTime::UtcNow().ToUnixTimestamp()))return true;
-    if(!Progress || !FreeFlightAssignment::Unlocked(Pilot?Pilot->GetRank():-1,Progress->GetPlayerInfo().Campaign==Campaign::TRAINING_CAMPAIGN))return true;
+    if(!Progress || !FreeFlightAssignment::Unlocked(Pilot?Pilot->GetRank():-1,Progress->GetPlayerInfo()))return true;
     return !Game || !Pilot || !PlayerFlightAccess::CanLaunch(FreeFlightAssignment::IsStarted(Game->GetTrainingAgent(),AgentAI::PilotKey(*Pilot)),Pilot->GetRank());
 }
 void Sim::PrepareCutscenePlayback(const Mission* PreparedMission)

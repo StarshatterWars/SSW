@@ -517,7 +517,8 @@ void NavAI::ThrottleControl()
     const double ShipSpeed = FVector::DotProduct(ship->GetVelocity(), ship->GetHeading());
 
     bool bAugmenter = false;
-    const bool bFighterRoute = navpt && !bTrackingTarget && ship->GetClassification() < CLASSIFICATION::LCA;
+    const bool bCruiseRoute = navpt && !bTrackingTarget;
+    const bool bFighterRoute = bCruiseRoute && ship->GetClassification() < CLASSIFICATION::LCA;
 
     // Defaults each tick (prevents stale values from previous frames)
     brakes = 0.0;
@@ -539,12 +540,12 @@ void NavAI::ThrottleControl()
             brakes = FMath::Clamp((-Error - 5.0) / 100.0, 0.0, 1.0);
             if (brakes > 0.0) throttle = 0.0;
         }
-        else if (bFighterRoute) {
+        else if (bCruiseRoute) {
             const Drive* MainDrive = ship->GetMainDrive();
             const bool bCanBoost = MainDrive && MainDrive->MaxAugmenter() > 0.0f;
             const double Limit = ship->GetVLimit();
             // Keep the cruise band above the existing 250 m/s stall override.
-            if (ship->IsAirborne()) DesiredSpeed = FMath::Max(265.0, DesiredSpeed);
+            if (bFighterRoute && ship->IsAirborne()) DesiredSpeed = FMath::Max(265.0, DesiredSpeed);
             if (Limit > 0.0)
                 DesiredSpeed = FMath::Min(DesiredSpeed, Limit * (bCanBoost ? 1.5 : 1.0));
 
@@ -616,7 +617,7 @@ void NavAI::ThrottleControl()
     ship->SetAugmenter(bAugmenter);
 
     // Braking thrust: negative Y translation (same intent as original)
-    if (bFighterRoute || (ShipSpeed > 1.0 && brakes > 0.0)) {
+    if (bCruiseRoute || (ShipSpeed > 1.0 && brakes > 0.0)) {
         const double MaxTransY = ship->Design() ? ship->Design()->trans_y : 0.0;
         ship->SetTransY(-brakes * MaxTransY);
     }

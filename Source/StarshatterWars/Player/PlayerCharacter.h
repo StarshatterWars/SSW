@@ -238,6 +238,7 @@ public:
 private:
     friend class FPlayerRankProgressionTest;
     friend class FMedalEligibilityTest;
+    friend class FTrainingCompletionAwardTest;
     void CreateUniqueID();
 
 private:

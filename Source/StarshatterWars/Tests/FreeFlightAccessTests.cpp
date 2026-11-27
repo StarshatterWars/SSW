@@ -26,16 +26,16 @@ bool FFreeFlightRankAccessTest::RunTest(const FString&)
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FFreeFlightClearanceTest,"Starshatter.Mission.FreeFlightAgentClearance",EAutomationTestFlags::EditorContext|EAutomationTestFlags::EngineFilter)
 bool FFreeFlightClearanceTest::RunTest(const FString&)
 {
-    TestFalse(TEXT("Free Flight remains unavailable in training campaigns"),FreeFlightAssignment::Unlocked(2,true));
+    TestFalse(TEXT("Free Flight remains unavailable in training campaigns"),FreeFlightAssignment::Unlocked(UAwardInfoRegistry::RankFromName(TEXT("Ensign")),true));
     FS_PlayerGameInfo Graduate;Graduate.Campaign=1;
     for(int32 Lesson=101;Lesson<=103;++Lesson)Graduate.MarkMissionCompleted(1,Lesson);
-    TestFalse(TEXT("Ensign promotion after T3 does not skip the final lesson"),FreeFlightAssignment::Unlocked(2,Graduate));
+    TestFalse(TEXT("Ensign promotion after T3 does not skip the final lesson"),FreeFlightAssignment::Unlocked(UAwardInfoRegistry::RankFromName(TEXT("Ensign")),Graduate));
     Graduate.MarkMissionCompleted(1,104);
-    TestTrue(TEXT("Graduates receive Free Flight before accepting the next campaign"),FreeFlightAssignment::Unlocked(2,Graduate));
-    TestFalse(TEXT("Graduation never removes the Ensign rank gate"),FreeFlightAssignment::Unlocked(1,Graduate));
+    TestTrue(TEXT("Graduates receive Free Flight before accepting the next campaign"),FreeFlightAssignment::Unlocked(UAwardInfoRegistry::RankFromName(TEXT("Ensign")),Graduate));
+    TestFalse(TEXT("Graduation never removes the Ensign rank gate"),FreeFlightAssignment::Unlocked(0,Graduate));
     AgentAI Journal;const FName Pilot(TEXT("Sortie fixture"));const int32 Id=FreeFlightAssignment::Id;
     TestFalse(TEXT("Cadets cannot request independent flight"),FreeFlightAssignment::Unlocked(0));
-    TestTrue(TEXT("Ensigns may request a flight assignment"),FreeFlightAssignment::Unlocked(2));
+    TestTrue(TEXT("Ensigns may request a flight assignment"),FreeFlightAssignment::Unlocked(UAwardInfoRegistry::RankFromName(TEXT("Ensign"))));
     TestFalse(TEXT("Docked idle session is not departure clearance"),FreeFlightAssignment::IsStarted(Journal,Pilot));
     const TArray<int32> Pool={Id};
     for(int32 Sortie=0;Sortie<2;++Sortie)

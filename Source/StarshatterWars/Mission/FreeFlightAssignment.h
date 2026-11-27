@@ -1,11 +1,12 @@
 #pragma once
 #include "AgentAI.h"
+#include "AwardInfoRegistry.h"
 #include "GameStructs.h"
 namespace FreeFlightAssignment
 {
     inline constexpr int32 Id = 900010;
     inline bool Unlocked(int32 Rank, bool bTrainingCampaign = false, bool bTrainingComplete = false)
-    { return Rank >= 2 && (!bTrainingCampaign || bTrainingComplete); } // Ensign
+    { return Rank >= FMath::Max(1, UAwardInfoRegistry::RankFromName(TEXT("Ensign"))) && (!bTrainingCampaign || bTrainingComplete); } // Ensign
     inline bool Unlocked(int32 Rank, const FS_PlayerGameInfo& PilotState)
     {
         bool Complete = true;

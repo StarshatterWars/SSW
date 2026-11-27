@@ -284,7 +284,7 @@ public partial class MainWindow : Window
 
             if (provider == "NULL")
             {
-                Launch(provider);
+                await LaunchAsync(provider);
                 return;
             }
 
@@ -292,13 +292,13 @@ public partial class MainWindow : Window
             if (provider == "EOS")
             {
                 string artifact = await PlatformSignIn.EpicAsync(game, sourceGame ?? game, timeout.Token);
-                Launch(provider, artifact: artifact);
+                await LaunchAsync(provider, artifact: artifact);
             }
             else
             {
                 uint appId = config.SteamAppId;
                 ulong account = PlatformSignIn.Steam(game, appId);
-                Launch(provider, steamAppId: appId, steamAccount: account);
+                await LaunchAsync(provider, steamAppId: appId, steamAccount: account);
             }
         }
         catch (OperationCanceledException)
@@ -589,15 +589,18 @@ public partial class MainWindow : Window
         AboutPatch.Visibility = Visibility.Visible;
     }
 
-    private static bool GameIsRunning()
+    private static bool GameIsRunning() => GameIsRunning(true);
+
+    private static bool GameIsRunning(bool includeServer)
     {
-        Process[] games = Process.GetProcessesByName("StarshatterWars")
-            .Concat(Process.GetProcessesByName("StarServer")).ToArray();
+        Process[] games = includeServer
+            ? Process.GetProcessesByName("StarshatterWars").Concat(Process.GetProcessesByName("StarServer")).ToArray()
+            : Process.GetProcessesByName("StarshatterWars");
         foreach (Process process in games) process.Dispose();
         return games.Length > 0;
     }
 
-    private void Launch(string provider, string? artifact = null, uint steamAppId = 0, ulong steamAccount = 0)
+    private async Task LaunchAsync(string provider, string? artifact = null, uint steamAppId = 0, ulong steamAccount = 0)
     {
         if (game is null) return;
         string directory = Path.GetDirectoryName(game)!;
@@ -636,9 +639,14 @@ public partial class MainWindow : Window
         try
         {
             using Process? process = Process.Start(start);
-            if (process is not null) StopMusic();
-            LaunchStatus.Text = process is null ? "Could not start the game." :
-                provider == "NULL" ? "Started in offline mode." : "Signed in. Game started.";
+            if (process is null) { LaunchStatus.Text = "Could not start the game."; return; }
+            LaunchStatus.Text = "Starting game…";
+            await Task.WhenAny(process.WaitForExitAsync(closing.Token), Task.Delay(TimeSpan.FromSeconds(6), closing.Token));
+            closing.Token.ThrowIfCancellationRequested();
+            bool running = GameIsRunning(includeServer: false);
+            int? exitCode = process.HasExited ? process.ExitCode : null;
+            LaunchStatus.Text = GameLaunchDiagnostics.Describe(provider, exitCode, running);
+            if (running) StopMusic();
         }
         catch (System.ComponentModel.Win32Exception ex)
         {

@@ -2671,7 +2671,7 @@
     "Station": "Orion",
     "Class": "Security",
     "Empire": "Terellian",
-    "MinimumRank": 2,
+    "MinimumRank": 1,
     "Level": 1,
     "Description": "Issues independent flight clearances to qualified pilots. Accept Free Flight and start the assignment before requesting departure.",
     "MissionIds": [
@@ -2692,7 +2692,7 @@
     "Station": "Janek Station",
     "Class": "Security",
     "Empire": "Terellian",
-    "MinimumRank": 2,
+    "MinimumRank": 1,
     "Level": 1,
     "Description": "Issues independent flight clearances to qualified pilots. Accept Free Flight and start the assignment before requesting departure.",
     "MissionIds": [
