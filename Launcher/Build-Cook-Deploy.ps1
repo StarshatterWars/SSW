@@ -65,7 +65,7 @@ try {
     [IO.File]::WriteAllText((Join-Path $runRoot '.pipeline-run'),$runId)
     Push-Location $projectPath
     try {
-        Run-NativeStep '1 Build Editor' $buildTool @('StarshatterWarsEditor','Win64','Development',('-Project='+$projectFile),'-WaitMutex','-NoHotReloadFromIDE')
+        Run-NativeStep '1 Build Editor' $buildTool @('StarshatterWarsEditor','Win64','Development',('-Project='+$projectFile),'-WaitMutex','-NoHotReloadFromIDE','-DisableAdaptiveUnity')
         Run-NativeStep '2 Automated tests' $EditorCommand @($projectFile,'-unattended','-nop4','-nosplash','-nosound','-RenderOffscreen','-ddc=InstalledNoZenLocalFallback','-ini:EditorSettings:[/Script/UnrealEd.AnalyticsPrivacySettings]:bSendUsageData=False','-ExecCmds=Automation RunTests Starshatter','-TestExit=Automation Test Queue Empty',('-ReportExportPath='+$report),('-abslog='+(Join-Path $logRoot 'GameTests.log')))
         $testFile=Join-Path $report 'index.json'
         if(!(Test-Path -LiteralPath $testFile)){throw 'Tests did not produce a report. Cooking and deployment were stopped.'}

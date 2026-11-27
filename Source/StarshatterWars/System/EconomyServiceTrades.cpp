@@ -9,7 +9,7 @@ namespace
 {
 using FDone=TFunction<void(bool,const FText&,FGuid)>;
 using FSharedDone=TSharedRef<FDone>;
-FString Profile(UStarshatterPlayerSubsystem* P){return P?P->GetSlotName()+TEXT("/")+P->GetActiveSavedPlayerSlot()+FString::Printf(TEXT("/%d/%lld"),P->GetUserIndex(),P->GetPlayerInfo().CreateTime):FString();}
+FString TradeProfileKey(UStarshatterPlayerSubsystem* P){return P?P->GetSlotName()+TEXT("/")+P->GetActiveSavedPlayerSlot()+FString::Printf(TEXT("/%d/%lld"),P->GetUserIndex(),P->GetPlayerInfo().CreateTime):FString();}
 void Finish(const FSharedDone& Done,bool Success,const FString& Text,FGuid Id={}){if(*Done){auto Callback=MoveTemp(*Done);Callback(Success,FText::FromString(Text),Id);}}
 TSharedRef<FJsonObject> Request(const FNpcTradeReceipt& T,const TCHAR* Action,const TCHAR* Suffix)
 {
@@ -23,11 +23,11 @@ bool Credits(const TSharedPtr<FJsonObject>& Root,const TCHAR* Name,int64& Out)
 bool UEconomyServiceSubsystem::Trade(const FNativeMarketCommand& CommandIn,TFunction<bool(FText&)>&& Validate,FDone&& Completed,FText& Reason)
 {
     auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
-    if(!RequiresExternal()||!IsReady()||bTradePending||!Players||!Players->HasLoaded()||Players->GetEconomy().NpcAuthorityWorldId!=Cached.WorldId||ProjectionProfile!=Profile(Players))
+    if(!RequiresExternal()||!IsReady()||bTradePending||!Players||!Players->HasLoaded()||Players->GetEconomy().NpcAuthorityWorldId!=Cached.WorldId||ProjectionProfile!=TradeProfileKey(Players))
     {Reason=INVTEXT("The economy is not ready, or a trade is awaiting confirmation. Nothing exchanged.");return false;}
     if(CommandIn.Action!=EMarketCommand::Trade){Reason=INVTEXT("Queued orders need the remote order adapter. No local order was placed.");return false;}
     if(!Validate||!Validate(Reason))return false;
-    FNpcTradeReceipt T;T.Id=CommandIn.Receipt;T.WorldId=Cached.WorldId;const FString Bound=Profile(Players);
+    FNpcTradeReceipt T;T.Id=CommandIn.Receipt;T.WorldId=Cached.WorldId;const FString Bound=TradeProfileKey(Players);
     T.Principal=TEXT("Pilot/")+FMD5::HashAnsiString(*Bound);T.Owner=FEconomyLedger::Pilot();T.bBuying=CommandIn.Quote.bBuy;
     T.Inventory=T.bBuying?CommandIn.Quote.Destination:CommandIn.Quote.Source;
     T.Market=T.bBuying?CommandIn.Quote.Source:CommandIn.Quote.Destination;T.Item=CommandIn.Quote.Item;T.Quantity=CommandIn.Quote.Quantity;
@@ -40,7 +40,7 @@ bool UEconomyServiceSubsystem::Trade(const FNativeMarketCommand& CommandIn,TFunc
     const bool Sent=Command(Body,[Weak,T,Bound,Done,Check=MoveTemp(Validate)](bool Ok,TSharedPtr<FJsonObject> Reply,const FString& Failure)mutable{
         auto* Self=Weak.Get();if(!Self)return;
         auto* P=Self->GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();FText Why;FString World;
-        bool Prepared=Ok&&Reply&&Reply->TryGetStringField(TEXT("worldId"),World)&&World==T.WorldId&&P&&P->HasLoaded()&&Profile(P)==Bound&&Check&&Check(Why);
+        bool Prepared=Ok&&Reply&&Reply->TryGetStringField(TEXT("worldId"),World)&&World==T.WorldId&&P&&P->HasLoaded()&&TradeProfileKey(P)==Bound&&Check&&Check(Why);
         if(Prepared)Prepared=Reply->TryGetNumberField(TEXT("unitTonnes"),T.UnitTonnes)&&Credits(Reply,TEXT("totalCredits"),T.TotalCredits)&&Credits(Reply,TEXT("baseCredits"),T.BaseCredits)&&Credits(Reply,TEXT("taxCredits"),T.TaxCredits);
         if(!Prepared||!NpcTradeAI::Stage(P->GetEconomy(),T,[P](){return P->SaveActivePlayerProgress();},Why)){
             Self->bTradePending=false;
@@ -66,7 +66,7 @@ void UEconomyServiceSubsystem::ApplyTradeReply(const FNpcTradeReceipt& T,const F
     bTradePending=false;const auto Done=MakeShared<FDone>(MoveTemp(Completed));
     auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();FString State,World;FText Why;
     if(!Ok||!Reply||!Reply->TryGetStringField(TEXT("state"),State)||!Reply->TryGetStringField(TEXT("worldId"),World)||World!=T.WorldId||Cached.WorldId!=T.WorldId||
-        !Players||!Players->HasLoaded()||Profile(Players)!=Bound)
+        !Players||!Players->HasLoaded()||TradeProfileKey(Players)!=Bound)
     {Finish(Done,false,Failure.IsEmpty()?TEXT("Settlement is pending verification. Saved escrow is retained."):Failure);return;}
     if(State!=TEXT("Committed")&&State!=TEXT("Cancelled")){Finish(Done,false,TEXT("Trade is pending. Saved escrow is retained."));return;}
     const bool Committed=State==TEXT("Committed");
@@ -82,7 +82,7 @@ void UEconomyServiceSubsystem::RecoverPendingTrades()
     {
         const auto T=Pair.Value;if(T.Phase!=ENpcTradePhase::Escrowed)continue;
         if(T.WorldId.IsEmpty()||T.WorldId!=Cached.WorldId){Cached.Error=TEXT("A trade belongs to another economy world. Its escrow is retained; no cross-world replay is allowed.");return;}
-        bTradePending=true;const auto Bound=Profile(Players);const TWeakObjectPtr<UEconomyServiceSubsystem> Weak(this);FString Error;
+        bTradePending=true;const auto Bound=TradeProfileKey(Players);const TWeakObjectPtr<UEconomyServiceSubsystem> Weak(this);FString Error;
         if(!Command(Request(T,TEXT("external_trade_status"),TEXT("/status")),[Weak,T,Bound](bool Ok,TSharedPtr<FJsonObject> Reply,const FString& Failure){
             auto* Self=Weak.Get();if(!Self)return;FString State,World;
             if(Ok&&Reply&&Reply->TryGetStringField(TEXT("worldId"),World)&&World==T.WorldId&&Reply->TryGetStringField(TEXT("state"),State)&&State==TEXT("Prepared"))Self->SettleTrade(T,Bound,{});

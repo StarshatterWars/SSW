@@ -17,7 +17,7 @@
 #include "Serialization/JsonWriter.h"
 namespace
 {
-FString Profile(UStarshatterPlayerSubsystem* P){return P->GetSlotName()+TEXT("/")+P->GetActiveSavedPlayerSlot()+FString::Printf(TEXT("/%d/%lld"),P->GetUserIndex(),P->GetPlayerInfo().CreateTime);}
+FString SnapshotProfileKey(UStarshatterPlayerSubsystem* P){return P->GetSlotName()+TEXT("/")+P->GetActiveSavedPlayerSlot()+FString::Printf(TEXT("/%d/%lld"),P->GetUserIndex(),P->GetPlayerInfo().CreateTime);}
 TSharedPtr<FJsonObject> Read(const FString& Path){FString Text;TSharedPtr<FJsonObject> O;if(FFileHelper::LoadFileToString(Text,*Path))FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Text),O);return O;}
 bool Durable(const FString& File,const TSharedRef<FJsonObject>& Object)
 {
@@ -33,7 +33,7 @@ void UEconomyServiceSubsystem::SynchronizeNpc()
     if(!bExternalRequired||bSyncPending||bStopping||!Cached.bConnected||!Cached.bCheckpointReady)return;
     auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();auto* Traffic=GetGameInstance()->GetSubsystem<UGalaxyTrafficSubsystem>();
     if(!Players||!Players->HasLoaded()||!Traffic)return;
-    const auto Bound=Profile(Players);if(ProjectionProfile!=Bound){bProjectionReady=false;ProjectedRevision=-1;ProjectedOffline.Reset();}if(Cached.Revision<ProjectedRevision){bProjectionReady=false;ProjectedRevision=-1;}
+    const auto Bound=SnapshotProfileKey(Players);if(ProjectionProfile!=Bound){bProjectionReady=false;ProjectedRevision=-1;ProjectedOffline.Reset();}if(Cached.Revision<ProjectedRevision){bProjectionReady=false;ProjectedRevision=-1;}
     auto& State=Players->GetEconomy();const auto Root=SSWEconomyAuthority::StateDirectory();const auto LinkPath=Root/TEXT("client-world.json"),PendingPath=Root/TEXT("handoff-request.json");
     const auto Link=Read(LinkPath);if(!Link&&IFileManager::Get().FileExists(*LinkPath)){bProjectionReady=false;Cached.Error=TEXT("The saved economy identity is unreadable. No replacement world was accepted.");return;}FString Pinned;if(Link)Link->TryGetStringField(TEXT("worldId"),Pinned);
     if((!Pinned.IsEmpty()&&Pinned!=Cached.WorldId)||(!State.NpcAuthorityWorldId.IsEmpty()&&State.NpcAuthorityWorldId!=Cached.WorldId))
@@ -73,7 +73,7 @@ void UEconomyServiceSubsystem::SynchronizeNpc()
     if(!Command(Request,[Weak,Bound,World,LinkPath](bool Ok,TSharedPtr<FJsonObject> Reply,const FString& Error){
         auto* Self=Weak.Get();if(!Self)return;Self->bSyncPending=false;
         auto* P=Self->GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();auto* T=Self->GetGameInstance()->GetSubsystem<UGalaxyTrafficSubsystem>();
-        if(!Ok||!Reply||!P||!P->HasLoaded()||!T||Profile(P)!=Bound||Self->Cached.WorldId!=World){if(!Ok)Self->Cached.Error=Error;return;}
+        if(!Ok||!Reply||!P||!P->HasLoaded()||!T||SnapshotProfileKey(P)!=Bound||Self->Cached.WorldId!=World){if(!Ok)Self->Cached.Error=Error;return;}
         FString Returned;double Revision=0;if(!Reply->TryGetStringField(TEXT("worldId"),Returned)||Returned!=World||!Reply->TryGetNumberField(TEXT("revision"),Revision)||Revision<0||Revision>9007199254740991.0||!FMath::IsFinite(Revision)||(Self->ProjectedRevision>=0&&Revision<Self->ProjectedRevision))
         {Self->bProjectionReady=false;Self->Cached.Error=TEXT("Rejected a stale or foreign NPC projection.");return;}
         FEconomyState Npc;FGalaxyTrafficState Trips;TMap<FGuid,FString> Ids;FString Why;
