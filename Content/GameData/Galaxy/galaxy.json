@@ -5995,7 +5995,8 @@
 			"asteroidType": "Metallic",
 			"productionSites": [
 				"Tarsus Orbital Concentrator",
-				"Tarsus Materials Works"
+				"Tarsus Materials Works",
+				"Sintar Orbital Concentrator"
 			]
 		},
 		{
@@ -6131,7 +6132,6 @@
 			],
 			"asteroidType": "Stony",
 			"productionSites": [
-				"Sintar Orbital Concentrator",
 				"Nergal Orbital Concentrator",
 				"Nergal Materials Works"
 			]

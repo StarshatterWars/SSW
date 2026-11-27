@@ -6,6 +6,7 @@
 
 namespace
 {
+bool IndustryIsBlueprintService(FName A){return A==TEXT("ResearchMaterial") || A==TEXT("ResearchTime") || A==TEXT("Copying");}
 constexpr double EconomyQuantityLimit = 1.e15;
 bool Positive(double Value) { return FMath::IsFinite(Value) && Value > 0 && Value <= EconomyQuantityLimit; }
 FEconomyItem* Find(FEconomyInventory& Inv, FName Item)
@@ -39,7 +40,7 @@ void Record(FEconomyState& State, FGuid Id, FName Reason, FName From, FName To, 
         : Kind.Contains(TEXT("Blueprint")) ? EWalletTransactionCategory::Blueprint : EWalletTransactionCategory::General;
     State.Journal.Add(Entry); State.CommittedTransactions.Add(Id);
     if (State.Journal.Num() > 512) State.Journal.RemoveAt(0, State.Journal.Num() - 512);
-    FSimDataEvents::Publish(State);
+    FSimDataEvents::Wallet(State,From,To);
 }
 bool ValidateAmounts(const TArray<FCommodityAmount>& Amounts)
 {
@@ -61,7 +62,7 @@ FEconomyInventory* FEconomyLedger::CreateInventory(FEconomyState& State, FName K
     if (auto* Existing = State.Inventories.Find(Key))
         return Existing->Owner == Owner && Existing->System == System ? Existing : nullptr;
     FEconomyInventory Inv; Inv.Id = FGuid::NewGuid(); Inv.Owner = Owner; Inv.System = System; Inv.CapacityTonnes = Capacity;
-    auto* Added=&State.Inventories.Add(Key,MoveTemp(Inv)); FSimDataEvents::Publish(State);return Added;
+    auto* Added=&State.Inventories.Add(Key,MoveTemp(Inv)); FSimDataEvents::Inventory(State,Key);return Added;
 }
 bool FEconomyLedger::ReconcileManifest(FEconomyState& State, FName Key, const TArray<FCommodityAmount>& Desired)
 {
@@ -94,7 +95,7 @@ bool FEconomyLedger::ReconcileManifest(FEconomyState& State, FName Key, const TA
     for (const auto& Amount : Desired) Candidate.ManifestItems.Add(Amount.Item);
     const bool Changed=Inventory->Items.Num()!=Candidate.Items.Num() || Inventory->ManifestItems.Num()!=Candidate.ManifestItems.Num() ||
         Inventory->Items.ContainsByPredicate([&Candidate](const auto& A){const auto* B=Candidate.Items.FindByPredicate([&A](const auto& Entry){return Entry.Id==A.Id;});return !B || B->Type!=A.Type || B->Quantity!=A.Quantity || B->UnitTonnes!=A.UnitTonnes;});
-    *Inventory = MoveTemp(Candidate); if(Changed)FSimDataEvents::Publish(State); return true;
+    *Inventory = MoveTemp(Candidate); if(Changed)FSimDataEvents::Inventory(State,Key); return true;
 }
 
 double FEconomyLedger::Used(const FEconomyInventory& Inventory)
@@ -122,28 +123,29 @@ bool FEconomyLedger::Deposit(FEconomyState& State, FName Inventory, FName Item, 
     FScopedSimDataChangeBatch DataChangeBatch(State);
     auto* Inv = State.Inventories.Find(Inventory);
     const bool Changed=Inv && DepositInto(*Inv, Item, Count, Mass);
-    if(Changed)FSimDataEvents::Publish(State);return Changed;
+    if(Changed)FSimDataEvents::Inventory(State,Inventory,Item);return Changed;
 }
 bool FEconomyLedger::Withdraw(FEconomyState& State, FName Owner, FName Inventory, FName Item, double Count)
 {
     FScopedSimDataChangeBatch DataChangeBatch(State);
     auto* Inv = State.Inventories.Find(Inventory);
     if (!HasAccess(Inv, Owner) || !Positive(Count) || Available(State, Inventory, Item) < Count) return false;
-    Find(*Inv, Item)->Quantity -= Count; FSimDataEvents::Publish(State); return true;
+    Find(*Inv, Item)->Quantity -= Count; FSimDataEvents::Inventory(State,Inventory,Item); return true;
 }
 FGuid FEconomyLedger::Reserve(FEconomyState& State, FName Owner, FName Inventory, FName Item, double Count)
 {
     FScopedSimDataChangeBatch DataChangeBatch(State);
     if (!HasAccess(State.Inventories.Find(Inventory), Owner) || !Positive(Count) || Available(State, Inventory, Item) < Count) return {};
     FEconomyReservation Claim; Claim.Id = FGuid::NewGuid(); Claim.Owner = Owner; Claim.Inventory = Inventory; Claim.Item = Item; Claim.Quantity = Count;
-    State.Reservations.Add(Claim.Id, Claim); FSimDataEvents::Publish(State); return Claim.Id;
+    State.Reservations.Add(Claim.Id, Claim); FSimDataEvents::Inventory(State,Inventory,Item); return Claim.Id;
 }
 bool FEconomyLedger::Release(FEconomyState& State, FName Owner, FGuid Id)
 {
     FScopedSimDataChangeBatch DataChangeBatch(State);
     const auto* Claim = State.Reservations.Find(Id);
+    const FName Inventory=Claim?Claim->Inventory:NAME_None,Item=Claim?Claim->Item:NAME_None;
     const bool Changed=Claim && Claim->Owner == Owner && State.Reservations.Remove(Id) == 1;
-    if(Changed)FSimDataEvents::Publish(State);return Changed;
+    if(Changed)FSimDataEvents::Inventory(State,Inventory,Item);return Changed;
 }
 bool FEconomyLedger::Transfer(FEconomyState& State, FName Owner, FName Source, FName Destination, FName Item, double Count, FGuid Id)
 {
@@ -164,7 +166,7 @@ bool FEconomyLedger::Transfer(FEconomyState& State, FName Owner, FName Source, F
         From->Items.RemoveAll([Item](const auto& Entry) { return Entry.Type == Item && Entry.Quantity == 0; });
     }
     if (Claim) { Claim->Quantity -= Count; if (Claim->Quantity <= UE_SMALL_NUMBER) State.Reservations.Remove(Id); }
-    return true;
+    FSimDataEvents::Inventory(State,Source,Item);return true;
 }
 namespace
 {
@@ -220,7 +222,7 @@ bool FEconomyLedger::Trade(FEconomyState& State, FName Buyer, FName Seller, FNam
     ApplyDeltas(State,Deltas);
     Record(State, Id, TEXT("Market purchase"), Buyer, Seller, Price);RecordCharges(State,Quote,Deltas);
     auto& Entry=State.Journal.Last();Entry.Item=Item;Entry.Quantity=Count;Entry.UnitPrice=Count>0?double(Price)/Count:0;Entry.Source=Source;Entry.Destination=Destination;
-    EconomyAI::RecordTrade(State,SourceInventory.System,Item,Count,double(Price));
+    EconomyAI::RecordTrade(State,SourceInventory.System,Item,Count,double(Price));FSimDataEvents::Inventory(State,Source,Item);
     return true;
 }
 FGuid FEconomyLedger::QueueJob(FEconomyState& State, FName Owner, FName Facility, FName Input, FName Output, FName Recipe,
@@ -238,8 +240,9 @@ FGuid FEconomyLedger::QueueAuthorizedJob(FEconomyState& State, FName Owner, FNam
         !HasAccess(State.Inventories.Find(Input), Owner) || !HasAccess(State.Inventories.Find(Output), Owner) ||
         !Positive(Duration) || !ValidateAmounts(Materials) || !ValidateAmounts(Products)) return {};
     FIndustryJob Job; Job.Id = FGuid::NewGuid(); Job.Owner = Owner; Job.Facility = Facility; Job.Input = Input; Job.Output = Output;
+    Job.Activity=State.RecipeActivities.Contains(Recipe)?State.RecipeActivities.FindChecked(Recipe):FName(TEXT("Manufacturing"));
     Job.Recipe = Recipe; Job.Materials = Materials; Job.Products = Products; Job.Duration = Duration; Job.Remaining = Duration;
-    State.Jobs.Add(Job); FSimDataEvents::Publish(State); return Job.Id;
+    State.Jobs.Add(Job); FSimDataEvents::Job(State,Job.Id,Job.Facility); return Job.Id;
 }
 FGuid FEconomyLedger::GrantBlueprint(FEconomyState& State, FName Owner, FName Recipe, bool Original, int32 Runs, double ME, double TE)
 {
@@ -267,16 +270,36 @@ FGuid FEconomyLedger::QueueBlueprintJob(FEconomyState& State, FName Owner, FName
     if (Id.IsValid()) { State.Jobs.Last().Blueprint = Blueprint; State.Jobs.Last().Runs = Runs; }
     return Id;
 }
+FGuid FEconomyLedger::QueueBlueprintService(FEconomyState& State,FName Owner,FName Facility,FGuid Blueprint,FName Activity,int32 Runs,double Duration)
+{
+    const auto* BP=State.Blueprints.Find(Blueprint);const auto Policy=State.IndustryPolicies.FindRef(Facility);
+    if(!IndustryIsBlueprintService(Activity) || !Policy.Allows(Activity) || !BP || !BP->bOriginal || BP->Owner!=Owner || !FMath::IsFinite(BP->MaterialEfficiency) || BP->MaterialEfficiency<0 || BP->MaterialEfficiency>.1 || !FMath::IsFinite(BP->TimeEfficiency) || BP->TimeEfficiency<0 || BP->TimeEfficiency>.2 || !Positive(Duration) || Runs<1 || Runs>1000 ||
+        (IsPlayerOwner(State,Owner) && (!State.BlueprintReceipts.Contains(Blueprint) || !State.CommittedTransactions.Contains(State.BlueprintReceipts.FindRef(Blueprint)))) ||
+        (Activity==TEXT("ResearchMaterial") && BP->MaterialEfficiency>=.1-1.e-9) || (Activity==TEXT("ResearchTime") && BP->TimeEfficiency>=.2-1.e-9) ||
+        State.Jobs.ContainsByPredicate([Blueprint](const auto& J){return J.Blueprint==Blueprint && J.State!=EIndustryJobState::Completed && J.State!=EIndustryJobState::Cancelled;}))return {};
+    FIndustryJob Job;Job.Id=FGuid::NewGuid();Job.Owner=Owner;Job.Facility=Facility;Job.Recipe=BP->Recipe;Job.Blueprint=Blueprint;Job.Activity=Activity;Job.Runs=Activity==TEXT("Copying")?Runs:1;
+    Job.SourceMaterialEfficiency=BP->MaterialEfficiency;Job.SourceTimeEfficiency=BP->TimeEfficiency;Job.Duration=Job.Remaining=Duration;
+    State.Jobs.Add(Job);FSimDataEvents::Job(State,Job.Id,Facility);return Job.Id;
+}
 bool FEconomyLedger::CanStartJob(const FEconomyState& State, const FIndustryJob& Job, bool Operational, FText& Reason, bool CheckFacilitySlot)
 {
     if (Job.State == EIndustryJobState::Completed || Job.State == EIndustryJobState::Cancelled)
     { Reason = INVTEXT("This job has finished."); return false; }
     if (!Operational) { Reason = INVTEXT("Facility is offline or unavailable."); return false; }
+    const auto Policy=State.IndustryPolicies.FindRef(Job.Facility);
+    if(!Policy.Allows(Job.Activity)){Reason=INVTEXT("This facility does not permit the job activity.");return false;}
     if (Job.State == EIndustryJobState::Running) { Reason = INVTEXT("Production in progress; output is delivered automatically."); return true; }
-    if (CheckFacilitySlot && State.Jobs.ContainsByPredicate([&Job](const auto& Other) { return Other.Id != Job.Id && Other.Facility == Job.Facility && Other.State == EIndustryJobState::Running; }))
+    if (CheckFacilitySlot && State.Jobs.FilterByPredicate([&Job](const auto& Other) { return Other.Id != Job.Id && Other.Facility == Job.Facility && Other.State == EIndustryJobState::Running; }).Num()>=Policy.Lanes)
     { Reason = INVTEXT("Waiting for the facility's current job to finish."); return false; }
+    if(IndustryIsBlueprintService(Job.Activity))
+    {
+        const auto* BP=State.Blueprints.Find(Job.Blueprint);
+        if(!BP || !BP->bOriginal || BP->Owner!=Job.Owner || !Positive(Job.Duration))
+        {Reason=INVTEXT("The original blueprint is unavailable.");return false;}
+        Reason=INVTEXT("Ready to queue the original for blueprint service.");return true;
+    }
     const auto* In = State.Inventories.Find(Job.Input); const auto* Out = State.Inventories.Find(Job.Output);
-    if (!HasAccess(In, Job.Owner) || !HasAccess(Out, Job.Owner) || Job.Input == Job.Output)
+    if (!HasAccess(In, Job.Owner) || !HasAccess(Out, Job.Owner) || !In->bOperational || !Out->bOperational || Job.Input == Job.Output)
     { Reason = INVTEXT("The job's input or output inventory is unavailable to its owner."); return false; }
     if (!ValidateAmounts(Job.Materials) || !ValidateAmounts(Job.Products) || !Positive(Job.Duration))
     { Reason = INVTEXT("The job has invalid material, product or time data."); return false; }
@@ -300,6 +323,7 @@ bool FEconomyLedger::CanStartJob(const FEconomyState& State, const FIndustryJob&
     for (const auto& Product : Job.Products)
     {
         OutputMass += Product.Quantity * Product.UnitTonnes;
+        if(!Out->AcceptedItems.IsEmpty() && !Out->AcceptedItems.Contains(Product.Item)){Reason=INVTEXT("Output inventory does not accept a required co-product.");return false;}
         const auto* Stack = Out->Items.FindByPredicate([&](const auto& Entry) { return Entry.Type == Product.Item; });
         if (Stack && !FMath::IsNearlyEqual(Stack->UnitTonnes, Product.UnitTonnes))
         { Reason = INVTEXT("The output inventory contains an incompatible product stack."); return false; }
@@ -314,28 +338,41 @@ bool FEconomyLedger::CancelJob(FEconomyState& State, FName Owner, FGuid Id)
     FScopedSimDataChangeBatch DataChangeBatch(State);
     auto* Job = State.Jobs.FindByPredicate([Id](const auto& Entry) { return Entry.Id == Id; });
     if (!Job || Job->Owner != Owner || Job->State == EIndustryJobState::Completed || Job->State == EIndustryJobState::Cancelled) return false;
-    if (Job->State == EIndustryJobState::Running)
+    if (Job->State == EIndustryJobState::Running && !IndustryIsBlueprintService(Job->Activity))
     {
         // Inputs have been consumed. Cancellation releases output space, never manufactures a refund.
         auto* Out = State.Inventories.Find(Job->Output);
         if (!Out || Out->Owner != Owner) return false;
         for (const auto& Product : Job->Products) Out->ReservedOutputTonnes = FMath::Max(0.0, Out->ReservedOutputTonnes - Product.Quantity * Product.UnitTonnes);
     }
-    Job->State = EIndustryJobState::Cancelled; Job->CompletionAt=0;ProductionEvents::Emit(Job->Facility,Job->Id,EProductionEvent::Cancelled,INVTEXT("Job cancelled; reserved output space released.")); FSimDataEvents::Publish(State); return true;
+    Job->State = EIndustryJobState::Cancelled; Job->CompletionAt=0;ProductionEvents::Emit(Job->Facility,Job->Id,EProductionEvent::Cancelled,INVTEXT("Job cancelled; reserved output space released.")); FSimDataEvents::Job(State,Job->Id,Job->Facility);FSimDataEvents::Inventory(State,Job->Output); return true;
 }
 int32 FEconomyLedger::AdvanceJobs(FEconomyState& State, double Seconds, TFunctionRef<bool(FName)> Operational)
 {
     FScopedSimDataChangeBatch DataChangeBatch(State);
     if (!FMath::IsFinite(Seconds) || Seconds <= 0) return 0;
     int32 Completed = 0;
-    TMap<FName, double> TimeLeft;
+    TMap<FString, double> TimeLeft;
     for (auto& Job : State.Jobs)
     {
         if (Job.State == EIndustryJobState::Completed || Job.State == EIndustryJobState::Cancelled || !Operational(Job.Facility)) continue;
+        const auto Policy=State.IndustryPolicies.FindRef(Job.Facility);
+        if(!Policy.Allows(Job.Activity))continue;
+        if(Job.Lane==INDEX_NONE || Job.State!=EIndustryJobState::Running)
+        {
+            Job.Lane=INDEX_NONE;
+            for(int32 Lane=0;Lane<Policy.Lanes;++Lane)
+                if(!State.Jobs.ContainsByPredicate([&](const auto& Other){return Other.Id!=Job.Id && Other.Facility==Job.Facility && Other.State==EIndustryJobState::Running && Other.Lane==Lane;})){Job.Lane=Lane;break;}
+        }
+        if(Job.Lane<0 || Job.Lane>=Policy.Lanes)
+        {if(Job.State!=EIndustryJobState::Running && Job.State!=EIndustryJobState::Blocked){Job.State=EIndustryJobState::Blocked;FSimDataEvents::Job(State,Job.Id,Job.Facility);}continue;}
         if (Job.State != EIndustryJobState::Running)
         {
             FText Reason;
-            if (!CanStartJob(State, Job, true, Reason)) { if(Job.State!=EIndustryJobState::Blocked){Job.State=EIndustryJobState::Blocked;FSimDataEvents::Publish(State);} continue; }
+            if (!CanStartJob(State, Job, true, Reason)) { if(Job.State!=EIndustryJobState::Blocked){Job.State=EIndustryJobState::Blocked;FSimDataEvents::Job(State,Job.Id,Job.Facility);} continue; }
+            if(IndustryIsBlueprintService(Job.Activity)){Job.State=EIndustryJobState::Running;FSimDataEvents::Job(State,Job.Id,Job.Facility);}
+            else
+            {
             auto* In = State.Inventories.Find(Job.Input); auto* Out = State.Inventories.Find(Job.Output);
             auto* BP = Job.Blueprint.IsValid() ? State.Blueprints.Find(Job.Blueprint) : nullptr;
             double OutputMass = 0;
@@ -348,13 +385,31 @@ int32 FEconomyLedger::AdvanceJobs(FEconomyState& State, double Seconds, TFunctio
                     auto& Stack = Out->Items.AddDefaulted_GetRef(); Stack.Id = FGuid::NewGuid();
                     Stack.Type = Product.Item; Stack.UnitTonnes = Product.UnitTonnes;
                 }
-            Out->ReservedOutputTonnes += OutputMass; Job.State = EIndustryJobState::Running; FSimDataEvents::Publish(State);
+            Out->ReservedOutputTonnes += OutputMass; Job.State = EIndustryJobState::Running; FSimDataEvents::Job(State,Job.Id,Job.Facility);FSimDataEvents::Inventory(State,Job.Input);FSimDataEvents::Inventory(State,Job.Output);
+            }
         }
-        double& Budget = TimeLeft.FindOrAdd(Job.Facility, Seconds);
+        double& Budget = TimeLeft.FindOrAdd(Job.Facility.ToString()+TEXT("/")+FString::FromInt(Job.Lane), Seconds);
         const double UsedTime = FMath::Min(Job.Remaining, Budget);
         Job.Remaining = FMath::Max(0.0, Job.Remaining - UsedTime);
         Budget -= UsedTime;
         if (Job.Remaining > 0) continue;
+        if(IndustryIsBlueprintService(Job.Activity))
+        {
+            auto* Original=State.Blueprints.Find(Job.Blueprint);
+            if(!Original || !Original->bOriginal || Original->Owner!=Job.Owner || !FMath::IsNearlyEqual(Original->MaterialEfficiency,Job.SourceMaterialEfficiency) || !FMath::IsNearlyEqual(Original->TimeEfficiency,Job.SourceTimeEfficiency))continue;
+            if(Job.Activity==TEXT("Copying"))
+            {
+                const auto Source=*Original;
+                const FGuid Copy=GrantBlueprint(State,Job.Owner,Job.Recipe,false,Job.Runs,Source.MaterialEfficiency,Source.TimeEfficiency);if(!Copy.IsValid())continue;
+                auto& Produced=State.Blueprints.FindChecked(Copy);Produced.Facility=Job.Facility;Produced.SourceBlueprint=Job.Blueprint;Produced.SourceJob=Job.Id;
+                State.BlueprintReceipts.Add(Copy,Job.Id);State.CommittedTransactions.Add(Job.Id);Job.ProducedBlueprint=Copy;
+            }
+            else if(Job.Activity==TEXT("ResearchMaterial"))Original->MaterialEfficiency=FMath::Min(.1,Original->MaterialEfficiency+.01);
+            else Original->TimeEfficiency=FMath::Min(.2,Original->TimeEfficiency+.02);
+            Job.State=EIndustryJobState::Completed;Job.CompletionAt=0;FSimDataEvents::Job(State,Job.Id,Job.Facility);
+            FSimDataChange Library;Library.Domains=ESimDataDomain::Other;Library.Owners.Add(Job.Owner);FSimDataEvents::Publish(State,Library);
+            ProductionEvents::Emit(Job.Facility,Job.Id,EProductionEvent::Completed,INVTEXT("Blueprint service completed."));++Completed;continue;
+        }
         auto* Out = State.Inventories.Find(Job.Output);
         if (!HasAccess(Out, Job.Owner) || !ValidateAmounts(Job.Products)) continue;
         // The destination can change after a job starts (or be restored from a
@@ -371,7 +426,7 @@ int32 FEconomyLedger::AdvanceJobs(FEconomyState& State, double Seconds, TFunctio
         // Failed attempts stay Running at zero remaining time: retries never
         // re-consume inputs or blueprint runs, and the facility remains occupied.
         *Out = MoveTemp(Candidate);
-        Job.State = EIndustryJobState::Completed; FSimDataEvents::Publish(State); ++Completed;
+        Job.State = EIndustryJobState::Completed;Job.CompletionAt=0;ProductionEvents::Emit(Job.Facility,Job.Id,EProductionEvent::Completed,INVTEXT("All products committed.")); FSimDataEvents::Job(State,Job.Id,Job.Facility);FSimDataEvents::Inventory(State,Job.Output); ++Completed;
     }
     return Completed;
 }

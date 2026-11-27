@@ -10,7 +10,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "avionics",
@@ -23,7 +24,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Electronics"
+    "Image": "Electronics",
+    "bCivilianConsumable": false
   },
   {
     "Name": "calcite",
@@ -36,7 +38,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "carbon composite",
@@ -49,7 +52,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "cassiterite",
@@ -62,7 +66,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "chalcopyrite",
@@ -75,7 +80,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "chromite",
@@ -88,7 +94,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "cobaltite",
@@ -101,7 +108,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "conductive metal",
@@ -114,7 +122,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "construction materials",
@@ -127,7 +136,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "copper concentrate",
@@ -140,7 +150,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "diamond",
@@ -153,7 +164,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "dilithium",
@@ -166,7 +178,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "dolomite",
@@ -179,7 +192,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "engine assembly",
@@ -192,7 +206,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "field medical supplies",
@@ -205,7 +220,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Medical"
+    "Image": "Medical",
+    "bCivilianConsumable": false
   },
   {
     "Name": "finished electronics",
@@ -218,7 +234,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Electronics"
+    "Image": "Electronics",
+    "bCivilianConsumable": false
   },
   {
     "Name": "fleet propellant",
@@ -231,7 +248,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "fleet reserve water",
@@ -244,7 +262,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "food",
@@ -257,7 +276,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "fusion propellant",
@@ -270,7 +290,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "galena",
@@ -283,7 +304,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "graphite",
@@ -296,7 +318,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "hematite",
@@ -309,7 +332,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "hull section",
@@ -322,7 +346,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "ilmenite",
@@ -335,7 +360,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "industrial ceramics",
@@ -348,7 +374,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "industrial concentrate",
@@ -361,7 +388,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "kamacite",
@@ -374,7 +402,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "life support supplies",
@@ -387,7 +416,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "liquid hydrogen",
@@ -400,7 +430,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "machine parts",
@@ -413,7 +444,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "magnetite",
@@ -426,7 +458,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "medical supplies",
@@ -439,7 +472,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Medical"
+    "Image": "Medical",
+    "bCivilianConsumable": false
   },
   {
     "Name": "merrillite",
@@ -452,7 +486,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "military rations",
@@ -465,7 +500,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "military spare parts",
@@ -478,7 +514,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "monazite",
@@ -491,7 +528,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "navigation computer",
@@ -504,7 +542,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Electronics"
+    "Image": "Electronics",
+    "bCivilianConsumable": false
   },
   {
     "Name": "olivine",
@@ -517,7 +556,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "optical glass",
@@ -530,7 +570,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "passengers",
@@ -543,7 +584,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Passengers"
+    "Image": "Passengers",
+    "bCivilianConsumable": false
   },
   {
     "Name": "pentlandite",
@@ -556,7 +598,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "plagioclase",
@@ -569,7 +612,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "pyrite",
@@ -582,7 +626,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "pyroxene",
@@ -595,7 +640,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "quantium-40",
@@ -608,7 +654,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "quartz",
@@ -621,7 +668,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "reactor fuel",
@@ -634,7 +682,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Liquid"
+    "Image": "Liquid",
+    "bCivilianConsumable": false
   },
   {
     "Name": "repair kit",
@@ -647,7 +696,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "rutile",
@@ -660,7 +710,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "saponite",
@@ -673,7 +724,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "scheelite",
@@ -686,7 +738,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "schreibersite",
@@ -699,7 +752,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "sealed documents",
@@ -712,7 +766,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "sealed freight",
@@ -725,7 +780,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "sensor assembly",
@@ -738,7 +794,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "serpentine",
@@ -751,7 +808,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "shield components",
@@ -764,7 +822,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "sphalerite",
@@ -777,7 +836,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "spinel",
@@ -790,7 +850,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "structural alloy",
@@ -803,7 +864,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "taenite",
@@ -816,7 +878,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "thruster propellant",
@@ -829,7 +892,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "troilite",
@@ -842,7 +906,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "uraninite",
@@ -855,7 +920,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "water",
@@ -868,7 +934,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": true
   },
   {
     "Name": "frasco water",
@@ -881,7 +948,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": true
   },
   {
     "Name": "water ice",
@@ -894,7 +962,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "wolframite",
@@ -907,7 +976,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "zircon",
@@ -920,7 +990,8 @@
     "PreviewQuantity": 1000,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard atmosphere filter",
@@ -933,7 +1004,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty atmosphere filter",
@@ -946,7 +1018,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision atmosphere filter",
@@ -959,7 +1032,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype atmosphere filter",
@@ -972,7 +1046,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard carbon dioxide scrubber",
@@ -985,7 +1060,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty carbon dioxide scrubber",
@@ -998,7 +1074,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision carbon dioxide scrubber",
@@ -1011,7 +1088,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype carbon dioxide scrubber",
@@ -1024,7 +1102,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard oxygen regulator",
@@ -1037,7 +1116,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty oxygen regulator",
@@ -1050,7 +1130,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision oxygen regulator",
@@ -1063,7 +1144,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype oxygen regulator",
@@ -1076,7 +1158,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard water purifier",
@@ -1089,7 +1172,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Liquid"
+    "Image": "Liquid",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty water purifier",
@@ -1102,7 +1186,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Liquid"
+    "Image": "Liquid",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision water purifier",
@@ -1115,7 +1200,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Liquid"
+    "Image": "Liquid",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype water purifier",
@@ -1128,7 +1214,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Liquid"
+    "Image": "Liquid",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard humidity separator",
@@ -1141,7 +1228,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty humidity separator",
@@ -1154,7 +1242,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision humidity separator",
@@ -1167,7 +1256,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype humidity separator",
@@ -1180,7 +1270,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard thermal radiator",
@@ -1193,7 +1284,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty thermal radiator",
@@ -1206,7 +1298,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision thermal radiator",
@@ -1219,7 +1312,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype thermal radiator",
@@ -1232,7 +1326,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard heat exchanger core",
@@ -1245,7 +1340,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty heat exchanger core",
@@ -1258,7 +1354,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision heat exchanger core",
@@ -1271,7 +1368,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype heat exchanger core",
@@ -1284,7 +1382,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard coolant pump",
@@ -1297,7 +1396,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Liquid"
+    "Image": "Liquid",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty coolant pump",
@@ -1310,7 +1410,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Liquid"
+    "Image": "Liquid",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision coolant pump",
@@ -1323,7 +1424,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Liquid"
+    "Image": "Liquid",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype coolant pump",
@@ -1336,7 +1438,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Liquid"
+    "Image": "Liquid",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard thermal insulation panel",
@@ -1349,7 +1452,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty thermal insulation panel",
@@ -1362,7 +1466,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision thermal insulation panel",
@@ -1375,7 +1480,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype thermal insulation panel",
@@ -1388,7 +1494,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard cryogenic valve",
@@ -1401,7 +1508,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty cryogenic valve",
@@ -1414,7 +1522,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision cryogenic valve",
@@ -1427,7 +1536,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype cryogenic valve",
@@ -1440,7 +1550,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard propellant feed pump",
@@ -1453,7 +1564,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty propellant feed pump",
@@ -1466,7 +1578,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision propellant feed pump",
@@ -1479,7 +1592,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype propellant feed pump",
@@ -1492,7 +1606,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard pressure relief valve",
@@ -1505,7 +1620,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty pressure relief valve",
@@ -1518,7 +1634,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision pressure relief valve",
@@ -1531,7 +1648,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype pressure relief valve",
@@ -1544,7 +1662,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard vacuum seal kit",
@@ -1557,7 +1676,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty vacuum seal kit",
@@ -1570,7 +1690,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision vacuum seal kit",
@@ -1583,7 +1704,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype vacuum seal kit",
@@ -1596,7 +1718,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard docking collar gasket",
@@ -1609,7 +1732,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty docking collar gasket",
@@ -1622,7 +1746,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision docking collar gasket",
@@ -1635,7 +1760,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype docking collar gasket",
@@ -1648,7 +1774,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard cargo restraint set",
@@ -1661,7 +1788,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty cargo restraint set",
@@ -1674,7 +1802,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision cargo restraint set",
@@ -1687,7 +1816,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype cargo restraint set",
@@ -1700,7 +1830,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard cargo lift actuator",
@@ -1713,7 +1844,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty cargo lift actuator",
@@ -1726,7 +1858,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision cargo lift actuator",
@@ -1739,7 +1872,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype cargo lift actuator",
@@ -1752,7 +1886,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard bay door motor",
@@ -1765,7 +1900,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty bay door motor",
@@ -1778,7 +1914,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision bay door motor",
@@ -1791,7 +1928,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype bay door motor",
@@ -1804,7 +1942,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard landing gear damper",
@@ -1817,7 +1956,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty landing gear damper",
@@ -1830,7 +1970,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision landing gear damper",
@@ -1843,7 +1984,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype landing gear damper",
@@ -1856,7 +1998,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard landing gear bearing",
@@ -1869,7 +2012,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty landing gear bearing",
@@ -1882,7 +2026,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision landing gear bearing",
@@ -1895,7 +2040,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype landing gear bearing",
@@ -1908,7 +2054,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard inertial reference unit",
@@ -1921,7 +2068,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty inertial reference unit",
@@ -1934,7 +2082,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision inertial reference unit",
@@ -1947,7 +2096,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype inertial reference unit",
@@ -1960,7 +2110,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard star tracker",
@@ -1973,7 +2124,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty star tracker",
@@ -1986,7 +2138,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision star tracker",
@@ -1999,7 +2152,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype star tracker",
@@ -2012,7 +2166,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard navigation beacon receiver",
@@ -2025,7 +2180,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty navigation beacon receiver",
@@ -2038,7 +2194,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision navigation beacon receiver",
@@ -2051,7 +2208,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype navigation beacon receiver",
@@ -2064,7 +2222,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard transponder module",
@@ -2077,7 +2236,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty transponder module",
@@ -2090,7 +2250,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision transponder module",
@@ -2103,7 +2264,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype transponder module",
@@ -2116,7 +2278,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard optical sensor array",
@@ -2129,7 +2292,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty optical sensor array",
@@ -2142,7 +2306,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision optical sensor array",
@@ -2155,7 +2320,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype optical sensor array",
@@ -2168,7 +2334,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard infrared detector",
@@ -2181,7 +2348,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty infrared detector",
@@ -2194,7 +2362,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision infrared detector",
@@ -2207,7 +2376,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype infrared detector",
@@ -2220,7 +2390,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard radio receiver module",
@@ -2233,7 +2404,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty radio receiver module",
@@ -2246,7 +2418,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision radio receiver module",
@@ -2259,7 +2432,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype radio receiver module",
@@ -2272,7 +2446,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard antenna gimbal",
@@ -2285,7 +2460,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty antenna gimbal",
@@ -2298,7 +2474,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision antenna gimbal",
@@ -2311,7 +2488,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype antenna gimbal",
@@ -2324,7 +2502,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard signal processor",
@@ -2337,7 +2516,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Electronics"
+    "Image": "Electronics",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty signal processor",
@@ -2350,7 +2530,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Electronics"
+    "Image": "Electronics",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision signal processor",
@@ -2363,7 +2544,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Electronics"
+    "Image": "Electronics",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype signal processor",
@@ -2376,7 +2558,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Electronics"
+    "Image": "Electronics",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard fiber data harness",
@@ -2389,7 +2572,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty fiber data harness",
@@ -2402,7 +2586,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision fiber data harness",
@@ -2415,7 +2600,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype fiber data harness",
@@ -2428,7 +2614,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard circuit breaker bank",
@@ -2441,7 +2628,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Electronics"
+    "Image": "Electronics",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty circuit breaker bank",
@@ -2454,7 +2642,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Electronics"
+    "Image": "Electronics",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision circuit breaker bank",
@@ -2467,7 +2656,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Electronics"
+    "Image": "Electronics",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype circuit breaker bank",
@@ -2480,7 +2670,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Electronics"
+    "Image": "Electronics",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard voltage converter",
@@ -2493,7 +2684,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty voltage converter",
@@ -2506,7 +2698,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision voltage converter",
@@ -2519,7 +2712,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype voltage converter",
@@ -2532,7 +2726,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard power bus coupler",
@@ -2545,7 +2740,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty power bus coupler",
@@ -2558,7 +2754,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision power bus coupler",
@@ -2571,7 +2768,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype power bus coupler",
@@ -2584,7 +2782,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard reactor control relay",
@@ -2597,7 +2796,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty reactor control relay",
@@ -2610,7 +2810,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision reactor control relay",
@@ -2623,7 +2824,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype reactor control relay",
@@ -2636,7 +2838,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard battery cell pack",
@@ -2649,7 +2852,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty battery cell pack",
@@ -2662,7 +2866,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision battery cell pack",
@@ -2675,7 +2880,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype battery cell pack",
@@ -2688,7 +2894,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard flux sensor",
@@ -2701,7 +2908,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty flux sensor",
@@ -2714,7 +2922,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision flux sensor",
@@ -2727,7 +2936,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype flux sensor",
@@ -2740,7 +2950,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard thruster control valve",
@@ -2753,7 +2964,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty thruster control valve",
@@ -2766,7 +2978,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision thruster control valve",
@@ -2779,7 +2992,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype thruster control valve",
@@ -2792,7 +3006,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard gyroscope assembly",
@@ -2805,7 +3020,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty gyroscope assembly",
@@ -2818,7 +3034,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision gyroscope assembly",
@@ -2831,7 +3048,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype gyroscope assembly",
@@ -2844,7 +3062,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard servo controller",
@@ -2857,7 +3076,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty servo controller",
@@ -2870,7 +3090,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision servo controller",
@@ -2883,7 +3104,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype servo controller",
@@ -2896,7 +3118,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard machine tool spindle",
@@ -2909,7 +3132,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty machine tool spindle",
@@ -2922,7 +3146,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision machine tool spindle",
@@ -2935,7 +3160,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype machine tool spindle",
@@ -2948,7 +3174,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard ore sampler",
@@ -2961,7 +3188,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty ore sampler",
@@ -2974,7 +3202,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision ore sampler",
@@ -2987,7 +3216,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype ore sampler",
@@ -3000,7 +3230,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard ore sorting sensor",
@@ -3013,7 +3244,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty ore sorting sensor",
@@ -3026,7 +3258,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision ore sorting sensor",
@@ -3039,7 +3272,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype ore sorting sensor",
@@ -3052,7 +3286,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard conveyor drive",
@@ -3065,7 +3300,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty conveyor drive",
@@ -3078,7 +3314,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision conveyor drive",
@@ -3091,7 +3328,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype conveyor drive",
@@ -3104,7 +3342,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard refinery crucible",
@@ -3117,7 +3356,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty refinery crucible",
@@ -3130,7 +3370,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision refinery crucible",
@@ -3143,7 +3384,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype refinery crucible",
@@ -3156,7 +3398,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard survey drill head",
@@ -3169,7 +3412,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty survey drill head",
@@ -3182,7 +3426,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision survey drill head",
@@ -3195,7 +3440,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype survey drill head",
@@ -3208,7 +3454,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "standard hull inspection scanner",
@@ -3221,7 +3468,8 @@
     "PreviewQuantity": 300,
     "Rarity": "Common",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "heavy duty hull inspection scanner",
@@ -3234,7 +3482,8 @@
     "PreviewQuantity": 120,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "precision hull inspection scanner",
@@ -3247,7 +3496,8 @@
     "PreviewQuantity": 45,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prototype hull inspection scanner",
@@ -3260,7 +3510,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "cipher relays",
@@ -3273,7 +3524,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": true,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "ghost navigation charts",
@@ -3286,7 +3538,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": true,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "unregistered survey cores",
@@ -3299,7 +3552,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": true,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "restricted memory crystals",
@@ -3312,7 +3566,8 @@
     "PreviewQuantity": 8,
     "Rarity": "Exotic",
     "bIllicit": true,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "dust",
@@ -3325,7 +3580,8 @@
     "PreviewQuantity": 4,
     "Rarity": "Exotic",
     "bIllicit": true,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "ketracel-white",
@@ -3338,7 +3594,8 @@
     "PreviewQuantity": 4,
     "Rarity": "Exotic",
     "bIllicit": true,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "colorado tegridy",
@@ -3351,7 +3608,8 @@
     "PreviewQuantity": 10,
     "Rarity": "Exotic",
     "bIllicit": true,
-    "Image": "Cargo"
+    "Image": "Cargo",
+    "bCivilianConsumable": false
   },
   {
     "Name": "khyber crystals",
@@ -3364,7 +3622,8 @@
     "PreviewQuantity": 2,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Mineral"
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   },
   {
     "Name": "mining drone",
@@ -3377,7 +3636,8 @@
     "PreviewQuantity": 6,
     "Rarity": "Uncommon",
     "bIllicit": false,
-    "Image": "MiningDrone"
+    "Image": "MiningDrone",
+    "bCivilianConsumable": false
   },
   {
     "Name": "falcon assembled hull",
@@ -3390,7 +3650,8 @@
     "PreviewQuantity": 1,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Ship"
+    "Image": "Ship",
+    "bCivilianConsumable": false
   },
   {
     "Name": "stormhawk assembled hull",
@@ -3403,7 +3664,8 @@
     "PreviewQuantity": 1,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Ship"
+    "Image": "Ship",
+    "bCivilianConsumable": false
   },
   {
     "Name": "prospector assembled hull",
@@ -3416,7 +3678,8 @@
     "PreviewQuantity": 1,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Ship"
+    "Image": "Ship",
+    "bCivilianConsumable": false
   },
   {
     "Name": "raptor assembled hull",
@@ -3429,7 +3692,8 @@
     "PreviewQuantity": 1,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Ship"
+    "Image": "Ship",
+    "bCivilianConsumable": false
   },
   {
     "Name": "viper assembled hull",
@@ -3442,7 +3706,8 @@
     "PreviewQuantity": 1,
     "Rarity": "Rare",
     "bIllicit": false,
-    "Image": "Ship"
+    "Image": "Ship",
+    "bCivilianConsumable": false
   },
   {
     "Name": "goliath assembled hull",
@@ -3455,6 +3720,63 @@
     "PreviewQuantity": 1,
     "Rarity": "Exotic",
     "bIllicit": false,
-    "Image": "Ship"
+    "Image": "Ship",
+    "bCivilianConsumable": false
+  },
+  {
+    "Name": "bauxite",
+    "Type": "Bulk",
+    "Unit": "t",
+    "Size": 1,
+    "Value": 60,
+    "Description": "Aluminium-bearing ore used in lightweight structural alloys.",
+    "DisplayName": "Bauxite",
+    "PreviewQuantity": 1000,
+    "Rarity": "Common",
+    "bIllicit": false,
+    "Image": "Mineral",
+    "bCivilianConsumable": false
+  },
+  {
+    "Name": "spodumene",
+    "Type": "Bulk",
+    "Unit": "t",
+    "Size": 1,
+    "Value": 90,
+    "Description": "Lithium-bearing silicate used in electronics and power-cell materials.",
+    "DisplayName": "Spodumene",
+    "PreviewQuantity": 1000,
+    "Rarity": "Uncommon",
+    "bIllicit": false,
+    "Image": "Mineral",
+    "bCivilianConsumable": false
+  },
+  {
+    "Name": "fluorite",
+    "Type": "Bulk",
+    "Unit": "t",
+    "Size": 1,
+    "Value": 75,
+    "Description": "Optical and industrial fluoride mineral used in precision glass production.",
+    "DisplayName": "Fluorite",
+    "PreviewQuantity": 1000,
+    "Rarity": "Uncommon",
+    "bIllicit": false,
+    "Image": "Mineral",
+    "bCivilianConsumable": false
+  },
+  {
+    "Name": "khyber ore",
+    "DisplayName": "Khyber-bearing Ore",
+    "Type": "Bulk",
+    "Unit": "t",
+    "Size": 1,
+    "Value": 600,
+    "Description": "Exotic host rock containing energy-focusing crystals. Separation yields a finished crystal and recoverable concentrate.",
+    "PreviewQuantity": 50,
+    "Rarity": "Exotic",
+    "bIllicit": false,
+    "Image": "Mineral",
+    "bCivilianConsumable": false
   }
 ]

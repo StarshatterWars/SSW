@@ -3,6 +3,7 @@
 #include "GameStructs.h"
 #include "GameStructs_products.h"
 #include "ProductionEvents.h"
+#include "SimDataEvents.h"
 #include "ShipStoreAI.h"
 #include "MarketCommandAI.h"
 #include "LedgerCommandAI.h"
@@ -66,6 +67,7 @@ struct FNativeEconomyResult
 {
     FEconomyState State;
     TArray<FProductionEventRecord> Events;
+    FSimDataChange Changes;
     uint64 Revision=0;
     FString Profile;
     double NextProductionAt=0;

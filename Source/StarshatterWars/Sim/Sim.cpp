@@ -3165,8 +3165,8 @@ void Sim::TickLegacyJanusActors(double DeltaSeconds)
                         const double Capacity = Hauler.Design()->CargoCapacity.Tonnes;
                         if (bProductRun)
                         {
-                            const FString Item = Recipe->CargoItem.IsEmpty() ? Recipe->OutputDisplayName : Recipe->CargoItem;
-                            Run.Contract.Reserve(Economy, OutputInventory, Item, Capacity);
+                            TArray<FCommodityAmount> Products;Recipe->ResolveOutputs(Products);
+                            for(const auto& Product:Products)if(Run.Contract.Reserve(Economy,OutputInventory,Product.Item.ToString(),Capacity))break;
                         }
                         else
                         {

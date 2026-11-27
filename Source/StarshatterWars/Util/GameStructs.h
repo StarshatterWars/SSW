@@ -55,6 +55,7 @@ struct FS_CargoCatalogRow : public FTableRowBase
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
     bool bIllicit = false;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Cargo") bool bCivilianConsumable=false;
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Cargo")
     FString Description;

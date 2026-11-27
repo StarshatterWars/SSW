@@ -1,0 +1,9 @@
+{
+  "ResearchMaterialSeconds": 1800,
+  "ResearchTimeSeconds": 1800,
+  "CopySecondsPerRun": 60,
+  "ResearchMaterialCredits": 1000,
+  "ResearchTimeCredits": 1000,
+  "CopyCreditsPerRun": 50,
+  "MaximumCopyRuns": 1000
+}

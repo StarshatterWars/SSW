@@ -4,6 +4,7 @@
 #include "ProductionCatalog.h"
 #include "EconomyRuntime.h"
 #include "RecordDetails.h"
+#include "ModifierProvenance.h"
 #include "BlueprintsDlg.h"
 #include "IndustryJobsPanel.h"
 #include "Widgets/SNullWidget.h"
@@ -164,14 +165,11 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                             ? FText::Format(INVTEXT("{0} UNITS {1} ({2} T)"),FText::AsNumber(Input.Quantity),FText::FromName(Input.Item),FText::AsNumber(Input.Quantity*Input.UnitTonnes))
                             : FText::Format(INVTEXT("{0} T {1}"),FText::AsNumber(Input.Quantity*Input.UnitTonnes),FText::FromName(Input.Item)));
                 }
+                TArray<FCommodityAmount> Products;Recipe.ResolveOutputs(Products);TArray<FText> ProductLabels;
+                for(const auto& Product:Products)ProductLabels.Add(FText::Format(INVTEXT("{0} {1} ({2} T)"),FText::AsNumber(Product.Quantity),FText::FromName(Product.Item),FText::AsNumber(Product.Quantity*Product.UnitTonnes)));
                 RecipeLabels->Add(Name, FRecipeLabels{
-                    FText::Format(INVTEXT("{0} t: {1}"), FText::AsNumber(Recipe.InputTonnes),
-                        FText::Join(INVTEXT(", "), Minerals)),
-                    Recipe.CargoItem.IsEmpty()
-                        ? FText::Format(INVTEXT("{0} t: {1}"), FText::AsNumber(Recipe.OutputTonnes),
-                            StaticEnum<ESSWFinishedItem>()->GetDisplayNameTextByValue(int64(Recipe.Product)))
-                        : FText::Format(INVTEXT("{0} {1}: {2}"), FText::AsNumber(Recipe.OutputQuantity),
-                            FText::FromString(Recipe.OutputUnit), FText::FromString(Recipe.OutputDisplayName)),
+                    FText::Format(INVTEXT("{0} t: {1}"),FText::AsNumber(Recipe.InputTonnes),FText::Join(INVTEXT(", "),Minerals)),
+                    FText::Join(INVTEXT(" / "),ProductLabels),
                     FText::Format(INVTEXT("{0} s | {1} t residue"), FText::AsNumber(Recipe.SecondsPerBatch),
                         FText::AsNumber(ReprocessingAI::Calculate(Recipe).WasteTonnes)), Recipe.Image
                 });
@@ -324,6 +322,13 @@ TSharedRef<SWidget> UProductionDlg::RebuildWidget()
                     D.Fact(INVTEXT("SERVICE PROFILE"),FText::FromName(Site.ServiceProfile)).Fact(INVTEXT("MAX BATCH"),FText::Format(INVTEXT("{0} RUNS"),FText::AsNumber(Site.MaximumPlayerRuns)));
                     D.Fact(INVTEXT("MATERIAL MODIFIER"),FText::Format(INVTEXT("{0}%"),FText::AsNumber(Site.PlayerMaterialMultiplier*100)));
                     D.Fact(INVTEXT("TIME MODIFIER"),FText::Format(INVTEXT("{0}%"),FText::AsNumber(Site.PlayerTimeMultiplier*100)));
+                    int32 Running=0,Queued=0;
+                    if(const auto* S=Sim::GetSim())for(const auto& J:S->ReadEconomy().Jobs)if(J.Facility==FName(*Site.Facility) || (Site.bSurface && J.Facility.ToString().EndsWith(TEXT("/")+Site.Facility)))
+                    {Running+=J.State==EIndustryJobState::Running;Queued+=J.State==EIndustryJobState::Queued || J.State==EIndustryJobState::Blocked;}
+                    D.Fact(INVTEXT("LIVE LANES"),FText::Format(INVTEXT("{0} / {1} RUNNING"),FText::AsNumber(Running),FText::AsNumber(Site.ProductionLanes)),INVTEXT("Running jobs from SSW's current simulation; capacity is authored by the facility."));
+                    D.Fact(INVTEXT("QUEUED JOBS"),FText::AsNumber(Queued),INVTEXT("Waiting jobs do not reserve a running lane or consume materials until they start."));
+                    TArray<FText> Activities;for(FName Activity:Site.AllowedActivities)Activities.Add(FText::FromName(Activity));D.Section(INVTEXT("PERMITTED ACTIVITIES"),FText::Join(INVTEXT(" / "),Activities));
+                    if(const auto* NativeRecipe=SSWProductionCatalog::Recipes().Find(Site.Recipe))ModifierProvenance::Industry(D,*NativeRecipe,Site);
                     if(Recipe){D.Fact(INVTEXT("BATCH TIME"),Recipe->ProcessingTime);D.Section(INVTEXT("REQUIRED INPUT / BATCH"),Recipe->Minerals);D.Section(INVTEXT("FINISHED OUTPUT / BATCH"),Recipe->Product);}
                     else if(Site.FacilityType==ESSWProductionFacilityType::Storage)
                     {

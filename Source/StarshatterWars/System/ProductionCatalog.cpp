@@ -1,5 +1,7 @@
 #include "ProductionCatalog.h"
 #include "JsonRecordCatalog.h"
+#include "ManufacturingAI.h"
+#include "ReprocessingAI.h"
 #include "SimDataEvents.h"
 #include "Misc/Paths.h"
 namespace
@@ -17,6 +19,14 @@ bool SSWProductionCatalog::Reload(FString& Error)
     if(!SSWJsonRecords::Load(FPaths::ProjectContentDir()/TEXT("GameData/Production/facilities.json"),NewSites,Error) || !SSWJsonRecords::Load(FPaths::ProjectContentDir()/TEXT("GameData/Cargo/recipes.json"),NewBatches,Error))return false;
     for(auto& Pair:NewBatches)
     {
+        auto& Recipe=Pair.Value;
+        for(auto& Output:Recipe.Outputs)Output.Item=DataTableUtils::MakeValidName(Output.Item.ToString());
+        TArray<FCommodityAmount> Outputs;
+        if(!Recipe.ResolveOutputs(Outputs) || !Recipe.HasValidSkillRequirements() || (Recipe.Activity!=TEXT("Manufacturing") && Recipe.Activity!=TEXT("Refining")))
+        {Error=TEXT("Invalid recipe outputs/activity: ")+Pair.Key.ToString();return false;}
+        double Mass=0;for(const auto& Output:Outputs)Mass+=Output.Quantity*Output.UnitTonnes;
+        Recipe.OutputTonnes=Mass;Recipe.Outputs=MoveTemp(Outputs);Recipe.NativeMineralKeys=ManufacturingAI::MineralKeys(Recipe);
+        if(!ReprocessingAI::Calculate(Recipe).bValid){Error=TEXT("Invalid recipe mass/time: ")+Pair.Key.ToString();return false;}
         TSet<FName> Seen;
         for(auto& Input:Pair.Value.Inputs)
         {
@@ -31,6 +41,22 @@ bool SSWProductionCatalog::Reload(FString& Error)
     for(const auto& Pair:NewProfiles)
         if(!Pair.Value.Recipe.IsNone() && (!NewBatches.Contains(Pair.Value.Recipe) || !FMath::IsFinite(Pair.Value.CapacityTonnes) || Pair.Value.CapacityTonnes<=0))
         {Error=TEXT("Invalid ground building production profile: ")+Pair.Key.ToString();return false;}
+    const auto ValidateSite=[&](const FSSWProductionFacility& Site)->bool
+    {
+        if(Site.ProductionLanes<1 || Site.ProductionLanes>16 || Site.AllowedActivities.IsEmpty())return false;
+        TSet<FName> Activities;for(FName Activity:Site.AllowedActivities){if((Activity!=TEXT("Manufacturing") && Activity!=TEXT("Refining") && Activity!=TEXT("ResearchMaterial") && Activity!=TEXT("ResearchTime") && Activity!=TEXT("Copying")) || Activities.Contains(Activity))return false;Activities.Add(Activity);}
+        TSet<FName> Choices;Choices.Add(Site.Recipe);for(FName Id:Site.AdditionalRecipes)Choices.Add(Id);
+        for(FName Id:Site.AutomatedRecipes)if(!Choices.Contains(Id))return false;
+        for(FName Id:Choices)
+        {
+            if(Id.IsNone() && Site.FacilityType==ESSWProductionFacilityType::Storage)continue;
+            const auto* Recipe=NewBatches.Find(Id);if(!Recipe || !Site.IndustryPolicy().Allows(Recipe->Activity))return false;
+            if(!Recipe->ShipDesign.IsNone() && Site.FacilityType!=ESSWProductionFacilityType::Shipyard)return false;
+        }
+        return true;
+    };
+    for(const auto& Pair:NewSites)if(!ValidateSite(Pair.Value)){Error=TEXT("Invalid lanes/activity/recipe eligibility: ")+Pair.Key.ToString();return false;}
+    for(const auto& Pair:NewProfiles)if(!Pair.Value.Recipe.IsNone() && !ValidateSite(Pair.Value)){Error=TEXT("Invalid ground facility policy: ")+Pair.Key.ToString();return false;}
     GroundProfiles=MoveTemp(NewProfiles);PublishedGround.Reset();
     ProductionSites=MoveTemp(NewSites);ProductionRecipes=MoveTemp(NewBatches);bProductionCatalogLoaded=true;
     UE_LOG(LogTemp,Display,TEXT("[ProductionCatalog] JSON-only facilities=%d recipes=%d"),ProductionSites.Num(),ProductionRecipes.Num());return true;

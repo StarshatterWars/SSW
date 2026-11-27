@@ -45,7 +45,7 @@ TArray<FName> ManufacturingAI::MineralKeys(const FSSWProductionRecipe& Recipe)
 {
     if(!Recipe.NativeMineralKeys.IsEmpty() || Recipe.Minerals.IsEmpty())return Recipe.NativeMineralKeys;
     checkf(IsInGameThread(),TEXT("Mineral names must be resolved before economy worker dispatch."));
-    TArray<FName> Names;for(auto Mineral:Recipe.Minerals)Names.Add(DataTableUtils::MakeValidName(StaticEnum<ESSWMineral>()->GetNameStringByValue(int64(Mineral))));return Names;
+    TArray<FName> Names;for(auto Mineral:Recipe.Minerals){FSSWAsteroidResource Resource;Resource.Mineral=Mineral;Names.Add(DataTableUtils::MakeValidName(Resource.GetMineralName().ToString()));};return Names;
 }
 bool ManufacturingAI::BuildBatch(const FEconomyState& State, FName Input, const FSSWProductionRecipe& Recipe,
     TArray<FCommodityAmount>& Materials, TArray<FCommodityAmount>& Products)
@@ -85,12 +85,7 @@ bool ManufacturingAI::BuildBatch(const FEconomyState& State, FName Input, const 
         }
         if (Needed > UE_SMALL_NUMBER) { Materials.Reset(); return false; }
     }
-    FCommodityAmount Product;
-    Product.Item = DataTableUtils::MakeValidName(Recipe.CargoItem.IsEmpty() ? Recipe.OutputDisplayName : Recipe.CargoItem);
-    Product.Quantity = Recipe.OutputQuantity > 0 ? Recipe.OutputQuantity : Recipe.OutputTonnes;
-    Product.UnitTonnes = Recipe.OutputTonnes / Product.Quantity;
-    if (Product.Item.IsNone()) return false;
-    Products.Add(Product); return true;
+    return Recipe.ResolveOutputs(Products);
 }
 
 bool ManufacturingAI::AdvanceLive(FEconomyState& State, FName Facility, FName Input, FName Output, FName RecipeId,
@@ -99,6 +94,7 @@ bool ManufacturingAI::AdvanceLive(FEconomyState& State, FName Facility, FName In
     if (!bOperational || !FMath::IsFinite(Seconds) || Seconds <= 0 || !ReprocessingAI::Calculate(Recipe).bValid) return false;
     const bool Active = State.Jobs.ContainsByPredicate([Facility](const auto& Job)
         { return Job.Facility == Facility && Job.State != EIndustryJobState::Completed && Job.State != EIndustryJobState::Cancelled; });
+    State.RecipeActivities.Add(RecipeId,Recipe.Activity);
     if (!Active && Recipe.CanStart(Recipe.InputTonnes, Recipe.OutputTonnes))
     {
         TArray<FCommodityAmount> Materials, Products;

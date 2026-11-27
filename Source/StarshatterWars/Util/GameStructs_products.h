@@ -10,6 +10,18 @@
 UENUM(BlueprintType)
 enum class ESSWProductionFacilityType : uint8 { Refinery, Factory, Shipyard, Storage };
 
+USTRUCT()
+struct FBlueprintServiceTerms
+{
+    GENERATED_BODY()
+    UPROPERTY() double ResearchMaterialSeconds=1800;
+    UPROPERTY() double ResearchTimeSeconds=1800;
+    UPROPERTY() double CopySecondsPerRun=60;
+    UPROPERTY() int64 ResearchMaterialCredits=1000;
+    UPROPERTY() int64 ResearchTimeCredits=1000;
+    UPROPERTY() int64 CopyCreditsPerRun=50;
+    UPROPERTY() int32 MaximumCopyRuns=1000;
+};
 USTRUCT(BlueprintType)
 struct FSSWProductionFacility : public FTableRowBase
 {
@@ -21,6 +33,11 @@ struct FSSWProductionFacility : public FTableRowBase
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FString StorageRole;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<FName> AllowedItems;
     UPROPERTY(EditAnywhere, BlueprintReadOnly) ESSWProductionFacilityType FacilityType=ESSWProductionFacilityType::Factory;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) int32 ProductionLanes=1;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<FName> AllowedActivities={TEXT("Manufacturing"),TEXT("Refining")};
+    // Additional automated choices; empty preserves primary-recipe-only behavior.
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<FName> AutomatedRecipes;
+    FIndustryFacilityPolicy IndustryPolicy()const{FIndustryFacilityPolicy P;P.Lanes=ProductionLanes;P.Activities=AllowedActivities;return P;}
     // Player service terms; NPC background batches retain their authored recipe.
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FName ServiceProfile = TEXT("Standard");
     UPROPERTY(EditAnywhere, BlueprintReadOnly) bool bPlayerManufacturing = true;
@@ -74,6 +91,26 @@ struct FSSWProductionRecipe : public FTableRowBase
 
     // Exact bill of materials. Empty only for ore refining, where Minerals are alternatives.
     UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<FCommodityAmount> Inputs;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) TArray<FCommodityAmount> Outputs;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly) FName Activity=TEXT("Manufacturing");
+    bool ResolveOutputs(TArray<FCommodityAmount>& Out)const
+    {
+        Out=Outputs;
+        if(Out.IsEmpty())
+        {
+            FCommodityAmount P;P.Item=DataTableUtils::MakeValidName(CargoItem.IsEmpty()?OutputDisplayName:CargoItem);
+            P.Quantity=OutputQuantity>0?OutputQuantity:OutputTonnes;P.UnitTonnes=P.Quantity>0?OutputTonnes/P.Quantity:0;
+            P.bWholeUnits=!OutputUnit.IsEmpty() && !OutputUnit.Equals(TEXT("t"),ESearchCase::IgnoreCase);Out.Add(P);
+        }
+        TSet<FName> Seen;double Total=0;
+        for(const auto& P:Out)
+        {
+            if(P.Item.IsNone() || Seen.Contains(P.Item) || !FMath::IsFinite(P.Quantity) || P.Quantity<=0 || !FMath::IsFinite(P.UnitTonnes) || P.UnitTonnes<=0 ||
+                (P.bWholeUnits && !FMath::IsNearlyEqual(P.Quantity,FMath::RoundToDouble(P.Quantity),1.e-9)))return false;
+            Seen.Add(P.Item);Total+=P.Quantity*P.UnitTonnes;
+        }
+        return FMath::IsFinite(Total) && Total>0 && (OutputTonnes<=0 || FMath::IsNearlyEqual(Total,OutputTonnes,1.e-6));
+    }
     UPROPERTY(EditAnywhere, BlueprintReadOnly) FName Image = TEXT("Production");
 
     UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -102,7 +139,7 @@ struct FSSWProductionRecipe : public FTableRowBase
 
     bool CanStart(double Available, double FreeSpace) const
     {
-        return (Product != ESSWFinishedItem::None || !CargoItem.IsEmpty()) && InputTonnes > 0 &&
+        return (Product != ESSWFinishedItem::None || !CargoItem.IsEmpty() || !Outputs.IsEmpty()) && InputTonnes > 0 &&
             OutputTonnes > 0 && SecondsPerBatch > 0 &&
             Available >= InputTonnes && FreeSpace >= OutputTonnes;
     }

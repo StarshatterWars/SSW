@@ -619,5 +619,284 @@
     "ReserveTonnes": 250000,
     "RateTonnesPerSecond": 0.025,
     "StorageTonnes": 2500
+  },
+  {
+    "Id": "Ostara/Ostara Outer Belt/chromite",
+    "System": "Ostara",
+    "Region": "Ostara Outer Belt",
+    "Item": "chromite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Korius/Solnas/spinel",
+    "System": "Korius",
+    "Region": "Solnas",
+    "Item": "spinel",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Nephrys/Nephrys Outer Belt/apatite",
+    "System": "Nephrys",
+    "Region": "Nephrys Outer Belt",
+    "Item": "apatite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Radix/Radix Outer Belt/merrillite",
+    "System": "Radix",
+    "Region": "Radix Outer Belt",
+    "Item": "merrillite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Trocanther/Trocanther Outer Belt/diamond",
+    "System": "Trocanther",
+    "Region": "Trocanther Outer Belt",
+    "Item": "diamond",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Jarnell/Jarnell Outer Belt/calcite",
+    "System": "Jarnell",
+    "Region": "Jarnell Outer Belt",
+    "Item": "calcite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Athenar/Athenar Outer Belt/dolomite",
+    "System": "Athenar",
+    "Region": "Athenar Outer Belt",
+    "Item": "dolomite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Janus/Janus Outer Belt/quartz",
+    "System": "Janus",
+    "Region": "Janus Outer Belt",
+    "Item": "quartz",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Ostara/Ostara Outer Belt/rutile",
+    "System": "Ostara",
+    "Region": "Ostara Outer Belt",
+    "Item": "rutile",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Korius/Solnas/zircon",
+    "System": "Korius",
+    "Region": "Solnas",
+    "Item": "zircon",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Nephrys/Nephrys Outer Belt/monazite",
+    "System": "Nephrys",
+    "Region": "Nephrys Outer Belt",
+    "Item": "monazite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Radix/Radix Outer Belt/bauxite",
+    "System": "Radix",
+    "Region": "Radix Outer Belt",
+    "Item": "bauxite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Trocanther/Trocanther Outer Belt/spodumene",
+    "System": "Trocanther",
+    "Region": "Trocanther Outer Belt",
+    "Item": "spodumene",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Jarnell/Jarnell Outer Belt/fluorite",
+    "System": "Jarnell",
+    "Region": "Jarnell Outer Belt",
+    "Item": "fluorite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Haiche/Haiche Outer Belt/graphite",
+    "System": "Haiche",
+    "Region": "Haiche Outer Belt",
+    "Item": "graphite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Isham/Isham Outer Belt/pyrite",
+    "System": "Isham",
+    "Region": "Isham Outer Belt",
+    "Item": "pyrite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Paragon/Paragon Outer Belt/water ice",
+    "System": "Paragon",
+    "Region": "Paragon Outer Belt",
+    "Item": "water ice",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Kolchev/Kolchev Outer Belt/pentlandite",
+    "System": "Kolchev",
+    "Region": "Kolchev Outer Belt",
+    "Item": "pentlandite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Tarsus/Sintar/hematite",
+    "System": "Tarsus",
+    "Region": "Sintar",
+    "Item": "hematite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Marak/Xanthe/ilmenite",
+    "System": "Marak",
+    "Region": "Xanthe",
+    "Item": "ilmenite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Garrison/Garrison Outer Belt/cassiterite",
+    "System": "Garrison",
+    "Region": "Garrison Outer Belt",
+    "Item": "cassiterite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Borova/Tulkas/chalcopyrite",
+    "System": "Borova",
+    "Region": "Tulkas",
+    "Item": "chalcopyrite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Renser/Lornas/sphalerite",
+    "System": "Renser",
+    "Region": "Lornas",
+    "Item": "sphalerite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Loris/Loris Outer Belt/galena",
+    "System": "Loris",
+    "Region": "Loris Outer Belt",
+    "Item": "galena",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Kolchev/Kolchev Outer Belt/cobaltite",
+    "System": "Kolchev",
+    "Region": "Kolchev Outer Belt",
+    "Item": "cobaltite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Tarsus/Sintar/scheelite",
+    "System": "Tarsus",
+    "Region": "Sintar",
+    "Item": "scheelite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Marak/Xanthe/wolframite",
+    "System": "Marak",
+    "Region": "Xanthe",
+    "Item": "wolframite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Garrison/Garrison Outer Belt/uraninite",
+    "System": "Garrison",
+    "Region": "Garrison Outer Belt",
+    "Item": "uraninite",
+    "ReserveTonnes": 250000,
+    "RateTonnesPerSecond": 0.025,
+    "StorageTonnes": 2500
+  },
+  {
+    "Id": "Borova/Tulkas/dilithium",
+    "System": "Borova",
+    "Region": "Tulkas",
+    "Item": "dilithium",
+    "ReserveTonnes": 50000,
+    "RateTonnesPerSecond": 0.001,
+    "StorageTonnes": 500
+  },
+  {
+    "Id": "Renser/Lornas/quantium-40",
+    "System": "Renser",
+    "Region": "Lornas",
+    "Item": "quantium-40",
+    "ReserveTonnes": 50000,
+    "RateTonnesPerSecond": 0.001,
+    "StorageTonnes": 500
+  },
+  {
+    "Id": "Loris/Loris Outer Belt/khyber ore",
+    "System": "Loris",
+    "Region": "Loris Outer Belt",
+    "Item": "khyber ore",
+    "ReserveTonnes": 50000,
+    "RateTonnesPerSecond": 0.001,
+    "StorageTonnes": 500
   }
 ]

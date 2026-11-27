@@ -73,6 +73,8 @@ struct FBlueprintInstance
     UPROPERTY(SaveGame) FName Facility;
     UPROPERTY(SaveGame) bool bOriginal = true;
     UPROPERTY(SaveGame) int32 RunsRemaining = 0;
+    UPROPERTY(SaveGame) FGuid SourceBlueprint;
+    UPROPERTY(SaveGame) FGuid SourceJob;
     UPROPERTY(SaveGame) double MaterialEfficiency = 0;
     UPROPERTY(SaveGame) double TimeEfficiency = 0;
 };
@@ -82,6 +84,14 @@ struct FMiningLease
     GENERATED_BODY()
     UPROPERTY(SaveGame) FName Claimant;
     UPROPERTY(SaveGame) double ExpiresAt = 0;
+};
+USTRUCT()
+struct FIndustryFacilityPolicy
+{
+    GENERATED_BODY()
+    UPROPERTY() int32 Lanes=1;
+    UPROPERTY() TArray<FName> Activities={TEXT("Manufacturing"),TEXT("Refining")};
+    bool Allows(FName Activity)const{return Lanes>=1 && Lanes<=16 && Activities.Contains(Activity);}
 };
 USTRUCT()
 struct FIndustryJob
@@ -95,6 +105,11 @@ struct FIndustryJob
     UPROPERTY(SaveGame) FName Recipe;
     UPROPERTY(SaveGame) FGuid Blueprint;
     UPROPERTY(SaveGame) int32 Runs = 1;
+    UPROPERTY(SaveGame) FName Activity=TEXT("Manufacturing");
+    UPROPERTY(SaveGame) int32 Lane=INDEX_NONE;
+    UPROPERTY(SaveGame) double SourceMaterialEfficiency=0;
+    UPROPERTY(SaveGame) double SourceTimeEfficiency=0;
+    UPROPERTY(SaveGame) FGuid ProducedBlueprint;
     UPROPERTY(SaveGame) TArray<FCommodityAmount> Materials;
     UPROPERTY(SaveGame) TArray<FCommodityAmount> Products;
     UPROPERTY(SaveGame) double Duration = 0;
@@ -211,6 +226,9 @@ struct FEconomyState
     UPROPERTY(SaveGame) TMap<FGuid, FEconomyReservation> Reservations;
     UPROPERTY(SaveGame) TMap<FName, FContractTransaction> Contracts;
     UPROPERTY(SaveGame) TArray<FIndustryJob> Jobs;
+    // Refreshed from authoritative JSON catalogs; old saves use the one-lane default.
+    UPROPERTY() TMap<FName,FIndustryFacilityPolicy> IndustryPolicies;
+    UPROPERTY() TMap<FName,FName> RecipeActivities;
     UPROPERTY(SaveGame) TMap<FGuid, FBlueprintInstance> Blueprints;
     UPROPERTY(SaveGame) TMap<FGuid, FGuid> BlueprintReceipts;
     UPROPERTY(SaveGame) TMap<FGuid,FSerializedHullStock> SerializedHulls;
@@ -272,6 +290,7 @@ public:
     static FGuid QueueBlueprintJob(FEconomyState&, FName Owner, FName Facility, FName Input, FName Output,
         FGuid Blueprint, int32 Runs, const TArray<FCommodityAmount>& Materials, const TArray<FCommodityAmount>& Products, double Duration);
     // Shared read-only preflight for installation, job UI and authoritative processing.
+    static FGuid QueueBlueprintService(FEconomyState&,FName Owner,FName Facility,FGuid Blueprint,FName Activity,int32 Runs,double Duration);
     static bool CanStartJob(const FEconomyState&, const FIndustryJob&, bool bOperational, FText& Reason, bool bCheckFacilitySlot = true);
     static bool CancelJob(FEconomyState&, FName Owner, FGuid Id);
     static int32 AdvanceJobs(FEconomyState&, double Seconds, TFunctionRef<bool(FName)> Operational);

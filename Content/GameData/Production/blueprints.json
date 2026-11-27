@@ -1766,5 +1766,21 @@
     "CopyPrice": 45916100,
     "CopyRuns": 1,
     "Image": "Ship"
+  },
+  {
+    "Recipe": "FrascoWaterBottling",
+    "DisplayName": "Frasco Water Bottling Blueprint",
+    "OriginalPrice": 7500,
+    "CopyPrice": 750,
+    "CopyRuns": 10,
+    "Image": "Liquid"
+  },
+  {
+    "Recipe": "KhyberCrystalSeparation",
+    "DisplayName": "Khyber Crystal Separation Blueprint",
+    "OriginalPrice": 90000,
+    "CopyPrice": 9000,
+    "CopyRuns": 10,
+    "Image": "Mineral"
   }
 ]

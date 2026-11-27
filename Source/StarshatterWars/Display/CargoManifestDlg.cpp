@@ -233,7 +233,7 @@ TSharedRef<SWidget> UCargoManifestDlg::RebuildWidget()
     Table->List = List;
     Table->Refresh();
     const auto Font = MissionUIStyle::GetRowFont(13);
-    return SNew(SChangeDrivenPanel).OnChanged_Lambda([Table](){Table->Refresh();})[SNew(SVerticalBox)
+    return SNew(SChangeDrivenPanel).Domains(ESimDataDomain::Inventory).Inventory_Lambda([](){const auto* Ship=CargoShip();return Ship?Ship->GetCargoInventoryKey():NAME_None;}).OnChanged_Lambda([Table](){Table->Refresh();})[SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(20, 18, 20, 8)
         [
             SNew(STextBlock).Font(MissionUIStyle::GetHeaderFont(20))

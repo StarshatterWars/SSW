@@ -90,20 +90,20 @@ Asteroid::Asteroid(int t, const FVector& pos, double m, TOptional<ESSWAsteroidTy
     using Mineral = ESSWMineral;
     if (TypeRoll < 0.70)
     {
-        constexpr Mineral Minerals[] = {Mineral::Serpentine, Mineral::Saponite, Mineral::Magnetite, Mineral::Troilite};
+        constexpr Mineral Minerals[] = {Mineral::Serpentine, Mineral::Saponite, Mineral::Magnetite, Mineral::Troilite, Mineral::Graphite, Mineral::Pyrite, Mineral::WaterIce};
         Resource.Type = ESSWAsteroidType::Carbonaceous;
         Resource.Mineral = Minerals[Deposit.RandHelper(UE_ARRAY_COUNT(Minerals))];
     }
     else if (TypeRoll < 0.93)
     {
-        constexpr Mineral Minerals[] = {Mineral::Olivine, Mineral::Pyroxene, Mineral::Plagioclase};
+        constexpr Mineral Minerals[] = {Mineral::Olivine, Mineral::Pyroxene, Mineral::Plagioclase, Mineral::Chromite, Mineral::Spinel, Mineral::Apatite, Mineral::Merrillite, Mineral::Diamond, Mineral::Calcite, Mineral::Dolomite, Mineral::Quartz, Mineral::Rutile, Mineral::Zircon, Mineral::Monazite, Mineral::Bauxite, Mineral::Spodumene, Mineral::Fluorite};
         Resource.Type = ESSWAsteroidType::Stony;
         Resource.Rarity = ESSWAsteroidRarity::Uncommon;
         Resource.Mineral = Minerals[Deposit.RandHelper(UE_ARRAY_COUNT(Minerals))];
     }
     else
     {
-        constexpr Mineral Minerals[] = {Mineral::Kamacite, Mineral::Taenite, Mineral::Schreibersite};
+        constexpr Mineral Minerals[] = {Mineral::Kamacite, Mineral::Taenite, Mineral::Schreibersite, Mineral::Pentlandite, Mineral::Hematite, Mineral::Ilmenite, Mineral::Cassiterite, Mineral::Chalcopyrite, Mineral::Sphalerite, Mineral::Galena, Mineral::Cobaltite, Mineral::Scheelite, Mineral::Wolframite, Mineral::Uraninite};
         Resource.Type = ESSWAsteroidType::Metallic;
         Resource.Rarity = ESSWAsteroidRarity::Rare;
         Resource.Mineral = Minerals[Deposit.RandHelper(UE_ARRAY_COUNT(Minerals))];
@@ -115,7 +115,7 @@ Asteroid::Asteroid(int t, const FVector& pos, double m, TOptional<ESSWAsteroidTy
     if (TypeRoll >= 0.985)
     {
         Resource.Rarity = ESSWAsteroidRarity::Exotic;
-        Resource.Mineral = TypeRoll >= 0.995 ? Mineral::Quantium40 : Mineral::Dilithium;
+        Resource.Mineral = TypeRoll >= 0.999 ? Mineral::KhyberOre : TypeRoll >= 0.995 ? Mineral::Quantium40 : Mineral::Dilithium;
     }
 
     // Heavy debris spins at a barely visible 0.14 degrees per second.

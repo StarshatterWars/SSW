@@ -147,9 +147,9 @@ public:
             [SNew(SBox).MaxDesiredHeight(210)[SNew(SScrollBox)+SScrollBox::Slot()[SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([this](){return GetTypeHash(Selected);})
                 .Record_Lambda([this]() { auto D=Details;D.Icon=EShipSystemIcon::Wallet;if(D.Title.IsEmpty()){D.Title=INVTEXT("SELECT A TRANSACTION");D.Description=INVTEXT("Inspect its receipt, counterparties and wallet movement. Amounts are credits; dates are GMT.");}return D; })]]])];
         Refresh();
-        DataHandle=FSimDataEvents::Changed().AddSP(this,&STransactionWallet::OnDataChanged);
+        DataHandle=FSimDataEvents::DetailedChanged().AddSP(this,&STransactionWallet::OnDataChanged);
     }
-    ~STransactionWallet(){FSimDataEvents::Changed().Remove(DataHandle);}
+    ~STransactionWallet(){FSimDataEvents::DetailedChanged().Remove(DataHandle);}
     void Tick(const FGeometry& Geometry, double Time, float Delta) override
     {
         SCompoundWidget::Tick(Geometry,Time,Delta);
@@ -170,8 +170,8 @@ private:
     int32 SortColumn=0;
     bool bDescending=true;
     FDelegateHandle DataHandle;bool bDataDirty=false;
-    void OnDataChanged(const FEconomyState& State)
-    {if(Players.IsValid() && &Players->GetPlayerInfo().Economy==&State)bDataDirty=true;}
+    void OnDataChanged(const FEconomyState& State,const FSimDataChange& Change)
+    {if(Change.Affects(ESimDataDomain::Wallet) && Change.AffectsOwner(FEconomyLedger::Pilot()) && Players.IsValid() && &Players->GetPlayerInfo().Economy==&State)bDataDirty=true;}
     FGuid LastReceipt;
     int32 LastCount=-1;
     bool bRecentOnly=false;

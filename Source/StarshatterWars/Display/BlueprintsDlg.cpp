@@ -1,5 +1,7 @@
 #include "BlueprintsDlg.h"
 #include "RecordDetails.h"
+#include "ModifierProvenance.h"
+#include "ProductionCatalog.h"
 #include "BlueprintCatalogSubsystem.h"
 #include "MissionUIStyle.h"
 #include "ShipSystemIcon.h"
@@ -119,7 +121,11 @@ FRecordDetails DescribeQuote(const TSharedPtr<FBlueprintTable>& Model)
         for(const auto& A:Model->Quote.Materials)Inputs.Add(FText::Format(INVTEXT("{0} / QTY {1} / {2} T"),FText::FromName(A.Item),FText::AsNumber(A.Quantity),FText::AsNumber(A.Quantity*A.UnitTonnes)));
         for(const auto& A:Model->Quote.Products)Outputs.Add(FText::Format(INVTEXT("{0} / QTY {1} / {2} T"),FText::FromName(A.Item),FText::AsNumber(A.Quantity),FText::AsNumber(A.Quantity*A.UnitTonnes)));
         D.Section(INVTEXT("REQUIRED MATERIALS"),FText::Join(INVTEXT("\n"),Inputs));D.Section(INVTEXT("FINISHED PRODUCTS"),FText::Join(INVTEXT("\n"),Outputs));
-    }return D;
+    }
+    if(const auto* Site=FStationServices::Facility();Site && Model->Selected)
+        if(const auto* Recipe=SSWProductionCatalog::Recipes().Find(Model->Selected->Recipe))
+        {const auto* S=Sim::GetSim();const auto* BP=S?S->ReadEconomy().Blueprints.Find(Model->License):nullptr;ModifierProvenance::Industry(D,*Recipe,*Site,BP,Model->CanInstall?&Model->Quote:nullptr);}
+    return D;
 }
 }
 TSharedRef<SWidget> UBlueprintsDlg::RebuildWidget()
@@ -158,6 +164,16 @@ TSharedRef<SWidget> UBlueprintsDlg::RebuildWidget()
             if (Weak.IsValid() && Site && Model->CanInstall) Weak->RequestBeginPlayerJob(*Site,Model->License,Model->Runs,[WeakModel=TWeakPtr<FBlueprintTable>(Model)](bool,const FText& Why,FGuid){if(auto M=WeakModel.Pin()){M->Feedback=Why;M->LastPreflight=0;M->Refresh();}},Model->Feedback);
             Model->LastPreflight=0; Model->Refresh(); return FReply::Handled();
         })[SNew(SShipSystemIcon).Icon(EShipSystemIcon::Production)]];
+    for(FName Activity:{FName(TEXT("ResearchMaterial")),FName(TEXT("ResearchTime")),FName(TEXT("Copying"))})
+    {
+        const auto Terms=[Weak,Model,Activity](FText& Reason)->bool
+        {RefreshPreflight(Weak,Model);const auto* Site=FStationServices::Facility();double Seconds=0;int64 Price=0;return Weak.IsValid() && Site && Weak->CanBlueprintService(*Site,Model->License,Activity,Model->Runs,Seconds,Price,Reason);};
+        Buttons->AddSlot().AutoWidth().Padding(6,0)[SNew(SButton)
+            .ToolTipText_Lambda([Terms,Activity](){FText Why;Terms(Why);return FText::Format(INVTEXT("{0}\n{1}"),Activity==TEXT("ResearchMaterial")?INVTEXT("RESEARCH MATERIAL EFFICIENCY +1 PERCENTAGE POINT"):Activity==TEXT("ResearchTime")?INVTEXT("RESEARCH TIME EFFICIENCY +2 PERCENTAGE POINTS"):INVTEXT("MAKE A LICENSED COPY USING THE RUNS VALUE"),Why);})
+            .IsEnabled_Lambda([Terms](){FText Why;return Terms(Why);})
+            .OnClicked_Lambda([Weak,Model,Activity](){RefreshPreflight(Weak,Model);const auto* Site=FStationServices::Facility();if(Weak.IsValid() && Site)Weak->RequestBlueprintService(*Site,Model->License,Activity,Model->Runs,[W=TWeakPtr<FBlueprintTable>(Model)](bool,const FText& Why,FGuid){if(auto M=W.Pin()){M->Feedback=Why;M->LastPreflight=0;M->Refresh();}},Model->Feedback);return FReply::Handled();})
+            [SNew(SShipSystemIcon).Icon(Activity==TEXT("Copying")?EShipSystemIcon::Replace:Activity==TEXT("ResearchMaterial")?EShipSystemIcon::Skills:EShipSystemIcon::Reactor)]];
+    }
     return SNew(SVerticalBox)
         + SVerticalBox::Slot().AutoHeight().Padding(8)[SNew(SSearchBox).HintText(INVTEXT("Search NPC blueprints"))
             .OnTextChanged_Lambda([Model](const FText& Search) { Model->Search=Search.ToString().TrimStartAndEnd(); Model->Refresh(); })]
@@ -165,7 +181,7 @@ TSharedRef<SWidget> UBlueprintsDlg::RebuildWidget()
         + SVerticalBox::Slot().AutoHeight().Padding(8)
         [MissionUIStyle::MakeDataPane(SNew(SBox).MaxDesiredHeight(170)
             [SNew(SScrollBox)+SScrollBox::Slot()
-                [SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([Model](){return PointerHash(Model->Selected.Get());}).Record_Lambda([Weak,Model]()
+                [SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([Model](){return HashCombine(PointerHash(Model->Selected.Get()),GetTypeHash(Model->Runs));}).Record_Lambda([Weak,Model]()
                     { RefreshPreflight(Weak,Model); return DescribeQuote(Model); })]])]
         + SVerticalBox::Slot().AutoHeight().Padding(8)[SNew(SHorizontalBox)
             + SHorizontalBox::Slot().FillWidth(1)[SNew(STextBlock).AutoWrapText(true).Text_Lambda([Model]() { return Model->Feedback; })]

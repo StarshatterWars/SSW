@@ -156,11 +156,20 @@ FNativeLedgerReply LedgerCommandAI::Execute(FEconomyState& State,const FNativeLe
     }
     else if(C.Action==ELedgerCommand::IndustryInstall)
     {
+        const auto* BP=State.Blueprints.Find(C.Object);
+        if(!BP || !C.Policy.Allows(C.Activity)){Out.Reason=INVTEXT("No permitted facility lane for this activity.");return Out;}
+        State.IndustryPolicies.Add(C.Facility,C.Policy);State.RecipeActivities.Add(BP->Recipe,C.Activity);
         if(FEconomyLedger::CreateInventory(State,C.Source,Pilot,C.System,C.Capacity) && FEconomyLedger::CreateInventory(State,C.Destination,Pilot,C.System,C.Capacity))
         {
             Out.Object=FEconomyLedger::QueueBlueprintJob(State,Pilot,C.Facility,C.Source,C.Destination,C.Object,C.Runs,C.Materials,C.Products,C.Duration);
             Out.bSucceeded=Out.Object.IsValid() && (C.Credits==0 || (C.Credits>0 && FEconomyLedger::Pay(State,Pilot,TEXT("NPC facility services"),C.Credits,Out.Object,TEXT("Manufacturing installation"),ECommercePurpose::Service)));
         }
+    }
+    else if(C.Action==ELedgerCommand::IndustryService)
+    {
+        State.IndustryPolicies.Add(C.Facility,C.Policy);
+        Out.Object=FEconomyLedger::QueueBlueprintService(State,Pilot,C.Facility,C.Object,C.Activity,C.Runs,C.Duration);
+        Out.bSucceeded=Out.Object.IsValid() && (C.Credits==0 || (C.Credits>0 && FEconomyLedger::Pay(State,Pilot,TEXT("NPC facility services"),C.Credits,Out.Object,TEXT("Blueprint service installation"),ECommercePurpose::Service)));
     }
     else if(C.Action==ELedgerCommand::IndustryCancel)Out.bSucceeded=FEconomyLedger::CancelJob(State,Pilot,C.Object);
     else if(C.Action==ELedgerCommand::MarketMaintain)
@@ -174,7 +183,7 @@ FNativeLedgerReply LedgerCommandAI::Execute(FEconomyState& State,const FNativeLe
     const bool Maintenance=C.Action==ELedgerCommand::MarketMaintain || C.Action==ELedgerCommand::ContractMaintain;
     if(Out.bSucceeded && !Maintenance)Out.bChanged=true;
     if(Out.bSucceeded && Out.bChanged && !State.CommittedTransactions.Contains(C.Receipt))
-        {State.CommittedTransactions.Add(C.Receipt);FSimDataEvents::Publish(State);}
+        {State.CommittedTransactions.Add(C.Receipt);if(C.Action!=ELedgerCommand::Transfer && C.Action!=ELedgerCommand::IndustryInstall && C.Action!=ELedgerCommand::IndustryService && C.Action!=ELedgerCommand::IndustryCancel)FSimDataEvents::Publish(State);}
     if(!Out.bSucceeded){State=Before;if(Out.Reason.IsEmpty())Out.Reason=INVTEXT("Request rejected. Stock, cargo, credits and reservations retained.");return Out;}
     Out.Reason=INVTEXT("REQUEST SAVED. CARGO, CREDITS AND WORK ORDERS CONFIRMED.");return Out;
 }

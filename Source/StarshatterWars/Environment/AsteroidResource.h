@@ -12,7 +12,8 @@ enum class ESSWMineral : uint8
     Chromite, Ilmenite, Spinel, Apatite, Merrillite, Graphite, Diamond,
     Serpentine, Saponite, Calcite, Dolomite, Pyrite, Pentlandite, Schreibersite,
     Hematite, Quartz, Rutile, Cassiterite, Chalcopyrite, Sphalerite, Galena,
-    Cobaltite, Scheelite, Wolframite, Monazite, Zircon, Uraninite, WaterIce, Dilithium, Quantium40
+    Cobaltite, Scheelite, Wolframite, Monazite, Zircon, Uraninite, WaterIce, Dilithium, Quantium40,
+    Bauxite, Spodumene, Fluorite, KhyberOre
 };
 
 UENUM(BlueprintType)

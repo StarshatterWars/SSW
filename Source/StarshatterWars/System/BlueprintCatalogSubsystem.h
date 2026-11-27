@@ -39,6 +39,8 @@ public:
     bool RequestPurchase(FName Recipe,bool Original,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
     bool RequestBeginPlayerJob(const FSSWProductionFacility&,FGuid Blueprint,int32 Runs,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
     bool RequestCancelPlayerJob(FGuid Job,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
+    bool CanBlueprintService(const FSSWProductionFacility&,FGuid Blueprint,FName Activity,int32 Runs,double& Seconds,int64& Price,FText&)const;
+    bool RequestBlueprintService(const FSSWProductionFacility&,FGuid Blueprint,FName Activity,int32 Runs,TFunction<void(bool,const FText&,FGuid)>&&,FText&);
     bool CanBeginPlayerJob(const FSSWProductionFacility&, FGuid Blueprint, int32 Runs, FPlayerIndustryQuote&, FText& Reason) const;
     static bool MeetsRecipeSkills(const FSSWProductionRecipe&, const TMap<FName, FSkillProgress>* PilotSkills, FText& Reason,
         const TMap<FName, FSkillDefinition>* SkillCatalog = nullptr);
@@ -49,4 +51,5 @@ public:
     static FGuid PurchaseLicense(FEconomyState&, const FBlueprintOffer&, bool bOriginal);
 private:
     TMap<FName, FBlueprintOffer> Offers;
+    FBlueprintServiceTerms ServiceTerms;
 };

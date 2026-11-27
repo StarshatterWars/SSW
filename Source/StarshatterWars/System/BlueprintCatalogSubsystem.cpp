@@ -35,6 +35,13 @@ bool UBlueprintCatalogSubsystem::LoadCatalog()
     FString Json; TArray<TSharedPtr<FJsonValue>> Rows;
     if (!FFileHelper::LoadFileToString(Json, *(FPaths::ProjectContentDir() / TEXT("GameData/Production/blueprints.json"))) ||
         !FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json), Rows)) return false;
+    FString ServiceJson;FBlueprintServiceTerms NewTerms;
+    if(!FFileHelper::LoadFileToString(ServiceJson,*(FPaths::ProjectContentDir()/TEXT("GameData/Production/blueprint_services.json"))) || !FJsonObjectConverter::JsonObjectStringToUStruct(ServiceJson,&NewTerms,0,0) ||
+        !FMath::IsFinite(NewTerms.ResearchMaterialSeconds) || NewTerms.ResearchMaterialSeconds<=0 || NewTerms.ResearchMaterialSeconds>31536000 ||
+        !FMath::IsFinite(NewTerms.ResearchTimeSeconds) || NewTerms.ResearchTimeSeconds<=0 || NewTerms.ResearchTimeSeconds>31536000 ||
+        !FMath::IsFinite(NewTerms.CopySecondsPerRun) || NewTerms.CopySecondsPerRun<=0 || NewTerms.CopySecondsPerRun>31536 ||
+        NewTerms.ResearchMaterialCredits<0 || NewTerms.ResearchMaterialCredits>1000000000000LL || NewTerms.ResearchTimeCredits<0 || NewTerms.ResearchTimeCredits>1000000000000LL ||
+        NewTerms.CopyCreditsPerRun<0 || NewTerms.CopyCreditsPerRun>1000000000LL || NewTerms.MaximumCopyRuns<1 || NewTerms.MaximumCopyRuns>1000)return false;
     TMap<FName, FBlueprintOffer> Imported;
     const auto& Recipes = SSWProductionCatalog::Recipes();
     for (const auto& Value : Rows)
@@ -46,7 +53,7 @@ bool UBlueprintCatalogSubsystem::LoadCatalog()
             !Recipes.Contains(Row.Recipe)) return false;
         Imported.Add(Row.Recipe, Row);
     }
-    Offers = MoveTemp(Imported); UE_LOG(LogTemp, Display, TEXT("[Blueprints] Loaded %d NPC blueprint offers."), Offers.Num());
+    Offers = MoveTemp(Imported);ServiceTerms=NewTerms; UE_LOG(LogTemp, Display, TEXT("[Blueprints] Loaded %d NPC blueprint offers."), Offers.Num());
     return !Offers.IsEmpty();
 }
 FGuid UBlueprintCatalogSubsystem::PurchaseLicense(FEconomyState& State, const FBlueprintOffer& Offer, bool Original)
@@ -115,6 +122,7 @@ bool UBlueprintCatalogSubsystem::QuotePlayerJob(const FEconomyState& State, cons
     const TMap<FName, FSkillProgress>* PilotSkills, const TMap<FName, FSkillDefinition>* SkillCatalog)
 {
     Quote = {};
+    if(!Site.IndustryPolicy().Allows(Recipe.Activity)){Reason=INVTEXT("This facility has no lane for this activity.");return false;}
     if(!Recipe.ShipDesign.IsNone() && Site.FacilityType!=ESSWProductionFacilityType::Shipyard){Reason=INVTEXT("Ships can only be constructed at a shipyard.");return false;}
     if (!MeetsRecipeSkills(Recipe, PilotSkills, Reason, SkillCatalog)) return false;
     if (!Site.bPlayerManufacturing) { Reason=INVTEXT("This facility does not offer player manufacturing."); return false; }
@@ -150,7 +158,7 @@ bool UBlueprintCatalogSubsystem::QuotePlayerJob(const FEconomyState& State, cons
     for (const auto& Pair : State.Reservations)
         if (Pair.Value.Inventory == Quote.Input) Candidate.Reservations.Add(Pair.Key, Pair.Value);
     for (const auto& Job : State.Jobs)
-        if (Job.Blueprint == Blueprint && Job.State != EIndustryJobState::Completed && Job.State != EIndustryJobState::Cancelled) Candidate.Jobs.Add(Job);
+        if ((Job.Blueprint == Blueprint || Job.Facility==FName(*Site.Facility)) && Job.State != EIndustryJobState::Completed && Job.State != EIndustryJobState::Cancelled) Candidate.Jobs.Add(Job);
     if (!FEconomyLedger::CreateInventory(Candidate, Quote.Input, FEconomyLedger::Pilot(), FName(*Site.System), Site.CapacityTonnes) ||
         !FEconomyLedger::CreateInventory(Candidate, Quote.Output, FEconomyLedger::Pilot(), FName(*Site.System), Site.CapacityTonnes))
     { Reason = INVTEXT("The facility input or output inventory is unavailable."); return false; }
@@ -163,8 +171,7 @@ bool UBlueprintCatalogSubsystem::QuotePlayerJob(const FEconomyState& State, cons
         const auto& Inventory = Candidate.Inventories.FindChecked(Quote.Input);
         for (const auto& Stack : Inventory.Items)
         {
-            const bool Accepted = Recipe.Minerals.ContainsByPredicate([&](ESSWMineral Mineral)
-            { return DataTableUtils::MakeValidName(StaticEnum<ESSWMineral>()->GetNameStringByValue(static_cast<int64>(Mineral))) == Stack.Type; });
+            const bool Accepted=ManufacturingAI::MineralKeys(Recipe).Contains(Stack.Type);
             if (!Accepted || Stack.UnitTonnes != 1) continue;
             const double Amount = FMath::Min(Needed, FEconomyLedger::Available(Candidate, Quote.Input, Stack.Type));
             if (Amount <= 0) continue;
@@ -174,12 +181,8 @@ bool UBlueprintCatalogSubsystem::QuotePlayerJob(const FEconomyState& State, cons
         }
         if (Needed > UE_SMALL_NUMBER) { Reason = FText::Format(INVTEXT("Deliver {0} more tonnes of accepted, unreserved ore to Player Input."), FText::AsNumber(Needed)); return false; }
     }
-    FCommodityAmount Product;
-    Product.Item = DataTableUtils::MakeValidName(Recipe.CargoItem.IsEmpty() ? Recipe.OutputDisplayName : Recipe.CargoItem);
-    Product.Quantity = Recipe.OutputQuantity > 0 ? Recipe.OutputQuantity : Recipe.OutputTonnes;
-    Product.UnitTonnes = Product.Quantity > 0 ? Recipe.OutputTonnes / Product.Quantity : 0;
-    Product.bWholeUnits = !Recipe.OutputUnit.IsEmpty() && !Recipe.OutputUnit.Equals(TEXT("t"),ESearchCase::IgnoreCase);
-    Products.Add(Product);
+    if(!Recipe.ResolveOutputs(Products)){Reason=INVTEXT("Invalid recipe outputs.");return false;}
+    Candidate.IndustryPolicies.Add(FName(*Site.Facility),Site.IndustryPolicy());Candidate.RecipeActivities.Add(BP->Recipe,Recipe.Activity);
     Quote.NominalMaterials=Materials; Quote.NominalProducts=Products; Quote.NominalDuration=Recipe.SecondsPerBatch*Site.PlayerTimeMultiplier;
     const FGuid Id = FEconomyLedger::QueueBlueprintJob(Candidate, FEconomyLedger::Pilot(), FName(*Site.Facility), Quote.Input, Quote.Output,
         Blueprint, Runs, Materials, Products, Recipe.SecondsPerBatch * Site.PlayerTimeMultiplier);
@@ -218,6 +221,8 @@ FGuid UBlueprintCatalogSubsystem::BeginPlayerJob(const FSSWProductionFacility& S
     const auto Before = Players->GetPlayerInfo(); auto& State = Players->GetEconomy();
     FEconomyLedger::CreateInventory(State, Quote.Input, FEconomyLedger::Pilot(), FName(*Site.System), Site.CapacityTonnes);
     FEconomyLedger::CreateInventory(State, Quote.Output, FEconomyLedger::Pilot(), FName(*Site.System), Site.CapacityTonnes);
+    State.IndustryPolicies.Add(FName(*Site.Facility),Site.IndustryPolicy());
+    if(const auto* BP=State.Blueprints.Find(Blueprint))if(const auto* Recipe=SSWProductionCatalog::Recipes().Find(BP->Recipe))State.RecipeActivities.Add(BP->Recipe,Recipe->Activity);
     // Preserve nominal inputs: reversing a rounded discrete preview would apply efficiency twice.
     const FGuid Id = FEconomyLedger::QueueBlueprintJob(State, FEconomyLedger::Pilot(), FName(*Site.Facility), Quote.Input, Quote.Output,
         Blueprint, Runs, Quote.NominalMaterials, Quote.NominalProducts, Quote.NominalDuration);
@@ -254,11 +259,14 @@ bool UBlueprintCatalogSubsystem::RequestBeginPlayerJob(const FSSWProductionFacil
 {
     FPlayerIndustryQuote Quote;if(!CanBeginPlayerJob(Site,Blueprint,Runs,Quote,Reason))return false;
     FNativeLedgerCommand C;C.Action=ELedgerCommand::IndustryInstall;C.Receipt=FGuid::NewGuid();C.Object=Blueprint;C.Runs=Runs;C.Source=Quote.Input;C.Destination=Quote.Output;
-    C.Facility=FName(*Site.Facility);C.System=FName(*Site.System);C.Capacity=Site.CapacityTonnes;C.Materials=Quote.NominalMaterials;C.Products=Quote.NominalProducts;C.Duration=Quote.NominalDuration;C.Credits=Quote.InstallationFee;
+    C.Facility=FName(*Site.Facility);C.System=FName(*Site.System);C.Capacity=Site.CapacityTonnes;C.Materials=Quote.NominalMaterials;C.Products=Quote.NominalProducts;C.Duration=Quote.NominalDuration;C.Credits=Quote.InstallationFee;C.Policy=Site.IndustryPolicy();
+    const auto* P=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();const auto* BP=P?P->GetPlayerInfo().Economy.Blueprints.Find(Blueprint):nullptr;
+    if(!BP)return false;C.Activity=SSWProductionCatalog::Recipes().FindChecked(BP->Recipe).Activity;
     const TWeakObjectPtr<UBlueprintCatalogSubsystem> Weak(this);
     return FStationServices::RequestLedgerAction(GetGameInstance(),C,INVTEXT("INSTALL MANUFACTURING JOB"),[Weak,Site,Blueprint,Runs,C](FText& Why)
     {
         FPlayerIndustryQuote Fresh;if(!Weak.IsValid() || !Weak->CanBeginPlayerJob(Site,Blueprint,Runs,Fresh,Why))return false;
+        const auto* LiveSite=FStationServices::Facility();if(!LiveSite || LiveSite->ProductionLanes!=C.Policy.Lanes || LiveSite->AllowedActivities!=C.Policy.Activities)return false;
         if(Fresh.Input!=C.Source || Fresh.Output!=C.Destination || Fresh.InstallationFee!=C.Credits || Fresh.NominalDuration!=C.Duration || Fresh.NominalMaterials.Num()!=C.Materials.Num() || Fresh.NominalProducts.Num()!=C.Products.Num())return false;
         for(int32 I=0;I<C.Materials.Num();++I)if(!FCommodityAmount::StaticStruct()->CompareScriptStruct(&Fresh.NominalMaterials[I],&C.Materials[I],0))return false;
         for(int32 I=0;I<C.Products.Num();++I)if(!FCommodityAmount::StaticStruct()->CompareScriptStruct(&Fresh.NominalProducts[I],&C.Products[I],0))return false;
@@ -274,5 +282,40 @@ bool UBlueprintCatalogSubsystem::RequestCancelPlayerJob(FGuid Id,TFunction<void(
         const auto* Job=Players?Players->GetPlayerInfo().Economy.Jobs.FindByPredicate([Id](const auto& J){return J.Id==Id;}):nullptr;
         if(!DockedNPC() || !Site || !Job || Job->Owner!=FEconomyLedger::Pilot() || Job->Facility!=FName(*Site->Facility) || Job->State==EIndustryJobState::Completed || Job->State==EIndustryJobState::Cancelled)
         {Why=INVTEXT("Select your own cancellable job at this docked facility.");return false;}return true;
+    },MoveTemp(Completed),Reason);
+}
+
+bool UBlueprintCatalogSubsystem::CanBlueprintService(const FSSWProductionFacility& Site,FGuid Blueprint,FName Activity,int32 Runs,double& Seconds,int64& Price,FText& Reason)const
+{
+    Seconds=0;Price=0;const auto* Local=FStationServices::Facility();
+    if(!DockedNPC() || !Local || !Local->bPlayerManufacturing || Local->Facility!=Site.Facility || !Local->IndustryPolicy().Allows(Activity))
+    {Reason=INVTEXT("Dock at a facility with a permitted blueprint-service lane.");return false;}
+    const auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();if(!Players)return false;const auto& State=Players->GetPlayerInfo().Economy;
+    const auto* BP=State.Blueprints.Find(Blueprint);
+    if(!BP || !BP->bOriginal || BP->Owner!=FEconomyLedger::Pilot() || !Local->SupportsRecipe(BP->Recipe) || !State.BlueprintReceipts.Contains(Blueprint) || !State.CommittedTransactions.Contains(State.BlueprintReceipts.FindRef(Blueprint)))
+    {Reason=INVTEXT("Select your purchased original blueprint for this facility.");return false;}
+    if(State.Jobs.ContainsByPredicate([Blueprint](const auto& J){return J.Blueprint==Blueprint && J.State!=EIndustryJobState::Completed && J.State!=EIndustryJobState::Cancelled;}))
+    {Reason=INVTEXT("This original is already locked by a queued or running job.");return false;}
+    if(Activity==TEXT("ResearchMaterial")){if(BP->MaterialEfficiency>=.1-1.e-9){Reason=INVTEXT("Material efficiency is at its 10% limit.");return false;}Seconds=ServiceTerms.ResearchMaterialSeconds;Price=ServiceTerms.ResearchMaterialCredits;}
+    else if(Activity==TEXT("ResearchTime")){if(BP->TimeEfficiency>=.2-1.e-9){Reason=INVTEXT("Time efficiency is at its 20% limit.");return false;}Seconds=ServiceTerms.ResearchTimeSeconds;Price=ServiceTerms.ResearchTimeCredits;}
+    else if(Activity==TEXT("Copying")){if(Runs<1 || Runs>ServiceTerms.MaximumCopyRuns){Reason=INVTEXT("Invalid licensed-copy run count.");return false;}Seconds=ServiceTerms.CopySecondsPerRun*Runs;Price=ServiceTerms.CopyCreditsPerRun*Runs;}
+    else{Reason=INVTEXT("Unknown blueprint service.");return false;}
+    const auto* Skills=GetGameInstance()->GetSubsystem<USkillsSubsystem>();
+    const FName Required=Activity==TEXT("ResearchMaterial")?FName(TEXT("material_research")):Activity==TEXT("ResearchTime")?FName(TEXT("process_research")):FName(TEXT("blueprint_duplication"));
+    if(!Skills || !Skills->HasSkill(Required,1)){Reason=FText::Format(INVTEXT("Train {0}, level I, before installing this service."),FText::FromName(Required));return false;}
+    Seconds*=Local->PlayerTimeMultiplier;
+    if(TransactionAI::BalanceIncludingLegacy(State,Players->GetPlayerInfo().InsuranceCredits)<Price){Reason=INVTEXT("Insufficient credits for this service.");return false;}
+    Reason=FText::Format(INVTEXT("{0}: {1} CR (fees included), {2} seconds. Queues for a permitted lane. Results apply only on completion."),FText::FromName(Activity),FText::AsNumber(Price),FText::AsNumber(Seconds));return true;
+}
+bool UBlueprintCatalogSubsystem::RequestBlueprintService(const FSSWProductionFacility& Site,FGuid Blueprint,FName Activity,int32 Runs,TFunction<void(bool,const FText&,FGuid)>&& Completed,FText& Reason)
+{
+    double Seconds=0;int64 Price=0;if(!CanBlueprintService(Site,Blueprint,Activity,Runs,Seconds,Price,Reason))return false;
+    FNativeLedgerCommand C;C.Action=ELedgerCommand::IndustryService;C.Object=Blueprint;C.Receipt=FGuid::NewGuid();C.Activity=Activity;C.Duration=Seconds;C.Credits=Price;C.Runs=Activity==TEXT("Copying")?Runs:1;C.Facility=FName(*Site.Facility);C.Policy=Site.IndustryPolicy();
+    const TWeakObjectPtr<UBlueprintCatalogSubsystem> Weak(this);
+    return FStationServices::RequestLedgerAction(GetGameInstance(),C,INVTEXT("BLUEPRINT RESEARCH / COPYING"),[Weak,Site,C](FText& Why)
+    {
+        double Duration=0;int64 Cost=0;const auto* Current=FStationServices::Facility();
+        return Weak.IsValid() && Current && Current->ProductionLanes==C.Policy.Lanes && Current->AllowedActivities==C.Policy.Activities &&
+            Weak->CanBlueprintService(Site,C.Object,C.Activity,C.Runs,Duration,Cost,Why) && Duration==C.Duration && Cost==C.Credits;
     },MoveTemp(Completed),Reason);
 }

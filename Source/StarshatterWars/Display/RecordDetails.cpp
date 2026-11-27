@@ -5,6 +5,7 @@
 #include "Widgets/Layout/SBox.h"
 #include "Widgets/Layout/SGridPanel.h"
 #include "Widgets/Text/STextBlock.h"
+#include "Widgets/SToolTip.h"
 #include "Brushes/SlateRoundedBoxBrush.h"
 namespace {
 const FLinearColor Accent(.31f,.77f,.89f), Muted(.50f,.63f,.69f), White(.88f,.94f,.97f);
@@ -37,7 +38,7 @@ void SRecordDetails::Tick(const FGeometry& Geometry,double Time,float Delta) {
 void SRecordDetails::Refresh(int32 Columns) {
     const auto Data=Record.Get();
     FString Key=Data.Title.ToString()+TEXT("\x1f")+Data.Subtitle.ToString()+TEXT("\x1f")+Data.Status.ToString()+TEXT("\x1f")+Data.Description.ToString()+FString::FromInt(int32(Data.Icon));
-    for(const auto& Field:Data.Fields) Key+=TEXT("\x1f")+Field.Label.ToString()+TEXT("\x1e")+Field.Value.ToString();
+    for(const auto& Field:Data.Fields) Key+=TEXT("\x1f")+Field.Label.ToString()+TEXT("\x1e")+Field.Value.ToString()+TEXT("\x1d")+Field.Source.ToString();
     for(const auto& Section:Data.Sections) Key+=TEXT("\x1f")+Section.Heading.ToString()+TEXT("\x1e")+Section.Body.ToString();
     if(Key==Signature && Columns==LastColumns) return;
     Signature=MoveTemp(Key);LastColumns=Columns;Content->ClearChildren();
@@ -58,7 +59,7 @@ void SRecordDetails::Refresh(int32 Columns) {
         for(int32 I=0;I<Data.Fields.Num();++I) {
             const auto& Field=Data.Fields[I];
             Grid->AddSlot(I%Columns,I/Columns).Padding(FMargin(0,0,I%Columns<Columns-1?8:0,8))
-                [SNew(SBorder).BorderImage(&Card()).Padding(FMargin(10,8))
+                [SNew(SBorder).BorderImage(&Card()).Padding(FMargin(10,8)).ToolTip(Field.Source.IsEmpty()?TSharedPtr<IToolTip>():SNew(SToolTip)[SNew(STextBlock).Font(MissionUIStyle::GetRowFont(11)).Text(Field.Source).WrapTextAt(360)])
                     [SNew(SVerticalBox)
                         + SVerticalBox::Slot().AutoHeight()[SNew(STextBlock).Text(Field.Label.ToUpper()).Font(MissionUIStyle::GetRowFont(10)).ColorAndOpacity(Muted)]
                         + SVerticalBox::Slot().AutoHeight().Padding(0,3,0,0)[SNew(STextBlock).Text(Field.Value.IsEmpty()?INVTEXT("—"):Field.Value.ToUpper()).Font(MissionUIStyle::GetRowFont(12)).ColorAndOpacity(White).AutoWrapText(true).WrappingPolicy(ETextWrappingPolicy::AllowPerCharacterWrapping)]]];

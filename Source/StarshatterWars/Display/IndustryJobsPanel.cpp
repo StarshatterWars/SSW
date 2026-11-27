@@ -2,6 +2,7 @@
 #include "ChangeDrivenPanel.h"
 
 #include "BlueprintCatalogSubsystem.h"
+#include "ProductionCatalog.h"
 #include "MissionUIStyle.h"
 #include "ShipSystemIcon.h"
 #include "StationServices.h"
@@ -24,6 +25,8 @@ bool Operational(const FIndustryJob& Job)
     auto* Simulation=Sim::GetSim();
     if(!Simulation)return false;
     const auto& Economy=Simulation->ReadEconomy();const auto* Input=Economy.Inventories.Find(Job.Input);const auto* Output=Economy.Inventories.Find(Job.Output);
+    if(Job.Input.IsNone() && Job.Output.IsNone())
+    {for(const auto& Site:SSWProductionCatalog::Facilities())if(FName(*Site.Value.Facility)==Job.Facility)return !Economy.OfflineFacilities.Contains(Site.Key);return false;}
     return Input && Output && Input->bOperational && Output->bOperational;
 }
 FText JobState(const FIndustryJob& Job)
@@ -48,7 +51,7 @@ public:
         FText Text;
         if(Column==TEXT("Id"))Text=FText::FromString(Item->Id.ToString(EGuidFormats::Digits).Left(8));
         else if(Column==TEXT("Facility"))Text=FText::FromName(Item->Facility);
-        else if(Column==TEXT("Recipe"))Text=FText::FromName(Item->Recipe);
+        else if(Column==TEXT("Recipe"))Text=FText::Format(INVTEXT("{0} / {1}"),FText::FromName(Item->Recipe),FText::FromName(Item->Activity));
         else if(Column==TEXT("Input"))Text=FText::FromName(Item->Input);
         else if(Column==TEXT("Output"))Text=FText::FromName(Item->Output);
         else if(Column==TEXT("Runs"))Text=FText::AsNumber(Item->Runs);
@@ -85,13 +88,13 @@ public:
                     .OnClicked_Lambda([this](){if(Catalog.IsValid())Catalog->RequestCancelPlayerJob(Selected,[Weak=TWeakPtr<SPlayerIndustryJobs>(StaticCastSharedRef<SPlayerIndustryJobs>(AsShared()))](bool,const FText& Why,FGuid){if(auto W=Weak.Pin()){W->Feedback=Why;W->Refresh(0,0);}},Feedback);Refresh(0,0);return FReply::Handled();})
                     [SNew(SShipSystemIcon).Icon(EShipSystemIcon::Abort)]]]];
         Refresh(0,0);
-        ChangeHandle=FSimDataEvents::Changed().AddSP(this,&SPlayerIndustryJobs::OnDataChanged);
+        ChangeHandle=FSimDataEvents::DetailedChanged().AddSP(this,&SPlayerIndustryJobs::OnDataChanged);
     }
-    ~SPlayerIndustryJobs(){FSimDataEvents::Changed().Remove(ChangeHandle);}
+    ~SPlayerIndustryJobs(){FSimDataEvents::DetailedChanged().Remove(ChangeHandle);}
     void Tick(const FGeometry& G,double Time,float Delta)override{SCompoundWidget::Tick(G,Time,Delta);if(bDataDirty && Time>=NextDispatch){bDataDirty=false;NextDispatch=Time+1;Refresh(0,0);}}
 private:
     FDelegateHandle ChangeHandle;bool bDataDirty=false;double NextDispatch=0;
-    void OnDataChanged(const FEconomyState& State){if(const auto* Simulation=Sim::GetSim();Simulation && &Simulation->ReadEconomy()==&State)bDataDirty=true;}
+    void OnDataChanged(const FEconomyState& State,const FSimDataChange& Change){if(!Change.AffectsIndustry(State,FEconomyLedger::Pilot()))return;if(const auto* Simulation=Sim::GetSim();Simulation && &Simulation->ReadEconomy()==&State)bDataDirty=true;}
     const FIndustryJob* FindSelected() const
     { const auto* Simulation=Sim::GetSim();return Simulation?Simulation->ReadEconomy().Jobs.FindByPredicate([this](const auto& Job){return Job.Id==Selected && Job.Owner==FEconomyLedger::Pilot();}):nullptr; }
     EActiveTimerReturnType Refresh(double,float)
@@ -117,6 +120,12 @@ private:
             FText::FromString(Job->Id.ToString()),FText::FromName(Job->Facility),FText::FromName(Job->Recipe),FText::AsNumber(Job->Runs),JobState(*Job),FText::FromName(Job->Input),FText::FromName(Job->Output),FText::AsNumber(Job->Duration),FText::AsNumber(FMath::CeilToInt(Job->Remaining))));
         if(Job->State!=EIndustryJobState::Completed && Job->State!=EIndustryJobState::Cancelled)
         {FText Reason;FEconomyLedger::CanStartJob(Simulation->ReadEconomy(),*Job,Operational(*Job),Reason);Lines.Add(Reason);}
+        if(Job->Input.IsNone() && Job->Output.IsNone())
+        {
+            Lines.Add(FText::Format(INVTEXT("ACTIVITY: {0} / ORIGINAL: {1}"),FText::FromName(Job->Activity),FText::FromString(Job->Blueprint.ToString())));
+            if(Job->ProducedBlueprint.IsValid())Lines.Add(FText::Format(INVTEXT("CREATED COPY: {0} / {1} LICENSED RUNS"),FText::FromString(Job->ProducedBlueprint.ToString()),FText::AsNumber(Job->Runs)));
+            Lines.Add(INVTEXT("RESEARCH AND COPIES APPLY ON COMPLETION. CANCELLATION GRANTS NO RESULT AND DOES NOT REFUND INSTALLATION FEES."));return FText::Join(INVTEXT("\n"),Lines).ToUpper();
+        }
         double Reserved=0;for(const auto& Pair:Simulation->ReadEconomy().Reservations)
             if(Pair.Value.Inventory==Job->Input && Pair.Value.Owner==Job->Owner)Reserved+=Pair.Value.Quantity;
         Lines.Add(FText::Format(INVTEXT("RESERVED AT INPUT: {0} CATALOG UNITS\nOUTPUT DESTINATION: {1}"),FText::AsNumber(Reserved),FText::FromName(Job->Output)));

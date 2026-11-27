@@ -9,12 +9,13 @@
 class SChangeDrivenPanel : public SCompoundWidget
 {
 public:
- SLATE_BEGIN_ARGS(SChangeDrivenPanel){} SLATE_EVENT(FSimpleDelegate,OnChanged) SLATE_DEFAULT_SLOT(FArguments,Content) SLATE_END_ARGS()
- void Construct(const FArguments& A){Refresh=A._OnChanged;ChildSlot[A._Content.Widget];Handle=FSimDataEvents::Changed().AddSP(this,&SChangeDrivenPanel::Changed);}
- ~SChangeDrivenPanel(){FSimDataEvents::Changed().Remove(Handle);}
+ SLATE_BEGIN_ARGS(SChangeDrivenPanel):_Domains(ESimDataDomain::All),_Inventory(NAME_None){} SLATE_ARGUMENT(ESimDataDomain,Domains) SLATE_ATTRIBUTE(FName,Inventory) SLATE_EVENT(FSimpleDelegate,OnChanged) SLATE_DEFAULT_SLOT(FArguments,Content) SLATE_END_ARGS()
+ void Construct(const FArguments& A){Interest=A._Domains;Inventory=A._Inventory;Refresh=A._OnChanged;ChildSlot[A._Content.Widget];Handle=FSimDataEvents::DetailedChanged().AddSP(this,&SChangeDrivenPanel::Changed);}
+ ~SChangeDrivenPanel(){FSimDataEvents::DetailedChanged().Remove(Handle);}
  void Tick(const FGeometry& G,double T,float D)override{SCompoundWidget::Tick(G,T,D);if(bDirty && T>=NextDispatch){bDirty=false;NextDispatch=T+1;Refresh.ExecuteIfBound();}}
 private:
- void Changed(const FEconomyState& S){if(const auto* Simulation=Sim::GetSim();Simulation && &Simulation->ReadEconomy()==&S)bDirty=true;}
+ void Changed(const FEconomyState& S,const FSimDataChange& Change){if(Change.Affects(Interest,Inventory.Get()) && Sim::GetSim() && &Sim::GetSim()->ReadEconomy()==&S)bDirty=true;}
+ ESimDataDomain Interest=ESimDataDomain::All;TAttribute<FName> Inventory;
  FSimpleDelegate Refresh;FDelegateHandle Handle;bool bDirty=false;double NextDispatch=0;
 };
 class SChangeDrivenText : public SCompoundWidget

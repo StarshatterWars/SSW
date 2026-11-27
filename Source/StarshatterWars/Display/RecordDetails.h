@@ -4,7 +4,7 @@
 #include "Widgets/SCompoundWidget.h"
 #include "SimDataEvents.h"
 
-struct FRecordDetailField { FText Label; FText Value; };
+struct FRecordDetailField { FText Label; FText Value; FText Source; };
 struct FRecordDetailSection { FText Heading; FText Body; };
 struct FRecordDetails
 {
@@ -12,7 +12,7 @@ struct FRecordDetails
     EShipSystemIcon Icon = EShipSystemIcon::Cargo;
     TArray<FRecordDetailField> Fields;
     TArray<FRecordDetailSection> Sections;
-    FRecordDetails& Fact(const FText& Label, const FText& Value) { Fields.Add({Label,Value}); return *this; }
+    FRecordDetails& Fact(const FText& Label,const FText& Value,const FText& Source=FText()) { Fields.Add({Label,Value,Source}); return *this; }
     FRecordDetails& Section(const FText& Heading, const FText& Body) { if(!Body.IsEmpty()) Sections.Add({Heading,Body}); return *this; }
 };
 // Native Slate only: no temporary UImage/brush owners to be collected.

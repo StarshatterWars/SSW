@@ -22,6 +22,19 @@ bool FOOBJsonParityTest::RunTest(const FString&)
   const FTCHARToUTF8 Path(*(Base/(FString(Faction)+TEXT(".def"))));Parser->LoadCombatRoster(Path.Get(),-1);
   auto* Json=NewObject<UDataTable>();
   if(!TestTrue(Faction,DesignTableJson::Import(*Json,*FS_CombatGroup::StaticStruct(),Base/TEXT("OOB")/(FString(Faction)+TEXT(".json")))))return false;
+  // Authored correction: Sintar is a Tarsus region, not an unspecified inherited system.
+  for(const auto& Pair:Legacy->GetRowMap())
+  {
+   auto* Row=reinterpret_cast<FS_CombatGroup*>(Pair.Value);
+   if(Row->Id==8579)
+   {
+    TestEqual(TEXT("Archived Sintar system was unspecified"),Row->System,FString());
+    const auto* Current=Json->FindRow<FS_CombatGroup>(Pair.Key,TEXT("Sintar correction"),false);
+    if(!TestNotNull(TEXT("Sintar station identity retained"),Current))return false;
+    TestEqual(TEXT("Authored Sintar endpoint belongs to Tarsus"),Current->System,FString(TEXT("Tarsus")));
+    Row->System=TEXT("Tarsus");
+   }
+  }
   TestTrue(TEXT("All nested fields, exact keys, enums and coordinates round-trip"),DesignTableJson::Compare(*Legacy,*Json));
   for(const auto& Pair:Legacy->GetRowMap())Expected->AddRow(Pair.Key,*reinterpret_cast<const FS_CombatGroup*>(Pair.Value));
  }
@@ -29,7 +42,17 @@ bool FOOBJsonParityTest::RunTest(const FString&)
  if(!TestTrue(TEXT("All factions merge through the standard DataTable bridge"),OOBJsonCatalog::ImportDirectory(*Combined,Base/TEXT("OOB"),Error))){AddError(Error);return false;}
  TestTrue(TEXT("Merged JSON matches all legacy groups"),DesignTableJson::Compare(*Expected,*Combined));
  auto* Saved=LoadObject<UDataTable>(nullptr,TEXT("/Game/Game/DT_CombatGroup.DT_CombatGroup"));
- if(TestNotNull(TEXT("Same saved combat-group table"),Saved))TestTrue(TEXT("Saved table contains the converted OOBs"),DesignTableJson::Compare(*Expected,*Saved));
+ if(TestNotNull(TEXT("Same saved combat-group table"),Saved))
+ {
+  auto* Reference=NewObject<UDataTable>();Reference->RowStruct=FS_CombatGroup::StaticStruct();
+  for(const auto& Pair:Saved->GetRowMap())
+  {
+   auto Row=*reinterpret_cast<const FS_CombatGroup*>(Pair.Value);
+   if(Row.Id==8579){TestTrue(TEXT("Historical Sintar reference is blank or corrected"),Row.System.IsEmpty() || Row.System==TEXT("Tarsus"));Row.System=TEXT("Tarsus");}
+   Reference->AddRow(Pair.Key,Row);
+  }
+  TestTrue(TEXT("Saved table contains the converted OOBs, with the explicit Sintar endpoint correction"),DesignTableJson::Compare(*Expected,*Reference));
+ }
  TMap<FName,FS_CombatGroup> Native;
  TestTrue(TEXT("Native reader requires no DataTable"),OOBJsonCatalog::LoadDirectory(Native,Base/TEXT("OOB"),Error));
  TestEqual(TEXT("Native OOB retains every group"),Native.Num(),Expected->GetRowMap().Num());

@@ -4,6 +4,7 @@
 #include "ChangeDrivenPanel.h"
 #include "EconomyAI.h"
 #include "RecordDetails.h"
+#include "ModifierProvenance.h"
 #include "ShipSystemIcon.h"
 #include "StationServices.h"
 #include "EconomyRuntime.h"
@@ -611,12 +612,14 @@ TSharedRef<SWidget> UMarketplaceDlg::RebuildWidget()
                 SNew(SVerticalBox)
                 + SVerticalBox::Slot().FillHeight(1)
                 [SNew(SScrollBox) + SScrollBox::Slot()
-                    [SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([Selected](){return PointerHash(Selected->Get());}).Record_Lambda([Selected]()
+                    [SNew(SRecordDetails).EventDriven(true).SelectionRevision_Lambda([Selected,Table](){return HashCombine(PointerHash(Selected->Get()),HashCombine(GetTypeHash(Table->Quantity),GetTypeHash(Table->BuyQuote.TotalCredits)));}).Record_Lambda([Selected,Table]()
                         {
                             FRecordDetails D;D.Icon=EShipSystemIcon::Marketplace;
                             if(!*Selected){D.Title=INVTEXT("SELECT AN ITEM");D.Description=INVTEXT("Inspect local stock and the nearest producer. Trading requires docking.");return D;}
                             const auto& Offer=**Selected;D.Title=FText::FromString(Offer.DisplayName());D.Description=FText::FromString(Offer.Goods.Description);
                             D.Status=Offer.Goods.bIllicit?INVTEXT("ILLICIT"):INVTEXT("LEGAL");
+                            if(Table->BuyQuote.bAllowed)ModifierProvenance::Price(D,Table->BuyQuote.TotalCredits,ECommercePurpose::Purchase,Offer.Goods.Value*Table->BuyQuote.Quantity);
+                            else{D.Fact(INVTEXT("PRICE STATUS"),INVTEXT("PREVIEW / DOCK FOR A QUOTE"));ModifierProvenance::Price(D,FMath::CeilToInt64(Offer.Price),ECommercePurpose::Purchase,Offer.Goods.Value);}
                             D.Fact(INVTEXT("LOCAL NPC STOCK"),FText::Format(INVTEXT("{0} {1}"),FText::AsNumber(Offer.Available),FText::FromString(Offer.Unit())));
                             D.Fact(INVTEXT("NEAREST PRODUCER"),Offer.Producer.IsEmpty()?INVTEXT("NO REACHABLE STOCK"):FText::FromString(Offer.Producer));
                             if(!Offer.Producer.IsEmpty()){

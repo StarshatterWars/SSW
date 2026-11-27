@@ -53,7 +53,16 @@
     "OutputQuantity": 1,
     "Image": "Cargo",
     "Inputs": [],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Refining",
+    "Outputs": [
+      {
+        "Item": "industrial concentrate",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "OrbitalConcentrate",
@@ -75,7 +84,16 @@
     "OutputQuantity": 2,
     "Image": "Cargo",
     "Inputs": [],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Refining",
+    "Outputs": [
+      {
+        "Item": "industrial concentrate",
+        "Quantity": 2,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "StructuralAlloy",
@@ -99,7 +117,7 @@
     "Inputs": [
       {
         "Item": "Kamacite",
-        "Quantity": 1.6666666666666667,
+        "Quantity": 1.5666666666666667,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -114,9 +132,24 @@
         "Quantity": 1.6666666666666667,
         "UnitTonnes": 1,
         "bWholeUnits": false
+      },
+      {
+        "Item": "bauxite",
+        "Quantity": 0.1,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "structural alloy",
+        "Quantity": 3,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "ConductiveMetal",
@@ -143,7 +176,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "conductive metal",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "IndustrialCeramics",
@@ -184,7 +226,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "industrial ceramics",
+        "Quantity": 3,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "OpticalGlass",
@@ -206,12 +257,27 @@
     "Inputs": [
       {
         "Item": "Quartz",
-        "Quantity": 3.0,
+        "Quantity": 2.9,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      },
+      {
+        "Item": "fluorite",
+        "Quantity": 0.1,
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "optical glass",
+        "Quantity": 2,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "ConstructionMaterials",
@@ -252,7 +318,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "construction materials",
+        "Quantity": 4,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "WaterRecovery",
@@ -273,13 +348,22 @@
     "Image": "Mineral",
     "Inputs": [
       {
-        "Item": "WaterIce",
+        "Item": "water ice",
         "Quantity": 4.0,
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "water",
+        "Quantity": 3,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_avionics",
@@ -313,7 +397,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "avionics",
+        "Quantity": 10,
+        "UnitTonnes": 0.2,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_carbon_composite",
@@ -340,7 +433,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "carbon composite",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_engine_assembly",
@@ -374,7 +476,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "engine assembly",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_field_medical_supplies",
@@ -396,7 +507,7 @@
     "Image": "Medical",
     "Inputs": [
       {
-        "Item": "WaterIce",
+        "Item": "water ice",
         "Quantity": 0.75,
         "UnitTonnes": 1,
         "bWholeUnits": false
@@ -408,7 +519,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "field medical supplies",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_finished_electronics",
@@ -431,7 +551,7 @@
     "Inputs": [
       {
         "Item": "Chalcopyrite",
-        "Quantity": 1.125,
+        "Quantity": 1.025,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -440,9 +560,24 @@
         "Quantity": 1.125,
         "UnitTonnes": 1,
         "bWholeUnits": false
+      },
+      {
+        "Item": "spodumene",
+        "Quantity": 0.1,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "finished electronics",
+        "Quantity": 10,
+        "UnitTonnes": 0.15,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_food",
@@ -464,7 +599,7 @@
     "Image": "Cargo",
     "Inputs": [
       {
-        "Item": "WaterIce",
+        "Item": "water ice",
         "Quantity": 0.75,
         "UnitTonnes": 1,
         "bWholeUnits": false
@@ -476,7 +611,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "food",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_hull_section",
@@ -510,7 +654,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "hull section",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_life_support_supplies",
@@ -532,7 +685,7 @@
     "Image": "Cargo",
     "Inputs": [
       {
-        "Item": "WaterIce",
+        "Item": "water ice",
         "Quantity": 0.75,
         "UnitTonnes": 1,
         "bWholeUnits": false
@@ -544,7 +697,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "life support supplies",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_machine_parts",
@@ -578,7 +740,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "machine parts",
+        "Quantity": 10,
+        "UnitTonnes": 0.4,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_medical_supplies",
@@ -600,7 +771,7 @@
     "Image": "Medical",
     "Inputs": [
       {
-        "Item": "WaterIce",
+        "Item": "water ice",
         "Quantity": 3.75,
         "UnitTonnes": 1,
         "bWholeUnits": false
@@ -612,7 +783,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "medical supplies",
+        "Quantity": 10,
+        "UnitTonnes": 0.5,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_military_rations",
@@ -634,7 +814,7 @@
     "Image": "Cargo",
     "Inputs": [
       {
-        "Item": "WaterIce",
+        "Item": "water ice",
         "Quantity": 0.75,
         "UnitTonnes": 1,
         "bWholeUnits": false
@@ -646,7 +826,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "military rations",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_military_spare_parts",
@@ -680,7 +869,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "military spare parts",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_navigation_computer",
@@ -714,7 +912,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "navigation computer",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_reactor_fuel",
@@ -735,13 +942,22 @@
     "Image": "Liquid",
     "Inputs": [
       {
-        "Item": "WaterIce",
+        "Item": "water ice",
         "Quantity": 1.5,
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "reactor fuel",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_repair_kit",
@@ -775,7 +991,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "repair kit",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_sealed_documents",
@@ -797,7 +1022,7 @@
     "Image": "Cargo",
     "Inputs": [
       {
-        "Item": "WaterIce",
+        "Item": "water ice",
         "Quantity": 0.15,
         "UnitTonnes": 1,
         "bWholeUnits": false
@@ -809,7 +1034,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "sealed documents",
+        "Quantity": 10,
+        "UnitTonnes": 0.02,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_sensor_assembly",
@@ -843,7 +1077,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "sensor assembly",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_shield_components",
@@ -877,7 +1120,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "shield components",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_thruster_propellant",
@@ -898,13 +1150,22 @@
     "Image": "Cargo",
     "Inputs": [
       {
-        "Item": "WaterIce",
+        "Item": "water ice",
         "Quantity": 1.5,
         "UnitTonnes": 1,
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "thruster propellant",
+        "Quantity": 1,
+        "UnitTonnes": 1.0,
+        "bWholeUnits": false
+      }
+    ]
   },
   {
     "Name": "Make_standard_atmosphere_filter",
@@ -915,7 +1176,7 @@
       "Plagioclase",
       "Calcite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -927,7 +1188,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -944,7 +1205,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard atmosphere filter",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_atmosphere_filter",
@@ -955,7 +1225,7 @@
       "Plagioclase",
       "Calcite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -967,7 +1237,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -984,7 +1254,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty atmosphere filter",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_atmosphere_filter",
@@ -1025,7 +1304,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision atmosphere filter",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_atmosphere_filter",
@@ -1066,7 +1354,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype atmosphere filter",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_carbon_dioxide_scrubber",
@@ -1077,7 +1374,7 @@
       "Plagioclase",
       "Calcite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -1089,7 +1386,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -1106,7 +1403,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard carbon dioxide scrubber",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_carbon_dioxide_scrubber",
@@ -1117,7 +1423,7 @@
       "Plagioclase",
       "Calcite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -1129,7 +1435,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -1146,7 +1452,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty carbon dioxide scrubber",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_carbon_dioxide_scrubber",
@@ -1187,7 +1502,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision carbon dioxide scrubber",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_carbon_dioxide_scrubber",
@@ -1228,7 +1552,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype carbon dioxide scrubber",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_oxygen_regulator",
@@ -1239,7 +1572,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -1251,7 +1584,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -1268,7 +1601,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard oxygen regulator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_oxygen_regulator",
@@ -1279,7 +1621,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -1291,7 +1633,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -1308,7 +1650,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty oxygen regulator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_oxygen_regulator",
@@ -1349,7 +1700,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision oxygen regulator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_oxygen_regulator",
@@ -1390,7 +1750,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype oxygen regulator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_water_purifier",
@@ -1401,7 +1770,7 @@
       "Plagioclase",
       "Calcite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -1413,7 +1782,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -1430,7 +1799,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard water purifier",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_water_purifier",
@@ -1441,7 +1819,7 @@
       "Plagioclase",
       "Calcite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -1453,7 +1831,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -1470,7 +1848,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty water purifier",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_water_purifier",
@@ -1511,7 +1898,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision water purifier",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_water_purifier",
@@ -1552,7 +1948,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype water purifier",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_humidity_separator",
@@ -1563,7 +1968,7 @@
       "Plagioclase",
       "Calcite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -1575,7 +1980,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -1592,7 +1997,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard humidity separator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_humidity_separator",
@@ -1603,7 +2017,7 @@
       "Plagioclase",
       "Calcite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -1615,7 +2029,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -1632,7 +2046,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty humidity separator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_humidity_separator",
@@ -1673,7 +2096,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision humidity separator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_humidity_separator",
@@ -1714,7 +2146,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype humidity separator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_thermal_radiator",
@@ -1725,7 +2166,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -1737,7 +2178,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -1754,7 +2195,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard thermal radiator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_thermal_radiator",
@@ -1765,7 +2215,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -1777,7 +2227,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -1794,7 +2244,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty thermal radiator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_thermal_radiator",
@@ -1835,7 +2294,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision thermal radiator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_thermal_radiator",
@@ -1876,7 +2344,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype thermal radiator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_heat_exchanger_core",
@@ -1887,7 +2364,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -1899,7 +2376,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -1916,7 +2393,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard heat exchanger core",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_heat_exchanger_core",
@@ -1927,7 +2413,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -1939,7 +2425,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -1956,7 +2442,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty heat exchanger core",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_heat_exchanger_core",
@@ -1997,7 +2492,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision heat exchanger core",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_heat_exchanger_core",
@@ -2038,7 +2542,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype heat exchanger core",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_coolant_pump",
@@ -2049,7 +2562,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -2061,7 +2574,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -2078,7 +2591,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard coolant pump",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_coolant_pump",
@@ -2089,7 +2611,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -2101,7 +2623,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -2118,7 +2640,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty coolant pump",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_coolant_pump",
@@ -2159,7 +2690,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision coolant pump",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_coolant_pump",
@@ -2200,7 +2740,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype coolant pump",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_thermal_insulation_panel",
@@ -2211,7 +2760,7 @@
       "Plagioclase",
       "Calcite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -2223,7 +2772,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -2240,7 +2789,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard thermal insulation panel",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_thermal_insulation_panel",
@@ -2251,7 +2809,7 @@
       "Plagioclase",
       "Calcite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -2263,7 +2821,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -2280,7 +2838,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty thermal insulation panel",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_thermal_insulation_panel",
@@ -2321,7 +2888,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision thermal insulation panel",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_thermal_insulation_panel",
@@ -2362,7 +2938,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype thermal insulation panel",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_cryogenic_valve",
@@ -2373,7 +2958,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -2385,7 +2970,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -2402,7 +2987,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard cryogenic valve",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_cryogenic_valve",
@@ -2413,7 +3007,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -2425,7 +3019,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -2442,7 +3036,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty cryogenic valve",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_cryogenic_valve",
@@ -2483,7 +3086,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision cryogenic valve",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_cryogenic_valve",
@@ -2524,7 +3136,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype cryogenic valve",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_propellant_feed_pump",
@@ -2534,7 +3155,7 @@
     "Minerals": [
       "WaterIce"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -2546,7 +3167,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -2563,7 +3184,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard propellant feed pump",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_propellant_feed_pump",
@@ -2573,7 +3203,7 @@
     "Minerals": [
       "WaterIce"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -2585,7 +3215,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -2602,7 +3232,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty propellant feed pump",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_propellant_feed_pump",
@@ -2642,7 +3281,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision propellant feed pump",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_propellant_feed_pump",
@@ -2682,7 +3330,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype propellant feed pump",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_pressure_relief_valve",
@@ -2693,7 +3350,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -2705,7 +3362,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -2722,7 +3379,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard pressure relief valve",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_pressure_relief_valve",
@@ -2733,7 +3399,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -2745,7 +3411,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -2762,7 +3428,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty pressure relief valve",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_pressure_relief_valve",
@@ -2803,7 +3478,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision pressure relief valve",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_pressure_relief_valve",
@@ -2844,7 +3528,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype pressure relief valve",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_vacuum_seal_kit",
@@ -2854,7 +3547,7 @@
     "Minerals": [
       "Graphite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -2866,7 +3559,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -2883,7 +3576,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard vacuum seal kit",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_vacuum_seal_kit",
@@ -2893,7 +3595,7 @@
     "Minerals": [
       "Graphite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -2905,7 +3607,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -2922,7 +3624,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty vacuum seal kit",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_vacuum_seal_kit",
@@ -2962,7 +3673,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision vacuum seal kit",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_vacuum_seal_kit",
@@ -3002,7 +3722,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype vacuum seal kit",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_docking_collar_gasket",
@@ -3012,7 +3741,7 @@
     "Minerals": [
       "Graphite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -3024,7 +3753,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -3041,7 +3770,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard docking collar gasket",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_docking_collar_gasket",
@@ -3051,7 +3789,7 @@
     "Minerals": [
       "Graphite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -3063,7 +3801,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -3080,7 +3818,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty docking collar gasket",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_docking_collar_gasket",
@@ -3120,7 +3867,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision docking collar gasket",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_docking_collar_gasket",
@@ -3160,7 +3916,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype docking collar gasket",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_cargo_restraint_set",
@@ -3171,7 +3936,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -3183,7 +3948,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -3200,7 +3965,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard cargo restraint set",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_cargo_restraint_set",
@@ -3211,7 +3985,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -3223,7 +3997,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -3240,7 +4014,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty cargo restraint set",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_cargo_restraint_set",
@@ -3281,7 +4064,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision cargo restraint set",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_cargo_restraint_set",
@@ -3322,7 +4114,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype cargo restraint set",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_cargo_lift_actuator",
@@ -3333,7 +4134,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -3345,7 +4146,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -3362,7 +4163,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard cargo lift actuator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_cargo_lift_actuator",
@@ -3373,7 +4183,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -3385,7 +4195,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -3402,7 +4212,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty cargo lift actuator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_cargo_lift_actuator",
@@ -3443,7 +4262,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision cargo lift actuator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_cargo_lift_actuator",
@@ -3484,7 +4312,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype cargo lift actuator",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_bay_door_motor",
@@ -3495,7 +4332,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -3507,7 +4344,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -3524,7 +4361,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard bay door motor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_bay_door_motor",
@@ -3535,7 +4381,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -3547,7 +4393,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -3564,7 +4410,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty bay door motor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_bay_door_motor",
@@ -3605,7 +4460,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision bay door motor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_bay_door_motor",
@@ -3646,7 +4510,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype bay door motor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_landing_gear_damper",
@@ -3657,7 +4530,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -3669,7 +4542,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -3686,7 +4559,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard landing gear damper",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_landing_gear_damper",
@@ -3697,7 +4579,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -3709,7 +4591,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -3726,7 +4608,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty landing gear damper",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_landing_gear_damper",
@@ -3767,7 +4658,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision landing gear damper",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_landing_gear_damper",
@@ -3808,7 +4708,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype landing gear damper",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_landing_gear_bearing",
@@ -3819,7 +4728,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -3831,7 +4740,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -3848,7 +4757,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard landing gear bearing",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_landing_gear_bearing",
@@ -3859,7 +4777,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -3871,7 +4789,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -3888,7 +4806,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty landing gear bearing",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_landing_gear_bearing",
@@ -3929,7 +4856,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision landing gear bearing",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_landing_gear_bearing",
@@ -3970,7 +4906,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype landing gear bearing",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_inertial_reference_unit",
@@ -3981,7 +4926,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -3993,7 +4938,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4010,7 +4955,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard inertial reference unit",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_inertial_reference_unit",
@@ -4021,7 +4975,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -4033,7 +4987,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4050,7 +5004,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty inertial reference unit",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_inertial_reference_unit",
@@ -4091,7 +5054,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision inertial reference unit",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_inertial_reference_unit",
@@ -4132,7 +5104,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype inertial reference unit",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_star_tracker",
@@ -4142,7 +5123,7 @@
     "Minerals": [
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -4154,7 +5135,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4171,7 +5152,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard star tracker",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_star_tracker",
@@ -4181,7 +5171,7 @@
     "Minerals": [
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -4193,7 +5183,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4210,7 +5200,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty star tracker",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_star_tracker",
@@ -4250,7 +5249,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision star tracker",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_star_tracker",
@@ -4290,7 +5298,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype star tracker",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_navigation_beacon_receiver",
@@ -4301,7 +5318,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -4313,7 +5330,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4330,7 +5347,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard navigation beacon receiver",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_navigation_beacon_receiver",
@@ -4341,7 +5367,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -4353,7 +5379,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4370,7 +5396,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty navigation beacon receiver",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_navigation_beacon_receiver",
@@ -4411,7 +5446,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision navigation beacon receiver",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_navigation_beacon_receiver",
@@ -4452,7 +5496,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype navigation beacon receiver",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_transponder_module",
@@ -4463,7 +5516,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -4475,7 +5528,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4492,7 +5545,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard transponder module",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_transponder_module",
@@ -4503,7 +5565,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -4515,7 +5577,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4532,7 +5594,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty transponder module",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_transponder_module",
@@ -4573,7 +5644,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision transponder module",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_transponder_module",
@@ -4614,7 +5694,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype transponder module",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_optical_sensor_array",
@@ -4625,7 +5714,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -4637,7 +5726,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4654,7 +5743,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard optical sensor array",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_optical_sensor_array",
@@ -4665,7 +5763,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -4677,7 +5775,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4694,7 +5792,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty optical sensor array",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_optical_sensor_array",
@@ -4735,7 +5842,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision optical sensor array",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_optical_sensor_array",
@@ -4759,7 +5875,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.5,
+        "Quantity": 0.49,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4774,9 +5890,24 @@
         "Quantity": 2,
         "UnitTonnes": 0.15,
         "bWholeUnits": true
+      },
+      {
+        "Item": "khyber crystals",
+        "Quantity": 1,
+        "UnitTonnes": 0.01,
+        "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype optical sensor array",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_infrared_detector",
@@ -4786,7 +5917,7 @@
     "Minerals": [
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -4798,7 +5929,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4815,7 +5946,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard infrared detector",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_infrared_detector",
@@ -4825,7 +5965,7 @@
     "Minerals": [
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -4837,7 +5977,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4854,7 +5994,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty infrared detector",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_infrared_detector",
@@ -4894,7 +6043,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision infrared detector",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_infrared_detector",
@@ -4934,7 +6092,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype infrared detector",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_radio_receiver_module",
@@ -4945,7 +6112,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -4957,7 +6124,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -4974,7 +6141,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard radio receiver module",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_radio_receiver_module",
@@ -4985,7 +6161,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -4997,7 +6173,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5014,7 +6190,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty radio receiver module",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_radio_receiver_module",
@@ -5055,7 +6240,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision radio receiver module",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_radio_receiver_module",
@@ -5096,7 +6290,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype radio receiver module",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_antenna_gimbal",
@@ -5107,7 +6310,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -5119,7 +6322,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5136,7 +6339,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard antenna gimbal",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_antenna_gimbal",
@@ -5147,7 +6359,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -5159,7 +6371,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5176,7 +6388,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty antenna gimbal",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_antenna_gimbal",
@@ -5217,7 +6438,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision antenna gimbal",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_antenna_gimbal",
@@ -5258,7 +6488,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype antenna gimbal",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_signal_processor",
@@ -5269,7 +6508,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -5281,7 +6520,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5298,7 +6537,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard signal processor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_signal_processor",
@@ -5309,7 +6557,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -5321,7 +6569,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5338,7 +6586,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty signal processor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_signal_processor",
@@ -5379,7 +6636,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision signal processor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_signal_processor",
@@ -5420,7 +6686,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype signal processor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_fiber_data_harness",
@@ -5430,7 +6705,7 @@
     "Minerals": [
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -5442,7 +6717,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5459,7 +6734,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard fiber data harness",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_fiber_data_harness",
@@ -5469,7 +6753,7 @@
     "Minerals": [
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -5481,7 +6765,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5498,7 +6782,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty fiber data harness",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_fiber_data_harness",
@@ -5538,7 +6831,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision fiber data harness",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_fiber_data_harness",
@@ -5578,7 +6880,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype fiber data harness",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_circuit_breaker_bank",
@@ -5589,7 +6900,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -5601,7 +6912,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5618,7 +6929,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard circuit breaker bank",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_circuit_breaker_bank",
@@ -5629,7 +6949,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -5641,7 +6961,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5658,7 +6978,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty circuit breaker bank",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_circuit_breaker_bank",
@@ -5699,7 +7028,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision circuit breaker bank",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_circuit_breaker_bank",
@@ -5740,7 +7078,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype circuit breaker bank",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_voltage_converter",
@@ -5751,7 +7098,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -5763,7 +7110,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5780,7 +7127,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard voltage converter",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_voltage_converter",
@@ -5791,7 +7147,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -5803,7 +7159,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5820,7 +7176,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty voltage converter",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_voltage_converter",
@@ -5861,7 +7226,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision voltage converter",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_voltage_converter",
@@ -5902,7 +7276,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype voltage converter",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_power_bus_coupler",
@@ -5913,7 +7296,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -5925,7 +7308,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5942,7 +7325,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard power bus coupler",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_power_bus_coupler",
@@ -5953,7 +7345,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -5965,7 +7357,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -5982,7 +7374,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty power bus coupler",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_power_bus_coupler",
@@ -6023,7 +7424,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision power bus coupler",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_power_bus_coupler",
@@ -6064,7 +7474,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype power bus coupler",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_reactor_control_relay",
@@ -6075,7 +7494,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -6087,7 +7506,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -6104,7 +7523,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard reactor control relay",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_reactor_control_relay",
@@ -6115,7 +7543,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -6127,7 +7555,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -6144,7 +7572,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty reactor control relay",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_reactor_control_relay",
@@ -6185,7 +7622,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision reactor control relay",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_reactor_control_relay",
@@ -6226,7 +7672,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype reactor control relay",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_battery_cell_pack",
@@ -6237,7 +7692,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -6249,7 +7704,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -6266,7 +7721,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard battery cell pack",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_battery_cell_pack",
@@ -6277,7 +7741,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -6289,7 +7753,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -6306,7 +7770,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty battery cell pack",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_battery_cell_pack",
@@ -6347,7 +7820,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision battery cell pack",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_battery_cell_pack",
@@ -6388,7 +7870,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype battery cell pack",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_flux_sensor",
@@ -6399,7 +7890,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -6411,7 +7902,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -6428,7 +7919,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard flux sensor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_flux_sensor",
@@ -6439,7 +7939,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -6451,7 +7951,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -6468,7 +7968,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty flux sensor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_flux_sensor",
@@ -6509,7 +8018,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision flux sensor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_flux_sensor",
@@ -6550,7 +8068,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype flux sensor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_thruster_control_valve",
@@ -6561,7 +8088,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -6573,7 +8100,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -6590,7 +8117,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard thruster control valve",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_thruster_control_valve",
@@ -6601,7 +8137,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -6613,7 +8149,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -6630,7 +8166,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty thruster control valve",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_thruster_control_valve",
@@ -6671,7 +8216,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision thruster control valve",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_thruster_control_valve",
@@ -6712,7 +8266,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype thruster control valve",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_gyroscope_assembly",
@@ -6723,7 +8286,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -6735,7 +8298,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -6752,7 +8315,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard gyroscope assembly",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_gyroscope_assembly",
@@ -6763,7 +8335,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -6775,7 +8347,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -6792,7 +8364,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty gyroscope assembly",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_gyroscope_assembly",
@@ -6833,7 +8414,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision gyroscope assembly",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_gyroscope_assembly",
@@ -6874,7 +8464,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype gyroscope assembly",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_servo_controller",
@@ -6885,7 +8484,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -6897,7 +8496,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -6914,7 +8513,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard servo controller",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_servo_controller",
@@ -6925,7 +8533,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -6937,7 +8545,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -6954,7 +8562,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty servo controller",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_servo_controller",
@@ -6995,7 +8612,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision servo controller",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_servo_controller",
@@ -7036,7 +8662,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype servo controller",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_machine_tool_spindle",
@@ -7047,7 +8682,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -7059,7 +8694,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -7076,7 +8711,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard machine tool spindle",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_machine_tool_spindle",
@@ -7087,7 +8731,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -7099,7 +8743,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -7116,7 +8760,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty machine tool spindle",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_machine_tool_spindle",
@@ -7157,7 +8810,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision machine tool spindle",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_machine_tool_spindle",
@@ -7198,7 +8860,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype machine tool spindle",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_ore_sampler",
@@ -7209,7 +8880,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -7221,7 +8892,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -7238,7 +8909,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard ore sampler",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_ore_sampler",
@@ -7249,7 +8929,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -7261,7 +8941,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -7278,7 +8958,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty ore sampler",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_ore_sampler",
@@ -7319,7 +9008,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision ore sampler",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_ore_sampler",
@@ -7360,7 +9058,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype ore sampler",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_ore_sorting_sensor",
@@ -7371,7 +9078,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -7383,7 +9090,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -7400,7 +9107,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard ore sorting sensor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_ore_sorting_sensor",
@@ -7411,7 +9127,7 @@
       "Chalcopyrite",
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -7423,7 +9139,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -7440,7 +9156,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty ore sorting sensor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_ore_sorting_sensor",
@@ -7481,7 +9206,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision ore sorting sensor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_ore_sorting_sensor",
@@ -7522,7 +9256,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype ore sorting sensor",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_conveyor_drive",
@@ -7533,7 +9276,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -7545,7 +9288,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -7562,7 +9305,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard conveyor drive",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_conveyor_drive",
@@ -7573,7 +9325,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -7585,7 +9337,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -7602,7 +9354,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty conveyor drive",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_conveyor_drive",
@@ -7643,7 +9404,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision conveyor drive",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_conveyor_drive",
@@ -7684,7 +9454,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype conveyor drive",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_refinery_crucible",
@@ -7695,7 +9474,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -7707,7 +9486,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -7724,7 +9503,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard refinery crucible",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_refinery_crucible",
@@ -7735,7 +9523,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -7747,7 +9535,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -7764,7 +9552,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty refinery crucible",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_refinery_crucible",
@@ -7805,7 +9602,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision refinery crucible",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_refinery_crucible",
@@ -7846,7 +9652,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype refinery crucible",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_survey_drill_head",
@@ -7857,7 +9672,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -7869,7 +9684,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -7886,7 +9701,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard survey drill head",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_survey_drill_head",
@@ -7897,7 +9721,7 @@
       "Kamacite",
       "Chromite"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -7909,7 +9733,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -7926,7 +9750,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty survey drill head",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_survey_drill_head",
@@ -7967,7 +9800,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision survey drill head",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_survey_drill_head",
@@ -8008,7 +9850,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype survey drill head",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_standard_hull_inspection_scanner",
@@ -8018,7 +9869,7 @@
     "Minerals": [
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 45.0,
@@ -8030,7 +9881,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -8047,7 +9898,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "standard hull inspection scanner",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_heavy_duty_hull_inspection_scanner",
@@ -8057,7 +9917,7 @@
     "Minerals": [
       "Quartz"
     ],
-    "InputTonnes": 0.8,
+    "InputTonnes": 1.112111,
     "Product": "None",
     "OutputTonnes": 1.0,
     "SecondsPerBatch": 52.5,
@@ -8069,7 +9929,7 @@
     "Inputs": [
       {
         "Item": "structural alloy",
-        "Quantity": 0.25,
+        "Quantity": 0.562111,
         "UnitTonnes": 1,
         "bWholeUnits": false
       },
@@ -8086,7 +9946,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "heavy duty hull inspection scanner",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_precision_hull_inspection_scanner",
@@ -8126,7 +9995,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "precision hull inspection scanner",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_prototype_hull_inspection_scanner",
@@ -8166,7 +10044,16 @@
         "bWholeUnits": true
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prototype hull inspection scanner",
+        "Quantity": 10,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_Cipher_Relays",
@@ -8200,7 +10087,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "cipher relays",
+        "Quantity": 4,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_Ghost_Navigation_Charts",
@@ -8234,7 +10130,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "ghost navigation charts",
+        "Quantity": 4,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_Unregistered_Survey_Cores",
@@ -8268,7 +10173,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "unregistered survey cores",
+        "Quantity": 4,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_Restricted_Memory_Crystals",
@@ -8302,7 +10216,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "restricted memory crystals",
+        "Quantity": 4,
+        "UnitTonnes": 0.1,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_Colorado_Tegridy",
@@ -8324,7 +10247,7 @@
     "Image": "Cargo",
     "Inputs": [
       {
-        "Item": "WaterIce",
+        "Item": "water ice",
         "Quantity": 0.1,
         "UnitTonnes": 1,
         "bWholeUnits": false
@@ -8336,7 +10259,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "colorado tegridy",
+        "Quantity": 6,
+        "UnitTonnes": 0.01,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_Dust",
@@ -8370,7 +10302,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "dust",
+        "Quantity": 4,
+        "UnitTonnes": 0.01,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_Ketracel_White",
@@ -8404,7 +10345,16 @@
         "bWholeUnits": false
       }
     ],
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "ketracel-white",
+        "Quantity": 4,
+        "UnitTonnes": 0.01,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Make_mining_drone",
@@ -8453,7 +10403,16 @@
     "OutputUnit": "units",
     "OutputDisplayName": "Mining Drone",
     "Image": "MiningDrone",
-    "ShipDesign": "None"
+    "ShipDesign": "None",
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "mining drone",
+        "Quantity": 1,
+        "UnitTonnes": 0.5,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Build_Falcon",
@@ -8490,7 +10449,16 @@
     "Image": "Ship",
     "RequiredSkillLevels": {
       "manufacturing": 2
-    }
+    },
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "falcon assembled hull",
+        "Quantity": 1,
+        "UnitTonnes": 14.5,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Build_Stormhawk",
@@ -8527,7 +10495,16 @@
     "Image": "Ship",
     "RequiredSkillLevels": {
       "manufacturing": 2
-    }
+    },
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "stormhawk assembled hull",
+        "Quantity": 1,
+        "UnitTonnes": 15.100000381469727,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Build_Prospector",
@@ -8564,7 +10541,16 @@
     "Image": "Ship",
     "RequiredSkillLevels": {
       "manufacturing": 2
-    }
+    },
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "prospector assembled hull",
+        "Quantity": 1,
+        "UnitTonnes": 87.0,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Build_Raptor",
@@ -8601,7 +10587,16 @@
     "Image": "Ship",
     "RequiredSkillLevels": {
       "manufacturing": 2
-    }
+    },
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "raptor assembled hull",
+        "Quantity": 1,
+        "UnitTonnes": 25.0,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Build_Viper",
@@ -8638,7 +10633,16 @@
     "Image": "Ship",
     "RequiredSkillLevels": {
       "manufacturing": 2
-    }
+    },
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "viper assembled hull",
+        "Quantity": 1,
+        "UnitTonnes": 14.0,
+        "bWholeUnits": true
+      }
+    ]
   },
   {
     "Name": "Build_Goliath",
@@ -8681,6 +10685,97 @@
     "Image": "Ship",
     "RequiredSkillLevels": {
       "manufacturing": 5
-    }
+    },
+    "Activity": "Manufacturing",
+    "Outputs": [
+      {
+        "Item": "goliath assembled hull",
+        "Quantity": 1,
+        "UnitTonnes": 782000.0,
+        "bWholeUnits": true
+      }
+    ]
+  },
+  {
+    "Name": "FrascoWaterBottling",
+    "RequiredSkillLevels": {
+      "manufacturing": 1
+    },
+    "Minerals": [
+      "WaterIce"
+    ],
+    "InputTonnes": 1,
+    "Product": "None",
+    "OutputTonnes": 1,
+    "SecondsPerBatch": 30,
+    "CargoItem": "frasco water",
+    "OutputDisplayName": "Frasco Water",
+    "OutputUnit": "t",
+    "OutputQuantity": 0.95,
+    "Image": "Liquid",
+    "Inputs": [
+      {
+        "Item": "water ice",
+        "Quantity": 1,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      }
+    ],
+    "ShipDesign": "None",
+    "Activity": "Refining",
+    "Outputs": [
+      {
+        "Item": "frasco water",
+        "Quantity": 0.95,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      },
+      {
+        "Item": "water",
+        "Quantity": 0.05,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      }
+    ]
+  },
+  {
+    "Name": "KhyberCrystalSeparation",
+    "RequiredSkillLevels": {
+      "reprocessing": 2
+    },
+    "Minerals": [],
+    "InputTonnes": 1,
+    "Product": "None",
+    "OutputTonnes": 0.91,
+    "SecondsPerBatch": 120,
+    "CargoItem": "khyber crystals",
+    "OutputDisplayName": "Khyber Crystals",
+    "OutputUnit": "units",
+    "OutputQuantity": 1,
+    "Image": "Mineral",
+    "Inputs": [
+      {
+        "Item": "khyber ore",
+        "Quantity": 1,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      }
+    ],
+    "ShipDesign": "None",
+    "Activity": "Refining",
+    "Outputs": [
+      {
+        "Item": "khyber crystals",
+        "Quantity": 1,
+        "UnitTonnes": 0.01,
+        "bWholeUnits": true
+      },
+      {
+        "Item": "industrial concentrate",
+        "Quantity": 0.9,
+        "UnitTonnes": 1,
+        "bWholeUnits": false
+      }
+    ]
   }
 ]

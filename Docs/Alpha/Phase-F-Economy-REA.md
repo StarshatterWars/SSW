@@ -90,3 +90,7 @@ source inspection nor full unit-suite success is a live, long-duration economy
 soak or a packaged gameplay test.
 
 Nexus research remains deferred until after the existing phases.
+
+## Implemented follow-up, 27 November 2026
+
+The subsequent native SSW implementation addresses reachability, output arrays, authored activity/lane policy, targeted owner/inventory/job payloads and blueprint research/copying. See Phase-F-Industry-Expansion.md for implementation, tests and limits. This is SSW code and balance; the evidence above remains a client/public-data comparison, not recovered server policy.

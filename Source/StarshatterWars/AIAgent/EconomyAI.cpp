@@ -58,11 +58,21 @@ bool EconomyAI::AdvancePlain(FEconomyState& State,const TMap<FName,FS_CargoCatal
     static const TMap<FName,double> DemandScales=[](){TMap<FName,double> M;FString Json;TArray<TSharedPtr<FJsonValue>> Rows;
         if(FFileHelper::LoadFileToString(Json,*(FPaths::ProjectContentDir()/TEXT("GameData/Cargo/economy.json"))) && FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Rows))
             for(const auto& V:Rows){const auto O=V->AsObject();FString Name;double Scale=1;if(O && O->TryGetStringField(TEXT("Name"),Name)){O->TryGetNumberField(TEXT("DemandScale"),Scale);M.Add(FName(*Name),FMath::Clamp(Scale,.1,10.0));}}return M;}();
+    static const TMap<FName,TSet<FName>> LegalMarkets=[]()
+    {
+        TMap<FName,TSet<FName>> M;FString Json;TArray<TSharedPtr<FJsonValue>> Rows;
+        if(FFileHelper::LoadFileToString(Json,*(FPaths::ProjectContentDir()/TEXT("GameData/Cargo/economy.json"))) && FJsonSerializer::Deserialize(TJsonReaderFactory<>::Create(Json),Rows))
+            for(const auto& V:Rows){const auto O=V->AsObject();FString Name;bool Illicit=false;const TArray<TSharedPtr<FJsonValue>>* Items=nullptr;
+                if(!O || !O->TryGetStringField(TEXT("Name"),Name))continue;auto& Allowed=M.FindOrAdd(FName(*Name));
+                O->TryGetBoolField(TEXT("bIllicitTrade"),Illicit);if(Illicit)Allowed.Add(TEXT("*"));
+                if(O->TryGetArrayField(TEXT("ExclusiveSupply"),Items))for(const auto& Item:*Items)Allowed.Add(DataTableUtils::MakeValidName(Item->AsString()));}
+        return M;
+    }();
     TMap<FName,const FS_CargoCatalogRow*> Goods;for(const auto& Pair:Definitions)Goods.Add(Pair.Key,&Pair.Value);
     for(auto& Pair:State.Inventories)
         if(Pair.Value.bMarket && !Pair.Value.bSupplyOnly && Pair.Value.Owner==FEconomyRuntime::IndustryOwner())
             for(const auto& Good:Goods)
-                if(Good.Value->Type==ECargoType::FinishedGoods && Good.Value->Size>0 && !Good.Value->bIllicit)
+                if((Good.Value->Type==ECargoType::FinishedGoods || Good.Value->bCivilianConsumable) && Good.Value->Size>0 && (!Good.Value->bIllicit || LegalMarkets.FindRef(Pair.Value.System).Contains(TEXT("*")) || LegalMarkets.FindRef(Pair.Value.System).Contains(Good.Key)))
                 {
                     const double Scale=DemandScales.FindRef(Pair.Value.System)>0?DemandScales.FindRef(Pair.Value.System):1.0;
                     Pair.Value.DesiredStock.Add(Good.Key,FMath::Max(1.0,FMath::FloorToDouble(FMath::Min(Good.Value->PreviewQuantity,40)*Scale)));
@@ -118,7 +128,7 @@ bool EconomyAI::AdvancePlain(FEconomyState& State,const TMap<FName,FS_CargoCatal
         if(Series.InitialSupply<=0)Series.InitialSupply=FMath::Max(1.0,Supply);
         const double Scale=DemandScales.FindRef(System)>0?DemandScales.FindRef(System):1.0;
         // Civilian end-use is a stock sink, never a fabricated trade or a debit to the pilot.
-        if(Row.Type==ECargoType::FinishedGoods)
+        if(Row.Type==ECargoType::FinishedGoods || Row.bCivilianConsumable)
         {
             const bool Whole=!Row.Unit.Equals(TEXT("t"),ESearchCase::IgnoreCase);
             const double Want=Series.ConsumptionRemainder+Series.InitialSupply*.01*Scale*Step/3600.0;
@@ -202,6 +212,7 @@ void EconomyAI::AdvanceProduction(FEconomyState& State,const TMap<FName,FSSWProd
     if(!bProductionDirty && (NextProductionDeadline<=0 || Now<NextProductionDeadline))return;
     bProductionDirty=false;NextProductionDeadline=0;
     FScopedSimDataChangeBatch Changes(State);
+    for(const auto& R:Recipes)State.RecipeActivities.Add(R.Key,R.Value.Activity);
     for(const auto& Pair:Facilities)
     {
         const auto& Site=Pair.Value;const bool Operational=!State.OfflineFacilities.Contains(Pair.Key);
@@ -224,47 +235,56 @@ void EconomyAI::AdvanceProduction(FEconomyState& State,const TMap<FName,FSSWProd
         In->bOperational=Out->bOperational=Operational;Out->bSupplyOnly=true;Out->bHullStorage=Site.FacilityType==ESSWProductionFacilityType::Shipyard;
         for(const auto& Material:Recipe->Inputs)In->DesiredStock.Add(Material.Item,FMath::Min(Material.Quantity*20,Site.CapacityTonnes/FMath::Max(.001,Material.UnitTonnes)));
         if(Recipe->Inputs.IsEmpty())for(FName Mineral:ManufacturingAI::MineralKeys(*Recipe))In->DesiredStock.Add(Mineral,FMath::Min(Recipe->InputTonnes*5,Site.CapacityTonnes));
-        const auto Active=[&]()->FIndustryJob*{return State.Jobs.FindByPredicate([&](const auto& Job){return Job.Facility==Facility && Job.State!=EIndustryJobState::Completed && Job.State!=EIndustryJobState::Cancelled;});};
-        auto* Work=Active();
-        if(!Operational)
+        State.IndustryPolicies.Add(Facility,Site.IndustryPolicy());
+        // Each running lane has its own absolute deadline. Inventory wakes never
+        // advance a second lane by another lane's elapsed time.
+        for(auto& Job:State.Jobs)if(Job.Facility==Facility && Job.State==EIndustryJobState::Running)
         {
-            if(Work && Work->CompletionAt>0)
+            if(Job.CompletionAt>0)Job.Remaining=FMath::Max(0.0,Job.CompletionAt-Now);
+            if((!Operational || !Site.IndustryPolicy().Allows(Job.Activity) || Job.Lane>=Site.ProductionLanes) && Job.CompletionAt>0)
+            {Job.CompletionAt=0;Job.LastProgressAt=Now;ProductionEvents::Emit(Facility,Job.Id,EProductionEvent::Stopped,INVTEXT("Facility offline; work retained."));FSimDataEvents::Job(State,Job.Id,Job.Facility);}
+        }
+        if(!Operational)continue;
+        FEconomyLedger::AdvanceJobs(State,UE_SMALL_NUMBER,[Facility](FName Other){return Other==Facility;});
+        TArray<FName> Choices{Site.Recipe};for(FName Id:Site.AutomatedRecipes)Choices.AddUnique(Id);
+        for(FName Id:Choices)if(const auto* Batch=Recipes.Find(Id);Batch && Site.SupportsRecipe(Id) && Site.IndustryPolicy().Allows(Batch->Activity))
+        {
+            for(const auto& Material:Batch->Inputs)
+                In->DesiredStock.FindOrAdd(Material.Item)=FMath::Max(In->DesiredStock.FindRef(Material.Item),FMath::Min(Material.Quantity*20,Site.CapacityTonnes/FMath::Max(.001,Material.UnitTonnes)));
+            if(Batch->Inputs.IsEmpty())for(FName Mineral:ManufacturingAI::MineralKeys(*Batch))
+                In->DesiredStock.FindOrAdd(Mineral)=FMath::Max(In->DesiredStock.FindRef(Mineral),FMath::Min(Batch->InputTonnes*5,Site.CapacityTonnes));
+        }
+        for(int32 Attempt=0;Attempt<Site.ProductionLanes;++Attempt)
+        {
+            const int32 ActiveCount=State.Jobs.FilterByPredicate([Facility](const auto& J){return J.Facility==Facility && J.State==EIndustryJobState::Running;}).Num();
+            if(ActiveCount>=Site.ProductionLanes)break;
+            FName Best;int32 Oldest=MAX_int32;double BestScore=MAX_dbl;TArray<FCommodityAmount> BestMaterials,BestProducts;
+            for(FName Id:Choices)
             {
-                Work->Remaining=FMath::Max(0.0,Work->CompletionAt-Now);Work->CompletionAt=0;Work->LastProgressAt=0;
-                ProductionEvents::Emit(Facility,Work->Id,EProductionEvent::Stopped,INVTEXT("Facility offline; reserved materials retained."));FSimDataEvents::Publish(State);
+                const auto* Batch=Recipes.Find(Id);if(!Batch || !Site.SupportsRecipe(Id) || !Site.IndustryPolicy().Allows(Batch->Activity) || (!Batch->ShipDesign.IsNone() && Site.FacilityType!=ESSWProductionFacilityType::Shipyard))continue;
+                if(State.Jobs.ContainsByPredicate([&](const auto& J){return J.Facility==Facility && J.Recipe==Id && J.State!=EIndustryJobState::Completed && J.State!=EIndustryJobState::Cancelled;}))continue;
+                TArray<FCommodityAmount> Materials,Products;if(!ManufacturingAI::BuildBatch(State,Input,*Batch,Materials,Products))continue;
+                double Score=MAX_dbl,Mass=0;for(const auto& Product:Products){Score=FMath::Min(Score,FEconomyLedger::Available(State,Output,Product.Item)/Product.Quantity);Mass+=Product.Quantity*Product.UnitTonnes;}
+                if(Score>=20 || FEconomyLedger::Used(*Out)+Mass>Out->CapacityTonnes+UE_SMALL_NUMBER)continue;
+                int32 LastUse=INDEX_NONE;for(int32 I=0;I<State.Jobs.Num();++I)if(State.Jobs[I].Facility==Facility && State.Jobs[I].Recipe==Id)LastUse=I;
+                if(LastUse<Oldest || (LastUse==Oldest && Score<BestScore)){Best=Id;Oldest=LastUse;BestScore=Score;BestMaterials=MoveTemp(Materials);BestProducts=MoveTemp(Products);}
             }
-            continue;
+            if(Best.IsNone())break;
+            FGuid License;for(const auto& BP:State.Blueprints)if(BP.Value.Owner==FEconomyRuntime::IndustryOwner() && BP.Value.Facility==Facility && BP.Value.Recipe==Best && BP.Value.bOriginal){License=BP.Key;break;}
+            if(!License.IsValid()){License=FEconomyLedger::GrantBlueprint(State,FEconomyRuntime::IndustryOwner(),Best,true,0);if(auto* BP=State.Blueprints.Find(License))BP->Facility=Facility;}
+            FEconomyLedger::QueueBlueprintJob(State,FEconomyRuntime::IndustryOwner(),Facility,Input,Output,License,1,BestMaterials,BestProducts,Recipes.FindChecked(Best).SecondsPerBatch);
+            FEconomyLedger::AdvanceJobs(State,UE_SMALL_NUMBER,[Facility](FName Other){return Other==Facility;});
         }
-        if(Work && Work->State==EIndustryJobState::Running && Work->CompletionAt>0 && Now>=Work->CompletionAt)
+        for(auto& Job:State.Jobs)if(Job.Facility==Facility && Job.State==EIndustryJobState::Running && Site.IndustryPolicy().Allows(Job.Activity) && Job.Lane<Site.ProductionLanes)
         {
-            const FGuid Id=Work->Id;
-            const double Elapsed=FMath::Max(UE_SMALL_NUMBER,Now-Work->LastProgressAt);
-            const int32 Finished=FEconomyLedger::AdvanceJobs(State,Elapsed,[Facility](FName Other){return Other==Facility;});
-            Work=Active();
-            ProductionEvents::Emit(Facility,Id,Finished>0?EProductionEvent::Completed:EProductionEvent::Blocked,Finished>0?INVTEXT("Batch completed."):INVTEXT("Output could not be committed; waiting for storage changes."));
-            if(Work){Work->CompletionAt=0;Work->LastProgressAt=Now;}
-        }
-        Work=Active();
-        if(!Work || Work->State!=EIndustryJobState::Running)
-        {
-            ManufacturingAI::AdvanceLive(State,Facility,Input,Output,Site.Recipe,*Recipe,true,UE_SMALL_NUMBER);
-            Work=Active();
-        }
-        else if(Work->Remaining<=0 && Work->CompletionAt<=0)
-        {
-            const FGuid Id=Work->Id;
-            if(FEconomyLedger::AdvanceJobs(State,UE_SMALL_NUMBER,[Facility](FName Other){return Other==Facility;})>0)
-                ProductionEvents::Emit(Facility,Id,EProductionEvent::Completed,INVTEXT("Output committed after storage became available."));
-            Work=Active();
-        }
-        if(Work && Work->State==EIndustryJobState::Running && Work->Remaining>0)
-        {
-            if(Work->CompletionAt<=0)
-            {
-                Work->LastProgressAt=Now;Work->CompletionAt=Now+Work->Remaining;
-                ProductionEvents::Emit(Facility,Work->Id,EProductionEvent::Started,INVTEXT("Batch scheduled."));FSimDataEvents::Publish(State);
-            }
-            if(NextProductionDeadline<=0 || Work->CompletionAt<NextProductionDeadline)NextProductionDeadline=Work->CompletionAt;
+            if(Job.Remaining>0 && Job.CompletionAt<=0)
+            {Job.LastProgressAt=Now;Job.CompletionAt=Now+Job.Remaining;ProductionEvents::Emit(Facility,Job.Id,EProductionEvent::Started,INVTEXT("Lane batch scheduled."));FSimDataEvents::Job(State,Job.Id,Job.Facility);}
+            if(Job.CompletionAt>0 && (NextProductionDeadline<=0 || Job.CompletionAt<NextProductionDeadline))NextProductionDeadline=Job.CompletionAt;
         }
     }
+    int32 Excess=State.Jobs.Num()-512;
+    for(int32 I=0;I<State.Jobs.Num() && Excess>0;)
+        if(State.Jobs[I].State==EIndustryJobState::Completed || State.Jobs[I].State==EIndustryJobState::Cancelled)
+        {FSimDataEvents::Job(State,State.Jobs[I].Id,State.Jobs[I].Facility);State.Jobs.RemoveAt(I);--Excess;}else ++I;
+
 }

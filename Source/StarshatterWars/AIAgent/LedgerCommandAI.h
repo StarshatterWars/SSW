@@ -3,7 +3,7 @@
 #include "ContractTransactions.h"
 
 enum class ELedgerCommand : uint8
-{ Transfer,BlueprintPurchase,IndustryInstall,IndustryCancel,ContractAccept,ContractBid,ContractDeliver,ContractAbandon,ContractClaim,ContractMaintain,MarketMaintain };
+{ Transfer,BlueprintPurchase,IndustryInstall,IndustryService,IndustryCancel,ContractAccept,ContractBid,ContractDeliver,ContractAbandon,ContractClaim,ContractMaintain,MarketMaintain };
 struct FNativeLedgerCommand
 {
     ELedgerCommand Action=ELedgerCommand::Transfer;
@@ -15,6 +15,8 @@ struct FNativeLedgerCommand
     bool bOriginal=false,bSeedTraining=false;
     TSet<FName> LostPackages;
     TArray<FCommodityAmount> Materials,Products;
+    FIndustryFacilityPolicy Policy;
+    FName Activity=TEXT("Manufacturing");
 };
 struct FNativeLedgerReply
 {

@@ -34,7 +34,7 @@ TUniquePtr<FNativeEconomyResult> FNativeEconomyWorker::TakeResult(){FScopeLock L
 FNativeEconomyResult FNativeEconomyWorker::Calculate(FNativeEconomyInput&& Input)
 {
     FNativeEconomyResult Out;Out.Revision=Input.Revision;Out.Profile=MoveTemp(Input.Profile);Out.State=MoveTemp(Input.State);Out.bOffGameThread=!IsInGameThread();
-    FSimDataEvents::Suppress(true);auto* Previous=ProductionEvents::Capture(&Out.Events);ON_SCOPE_EXIT{ProductionEvents::Capture(Previous);FSimDataEvents::Suppress(false);};
+    FSimDataEvents::Suppress(true);auto* PriorChanges=FSimDataEvents::Capture(&Out.Changes);auto* Previous=ProductionEvents::Capture(&Out.Events);ON_SCOPE_EXIT{ProductionEvents::Capture(Previous);FSimDataEvents::Capture(PriorChanges);FSimDataEvents::Suppress(false);};
     if(Input.Skill)
     {Out.Skill=MakeUnique<FNativeSkillReply>(SkillCommandAI::Execute(Out.State,*Input.Skill));return Out;}
     if(Input.Owned)
@@ -122,7 +122,7 @@ bool FNativeEconomyWorker::Commit(FNativeEconomyResult&& Result,FEconomyState& L
     Result.State.OfflineFacilities=MoveTemp(Live.OfflineFacilities);
     Live=MoveTemp(Result.State);
     for(const auto& Event:Result.Events)ProductionEvents::Emit(Event.Facility,Event.Job,Event.Phase,Event.Reason);
-    FSimDataEvents::Publish(Live);return true;
+    FSimDataEvents::Publish(Live,Result.Changes);return true;
 }
 bool FNativeEconomyWorker::CommitMarket(FNativeEconomyResult&& Result,FEconomyState& Live,uint64 Revision,const FString& Profile,TFunctionRef<bool()> Save,FText& Reason)
 {

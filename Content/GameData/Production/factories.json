@@ -12,7 +12,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "BioDome",
@@ -27,7 +36,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "BioDome2",
@@ -42,7 +60,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "BioTrail",
@@ -57,7 +84,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Bldg00",
@@ -72,7 +108,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Bldg01",
@@ -87,7 +132,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Bldg02",
@@ -102,7 +156,13 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "General warehouse",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Bldg03",
@@ -122,7 +182,13 @@
       "military rations",
       "medical supplies",
       "field medical supplies"
-    ]
+    ],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Bldg04",
@@ -137,7 +203,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Bldg05",
@@ -157,7 +232,13 @@
       "fusion propellant",
       "thruster propellant",
       "reactor fuel"
-    ]
+    ],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "City00",
@@ -172,7 +253,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "City01",
@@ -187,7 +277,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "City02",
@@ -202,7 +301,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "City03",
@@ -217,7 +325,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Cool00",
@@ -232,7 +349,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Dsrt00",
@@ -247,7 +373,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Dsrt01",
@@ -262,7 +397,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Dsrt02",
@@ -277,7 +421,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Dsrt03",
@@ -292,7 +445,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Dsrt04",
@@ -307,7 +469,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Dsrt05",
@@ -322,7 +493,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Fact00",
@@ -337,7 +517,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Fact01",
@@ -352,7 +541,13 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Fact02",
@@ -367,7 +562,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Fact03",
@@ -382,7 +586,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Fact04",
@@ -397,7 +610,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Platform",
@@ -412,7 +634,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Reac01",
@@ -427,7 +658,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Senate",
@@ -442,7 +682,16 @@
     "Image": "Production",
     "AdditionalRecipes": [],
     "StorageRole": "",
-    "AllowedItems": []
+    "AllowedItems": [],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining",
+      "ResearchMaterial",
+      "ResearchTime",
+      "Copying"
+    ],
+    "AutomatedRecipes": []
   },
   {
     "Name": "Tank00",
@@ -459,6 +708,12 @@
     "StorageRole": "Cryogenic tank",
     "AllowedItems": [
       "liquid hydrogen"
-    ]
+    ],
+    "ProductionLanes": 1,
+    "AllowedActivities": [
+      "Manufacturing",
+      "Refining"
+    ],
+    "AutomatedRecipes": []
   }
 ]
