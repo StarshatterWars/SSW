@@ -625,6 +625,9 @@ public partial class MainWindow : Window
     private async Task LaunchAsync(string provider, string? artifact = null, uint steamAppId = 0, ulong steamAccount = 0)
     {
         if (game is null) return;
+        var economy = await economyServer.RefreshAsync(game, closing.Token);
+        for (int attempt=0; attempt<30 && economy.Label=="STARTING"; ++attempt){await Task.Delay(200,closing.Token);economy=await economyServer.RefreshAsync(game,closing.Token);}
+        if(economy.Status is null || !economy.Status.CheckpointReady){LaunchStatus.Text="Economy service unavailable: "+economy.Detail;return;}
         string directory = Path.GetDirectoryName(game)!;
         string executable = game;
         if (provider == "EOS")

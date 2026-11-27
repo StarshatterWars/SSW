@@ -5,10 +5,10 @@
 // Campaign missions keep their original identity in the simulation and saves.
 namespace AgentMissionRules
 {
-    inline bool FactionAllows(EEMPIRE_NAME Pilot, const FS_CampaignMission& Mission)
+    inline bool FactionAllows(EEMPIRE_NAME PilotEmpire, const FS_CampaignMission& Mission)
     {
-        return Pilot != EEMPIRE_NAME::NONE && Pilot != EEMPIRE_NAME::Unknown &&
-            (Mission.RequiredEmpire == EEMPIRE_NAME::Neutral || Mission.RequiredEmpire == Pilot);
+        return PilotEmpire != EEMPIRE_NAME::NONE && PilotEmpire != EEMPIRE_NAME::Unknown &&
+            (Mission.RequiredEmpire == EEMPIRE_NAME::Neutral || Mission.RequiredEmpire == PilotEmpire);
     }
     constexpr int32 CampaignBase = 2000000;
     constexpr int32 CampaignStride = 1000000;

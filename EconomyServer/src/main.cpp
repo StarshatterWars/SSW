@@ -65,7 +65,7 @@ int run(int argc,char** argv){
         http.Post("/v1/commands",[&](const httplib::Request& request,httplib::Response& response){if(!authorized(request,response))return;try{const auto command=ssw::json::parse(request.body);
             const auto action=command.value("action",std::string());
             if(action=="create_account"||action=="buy"){respond(response,{{"ok",false},{"error","Player wallets and cargo belong to the player domain; use prepared external trades"}},400);return;}
-            std::lock_guard lock(mutex);if(action=="external_trade_status"||action=="quote_external_trade"){respond(response,world.execute(command));return;}if(!persistence_error.empty()){respond(response,{{"ok",false},{"error","Economy persistence is unavailable; mutations suspended"}},503);return;}const auto before=world.state();try{
+            std::lock_guard lock(mutex);if(action=="npc_projection"||action=="external_trade_status"||action=="quote_external_trade"||(action=="observe_freight"&&!command.value("lost",false))){respond(response,world.execute(command));if(action=="observe_freight")wake.notify_all();return;}if(!persistence_error.empty()){respond(response,{{"ok",false},{"error","Economy persistence is unavailable; mutations suspended"}},503);return;}const auto before=world.state();try{
 #ifdef _WIN32
             if(action=="bootstrap_npc")claim_writer();
 #endif

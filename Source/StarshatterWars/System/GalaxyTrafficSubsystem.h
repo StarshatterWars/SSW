@@ -24,6 +24,9 @@ public:
     TStatId GetStatId()const override{RETURN_QUICK_DECLARE_CYCLE_STAT(UGalaxyTrafficSubsystem,STATGROUP_Tickables);}
     bool LoadEconomyCatalogs();
     void AdvanceServerWorld(FFractalVerseWorld&, double Seconds);
+    bool QuiesceForExternal(FString&);
+    void ApplyExternalTraffic(FGalaxyTrafficState&&);
+    void ReportExternalTraffic(TFunctionRef<void(FGuid,bool,bool,EGalaxyTrafficPhase)>);
     int32 GetFacilityCount()const{return Facilities.Num();}
     int32 GetBackgroundMineCount()const{return Mines.Num();}
     int32 GetCoveredSectorCount()const{return Sectors.Num();}

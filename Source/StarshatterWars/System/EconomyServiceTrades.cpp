@@ -23,7 +23,7 @@ bool Credits(const TSharedPtr<FJsonObject>& Root,const TCHAR* Name,int64& Out)
 bool UEconomyServiceSubsystem::Trade(const FNativeMarketCommand& CommandIn,TFunction<bool(FText&)>&& Validate,FDone&& Completed,FText& Reason)
 {
     auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
-    if(!RequiresExternal()||!IsReady()||bTradePending||!Players||!Players->HasLoaded())
+    if(!RequiresExternal()||!IsReady()||bTradePending||!Players||!Players->HasLoaded()||Players->GetEconomy().NpcAuthorityWorldId!=Cached.WorldId||ProjectionProfile!=Profile(Players))
     {Reason=INVTEXT("The economy is not ready, or a trade is awaiting confirmation. Nothing exchanged.");return false;}
     if(CommandIn.Action!=EMarketCommand::Trade){Reason=INVTEXT("Queued orders need the remote order adapter. No local order was placed.");return false;}
     if(!Validate||!Validate(Reason))return false;

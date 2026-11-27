@@ -30,6 +30,8 @@ FEconomyState ExtractNpc(const FEconomyState& Source)
     for(const auto& Job:Source.Jobs)if(IsNpcOwner(Source,Job.Owner))Out.Jobs.Add(Job);
     for(const auto& P:Source.Blueprints)if(IsNpcOwner(Source,P.Value.Owner))Out.Blueprints.Add(P.Key,P.Value);
     for(const auto& P:Source.MarketOrders)if(IsNpcOwner(Source,P.Value.Owner))Out.MarketOrders.Add(P.Key,P.Value);
+    for(const auto& P:Source.SerializedHulls)if(!P.Value.bWithdrawn&&Out.Inventories.Contains(P.Value.Inventory))
+    {Out.SerializedHulls.Add(P.Key,P.Value);if(const auto* Used=Source.UsedHullStock.Find(P.Key))Out.UsedHullStock.Add(P.Key,*Used);}
     Out.IndustryPolicies=Source.IndustryPolicies;Out.RecipeActivities=Source.RecipeActivities;
     Out.BackgroundOreRemaining=Source.BackgroundOreRemaining;Out.BackgroundMineDeadlines=Source.BackgroundMineDeadlines;Out.BackgroundMineLastCycle=Source.BackgroundMineLastCycle;
     Out.NextBackgroundMineAt=Source.NextBackgroundMineAt;Out.LastBackgroundMineAt=Source.LastBackgroundMineAt;
@@ -47,7 +49,8 @@ bool MatchesNpc(const FEconomyState& A,const FEconomyState& B)
 }
 void ApplyNpcProjection(FEconomyState& Local,const FEconomyState& Remote)
 {
-    const auto PriorAccounts=Accounts(Local);const auto Incoming=ExtractNpc(Remote);
+    const auto PriorAccounts=Accounts(Local);const auto Incoming=ExtractNpc(Remote);TSet<FName> PriorNpcInventories;
+    for(const auto& P:Local.Inventories)if(IsNpcOwner(Local,P.Value.Owner))PriorNpcInventories.Add(P.Key);
     for(auto It=Local.Inventories.CreateIterator();It;++It)if(IsNpcOwner(Local,It.Value().Owner))It.RemoveCurrent();
     for(const auto& P:Incoming.Inventories)if(!Local.Inventories.Contains(P.Key))Local.Inventories.Add(P.Key,P.Value);
     for(FName Account:PriorAccounts)if(!FEconomyLedger::IsPlayerOwner(Local,Account))Local.Wallets.Remove(Account);
@@ -60,6 +63,13 @@ void ApplyNpcProjection(FEconomyState& Local,const FEconomyState& Remote)
     for(const auto& P:Incoming.Blueprints)if(!Local.Blueprints.Contains(P.Key))Local.Blueprints.Add(P.Key,P.Value);
     for(auto It=Local.MarketOrders.CreateIterator();It;++It)if(IsNpcOwner(Local,It.Value().Owner))It.RemoveCurrent();
     for(const auto& P:Incoming.MarketOrders)if(!Local.MarketOrders.Contains(P.Key))Local.MarketOrders.Add(P.Key,P.Value);
+    for(auto It=Local.SerializedHulls.CreateIterator();It;++It)if(!It.Value().bWithdrawn&&PriorNpcInventories.Contains(It.Value().Inventory))
+    {Local.UsedHullStock.Remove(It.Key());It.RemoveCurrent();}
+    for(const auto& P:Incoming.SerializedHulls)if(!Local.SerializedHulls.Contains(P.Key))Local.SerializedHulls.Add(P.Key,P.Value);
+    for(const auto& P:Incoming.UsedHullStock)if(!Local.UsedHullStock.Contains(P.Key))Local.UsedHullStock.Add(P.Key,P.Value);
+    Local.IndustryPolicies=Incoming.IndustryPolicies;Local.RecipeActivities=Incoming.RecipeActivities;
+    Local.OfflineFacilities=Incoming.OfflineFacilities;Local.GroundFactories=Incoming.GroundFactories;
+    Local.EconomyClockSeconds=Incoming.EconomyClockSeconds;
     Local.RegionalMarkets=Incoming.RegionalMarkets;
     Local.BackgroundOreRemaining=Incoming.BackgroundOreRemaining;Local.BackgroundMineDeadlines=Incoming.BackgroundMineDeadlines;Local.BackgroundMineLastCycle=Incoming.BackgroundMineLastCycle;
     Local.NextBackgroundMineAt=Incoming.NextBackgroundMineAt;Local.LastBackgroundMineAt=Incoming.LastBackgroundMineAt;

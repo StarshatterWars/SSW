@@ -1,6 +1,12 @@
 {
   "entries": [
     {
+      "category": "Development update",
+      "title": "Alpha 5: persistent native NPC economy handoff",
+      "date": "2026-11-27",
+      "body": "NPC mining, production, freight and market stock now migrate to the separate native economy service. Pilot ships, cargo and wallet stay in the pilot record. The launcher checks the service before Play, and the build pipeline bundles the tested service. Restart keeps the same world; disconnect never starts a duplicate local economy. The launcher buttons share one row. Remote queued orders and ship-stock transaction adapters remain gated pending follow-up; this is a deployment-test checkpoint."
+    },
+    {
       "category": "Latest install build",
       "title": "Alpha 5 - Build 20261121-174954Z ready to install",
       "date": "2026-11-21",

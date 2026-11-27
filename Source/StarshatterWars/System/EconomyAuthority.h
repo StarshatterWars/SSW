@@ -7,4 +7,5 @@ namespace SSWEconomyAuthority
     bool MayAdvanceLocally();
     bool BeginHandoff(FString& Reason);
     FString MarkerPath();
+    FString StateDirectory();
 }

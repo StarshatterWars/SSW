@@ -6,6 +6,7 @@
 #include "HAL/PlatformProcess.h"
 #include "HAL/FileManager.h"
 #include "HAL/PlatformFileManager.h"
+#include "HAL/PlatformProperties.h"
 #include "Misc/ScopeLock.h"
 #if PLATFORM_WINDOWS
 #include "Windows/WindowsHWrapper.h"
@@ -20,8 +21,9 @@ struct FWriterLease {HANDLE Handle=nullptr;~FWriterLease(){if(Handle)CloseHandle
 FWriterLease& Lease(){static FWriterLease Value;return Value;}
 #endif
 }
-FString MarkerPath(){return FPaths::Combine(FPlatformProcess::UserSettingsDir(),TEXT("Fractal Dev Games/FractalEconomy/LocalEconomy/client-handoff.required"));}
-namespace {bool& ServiceOnly(){static bool Required=FParse::Param(FCommandLine::Get(),TEXT("SSWExternalEconomy"))||IFileManager::Get().FileExists(*MarkerPath());return Required;}}
+FString StateDirectory(){FString Override;if(FParse::Value(FCommandLine::Get(),TEXT("SSWEconomyStateDir="),Override)&&!Override.IsEmpty())return FPaths::ConvertRelativePathToFull(Override);return FPaths::Combine(FPlatformProcess::UserSettingsDir(),TEXT("Fractal Dev Games/FractalEconomy/LocalEconomy"));}
+FString MarkerPath(){return FPaths::Combine(StateDirectory(),TEXT("client-handoff.required"));}
+namespace {bool& ServiceOnly(){static bool Required=FPlatformProperties::RequiresCookedData()||FParse::Param(FCommandLine::Get(),TEXT("SSWExternalEconomy"))||IFileManager::Get().FileExists(*MarkerPath());return Required;}}
 bool RequiresService(){if(IsRunningCommandlet()&&!FParse::Param(FCommandLine::Get(),TEXT("SSWIntegrationEconomy")))return false;FScopeLock Lock(&WriterMutex);return ServiceOnly();}
 bool MayAdvanceLocally()
 {

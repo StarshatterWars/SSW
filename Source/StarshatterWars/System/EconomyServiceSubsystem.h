@@ -27,7 +27,7 @@ public:
     const FEconomyServiceEndpoint& Endpoint()const{return Address;}
     const FEconomyServiceStatus& Status()const{return Cached;}
     bool RequiresExternal()const{return bExternalRequired;}
-    bool IsReady()const{return Cached.bConnected&&Cached.bCheckpointReady&&Cached.bNpcAuthorityActive;}
+    bool IsReady()const{return Cached.bConnected&&Cached.bCheckpointReady&&Cached.bNpcAuthorityActive&&bProjectionReady;}
     FString Summary()const;
     using FReply=TFunction<void(bool,TSharedPtr<FJsonObject>,const FString&)>;
     bool Command(TSharedRef<FJsonObject>,FReply,FString& Reason);
@@ -36,7 +36,13 @@ public:
 private:
     FEconomyServiceEndpoint Address;
     FEconomyServiceStatus Cached;
-    bool bStopping=false,bPolling=false,bExternalRequired=false,bTradePending=false;
+    bool bStopping=false,bPolling=false,bExternalRequired=false,bTradePending=false,bSyncPending=false,bProjectionReady=false;
+    int64 ProjectedRevision=-1;
+    FString ProjectionProfile,SiteSignature;
+    TMap<FGuid,FString> JourneyIds;
+    TSet<FName> ProjectedOffline;
+    void SynchronizeNpc();
+    void ObserveTraffic();
     FTSTicker::FDelegateHandle PollHandle;
     TArray<FHttpRequestPtr> Requests;
     void Poll();

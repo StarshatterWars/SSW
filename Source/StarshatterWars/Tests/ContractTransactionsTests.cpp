@@ -10,17 +10,17 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FContractTransactionsTest, "Starshatter.Industr
 
 bool FContractTransactionsTest::RunTest(const FString&)
 {
-    const FName Issuer(TEXT("Issuer")), Buyer(TEXT("Buyer")), Rival(TEXT("Rival"));
+    const FName IssuerAccount(TEXT("Issuer")), Buyer(TEXT("Buyer")), Rival(TEXT("Rival"));
     const FName Pickup(TEXT("Pickup")), Destination(TEXT("Destination")), Ore(TEXT("Ore"));
     const FDateTime Now(2228, 11, 17);
     FContractAccounts Accounts;
-    Accounts.Add(Issuer).StationStock.FindOrAdd(Pickup).Add(Ore, 10.0);
-    Accounts.FindChecked(Issuer).Credits = 10000;
+    Accounts.Add(IssuerAccount).StationStock.FindOrAdd(Pickup).Add(Ore, 10.0);
+    Accounts.FindChecked(IssuerAccount).Credits = 10000;
     Accounts.Add(Buyer).Credits = 5000;
     Accounts.Add(Rival).Credits = 5000;
 
     FContractTransaction Draft;
-    Draft.Issuer = Issuer;
+    Draft.Issuer = IssuerAccount;
     Draft.Terms.PickupStationId = Pickup;
     Draft.Terms.OfferExpiryMinutes = 10;
     auto& Cargo = Draft.Terms.OfferedItems.AddDefaulted_GetRef();
@@ -41,7 +41,7 @@ bool FContractTransactionsTest::RunTest(const FString&)
     TestTrue(TEXT("Correct delivery settles"), SettlementAI::DeliverCourier(Courier, Accounts, Buyer, Destination));
     TestFalse(TEXT("Delivery cannot pay twice"), SettlementAI::DeliverCourier(Courier, Accounts, Buyer, Destination));
     TestEqual(TEXT("Reward and collateral paid"), Accounts.FindChecked(Buyer).Credits, int64(5100));
-    TestEqual(TEXT("Cargo credited at the destination"), Accounts.FindChecked(Issuer).StationStock.FindRef(Destination).FindRef(Ore), 2.0);
+    TestEqual(TEXT("Cargo credited at the destination"), Accounts.FindChecked(IssuerAccount).StationStock.FindRef(Destination).FindRef(Ore), 2.0);
 
     auto Exchange = Draft;
     Exchange.Terms.Type = ESSWContractType::ItemExchange;
@@ -64,8 +64,8 @@ bool FContractTransactionsTest::RunTest(const FString&)
     TestEqual(TEXT("Outbid buyer refunded"), Accounts.FindChecked(Buyer).Credits, int64(4900));
     TestFalse(TEXT("Original expiration was extended"), SettlementAI::CloseExpired(Auction, Accounts, Now + FTimespan::FromMinutes(10)));
     TestTrue(TEXT("Auction closes at extended deadline"), SettlementAI::CloseExpired(Auction, Accounts, Auction.ExpiresAt));
-    TestTrue(TEXT("Seller claims credits"), SettlementAI::ClaimAuction(Auction, Accounts, Issuer));
-    TestFalse(TEXT("Seller cannot claim twice"), SettlementAI::ClaimAuction(Auction, Accounts, Issuer));
+    TestTrue(TEXT("Seller claims credits"), SettlementAI::ClaimAuction(Auction, Accounts, IssuerAccount));
+    TestFalse(TEXT("Seller cannot claim twice"), SettlementAI::ClaimAuction(Auction, Accounts, IssuerAccount));
     TestTrue(TEXT("Winner claims cargo"), SettlementAI::ClaimAuction(Auction, Accounts, Rival));
     TestTrue(TEXT("Both claims complete auction"), Auction.State == EContractState::Completed);
     return true;

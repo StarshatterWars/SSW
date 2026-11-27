@@ -390,6 +390,8 @@ public:
     const ShipDesign* Design() const { return design; }
     void AssignMilitaryCargo();
     void SetSimulatedCargo(SSWFreightManifest::FLoad Load);
+    void SetNpcCargoProjection(FName Inventory,SSWFreightManifest::FLoad Load);
+    FName CargoProjectionInventory;
     FName GetCargoInventoryKey() const;
     void SyncCargoInventory();
     void SyncCargoInventory(FEconomyState&);

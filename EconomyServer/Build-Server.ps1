@@ -1,5 +1,5 @@
 #Requires -Version 7.0
-param([string]$ProjectRoot=(Join-Path $PSScriptRoot '..'),[string]$CMake)
+param([string]$ProjectRoot=(Join-Path $PSScriptRoot '..'),[string]$CMake,[string]$WireFixture=(Join-Path $PSScriptRoot "../Saved/Automation/EconomyWireFixture.json"))
 $ErrorActionPreference='Stop'
 $root=(Resolve-Path -LiteralPath $ProjectRoot).Path
 $vendors=Join-Path $root 'EconomyServer/third_party'
@@ -24,6 +24,11 @@ if($LASTEXITCODE -ne 0){throw 'Native economy configuration failed.'}
 if($LASTEXITCODE -ne 0){throw 'Native economy build failed.'}
 & $ctest --test-dir $build -C Release --output-on-failure
 if($LASTEXITCODE -ne 0){throw 'Native economy tests failed. No package was staged.'}
+if(!(Test-Path -LiteralPath $WireFixture -PathType Leaf)){throw 'Run the Unreal economy snapshot tests before staging the service.'}
+& (Join-Path $build 'Release/EconomyBridgeTests.exe') (Join-Path $root 'Content/GameData') $WireFixture
+if($LASTEXITCODE -ne 0){throw 'Unreal/native snapshot regression failed. No package was staged.'}
+& python (Join-Path $PSScriptRoot 'tests/ue_service_tests.py') (Join-Path $build 'Release/FractalEconomy.exe') (Join-Path $root 'Content/GameData') $WireFixture
+if($LASTEXITCODE -ne 0){throw 'Unreal/native HTTP lifecycle regression failed. No package was staged.'}
 $destination=Join-Path $root ('Build/EconomyServerStaging/'+[guid]::NewGuid().ToString('N'))
 [void][IO.Directory]::CreateDirectory($destination)
 Copy-Item -LiteralPath (Join-Path $build 'Release/FractalEconomy.exe') -Destination $destination
@@ -38,6 +43,6 @@ foreach($file in @('JSON-LICENSE.MIT','HTTPLIB-LICENSE','manifest.json')){Copy-I
 $files=@(Get-ChildItem -LiteralPath $destination -File -Recurse|ForEach-Object {
  [ordered]@{path=[IO.Path]::GetRelativePath($destination,$_.FullName).Replace('\','/');sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant();length=$_.Length}
 })
-$manifest=[ordered]@{server='FractalEconomy';protocol=1;createdUtc=[DateTime]::UtcNow.ToString('o');sourceCommit=(& git -C $root rev-parse HEAD).Trim();liveClientCutoverReady=$false;standbyAutostartReady=$true;handoffProtocol=1;files=$files}
+$manifest=[ordered]@{server='FractalEconomy';protocol=1;createdUtc=[DateTime]::UtcNow.ToString('o');sourceCommit=(& git -C $root rev-parse HEAD).Trim();liveClientCutoverReady=$true;standbyAutostartReady=$true;handoffProtocol=1;files=$files}
 [IO.File]::WriteAllText((Join-Path $destination 'server-manifest.json'),($manifest|ConvertTo-Json -Depth 5))
 Write-Output $destination

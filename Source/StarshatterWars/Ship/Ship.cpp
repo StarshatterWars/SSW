@@ -15,6 +15,7 @@
 	Starship class
 */
 #include "Ship.h"
+#include "EconomyAuthority.h"
 #include "ShipEquipment.h"
 #include "CampaignFleet.h"
 #include "Campaign.h"
@@ -446,7 +447,7 @@ EFreighterLoadStatus Ship::GetFreighterLoadStatus() const
 }
 
 FName Ship::GetCargoInventoryKey() const
-{ return FName(*(TEXT("Ship/") + CargoInventoryId.ToString(EGuidFormats::Digits))); }
+{ return !CargoProjectionInventory.IsNone()?CargoProjectionInventory:FName(*(TEXT("Ship/") + CargoInventoryId.ToString(EGuidFormats::Digits))); }
 
 void Ship::SyncCargoInventory()
 {
@@ -456,6 +457,7 @@ void Ship::SyncCargoInventory(FEconomyState& State)
 {
     auto* Simulation = Sim::GetSim();
     if (!Simulation || !Simulation->HasSimulationAuthority() || !design) return;
+    if(SSWEconomyAuthority::RequiresService()&&Simulation->GetPlayerShip()!=this)return;
     const FName SystemName(GetRegion() && GetRegion()->GetSystem() ? UTF8_TO_TCHAR(GetRegion()->GetSystem()->GetName()) : TEXT(""));
     auto* Inventory = State.Inventories.Find(GetCargoInventoryKey());
     if (!Inventory) Inventory = FEconomyLedger::CreateInventory(State, GetCargoInventoryKey(), (Simulation->GetPlayerShip() == this ? FEconomyLedger::Pilot() : FEconomyRuntime::IndustryOwner()), SystemName, design->CargoCapacity.Tonnes);
@@ -556,6 +558,12 @@ void Ship::ApplyCargoInventoryToManifest(const FEconomyState& State)
     const double Amount = FEconomyLedger::Quantity(State, GetCargoInventoryKey(), DataTableUtils::MakeValidName(CargoManifest->Item));
     CargoManifest->Quantity = FMath::FloorToInt(Amount);
     FractionalMinedOre = CargoManifest->Unit == TEXT("t") ? Amount - CargoManifest->Quantity : 0;
+}
+
+void Ship::SetNpcCargoProjection(FName Inventory,SSWFreightManifest::FLoad Load)
+{
+    if(auto* Simulation=Sim::GetSim();Simulation&&Simulation->GetPlayerShip()==this)return;
+    CargoProjectionInventory=Inventory;CargoManifest=MoveTemp(Load);FractionalMinedOre=0;ApplyCargoInventoryToManifest();
 }
 
 void Ship::SetSimulatedCargo(SSWFreightManifest::FLoad Load)

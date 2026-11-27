@@ -5,6 +5,7 @@ param(
     [string]$EngineRoot = 'C:/Program Files/Epic Games/UE_5.7',
     [string]$EditorCommand = '',
     [string]$StarServerPackage = '',
+    [string]$EconomyServerPackage = '',
     [string]$FeedRoot = '',
     [string]$PrivateKey = '',
     [string]$LauncherConfig = (Join-Path $PSScriptRoot 'launcher.localhost.json'),
@@ -39,6 +40,7 @@ if($PlanOnly){Write-Host 'PLAN ONLY: build Editor; run Starshatter tests; build/
 [void][IO.Directory]::CreateDirectory($buildRoot)
 try {$pipelineLock=[IO.File]::Open((Join-Path $buildRoot '.build-cook-deploy.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)}
 catch {throw 'Another Build-Cook-Deploy run is already active.'}
+$runStartedUtc=[DateTime]::UtcNow
 $runId=[DateTime]::UtcNow.ToString('yyyyMMdd-HHmmssZ')+'-'+[guid]::NewGuid().ToString('N').Substring(0,8)
 $runRoot=Join-Path $buildRoot "ReleaseStaging/$runId"
 $logRoot=Join-Path $projectPath "Saved/Logs/BuildCookDeploy-$runId"
@@ -73,9 +75,31 @@ try {
             if(!$value -or $value.Value -isnot [ValueType] -or $value.Value -lt 0){throw "Invalid automated test report: missing or invalid $field. Nothing was deployed."}
         }
         if($tests.failed -gt 0 -or $tests.succeededWithWarnings -gt 0 -or $tests.notRun -gt 0 -or $tests.succeeded -lt 1){throw 'Tests failed, had warnings, or were incomplete. See the test report; nothing was deployed.'}
+        if(!$EconomyServerPackage){
+            $wire=Join-Path $projectPath 'Saved/Automation/EconomyWireFixture.json'
+            if(!(Test-Path -LiteralPath $wire -PathType Leaf) -or (Get-Item -LiteralPath $wire).LastWriteTimeUtc -lt $runStartedUtc){throw 'The current Unreal tests did not produce a fresh economy snapshot. Nothing was deployed.'}
+            $nativeOutput=@(& (Join-Path $projectPath 'EconomyServer/Build-Server.ps1') -ProjectRoot $projectPath)
+            $EconomyServerPackage=[string]($nativeOutput|Select-Object -Last 1)
+            $parityReport=Join-Path $logRoot 'NativeProjectionParity'
+            Run-NativeStep '2b Native projection parity' $EditorCommand @($projectFile,'-unattended','-nop4','-nosplash','-nosound','-RenderOffscreen','-ddc=InstalledNoZenLocalFallback','-ini:EditorSettings:[/Script/UnrealEd.AnalyticsPrivacySettings]:bSendUsageData=False','-ExecCmds=Automation RunTests Starshatter.Economy.Service.ProjectionPreservesPlayer','-TestExit=Automation Test Queue Empty',('-SSWEconomyProjectionFixture='+(Join-Path $projectPath 'Saved/Automation/EconomyWireProjection.json')),('-ReportExportPath='+$parityReport),('-abslog='+(Join-Path $logRoot 'NativeProjectionParity.log')))
+            $parityFile=Join-Path $parityReport 'index.json'
+            if(!(Test-Path -LiteralPath $parityFile -PathType Leaf)){throw 'Native projection parity did not report results.'}
+            $parity=Get-Content -LiteralPath $parityFile -Raw|ConvertFrom-Json
+            if($parity.succeeded -ne 1 -or $parity.failed -ne 0 -or $parity.succeededWithWarnings -ne 0 -or $parity.notRun -ne 0){throw 'Native projection parity failed. Nothing was deployed.'}
+        }
+        $nativeManifest=Join-Path $EconomyServerPackage 'server-manifest.json'
+        if(!(Test-Path -LiteralPath $nativeManifest -PathType Leaf)){throw 'Verified economy server package is missing. Publication stopped.'}
+        $native=Get-Content -LiteralPath $nativeManifest -Raw|ConvertFrom-Json
+        if(!$native.liveClientCutoverReady -or !$native.standbyAutostartReady -or $native.protocol -ne 1){throw 'Economy package has not passed live handoff tests.'}
+        foreach($entry in $native.files){
+            $base=[IO.Path]::GetFullPath($EconomyServerPackage).TrimEnd('\','/')+[IO.Path]::DirectorySeparatorChar
+            $file=[IO.Path]::GetFullPath((Join-Path $base $entry.path))
+            if(!$file.StartsWith($base,[StringComparison]::OrdinalIgnoreCase) -or !(Test-Path -LiteralPath $file -PathType Leaf) -or (Get-Item -LiteralPath $file).Length -ne $entry.length -or (Get-FileHash -LiteralPath $file -Algorithm SHA256).Hash -ine $entry.sha256){throw 'Economy package integrity check failed.'}
+        }
         $cookArgs=@('BuildCookRun',('-project='+$projectFile),'-target=StarshatterWars','-platform=Win64','-clientconfig=Development','-build','-nocompileeditor','-cook','-stage','-pak','-iostore','-prereqs','-nodebuginfo','-archive',('-archivedirectory='+$archive),('-stagingdirectory='+$stage),('-unrealexe='+$EditorCommand),'-AdditionalCookerOptions=-ddc=InstalledNoZenLocalFallback','-unattended','-utf8output','-nop4')
         Run-NativeStep '3 Build cook and package' $uatTool $cookArgs
         $fresh=Assert-BuildChild (Join-Path $archive 'Windows')
+        Copy-Item -LiteralPath $EconomyServerPackage -Destination (Join-Path $fresh 'EconomyServer') -Recurse
         $validation=@{Package=$fresh;StarServerPackage=$StarServerPackage;ProjectRoot=$projectPath;FeedRoot=$FeedRoot;PrivateKey=$PrivateKey;LauncherConfig=$LauncherConfig}
         $validated=& (Join-Path $PSScriptRoot 'Test-LauncherPackage.ps1') @validation
         & (Join-Path $PSScriptRoot 'Test-PackagedStartup.ps1') -Package $fresh -ReportDirectory (Join-Path $logRoot 'PackagedStartup') | Out-Host
@@ -87,7 +111,7 @@ try {
         catch {if($hadPackage -and !(Test-Path -LiteralPath $package)){Move-Item -LiteralPath $previous -Destination $package};throw}
         Write-Host "`n=== 5 Record verified build ==="
         $message=Join-Path $logRoot 'build-commit.txt'
-        [IO.File]::WriteAllText($message,"Record verified Windows build $($validated.Version)`n`nSource commit: $sourceCommit`nEditor build, $($tests.succeeded) automated tests, client build, cook, package and isolated packaged-startup check passed. Includes the existing packaged StarServer. Only build metadata is recorded automatically; unrelated staged and unstaged changes are preserved.`n")
+        [IO.File]::WriteAllText($message,"Record verified Windows build $($validated.Version)`n`nSource commit: $sourceCommit`nEditor build, $($tests.succeeded) automated tests, client build, cook, package and isolated packaged-startup check passed. Includes packaged StarServer and the cross-process verified native economy service. Only build metadata is recorded automatically; unrelated staged and unstaged changes are preserved.`n")
         & git -C $projectPath diff --quiet HEAD -- Content/Build/build-version.json
         if($LASTEXITCODE -eq 1){& git -C $projectPath commit --only -F $message -- Content/Build/build-version.json;if($LASTEXITCODE -ne 0){throw 'The build passed but its metadata commit failed. Publication was stopped.'}}
         elseif($LASTEXITCODE -ne 0){throw 'Could not check the build metadata for its commit.'}

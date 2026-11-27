@@ -79,7 +79,7 @@ internal static class Program
                     string target=Path.Combine(nativeDir,"GameData",relative);Directory.CreateDirectory(Path.GetDirectoryName(target)!);File.Copy(Path.Combine(Environment.CurrentDirectory,"Content","GameData",relative),target);
                 }
                 var files=Directory.GetFiles(nativeDir,"*",SearchOption.AllDirectories).Select(file=>new{path=Path.GetRelativePath(nativeDir,file).Replace('\\','/'),sha256=Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(file))),length=new FileInfo(file).Length}).ToArray();
-                File.WriteAllText(Path.Combine(nativeDir,"server-manifest.json"),JsonSerializer.Serialize(new{server="FractalEconomy",protocol=1,handoffProtocol=1,standbyAutostartReady=true,liveClientCutoverReady=false,files}));
+                File.WriteAllText(Path.Combine(nativeDir,"server-manifest.json"),JsonSerializer.Serialize(new{server="FractalEconomy",protocol=1,handoffProtocol=1,standbyAutostartReady=true,liveClientCutoverReady=true,files}));
                 var probe=new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback,0);probe.Start();int port=((System.Net.IPEndPoint)probe.LocalEndpoint).Port;probe.Stop();
                 string settings=Path.Combine(liveFixture,"services.json");ServiceEndpoints.Save($"http://127.0.0.1:{port}",true,0,settings);
                 var nativeManager=new EconomyServerManager(settings,Path.Combine(liveFixture,"World éΔ"));manager=nativeManager;
@@ -112,8 +112,8 @@ internal static class Program
             string nativeExe=Path.Combine(nativePackage,"FractalEconomy.exe");File.WriteAllText(nativeExe,"test data, never executed");
             string hash=Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(nativeExe)));
             string manifest=Path.Combine(nativePackage,"server-manifest.json");
-            File.WriteAllText(manifest,JsonSerializer.Serialize(new {server="FractalEconomy",protocol=1,handoffProtocol=1,standbyAutostartReady=true,liveClientCutoverReady=false,files=new[]{new{path="FractalEconomy.exe",sha256=hash,length=new FileInfo(nativeExe).Length}}}));
-            Check(EconomyServerManager.ReadyPackage(nativeExe),"Verified standby package can start without claiming a completed live cutover");
+            File.WriteAllText(manifest,JsonSerializer.Serialize(new {server="FractalEconomy",protocol=1,handoffProtocol=1,standbyAutostartReady=true,liveClientCutoverReady=true,files=new[]{new{path="FractalEconomy.exe",sha256=hash,length=new FileInfo(nativeExe).Length}}}));
+            Check(EconomyServerManager.ReadyPackage(nativeExe),"Verified live handoff package can start in standby");
             File.AppendAllText(nativeExe,"tampered");Check(!EconomyServerManager.ReadyPackage(nativeExe),"Changed economy executable is rejected before startup");
             File.WriteAllText(manifest,"invalid");Check(!EconomyServerManager.ReadyPackage(nativeExe),"Malformed package metadata fails closed without breaking the launcher monitor");
         }finally{Directory.Delete(nativePackage,true);}

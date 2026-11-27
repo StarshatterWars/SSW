@@ -266,7 +266,7 @@ void UGalaxyTrafficSubsystem::Despawn(Sim& Simulation,FGuid Id)
     if(const auto* Name=LiveShips.Find(Id))if(auto* Craft=Simulation.FindShip(TCHAR_TO_UTF8(**Name)))
     {
         auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();
-        if(Players)for(auto& Journey:Players->GetMutablePlayerInfo().Traffic.Journeys)
+        if(Players&&!SSWEconomyAuthority::RequiresService())for(auto& Journey:Players->GetMutablePlayerInfo().Traffic.Journeys)
             if(Journey.Id==Id && Journey.IsCargo() && !Journey.IsFinished())
             {
                 const FName System=Craft->GetRegion() && Craft->GetRegion()->GetSystem()?FName(UTF8_TO_TCHAR(Craft->GetRegion()->GetSystem()->GetName())):NAME_None;
@@ -343,6 +343,11 @@ void UGalaxyTrafficSubsystem::Realize(Sim& Simulation,FGalaxyTrafficJourney& Job
         int32 Index=0;for(ListIter<WeaponGroup> G=Craft->GetWeapons();++G;)for(ListIter<Weapon> W=G->GetWeapons();++W;)if(Job.PatrolAmmo.IsValidIndex(Index))W->SetAmmo(Job.PatrolAmmo[Index++]);
     }
 
+    if(SSWEconomyAuthority::RequiresService())
+    {
+        SSWFreightManifest::FLoad Load;Load.Item=Job.Item.ToString();Load.Unit=Job.UnitTonnes==1?TEXT("t"):TEXT("units");
+        Craft->SetNpcCargoProjection(Job.Hold,MoveTemp(Load));LiveShips.Add(Job.Id,Name);return;
+    }
     // Constructor defaults may describe random civilian freight; ambient jobs
     // start empty and only load stock reserved by TrafficAI.
     SSWFreightManifest::FLoad Empty;Craft->SetSimulatedCargo(Empty);
@@ -369,7 +374,7 @@ void UGalaxyTrafficSubsystem::UpdateLive(Sim& Simulation,FGalaxyTrafficState& Tr
     {
         const auto* Name=LiveShips.Find(Job.Id);if(!Name)continue;
         auto* Craft=Simulation.FindShip(TCHAR_TO_UTF8(**Name));
-        if(!Craft || Craft->IsDead() || Craft->IsDying()) {if(SSWEconomyAuthority::MayAdvanceLocally())TrafficAI::Lose(Job,Economy);LiveShips.Remove(Job.Id);LiveGoals.Remove(Job.Id);continue;}
+        if(!Craft || Craft->IsDead() || Craft->IsDying()) {if(SSWEconomyAuthority::MayAdvanceLocally()){TrafficAI::Lose(Job,Economy);LiveShips.Remove(Job.Id);}LiveGoals.Remove(Job.Id);continue;}
         Job.CurrentSector=SectorKey(Craft->GetRegion());const int32 Actual=Job.Route.IndexOfByKey(Job.CurrentSector);if(Actual!=INDEX_NONE)Job.RouteIndex=Actual;
 
         if(!Observed(Simulation,*Craft))
@@ -567,6 +572,7 @@ void UGalaxyTrafficSubsystem::GroundBuildingRetired(const Ship& Building,const S
 
 void UGalaxyTrafficSubsystem::ScheduleManagement(double Delay)
 {
+    if(SSWEconomyAuthority::RequiresService()){if(GetWorld())GetWorld()->GetTimerManager().ClearTimer(ManagementTimer);return;}
     if(bManagementRunning){bManagementWake=true;return;}
     auto* World=GetWorld();if(!World || IsRunningCommandlet() || UFractalVerseSubsystem::ProcessRole()!=EFractalVerseRole::Disabled)return;
     World->GetTimerManager().ClearTimer(ManagementTimer);
@@ -574,6 +580,7 @@ void UGalaxyTrafficSubsystem::ScheduleManagement(double Delay)
 }
 void UGalaxyTrafficSubsystem::RunManagement()
 {
+    if(SSWEconomyAuthority::RequiresService())return;
     const double Wall=FPlatformTime::Seconds();const double Elapsed=LastManagementTime>0?FMath::Max(UE_SMALL_NUMBER,Wall-LastManagementTime):UE_SMALL_NUMBER;LastManagementTime=Wall;
     bManagementRunning=true;bManagementWake=false;AdvanceManagement(float(Elapsed));bManagementRunning=false;
     double Delay=60;
@@ -841,4 +848,49 @@ void UGalaxyTrafficSubsystem::FlushCriticalOwned()
         if(EconomyWorker && EconomyWorker->IsBusy()){FPlatformProcess::SleepNoStats(.001f);continue;}
         EconomyWorkerCompleted();PumpEconomyRequests();
     }
+}
+
+bool UGalaxyTrafficSubsystem::QuiesceForExternal(FString& Reason)
+{
+    if(IsTransactionPending()){Reason=TEXT("Waiting for the current saved transaction before NPC handoff.");return false;}
+    EconomyWorker.Reset();++EconomySessionEpoch;++EconomyMutationRevision;bWorkerInitialized=false;
+    if(auto* Simulation=Sim::GetSim())BuildGraph(*Simulation);
+    return true;
+}
+void UGalaxyTrafficSubsystem::ApplyExternalTraffic(FGalaxyTrafficState&& Incoming)
+{
+    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();if(!Players||!Players->HasLoaded())return;
+    auto* Simulation=Sim::GetSim();if(Simulation&&(Sectors.IsEmpty()||LastMission!=Simulation->GetMission())){BuildGraph(*Simulation);LastMission=Simulation->GetMission();}
+    auto& Current=Players->GetMutablePlayerInfo().Traffic;
+    const auto Endpoint=[this](FName Inventory)->const FGalaxyTrafficEndpoint*{
+        const auto Key=Inventory.ToString();const FGalaxyTrafficEndpoint* Transfer=nullptr;
+        for(const auto& P:Endpoints)
+        {
+            const auto& E=P.Value;if(!E.Station.IsNone()&&Key.StartsWith(E.System.ToString()+TEXT("/")+E.Station.ToString()+TEXT("/")))return &E;
+            if(Key.StartsWith(E.System.ToString()+TEXT("/"))&&Ship::IsTransferStationName(E.Station.ToString())&&(!Transfer||E.Id.LexicalLess(Transfer->Id)))Transfer=&E;
+        }
+        return Transfer;
+    };
+    for(auto& J:Incoming.Journeys)
+    {
+        if(const auto* Old=Current.Journeys.FindByPredicate([&](const auto& Row){return Row.Id==J.Id;}))
+        {J.HullId=Old->HullId;J.ShipName=Old->ShipName;J.CurrentSector=Old->CurrentSector;J.RouteIndex=Old->RouteIndex;J.Route=Old->Route;J.Origin=Old->Origin;J.Destination=Old->Destination;}
+        if(const auto* From=Endpoint(J.SourceInventory))if(const auto* To=Endpoint(J.DestinationInventory))
+        {J.Origin=From->Id;J.Destination=To->Id;if(J.Route.IsEmpty())J.Route=TrafficAI::Route(Sectors,From->Sector,To->Sector);if(J.CurrentSector.IsNone())J.CurrentSector=From->Sector;}
+    }
+    TSet<FGuid> Alive;for(const auto& J:Incoming.Journeys)if(!J.IsFinished())Alive.Add(J.Id);
+    if(Simulation){TArray<FGuid> Old;LiveShips.GetKeys(Old);for(FGuid Id:Old)if(!Alive.Contains(Id))Despawn(*Simulation,Id);}
+    Current=MoveTemp(Incoming);
+    if(Simulation)for(auto& J:Current.Journeys)if(!J.IsFinished())
+    {
+        Realize(*Simulation,J,Players->GetEconomy());
+        if(const auto* Name=LiveShips.Find(J.Id))if(auto* Craft=Simulation->FindShip(TCHAR_TO_UTF8(**Name)))
+        {SSWFreightManifest::FLoad Load;Load.Item=J.Item.ToString();Load.Unit=J.UnitTonnes==1?TEXT("t"):TEXT("units");Craft->SetNpcCargoProjection(J.Hold,MoveTemp(Load));}
+    }
+}
+void UGalaxyTrafficSubsystem::ReportExternalTraffic(TFunctionRef<void(FGuid,bool,bool,EGalaxyTrafficPhase)> Report)
+{
+    auto* Players=GetGameInstance()->GetSubsystem<UStarshatterPlayerSubsystem>();auto* Simulation=Sim::GetSim();if(!Players||!Simulation)return;
+    for(const auto& J:Players->GetPlayerInfo().Traffic.Journeys)if(!J.IsFinished())if(const auto* Name=LiveShips.Find(J.Id))
+    {auto* Craft=Simulation->FindShip(TCHAR_TO_UTF8(**Name));Report(J.Id,!Craft||Craft->IsDead()||Craft->IsDying(),LiveArrivals.Contains(J.Id),J.Phase);}
 }

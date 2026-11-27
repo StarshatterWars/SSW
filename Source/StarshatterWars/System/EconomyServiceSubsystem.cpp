@@ -48,7 +48,7 @@ void UEconomyServiceSubsystem::Deinitialize()
 }
 void UEconomyServiceSubsystem::Disconnected(const FString& Reason)
 {
-    Cached.bConnected=false;Cached.bNpcAuthorityActive=false;Cached.PingMs=-1;Cached.Error=Reason;OnStatusChanged.Broadcast();
+    bProjectionReady=false;Cached.bConnected=false;Cached.bNpcAuthorityActive=false;Cached.PingMs=-1;Cached.Error=Reason;OnStatusChanged.Broadcast();
 }
 void UEconomyServiceSubsystem::Poll()
 {
@@ -73,7 +73,7 @@ void UEconomyServiceSubsystem::Poll()
         Root->TryGetStringField(TEXT("worldId"),Next.WorldId);Root->TryGetBoolField(TEXT("npcAuthorityActive"),Next.bNpcAuthorityActive);
         Next.bNpcAuthorityActive&=!Next.WorldId.IsEmpty();
         if(!Checkpoint)Next.Error=TEXT("Economy persistence is unavailable. Mutating requests are suspended.");
-        Self->Cached=MoveTemp(Next);Self->OnStatusChanged.Broadcast();Self->RecoverPendingTrades();
+        Self->Cached=MoveTemp(Next);Self->OnStatusChanged.Broadcast();Self->SynchronizeNpc();Self->RecoverPendingTrades();
     });
     if(!Request->ProcessRequest()){Requests.Remove(Request);bPolling=false;Disconnected(TEXT("The economy heartbeat could not start."));}
 }
@@ -91,8 +91,8 @@ bool UEconomyServiceSubsystem::Command(TSharedRef<FJsonObject> Body,FReply Compl
     if(bStopping||!Address.bValid||!Cached.bConnected||!Cached.bCheckpointReady){Reason=TEXT("The economy service is unavailable. No local fallback or exchange was performed.");return false;}
     if(!Address.bLoopback){Reason=TEXT("Remote economy authorization has not been configured.");return false;}
     FString Action;Body->TryGetStringField(TEXT("action"),Action);
-    if(!bExternalRequired||(Action!=TEXT("bootstrap_npc")&&!IsReady())){Reason=TEXT("The live NPC economy handoff is not active. Nothing exchanged.");return false;}
-    FString Key;const auto KeyPath=FPaths::Combine(FPlatformProcess::UserSettingsDir(),TEXT("Fractal Dev Games/FractalEconomy/LocalEconomy/authority.key"));
+    if(!bExternalRequired||(Action!=TEXT("bootstrap_npc")&&Action!=TEXT("npc_projection")&&!IsReady())){Reason=TEXT("The live NPC economy handoff is not active. Nothing exchanged.");return false;}
+    FString Key;const auto KeyPath=FPaths::Combine(SSWEconomyAuthority::StateDirectory(),TEXT("authority.key"));
     if(!FFileHelper::LoadFileToString(Key,*KeyPath)){Reason=TEXT("Local economy authorization is unavailable.");return false;}Key.TrimStartAndEndInline();
     if(Key.Len()!=64){Reason=TEXT("Invalid local economy authorization.");return false;}for(TCHAR C:Key)if(!FChar::IsHexDigit(C)){Reason=TEXT("Invalid local economy authorization.");return false;}
     FString Payload;if(!FJsonSerializer::Serialize(Body,TJsonWriterFactory<>::Create(&Payload))){Reason=TEXT("The economy request could not be encoded.");return false;}

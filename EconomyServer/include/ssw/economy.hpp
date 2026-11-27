@@ -8,7 +8,7 @@
 
 namespace ssw {
 using json=nlohmann::json;
-struct Good {std::string id;double tonnes=1;std::int64_t credits=0;bool whole=false,illicit=false;double preview_quantity=0;int rarity=0;};
+struct Good {std::string id;double tonnes=1;std::int64_t credits=0;bool whole=false,illicit=false,consumable=false;double preview_quantity=0;int rarity=0;};
 struct Amount {std::string item;double quantity=0;};
 struct Recipe {
     std::string id,activity,hull;
@@ -16,7 +16,7 @@ struct Recipe {
     std::vector<std::string> minerals;
     double input_tonnes=0,seconds=0;
 };
-struct Facility {std::string id,name,system,region,recipe;double capacity=0;int lanes=1;std::vector<std::string> activities,recipes;};
+struct Facility {std::string id,name,system,region,recipe,kind="Factory";double capacity=0;int lanes=1;bool surface=false;std::vector<std::string> activities,recipes;};
 struct Mine {std::string id,system,region,item;double reserve=0,rate=0,capacity=0;};
 struct Catalog {
     std::map<std::string,Good> goods;

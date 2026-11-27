@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory)][string]$Wix,
-    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '1.0.20',
+    [ValidatePattern('^\d+\.\d+\.\d+$')][string]$Version = '1.0.21',
     [string]$LauncherConfig,
     [string]$ApacheArchive
 )

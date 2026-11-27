@@ -41,6 +41,7 @@ internal sealed class EconomyServerManager:IDisposable
     {
         string file=Path.Combine(Path.GetDirectoryName(executable)!,"server-manifest.json");if(!File.Exists(file))return false;
         using var doc=JsonDocument.Parse(File.ReadAllText(file));var root=doc.RootElement;
+        if(!root.TryGetProperty("liveClientCutoverReady",out var live)||live.ValueKind!=JsonValueKind.True)return false;
         if(!root.TryGetProperty("standbyAutostartReady",out var ready)||ready.ValueKind!=JsonValueKind.True||root.GetProperty("protocol").GetInt32()!=1||root.GetProperty("handoffProtocol").GetInt32()!=1||root.GetProperty("server").GetString()!="FractalEconomy")return false;
         var directory=Path.GetDirectoryName(Path.GetFullPath(executable))!;
         foreach(var entry in root.GetProperty("files").EnumerateArray()){

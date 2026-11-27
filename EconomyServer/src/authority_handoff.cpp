@@ -1,4 +1,5 @@
 #include "ssw/economy.hpp"
+#include "ssw/game_bridge.hpp"
 #include <stdexcept>
 namespace ssw {
 namespace {
@@ -13,12 +14,13 @@ json World::bootstrap(const json& command){
         require(state_.value("handoffId",std::string())==handoff&&state_.value("sourceId",std::string())==source&&state_.contains("handoffSnapshot")&&state_["handoffSnapshot"]==incoming,"This service already owns another handoff; refusing to overwrite live stock");
         return {{"ok",true},{"worldId",state_.at("worldId")},{"handoffId",handoff},{"revision",state_.at("revision")}};
     }
-    require(command.value("format",std::string())=="SSW-NPC-1","Unsupported NPC handoff format");
+    const auto format=command.value("format",std::string());
+    require(format=="SSW-NPC-1"||format=="SSW-UE-NPC-1","Unsupported NPC handoff format");
     require(incoming.is_object()&&incoming.value("schema",0)==1,"Invalid NPC handoff snapshot");
-    const auto before=state_;
+    const auto before=state_;const auto old_catalog=catalog_;
     try{
         // Restoring validates quantities, capacity and reservations before activation.
-        restore(incoming);
+        restore(format=="SSW-UE-NPC-1"?import_game(catalog_,state_,incoming):incoming);
         require(state_.contains("mines")&&state_.contains("jobs")&&state_.contains("journeys")&&state_.contains("history"),"Incomplete NPC handoff");
         for(const auto& [owner,balance]:state_.at("wallets").items()){
             (void)balance;require(owner=="Treasury"||owner.starts_with("NPC/")||owner.starts_with("Residents/"),"Only explicit NPC budgets may enter an NPC handoff");
@@ -45,6 +47,6 @@ json World::bootstrap(const json& command){
         state_["revision"]=before.at("revision").get<std::uint64_t>()+1;
         validate();
         return {{"ok",true},{"worldId",state_.at("worldId")},{"handoffId",handoff},{"revision",state_.at("revision")}};
-    }catch(...){state_=before;throw;}
+    }catch(...){state_=before;catalog_=old_catalog;throw;}
 }
 }

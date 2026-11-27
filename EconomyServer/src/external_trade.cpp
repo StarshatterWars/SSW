@@ -12,6 +12,13 @@ void credit(json& wallets,const std::string& owner,std::int64_t value){const aut
 double used(const json& inv,const Catalog& catalog){double mass=0;for(const auto& [item,count]:inv.at("stock").items())mass+=count.get<double>()*catalog.goods.at(item).tonnes;return mass;}
 json reply(const json& trade){auto result=trade;result["ok"]=true;return result;}
 }
+std::int64_t external_unit_price(const json& world,const Catalog& catalog,const std::string& market,const std::string& item){
+    const auto& inv=world.at("inventories").at(market);const double stock=inv.at("stock").value(item,0.0)-inv.at("reservedPickup").value(item,0.0);
+    const double target=inv.value("desired",json::object()).value(item,1.0);double trend=1;
+    const auto key=inv.at("system").get<std::string>()+"/"+item;
+    if(world.at("history").contains(key)){const auto& h=world.at("history").at(key);if(h.size()>1){double sum=0;std::size_t n=0;for(std::size_t i=h.size()>12?h.size()-12:0;i+1<h.size();++i){const double price=h[i].at("price");if(price>0){sum+=price;++n;}}if(n>0)trend=std::clamp(h.back().at("price").get<double>()/(sum/double(n)),.8,1.2);}}
+    return std::max(std::int64_t{1},amount(double(catalog.goods.at(item).credits)*std::clamp(.8+std::max(1.0,target)/std::max(1.0,stock),.85,3.0)*trend));
+}
 json quote_external_trade(const json& world,const Catalog& catalog,const json& command){
     const std::string market=command.at("market"),side=command.at("side"),item=catalog.item(command.at("item"));
     require(side=="Buy"||side=="Sell","Trade side must be Buy or Sell");
@@ -20,8 +27,7 @@ json quote_external_trade(const json& world,const Catalog& catalog,const json& c
     const auto& good=catalog.goods.at(item);const double count=command.at("quantity");
     require(good.credits>0&&good.tonnes>0&&std::isfinite(count)&&count>0&&count<=1.e6&&(!good.whole||std::floor(count)==count),"Invalid item quantity or cargo type");
     const double stock=inv.at("stock").value(item,0.0),reserved=inv.at("reservedPickup").value(item,0.0);
-    const double factor=std::clamp(.8+80.0/std::max(1.0,stock-reserved),.85,3.0);
-    const auto unit=amount(double(good.credits)*factor),total=amount(double(unit)*count);
+    const auto unit=external_unit_price(world,catalog,market,item),total=amount(double(unit)*count);
     const std::int64_t denominator=10000+catalog.gst_basis_points;
     const auto tax=(total/denominator)*catalog.gst_basis_points+((total%denominator)*catalog.gst_basis_points)/denominator;
     return {{"ok",true},{"market",market},{"owner",owner},{"side",side},{"item",item},{"quantity",count},{"unitTonnes",good.tonnes},{"unitPrice",unit},{"totalCredits",total},{"baseCredits",total-tax},{"taxCredits",tax},{"availableQuantity",std::max(0.0,stock-reserved)},{"revision",world.at("revision")}};

@@ -241,6 +241,8 @@ USTRUCT()
 struct FEconomyState
 {
     GENERATED_BODY()
+    UPROPERTY(SaveGame) FString NpcAuthorityWorldId;
+    UPROPERTY(SaveGame) int64 NpcAuthorityRevision=0;
     UPROPERTY(SaveGame) TMap<FGuid,FNpcTradeReceipt> NpcTradeOutbox;
     UPROPERTY(SaveGame) TMap<FGuid, FFleetRepairOrder> FleetRepairOrders;
     UPROPERTY(SaveGame) TMap<FName, FEconomyInventory> Inventories;
