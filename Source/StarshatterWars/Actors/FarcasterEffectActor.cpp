@@ -1,4 +1,6 @@
 #include "FarcasterEffectActor.h"
+#include "TravelVortexActor.h"
+#include "Engine/World.h"
 #include "NiagaraComponent.h"
 #include "NiagaraSystem.h"
 
@@ -112,6 +114,24 @@ void AFarcasterEffectActor::SetPortalScale(float Fraction)
 {
     const bool bWasOpen=OpeningFraction>0.f;
     OpeningFraction=FMath::Clamp(Fraction,0.f,1.f);
+    if (OpeningFraction>0 && !ProceduralTunnel.IsValid() && GetWorld())
+    {
+        FActorSpawnParameters Spawn;Spawn.Owner=this;Spawn.ObjectFlags|=RF_Transient;
+        ProceduralTunnel=GetWorld()->SpawnActor<ATravelVortexActor>(Spawn);
+        if (auto* Tunnel=ProceduralTunnel.Get())
+        {
+            float Radius=1000.f;
+            if (const auto* Gate=Cast<AShipActor>(GetParentActor()); Gate && Gate->HullMesh)
+                Radius=FMath::Clamp(float(Gate->HullMesh->Bounds.BoxExtent.Y*.65),50.f,50000.f);
+            Tunnel->Configure(Radius,Radius*4.f);
+            Tunnel->AttachToActor(this,FAttachmentTransformRules::KeepWorldTransform);
+            Tunnel->GetRootComponent()->SetAbsolute(false,false,true);
+            Tunnel->SetActorRelativeLocation(FVector::ZeroVector);
+            Tunnel->SetActorRelativeRotation(FRotator(-90,0,0));
+            Tunnel->SetActorScale3D(FVector::OneVector);
+        }
+    }
+    if (auto* Tunnel=ProceduralTunnel.Get()) Tunnel->SetEnvelope(bArrivalEffect,OpeningFraction);
     SetActorTickEnabled(OpeningFraction>0.f);
     if (OpeningFraction>0.f && !bWasOpen)
     {
@@ -153,6 +173,7 @@ void AFarcasterEffectActor::ClosePortal()
 void AFarcasterEffectActor::SetArrivalAppearance(bool bArrival)
 {
     bArrivalEffect=bArrival;
+    if (auto* Tunnel=ProceduralTunnel.Get()) Tunnel->SetEnvelope(bArrivalEffect,OpeningFraction);
     const TCHAR* Blue=TEXT("/Game/WarpGates/Materials/Effects/MI_WarpEffect_CircleBlue.MI_WarpEffect_CircleBlue");
     const TCHAR* Green=TEXT("/Game/WarpGates/Materials/Effects/MI_WarpEffect_CircleGreen.MI_WarpEffect_CircleGreen");
     const TCHAR* Red=TEXT("/Game/WarpGates/Materials/Effects/MI_WarpEffect_CircleRed.MI_WarpEffect_CircleRed");
@@ -186,4 +207,11 @@ void AFarcasterEffectActor::Tick(float DeltaSeconds)
         Ring->SetRelativeScale3D(FVector(Radius*5.f));
         if (EffectAge>.5f && !Ring->IsActive()) Ring->Activate(true);
     }
+}
+
+void AFarcasterEffectActor::EndPlay(const EEndPlayReason::Type Reason)
+{
+    if (auto* Tunnel=ProceduralTunnel.Get()) Tunnel->Destroy();
+    ProceduralTunnel.Reset();
+    Super::EndPlay(Reason);
 }

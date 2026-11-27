@@ -44,5 +44,6 @@ private:
     TWeakObjectPtr<class APlayerCameraManager> Manager;
     TWeakObjectPtr<AActor> ViewTarget;
     TWeakObjectPtr<UQuantumTravelCameraModifier> Modifier;
+    TWeakObjectPtr<class ATravelVortexActor> Vortex;
     int32 Mode = INDEX_NONE;
 };

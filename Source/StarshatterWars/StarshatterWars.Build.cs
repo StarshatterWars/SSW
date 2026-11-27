@@ -53,6 +53,10 @@ public class StarshatterWars : ModuleRules
             "WorldScapeFoliages",
         });
 
+        // The supplied Vortex Pack currently declares Win64 and Mac support.
+        if (Target.Platform == UnrealTargetPlatform.Win64 || Target.Platform == UnrealTargetPlatform.Mac)
+            PrivateDependencyModuleNames.Add("ProceduralVortexTunnel");
+
         // WorldScapeRoot.h includes PCUtils.h only under WITH_EDITOR.
         if (Target.Type == TargetType.Editor)
         {

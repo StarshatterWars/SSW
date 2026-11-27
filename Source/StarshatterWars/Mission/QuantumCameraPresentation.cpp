@@ -1,4 +1,6 @@
 #include "QuantumCameraPresentation.h"
+#include "TravelVortexActor.h"
+#include "Engine/World.h"
 #include "Ship.h"
 #include "Camera/CameraTypes.h"
 #include "Camera/PlayerCameraManager.h"
@@ -43,6 +45,8 @@ void FQuantumCameraPresentation::Reset()
         Owned->DisableModifier(true);
         if (auto* Camera = Manager.Get()) Camera->RemoveCameraModifier(Owned);
     }
+    if (auto* Tunnel = Vortex.Get()) Tunnel->Destroy();
+    Vortex.Reset();
     Modifier.Reset(); Manager.Reset(); ViewTarget.Reset(); Envelope.Reset(); Mode=INDEX_NONE;
 }
 void FQuantumCameraPresentation::Update(APlayerController* Controller, float Seconds, EQuantumPresentationPhase Phase, int32 CameraMode)
@@ -64,6 +68,19 @@ void FQuantumCameraPresentation::Update(APlayerController* Controller, float Sec
         Modifier = Cast<UQuantumTravelCameraModifier>(Camera->AddNewCameraModifier(UQuantumTravelCameraModifier::StaticClass()));
     }
     if (auto* Owned = Modifier.Get()) { Owned->ExpectedViewTarget = Target; Owned->Strength = Envelope.Strength; }
+    if (!Vortex.IsValid() && Controller->GetWorld())
+    {
+        FActorSpawnParameters Spawn; Spawn.Owner=Controller; Spawn.ObjectFlags|=RF_Transient;
+        Vortex=Controller->GetWorld()->SpawnActor<ATravelVortexActor>(Spawn);
+        if (auto* Tunnel=Vortex.Get()) Tunnel->Configure(1200.f,16000.f);
+    }
+    if (auto* Tunnel=Vortex.Get())
+    {
+        const FVector Forward=Camera->GetCameraRotation().Vector();
+        Tunnel->SetActorLocationAndRotation(Camera->GetCameraLocation()-Forward*2000.f,
+            FQuat::FindBetweenNormals(FVector::UpVector,Forward));
+        Tunnel->SetEnvelope(Phase==EQuantumPresentationPhase::Arrival,Envelope.Strength);
+    }
 }
 
 Ship* ResolveQuantumPresentationShip(Ship* Pilot)

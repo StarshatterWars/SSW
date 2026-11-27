@@ -29,6 +29,7 @@ public:
     virtual void Tick(float DeltaSeconds) override;
     bool IsArrivalEffect() const { return bArrivalEffect; }
     void ClosePortal();
+    void EndPlay(const EEndPlayReason::Type Reason) override;
 
 private:
     void ConfigureAppearance(bool bMarakan);
@@ -45,5 +46,6 @@ private:
     float OpeningFraction = 0.f;
     float EffectAge = 0.f;
     TArray<FVector> AuthoredScales;
+    TWeakObjectPtr<class ATravelVortexActor> ProceduralTunnel;
     FTimerHandle CloseTimer;
 };
